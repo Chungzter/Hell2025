@@ -349,27 +349,31 @@ void Light::ForceDirty() {
 }
 
 void Light::UpdateMatricesAndFrustum() {
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(90.0f), (float)SHADOW_MAP_HI_RES_SIZE / (float)SHADOW_MAP_HI_RES_SIZE, SHADOW_NEAR_PLANE, m_createInfo.radius);
+	float fovRadians = glm::radians(90.0f);
+	float aspectRatio = 1.0f; // Square
 
-    m_viewMatrix[0] = glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-    m_viewMatrix[1] = glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-    m_viewMatrix[2] = glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    m_viewMatrix[3] = glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
-    m_viewMatrix[4] = glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-    m_viewMatrix[5] = glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+	const glm::mat4 projectionMatrix = glm::perspective(fovRadians, aspectRatio, SHADOW_NEAR_PLANE, m_createInfo.radius);
+	const glm::mat4 projectionMatrixReverseZ = Util::CalculateProjectionReverseZ(fovRadians, aspectRatio, SHADOW_NEAR_PLANE);
 
-    m_projectionTransforms[0] = projectionMatrix * glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-    m_projectionTransforms[1] = projectionMatrix * glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-    m_projectionTransforms[2] = projectionMatrix * glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    m_projectionTransforms[3] = projectionMatrix * glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
-    m_projectionTransforms[4] = projectionMatrix * glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-    m_projectionTransforms[5] = projectionMatrix * glm::lookAt(m_createInfo.position, m_createInfo.position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+	const glm::vec3 targets[6] = {
+		glm::vec3(1.0f, 0.0f, 0.0f),  glm::vec3(-1.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f),  glm::vec3(0.0f, -1.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f),  glm::vec3(0.0f, 0.0f, -1.0f)
+	};
 
-    for (int i = 0; i < 6; i++) {
-        m_frustum[i].Update(m_projectionTransforms[i]);
-    }
+	const glm::vec3 ups[6] = {
+		glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f),  glm::vec3(0.0f, 0.0f, -1.0f),
+		glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)
+	};
+
+	for (int i = 0; i < 6; i++) {
+		m_viewMatrix[i] = glm::lookAt(m_createInfo.position, m_createInfo.position + targets[i], ups[i]);
+		m_projectionTransforms[i] = projectionMatrix * m_viewMatrix[i];
+		m_projectionTransformsReverseZ[i] = projectionMatrixReverseZ * m_viewMatrix[i];
+		m_frustum[i].Update(m_projectionTransforms[i]);
+	}
 }
-
 
 void LightFlicker::Update(float deltaTime, float timeSeconds) {
     float tSlow = timeSeconds * m_slowFrequencyHz;

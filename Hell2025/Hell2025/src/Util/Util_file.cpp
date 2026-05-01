@@ -1,4 +1,7 @@
 #include "Util.h"
+
+#include <Hell/Logging.h>
+
 #include <fstream>
 #include <string>
 
@@ -59,7 +62,25 @@ namespace Util {
     }
 
     std::string GetFileExtension(const std::filesystem::directory_entry& entry) {
-        return entry.path().extension().string().substr(1);
+		const auto& path = entry.path();
+
+		// check if extension exists
+		if (!path.has_extension()) {
+			Logging::Error() << "File has no extension: " << path.string() << "\n";
+			return "";
+		}
+
+		std::string ext = path.extension().string();
+		// extension() returns strings starting with '.' (e.g., ".txt")
+		// verify it's not just a lone dot or empty before substr
+		if (ext.size() <= 1) {
+			Logging::Error() << "Invalid or empty extension found for: " << path.string() << "\n";
+			return "";
+		}
+
+		// strip the leading dot
+		return ext.substr(1);
+        //return entry.path().extension().string().substr(1);
     }
 
     std::vector<FileInfo> IterateDirectory(const std::string& directory, std::vector<std::string> extensions) {

@@ -11,7 +11,7 @@ namespace OpenGLRenderer {
     void StainedGlassPass() {
         ProfilerOpenGLZoneFunction();
 
-        SetRasterizerState("GlassPass");
+        ForceRasterizerState("GlassPass");
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 

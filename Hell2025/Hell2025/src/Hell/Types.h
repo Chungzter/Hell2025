@@ -57,10 +57,15 @@ struct RenderItem {
     float furUVScale = 0.0f;
     int blockScreenSpaceBloodDecals = 0;  // True or false
 
-    int32_t woundBaseColorTextureIndex = 0;
-    int32_t woundNormalMapTextureIndex = 0;
-    int32_t woundRmaTextureIndex = 0;
+    int32_t additionalTextureIndex0 = 0;
+    int32_t additionalTextureIndex1 = 0;
+    int32_t additionalTextureIndex2 = 0;
+    int32_t additionalTextureIndex3 = 0;
+
     int32_t localMeshNodeIndex = 0;
+    int32_t padding0 = 0;
+    int32_t padding1 = 0;
+    int32_t padding2 = 0;
 
     float tintColorR = 1.0f;
     float tintColorG = 1.0f;
@@ -275,6 +280,10 @@ struct Material {
 	int m_normal = 0;
 	int m_rma = 0;
 	int m_emissive = 0;
+	int m_hairFlowMap = 0;
+    int m_hairIdMap = 0;
+    int m_hairRootMap = 0;
+    int m_hairBlendMap = 0;
 };
 
 struct QueuedTextureBake {
@@ -291,11 +300,15 @@ struct QueuedTextureBake {
 };
 
 struct ViewportData {
+	glm::mat4 projectionReverseZ;
+	glm::mat4 inverseProjectionReverseZ;
+	glm::mat4 projectionViewReverseZ;
+	glm::mat4 inverseProjectionViewReverseZ;
     glm::mat4 projection;
     glm::mat4 inverseProjection;
     glm::mat4 view;
-    glm::mat4 inverseView;
-    glm::mat4 projectionView;
+	glm::mat4 inverseView;
+	glm::mat4 projectionView;
     glm::mat4 inverseProjectionView;
     glm::mat4 skyboxProjectionView;
     glm::mat4 flashlightProjectionView;
@@ -382,22 +395,24 @@ struct DrawArraysIndirectCommand {
 };
 
 struct DrawCommandsSet {
-    std::vector<DrawIndexedIndirectCommand> geometry[4];
-    std::vector<DrawIndexedIndirectCommand> geometryBlended[4];
-    std::vector<DrawIndexedIndirectCommand> geometryAlphaDiscard[4];
-    std::vector<DrawIndexedIndirectCommand> hair[4];
+	std::vector<DrawIndexedIndirectCommand> alphaDiscard[4];
+	std::vector<DrawIndexedIndirectCommand> blended[4];
+	std::vector<DrawIndexedIndirectCommand> hair[4];
+	std::vector<DrawIndexedIndirectCommand> standard[4];
+
+	std::vector<DrawIndexedIndirectCommand> house[4];
 	std::vector<DrawIndexedIndirectCommand> mirrorRenderItems[4];
 	std::vector<DrawIndexedIndirectCommand> plastic[4];
 
-    std::vector<DrawIndexedIndirectCommand> skinnedGeometry[4];
-    std::vector<DrawIndexedIndirectCommand> skinnedGeometryAlphaDiscard[4];
-    std::vector<DrawIndexedIndirectCommand> skinnedGeometryBlended[4] ;
-    std::vector<DrawIndexedIndirectCommand> skinnedGeometryHair[4];
+    std::vector<DrawIndexedIndirectCommand> skinnedAlphaDiscard[4];
+	std::vector<DrawIndexedIndirectCommand> skinnedBlended[4];
+	std::vector<DrawIndexedIndirectCommand> skinnedHair[4];
+	std::vector<DrawIndexedIndirectCommand> skinnedStandard[4];
 
-    std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingAlphaDiscarded[4];
+    std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingAlphaDiscard[4];
     std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingBlended[4];
-    std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingDefault[4];
-    std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingHair[4];
+	std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingHair[4];
+	std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingStandard[4];
 
     std::vector<DrawIndexedIndirectCommand> shadowMapHiRes[SHADOWMAP_HI_RES_COUNT][6];
     std::vector<DrawIndexedIndirectCommand> moonLightCascades[4][SHADOW_CASCADE_COUNT]; // [player][cascade]
@@ -494,11 +509,11 @@ struct GPULight {
     glm::vec3 right;
     float iesExposure;
 
-    glm::vec3 up;
-    int textureIndex;
+	glm::vec3 up;
+	int padding0;
 
+    int iesTextureIndex;
     int isDirtyForRaytracing = 0; // true or false
-    int padding0;
     int padding1;
     int padding2;
 };

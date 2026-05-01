@@ -19,7 +19,7 @@ namespace ViewportManager {
         
         for (int i = 0; i < 4; i++) {
             g_viewports.emplace_back(Viewport(i));
-            g_viewports[i].SetPerspective(1.0f, NEAR_PLANE, FAR_PLANE);
+            g_viewports[i].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
         }
 
         Update();
@@ -76,7 +76,7 @@ namespace ViewportManager {
                 g_viewports[i].SetViewportMode(Editor::GetViewportModeByIndex(i));
                 Editor::IsViewportOrthographic(i)
                     ? g_viewports[i].SetOrthographic(g_viewports[i].GetOrthoSize(), orthoNear, orthoFar)
-                    : g_viewports[i].SetPerspective(1.0f, NEAR_PLANE, FAR_PLANE);
+                    : g_viewports[i].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
             }
         }
         // When not in the editor
@@ -87,7 +87,7 @@ namespace ViewportManager {
             if (Game::GetSplitscreenMode() == SplitscreenMode::FULLSCREEN) {
                 g_viewports[0].SetPosition(glm::vec2(0.0f, 0.0f));  // Fullscreen
                 g_viewports[0].SetSize(glm::vec2(1.0f, 1.0f));
-                g_viewports[0].SetPerspective(1.0f, NEAR_PLANE, FAR_PLANE);
+                g_viewports[0].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
                 g_viewports[0].Show();
                 g_viewports[1].Hide();
                 g_viewports[2].Hide();
@@ -98,8 +98,8 @@ namespace ViewportManager {
                 g_viewports[1].SetPosition(glm::vec2(0.0f, 0.0f));  // Bottom
                 g_viewports[0].SetSize(glm::vec2(1.0f, 0.5f));
                 g_viewports[1].SetSize(glm::vec2(1.0f, 0.5f));
-                g_viewports[0].SetPerspective(1.0f, NEAR_PLANE, FAR_PLANE);
-                g_viewports[1].SetPerspective(1.0f, NEAR_PLANE, FAR_PLANE);
+                g_viewports[0].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
+                g_viewports[1].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
                 g_viewports[0].Show();
                 g_viewports[1].Show();
                 g_viewports[2].Hide();
@@ -114,10 +114,10 @@ namespace ViewportManager {
                 g_viewports[1].SetSize(glm::vec2(0.5f, 0.5f));
                 g_viewports[2].SetSize(glm::vec2(0.5f, 0.5f));
                 g_viewports[3].SetSize(glm::vec2(0.5f, 0.5f));
-                g_viewports[0].SetPerspective(1.0f, NEAR_PLANE, FAR_PLANE);
-                g_viewports[1].SetPerspective(1.0f, NEAR_PLANE, FAR_PLANE);
-                g_viewports[2].SetPerspective(1.0f, NEAR_PLANE, FAR_PLANE);
-                g_viewports[3].SetPerspective(1.0f, NEAR_PLANE, FAR_PLANE);
+				g_viewports[0].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
+				g_viewports[1].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
+				g_viewports[2].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
+				g_viewports[3].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
                 g_viewports[0].Show();
                 g_viewports[1].Show();
                 g_viewports[2].Show();

@@ -7,7 +7,7 @@ namespace OpenGLRenderer {
     void EmissivePass() {
         ProfilerOpenGLZoneFunction();
 
-        SetRasterizerState("EmissivePass");
+        ForceRasterizerState("EmissivePass");
 
         OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer* finalImageFBO = GetFrameBuffer("FinalImage");

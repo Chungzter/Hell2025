@@ -29,11 +29,13 @@ namespace RenderDataManager {
     RendererData g_rendererData;
     std::vector<GPULight> g_gpuLightsHighRes;
 
-    std::vector<HouseRenderItem> g_houseRenderItems;
+	std::vector<RenderItem> g_houseRenderItems;
+	std::vector<HouseRenderItem> g_houseRenderItemsOLD;
     std::vector<HouseRenderItem> g_houseOutlineRenderItems;
     std::vector<RenderItem> g_decalRenderItems;
 
     std::vector<RenderItem> g_glassRenderItems;
+
     std::vector<RenderItem> g_renderItems;
     std::vector<RenderItem> g_renderItemsBlended;
     std::vector<RenderItem> g_renderItemsAlphaDiscarded;
@@ -56,10 +58,12 @@ namespace RenderDataManager {
 
     std::vector<glm::mat4> g_skinningTransforms;
     std::vector<RenderItem> g_combinedSkinnedRenderItems;
+
     std::vector<RenderItem> g_skinnedRenderItems;
     std::vector<RenderItem> g_skinnedRenderItemsAlphaDiscard;
     std::vector<RenderItem> g_skinnedRenderItemsBlended;
     std::vector<RenderItem> g_skinnedRenderItemsHair;
+
     std::vector<RenderItem> g_skinnedNonDeformingSkinnedMeshRenderItems;
     std::vector<RenderItem> g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard;
     std::vector<RenderItem> g_skinnedNonDeformingSkinnedMeshRenderItemsBlended;
@@ -86,6 +90,9 @@ namespace RenderDataManager {
     void CreateMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
     void CreateMultiDrawIndirectCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
     void CreateMultiDrawIndirectCommandsSkinnedNonDeforming(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
+	
+    void CreateHouseDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex);
+	void CreateHouseMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
 
     void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, uint32_t faceIndex, GPULight& gpuLight);
     void CreateMoonLightShadowMapDrawCommands();
@@ -113,8 +120,9 @@ namespace RenderDataManager {
 		g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent.clear();
 
         g_decalRenderItems.clear();
-        g_houseOutlineRenderItems.clear();
-        g_houseRenderItems.clear();
+		g_houseOutlineRenderItems.clear();
+		g_houseRenderItemsOLD.clear();
+		g_houseRenderItems.clear();
 
         g_renderItems.clear();
 		g_renderItemsMirror.clear();
@@ -196,11 +204,10 @@ namespace RenderDataManager {
                 g_viewportData[i].previousProjectionView = g_viewportData[i].projectionView;
             }
 
-            // Store them (no need to normalize, they should already be unit vectors)
             g_viewportData[i].cameraForward = glm::vec4(cameraForward, 0.0f);
             g_viewportData[i].cameraRight = glm::vec4(cameraRight, 0.0f);
-            g_viewportData[i].cameraUp = glm::vec4(cameraUp, 0.0f);
-            g_viewportData[i].projection = viewport->GetProjectionMatrix();
+			g_viewportData[i].cameraUp = glm::vec4(cameraUp, 0.0f);
+			g_viewportData[i].projection = viewport->GetProjectionMatrix();
             g_viewportData[i].inverseProjection = glm::inverse(g_viewportData[i].projection);
             g_viewportData[i].view = viewMatrix;
             g_viewportData[i].inverseView = inverseView;
@@ -216,6 +223,11 @@ namespace RenderDataManager {
             g_viewportData[i].sizeX = viewport->GetSize().x;
             g_viewportData[i].sizeY = viewport->GetSize().y;
             g_viewportData[i].viewPos = g_viewportData[i].inverseView[3];
+
+			g_viewportData[i].projectionReverseZ = viewport->GetProjectionMatrixReverseZ();
+			g_viewportData[i].inverseProjectionReverseZ = glm::inverse(g_viewportData[i].projectionReverseZ);
+			g_viewportData[i].projectionViewReverseZ = g_viewportData[i].projectionReverseZ * g_viewportData[i].view;
+			g_viewportData[i].inverseProjectionViewReverseZ = glm::inverse(g_viewportData[i].projectionViewReverseZ);
 
             // If no previous then use current frame values
             if (previousDataExists) {
@@ -265,8 +277,8 @@ namespace RenderDataManager {
     void UpdateRendererData() {
         const RendererSettings& rendererSettings = Renderer::GetCurrentRendererSettings();
         const Resolutions& resolutions = Config::GetResolutions();
-        g_rendererData.nearPlane = NEAR_PLANE;
-        g_rendererData.farPlane = FAR_PLANE;
+        g_rendererData.nearPlane = Config::GetNearPlane();
+        g_rendererData.farPlane = Config::GetFarPlane();
         g_rendererData.gBufferWidth = (float)resolutions.gBuffer.x;
         g_rendererData.gBufferHeight = (float)resolutions.gBuffer.y;
         g_rendererData.hairBufferWidth = (float)resolutions.hair.x;
@@ -346,12 +358,13 @@ namespace RenderDataManager {
 
         // Clear any commands from last frame
         for (int i = 0; i < 4; i++) {
-            set.geometry[i].clear();
-            set.geometryBlended[i].clear();
-            set.geometryAlphaDiscard[i].clear();
+            set.standard[i].clear();
+            set.blended[i].clear();
+            set.alphaDiscard[i].clear();
             set.hair[i].clear();
 			set.mirrorRenderItems[i].clear();
 			set.plastic[i].clear();
+			set.house[i].clear();
 
             g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i].clear();
             g_flashLightShadowMapDrawInfo.heightMapChunkIndices[i].clear();
@@ -363,6 +376,7 @@ namespace RenderDataManager {
         SortRenderItems(g_renderItemsAlphaDiscarded);
 		SortRenderItems(g_renderItemsHairLayer);
 		SortRenderItems(g_renderItemsPlastic);
+		SortRenderItems(g_houseRenderItems);
 
         // Lil hack to include bullet decals in mirrors
         int count = g_renderItems.size() + g_renderItemsAlphaDiscarded.size();
@@ -377,11 +391,12 @@ namespace RenderDataManager {
             if (!viewport->IsVisible()) continue;
 
             Frustum& frustum = viewport->GetFrustum();
-            CreateDrawCommands(set.geometry[i], g_renderItems, &frustum, i);
-            CreateDrawCommands(set.geometryBlended[i], g_renderItemsBlended, &frustum, i);
-            CreateDrawCommands(set.geometryAlphaDiscard[i], g_renderItemsAlphaDiscarded, &frustum, i);
+            CreateDrawCommands(set.standard[i], g_renderItems, &frustum, i);
+            CreateDrawCommands(set.blended[i], g_renderItemsBlended, &frustum, i);
+            CreateDrawCommands(set.alphaDiscard[i], g_renderItemsAlphaDiscarded, &frustum, i);
 			CreateDrawCommands(set.hair[i], g_renderItemsHairLayer, &frustum, i);
 			CreateDrawCommands(set.plastic[i], g_renderItemsPlastic, &frustum, i);
+			CreateHouseDrawCommands(set.house[i], g_houseRenderItems, &frustum, i);
 
             if (Mirror* mirror = MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId())) {
                 CreateDrawCommands(set.mirrorRenderItems[i], potentialMirrorItems, mirror->GetFrustum(i), i);
@@ -398,7 +413,7 @@ namespace RenderDataManager {
             }
         }
 
-        // CSM render items (moon light shadowmaps)
+        // CSM render items (moon light shadow maps)
         CreateMoonLightShadowMapDrawCommands();
 
         // Flashlight stuff
@@ -421,9 +436,9 @@ namespace RenderDataManager {
             }
 
             // Frustum cull the house mesh
-            g_flashLightShadowMapDrawInfo.houseMeshRenderItems->reserve(g_houseRenderItems.size());
-            for (int i = 0; i < g_houseRenderItems.size(); i++) {
-                HouseRenderItem& renderItem = g_houseRenderItems[i];
+            g_flashLightShadowMapDrawInfo.houseMeshRenderItems->reserve(g_houseRenderItemsOLD.size());
+            for (int i = 0; i < g_houseRenderItemsOLD.size(); i++) {
+                HouseRenderItem& renderItem = g_houseRenderItemsOLD[i];
                 if (flashLightFrustum.IntersectsAABBFast(renderItem)) {
                     g_flashLightShadowMapDrawInfo.houseMeshRenderItems[playerIndex].push_back(renderItem);
                 }
@@ -454,6 +469,69 @@ namespace RenderDataManager {
         }
         UpdateOceanPatchTransforms();
     }
+
+
+
+
+
+
+    void CreateHouseDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex) {
+		// Store the instance offset for this list of commands
+		int instanceStart = g_instanceData.size();
+
+		// Preallocate an estimate
+		g_instanceData.reserve(g_instanceData.size() + renderItems.size());
+
+		// Append new render items to the global instance data
+		for (const RenderItem& renderItem : renderItems) {
+			// Skip culling if no frustum is bound, otherwise test intersection
+			if (!frustum || frustum->IntersectsAABBFast(renderItem)) {
+				g_instanceData.push_back(renderItem);
+			}
+		}
+
+		// Create indirect draw commands using the stored offset
+		std::span<RenderItem> instanceView(g_instanceData.begin() + instanceStart, g_instanceData.end());
+		CreateHouseMultiDrawIndirectCommands(drawCommands, instanceView, viewportIndex, instanceStart);
+    }
+
+    void CreateHouseMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset) {
+        std::unordered_map<int, std::size_t> commandMap;
+        commands.reserve(renderItems.size());
+
+        for (const RenderItem& renderItem : renderItems) {
+            int meshIndex = renderItem.meshIndex;
+            Mesh* mesh = World::GetHouseMeshByIndex(meshIndex);
+
+            // If the command exists, increment its instance count
+            auto it = commandMap.find(meshIndex);
+            if (it != commandMap.end()) {
+                commands[it->second].instanceCount++;
+            }
+            // Otherwise create a new command
+            else {
+                std::size_t index = commands.size();
+                auto& cmd = commands.emplace_back();
+                cmd.indexCount = mesh->indexCount;
+                cmd.firstIndex = mesh->baseIndex;
+                cmd.baseVertex = mesh->baseVertex;
+                cmd.baseInstance = EncodeBaseInstance(viewportIndex, instanceOffset);
+                cmd.instanceCount = 1;
+
+                commandMap[meshIndex] = index;
+            }
+            instanceOffset++;
+        }
+    }
+
+
+
+
+
+
+
+
+
 
     void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters) {
         // Store the instance offset for this list of commands
@@ -696,10 +774,10 @@ namespace RenderDataManager {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            CreateDrawCommandsSkinned(set.skinnedGeometry[i], g_skinnedRenderItems, i);
-            CreateDrawCommandsSkinned(set.skinnedGeometryAlphaDiscard[i], g_skinnedRenderItemsAlphaDiscard, i);
-            CreateDrawCommandsSkinned(set.skinnedGeometryBlended[i], g_skinnedRenderItemsBlended, i);
-            CreateDrawCommandsSkinned(set.skinnedGeometryHair[i], g_skinnedRenderItemsHair, i);
+            CreateDrawCommandsSkinned(set.skinnedStandard[i], g_skinnedRenderItems, i);
+            CreateDrawCommandsSkinned(set.skinnedAlphaDiscard[i], g_skinnedRenderItemsAlphaDiscard, i);
+            CreateDrawCommandsSkinned(set.skinnedBlended[i], g_skinnedRenderItemsBlended, i);
+            CreateDrawCommandsSkinned(set.skinnedHair[i], g_skinnedRenderItemsHair, i);
         }
 
         // Combine all into a single vector for the compute skinning pass
@@ -723,9 +801,9 @@ namespace RenderDataManager {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            CreateDrawCommandsNonDeformingSkinned(set.skinnedNonDeformingAlphaDiscarded[i], g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard, i);
+            CreateDrawCommandsNonDeformingSkinned(set.skinnedNonDeformingAlphaDiscard[i], g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard, i);
             CreateDrawCommandsNonDeformingSkinned(set.skinnedNonDeformingBlended[i], g_skinnedNonDeformingSkinnedMeshRenderItemsBlended, i);
-            CreateDrawCommandsNonDeformingSkinned(set.skinnedNonDeformingDefault[i], g_skinnedNonDeformingSkinnedMeshRenderItems, i);
+            CreateDrawCommandsNonDeformingSkinned(set.skinnedNonDeformingStandard[i], g_skinnedNonDeformingSkinnedMeshRenderItems, i);
             CreateDrawCommandsNonDeformingSkinned(set.skinnedNonDeformingHair[i], g_skinnedNonDeformingSkinnedMeshRenderItemsHair, i);
         }
     }
@@ -877,7 +955,7 @@ namespace RenderDataManager {
     }
 
     const std::vector<HouseRenderItem>& GetHouseRenderItems() {
-        return g_houseRenderItems;
+        return g_houseRenderItemsOLD;
     }
 
     const std::vector<HouseRenderItem>& GetHouseOutlineRenderItems() {
@@ -975,7 +1053,7 @@ namespace RenderDataManager {
         IESProfile* iesProfile = AssetManager::GetIESProfileByIESProfileType(light->GetIESProfileType());
         if (iesProfile) {
             gpuLight.iesExposure = light->GetIESExposure();
-            gpuLight.textureIndex = iesProfile->GetTextureIndex();
+            gpuLight.iesTextureIndex = iesProfile->GetTextureIndex();
             gpuLight.iesVScale = iesProfile->GetVScale();
             gpuLight.iesVBias = iesProfile->GetVBias();
             gpuLight.iesHScale = iesProfile->GetHScale();
@@ -1024,9 +1102,13 @@ namespace RenderDataManager {
         g_stainedGlassRenderItems.insert(g_stainedGlassRenderItems.begin(), renderItems.begin(), renderItems.end());
     }
 
-    void SubmitHouseRenderItem(const HouseRenderItem& renderItem) {
-        g_houseRenderItems.push_back(renderItem);
-    }
+	void SubmitHouseRenderItemOLD(const HouseRenderItem& renderItem) {
+		g_houseRenderItemsOLD.push_back(renderItem);
+	}
+
+	void SubmitHouseRenderItem(const RenderItem& renderItem) {
+		g_houseRenderItems.push_back(renderItem);
+	}
 
 	void SubmitRenderItemsPlastic(const std::vector<RenderItem>& renderItems) {
         g_renderItemsPlastic.insert(g_renderItemsPlastic.begin(), renderItems.begin(), renderItems.end());
@@ -1057,7 +1139,7 @@ namespace RenderDataManager {
     }
 
     void SubmitHouseRenderItems(const std::vector<HouseRenderItem>& renderItems) {
-        g_houseRenderItems.insert(g_houseRenderItems.begin(), renderItems.begin(), renderItems.end());
+        g_houseRenderItemsOLD.insert(g_houseRenderItemsOLD.begin(), renderItems.begin(), renderItems.end());
     }
 
     void SubmitOutlineRenderItem(const RenderItem& renderItem) {

@@ -72,23 +72,24 @@ struct Light {
 
     Frustum* GetFrustumByFaceIndex(uint32_t faceIndex);
 
-    MeshNodes& GetMeshNodes()                               { return m_meshNodes; }
-    LightType GetType() const                               { return m_createInfo.type; }
-    const glm::mat4 GetProjectionView(int index) const      { return m_projectionTransforms[index]; }
-    const bool IsDirtyForShadowMaps() const                 { return m_dirtyForShadowMaps; }
-    const bool IsDirtyForRaytracing() const                 { return m_dirtyForRaytracing; }
-    const float GetRadius() const                           { return m_createInfo.radius; }
-    const float GetStrength() const                         { return m_createInfo.strength; }
-    const float GetTwist() const                            { return m_createInfo.twist; }
-    const glm::vec3& GetPosition() const                    { return m_createInfo.position; }
-    const glm::vec3& GetRotation() const                    { return m_createInfo.rotation; }
-    const glm::vec3& GetForward() const                     { return m_createInfo.forward; }
-    const glm::vec3& GetColor() const                       { return m_createInfo.color; }
-    const uint64_t GetObjectId() const                      { return m_objectId; }
-    const LightCreateInfo& GetCreateInfo() const            { return m_createInfo; };
-    const std::vector<RenderItem>& GetRenderItems() const   { return m_meshNodes.GetRenderItems(); }
-    const IESProfileType GetIESProfileType() const          { return m_createInfo.iesProfileType; }
-    const float GetIESExposure() const                      { return m_createInfo.iesExposure; }
+    MeshNodes& GetMeshNodes()                                  { return m_meshNodes; }
+    LightType GetType() const                                  { return m_createInfo.type; }
+    const glm::mat4 GetProjectionView(int index) const         { return m_projectionTransforms[index]; }
+	const glm::mat4 GetProjectionViewReverseZ(int index) const { return m_projectionTransformsReverseZ[index]; }
+    const bool IsDirtyForShadowMaps() const                    { return m_dirtyForShadowMaps; }
+    const bool IsDirtyForRaytracing() const                    { return m_dirtyForRaytracing; }
+    const float GetRadius() const                              { return m_createInfo.radius; }
+    const float GetStrength() const                            { return m_createInfo.strength; }
+    const float GetTwist() const                               { return m_createInfo.twist; }
+    const glm::vec3& GetPosition() const                       { return m_createInfo.position; }
+    const glm::vec3& GetRotation() const                       { return m_createInfo.rotation; }
+    const glm::vec3& GetForward() const                        { return m_createInfo.forward; }
+    const glm::vec3& GetColor() const                          { return m_createInfo.color; }
+    const uint64_t GetObjectId() const                         { return m_objectId; }
+    const LightCreateInfo& GetCreateInfo() const               { return m_createInfo; };
+    const std::vector<RenderItem>& GetRenderItems() const      { return m_meshNodes.GetRenderItems(); }
+    const IESProfileType GetIESProfileType() const             { return m_createInfo.iesProfileType; }
+    const float GetIESExposure() const                         { return m_createInfo.iesExposure; }
 
     // Remove me
     const glm::vec3& GetCullBoundsMin() const { return m_createInfo.cullBoundsMin; }
@@ -108,8 +109,9 @@ private:
     uint64_t m_objectId = 0;
     std::vector<RenderItem> m_renderItems;
     LightCreateInfo m_createInfo;
-    Frustum m_frustum[6];
-    glm::mat4 m_projectionTransforms[6];
+	Frustum m_frustum[6];
+	glm::mat4 m_projectionTransforms[6];
+	glm::mat4 m_projectionTransformsReverseZ[6];
     glm::mat4 m_viewMatrix[6];
 
     // Your light is basically made of 3 things. A main model/transform which for most lights is the main model.

@@ -50,7 +50,8 @@ namespace RenderDataManager {
     void SubmitAnimatedMeshNodes(const AnimatedMeshNodes& animatedMeshNodes);
 
     // House submissions
-    void SubmitHouseRenderItem(const HouseRenderItem& renderItem);
+    void SubmitHouseRenderItem(const RenderItem& renderItem);
+    void SubmitHouseRenderItemOLD(const HouseRenderItem& renderItem);
     void SubmitHouseRenderItems(const std::vector<HouseRenderItem>& renderItems);
     void SubmitOutlineRenderItem(const HouseRenderItem& renderItem);
     void SubmitOutlineRenderItems(const std::vector<HouseRenderItem>& renderItems);

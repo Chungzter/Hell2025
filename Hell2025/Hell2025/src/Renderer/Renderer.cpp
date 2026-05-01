@@ -4,6 +4,7 @@
 #include "API/Vulkan/Renderer/VK_renderer.h"
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
+#include "Core/Debug.h"
 #include "Editor/Editor.h"
 #include <Hell/Logging.h>
 #include "Timer.hpp"
@@ -12,6 +13,7 @@ namespace Renderer {
 
     std::vector<bool> g_freeWoundMaskIndices;
     bool g_gameIsRendering = false;
+    bool g_msaaEnabled = false;
 
     void InitMain() {
         if (BackEnd::GetAPI() == API::OPENGL) {
@@ -60,7 +62,9 @@ namespace Renderer {
         }
     }
 
-    void HotloadShaders() {
+	void HotloadShaders() {
+		Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+
         if (BackEnd::GetAPI() == API::OPENGL) {
             OpenGLRenderer::HotloadShaders();
         }
@@ -286,7 +290,18 @@ namespace Renderer {
 		return (resolutions.gBuffer.y + TILE_SIZE - 1) / TILE_SIZE;
     }
 
+    void ToggleMSAA() {
+        g_msaaEnabled = !g_msaaEnabled;
+
+        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        Debug::BlitQuickDebugMessage(g_msaaEnabled ? "MSAA Enabled" : "MSAA Disabled");
+    }
+
     bool GameIsRendering() {
-        return g_gameIsRendering = true;
+        return g_gameIsRendering;
+    }
+
+    bool MSAAEnabled() {
+        return g_msaaEnabled;
     }
 }

@@ -203,7 +203,7 @@ namespace World {
     Light* GetLightByIndex(int32_t index);
     Tree* GetTreeByIndex(int32_t index);
 
-    int32_t GetLightCount();
+    uint32_t GetLightCount();
 
     Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects();
     Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets();

@@ -242,23 +242,43 @@ namespace OpenGLRenderer {
             rendererSettings.rendererOverrideState == RendererOverrideState::ROUGHNESS ||
             rendererSettings.rendererOverrideState == RendererOverrideState::INDIRECT_DIFFUSE) {
 
-            OpenGLShader* shader = GetShader("DebugView");
+            std::string shaderName = Renderer::MSAAEnabled() ? "DebugViewMSAA" : "DebugView";
+
+            OpenGLShader* shader = GetShader(shaderName);
             if (!shader) return;
 
             shader->Bind();
             shader->SetFloat("u_brushSize", Editor::GetMapHeightBrushSize());
             shader->SetBool("u_heightMapEditor", (Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Editor::IsOpen());
-            glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 
-            glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
-            glBindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
-            glBindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
-            glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-            glBindTextureUnit(5, miscFullSizeFBO->GetColorAttachmentHandleByName("ViewportIndex"));
-            glBindTextureUnit(7, gBuffer->GetColorAttachmentHandleByName("Emissive"));
-            glBindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
+            if (Renderer::MSAAEnabled()) {
+                OpenGLFrameBuffer* msaaFbo = GetFrameBuffer("MSAA");
+                OpenGLFrameBuffer* resolveFbo = GetFrameBuffer("Resolve");
+                glBindImageTexture(0, resolveFbo->GetColorAttachmentHandleByName("Color"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 
-            glDispatchCompute(gBuffer->GetWidth() / TILE_SIZE, gBuffer->GetHeight() / TILE_SIZE, 1);
+                //glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
+                glBindTextureUnit(2, resolveFbo->GetColorAttachmentHandleByName("Normal"));
+                glBindTextureUnit(3, msaaFbo->GetColorAttachmentHandleByName("Material"));
+                //glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
+                //glBindTextureUnit(5, miscFullSizeFBO->GetColorAttachmentHandleByName("ViewportIndex"));
+                //glBindTextureUnit(7, gBuffer->GetColorAttachmentHandleByName("Emissive"));
+                glBindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
+
+                glDispatchCompute(resolveFbo->GetWidth() / TILE_SIZE, resolveFbo->GetHeight() / TILE_SIZE, 1);
+            }
+            else {
+                glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+
+                glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
+                glBindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
+                glBindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
+                glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
+                glBindTextureUnit(5, miscFullSizeFBO->GetColorAttachmentHandleByName("ViewportIndex"));
+                glBindTextureUnit(7, gBuffer->GetColorAttachmentHandleByName("Emissive"));
+                glBindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
+
+                glDispatchCompute(gBuffer->GetWidth() / TILE_SIZE, gBuffer->GetHeight() / TILE_SIZE, 1);
+            }
         }
     }
 

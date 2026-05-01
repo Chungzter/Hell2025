@@ -67,7 +67,7 @@ namespace OpenGLRenderer {
 		depthPeeledTransparencyFbo->DrawBuffers({ "Composite", });
 
 
-		SetRasterizerState("GeometryPass_Default");
+		ForceRasterizerState("GeometryPass_Default");
 
 		glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
 		glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());

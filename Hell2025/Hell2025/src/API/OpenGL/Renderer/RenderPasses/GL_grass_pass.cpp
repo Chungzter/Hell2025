@@ -160,7 +160,7 @@ namespace OpenGLRenderer {
         glBindTextureUnit(3, roadFramebuffer->GetColorAttachmentHandleByName("RoadMask"));
 
         // GL State
-        SetRasterizerState("GeometryPass_Default");
+        ForceRasterizerState("GeometryPass_Default");
 
         // Generate and draw
         for (int i = 0; i < 4; i++) {   // CHANGE TO VIEWPORT NOT PLAYER!!!!

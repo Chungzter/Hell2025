@@ -64,8 +64,7 @@ namespace OpenGLRenderer {
 
     void LoadShaders();
     void CreateFrameBuffers();
-	void CreateSSBOs();
-	void InitSSBOs();
+
 
     IndirectBuffer g_indirectBuffer;
 
@@ -110,6 +109,8 @@ namespace OpenGLRenderer {
         InitFog();
         InitGrass();
         InitOceanHeightReadback();
+
+        InitMSAA();
     }
 
     void InitMain() {
@@ -257,143 +258,127 @@ namespace OpenGLRenderer {
     }
 
     void LoadShaders() {
-        g_shaders["ChristmasLightCulling"] = OpenGLShader({ "GL_christmas_light_culling.comp" });
-        g_shaders["ChristmasLightsWire"] = OpenGLShader({ "GL_christmas_light_wire.vert", "GL_christmas_light_wire.frag" });
+        LoadShader("ChristmasLightCulling", { "GL_christmas_light_culling.comp" });
+        LoadShader("ChristmasLightsWire", { "GL_christmas_light_wire.vert", "GL_christmas_light_wire.frag" });
+        LoadShader("BlitRoad", { "GL_blit_road.comp" });
+        LoadShader("BlurHorizontal", { "GL_blur_horizontal.vert", "GL_blur.frag" });
+        LoadShader("BlurVertical", { "GL_blur_vertical.vert", "GL_blur.frag" });
+        LoadShader("ComputeSkinning", { "GL_compute_skinning.comp" });
+        LoadShader("TileWorldBounds", { "GL_tile_world_bounds.comp" });
+        LoadShader("DecalPaintUVs", { "gl_decal_paint_uvs.vert", "gl_decal_paint_uvs.frag" });
+        LoadShader("DecalPaintMask", { "gl_decal_paint_mask.comp" });
+        LoadShader("Decals", { "GL_decals.vert", "GL_decals.frag" });
+        LoadShader("DownSample2xBox", { "GL_down_sample_2x_box.comp" });
+        LoadShader("EditorMesh", { "GL_editor_mesh.vert", "GL_editor_mesh.frag" });
+        LoadShader("ExamineItem", { "GL_examine_item.vert", "GL_examine_item.frag" });
+        LoadShader("FogRayMarch", { "GL_fog_ray_march.comp" });
+        LoadShader("FogComposite", { "GL_fog_composite.comp" });
+        LoadShader("FttRadix64Vertical", { "GL_ftt_radix_64_vertical.comp" });
+        LoadShader("FttRadix8Vertical", { "GL_ftt_radix_8_vertical.comp" });
+        LoadShader("FttRadix64Horizontal", { "GL_ftt_radix_64_horizontal.comp" });
+        LoadShader("FttRadix8Horizontal", { "GL_ftt_radix_8_horizontal.comp" });
+        LoadShader("Fur", { "GL_fur.vert", "GL_fur.frag" });
+        LoadShader("FurComposite", { "GL_fur_composite.comp" });
+        LoadShader("EmissiveComposite", { "GL_emissive_composite.comp" });
+        LoadShader("GBuffer", { "GL_GBuffer.vert", "GL_gBuffer.frag" });
+        LoadShader("Gizmo", { "GL_gizmo.vert", "GL_gizmo.frag" });
+        LoadShader("Glass", { "GL_glass.vert", "GL_glass.frag" });
+        LoadShader("GlassComposite", { "GL_glass_composite.comp" });
+        LoadShader("Grass", { "GL_grass.vert", "GL_grass.frag" });
+        LoadShader("GrassGeometryGeneration", { "GL_grass_geometry_generation.comp" });
+        LoadShader("GrassPositionGeneration", { "GL_grass_position_generation.comp" });
+        LoadShader("GaussianBlurUtil", { "GL_gaussian_blur_util.comp" });
+        LoadShader("HairDepthPeel", { "GL_hair_depth_peel.vert", "GL_hair_depth_peel.frag" });
+        LoadShader("HairFinalComposite", { "GL_hair_final_composite.comp" });
+        LoadShader("HairLighting", { "GL_hair_lighting.vert", "GL_hair_lighting.frag" });
+        LoadShader("HeightMapColor", { "GL_heightmap_color.vert", "GL_heightmap_color.frag" });
+        LoadShader("HeightMapImageGeneration", { "GL_heightmap_image_generation.comp" });
+        LoadShader("HeightMapPhysxTextureGeneration", { "GL_heightmap_physx_texture_generation.comp" });
+        LoadShader("HeightMapToWorldBlit", { "GL_heightmap_to_world_blit.comp" });
+        LoadShader("HeightMapVertexGeneration", { "GL_heightmap_vertex_generation.comp" });
+        LoadShader("HeightMapPaint", { "GL_heightmap_paint.comp" });
+        LoadShader("LightCulling", { "GL_light_culling.comp" });
+        LoadShader("Lighting", { "GL_lighting.comp" });
+        LoadShader("CSMLighting", { "GL_lighting.vert", "GL_lighting.frag" });
+        LoadShader("OceanSurfaceComposite", { "GL_ocean_surface_composite.comp" });
+        LoadShader("OceanGeometry", { "GL_ocean_geometry.vert", "GL_ocean_geometry.frag", "GL_ocean_geometry.tesc", "GL_ocean_geometry.tese" });
+        LoadShader("OceanCalculateSpectrum", { "GL_ocean_calculate_spectrum.comp" });
+        LoadShader("OceanUpdateTextures", { "GL_ocean_update_textures.comp" });
+        LoadShader("OceanUnderwaterComposite", { "GL_ocean_underwater_composite.comp" });
+        LoadShader("OceanUnderwaterMaskPreProcess", { "GL_ocean_underwater_mask_preprocess.comp" });
+        LoadShader("OceanTesseleationEdgeTransitionCleanUp", { "GL_ocean_tessellation_edge_transition_cleanup.comp" });
+        LoadShader("OceanPositionReadback", { "GL_ocean_position_readback.comp" });
+        LoadShader("GaussianBlur", { "GL_gaussian_blur.comp" }); // am I needed????
+        LoadShader("Outline", { "GL_outline.vert", "GL_outline.frag" });
+        LoadShader("OutlineComposite", { "GL_outline_composite.comp" });
+        LoadShader("OutlineMask", { "GL_outline_mask.vert", "GL_outline_mask.frag" });
+        LoadShader("PerlinNoise3D", { "GL_perlin_noise_3d.comp" });
+        LoadShader("PostProcessing", { "GL_post_processing.comp" });
+        LoadShader("ShadowMap", { "GL_shadow_map.vert", "GL_shadow_map.frag" });
+        LoadShader("ShadowCubeMap", { "GL_shadow_cube_map.vert", "GL_shadow_cube_map.frag" });
+        LoadShader("SolidColor", { "GL_solid_color.vert", "GL_solid_color.frag" });
+        LoadShader("Skybox", { "GL_skybox.vert", "GL_skybox.frag" });
+        LoadShader("SpriteSheet", { "GL_sprite_sheet.vert", "GL_sprite_sheet.frag" });
+        LoadShader("ScreenspaceReflections", { "GL_screenspace_reflections.comp" });
+        LoadShader("StainedGlass", { "GL_stained_glass.vert", "GL_stained_glass.frag" });
+        LoadShader("UI", { "GL_ui.vert", "GL_ui.frag" });
+        LoadShader("Winston", { "GL_winston.vert", "GL_winston.frag" });
+        LoadShader("CSMDepth", { "GL_csm_depth.vert", "GL_csm_depth.frag", "GL_csm_depth.geom" });
+        LoadShader("ZeroOut", { "GL_zero_out.comp" });
+        LoadShader("VatBlood", { "GL_vat_blood.vert", "GL_vat_blood.frag" });
+        LoadShader("BloodDecalsCulling", { "GL_blood_decals_culling.comp" });
+        LoadShader("BloodDecalsDraw", { "GL_blood_decals_draw.vert", "GL_blood_decals_draw.frag" });
+        LoadShader("BloodDecalsComposite", { "GL_blood_decals_composite.comp" });
+        LoadShader("BloodDecalsRaster", { "GL_blood_decals_raster.vert", "GL_blood_decals_raster.frag" });
+        LoadShader("MetaBalls", { "GL_meta_balls.vert", "GL_meta_balls.frag"});
+        LoadShader("BloodFluidDepth", { "GL_blood_fluid.vert", "GL_blood_fluid_depth.frag" });
+        LoadShader("BloodFluidThickness", { "GL_blood_fluid.vert", "GL_blood_fluid_thickness.frag" });
+        LoadShader("BloodFluidBlur", { "GL_blood_fluid_blur.comp" });
+        LoadShader("MetaBalls", { "GL_meta_balls.vert", "GL_meta_balls.frag" });
+		LoadShader("ViewspaceDepth", { "GL_viewspace_depth.comp" });
+		LoadShader("DepthPeeledTransparencyColor", { "GL_depth_peeled_transparency_color.vert", "GL_depth_peeled_transparency_color.frag" });
+		LoadShader("DepthPeeledTransparencyDepth", { "GL_depth_peeled_transparency_depth.vert", "GL_depth_peeled_transparency_depth.frag" });
+        LoadShader("DepthPeeledTransparencyComposite", { "GL_depth_peeled_transparency_composite.comp" });
+        LoadShader("RaytraceScene", { "GL_raytrace_scene.comp" });
+		LoadShader("Plastic", { "GL_plastic.vert", "GL_plastic.frag" });
 
-        g_shaders["BlitRoad"] = OpenGLShader({ "GL_blit_road.comp" });
-        g_shaders["BlurHorizontal"] = OpenGLShader({ "GL_blur_horizontal.vert", "GL_blur.frag" });
-        g_shaders["BlurVertical"] = OpenGLShader({ "GL_blur_vertical.vert", "GL_blur.frag" });
-        g_shaders["ComputeSkinning"] = OpenGLShader({ "GL_compute_skinning.comp" });
-        g_shaders["TileWorldBounds"] = OpenGLShader({ "GL_tile_world_bounds.comp" });
-        g_shaders["DebugSolidColor"] = OpenGLShader({ "GL_debug_solid_color.vert", "GL_debug_solid_color.frag" });
-        g_shaders["DebugRagdoll"] = OpenGLShader({ "GL_debug_ragdoll.vert", "GL_debug_ragdoll.frag" });
-        g_shaders["DebugTextureBlit"] = OpenGLShader({ "GL_debug_texture_blit.vert", "GL_debug_texture_blit.frag" });
-        g_shaders["DebugTextured"] = OpenGLShader({ "GL_debug_textured.vert", "GL_debug_textured.frag" });
-        g_shaders["DebugView"] = OpenGLShader({ "GL_debug_view.comp" });
-        g_shaders["DebugTileView"] = OpenGLShader({ "GL_debug_tile_view.comp" });
-        g_shaders["DebugVertex2D"] = OpenGLShader({ "GL_debug_vertex_2D.vert", "GL_debug_vertex_2D.frag" });
-        g_shaders["DebugVertex3D"] = OpenGLShader({ "GL_debug_vertex_3D.vert", "GL_debug_vertex_3D.frag" });
-        g_shaders["DecalPaintUVs"] = OpenGLShader({ "gl_decal_paint_uvs.vert", "gl_decal_paint_uvs.frag" });
-        g_shaders["DecalPaintMask"] = OpenGLShader({ "gl_decal_paint_mask.comp" });
-        g_shaders["Decals"] = OpenGLShader({ "GL_decals.vert", "GL_decals.frag" });
-        g_shaders["DownSample2xBox"] = OpenGLShader({ "GL_down_sample_2x_box.comp" });
+        // Debug
+        LoadShader("Debug", "DebugHackAABB", { "GL_debug_hack_aabb.vert", "GL_debug_hack_aabb.frag" });
+        LoadShader("Debug", "DebugLightAABB", { "GL_debug_light_aabb.vert", "GL_debug_light_aabb.frag" });
+        LoadShader("Debug", "DebugPointCloud", { "GL_debug_point_cloud.vert", "GL_debug_point_cloud.frag" });
+        LoadShader("Debug", "DebugProbes", { "GL_debug_probes.vert", "GL_debug_probes.frag" });
+        LoadShader("Debug", "DebugRagdoll", { "GL_debug_ragdoll.vert", "GL_debug_ragdoll.frag" });
+        LoadShader("Debug", "DebugSolidColor", { "GL_debug_solid_color.vert", "GL_debug_solid_color.frag" });
+        LoadShader("Debug", "DebugTextureBlit", { "GL_debug_texture_blit.vert", "GL_debug_texture_blit.frag" });
+        LoadShader("Debug", "DebugTextured", { "GL_debug_textured.vert", "GL_debug_textured.frag" });
+        LoadShader("Debug", "DebugTileView", { "GL_debug_tile_view.comp" });
+        LoadShader("Debug", "DebugVertex2D", { "GL_debug_vertex_2D.vert", "GL_debug_vertex_2D.frag" });
+        LoadShader("Debug", "DebugVertex3D", { "GL_debug_vertex_3D.vert", "GL_debug_vertex_3D.frag" });
+        LoadShader("Debug", "DebugView", { "GL_debug_view.comp" });
+        LoadShader("Debug", "DebugViewMSAA", { "GL_debug_view.comp" }, { "MSAA_ENABLED" });
 
+        // DDGI
+		LoadShader("DDGI", "PointCloudBaseColor", { "GL_point_cloud_basecolor.comp" });
+        LoadShader("DDGI", "PointCloudLighting", { "GL_point_cloud_lighting.comp" });
+        LoadShader("DDGI", "ProbeDistance", { "GL_probe_distance.comp" });
+        LoadShader("DDGI", "ProbeDistanceBorder", { "GL_probe_distance_border.comp" });
+        LoadShader("DDGI", "ProbeDistanceDispatchArgs", { "GL_probe_distance_dispatch_args.comp" });
+        LoadShader("DDGI", "ProbeDistanceList", { "GL_probe_distance_list.comp" });
+        LoadShader("DDGI", "ProbeIrradiance", { "GL_probe_irradiance.comp" });
+        LoadShader("DDGI", "ProbeIrradianceBorder", { "GL_probe_irradiance_border.comp" });
+        LoadShader("DDGI", "ProbeIrradianceDirtyPointCheck", { "GL_probe_irradiance_dirty_point_check.comp" });
+		LoadShader("DDGI", "ProbeIrradianceList", { "GL_probe_irradiance_list.comp" });
+        LoadShader("DDGI", "ProbeIrradianceTexture", { "GL_probe_irradiance_texture.comp" });
+        LoadShader("DDGI", "ProbeLightingDispatchArgs", { "GL_probe_lighting_dispatch_args.comp" });
+        LoadShader("DDGI", "ProbePointIndices", { "GL_probe_point_indices.comp" });
+        LoadShader("DDGI", "ProbeRelevance", { "GL_probe_relevance.comp" });
+        LoadShader("DDGI", "ProbeRelocation", { "GL_probe_state_update.comp" });
+        LoadShader("DDGI", "ProbeStateUpdate", { "GL_probe_state_update.comp" });
 
-        g_shaders["EditorMesh"] = OpenGLShader({ "GL_editor_mesh.vert", "GL_editor_mesh.frag" });
-        g_shaders["ExamineItem"] = OpenGLShader({ "GL_examine_item.vert", "GL_examine_item.frag" });
-        g_shaders["FogRayMarch"] = OpenGLShader({ "GL_fog_ray_march.comp" });
-        g_shaders["FogComposite"] = OpenGLShader({ "GL_fog_composite.comp" });
-        g_shaders["FttRadix64Vertical"] = OpenGLShader({ "GL_ftt_radix_64_vertical.comp" });
-        g_shaders["FttRadix8Vertical"] = OpenGLShader({ "GL_ftt_radix_8_vertical.comp" });
-        g_shaders["FttRadix64Horizontal"] = OpenGLShader({ "GL_ftt_radix_64_horizontal.comp" });
-        g_shaders["FttRadix8Horizontal"] = OpenGLShader({ "GL_ftt_radix_8_horizontal.comp" });
-        g_shaders["Fur"] = OpenGLShader({ "GL_fur.vert", "GL_fur.frag" });
-        g_shaders["FurComposite"] = OpenGLShader({ "GL_fur_composite.comp" });
-        g_shaders["EmissiveComposite"] = OpenGLShader({ "GL_emissive_composite.comp" });
-        g_shaders["GBuffer"] = OpenGLShader({ "GL_GBuffer.vert", "GL_gBuffer.frag" });
-        g_shaders["Gizmo"] = OpenGLShader({ "GL_gizmo.vert", "GL_gizmo.frag" });
-        g_shaders["Glass"] = OpenGLShader({ "GL_glass.vert", "GL_glass.frag" });
-        g_shaders["GlassComposite"] = OpenGLShader({ "GL_glass_composite.comp" });
-        g_shaders["Grass"] = OpenGLShader({ "GL_grass.vert", "GL_grass.frag" });
-        g_shaders["GrassGeometryGeneration"] = OpenGLShader({ "GL_grass_geometry_generation.comp" });
-        g_shaders["GrassPositionGeneration"] = OpenGLShader({ "GL_grass_position_generation.comp" });
-        g_shaders["GaussianBlurUtil"] = OpenGLShader({ "GL_gaussian_blur_util.comp" });
-        g_shaders["HairDepthPeel"] = OpenGLShader({ "GL_hair_depth_peel.vert", "GL_hair_depth_peel.frag" });
-        g_shaders["HairFinalComposite"] = OpenGLShader({ "GL_hair_final_composite.comp" });
-        g_shaders["HairLighting"] = OpenGLShader({ "GL_hair_lighting.vert", "GL_hair_lighting.frag" });
-        g_shaders["HeightMapColor"] = OpenGLShader({ "GL_heightmap_color.vert", "GL_heightmap_color.frag" });
-        g_shaders["HeightMapImageGeneration"] = OpenGLShader({ "GL_heightmap_image_generation.comp" });
-        g_shaders["HeightMapPhysxTextureGeneration"] = OpenGLShader({ "GL_heightmap_physx_texture_generation.comp" });
-        g_shaders["HeightMapToWorldBlit"] = OpenGLShader({ "GL_heightmap_to_world_blit.comp" });
-        g_shaders["HeightMapVertexGeneration"] = OpenGLShader({ "GL_heightmap_vertex_generation.comp" });
-        g_shaders["HeightMapPaint"] = OpenGLShader({ "GL_heightmap_paint.comp" });
-        g_shaders["LightCulling"] = OpenGLShader({ "GL_light_culling.comp" });
-        g_shaders["Lighting"] = OpenGLShader({ "GL_lighting.comp" });
-        g_shaders["CSMLighting"] = OpenGLShader({ "GL_lighting.vert", "GL_lighting.frag" });
-        g_shaders["OceanSurfaceComposite"] = OpenGLShader({ "GL_ocean_surface_composite.comp" });
-        g_shaders["OceanGeometry"] = OpenGLShader({ "GL_ocean_geometry.vert", "GL_ocean_geometry.frag", "GL_ocean_geometry.tesc", "GL_ocean_geometry.tese" });
-        g_shaders["OceanCalculateSpectrum"] = OpenGLShader({ "GL_ocean_calculate_spectrum.comp" });
-        g_shaders["OceanUpdateTextures"] = OpenGLShader({ "GL_ocean_update_textures.comp" });
-        g_shaders["OceanUnderwaterComposite"] = OpenGLShader({ "GL_ocean_underwater_composite.comp" });
-        g_shaders["OceanUnderwaterMaskPreProcess"] = OpenGLShader({ "GL_ocean_underwater_mask_preprocess.comp" });
-        g_shaders["OceanTesseleationEdgeTransitionCleanUp"] = OpenGLShader({ "GL_ocean_tessellation_edge_transition_cleanup.comp" });
-        g_shaders["OceanPositionReadback"] = OpenGLShader({ "GL_ocean_position_readback.comp" });
-        g_shaders["GaussianBlur"] = OpenGLShader({ "GL_gaussian_blur.comp" }); // am I needed????
-        g_shaders["Outline"] = OpenGLShader({ "GL_outline.vert", "GL_outline.frag" });
-        g_shaders["OutlineComposite"] = OpenGLShader({ "GL_outline_composite.comp" });
-        g_shaders["OutlineMask"] = OpenGLShader({ "GL_outline_mask.vert", "GL_outline_mask.frag" });
-        g_shaders["PointCloudLighting"] = OpenGLShader({ "GL_point_cloud_lighting.comp" });
-        g_shaders["PerlinNoise3D"] = OpenGLShader({ "GL_perlin_noise_3d.comp" });
-        g_shaders["PostProcessing"] = OpenGLShader({ "GL_post_processing.comp" });
-        g_shaders["ShadowMap"] = OpenGLShader({ "GL_shadow_map.vert", "GL_shadow_map.frag" });
-        g_shaders["ShadowCubeMap"] = OpenGLShader({ "GL_shadow_cube_map.vert", "GL_shadow_cube_map.frag" });
-        g_shaders["SolidColor"] = OpenGLShader({ "GL_solid_color.vert", "GL_solid_color.frag" });
-        g_shaders["Skybox"] = OpenGLShader({ "GL_skybox.vert", "GL_skybox.frag" });
-        g_shaders["SpriteSheet"] = OpenGLShader({ "GL_sprite_sheet.vert", "GL_sprite_sheet.frag" });
-
-        g_shaders["ScreenspaceReflections"] = OpenGLShader({ "GL_screenspace_reflections.comp" });
-
-        g_shaders["StainedGlass"] = OpenGLShader({ "GL_stained_glass.vert", "GL_stained_glass.frag" });
-        g_shaders["UI"] = OpenGLShader({ "GL_ui.vert", "GL_ui.frag" });
-        g_shaders["Winston"] = OpenGLShader({ "GL_winston.vert", "GL_winston.frag" });
-        g_shaders["CSMDepth"] = OpenGLShader({ "GL_csm_depth.vert", "GL_csm_depth.frag", "GL_csm_depth.geom" });
-        g_shaders["ZeroOut"] = OpenGLShader({ "GL_zero_out.comp" });
-        g_shaders["VatBlood"] = OpenGLShader({ "GL_vat_blood.vert", "GL_vat_blood.frag" });
-
-        g_shaders["BloodDecalsCulling"] = OpenGLShader({ "GL_blood_decals_culling.comp" });
-        g_shaders["BloodDecalsDraw"] = OpenGLShader({ "GL_blood_decals_draw.vert", "GL_blood_decals_draw.frag" });
-        g_shaders["BloodDecalsComposite"] = OpenGLShader({ "GL_blood_decals_composite.comp" });
-
-
-        g_shaders["BloodDecalsRaster"] = OpenGLShader({ "GL_blood_decals_raster.vert", "GL_blood_decals_raster.frag" });
-
-        //g_shaders["MetaBallsOLD"] = OpenGLShader({ "GL_metaballs_OLD.comp" });
-        g_shaders["MetaBalls"] = OpenGLShader({ "GL_meta_balls.vert", "GL_meta_balls.frag"});
-
-
-        g_shaders["BloodFluidDepth"] = OpenGLShader({ "GL_blood_fluid.vert", "GL_blood_fluid_depth.frag" });
-        g_shaders["BloodFluidThickness"] = OpenGLShader({ "GL_blood_fluid.vert", "GL_blood_fluid_thickness.frag" });
-        g_shaders["BloodFluidBlur"] = OpenGLShader({ "GL_blood_fluid_blur.comp" });
-
-        g_shaders["MetaBalls"] = OpenGLShader({ "GL_meta_balls.vert", "GL_meta_balls.frag" });
-
-		g_shaders["ViewspaceDepth"] = OpenGLShader({ "GL_viewspace_depth.comp" });
-
-		g_shaders["DepthPeeledTransparencyColor"] = OpenGLShader({ "GL_depth_peeled_transparency_color.vert", "GL_depth_peeled_transparency_color.frag" });
-		g_shaders["DepthPeeledTransparencyDepth"] = OpenGLShader({ "GL_depth_peeled_transparency_depth.vert", "GL_depth_peeled_transparency_depth.frag" });
-		g_shaders["DepthPeeledTransparencyComposite"] = OpenGLShader({ "GL_depth_peeled_transparency_composite.comp" });
-
-		g_shaders["DebugProbes"] = OpenGLShader({ "GL_debug_probes.vert", "GL_debug_probes.frag" });
-		g_shaders["DebugPointCloud"] = OpenGLShader({ "GL_debug_point_cloud.vert", "GL_debug_point_cloud.frag" });
-
-        g_shaders["ProbeDistance"] = OpenGLShader({ "GL_probe_distance.comp" });
-        g_shaders["ProbeDistanceBorder"] = OpenGLShader({ "GL_probe_distance_border.comp" });
-		g_shaders["PointCloudBaseColor"] = OpenGLShader({ "GL_point_cloud_basecolor.comp" });
-        g_shaders["ProbeLightingDispatchArgs"] = OpenGLShader({ "GL_probe_lighting_dispatch_args.comp" });
-
-        g_shaders["RaytraceScene"] = OpenGLShader({ "GL_raytrace_scene.comp" });
-
-		g_shaders["Plastic"] = OpenGLShader({ "GL_plastic.vert", "GL_plastic.frag" });
-
-
-        LoadShader("ProbeRelevance", { "GL_probe_relevance.comp" });
-
-        LoadShader("ProbeIrradianceList", { "GL_probe_irradiance_list.comp" });
-        LoadShader("ProbeIrradianceTexture", { "GL_probe_irradiance_texture.comp" });
-        LoadShader("ProbeStateUpdate", { "GL_probe_state_update.comp" });
-        LoadShader("ProbeRelocation", { "GL_probe_state_update.comp" });
-        LoadShader("ProbeIrradianceBorder", { "GL_probe_irradiance_border.comp" });
-        LoadShader("ProbeIrradiance", { "GL_probe_irradiance.comp" });
-        LoadShader("ProbeIrradianceDirtyPointCheck", { "GL_probe_irradiance_dirty_point_check.comp" });
-        LoadShader("ProbeDistanceList", { "GL_probe_distance_list.comp" });
-        LoadShader("ProbeDistanceDispatchArgs", { "GL_probe_distance_dispatch_args.comp" });
-        LoadShader("ProbePointIndices", { "GL_probe_point_indices.comp" });
-
-		LoadShader("DebugHackAABB", { "GL_debug_hack_aabb.vert", "GL_debug_hack_aabb.frag" });
-		LoadShader("DebugLightAABB", { "GL_debug_light_aabb.vert", "GL_debug_light_aabb.frag" });
 
         LoadShader("LightAABBPosition", { "GL_light_aabb_position.vert", "GL_light_aabb_position.frag" });
         LoadShader("LightAABBMinMax", { "GL_light_aabb_min_max.comp" });
+
 
 		//LoadShader("TightLightAABBTest", { "GL_light_aabb_test.comp" }); // TODO: delete this shader from res/shaders/
     }
@@ -574,6 +559,11 @@ namespace OpenGLRenderer {
 
 
     void RenderGame() {
+        if (Renderer::MSAAEnabled()) {
+            RenderGameMSAA();
+            return;
+        }
+
         ProfilerOpenGLFrame();
 
         OpenGLFrameBuffer& gBuffer = g_frameBuffers["GBuffer"];
@@ -614,10 +604,7 @@ namespace OpenGLRenderer {
         TextureReadBackPass();
 
         // GI
-        static bool calculateGI = true;
-        if (calculateGI) {
-            UpdateGlobalIllumintation();
-        }
+        UpdateGlobalIllumintation();
 
         BindSSBO("Samplers", 0);
         BindSSBO("RendererData", 1);
@@ -694,10 +681,6 @@ namespace OpenGLRenderer {
         // Blit to swapchain
         OpenGLRenderer::BlitToDefaultFrameBuffer(&finalImageBuffer, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-        if (Input::KeyPressed(HELL_KEY_J)) {
-            calculateGI = !calculateGI;
-        }
-
         // Blit to swapchain
         //OpenGLRenderer::BlitToDefaultFrameBuffer(&gBuffer, "FinalLighting", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
@@ -772,6 +755,11 @@ namespace OpenGLRenderer {
     }
 
     void SplitMultiDrawIndirect(OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand>& commands, bool bindMaterial, bool bindWoundMaterial) {
+        if (!shader) {
+            Logging::Fatal() << "SplitMultiDrawIndirect(..) was called with nullptr shader\n";
+            return;
+        }
+
         const std::vector<RenderItem>& instanceData = RenderDataManager::GetInstanceData();
 
         for (const DrawIndexedIndirectCommand& command : commands) {
@@ -806,11 +794,11 @@ namespace OpenGLRenderer {
                 }
                 if (bindWoundMaterial) {
                     glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.woundBaseColorTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.additionalTextureIndex0)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE5);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.woundNormalMapTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.additionalTextureIndex1)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE6);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.woundRmaTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.additionalTextureIndex2)->GetGLTexture().GetHandle());
                 }
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, command.indexCount, GL_UNSIGNED_INT, (GLvoid*)(command.firstIndex * sizeof(GLuint)), command.baseVertex);
@@ -822,14 +810,24 @@ namespace OpenGLRenderer {
         // Reset the currently bound shader
         g_boundShader = nullptr;
 
+        std::string failedShaders = "FAILED TO HOTLOAD";
+
         bool allSucceeded = true;
         for (auto& [_, shader] : g_shaders) {
             if (!shader.Hotload()) {
-                allSucceeded = false;
+				allSucceeded = false;
+				failedShaders += "\n- ";
+				for (const std::string& path : shader.GetPaths()) {
+                    failedShaders += path + " ";
+                }
             }
         }
         if (allSucceeded) {
-            std::cout << "Hotloaded shaders\n";
+			std::cout << "Hotloaded shaders\n";
+            Debug::BlitQuickDebugMessage("HOTLOADED SHADERS\n");
+		}
+		else {
+			Debug::BlitQuickDebugMessage(failedShaders);
         }
     }
 
@@ -871,12 +869,19 @@ namespace OpenGLRenderer {
         glDispatchComputeIndirect(0);
     }
 
-    void LoadShader(const std::string& name, const std::vector<std::string>& shaderPaths) {
-        const auto [it, inserted] = g_shaders.try_emplace(name, shaderPaths);
+    void LoadShader(const std::string& name, const std::vector<std::string>& shaderPaths, const std::vector<std::string>& defines) {
+        const auto [it, inserted] = g_shaders.try_emplace(name, shaderPaths, "", defines);
         if (!inserted) {
             Logging::Error() << "Renderer::LoadShader() failed: '" << name << "' already exists\n";
         }
     }
+
+	void LoadShader(const std::string& subDirectory, const std::string& name, const std::vector<std::string>& shaderPaths, const std::vector<std::string>& defines) {
+		const auto [it, inserted] = g_shaders.try_emplace(name, shaderPaths, subDirectory, defines);
+		if (!inserted) {
+			Logging::Error() << "Renderer::LoadShader() failed: '" << name << "' already exists\n";
+		}
+	}
 
     void BindShader(const std::string& name) {
         OpenGLShader* shader = GetShader(name);
@@ -888,6 +893,12 @@ namespace OpenGLRenderer {
 
         g_boundShader = shader;
         g_boundShader->Bind();
+    }
+
+    void SetUniformBool(const std::string& name, bool value) {
+		if (g_boundShader) {
+			g_boundShader->SetBool(name, value);
+		}
     }
 
     void SetUniformInt(const std::string& name, int value) {
@@ -1022,6 +1033,24 @@ namespace OpenGLRenderer {
         return result.first->second;
     }
 
+    OpenGLFrameBuffer& CreateMultisampledFrameBuffer(const std::string& name, glm::ivec2 resolution, uint32_t sampleCount) {
+        return CreateMultisampledFrameBuffer(name, resolution.x, resolution.y, sampleCount);
+    }
+
+    OpenGLFrameBuffer& CreateMultisampledFrameBuffer(const std::string& name, int32_t width, int32_t height, uint32_t sampleCount) {
+        auto it = g_frameBuffers.find(name);
+
+        if (it != g_frameBuffers.end()) {
+            Logging::Warning() << "Renderer::CreateMultisampledFrameBuffer() warning: '" << name << "' already existed and you just overwrote it with a new one of the same name!\n";
+            it->second.CleanUp();
+            it->second = OpenGLFrameBuffer(name, width, height, sampleCount);
+            return it->second;
+        }
+
+        auto result = g_frameBuffers.emplace(name, OpenGLFrameBuffer(name, width, height, sampleCount));
+        return result.first->second;
+    }
+
     OpenGLFrameBuffer* GetFrameBuffer(const std::string& name) {
         auto it = g_frameBuffers.find(name);
         if (it == g_frameBuffers.end()) {
@@ -1141,28 +1170,6 @@ namespace OpenGLRenderer {
         return &g_rasterizerStates[name];
     }
 
-    void SetRasterizerState(const std::string& name) {
-        OpenGLRasterizerState* rasterizerState = GetRasterizerState(name);
-        if (!rasterizerState) {
-            std::cout << "OpenGLRenderer::SetRasterizerState(const std::string& name) failed! " << name << " does not exist!\n";
-            return;
-        }
-
-        rasterizerState->blendEnable ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
-        rasterizerState->cullfaceEnable ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
-        rasterizerState->depthMask ? glDepthMask(GL_TRUE) : glDepthMask(GL_FALSE);
-        rasterizerState->depthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
-
-        if (rasterizerState->blendEnable) {
-            glBlendFunc(rasterizerState->blendFuncSrcfactor, rasterizerState->blendFuncDstfactor);
-        }
-        if (rasterizerState->depthTestEnabled) {
-            glDepthFunc(rasterizerState->depthFunc);
-        }
-        if (rasterizerState->pointSize > 1.0f) {
-            glPointSize(rasterizerState->pointSize);
-        }
-    }
 
     std::vector<float>& GetShadowCascadeLevels() {
         return g_shadowCascadeLevels;

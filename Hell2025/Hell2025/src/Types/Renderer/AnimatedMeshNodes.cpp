@@ -62,11 +62,19 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         renderItem.blockScreenSpaceBloodDecals = (int)true;
         Util::PackUint64(m_parentId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
 
-        if (m_woundMaskTextureIndices[i] != -1) {
+        // Additional textures (hair)
+		if (m_nodes[i].blendingMode == BlendingMode::HAIR) {
+			renderItem.additionalTextureIndex0 = material->m_hairFlowMap;
+            renderItem.additionalTextureIndex1 = material->m_hairIdMap;
+            renderItem.additionalTextureIndex2 = material->m_hairRootMap;
+            renderItem.additionalTextureIndex3 = material->m_hairBlendMap;
+		}
+		// Additional textures (wound mask)
+        else if (m_woundMaskTextureIndices[i] != -1) {
             Material* wouldMaterial = AssetManager::GetMaterialByIndex(m_nodes[i].woundMaterialIndex);
-            renderItem.woundBaseColorTextureIndex = wouldMaterial->m_basecolor;
-            renderItem.woundNormalMapTextureIndex = wouldMaterial->m_normal;
-            renderItem.woundRmaTextureIndex = wouldMaterial->m_rma;
+            renderItem.additionalTextureIndex0 = wouldMaterial->m_basecolor;
+            renderItem.additionalTextureIndex1 = wouldMaterial->m_normal;
+            renderItem.additionalTextureIndex2 = wouldMaterial->m_rma;
         }
 
         // Put it where it belongs

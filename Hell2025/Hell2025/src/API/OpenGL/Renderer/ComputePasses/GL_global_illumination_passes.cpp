@@ -209,27 +209,48 @@ namespace OpenGLRenderer {
 	void ComputeProbeRelevance(DDGIVolume& ddgiVolume) {
 		ProfilerOpenGLZoneFunctionLightGreen();
 
-		OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-		if (!gBuffer) return;
 
 		ClearSSBO("ProbeIrradianceCounter");
 
 		BindSSBO("ProbeStates", 4);
 		BindSSBO("DDGIVolume", 5);
+		BindSSBO("RendererData", 6);
+		BindSSBO("ViewportData", 7);
 
 		BindShader("ProbeRelevance");
 		SetUniformVec3("u_viewPos", RenderDataManager::GetViewportData()[0].viewPos);
-
-		BindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
-		BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-		BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
+		SetUniformBool("u_msaaRenderer", Renderer::MSAAEnabled());
 
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
-		int32_t quarterWidth = (gBuffer->GetWidth() + 3) / 4;
-		int32_t quarterHeight = (gBuffer->GetHeight() + 3) / 4;
+		if (Renderer::MSAAEnabled()) {
+			OpenGLFrameBuffer* msaaRenderer = GetFrameBuffer("MSAA");
+			if (!msaaRenderer) return;
 
-		glDispatchCompute((quarterWidth + 7) / 8, (quarterHeight + 7) / 8, 1);
+            BindTextureUnit(0, msaaRenderer->GetDepthAttachmentHandle());
+			BindTextureUnit(1, msaaRenderer->GetColorAttachmentHandleByName("Normal"));
+
+            // TODO: REMOVE ME
+			OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+			BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
+            // TODO: REMOVE ME
+
+			int32_t quarterWidth = (msaaRenderer->GetWidth() + 3) / 4;
+			int32_t quarterHeight = (msaaRenderer->GetHeight() + 3) / 4;
+			glDispatchCompute((quarterWidth + 7) / 8, (quarterHeight + 7) / 8, 1);
+        }
+		else {
+			OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+			if (!gBuffer) return;
+
+			BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
+			BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
+			BindTextureUnit(4, gBuffer->GetDepthAttachmentHandle());
+
+			int32_t quarterWidth = (gBuffer->GetWidth() + 3) / 4;
+			int32_t quarterHeight = (gBuffer->GetHeight() + 3) / 4;
+			glDispatchCompute((quarterWidth + 7) / 8, (quarterHeight + 7) / 8, 1);
+        }
 	}
 
     void ComputeProbeDistance(DDGIVolume& ddgiVolume) {
@@ -458,9 +479,6 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        gBuffer->Bind();
-        gBuffer->DrawBuffer("FinalLighting");
-
         const PointCloud& pointCloud = ddgiVolume.GetPointClound();
 
         shader->Bind();
@@ -473,17 +491,52 @@ namespace OpenGLRenderer {
         BindSSBO("PointCloudGridCounts", 6);
         BindSSBO("PointCloudGridDirtyFlags", 7);
 
-        glEnable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        glDisable(GL_BLEND);
+		OpenGLFrameBuffer* fbo = nullptr;
+
+		if (Renderer::MSAAEnabled()) {
+			fbo = GetFrameBuffer("MSAA");
+			if (!fbo) return;
+
+			fbo->Bind();
+			fbo->DrawBuffer("Lighting");
+
+			OpenGLRasterizerState state;
+			state.depthTestEnabled = true;
+			state.cullfaceEnable = true;
+			state.blendEnable = false;
+			state.depthMask = true;
+			state.depthFunc = GL_GREATER;
+			ForceRasterizerState(state);
+		}
+		else {
+			fbo = GetFrameBuffer("GBuffer");
+			if (!fbo) return;
+
+			fbo->Bind();
+			fbo->DrawBuffer("FinalLighting");
+
+			OpenGLRasterizerState state;
+			state.depthTestEnabled = true;
+			state.cullfaceEnable = true;
+			state.blendEnable = false;
+			state.depthMask = true;
+			state.depthFunc = GL_LESS;
+			ForceRasterizerState(state);
+		}
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGLRenderer::SetViewport(fbo, viewport);
             shader->SetInt("u_viewportIndex", i);
-            shader->SetMat4("u_projectionView", viewportData[i].projectionView);
+
+			if (Renderer::MSAAEnabled()) {
+				shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+			}
+			else {
+				shader->SetMat4("u_projectionView", viewportData[i].projectionView);
+			}
 
             glBindVertexArray(g_pointCloudVao);
             glDrawArrays(GL_POINTS, 0, ddgiVolume.GetPointCloudCount());
@@ -496,10 +549,8 @@ namespace OpenGLRenderer {
     }
 
     void DrawProbes(DDGIVolume& ddgiVolume) {
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
         OpenGLShader* shader = GetShader("DebugProbes");
 
-        if (!gBuffer) return;
         if (!shader) return;
 
 		shader->Bind();
@@ -511,20 +562,43 @@ namespace OpenGLRenderer {
 
         OpenGLTextureArray& probeIrradianceTexture = GetProbeIrradianceTextureArray();
         BindTextureUnit(1, probeIrradianceTexture.GetHandle());
+        
+        OpenGLFrameBuffer* fbo = nullptr;
+        
+        if (Renderer::MSAAEnabled()) {
+            fbo = GetFrameBuffer("MSAA");
+            if (!fbo) return;
 
-        gBuffer->Bind();
-        gBuffer->DrawBuffer("FinalLighting");
+            fbo->Bind();
+            fbo->DrawBuffer("Lighting");
+
+			OpenGLRasterizerState state;
+			state.depthTestEnabled = true;
+			state.cullfaceEnable = true;
+			state.blendEnable = false;
+			state.depthMask = true;
+            state.depthFunc = GL_GREATER;
+            ForceRasterizerState(state);
+        }
+        else {
+            fbo = GetFrameBuffer("GBuffer");
+			if (!fbo) return;
+
+            fbo->Bind();
+            fbo->DrawBuffer("FinalLighting");
+
+			OpenGLRasterizerState state;
+			state.depthTestEnabled = true;
+			state.cullfaceEnable = true;
+			state.blendEnable = false;
+			state.depthMask = true;
+			state.depthFunc = GL_LESS;
+			ForceRasterizerState(state);
+        }
 
         BindSSBO("ProbeSHColor", 6);
         BindSSBO("DDGIVolume", 7);
         BindSSBO("ProbeStates", 8);
-
-
-
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-        glDisable(GL_BLEND);
-        glDepthMask(GL_TRUE);
 
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 
@@ -535,9 +609,15 @@ namespace OpenGLRenderer {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGLRenderer::SetViewport(fbo, viewport);
             shader->SetInt("u_viewportIndex", i);
-            shader->SetMat4("u_projectionView", viewportData[i].projectionView);
+
+            if (Renderer::MSAAEnabled()) {
+                shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+			}
+			else {
+				shader->SetMat4("u_projectionView", viewportData[i].projectionView);
+            }
 
 			glDrawElementsInstancedBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), ddgiVolume.GetTotalProbeCount(), mesh->baseVertex);
         }
@@ -574,11 +654,9 @@ namespace OpenGLRenderer {
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
         OpenGLFrameBuffer* fbo = GetFrameBuffer("IndirectDiffuse");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
         OpenGLShader* shader = GetShader("ProbeIrradianceTexture");
 
         if (!fbo) return;
-        if (!gBuffer) return;
         if (!shader) return;
 
         BindSSBO("DDGIVolume", 7);
@@ -588,6 +666,7 @@ namespace OpenGLRenderer {
         shader->SetVec3("u_cameraPos", viewportData[0].viewPos);
         shader->SetMat4("u_viewMatrix", viewportData[0].view);
         shader->SetBool("u_useSH", Renderer::GetCurrentRendererSettings().irradianceUsesSH);
+        shader->SetBool("u_msaaRenderer", Renderer::MSAAEnabled());
 
         BindSSBO("EntityInstances", 0);
         BindSSBO("TriangleData", 1);
@@ -601,9 +680,22 @@ namespace OpenGLRenderer {
         BindSSBO("ViewportData", 9);
 
         glBindImageTexture(0, fbo->GetColorAttachmentHandleByName("Color"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-        glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-        glBindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
-        glBindTextureUnit(3, gBuffer->GetDepthAttachmentHandle());
+
+        if (Renderer::MSAAEnabled()) {
+            OpenGLFrameBuffer* msaaRenderer = GetFrameBuffer("MSAA");
+            if (!msaaRenderer) return;
+
+            BindTextureUnit(6, msaaRenderer->GetColorAttachmentHandleByName("Normal"));
+            BindTextureUnit(7, msaaRenderer->GetDepthAttachmentHandle());
+        }
+        else {
+            OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+            if (!gBuffer) return;
+
+            BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
+            BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
+            BindTextureUnit(3, gBuffer->GetDepthAttachmentHandle());
+        }
 
         OpenGLTextureArray& probeDistanceTexture = GetProbeDistanceTextureArray();
         BindTextureUnit(4, probeDistanceTexture.GetHandle());

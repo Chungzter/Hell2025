@@ -6,6 +6,8 @@
 #include "Renderer/Renderer.h"
 #include "Ocean/Ocean.h"
 
+#include "Config/Config.h"
+
 #include <Hell/Logging.h>
 
 namespace OpenGLRenderer {
@@ -71,7 +73,7 @@ namespace OpenGLRenderer {
         std::vector<float>& cascadeLevels = GetShadowCascadeLevels();
 
         shader->SetVec3("u_moonlightDir", Game::GetMoonlightDirection());
-        shader->SetFloat("farPlane", FAR_PLANE);
+        shader->SetFloat("farPlane", Config::GetFarPlane());
         shader->SetVec2("u_viewportSize", glm::vec2(viewportWidth, viewportHeight));
         shader->SetInt("cascadeCount", cascadeLevels.size() + 1);
         for (size_t i = 0; i < cascadeLevels.size(); ++i) {

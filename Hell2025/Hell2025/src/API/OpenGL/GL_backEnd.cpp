@@ -87,6 +87,8 @@ namespace OpenGLBackEnd {
         int indexBufferSize = (HEIGHT_MAP_SIZE - 1) * (HEIGHT_MAP_SIZE - 1) * 6 * sizeof(uint32_t);
         g_heightMapVerticesReadBackPBO.Init(vertexBufferSize);
         g_heightMapIndicesReadBackPBO.Init(indexBufferSize);
+
+        CheckSupport();
     }
 
     void BeginFrame() {

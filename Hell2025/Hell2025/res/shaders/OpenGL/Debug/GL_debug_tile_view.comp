@@ -1,0 +1,90 @@
+#version 460
+
+#include "../../common/types.glsl"
+#include "../../common/constants.glsl"
+
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
+
+layout(rgba16f, binding = 0) uniform image2D OutputImage;
+layout (binding = 1) uniform sampler2D DepthTexture;
+layout (binding = 2) uniform usampler2D ViewportIndexTexture;
+
+uniform float u_viewportWidth;
+uniform float u_viewportHeight;
+uniform int u_tileXCount;
+uniform int u_tileYCount;
+uniform int u_debugMode;
+
+shared vec3 sharedDebugOutputColor;
+
+readonly restrict layout(std430, binding = 4) buffer lightsBuffer              { Light lights[]; };
+readonly restrict layout(std430, binding = 5) buffer tileLightsBuffer          { TileLights tileLights[]; };
+readonly restrict layout(std430, binding = 6) buffer tileBloodDecalsBuffer     { TileInstanceData tileBloodDecals[]; };
+readonly restrict layout(std430, binding = 7) buffer tileChristmasLightsBuffer { TileInstanceData tileChristmasLights[]; };
+
+void main() {
+
+	ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 outputImageSize = imageSize(OutputImage);
+    vec2 uv_screenspace = (vec2(pixelCoords) + 0.5) / vec2(outputImageSize);
+    
+    // Don't process out of bounds pixels
+    if (pixelCoords.x >= outputImageSize.x || pixelCoords.y >= outputImageSize.y) {
+        return;
+    }   
+    
+    uint viewportIndex = texture(ViewportIndexTexture, uv_screenspace).r;
+
+	const int tileSize = TILE_SIZE;	
+	vec2 viewportSize = vec2(u_viewportWidth, u_viewportHeight);
+	vec2 uv = (vec2(pixelCoords) + vec2(0.5)) / viewportSize;
+	vec3 lightingColor = imageLoad(OutputImage, pixelCoords).rgb;
+
+	// Heatmap
+	if (gl_LocalInvocationIndex == 0) {
+		uint tileIndex = gl_WorkGroupID.y * u_tileXCount + gl_WorkGroupID.x;
+
+		// Lights
+		float count = 0;
+		
+		if (u_debugMode == 0) {
+			count = tileLights[tileIndex].lightCount / 8.0;
+		}
+		if (u_debugMode == 1) {
+			count = tileBloodDecals[tileIndex].count / 8.0;
+		}
+        
+		if (u_debugMode == 2) {
+			count = tileChristmasLights[tileIndex].count / 8.0;
+		}
+
+		count = clamp(count, 0, 1);	
+		float level = count * 3.14159265/2;
+		vec3 col;
+		col.r = sin(level);
+		col.g = sin(level * 2.0);
+		col.b = cos(level);
+		sharedDebugOutputColor = lightingColor * 0.5 + col * col;   	
+		sharedDebugOutputColor = (lightingColor * 0.1) + (col * col);   	
+		if (tileLights[tileIndex].lightCount == 0) {
+			sharedDebugOutputColor = vec3(0,0,0);
+		}
+
+        //if (count == 0) {
+		//	sharedDebugOutputColor = vec3(0,1,0);
+        //}
+
+		//if (u_debugMode == 1) {
+		//	value = tileBloodDecals[tileIndex].decalCount;
+		//	float debugFloat = float(value) / 255.0;
+		//	sharedDebugOutputColor = vec3(debugFloat);
+		//}
+	}
+	barrier();
+
+	// Lines
+	imageStore(OutputImage, pixelCoords, vec4(sharedDebugOutputColor, 1));	
+	if (gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 0 || gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 1) {	
+		imageStore(OutputImage, pixelCoords, vec4(0, 0, 0, 1));	
+	}	
+}

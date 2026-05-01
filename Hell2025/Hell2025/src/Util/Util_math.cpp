@@ -6,6 +6,19 @@
 
 namespace Util {
 
+	glm::mat4 CalculateProjectionReverseZ(float fovY_radians, float aspect, float zNear) {
+		float f = 1.0f / tan(fovY_radians / 2.0f);
+
+		glm::mat4 proj(0.0f);
+		proj[0][0] = f / aspect;
+		proj[1][1] = f;
+		proj[2][2] = 0.0f;  // Maps infinite far plane to 0.0
+		proj[2][3] = -1.0f; // W perspective divide
+		proj[3][2] = zNear; // Maps near plane to 1.0
+
+		return proj;
+	}
+
     glm::vec3 EulerRotationFromNormal(glm::vec3 normal, glm::vec3 forward) {
         normal = glm::normalize(normal);
         glm::quat q = glm::rotation(forward, normal);

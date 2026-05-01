@@ -142,17 +142,29 @@ void HousePlane::SubmitRenderItem() {
     Mesh* mesh = World::GetHouseMeshByIndex(m_meshIndex);
     if (!mesh) return;
 
-    HouseRenderItem renderItem;
-    renderItem.baseColorTextureIndex = m_material->m_basecolor;
-    renderItem.normalMapTextureIndex = m_material->m_normal;
-    renderItem.rmaTextureIndex = m_material->m_rma;
-    renderItem.baseVertex = mesh->baseVertex;
-    renderItem.baseIndex = mesh->baseIndex;
-    renderItem.vertexCount = mesh->vertexCount;
-    renderItem.indexCount = mesh->indexCount;
-    renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
-    renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
-    RenderDataManager::SubmitHouseRenderItem(renderItem);
+    HouseRenderItem renderItemOLD;
+    renderItemOLD.baseColorTextureIndex = m_material->m_basecolor;
+    renderItemOLD.normalMapTextureIndex = m_material->m_normal;
+    renderItemOLD.rmaTextureIndex = m_material->m_rma;
+    renderItemOLD.baseVertex = mesh->baseVertex;
+    renderItemOLD.baseIndex = mesh->baseIndex;
+    renderItemOLD.vertexCount = mesh->vertexCount;
+    renderItemOLD.indexCount = mesh->indexCount;
+    renderItemOLD.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
+    renderItemOLD.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
+
+	RenderItem renderItem;
+	renderItem.baseColorTextureIndex = m_material->m_basecolor;
+	renderItem.normalMapTextureIndex = m_material->m_normal;
+	renderItem.rmaTextureIndex = m_material->m_rma;
+	renderItem.meshIndex = m_meshIndex;
+	renderItem.modelMatrix = glm::mat4(1.0f);
+	renderItem.inverseModelMatrix = glm::mat4(1.0f);
+	renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
+	renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
+
+	RenderDataManager::SubmitHouseRenderItemOLD(renderItemOLD);
+	RenderDataManager::SubmitHouseRenderItem(renderItem);
 }
 
 void HousePlane::DrawVertices(glm::vec4 color) {

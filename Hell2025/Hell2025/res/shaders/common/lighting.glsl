@@ -3,13 +3,16 @@
 
 float ApplyIESProfile(vec3 worldPos, Light light, sampler2D iesSampler) {
     vec3 lightPos = vec3(light.posX, light.posY, light.posZ);
+    vec3 forward = light.forward_iesMaxIntensity.rgb;
+    vec3 right = light.right_iesExposure.rgb;
+    vec3 up = light.up.rgb;
     float lightRadius = light.radius;
     float vScale = light.iesVScale;
     float vBias = light.iesVBias;
     float hScale = light.iesHScale;
     float hBias = light.iesHBias;
-    float maxIntensity = light.iesMaxIntensity;
-    float exposure = light.iesExposure;
+    float maxIntensity = light.forward_iesMaxIntensity.w;
+    float exposure = light.right_iesExposure.w;
     const float globalDampener = 0.005;
 
     vec3 L = worldPos - lightPos;
@@ -20,9 +23,9 @@ float ApplyIESProfile(vec3 worldPos, Light light, sampler2D iesSampler) {
     vec3 dir = L / dist; // Normalized direction
 
     // Project into local space
-    float dotF = dot(dir, light.forward);
-    float dotR = dot(dir, light.right);
-    float dotU = dot(dir, light.up);
+    float dotF = dot(dir, forward);
+    float dotR = dot(dir, right);
+    float dotU = dot(dir, up);
 
     // U
     float theta = acos(clamp(dotF, -1.0, 1.0)) * 57.29578;

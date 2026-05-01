@@ -10,6 +10,8 @@
 #include "Input/Input.h"
 #include "Renderer/Renderer.h"
 #include "Core/Game.h"
+#include "Core/Debug.h"
+#include "Util/Util.h"
 
 namespace OpenGLRenderer {
 
@@ -22,17 +24,18 @@ namespace OpenGLRenderer {
         int peelCount = renderSettings.depthPeelCount;
         if (Input::KeyPressed(HELL_KEY_RIGHT) && peelCount < 7) {
             renderSettings.depthPeelCount++;
-            std::cout << "Depth peel layer count: " << renderSettings.depthPeelCount << "\n";
+            Debug::BlitQuickDebugMessage("Hair depth peel count: " + std::to_string(renderSettings.depthPeelCount));
         }
         if (Input::KeyPressed(HELL_KEY_LEFT) && peelCount > 0) {
             Audio::PlayAudio("UI_Select.wav", 1.0f);
             renderSettings.depthPeelCount--;
-            std::cout << "Depth peel layer count: " << renderSettings.depthPeelCount << "\n";
+            Debug::BlitQuickDebugMessage("Hair depth peel count: " + std::to_string(renderSettings.depthPeelCount));
         }
 
         if (Input::KeyPressed(HELL_KEY_Z)) {
             Audio::PlayAudio("UI_Select.wav", 1.0f);
             g_cullFace = !g_cullFace;
+            Debug::BlitQuickDebugMessage("Hair cull face enabled: " + Util::BoolToString(g_cullFace));
         }
     }
 
@@ -71,7 +74,7 @@ namespace OpenGLRenderer {
 
         for (int j = 0; j < renderSettings.depthPeelCount; j++) {
 
-            SetRasterizerState("GeometryPass_Default");
+            ForceRasterizerState("GeometryPass_Default");
             glDrawBuffer(GL_NONE);
             glDepthFunc(GL_LESS);
             glDepthMask(GL_TRUE);
@@ -105,22 +108,22 @@ namespace OpenGLRenderer {
             // Skinned hair
             glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
             for (int i = 0; i < 4; i++) {
-                if (drawInfoSet.skinnedGeometryHair[i].empty()) continue;
+                if (drawInfoSet.skinnedHair[i].empty()) continue;
 
                 Viewport* viewport = ViewportManager::GetViewportByIndex(i);
                 if (!viewport->IsVisible()) continue;
 
                 OpenGLRenderer::SetViewport(hairFrameBuffer, viewport);
                 if (BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(depthPeelShader, drawInfoSet.skinnedGeometryHair[i], false, false);
+                    SplitMultiDrawIndirect(depthPeelShader, drawInfoSet.skinnedHair[i], false, false);
                 }
                 else {
-                    MultiDrawIndirect(drawInfoSet.skinnedGeometryHair[i]);
+                    MultiDrawIndirect(drawInfoSet.skinnedHair[i]);
                 }
             }
 
             // Color pass
-            SetRasterizerState("HairLighting");
+            ForceRasterizerState("HairLighting");
 
             if (!g_cullFace) glDisable(GL_CULL_FACE);
 
@@ -167,22 +170,20 @@ namespace OpenGLRenderer {
             // Skinned hair color
             glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
             for (int i = 0; i < 4; i++) {
-                if (drawInfoSet.skinnedGeometryHair[i].empty()) continue;
+                if (drawInfoSet.skinnedHair[i].empty()) continue;
 
                 Viewport* viewport = ViewportManager::GetViewportByIndex(i);
                 if (!viewport->IsVisible()) continue;
 
                 OpenGLRenderer::SetViewport(hairFrameBuffer, viewport);
                 if (BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(hairLightingShader, drawInfoSet.skinnedGeometryHair[i], true, false);
+                    SplitMultiDrawIndirect(hairLightingShader, drawInfoSet.skinnedHair[i], true, false);
                 }
                 else {
-                    MultiDrawIndirect(drawInfoSet.skinnedGeometryHair[i]);
+                    MultiDrawIndirect(drawInfoSet.skinnedHair[i]);
                 }
             }
         }
-
-        glBindVertexArray(0);
 
         // Composite peeled final color back into gbuffer
         finalCompositeShader->Bind();
@@ -192,5 +193,8 @@ namespace OpenGLRenderer {
 
         glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
         glDispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);
+
+        // Clean up
+        glBindVertexArray(0);
     }
 }

@@ -2,6 +2,7 @@
 #include "Audio/Audio.h"
 #include "Viewport/ViewportManager.h"
 #include <Hell/Logging.h>
+#include "Config/Config.h"
 
 void Player::UpdateGunLogic(float deltaTime) {
     if (InventoryIsClosed()) {
@@ -131,7 +132,7 @@ void Player::UpdateADSLogic(float deltaTime) {
     m_cameraZoom = std::min(1.0f, m_cameraZoom);
 
     Viewport* viewport = ViewportManager::GetViewportByIndex(m_viewportIndex);
-    viewport->SetPerspective(m_cameraZoom, NEAR_PLANE, FAR_PLANE);
+    viewport->SetPerspective(m_cameraZoom, Config::GetNearPlane(), Config::GetFarPlane());
 }
 
 void Player::EnterADS() {

@@ -257,18 +257,30 @@ void Wall::SubmitRenderItems() {
         Mesh* mesh = World::GetHouseMeshByIndex(wallSegment.GetMeshIndex());
         if (!mesh) continue;
 
-        HouseRenderItem renderItem;
-        renderItem.baseColorTextureIndex = m_material->m_basecolor;
-        renderItem.normalMapTextureIndex = m_material->m_normal;
-        renderItem.rmaTextureIndex = m_material->m_rma;
-        renderItem.baseVertex = mesh->baseVertex;
-        renderItem.baseIndex = mesh->baseIndex;
-        renderItem.vertexCount = mesh->vertexCount;
-        renderItem.indexCount = mesh->indexCount;
-        renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
-        renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
-        renderItem.meshIndex = wallSegment.GetMeshIndex();
-        RenderDataManager::SubmitHouseRenderItem(renderItem);
+        HouseRenderItem renderItemOLD;
+        renderItemOLD.baseColorTextureIndex = m_material->m_basecolor;
+        renderItemOLD.normalMapTextureIndex = m_material->m_normal;
+        renderItemOLD.rmaTextureIndex = m_material->m_rma;
+        renderItemOLD.baseVertex = mesh->baseVertex;
+        renderItemOLD.baseIndex = mesh->baseIndex;
+        renderItemOLD.vertexCount = mesh->vertexCount;
+        renderItemOLD.indexCount = mesh->indexCount;
+        renderItemOLD.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
+        renderItemOLD.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
+        renderItemOLD.meshIndex = wallSegment.GetMeshIndex();
+        RenderDataManager::SubmitHouseRenderItemOLD(renderItemOLD);
+
+		RenderItem renderItem;
+		renderItem.baseColorTextureIndex = m_material->m_basecolor;
+		renderItem.normalMapTextureIndex = m_material->m_normal;
+		renderItem.rmaTextureIndex = m_material->m_rma;
+		renderItem.meshIndex = wallSegment.GetMeshIndex();
+		renderItem.modelMatrix = glm::mat4(1.0f);
+		renderItem.inverseModelMatrix = glm::mat4(1.0f);
+		renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
+		renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
+
+		RenderDataManager::SubmitHouseRenderItem(renderItem);
 
         // Outline?
         //if (Editor::GetHoveredObjectId() == m_objectId) {

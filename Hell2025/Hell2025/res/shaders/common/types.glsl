@@ -1,5 +1,9 @@
 
 struct ViewportData {
+    mat4 projectionReverseZ;
+    mat4 inverseProjectionReverseZ;
+    mat4 projectionViewReverseZ;
+    mat4 inverseProjectionViewReverseZ;
     mat4 projection;
     mat4 inverseProjection;
     mat4 view;
@@ -103,10 +107,15 @@ struct RenderItem {
     float furUVScale;
     int blockScreenSpaceBloodDecals;    // True or false
 
-    int woundBaseColorTextureIndex;
-    int woundNormalMapTextureIndex;
-    int woundRmaTextureIndex;
+    int additionalTextureIndex0;
+    int additionalTextureIndex1;
+    int additionalTextureIndex2;
+    int additionalTextureIndex3;
+
     int localMeshNodeIndex;
+    int padding0;
+    int padding1;
+    int padding2;
 
     float tintColorR;
     float tintColorG;
@@ -135,17 +144,12 @@ struct Light {
     float iesHScale;
     float iesHBias;
 
-    vec3 forward;
-    float iesMaxIntensity;
+    vec4 forward_iesMaxIntensity;
+    vec4 right_iesExposure;
+    vec4 up;
 
-    vec3 right;
-    float iesExposure;
-
-    vec3 up;
     int iesTextureIndex;
-
     int isDirtyForRaytracing; // true or false
-    int padding0;
     int padding1;
     int padding2;
 };

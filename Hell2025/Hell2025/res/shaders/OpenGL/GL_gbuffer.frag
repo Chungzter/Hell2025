@@ -12,9 +12,9 @@
     in flat int BaseColorTextureIndex;
     in flat int NormalTextureIndex;
     in flat int RMATextureIndex;
-    in flat int WoundBaseColorTextureIndex;
+    in flat int additionalTextureIndex0;
     in flat int WoundNormalTextureIndex;
-    in flat int WoundRMATextureIndex;
+    in flat int additionalTextureIndex2;
 
 #else
     layout (binding = 0) uniform sampler2D baseColorTexture;
@@ -88,9 +88,9 @@ void main() {
     float woundMask = 0;
     if (WoundMaskTextureIndex != -1) {
         #if ENABLE_BINDLESS == 1
-            woundBaseColor = texture(sampler2D(textureSamplers[WoundBaseColorTextureIndex]), TexCoord);
+            woundBaseColor = texture(sampler2D(textureSamplers[additionalTextureIndex0]), TexCoord);
             woundNormalMap = texture(sampler2D(textureSamplers[WoundNormalTextureIndex]), TexCoord).rgb;
-            woundRma = texture(sampler2D(textureSamplers[WoundRMATextureIndex]), TexCoord).rgb;
+            woundRma = texture(sampler2D(textureSamplers[additionalTextureIndex2]), TexCoord).rgb;
         #else
             woundBaseColor = texture(woundBaseColorTexture, TexCoord);
             woundNormalMap = texture(woundNormalTexture, TexCoord).rgb;

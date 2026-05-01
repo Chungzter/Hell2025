@@ -39,6 +39,179 @@ namespace World {
         return GetAnimatedGameObjectByObjectId(g_ratKidAO);
     }
 
+
+	void InitRatKing(const std::string& modelName) {
+        RemoveObject(g_ratKidAO);
+
+		g_ratKidAO = CreateAnimatedGameObject();
+		AnimatedGameObject* ratKidAO = GetRadKidAO();
+
+		ratKidAO->SetSkinnedModel(modelName);
+		ratKidAO->SetAnimationModeToBindPose();
+
+
+
+		ratKidAO->SetMeshMaterialByMeshName("Slim_Jeans", "Jeans");
+
+		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body", "RatKingHead");
+		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body2", "RatKingTorso");
+		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body3", "RatKingArms");
+		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body4", "RatKingLegs");
+		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body5", "RatKingNails");
+		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body6", "RatKingLashes2");
+		ratKidAO->SetBlendingModeByMeshName("CC_Base_Body6", BlendingMode::BLENDED);
+
+		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Eye", "RatKingEye");
+		ratKidAO->SetBlendingModeByMeshName("CC_Base_Eye2", BlendingMode::DO_NOT_RENDER);
+		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Eye3", "RatKingEye");
+		ratKidAO->SetBlendingModeByMeshName("CC_Base_Eye4", BlendingMode::DO_NOT_RENDER);
+
+		ratKidAO->SetBlendingModeByMeshName("CC_Base_TearLine", BlendingMode::DO_NOT_RENDER);
+		ratKidAO->SetBlendingModeByMeshName("CC_Base_TearLine2", BlendingMode::DO_NOT_RENDER);
+
+		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Tongue", "TrapKingTongue");
+
+		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Teeth", "TrapKingTeethUpper");
+		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Teeth2", "TrapKingTeethLower");
+
+		ratKidAO->SetBlendingModeByMeshName("Brows_Bushy", BlendingMode::DO_NOT_RENDER);
+		ratKidAO->SetMeshMaterialByMeshName("Brows_Bushy2", "RatKingBrows");
+		ratKidAO->SetBlendingModeByMeshName("Brows_Bushy2", BlendingMode::BLENDED);
+		ratKidAO->SetBlendingModeByMeshName("Brows_Bushy3", BlendingMode::DO_NOT_RENDER);
+
+		// NEW
+		ratKidAO->SetMeshMaterialByMeshName("Chunky_Highlights_Bangs", "RatKingHair2");
+		ratKidAO->SetBlendingModeByMeshName("Chunky_Highlights_Bangs", BlendingMode::HAIR);
+		ratKidAO->SetMeshMaterialByMeshName("Chunky_Highlights_Bangs2", "RatKingHair2");
+		ratKidAO->SetBlendingModeByMeshName("Chunky_Highlights_Bangs2", BlendingMode::HAIR);
+		ratKidAO->SetMeshMaterialByMeshName("Chunky_Highlights_Bangs.001", "RatKingHair2");
+		ratKidAO->SetBlendingModeByMeshName("Chunky_Highlights_Bangs.001", BlendingMode::HAIR);
+		ratKidAO->SetMeshMaterialByMeshName("Chunky_Highlights_Bangs.0012", "RatKingHair2");
+        ratKidAO->SetBlendingModeByMeshName("Chunky_Highlights_Bangs.0012", BlendingMode::HAIR);
+        //
+
+		ratKidAO->SetMeshMaterialByMeshName("Side_swept_L", "RatKingHair");
+		ratKidAO->SetBlendingModeByMeshName("Side_swept_L", BlendingMode::HAIR);
+
+
+		ratKidAO->SetMeshMaterialByMeshName("Long_Hair_R", "RatKingHair");
+		ratKidAO->SetBlendingModeByMeshName("Long_Hair_R", BlendingMode::HAIR);
+		
+		ratKidAO->SetMeshMaterialByMeshName("Long_Hair_R2", "RatKingHair");
+		ratKidAO->SetBlendingModeByMeshName("Long_Hair_R2", BlendingMode::HAIR);
+
+		ratKidAO->SetMeshMaterialByMeshName("Side_swept_Long_Hair_L", "RatKingScalp");
+		ratKidAO->SetBlendingModeByMeshName("Side_swept_Long_Hair_L", BlendingMode::BLENDED);
+		ratKidAO->SetMeshMaterialByMeshName("Side_swept_Long_Hair_L2", "RatKingHair");
+		ratKidAO->SetBlendingModeByMeshName("Side_swept_Long_Hair_L2", BlendingMode::HAIR);
+
+		ratKidAO->SetMeshMaterialByMeshName("Side_swept_Long_Hair_R", "RatKingScalp");
+		ratKidAO->SetBlendingModeByMeshName("Side_swept_Long_Hair_R", BlendingMode::BLENDED);
+		ratKidAO->SetMeshMaterialByMeshName("Side_swept_Long_Hair_R2", "RatKingHair");
+		ratKidAO->SetBlendingModeByMeshName("Side_swept_Long_Hair_R2", BlendingMode::HAIR);
+
+		ratKidAO->SetMeshMaterialByMeshName("Long_bangs", "RatKingHair2");
+		ratKidAO->SetBlendingModeByMeshName("Long_bangs", BlendingMode::HAIR);
+
+
+		ratKidAO->SetMeshMaterialByMeshName("Scalp_Male", "RatKingScalp");
+		ratKidAO->SetBlendingModeByMeshName("Scalp_Male", BlendingMode::BLENDED);
+
+		ratKidAO->SetMeshMaterialByMeshName("Side_swept_L2", "RatKingScalp");
+		ratKidAO->SetBlendingModeByMeshName("Side_swept_L2", BlendingMode::BLENDED);
+
+
+		ratKidAO->SetBlendingModeByMeshName("CC_Base_EyeOcclusion", BlendingMode::DO_NOT_RENDER);
+		ratKidAO->SetBlendingModeByMeshName("CC_Base_EyeOcclusion2", BlendingMode::DO_NOT_RENDER);
+
+		ratKidAO->SetBlendingModeByMeshName("Lash_Low_Short_Sparse", BlendingMode::BLENDED);
+		ratKidAO->SetBlendingModeByMeshName("Lash_Low_Sparse", BlendingMode::BLENDED);
+		ratKidAO->SetBlendingModeByMeshName("Lash_Up_Downward", BlendingMode::BLENDED);
+		ratKidAO->SetBlendingModeByMeshName("Lash_Up_Short_Sparse", BlendingMode::BLENDED);
+
+		ratKidAO->SetMeshMaterialByMeshName("Lash_Low_Short_Sparse", "RatKingLashes");
+		ratKidAO->SetMeshMaterialByMeshName("Lash_Low_Sparse", "RatKingLashes");
+		ratKidAO->SetMeshMaterialByMeshName("Lash_Up_Downward", "RatKingLashes");
+		ratKidAO->SetMeshMaterialByMeshName("Lash_Up_Short_Sparse", "RatKingLashes");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		ratKidAO->SetMeshMaterialByMeshName("Jeans", "Jeans");
+
+		ratKidAO->SetMeshMaterialByMeshName("Body", "RatKingHead");
+		ratKidAO->SetMeshMaterialByMeshName("Body2", "RatKingTorso");
+		ratKidAO->SetMeshMaterialByMeshName("Body3", "RatKingArms");
+		ratKidAO->SetMeshMaterialByMeshName("Body4", "RatKingLegs");
+		ratKidAO->SetMeshMaterialByMeshName("Body5", "RatKingNails");
+		ratKidAO->SetMeshMaterialByMeshName("Body6", "RatKingLashes2");
+		ratKidAO->SetBlendingModeByMeshName("Body6", BlendingMode::BLENDED);
+
+		ratKidAO->SetMeshMaterialByMeshName("Eye", "RatKingEye");
+		ratKidAO->SetBlendingModeByMeshName("Eye2", BlendingMode::DO_NOT_RENDER);
+		ratKidAO->SetMeshMaterialByMeshName("Eye3", "RatKingEye");
+		ratKidAO->SetBlendingModeByMeshName("Eye4", BlendingMode::DO_NOT_RENDER);
+
+		ratKidAO->SetBlendingModeByMeshName("TearLine", BlendingMode::DO_NOT_RENDER);
+		ratKidAO->SetBlendingModeByMeshName("TearLine2", BlendingMode::DO_NOT_RENDER);
+
+		ratKidAO->SetMeshMaterialByMeshName("Tongue", "TrapKingTongue");
+
+		ratKidAO->SetMeshMaterialByMeshName("Teeth", "TrapKingTeethUpper");
+		ratKidAO->SetMeshMaterialByMeshName("Teeth2", "TrapKingTeethLower");
+
+		ratKidAO->SetBlendingModeByMeshName("Brows", BlendingMode::DO_NOT_RENDER);
+		ratKidAO->SetMeshMaterialByMeshName("Brows2", "RatKingBrows");
+		ratKidAO->SetBlendingModeByMeshName("Brows2", BlendingMode::BLENDED);
+		ratKidAO->SetBlendingModeByMeshName("Brows3", BlendingMode::DO_NOT_RENDER);
+
+		ratKidAO->SetMeshMaterialByMeshName("HairL", "RatKingHair");
+		ratKidAO->SetMeshMaterialByMeshName("HairR", "RatKingHair");
+		ratKidAO->SetMeshMaterialByMeshName("HairLong", "RatKingHair");
+		ratKidAO->SetBlendingModeByMeshName("HairL", BlendingMode::HAIR);
+		ratKidAO->SetBlendingModeByMeshName("HairR", BlendingMode::HAIR);
+		ratKidAO->SetBlendingModeByMeshName("HairLong", BlendingMode::HAIR);
+
+		ratKidAO->SetMeshMaterialByMeshName("Scalp", "RatKingScalp");
+		ratKidAO->SetMeshMaterialByMeshName("Scalp2", "RatKingScalp");
+		ratKidAO->SetMeshMaterialByMeshName("Scalp3", "RatKingScalp");
+		ratKidAO->SetBlendingModeByMeshName("Scalp", BlendingMode::DO_NOT_RENDER);
+		ratKidAO->SetBlendingModeByMeshName("Scalp2", BlendingMode::DO_NOT_RENDER);
+		ratKidAO->SetBlendingModeByMeshName("Scalp3", BlendingMode::DO_NOT_RENDER);
+
+		ratKidAO->SetMeshMaterialByMeshName("Scalp4", "RatKingScalp2");
+		ratKidAO->SetBlendingModeByMeshName("Scalp4", BlendingMode::BLENDED);
+
+		ratKidAO->SetBlendingModeByMeshName("EyeOcclusion", BlendingMode::DO_NOT_RENDER);
+		ratKidAO->SetBlendingModeByMeshName("EyeOcclusion2", BlendingMode::DO_NOT_RENDER);
+
+		ratKidAO->SetBlendingModeByMeshName("Lashes", BlendingMode::BLENDED);
+		ratKidAO->SetBlendingModeByMeshName("Lashes2", BlendingMode::BLENDED);
+		ratKidAO->SetBlendingModeByMeshName("Lashes3", BlendingMode::BLENDED);
+		ratKidAO->SetBlendingModeByMeshName("Lashes4", BlendingMode::BLENDED);
+
+		ratKidAO->SetMeshMaterialByMeshName("Lashes", "RatKingLashes");
+		ratKidAO->SetMeshMaterialByMeshName("Lashes2", "RatKingLashes");
+		ratKidAO->SetMeshMaterialByMeshName("Lashes3", "RatKingLashes");
+		ratKidAO->SetMeshMaterialByMeshName("Lashes4", "RatKingLashes");
+
+		ratKidAO->SetPosition(glm::vec3(36.8f, 31.0f, 36.23f));
+		//ratKidAO->PlayAndLoopAnimation("Main", "RatKid_PistolWalk2", 1.0f);
+		ratKidAO->PrintMeshNames();
+    }
     
     static float DegToRad(float degrees) { return degrees * (HELL_PI / 180.0f); }
 
@@ -175,89 +348,26 @@ namespace World {
         }
 
       if (g_ratKidAO == 0) {
-          g_ratKidAO = CreateAnimatedGameObject();
-          AnimatedGameObject* ratKidAO = GetRadKidAO();
-      
-          // bool found = false;
-          // for (RagdollV2& ragdoll : RagdollManager::GetRagdolls()) {
-          //     if (ragdoll.GetRagdollName() == "dobermann") {
-          //         //dobermann->m_ragdollV2Id = ragdoll.GetRagdollId();
-          //         found = true;
-          //     }
-          // }
-          // if (!found) {
-          //     Logging::Error() << "Failed to set ragdoll by name 'dobermann'";
-          // }
-          // else {
-          //     Logging::Debug() << "Successfuly set ragdollV2Id to " << dobermann->m_ragdollV2Id;
-          // }
-      
-          ratKidAO->SetSkinnedModel("RatKing");
-          //dobermann->PrintMeshNames();
-          //dobermann->PrintNodeNames();
-          ratKidAO->SetAnimationModeToBindPose();
-          ratKidAO->SetMeshMaterialByMeshName("Jeans", "Jeans");
-
-          ratKidAO->SetMeshMaterialByMeshName("Body", "RatKingHead");
-          ratKidAO->SetMeshMaterialByMeshName("Body2", "RatKingTorso");
-          ratKidAO->SetMeshMaterialByMeshName("Body3", "RatKingArms");
-          ratKidAO->SetMeshMaterialByMeshName("Body4", "RatKingLegs");
-          ratKidAO->SetMeshMaterialByMeshName("Body5", "RatKingNails");
-          ratKidAO->SetMeshMaterialByMeshName("Body6", "RatKingLashes2");
-          ratKidAO->SetBlendingModeByMeshName("Body6", BlendingMode::BLENDED);
-
-          ratKidAO->SetMeshMaterialByMeshName("Eye", "RatKingEye");
-          ratKidAO->SetBlendingModeByMeshName("Eye2", BlendingMode::DO_NOT_RENDER);
-          ratKidAO->SetMeshMaterialByMeshName("Eye3", "RatKingEye");
-          ratKidAO->SetBlendingModeByMeshName("Eye4", BlendingMode::DO_NOT_RENDER);
-
-          ratKidAO->SetBlendingModeByMeshName("TearLine", BlendingMode::DO_NOT_RENDER);
-          ratKidAO->SetBlendingModeByMeshName("TearLine2", BlendingMode::DO_NOT_RENDER);
-
-          ratKidAO->SetMeshMaterialByMeshName("Tongue", "TrapKingTongue");
-
-          ratKidAO->SetMeshMaterialByMeshName("Teeth", "TrapKingTeethUpper");
-          ratKidAO->SetMeshMaterialByMeshName("Teeth2", "TrapKingTeethLower");
-
-          ratKidAO->SetBlendingModeByMeshName("Brows", BlendingMode::DO_NOT_RENDER);
-          ratKidAO->SetMeshMaterialByMeshName("Brows2", "RatKingBrows");
-          ratKidAO->SetBlendingModeByMeshName("Brows2", BlendingMode::BLENDED);
-          ratKidAO->SetBlendingModeByMeshName("Brows3", BlendingMode::DO_NOT_RENDER);
-
-          ratKidAO->SetMeshMaterialByMeshName("HairL", "RatKingHair");
-          ratKidAO->SetMeshMaterialByMeshName("HairR", "RatKingHair");
-          ratKidAO->SetMeshMaterialByMeshName("HairLong", "RatKingHair");
-          ratKidAO->SetBlendingModeByMeshName("HairL", BlendingMode::HAIR);
-          ratKidAO->SetBlendingModeByMeshName("HairR", BlendingMode::HAIR);
-          ratKidAO->SetBlendingModeByMeshName("HairLong", BlendingMode::HAIR);
-
-          ratKidAO->SetMeshMaterialByMeshName("Scalp", "RatKingScalp");
-          ratKidAO->SetMeshMaterialByMeshName("Scalp2", "RatKingScalp");
-          ratKidAO->SetMeshMaterialByMeshName("Scalp3", "RatKingScalp");
-          ratKidAO->SetBlendingModeByMeshName("Scalp", BlendingMode::DO_NOT_RENDER);
-          ratKidAO->SetBlendingModeByMeshName("Scalp2", BlendingMode::DO_NOT_RENDER);
-          ratKidAO->SetBlendingModeByMeshName("Scalp3", BlendingMode::DO_NOT_RENDER);
-
-          ratKidAO->SetMeshMaterialByMeshName("Scalp4", "RatKingScalp2");
-          ratKidAO->SetBlendingModeByMeshName("Scalp4", BlendingMode::BLENDED);
-
-          ratKidAO->SetBlendingModeByMeshName("EyeOcclusion", BlendingMode::DO_NOT_RENDER);
-          ratKidAO->SetBlendingModeByMeshName("EyeOcclusion2", BlendingMode::DO_NOT_RENDER);
-
-          ratKidAO->SetBlendingModeByMeshName("Lashes", BlendingMode::BLENDED);
-          ratKidAO->SetBlendingModeByMeshName("Lashes2", BlendingMode::BLENDED);
-          ratKidAO->SetBlendingModeByMeshName("Lashes3", BlendingMode::BLENDED);
-          ratKidAO->SetBlendingModeByMeshName("Lashes4", BlendingMode::BLENDED);
-
-          ratKidAO->SetMeshMaterialByMeshName("Lashes", "RatKingLashes");
-          ratKidAO->SetMeshMaterialByMeshName("Lashes2", "RatKingLashes");
-          ratKidAO->SetMeshMaterialByMeshName("Lashes3", "RatKingLashes");
-          ratKidAO->SetMeshMaterialByMeshName("Lashes4", "RatKingLashes");
-
-          ratKidAO->SetPosition(glm::vec3(36.8f, 31.0f, 36.23f));
-          //ratKidAO->PlayAndLoopAnimation("Main", "RatKid_PistolWalk2", 1.0f);
-          ratKidAO->PrintMeshNames();
-      }
+		  InitRatKing("RatKing");
+	  }
+	  if (Input::KeyPressed(HELL_KEY_NUMPAD_7)) {
+		  InitRatKing("RatKingSam");
+		  Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+	  }
+	  if (Input::KeyPressed(HELL_KEY_NUMPAD_8)) {
+		  InitRatKing("RatKingNew");
+		  Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+	  }
+	  if (Input::KeyPressed(HELL_KEY_NUMPAD_9)) {
+		  AnimatedGameObject* ratKidAO = GetRadKidAO();
+		  ratKidAO->SetAnimationModeToBindPose();
+		  Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+	  }
+	  if (Input::KeyPressed(HELL_KEY_NUMPAD_0)) {
+		  AnimatedGameObject* ratKidAO = GetRadKidAO();
+		  ratKidAO->PlayAndLoopAnimation("Main", "RatKingSamTest", 1.0f);
+		  Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+	  }
      
        
         auto& ragdolls = RagdollManager::GetRagdolls();

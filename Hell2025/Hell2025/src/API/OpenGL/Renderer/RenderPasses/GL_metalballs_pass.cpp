@@ -106,7 +106,7 @@ namespace OpenGLRenderer {
         BindSSBO("MetaBalls", 5);
 
 
-        SetRasterizerState("GeometryPass_Default");
+        ForceRasterizerState("GeometryPass_Default");
 
         shader->Bind();
         shader->SetInt("u_metaBallCount", metaBalls.size());

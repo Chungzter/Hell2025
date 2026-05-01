@@ -32,9 +32,9 @@ out vec3 EmissiveColor;
 out flat int BaseColorTextureIndex;
 out flat int NormalTextureIndex;
 out flat int RMATextureIndex;
-out flat int WoundBaseColorTextureIndex;
+out flat int additionalTextureIndex0;
 out flat int WoundNormalTextureIndex;
-out flat int WoundRMATextureIndex;
+out flat int additionalTextureIndex2;
 #else
 uniform int u_viewportIndex;
 uniform int u_globalInstanceIndex;
@@ -62,9 +62,9 @@ void main() {
 	RMATextureIndex = renderItems[globalInstanceIndex].rmaTextureIndex;   
     EmissiveTextureIndex = renderItems[globalInstanceIndex].emissiveTextureIndex;   
         
-    WoundBaseColorTextureIndex = renderItems[globalInstanceIndex].woundBaseColorTextureIndex;
-	WoundNormalTextureIndex = renderItems[globalInstanceIndex].woundNormalMapTextureIndex;
-	WoundRMATextureIndex = renderItems[globalInstanceIndex].woundRmaTextureIndex;   
+    additionalTextureIndex0 = renderItems[globalInstanceIndex].additionalTextureIndex0;
+	WoundNormalTextureIndex = renderItems[globalInstanceIndex].additionalTextureIndex1;
+	additionalTextureIndex2 = renderItems[globalInstanceIndex].additionalTextureIndex2;   
 
 #else
     int globalInstanceIndex = u_globalInstanceIndex;

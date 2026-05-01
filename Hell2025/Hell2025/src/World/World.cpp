@@ -1368,7 +1368,7 @@ namespace World {
         return ids;
     }
 
-    int32_t GetLightCount()                                     { return (int32_t)g_lights.size(); }
+    uint32_t GetLightCount()                                     { return (uint32_t)g_lights.size(); }
 
 
     Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects() { return g_animatedGameObjects; }

@@ -4,8 +4,8 @@
 #define DEFAULT_MATERIAL_NAME "CheckerBoard"
 #define TIME_WRAP 10000.0f
 
-#define NEAR_PLANE 0.005f
-#define FAR_PLANE 256.0f
+//#define NEAR_PLANE 0.005f
+//#define FAR_PLANE 256.0f
 
 #define NO_ID 0
 

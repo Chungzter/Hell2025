@@ -11,7 +11,8 @@
 namespace OpenGLBackEnd {
     // Core
     void Init();
-    void BeginFrame();
+	void BeginFrame();
+	bool CheckSupport();
 
     // Textures
     void UpdateTextureBaking();

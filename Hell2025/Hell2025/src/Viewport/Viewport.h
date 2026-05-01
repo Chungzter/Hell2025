@@ -33,6 +33,7 @@ public:
     glm::vec2 GetPosition() const;
     glm::vec2 GetSize() const;
     glm::mat4 GetProjectionMatrix() const;
+    glm::mat4 GetProjectionMatrixReverseZ() const;
     glm::mat4 GetPerpsectiveMatrix() const;
     glm::mat4 GetOrthographicMatrix() const;
     glm::vec2 WorldToScreen(const glm::mat4& viewMatrix, const glm::vec3& worldPosition) const;
@@ -69,6 +70,7 @@ private:
     bool m_hasHover = false;
     uint32_t m_viewportIndex = 0;
     glm::mat4 m_perspectiveMatrix;
+    glm::mat4 m_perspectiveMatrixReverseZ;
     glm::mat4 m_orthographicMatrix;
     glm::vec3 m_mouseRayDirPerspective;
     glm::vec3 m_mouseRayDirOrthographic;

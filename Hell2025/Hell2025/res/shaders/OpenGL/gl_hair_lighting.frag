@@ -93,7 +93,7 @@ void main() {
       vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
       float shadow = ShadowCalculation(int(lightIndex), lightPosition, light.radius, WorldPos.xyz, ViewPos, normal, shadowMapArray);
       vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal, WorldPos.xyz, baseColor.rgb, roughness, metallic, ViewPos) * shadow;
-      
+      //vec3 directLight = GetDirectLightingHair(lightPosition, lightColor, light.radius, light.strength, normal, Tangent, WorldPos.xyz, baseColor.rgb, roughness, metallic, ViewPos) * shadow;
       
 #if ENABLE_BINDLESS
       if (light.iesTextureIndex != 0) {

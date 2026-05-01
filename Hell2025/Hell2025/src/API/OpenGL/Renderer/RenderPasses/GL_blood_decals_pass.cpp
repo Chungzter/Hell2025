@@ -155,7 +155,7 @@ namespace OpenGLRenderer {
         miscFullSizeFBO->ClearAttachment("ScreenSpaceBloodDecalMask", 0.0f, 0.0f, 0.0f, 0.0f);
         miscFullSizeFBO->DrawBuffers({ "ScreenSpaceBloodDecalMask" });
 
-        SetRasterizerState("GeometryPass_Default");
+        ForceRasterizerState("GeometryPass_Default");
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);

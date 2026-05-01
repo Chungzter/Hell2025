@@ -21,6 +21,7 @@ namespace Util {
     void UnpackUint64(uint32_t xValue, uint32_t yValue, uint64_t& out);
 
     // Math
+    glm::mat4 CalculateProjectionReverseZ(float fovY_radians, float aspect, float zNear);
     glm::vec3 EulerRotationFromNormal(glm::vec3 normal, glm::vec3 forward = glm::vec3(0.0f, 0.0f, 1.0f));
     float YRotationBetweenTwoPoints(glm::vec3 a, glm::vec3 b);
     glm::mat4 GetRotationMat4FromForwardVector(glm::vec3 forward);

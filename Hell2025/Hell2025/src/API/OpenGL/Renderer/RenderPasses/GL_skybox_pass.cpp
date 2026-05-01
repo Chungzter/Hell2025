@@ -21,7 +21,7 @@ namespace OpenGLRenderer {
         gBuffer->DrawBuffers( {"FinalLighting", "WorldPosition" });
         shader->Bind();
 
-        SetRasterizerState("SkyBox");
+        ForceRasterizerState("SkyBox");
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemapView->GetHandle());

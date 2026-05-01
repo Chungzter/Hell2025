@@ -23,20 +23,30 @@ struct OpenGLRasterizerState {
     GLboolean depthTestEnabled = true;
     GLboolean blendEnable = false;
     GLboolean cullfaceEnable = true;
+    GLboolean colorMask = true;
     GLboolean depthMask = true;
     GLfloat pointSize = 1.0f;
     GLenum blendFuncSrcfactor = GL_SRC_ALPHA;
     GLenum blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
     GLenum depthFunc = GL_LESS;
+	GLenum cullfaceMode = GL_BACK;
 };
 
 namespace OpenGLRenderer {
     void Init();
     void InitMain();
-    void RenderLoadingScreen();
+
+	void RenderLoadingScreen();
 
     void PreGameLogicComputePasses();
     void RenderGame();
+
+    void InitMSAA();
+    void RenderGameMSAA();
+
+    void CreateSSBOs();
+    void InitSSBOs();
+    void UpdateSSBOS();
 
     // Compute passes
     void BlitRoads();
@@ -167,6 +177,8 @@ namespace OpenGLRenderer {
     // Frame Buffers
     OpenGLFrameBuffer& CreateFrameBuffer(const std::string& name, glm::ivec2 resolution);
     OpenGLFrameBuffer& CreateFrameBuffer(const std::string& name, int32_t width, int32_t height);
+    OpenGLFrameBuffer& CreateMultisampledFrameBuffer(const std::string& name, glm::ivec2 resolution, uint32_t sampleCount);
+    OpenGLFrameBuffer& CreateMultisampledFrameBuffer(const std::string& name, int32_t width, int32_t height, uint32_t sampleCount);
     OpenGLFrameBuffer* GetFrameBuffer(const std::string& name);
 
     OpenGLCubemapFrameBuffer& CreateCubemapFrameBuffer(const std::string& name, int32_t size);
@@ -177,18 +189,21 @@ namespace OpenGLRenderer {
     void BindImageTextureArray(uint32_t bindingIndex, uint32_t textureHandle, uint32_t access, uint32_t format);
     void BindTextureUnit(uint32_t bindingIndex, uint32_t textureHandle);
 
-    // Shaders
-    void LoadShader(const std::string& name, const std::vector<std::string>& shaderPaths);
+	// Shaders
+	void LoadShader(const std::string& name, const std::vector<std::string>& shaderPaths, const std::vector<std::string>& defines = std::vector<std::string>());
+	void LoadShader(const std::string& subDirectory, const std::string& name, const std::vector<std::string>& shaderPaths, const std::vector<std::string>& defines = std::vector<std::string>());
     void BindShader(const std::string& name);
-    void HotloadShaders();
-    void SetUniformInt(const std::string& name, int value);
+	void HotloadShaders();
+	void SetUniformBool(const std::string& name, bool value);
+	void SetUniformInt(const std::string& name, int value);
     void SetUniformFloat(const std::string& name, float value);
     void SetUniformVec2(const std::string& name, const glm::vec2& value);
     void SetUniformVec3(const std::string& name, const glm::vec3& value);
     void SetUniformIVec3(const std::string& name, const glm::ivec3& value);
     void SetUniformUVec3(const std::string& name, const glm::uvec3& value);
-    void SetUniformVec4(const std::string& name, const glm::vec4& value);
-    void SetUniformMat4(const std::string& name, const glm::mat4& value);
+	void SetUniformVec4(const std::string& name, const glm::vec4& value);
+	void SetUniformMat4(const std::string& name, const glm::mat4& value);
+    
 
     // SSBOs
     void CreateSSBO(const std::string& name, size_t size, GLbitfield flags);
@@ -217,7 +232,9 @@ namespace OpenGLRenderer {
     void InitRasterizerStates();
     OpenGLRasterizerState* CreateRasterizerState(const std::string& name);
     OpenGLRasterizerState* GetRasterizerState(const std::string& name);
-    void SetRasterizerState(const std::string& name);
+    void ForceRasterizerState(const std::string& name);
+    void ForceRasterizerState(const OpenGLRasterizerState& rasterizerState);
+    void SetRasterizerState(const OpenGLRasterizerState& rasterizerState);
 
     // Drawing
     void MultiDrawIndirect(const std::vector<DrawIndexedIndirectCommand>& commands);

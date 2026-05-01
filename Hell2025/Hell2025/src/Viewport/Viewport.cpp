@@ -10,8 +10,8 @@ Viewport::Viewport(uint32_t viewportIndex, const glm::vec2& position, const glm:
     m_size(size),
     m_isOrthographic(isOrthographic),
     m_orthoSize(1.0f),
-    m_nearPlane(NEAR_PLANE),
-    m_farPlane(FAR_PLANE),
+    m_nearPlane(Config::GetNearPlane()),
+    m_farPlane(Config::GetFarPlane()),
     m_fov(1.0f),
     m_perspectiveMatrix(glm::mat4(1.0f)),
     m_orthographicMatrix(glm::mat4(1.0f)),
@@ -81,6 +81,7 @@ void Viewport::UpdateProjectionMatrices() {
     float viewportHeight = m_size.y * renderTargetHeight;
     m_aspect = viewportWidth / viewportHeight;
     m_perspectiveMatrix = glm::perspective(m_fov, m_aspect, m_nearPlane, m_farPlane);
+    m_perspectiveMatrixReverseZ = Util::CalculateProjectionReverseZ(m_fov, m_aspect, m_nearPlane);
 
     float left = -m_orthoSize * m_aspect;
     float right = m_orthoSize * m_aspect;
@@ -139,6 +140,15 @@ glm::mat4 Viewport::GetProjectionMatrix() const {
     else {
         return m_perspectiveMatrix;
     }
+}
+
+glm::mat4 Viewport::GetProjectionMatrixReverseZ() const {
+	if (IsOrthographic()) {
+		return m_orthographicMatrix;
+	}
+	else {
+		return m_perspectiveMatrixReverseZ;
+	}
 }
 
 glm::mat4 Viewport::GetPerpsectiveMatrix() const {

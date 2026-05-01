@@ -1,5 +1,6 @@
 #include "Util.h"
 #include "AssetManagement/AssetManager.h"
+#include "Config/Config.h"
 #include "Input/Input.h"
 #include <array>
 
@@ -263,13 +264,13 @@ namespace Util {
 
         for (size_t i = 0; i < shadowCascadeLevels.size() + 1; ++i) {
             if (i == 0) {
-                ret.push_back(GetLightSpaceMatrix(viewMatrix, lightDir, viewportWidth, viewportHeight, fov, NEAR_PLANE, shadowCascadeLevels[i]));
+                ret.push_back(GetLightSpaceMatrix(viewMatrix, lightDir, viewportWidth, viewportHeight, fov, Config::GetNearPlane(), shadowCascadeLevels[i]));
             }
             else if (i < shadowCascadeLevels.size()) {
                 ret.push_back(GetLightSpaceMatrix(viewMatrix, lightDir, viewportWidth, viewportHeight, fov, shadowCascadeLevels[i - 1], shadowCascadeLevels[i]));
             }
             else {
-                ret.push_back(GetLightSpaceMatrix(viewMatrix, lightDir, viewportWidth, viewportHeight, fov, shadowCascadeLevels[i - 1], FAR_PLANE));
+                ret.push_back(GetLightSpaceMatrix(viewMatrix, lightDir, viewportWidth, viewportHeight, fov, shadowCascadeLevels[i - 1], Config::GetFarPlane()));
             }
         }
         return ret;

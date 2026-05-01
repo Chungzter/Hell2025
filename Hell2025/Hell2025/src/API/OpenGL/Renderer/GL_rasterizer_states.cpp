@@ -1,6 +1,171 @@
 #include "GL_renderer.h"
+#include <Hell/Logging.h>
 
 namespace OpenGLRenderer {
+
+    OpenGLRasterizerState g_globalState;
+    bool g_stateInitialized = false;
+
+	void ForceRasterizerState(const std::string& name) {
+		OpenGLRasterizerState* rasterizerState = GetRasterizerState(name);
+		if (!rasterizerState) {
+			std::cout << "OpenGLRenderer::ForceRasterizerState(const std::string& name) failed! " << name << " does not exist!\n";
+			return;
+		}
+		ForceRasterizerState(*rasterizerState);
+	}
+
+	void ForceRasterizerState(const OpenGLRasterizerState& newState) {
+		newState.blendEnable ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+		newState.cullfaceEnable ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
+		newState.depthMask ? glDepthMask(GL_TRUE) : glDepthMask(GL_FALSE);
+		newState.depthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+		newState.colorMask ? glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE) : glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glCullFace(newState.cullfaceMode);
+
+		if (newState.blendEnable)      glBlendFunc(newState.blendFuncSrcfactor, newState.blendFuncDstfactor);
+		if (newState.depthTestEnabled) glDepthFunc(newState.depthFunc);
+		if (newState.pointSize > 1.0f) glPointSize(newState.pointSize);
+
+		g_globalState = newState;
+		g_stateInitialized = true;
+	}
+
+	void SetRasterizerState(const OpenGLRasterizerState& newState) {
+		if (!g_stateInitialized) {
+			ForceRasterizerState(newState);
+			return;
+		}
+
+		bool blendWasDisabled = !g_globalState.blendEnable;
+		if (g_globalState.blendEnable != newState.blendEnable) {
+			newState.blendEnable ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+		}
+
+		if (newState.blendEnable) {
+			if (blendWasDisabled ||
+				g_globalState.blendFuncSrcfactor != newState.blendFuncSrcfactor ||
+				g_globalState.blendFuncDstfactor != newState.blendFuncDstfactor) {
+				glBlendFunc(newState.blendFuncSrcfactor, newState.blendFuncDstfactor);
+			}
+		}
+
+		if (g_globalState.cullfaceEnable != newState.cullfaceEnable) {
+			newState.cullfaceEnable ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
+		}
+
+		if (newState.cullfaceEnable) {
+			if (g_globalState.cullfaceMode != newState.cullfaceMode) {
+				glCullFace(newState.cullfaceMode);
+			}
+		}
+
+		if (g_globalState.depthMask != newState.depthMask) {
+			glDepthMask(newState.depthMask ? GL_TRUE : GL_FALSE);
+		}
+
+		bool depthWasDisabled = !g_globalState.depthTestEnabled;
+		if (g_globalState.depthTestEnabled != newState.depthTestEnabled) {
+			newState.depthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+		}
+
+		if (newState.depthTestEnabled) {
+			if (depthWasDisabled || g_globalState.depthFunc != newState.depthFunc) {
+				glDepthFunc(newState.depthFunc);
+			}
+		}
+
+		if (g_globalState.colorMask != newState.colorMask) {
+			if (newState.colorMask) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			else glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		}
+
+		if (g_globalState.pointSize != newState.pointSize) {
+			if (newState.pointSize > 1.0f) {
+				glPointSize(newState.pointSize);
+			}
+		}
+
+		g_globalState = newState;
+	}
+
+	void VerifyStateCache() {
+		if (!g_stateInitialized) {
+			return;
+		}
+
+		GLboolean glBool;
+		GLint glInt;
+		GLfloat glFloat;
+
+		// Blend Enable
+		glBool = glIsEnabled(GL_BLEND);
+		if (g_globalState.blendEnable != (glBool == GL_TRUE)) {
+			Logging::Error() << "State Leak: GL_BLEND out of sync\n";
+		}
+
+		// Cull Face
+		glBool = glIsEnabled(GL_CULL_FACE);
+		if (g_globalState.cullfaceEnable != (glBool == GL_TRUE)) {
+			Logging::Error() << "State Leak: GL_CULL_FACE out of sync\n";
+		}
+
+		// Cull Face Mode
+		if (g_globalState.cullfaceEnable) {
+			glGetIntegerv(GL_CULL_FACE_MODE, &glInt);
+			if (g_globalState.cullfaceMode != (GLenum)glInt) {
+				Logging::Error() << "State Leak: GL_CULL_FACE_MODE out of sync\n";
+			}
+		}
+
+		// Depth Mask
+		glGetBooleanv(GL_DEPTH_WRITEMASK, &glBool);
+		if (g_globalState.depthMask != (glBool == GL_TRUE)) {
+			Logging::Error() << "State Leak: GL_DEPTH_WRITEMASK out of sync\n";
+		}
+
+		// Depth Test
+		glBool = glIsEnabled(GL_DEPTH_TEST);
+		if (g_globalState.depthTestEnabled != (glBool == GL_TRUE)) {
+			Logging::Error() << "State Leak: GL_DEPTH_TEST out of sync\n";
+		}
+
+		// Color Mask
+		GLboolean colorMasks[4];
+		glGetBooleanv(GL_COLOR_WRITEMASK, colorMasks);
+		if (g_globalState.colorMask != (colorMasks[0] == GL_TRUE)) {
+			Logging::Error() << "State Leak: GL_COLOR_WRITEMASK out of sync\n";
+		}
+
+		// Blend Functions
+		if (g_globalState.blendEnable) {
+			glGetIntegerv(GL_BLEND_SRC_RGB, &glInt);
+			if (g_globalState.blendFuncSrcfactor != glInt) {
+				Logging::Error() << "State Leak: GL_BLEND_SRC_RGB out of sync\n";
+			}
+
+			glGetIntegerv(GL_BLEND_DST_RGB, &glInt);
+			if (g_globalState.blendFuncDstfactor != glInt) {
+				Logging::Error() << "State Leak: GL_BLEND_DST_RGB out of sync\n";
+			}
+		}
+
+		// Depth Function
+		if (g_globalState.depthTestEnabled) {
+			glGetIntegerv(GL_DEPTH_FUNC, &glInt);
+			if (g_globalState.depthFunc != glInt) {
+				Logging::Error() << "State Leak: GL_DEPTH_FUNC out of sync\n";
+			}
+		}
+
+		// Point Size
+		if (g_globalState.pointSize > 1.0f) {
+			glGetFloatv(GL_POINT_SIZE, &glFloat);
+			if (g_globalState.pointSize != glFloat) {
+				Logging::Error() << "State Leak: GL_POINT_SIZE out of sync\n";
+			}
+		}
+	}
 
     void InitRasterizerStates() {
         OpenGLRasterizerState* decalPass = CreateRasterizerState("DecalPass");
@@ -85,5 +250,4 @@ namespace OpenGLRenderer {
         skybox->depthMask = false;
         skybox->depthFunc = GL_LESS;
     }
-
 }

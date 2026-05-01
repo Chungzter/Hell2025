@@ -183,13 +183,14 @@ namespace OpenGLUtil {
     GLenum GLInternalFormatToGLType(GLenum internalFormat) {
         switch (internalFormat) {
             // Integers
-            case GL_R8UI: case GL_RG8UI: case GL_RGBA8UI:      return GL_UNSIGNED_BYTE;
-            case GL_R8I:  case GL_RG8I:  case GL_RGBA8I:       return GL_BYTE;
+            case GL_R8UI:  case GL_RG8UI:  case GL_RGBA8UI:    return GL_UNSIGNED_BYTE;
+            case GL_R8I:   case GL_RG8I:   case GL_RGBA8I:     return GL_BYTE;
             case GL_R16UI: case GL_RG16UI: case GL_RGBA16UI:   return GL_UNSIGNED_SHORT;
             case GL_R16I:  case GL_RG16I:  case GL_RGBA16I:    return GL_SHORT;
             case GL_R32UI: case GL_RG32UI: case GL_RGBA32UI:   return GL_UNSIGNED_INT;
             case GL_R32I:  case GL_RG32I:  case GL_RGBA32I:    return GL_INT;
-            case GL_RGB10_A2UI:                               return GL_UNSIGNED_INT_2_10_10_10_REV;
+            case GL_RGB10_A2UI:                                return GL_UNSIGNED_INT_2_10_10_10_REV;
+			case GL_RGB10_A2:                                  return GL_UNSIGNED_INT_2_10_10_10_REV;
 
             // Normalized
             case GL_R8: case GL_RG8: case GL_RGBA8:
@@ -198,7 +199,8 @@ namespace OpenGLUtil {
 
             // Floats
             case GL_R16F: case GL_RG16F: case GL_RGBA16F:      return GL_HALF_FLOAT;
-            case GL_R32F: case GL_RG32F: case GL_RGBA32F:      return GL_FLOAT;
+			case GL_R32F: case GL_RG32F: case GL_RGBA32F:      return GL_FLOAT;
+			case GL_R11F_G11F_B10F:                            return GL_UNSIGNED_INT_10F_11F_11F_REV;
 
             // Depth/stencil
             case GL_DEPTH_COMPONENT16:                         return GL_UNSIGNED_SHORT;

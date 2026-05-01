@@ -37,7 +37,7 @@ namespace OpenGLRenderer {
 
         gBuffer->Bind();
         gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive" });
-        SetRasterizerState("GeometryPass_Default");
+        ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
 
         shader->Bind();
@@ -77,7 +77,7 @@ namespace OpenGLRenderer {
                 glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
             }
 		}
-		glFinish();
+		//glFinish();
     }
 
 
@@ -102,7 +102,7 @@ namespace OpenGLRenderer {
 
         // Default
         shader->SetBool("u_alphaDiscard", false);
-        SetRasterizerState("GeometryPass_Default");
+        ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -111,16 +111,16 @@ namespace OpenGLRenderer {
             OpenGLRenderer::SetViewport(gBuffer, viewport);
 
             if (BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedNonDeformingDefault[i], true, false);
+                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedNonDeformingStandard[i], true, false);
             }
             else {
-                MultiDrawIndirect(drawInfoSet.skinnedNonDeformingDefault[i]);
+                MultiDrawIndirect(drawInfoSet.skinnedNonDeformingStandard[i]);
             }
         }
 
         // Alpha Discard
         shader->SetBool("u_alphaDiscard", true);
-        SetRasterizerState("GeometryPass_AlphaDiscard");
+        ForceRasterizerState("GeometryPass_AlphaDiscard");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -129,10 +129,10 @@ namespace OpenGLRenderer {
             OpenGLRenderer::SetViewport(gBuffer, viewport);
 
             if (BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedNonDeformingAlphaDiscarded[i], true, false);
+                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedNonDeformingAlphaDiscard[i], true, false);
             }
             else {
-                MultiDrawIndirect(drawInfoSet.skinnedNonDeformingAlphaDiscarded[i]);
+                MultiDrawIndirect(drawInfoSet.skinnedNonDeformingAlphaDiscard[i]);
             }
 
             // Hair
@@ -148,7 +148,7 @@ namespace OpenGLRenderer {
         // Blended
         shader->SetBool("u_alphaDiscard", false);
         gBuffer->DrawBuffers({ "BaseColor" });
-        SetRasterizerState("GeometryPass_Blended");
+        ForceRasterizerState("GeometryPass_Blended");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -198,7 +198,7 @@ namespace OpenGLRenderer {
 
         // Default (Non blended)
         shader->SetBool("u_alphaDiscard", false);
-        SetRasterizerState("GeometryPass_Default");
+        ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
@@ -206,17 +206,17 @@ namespace OpenGLRenderer {
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
                 if (BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(shader, drawInfoSet.geometry[i], true, false);
+                    SplitMultiDrawIndirect(shader, drawInfoSet.standard[i], true, false);
                 }
                 else {
-                    MultiDrawIndirect(drawInfoSet.geometry[i]);
+                    MultiDrawIndirect(drawInfoSet.standard[i]);
                 }
             }
         }
 
         // Alpha discard
         shader->SetBool("u_alphaDiscard", true);
-        SetRasterizerState("GeometryPass_AlphaDiscard");
+        ForceRasterizerState("GeometryPass_AlphaDiscard");
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
@@ -224,10 +224,10 @@ namespace OpenGLRenderer {
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
                 if (BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(shader, drawInfoSet.geometryAlphaDiscard[i], true, false);
+                    SplitMultiDrawIndirect(shader, drawInfoSet.alphaDiscard[i], true, false);
                 }
                 else {
-                    MultiDrawIndirect(drawInfoSet.geometryAlphaDiscard[i]);
+                    MultiDrawIndirect(drawInfoSet.alphaDiscard[i]);
                 }
 
                 // Hair
@@ -244,7 +244,7 @@ namespace OpenGLRenderer {
         // Blended
         shader->SetBool("u_alphaDiscard", false);
         gBuffer->DrawBuffers({ "BaseColor" });
-        SetRasterizerState("GeometryPass_Blended");
+        ForceRasterizerState("GeometryPass_Blended");
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
@@ -252,10 +252,10 @@ namespace OpenGLRenderer {
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
                 if (BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(shader, drawInfoSet.geometryBlended[i], true, false);
+                    SplitMultiDrawIndirect(shader, drawInfoSet.blended[i], true, false);
                 }
                 else {
-                    MultiDrawIndirect(drawInfoSet.geometryBlended[i]);
+                    MultiDrawIndirect(drawInfoSet.blended[i]);
                 }
             }
         }
@@ -276,7 +276,7 @@ namespace OpenGLRenderer {
 
         // Skinned mesh (non blended)
         shader->SetBool("u_alphaDiscard", false);
-        SetRasterizerState("GeometryPass_Default");
+        ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -285,16 +285,16 @@ namespace OpenGLRenderer {
             OpenGLRenderer::SetViewport(gBuffer, viewport);
 
             if (BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedGeometry[i], true, true);
+                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedStandard[i], true, true);
             }
             else {
-                MultiDrawIndirect(drawInfoSet.skinnedGeometry[i]);
+                MultiDrawIndirect(drawInfoSet.skinnedStandard[i]);
             }
         }
 
         // Skinned mesh (alpha discard)
         shader->SetBool("u_alphaDiscard", true);
-        SetRasterizerState("GeometryPass_AlphaDiscard");
+        ForceRasterizerState("GeometryPass_AlphaDiscard");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -303,26 +303,26 @@ namespace OpenGLRenderer {
             OpenGLRenderer::SetViewport(gBuffer, viewport);
 
             if (BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedGeometryAlphaDiscard[i], true, false);
+                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedAlphaDiscard[i], true, false);
             }
             else {
-                MultiDrawIndirect(drawInfoSet.skinnedGeometryAlphaDiscard[i]);
+                MultiDrawIndirect(drawInfoSet.skinnedAlphaDiscard[i]);
             }
 
             // Hair
             glDisable(GL_CULL_FACE);
             if (BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedGeometryHair[i], true, false);
+                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedHair[i], true, false);
             }
             else {
-                MultiDrawIndirect(drawInfoSet.skinnedGeometryHair[i]);
+                MultiDrawIndirect(drawInfoSet.skinnedHair[i]);
             }
         }
 
         // Skinned mesh (alpha blended)
         shader->SetBool("u_alphaDiscard", false);
         gBuffer->DrawBuffers({ "BaseColor" });
-        SetRasterizerState("GeometryPass_Blended");
+        ForceRasterizerState("GeometryPass_Blended");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -331,10 +331,10 @@ namespace OpenGLRenderer {
             OpenGLRenderer::SetViewport(gBuffer, viewport);
 
             if (BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedGeometryBlended[i], true, true);
+                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedBlended[i], true, true);
             }
             else {
-                MultiDrawIndirect(drawInfoSet.skinnedGeometryBlended[i]);
+                MultiDrawIndirect(drawInfoSet.skinnedBlended[i]);
             }
         }
 
@@ -349,7 +349,7 @@ namespace OpenGLRenderer {
 
         OpenGLShader* christmasLightWireShader = GetShader("ChristmasLightsWire");
         christmasLightWireShader->Bind();
-        SetRasterizerState("GeometryPass_Default");
+        ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
@@ -387,7 +387,7 @@ namespace OpenGLRenderer {
 
         OpenGLShader* ragdollShader = GetShader("DebugRagdoll");
         ragdollShader->Bind();
-        SetRasterizerState("GeometryPass_Default");
+        ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
@@ -544,7 +544,7 @@ namespace OpenGLRenderer {
         // Clear the depth buffer so that the mirror world has a clean depth state to test against
         gBuffer->ClearDepthAttachment();
 
-        SetRasterizerState("GeometryPass_Default");
+        ForceRasterizerState("GeometryPass_Default");
 
         glEnable(GL_CLIP_DISTANCE0);
         glFrontFace(GL_CW);

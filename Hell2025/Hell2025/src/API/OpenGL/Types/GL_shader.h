@@ -6,7 +6,7 @@
 
 struct OpenGLShaderModule {
 public:
-    OpenGLShaderModule(const std::string& filename);
+    OpenGLShaderModule(const std::string& filename, const std::vector<std::string>& defines);
     int GetHandle();
     bool CompilationFailed();
     std::string& GetFilename();
@@ -22,7 +22,7 @@ private:
 struct OpenGLShader {
 public:
     OpenGLShader() = default;
-	OpenGLShader(std::vector<std::string> shaderPaths);
+	OpenGLShader(std::vector<std::string> shaderPaths, const std::string subDirectory, const std::vector<std::string>& defines);
     void Bind();
     bool Load(std::vector<std::string> shaderPaths);
 	bool Hotload();
@@ -48,8 +48,12 @@ public:
     void SetIVec2Array(const std::string& name, const std::vector<glm::ivec2>& data);
 
     int GetHandle();
+    const std::vector<std::string>& GetPaths() const { return m_shaderPaths; }
+
 private:
+    std::vector<std::string> m_defines;
     std::vector<std::string> m_shaderPaths;
     std::unordered_map<std::string, int> m_uniformLocations;
     int m_handle = -1;
+    std::string m_subDirectory = "";
 };

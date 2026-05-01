@@ -6,6 +6,7 @@
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
 #include "Hell/UniqueID.h"
+#include "Config/Config.h"
 
 namespace OpenGLRenderer {
 
@@ -24,8 +25,8 @@ namespace OpenGLRenderer {
         shader->SetVec3("color", { 0, 0.9f, 1 });
         shader->SetFloat("alpha", 0.01f);
         shader->SetVec2("screensize", gBuffer->GetWidth(), gBuffer->GetHeight());
-        shader->SetFloat("near", NEAR_PLANE);
-        shader->SetFloat("far", FAR_PLANE);
+        shader->SetFloat("near", Config::GetNearPlane());
+        shader->SetFloat("far", Config::GetFarPlane());
         shader->SetFloat("u_time", time);
 
         gBuffer->Bind();

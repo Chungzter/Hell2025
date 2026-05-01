@@ -132,24 +132,27 @@ namespace OpenGLRenderer {
 
         const std::vector<GPULight>& gpuLightsHighRes = RenderDataManager::GetGPULightsHighRes();
 
+		OpenGLRasterizerState state;
+		state.depthMask = true;
+		state.depthTestEnabled = true;
+		state.blendEnable = false;
+		state.cullfaceEnable = false;
+		state.cullfaceMode = GL_FRONT;
+		ForceRasterizerState(state);
+
         // Clear any shadow map that needs redrawing
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
             const GPULight& gpuLight = gpuLightsHighRes[i];
             Light* light = World::GetLightByIndex(gpuLight.lightIndex);
-
+            
             if (light->IsDirtyForShadowMaps()) {
                 hiResShadowMaps->ClearDepthLayer(i, 1.0f);
             }
         }
 
-        glDepthMask(true);
-        glDisable(GL_BLEND);
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_DEPTH_TEST);
         glViewport(0, 0, hiResShadowMaps->GetSize(), hiResShadowMaps->GetSize());
         glBindFramebuffer(GL_FRAMEBUFFER, hiResShadowMaps->GetHandle());
 
-        glCullFace(GL_FRONT);
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
@@ -172,10 +175,6 @@ namespace OpenGLRenderer {
                 shader->SetInt("faceIndex", face);
                 glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, hiResShadowMaps->GetDepthTexture(), 0, layer);
                 MultiDrawIndirect(drawInfoSet.shadowMapHiRes[i][face]);
-
-                //const std::vector<DrawIndexedIndirectCommand>& commands = drawInfoSet.shadowMapHiRes[i][face];
-                //std::cout << gpuLight.lightIndex << ": " << face << " " << commands.size() << "\n";
-
             }
         }
 
@@ -225,65 +224,6 @@ namespace OpenGLRenderer {
                 }
             }
         }
-
-
-        return;
-
-
-        // Ragdoll
-        //RagdollInfo& ragdoll = RagdollManager::GetRagdoll();
-        //MeshBuffer& meshBuffer = ragdoll.GetMeshBuffer();
-        //glBindVertexArray(meshBuffer.GetGLMeshBuffer().GetVAO());
-        shader->SetBool("u_useInstanceData", false);
-
-        for (int i = 0; i < gpuLightsHighRes.size(); i++) {
-            const GPULight& gpuLight = gpuLightsHighRes[i];
-
-            Light* light = World::GetLightByIndex(gpuLight.lightIndex);
-            if (!light || !light->IsDirtyForShadowMaps()) continue;
-
-            shader->SetFloat("farPlane", light->GetRadius());
-            shader->SetVec3("lightPosition", light->GetPosition());
-            shader->SetMat4("shadowMatrices[0]", light->GetProjectionView(0));
-            shader->SetMat4("shadowMatrices[1]", light->GetProjectionView(1));
-            shader->SetMat4("shadowMatrices[2]", light->GetProjectionView(2));
-            shader->SetMat4("shadowMatrices[3]", light->GetProjectionView(3));
-            shader->SetMat4("shadowMatrices[4]", light->GetProjectionView(4));
-            shader->SetMat4("shadowMatrices[5]", light->GetProjectionView(5));
-
-            for (int face = 0; face < 6; ++face) {
-                shader->SetInt("faceIndex", face);
-                int shadowMapIndex = i;
-                GLuint layer = shadowMapIndex * 6 + face;
-
-                glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, hiResShadowMaps->GetDepthTexture(), 0, layer);
-
-                Frustum* frustum = light->GetFrustumByFaceIndex(face);
-                if (!frustum) return;
-
-                // Ragdoll
-                //auto& ragdolls = RagdollManager::GetRagdolls();
-                //for (auto it = ragdolls.begin(); it != ragdolls.end(); ) {
-                //    RagdollV2& ragdoll = it->second;
-                //
-                //    if (ragdoll.RenderingEnabled()) {
-                //        MeshBuffer& meshBuffer = ragdoll.GetMeshBuffer();
-                //        if (meshBuffer.GetIndices().size() == 0) continue;
-                //
-                //        glBindVertexArray(meshBuffer.GetGLMeshBuffer().GetVAO());
-                //        for (int j = 0; j < meshBuffer.GetMeshCount(); j++) {
-                //            Mesh* mesh = meshBuffer.GetMeshByIndex(j);
-                //            glm::mat4 modelMatrix = ragdoll.GetModelMatrixByRigidIndex(j);
-                //            shader->SetMat4("u_modelMatrix", modelMatrix);
-                //            glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
-                //        }
-                //    }
-                //    ++it;
-                //}
-            }
-        }
-
-        glCullFace(GL_BACK);
     }
 
 

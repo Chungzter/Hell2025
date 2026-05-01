@@ -49,6 +49,9 @@ void Mermaid::Init(MermaidCreateInfo createInfo, SpawnOffset spawnOffset) {
 }
 
 void Mermaid::Update(float deltaTime) {
+    m_transform.rotation.y = HELL_PI * 0.5f;
+    //m_transform.position.x = 36.6f;
+    //m_transform.position.z = 36.4f;
     UpdateRenderItems();
 
     static bool titties = false;

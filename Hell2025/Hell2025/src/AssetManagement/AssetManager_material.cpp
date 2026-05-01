@@ -37,16 +37,27 @@ namespace AssetManager {
 		int defaultNormal = -1;
 		int defaultRma = -1;
 		int defaultEmi = -1;
+		int defaulthairFlowMap = -1;
+        int defaulthairIdMap = -1;
+        int defaulthairRootMap = -1;
+        int defaulthairBlendMap = -1;
+
         for (int i = 0; i < textures.size(); i++) {
             if (textures[i].GetFileName() == "DefaultNRM") {
                 defaultNormal = i;
 			}
 			if (textures[i].GetFileName() == "DefaultRMA") {
 				defaultRma = i;
-			}
-			if (textures[i].GetFileName() == "Black") {
+            }
+            if (textures[i].GetFileName() == "Black") {
                 defaultEmi = i;
-			}
+                defaulthairFlowMap = i;
+                defaulthairIdMap = i;
+                defaulthairRootMap = i;
+            }
+            if (textures[i].GetFileName() == "White") {
+                defaulthairBlendMap = i;
+            }
         }
 
         // Look for textures with _ALB suffix, create a material, and search for accompanying _NRM & _RMA textures
@@ -63,33 +74,40 @@ namespace AssetManager {
 				material.m_normal = defaultNormal;
 				material.m_rma = defaultRma;
 				material.m_emissive = defaultEmi;
+				material.m_hairFlowMap = defaulthairFlowMap;
+                material.m_hairIdMap = defaulthairIdMap;
+                material.m_hairRootMap = defaulthairRootMap;
+                material.m_hairBlendMap = defaulthairBlendMap;
 
                 for (int j = 0; j < textures.size(); j++) {
                     if (textures[j].GetFileName() == material.m_name + "_ALB") {
                         material.m_basecolor = j;
-                        break;
                     }
-                }
-
-                for (int j = 0; j < textures.size(); j++) {
                     if (textures[j].GetFileName() == material.m_name + "_NRM") {
                         material.m_normal = j;
-                        break;
                     }
-                }
-
-				for (int j = 0; j < textures.size(); j++) {
 					if (textures[j].GetFileName() == material.m_name + "_RMA") {
 						material.m_rma = j;
-						break;
 					}
-				}
-
-				for (int j = 0; j < textures.size(); j++) {
-					if (textures[j].GetFileName() == material.m_name + "_EMI") {
-						material.m_emissive = j;
-						break;
+                    if (textures[j].GetFileName() == material.m_name + "_EMI") {
+                        material.m_emissive = j;
+                    }
+					if (textures[j].GetFileName() == material.m_name + "_HAIR_FLOW") {
+						std::cout << textures[j].GetFileName() << " found\n";
+						material.m_hairFlowMap = j;
 					}
+					if (textures[j].GetFileName() == material.m_name + "_HAIR_ID") {
+						std::cout << textures[j].GetFileName() << " found\n";
+						material.m_hairIdMap = j;
+                    }
+                    if (textures[j].GetFileName() == material.m_name + "_HAIR_ROOT") {
+                        std::cout << textures[j].GetFileName() << " found\n";
+                        material.m_hairRootMap = j;
+                    }
+                    if (textures[j].GetFileName() == material.m_name + "_HAIR_BLEND") {
+                        std::cout << textures[j].GetFileName() << " found\n";
+                        material.m_hairBlendMap = j;
+                    }
 				}
             }
         }

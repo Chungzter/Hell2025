@@ -14,13 +14,13 @@ struct ShaderParseContext {
     bool rootVersionSeen = false;
 };
 
-static void ParseFile(const std::string& filepath, std::string& outputString, std::vector<std::string>& lineToFile, ShaderParseContext& context, const std::string& rootFilepath);
+void InsertDefines(std::string& source, const std::vector<std::string>& defines);
+void ParseFile(const std::string& filepath, std::string& outputString, std::vector<std::string>& lineToFile, ShaderParseContext& context, const std::string& rootFilepath);
+void StripUTF8BOMFromLine(std::string& line);
 int GetErrorLineNumber(const std::string& error);
 std::string GetErrorMessage(const std::string& line);
 std::string GetLinkingErrors(unsigned int shader);
 std::string GetShaderCompileErrors(unsigned int shader, const std::string& filename, const std::vector<std::string>& lineToFile);
-//std::string StripBOM(const std::string& source);
-void StripUTF8BOMFromLine(std::string& line);
 
 static std::string LTrimCopy(const std::string& s) {
     size_t i = 0;
@@ -49,8 +49,11 @@ static bool TryParseInclude(const std::string& line, std::string& outIncludeFile
     return !outIncludeFile.empty();
 }
 
-OpenGLShader::OpenGLShader(std::vector<std::string> shaderPaths) {
+OpenGLShader::OpenGLShader(std::vector<std::string> shaderPaths, const std::string subDirectory, const std::vector<std::string>& defines) {
+    m_defines = defines;
     m_shaderPaths = shaderPaths;
+    m_subDirectory = subDirectory;
+
     Load(m_shaderPaths);
 }
 
@@ -66,8 +69,10 @@ bool OpenGLShader::Load(std::vector<std::string> shaderPaths) {
     // Compile shader modules
     std::vector<OpenGLShaderModule> modules;
     for (std::string& shaderPath : shaderPaths) {
-        modules.push_back(shaderPath);
+        std::string fullPath = m_subDirectory.empty() ? shaderPath : m_subDirectory + "/" + shaderPath;
+        modules.push_back(OpenGLShaderModule(fullPath, m_defines));
     }
+
     // Print compilation errors
     bool errorsFound = false;
     for (OpenGLShaderModule& module : modules) {
@@ -262,15 +267,14 @@ int OpenGLShader::GetHandle() {
     return m_handle;
 }
 
-OpenGLShaderModule::OpenGLShaderModule(const std::string& filename) {
+OpenGLShaderModule::OpenGLShaderModule(const std::string& filename, const std::vector<std::string>& defines) {
     // Parse the source code
+    ShaderParseContext context;
     std::vector<std::string> lineMap;
     std::string prasedShaderSource = "";
-    ShaderParseContext context;
-    ParseFile("res/shaders/OpenGL/" + filename, prasedShaderSource, lineMap, context, "res/shaders/OpenGL/" + filename);
 
-    // Strip any BOM characters. Apparently older drivers don't handle BOM bytes properly when compiling GLSL shaders
-    //prasedShaderSource = StripBOM(prasedShaderSource);
+    ParseFile("res/shaders/OpenGL/" + filename, prasedShaderSource, lineMap, context, "res/shaders/OpenGL/" + filename);
+    InsertDefines(prasedShaderSource, defines);
 
     // Get type based on extension
     std::string extension = std::filesystem::path(filename).extension().string();
@@ -445,22 +449,29 @@ std::string GetLinkingErrors(unsigned int programId) {
     return "";
 }
 
-/*
-std::string GetLinkingErrors(unsigned int shader) {
-    int success;
-    char infoLog[1024];
-    std::string result = "";
-    glGetProgramiv(shader, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-        std::stringstream logStream(infoLog);
-        std::string line;
-        while (std::getline(logStream, line)) {
-            result = "  " + line + "\n";
+void InsertDefines(std::string& source, const std::vector<std::string>& defines) {
+    if (defines.empty()) return;
+
+    // Build defines string
+    std::string definesBlock = "";
+    for (const std::string& define : defines) {
+        definesBlock += "#define " + define + "\n";
+    }
+
+    // Find the #version directive
+    size_t versionPos = source.find("#version");
+
+    if (versionPos != std::string::npos) {
+
+        // Find the end of the version line
+        size_t newlinePos = source.find('\n', versionPos);
+
+        // Insert the defines
+        if (newlinePos != std::string::npos) {
+            source.insert(newlinePos + 1, definesBlock);
         }
     }
-    return result;
-}*/
+}
 
 int GetErrorLineNumber(const std::string& error) {
     size_t firstColon = error.find(':');
@@ -493,13 +504,6 @@ std::string GetErrorMessage(const std::string& line) {
     }
     return ""; // Return empty string if parsing fails
 }
-
-//std::string StripBOM(const std::string& source) {
-//    const std::string bom = "\xEF\xBB\xBF";
-//    if (source.compare(0, bom.size(), bom) == 0)
-//        return source.substr(bom.size());
-//    return source;
-//}
 
 void StripUTF8BOMFromLine(std::string& line) {
     if (line.size() >= 3) {

@@ -34,8 +34,8 @@ namespace OpenGLRenderer {
             lightIndex++;
         }
 
-        if (lightIndex < 3) lightIndex == World::GetLightCount() - 1;
-        if (lightIndex == World::GetLightCount()) lightIndex == 3;
+        if (lightIndex < 3) lightIndex = World::GetLightCount() - 1;
+        if (lightIndex == World::GetLightCount()) lightIndex = 3;
 
         if (Input::KeyPressed(HELL_KEY_Y)) {
             RenderWorldPosition(lightIndex);

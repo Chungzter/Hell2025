@@ -22,7 +22,7 @@ namespace OpenGLRenderer {
         gBuffer->Bind();
         gBuffer->DrawBuffer("FinalLighting");
         shader->Bind();
-        SetRasterizerState("SpriteSheetPass");
+        ForceRasterizerState("SpriteSheetPass");
 
 
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());

@@ -51,7 +51,7 @@ namespace OpenGLRenderer {
 
         BindSSBO("TileLights", 5);
 
-		SetRasterizerState("GeometryPass_Default");
+		ForceRasterizerState("GeometryPass_Default");
 
 		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 
@@ -165,7 +165,7 @@ namespace OpenGLRenderer {
 
 		shader->Bind();
 
-		SetRasterizerState("GeometryPass_Default");
+		ForceRasterizerState("GeometryPass_Default");
 		EditorRasterizerStateOverride();
 
 		glDisable(GL_DEPTH_TEST);

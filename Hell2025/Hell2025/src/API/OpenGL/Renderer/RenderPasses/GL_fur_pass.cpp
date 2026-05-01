@@ -34,7 +34,7 @@ namespace OpenGLRenderer {
 
         shader->Bind();
 
-        SetRasterizerState("GeometryPass_Blended");
+        ForceRasterizerState("GeometryPass_Blended");
 
         static bool skip = false;
         if (Input::KeyPressed(HELL_KEY_X)) {
