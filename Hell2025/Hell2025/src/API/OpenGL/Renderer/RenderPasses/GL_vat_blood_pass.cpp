@@ -15,8 +15,8 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLShader* shader = GetShader("VatBlood");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("VatBlood");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 
         if (!shader) return;
         if (!gBuffer) return;

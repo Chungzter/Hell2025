@@ -40,7 +40,7 @@ struct AnimatedMeshNodes {
 
     void SetMeshWoundMaskTextureIndex(const std::string& meshName, int32_t woundMaskTextureIndex);
     void SetBlendingModeByMeshName(const std::string& meshName, BlendingMode blendingMode);
-    void SetMeshMaterialByMeshName(const std::string& meshName, const std::string& materialName);
+    void SetMeshMaterialByMeshName(const std::string& meshName, const std::string& materialName, BlendingMode blendingMode = BlendingMode::DEFAULT);
     void SetMeshMaterialByMeshIndex(int meshIndex, const std::string& materialName);
     void SetMeshToRenderAsGlassByMeshIndex(const std::string& materialName);
     void SetMeshFurLength(const std::string& meshName, float furLength);

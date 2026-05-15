@@ -36,6 +36,7 @@ layout (location = 1) out vec4 NormalOut;
 layout (location = 2) out vec4 RMAOut;
 layout (location = 3) out vec4 WorldPositionOut;
 layout (location = 4) out vec4 EmissiveOut;
+layout (location = 5) out vec4 VelocityOcclusionSubSurfaceOut;
 
 in vec2 TexCoord;
 in vec3 Normal;
@@ -43,6 +44,8 @@ in vec3 Tangent;
 in vec4 WorldPos;
 in vec3 ViewPos;
 in vec3 EmissiveColor;
+in vec4 v_currPos;
+in vec4 v_prevPos;
 
 in flat int WoundMaskTextureIndex;
 in flat int BlockScreenSpaceBloodDecalsFlag;
@@ -125,7 +128,6 @@ void main() {
         normalMap.y *= -1.0;
     };
 
-    
     vec3 normal = normalize(tbn * (normalMap));
 
     if (!gl_FrontFacing) {
@@ -143,9 +145,13 @@ void main() {
     // Thickness
     float thickness = rmat.a;
 
-
+    // Emissive
     EmissiveOut.a = thickness;
-
-    //BaseColorOut = vec4(thickness, thickness, thickness, 1.0);
-    //BaseColorOut = vec4(vec3(rmat.a), 1.0);
+    
+    // Velocity
+    vec2 currNDC = v_currPos.xy / v_currPos.w;
+    vec2 prevNDC = v_prevPos.xy / v_prevPos.w;
+    vec2 velocity = currNDC - prevNDC;
+    velocity *= 0.5;
+    VelocityOcclusionSubSurfaceOut = vec4(velocity, rmat.a, 1.0);
 }

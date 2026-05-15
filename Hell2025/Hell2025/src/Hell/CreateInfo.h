@@ -120,12 +120,6 @@ struct ChristmasLightsCreateInfo {
     glm::vec3 sprialTopCenter;
 };
 
-struct ChristmasPresentCreateInfo {
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
-    ChristmasPresentType type = ChristmasPresentType::SMALL;
-};
-
 struct ChristmasTreeCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);

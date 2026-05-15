@@ -9,11 +9,11 @@ namespace OpenGLRenderer {
 
         ForceRasterizerState("EmissivePass");
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* finalImageFBO = GetFrameBuffer("FinalImage");
-        OpenGLShader* horizontalShader = GetShader("BlurHorizontal");
-        OpenGLShader* verticalShader = GetShader("BlurVertical");
-        OpenGLShader* compositeShader = GetShader("EmissiveComposite");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* finalImageFBO = GetFrameBufferOLD("FinalImage");
+        OpenGLShader* horizontalShader = GetShaderOLD("BlurHorizontal");
+        OpenGLShader* verticalShader = GetShaderOLD("BlurVertical");
+        OpenGLShader* compositeShader = GetShaderOLD("EmissiveComposite");
 
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         glDisable(GL_DEPTH_TEST);

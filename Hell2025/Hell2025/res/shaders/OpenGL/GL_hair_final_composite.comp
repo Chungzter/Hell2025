@@ -26,5 +26,6 @@ void main() {
     
     // Write the final composited color back
     vec4 finalOutput = vec4(blendedColor, blendedAlpha);    
+
     imageStore(outputImage, pixelCoords, finalOutput);
 }

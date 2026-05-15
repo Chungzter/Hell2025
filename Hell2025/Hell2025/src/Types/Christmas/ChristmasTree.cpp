@@ -1,5 +1,4 @@
 #include "ChristmasTree.h"
-#include "ChristmasPresent.h"
 #include "AssetManagement/AssetManager.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"
@@ -16,24 +15,15 @@ ChristmasTree::ChristmasTree(const ChristmasTreeCreateInfo& createInfo, const Sp
     m_modelMatrix = transform.to_mat4();
 
     CreateRenderItems();
-    SpawnPresents(glm::vec3(0.0f, 1.0f, 0.0f));
-
 
     ChristmasLightsCreateInfo christmasLightsCreateInfo;
-    //christmasLightsCreateInfo.start = createInfo.position;
-    //christmasLightsCreateInfo.end = createInfo.position;
-
-
     christmasLightsCreateInfo.sprialTopCenter = createInfo.position + glm::vec3(-0.08f, 1.7f, -0.03f);
     christmasLightsCreateInfo.spiral = true;
-
-
 
     World::AddChristmasLights(christmasLightsCreateInfo, spawnOffset);
 }
 
 void ChristmasTree::CreateRenderItems() {
-    // Build render items
     m_renderItems.clear();
 
     m_model = AssetManager::GetModelByName("ChristmasTree");
@@ -44,7 +34,7 @@ void ChristmasTree::CreateRenderItems() {
 
     m_material = AssetManager::GetMaterialByName("ChristmasTree");
     if (!m_material) {
-        std::cout << "Could not get ChristmasTree mateial\n";
+        std::cout << "Could not get ChristmasTree material\n";
         return;
     }
 
@@ -70,25 +60,4 @@ void ChristmasTree::Update(float deltaTime) {
 
 void ChristmasTree::CleanUp() {
     // Nothing as of yet
-}
-
-void ChristmasTree::SpawnPresents(glm::vec3 localOffset) {
-    int w = 4;
-    int h = 4;
-    int d = 4;
-    float spacing = 0.25f;
-
-    for (int x = -w / 2; x < w / 2; x++) {
-        for (int y = -h / 2; y < h / 2; y++) {
-            for (int z = -d / 2; z < d / 2; z++) {
-                ChristmasPresentCreateInfo createInfo;
-                createInfo.position = m_position + localOffset + (glm::vec3(x, y, z) * spacing);
-                createInfo.rotation.x = Util::RandomFloat(0.0f, HELL_PI);
-                createInfo.rotation.y = Util::RandomFloat(0.0f, HELL_PI);
-                createInfo.rotation.z = Util::RandomFloat(0.0f, HELL_PI);
-                createInfo.type = ChristmasPresentType::SMALL;
-                World::AddChristmasPresent(createInfo);
-            }
-        }
-    }
 }

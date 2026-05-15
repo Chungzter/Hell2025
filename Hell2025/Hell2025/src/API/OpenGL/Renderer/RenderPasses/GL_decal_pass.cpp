@@ -16,8 +16,8 @@ namespace OpenGLRenderer {
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
         const std::vector<RenderItem>& decalRenderItems = RenderDataManager::GetDecalRenderItems();
 
-        OpenGLShader* shader = GetShader("Decals");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("Decals");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 
         shader->Bind();
 

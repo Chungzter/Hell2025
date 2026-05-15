@@ -1837,7 +1837,7 @@
         0.0
       ],
       "IESExposure": 1.0,
-      "IESProfileType": "LAMP_6",
+      "IESProfileType": "LAMP_0",
       "Position": [
         6.644947052001953,
         1.8480437994003296,
@@ -1850,7 +1850,7 @@
         0.0
       ],
       "SaveToFile": true,
-      "Strength": 1.0,
+      "Strength": 0.5,
       "Twist": 0.0,
       "Type": "WALL_LAMP"
     },

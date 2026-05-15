@@ -47,11 +47,11 @@ namespace OpenGLRenderer {
 		const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 		const std::vector<RenderItem>& renderItems = RenderDataManager::GetNonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent();
 
-		OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-		OpenGLFrameBuffer* depthPeeledTransparencyFbo = GetFrameBuffer("DepthPeeledTransparency");
-		OpenGLFrameBuffer* miscFullSizeFbo = GetFrameBuffer("MiscFullSize"); // Has gbuffer viewspace depth in here
-		OpenGLShader* depthPeelDepthShader = GetShader("DepthPeeledTransparencyDepth");
-		OpenGLShader* depthPeelColorShader = GetShader("DepthPeeledTransparencyColor");
+		OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+		OpenGLFrameBuffer* depthPeeledTransparencyFbo = GetFrameBufferOLD("DepthPeeledTransparency");
+		OpenGLFrameBuffer* miscFullSizeFbo = GetFrameBufferOLD("MiscFullSize"); // Has gbuffer viewspace depth in here
+		OpenGLShader* depthPeelDepthShader = GetShaderOLD("DepthPeeledTransparencyDepth");
+		OpenGLShader* depthPeelColorShader = GetShaderOLD("DepthPeeledTransparencyColor");
 
 		if (!gBuffer) return;
 		if (!depthPeeledTransparencyFbo) return;
@@ -111,7 +111,7 @@ namespace OpenGLRenderer {
 					BlitFrameBufferDepth(gBuffer, depthPeeledTransparencyFbo);
 
 					depthPeeledTransparencyFbo->Bind();
-					depthPeeledTransparencyFbo->ClearAttachment("ViewspaceDepth", 0.0f);
+					depthPeeledTransparencyFbo->ClearAttachmentR("ViewspaceDepth", 0.0f);
 					depthPeeledTransparencyFbo->DrawBuffers({ "ViewspaceDepth" });
 
 					depthPeelDepthShader->Bind();
@@ -134,7 +134,7 @@ namespace OpenGLRenderer {
 
 
 					depthPeeledTransparencyFbo->Bind();
-					depthPeeledTransparencyFbo->ClearAttachment("Color", 0.0f);
+					depthPeeledTransparencyFbo->ClearAttachment("Color", 0.0f, 0.0f, 0.0f, 0.0f);
 					depthPeeledTransparencyFbo->DrawBuffers({ "Color", "ViewspaceDepthPrevious"});
 
 
@@ -150,7 +150,7 @@ namespace OpenGLRenderer {
 					glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(material->m_rma)->GetGLTexture().GetHandle());
 
 
-					OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+					OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 					glActiveTexture(GL_TEXTURE6);
 					glBindTexture(GL_TEXTURE_2D, gBuffer->GetColorAttachmentHandleByName("FinalLighting"));
 					glActiveTexture(GL_TEXTURE7);
@@ -182,9 +182,9 @@ namespace OpenGLRenderer {
 	void
 		P90MagComposite() {
 
-		OpenGLFrameBuffer* depthPeeledTransparencyFbo = GetFrameBuffer("DepthPeeledTransparency");
-		OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-		OpenGLShader* shader = GetShader("DepthPeeledTransparencyComposite");
+		OpenGLFrameBuffer* depthPeeledTransparencyFbo = GetFrameBufferOLD("DepthPeeledTransparency");
+		OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+		OpenGLShader* shader = GetShaderOLD("DepthPeeledTransparencyComposite");
 
 		if (!depthPeeledTransparencyFbo) return;
 		if (!gBuffer) return;

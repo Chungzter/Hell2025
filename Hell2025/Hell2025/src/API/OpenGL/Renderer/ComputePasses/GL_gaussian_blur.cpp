@@ -3,8 +3,8 @@
 namespace OpenGLRenderer {
 
     void GaussianBlur(OpenGLFrameBuffer* srcFrameBuffer, OpenGLFrameBuffer* dstFrameBuffer, const std::string& srcAttachmentName, const std::string& dstAttachmentName, BlitRect srcRect, BlitRect dstRect, int blurRadius, int passCount) {
-        OpenGLFrameBuffer* gaussianFrameBuffer = GetFrameBuffer("GaussianBlur");
-        OpenGLShader* shader = GetShader("GaussianBlurUtil");
+        OpenGLFrameBuffer* gaussianFrameBuffer = GetFrameBufferOLD("GaussianBlur");
+        OpenGLShader* shader = GetShaderOLD("GaussianBlurUtil");
 
         if (!gaussianFrameBuffer) return;
         if (!shader) return;

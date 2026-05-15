@@ -7,7 +7,7 @@
 namespace P90MagManager {
     
     void SubmitMagForRender(const glm::mat4& worldTransform, uint32_t ammoInMag) {
-        Renderer::DrawPoint(worldTransform[3], RED);
+        //Renderer::DrawPoint(worldTransform[3], RED);
     }
     
     void SubmitRenderItems() {

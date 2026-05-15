@@ -14,9 +14,9 @@ namespace OpenGLRenderer {
 
 
     void ComputeViewspaceDepth() {
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* fullSizeFBO = GetFrameBuffer("MiscFullSize");
-        OpenGLShader* shader = GetShader("ViewspaceDepth");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* fullSizeFBO = GetFrameBufferOLD("MiscFullSize");
+        OpenGLShader* shader = GetShaderOLD("ViewspaceDepth");
 
         if (!gBuffer) return;
         if (!fullSizeFBO) return;
@@ -34,13 +34,13 @@ namespace OpenGLRenderer {
     void LightingPass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* finalImageFBO = GetFrameBuffer("FinalImage");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* finalImageFBO = GetFrameBufferOLD("FinalImage");
         OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
-        OpenGLFrameBuffer* indirectDiffuseFbo = GetFrameBuffer("IndirectDiffuse");
+        OpenGLFrameBuffer* indirectDiffuseFbo = GetFrameBufferOLD("IndirectDiffuse");
         OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
-        OpenGLShader* shader = GetShader("Lighting");
-        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBuffer("MiscFullSize");
+        OpenGLShader* shader = GetShaderOLD("Lighting");
+        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBufferOLD("MiscFullSize");
 
         if (!gBuffer) return;
         if (!miscFullSizeFBO) return;

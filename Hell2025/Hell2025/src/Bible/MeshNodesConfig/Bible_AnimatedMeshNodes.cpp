@@ -1,0 +1,105 @@
+#include "../Bible.h"
+
+namespace Bible {
+    void ConfigureAnimatedMeshNodesRatKing(uint64_t id, AnimatedMeshNodes* meshNodes);
+    void ConfigureAnimatedMeshNodesRemington870(uint64_t id, AnimatedMeshNodes* meshNodes);
+    void ConfigureAnimatedMeshNodesSPAS(uint64_t id, AnimatedMeshNodes* meshNodes);
+
+    void ConfigureAnimatedMeshNodes(uint64_t id, AnimatedMeshNodes* meshNodes, const std::string& presetName) {
+        if (presetName == "RatKing")      ConfigureAnimatedMeshNodesRatKing(id, meshNodes);
+        if (presetName == "Remington870") ConfigureAnimatedMeshNodesRemington870(id, meshNodes);
+        if (presetName == "SPAS")         ConfigureAnimatedMeshNodesSPAS(id, meshNodes);
+    }
+
+    void ConfigureAnimatedMeshNodesRatKing(uint64_t id, AnimatedMeshNodes* meshNodes) {
+        meshNodes->SetSkinnedModel(id, "RatKingNew2");
+
+        // Body
+        meshNodes->SetMeshMaterialByMeshName("CC_Base_Body", "RatKingHead");
+        meshNodes->SetMeshMaterialByMeshName("CC_Base_Body2", "RatKingTorso");
+        meshNodes->SetMeshMaterialByMeshName("CC_Base_Body3", "RatKingArms");
+        meshNodes->SetMeshMaterialByMeshName("CC_Base_Body4", "RatKingLegs");
+        meshNodes->SetMeshMaterialByMeshName("CC_Base_Body5", "RatKingNails");
+        meshNodes->SetMeshMaterialByMeshName("CC_Base_Body6", "RatKingLashes2", BlendingMode::BLENDED);
+        meshNodes->SetMeshMaterialByMeshName("CC_Base_Eye", "RatKingEye");
+        meshNodes->SetBlendingModeByMeshName("CC_Base_Eye2", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetMeshMaterialByMeshName("CC_Base_Eye3", "RatKingEye");
+        meshNodes->SetBlendingModeByMeshName("CC_Base_Eye4", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetBlendingModeByMeshName("CC_Base_TearLine", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetBlendingModeByMeshName("CC_Base_TearLine2", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetMeshMaterialByMeshName("CC_Base_Tongue", "TrapKingTongue");
+        meshNodes->SetMeshMaterialByMeshName("CC_Base_Teeth", "TrapKingTeethUpper");
+        meshNodes->SetMeshMaterialByMeshName("CC_Base_Teeth2", "TrapKingTeethLower");
+
+        // Brows
+        //meshNodes->SetMeshMaterialByMeshName("Brows_Bushy1", "???");
+        meshNodes->SetBlendingModeByMeshName("Brows_Bushy", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetMeshMaterialByMeshName("Brows_Bushy2", "RatKingBrows", BlendingMode::BLENDED);
+        meshNodes->SetMeshMaterialByMeshName("Brows_Bushy3", "RatKingBrows2", BlendingMode::BLENDED);
+
+        // Eyes
+        meshNodes->SetBlendingModeByMeshName("CC_Base_EyeOcclusion", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetBlendingModeByMeshName("CC_Base_EyeOcclusion2", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetMeshMaterialByMeshName("Lash_Low_Short_Sparse", "RatKingLashes", BlendingMode::BLENDED);
+        meshNodes->SetMeshMaterialByMeshName("Lash_Low_Sparse", "RatKingLashes", BlendingMode::BLENDED);
+        meshNodes->SetMeshMaterialByMeshName("Lash_Up_Downward", "RatKingLashes", BlendingMode::BLENDED);
+        meshNodes->SetMeshMaterialByMeshName("Lash_Up_Short_Sparse", "RatKingLashes", BlendingMode::BLENDED);
+
+        // Hair
+        meshNodes->SetMeshMaterialByMeshName("Side_swept_L", "RatKingHair", BlendingMode::HAIR);
+        meshNodes->SetMeshMaterialByMeshName("Long_Hair_R", "RatKingHair", BlendingMode::HAIR);
+        meshNodes->SetMeshMaterialByMeshName("Long_Hair_R2", "RatKingHair", BlendingMode::DO_NOT_RENDER); // some scalp
+        meshNodes->SetMeshMaterialByMeshName("Side_swept_Long_Hair_L", "RatKingScalp", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetMeshMaterialByMeshName("Side_swept_Long_Hair_L2", "RatKingHair", BlendingMode::HAIR);
+        meshNodes->SetMeshMaterialByMeshName("Side_swept_Long_Hair_R", "RatKingHair", BlendingMode::HAIR);
+        meshNodes->SetMeshMaterialByMeshName("Hair_Tattoo", "RatKingHeadTattoo", BlendingMode::BLENDED);
+        meshNodes->SetMeshMaterialByMeshName("Hair_Tattoo2", "RatKingScalp", BlendingMode::BLENDED);
+        meshNodes->SetMeshMaterialByMeshName("Scalp_Male", "RatKingScalp", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetMeshMaterialByMeshName("Side_swept_L2", "RatKingScalp", BlendingMode::DO_NOT_RENDER);
+
+        // Clothes
+        meshNodes->SetMeshMaterialByMeshName("Boxers", "BoxersBlack");
+        meshNodes->SetMeshMaterialByMeshName("Slim_Jeans", "Jeans");
+    }
+
+    void ConfigureAnimatedMeshNodesRemington870(uint64_t id, AnimatedMeshNodes* meshNodes) {
+        meshNodes->SetSkinnedModel(id, "Remington870");
+        meshNodes->SetMeshMaterialByMeshName("ArmsMale", "ArmsMale");
+        meshNodes->SetMeshMaterialByMeshName("ArmsFemale", "FemaleArms");
+        meshNodes->SetMeshMaterialByMeshName("Shells", "Shell");
+        meshNodes->SetMeshMaterialByMeshName("Shells.001", "Shell");
+        meshNodes->SetMeshMaterialByMeshName("Shells.002", "Shell");
+        meshNodes->SetMeshMaterialByMeshName("Shotgun", "Shotgun");
+        meshNodes->PrintMeshNames();
+    }
+
+    void ConfigureAnimatedMeshNodesSPAS(uint64_t id, AnimatedMeshNodes* meshNodes) {
+        meshNodes->SetSkinnedModel(id, "SPAS");
+        meshNodes->SetMeshMaterialByMeshName("ArmsMale", "ArmsMale");
+        meshNodes->SetMeshMaterialByMeshName("ArmsFemale", "FemaleArms");
+        meshNodes->SetMeshMaterialByMeshName("Shells", "Shell");
+        meshNodes->SetMeshMaterialByMeshName("Shells.002", "Shell");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Beachshroud", "SPAS2_Moving");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Bolt", "SPAS2_Moving");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Main", "SPAS2_Main");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Main_Moving_Low", "SPAS2_Moving");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Main_StampedSG", "SPAS2_Stamped");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Pumpslide", "SPAS2_Moving");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Ring", "SPAS2_Moving");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Stock_01", "SPAS2_Moving");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Stock_02", "SPAS2_Moving");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Stock_Holder", "SPAS2_Main");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Strock_Release", "SPAS2_Moving");
+        meshNodes->SetMeshMaterialByMeshName("SPAS12_Trigger", "SPAS2_Moving");
+    }
+}
+
+
+
+
+
+
+
+
+
+

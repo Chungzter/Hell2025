@@ -12,8 +12,8 @@ namespace OpenGLRenderer {
 
         //if (Editor::IsOpen()) return;
 
-        OpenGLShader* shader = GetShader("Skybox");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("Skybox");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
         Mesh* mesh = AssetManager::GetCubeMesh();
 

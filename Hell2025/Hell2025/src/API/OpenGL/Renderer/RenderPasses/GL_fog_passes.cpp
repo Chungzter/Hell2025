@@ -9,7 +9,7 @@
 namespace OpenGLRenderer {
 
     void InitFog() {
-        OpenGLShader* shader = GetShader("PerlinNoise3D");
+        OpenGLShader* shader = GetShaderOLD("PerlinNoise3D");
         OpenGLTexture3D* perlinNoiseTexture = GetTexture3D("PerlinNoise");
 
         if (!shader) return;
@@ -38,12 +38,12 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLShader* rayMarchShader = GetShader("FogRayMarch");
-        OpenGLShader* compositeShader = GetShader("FogComposite");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* fogFbo = GetFrameBuffer("Fog");
+        OpenGLShader* rayMarchShader = GetShaderOLD("FogRayMarch");
+        OpenGLShader* compositeShader = GetShaderOLD("FogComposite");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* fogFbo = GetFrameBufferOLD("Fog");
         OpenGLTexture3D* perlinNoiseTexture = GetTexture3D("PerlinNoise");
-        OpenGLFrameBuffer* fullSizeFBO = GetFrameBuffer("MiscFullSize");
+        OpenGLFrameBuffer* fullSizeFBO = GetFrameBufferOLD("MiscFullSize");
 
         if (!fullSizeFBO) return;
         if (!rayMarchShader) return;

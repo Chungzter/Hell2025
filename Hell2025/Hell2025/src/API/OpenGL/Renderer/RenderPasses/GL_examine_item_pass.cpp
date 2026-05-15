@@ -17,7 +17,7 @@ namespace OpenGLRenderer {
 
         if (Editor::IsOpen()) return;
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         if (!gBuffer) return;
 
         for (int i = 0; i < Game::GetLocalPlayerCount(); i++) {
@@ -62,8 +62,8 @@ namespace OpenGLRenderer {
     void ExamineItemPass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLShader* shader = GetShader("ExamineItem");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("ExamineItem");
         if (!gBuffer) return;
         if (!shader) return;
 

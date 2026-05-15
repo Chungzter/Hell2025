@@ -48,7 +48,7 @@ void Player::UpdateBreatheBob(float deltaTime) {
 
     m_breatheBobTime += deltaTime;
 
-    //m_breatheBobTime = 0;
+    m_breatheBobTime = 0;
 
     float breathSpeed = 0.5f;
     float horizontalBreathIntensity = 0.00025f;

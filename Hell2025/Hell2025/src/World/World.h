@@ -8,7 +8,6 @@
 #include "Types/Characters/Enemies/Kangaroo/Kangaroo.h"
 #include "Types/Characters/Enemies/Shark/Shark.h"
 #include "Types/Christmas/ChristmasLights.h"
-#include "Types/Christmas/ChristmasPresent.h"
 #include "Types/Christmas/ChristmasTree.h"
 #include "Types/Core/GenericObject.h"
 #include "Types/Effects/VolumetricBloodSplatter.h"
@@ -99,7 +98,6 @@ namespace World {
     void AddDDGIVolume(DDGIVolumeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddDoor(DoorCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddBulletCasing(BulletCasingCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    void AddChristmasPresent(ChristmasPresentCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddChristmasTree(ChristmasTreeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddCreateInfoCollection(CreateInfoCollection& createInfoCollection, SpawnOffset spawnOffset);
     void AddDobermann(DobermannCreateInfo& createInfo);
@@ -222,7 +220,6 @@ namespace World {
     std::vector<ScreenSpaceBloodDecal>& GetScreenSpaceBloodDecals();
     std::vector<Bullet>& GetBullets();
     std::vector<BulletCasing>& GetBulletCasings();
-    std::vector<ChristmasPresent>& GetChristmasPresents();
     std::vector<ChristmasTree>& GetChristmasTrees();
     std::vector<ClippingCube>& GetClippingCubes();
     std::vector<Decal>& GetDecals();

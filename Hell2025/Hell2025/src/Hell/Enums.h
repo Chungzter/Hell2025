@@ -425,6 +425,7 @@ enum class RendererOverrideState {
     TILE_HEATMAP_BLOOD_DECALS,
     TILE_HEATMAP_CHRISTMAS_LIGHTS,
     INDIRECT_DIFFUSE,
+    VELOCITY,
     STATE_COUNT,
 };
 

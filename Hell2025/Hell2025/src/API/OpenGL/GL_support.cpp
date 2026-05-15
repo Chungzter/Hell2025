@@ -10,7 +10,18 @@ namespace OpenGLBackEnd {
 		std::string name;
 	};
 
-	bool CheckSupport() {
+	struct DeviceCapabilities {
+        int maxAttachments = 0;
+        int maxDrawBuffers = 0;
+	} g_deviceCapabilities;
+
+    bool CheckSupport() {
+        glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &g_deviceCapabilities.maxAttachments);
+        glGetIntegerv(GL_MAX_DRAW_BUFFERS, &g_deviceCapabilities.maxDrawBuffers);
+
+        Logging::Support() << "Max attachments: " << g_deviceCapabilities.maxAttachments << "\n";
+        Logging::Support() << "Max draw buffers: " << g_deviceCapabilities.maxDrawBuffers << "\n";
+
 		// Define requirements locally to avoid global state issues
 		std::vector<SupportQuery> requirements = {
 			{ GLAD_GL_NV_mesh_shader, "GLAD_GL_NV_mesh_shader" },
@@ -21,11 +32,11 @@ namespace OpenGLBackEnd {
 
 		for (const auto& query : requirements) {
 			if (query.value) {
-				Logging::Support() << query.name << " found\n";
+				Logging::Support() << query.name << " supported\n";
 			}
 			else {
 				// Use Error instead of Fatal to see all missing extensions
-				Logging::Error() << query.name << " not found\n";
+				Logging::Error() << query.name << " not supported\n";
 				allFound = false;
 			}
 		}

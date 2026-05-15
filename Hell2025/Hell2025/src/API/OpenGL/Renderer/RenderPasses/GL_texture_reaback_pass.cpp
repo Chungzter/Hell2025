@@ -25,7 +25,7 @@ namespace OpenGLRenderer {
 
         // Get mouse hit position
         if (!g_mouseRayReadBack.IsRequestInProgress()) {
-            OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+            OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
             GLuint fboHandle = gBuffer->GetHandle();
             GLuint attachment = gBuffer->GetColorAttachmentSlotByName("WorldPosition");
             int mappedMouseX = Util::MapRange(Input::GetMouseX(), 0, BackEnd::GetCurrentWindowWidth(), 0, gBuffer->GetWidth());

@@ -15,10 +15,15 @@ namespace OpenGLRenderer {
     void UIPass() {
         ProfilerOpenGLZoneFunction();
 
+        // First blit the final image into the UI fbo, which is double the size. UI has double resolution as the main game
+        OpenGLFrameBuffer& finalImageFbo = GetFrameBuffer("FinalImage");
+        OpenGLFrameBuffer& uiFbo = GetFrameBuffer("UI");
+        OpenGLRenderer::BlitFrameBuffer(&finalImageFbo, &uiFbo, "Color", "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
         const Resolutions& resolutions = Config::GetResolutions();
 
-        OpenGLShader* shader = GetShader("UI");
-        OpenGLFrameBuffer* uiFrameBuffer = GetFrameBuffer("UI");
+        OpenGLShader* shader = GetShaderOLD("UI");
+        OpenGLFrameBuffer* uiFrameBuffer = GetFrameBufferOLD("UI");
 
         if (!shader) return;
         if (!uiFrameBuffer) return;
@@ -37,24 +42,26 @@ namespace OpenGLRenderer {
 
         uiFrameBuffer->Bind();
         uiFrameBuffer->SetViewport();
-        uiFrameBuffer->ClearAttachment("Color", 0.0f, 0.0f, 0.0f, 1.0f);
         uiFrameBuffer->DrawBuffer("Color");
         shader->Bind();
 
-        glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
-        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA); // vERY IMPORTANT. Preserves alpha accumulation correclty. Required for blit into main image.
-
-        glBindVertexArray(glMesh.GetVAO());
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
         glEnable(GL_CLIP_DISTANCE0);
         glEnable(GL_CLIP_DISTANCE1);
         glEnable(GL_CLIP_DISTANCE2);
         glEnable(GL_CLIP_DISTANCE3);
 
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_DEPTH_TEST);
+
         shader->SetFloat("u_renderTargetWidth", resolutions.ui.x);
         shader->SetFloat("u_renderTargetHeight", resolutions.ui.y);
-        
+
+        glBindVertexArray(glMesh.GetVAO());
+
         int lastFilter = -1; // -1 = unknown, 0 = linear, 1 = nearest
 
         for (UIRenderItem& renderItem : UIBackEnd::GetRenderItems()) {
@@ -69,7 +76,7 @@ namespace OpenGLRenderer {
                 }
                 lastFilter = renderItem.filter;
             }
-
+            
             shader->SetFloat("u_clipMinX", renderItem.clipMinX);
             shader->SetFloat("u_clipMinY", renderItem.clipMinY);
             shader->SetFloat("u_clipMaxX", renderItem.clipMaxX);
@@ -83,24 +90,9 @@ namespace OpenGLRenderer {
         glDisable(GL_CLIP_DISTANCE2);
         glDisable(GL_CLIP_DISTANCE3);
 
-        // Create QUAD if it don't exist
-        if (g_quadVAO == 0) {
-            g_quadVAO = OpenGLRenderer::CreateQuadVAO();
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glBindVertexArray(0);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        //glBindSampler(0, g_nearestSampler);
-        glBindSampler(0, g_linearSampler);
-        glViewport(0, 0, BackEnd::GetCurrentWindowWidth(), BackEnd::GetCurrentWindowHeight());
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, uiFrameBuffer->GetColorAttachmentHandleByName("Color"));
-        glBindVertexArray(g_quadVAO);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-        // Cleanup
-        glDisable(GL_BLEND);
-        glBindSampler(0, 0);
+        // Blit this image into the default framebuffer. It is the last point of call. Probably clean this up at some point because it is kinda hidden in here.
+        OpenGLRenderer::BlitToDefaultFrameBuffer(&uiFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
 }

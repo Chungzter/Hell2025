@@ -176,10 +176,6 @@ namespace World {
             RenderDataManager::SubmitRenderItems(fence.GetRenderItems());
         }
 
-        for (ChristmasPresent& christmasPresent : GetChristmasPresents()) {
-            RenderDataManager::SubmitRenderItems(christmasPresent.GetRenderItems());
-        }
-
         for (ChristmasTree& christmasTree : GetChristmasTrees()) {
             RenderDataManager::SubmitRenderItemsAlphaDiscard(christmasTree.GetRenderItems());
         }

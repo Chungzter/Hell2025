@@ -10,10 +10,10 @@ namespace OpenGLRenderer {
 
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* halfSizeFbo = GetFrameBuffer("HalfSize");
-        OpenGLFrameBuffer* fullSizeFBO = GetFrameBuffer("MiscFullSize");
-        OpenGLShader* shader = GetShader("ScreenspaceReflections");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* halfSizeFbo = GetFrameBufferOLD("HalfSize");
+        OpenGLFrameBuffer* fullSizeFBO = GetFrameBufferOLD("MiscFullSize");
+        OpenGLShader* shader = GetShaderOLD("ScreenspaceReflections");
 
         if (!gBuffer) return;
         if (!shader) return;

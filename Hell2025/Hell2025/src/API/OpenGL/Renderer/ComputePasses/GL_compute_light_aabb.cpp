@@ -48,7 +48,7 @@ namespace OpenGLRenderer {
     void RenderWorldPosition(uint32_t lightIndex) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
-        OpenGLShader* shader = GetShader("LightAABBPosition");
+        OpenGLShader* shader = GetShaderOLD("LightAABBPosition");
         if (!shader) return;
 
         Light* light = World::GetLightByIndex(lightIndex);
@@ -158,7 +158,7 @@ namespace OpenGLRenderer {
     }
 
     void ComputeMinMax(uint32_t lightIndex) {
-        OpenGLShader* shader = GetShader("LightAABBMinMax");
+        OpenGLShader* shader = GetShaderOLD("LightAABBMinMax");
         OpenGLSSBO* ssbo = GetSSBO("LightAABBs");
         Light* light = World::GetLightByIndex(lightIndex);
 
@@ -208,7 +208,7 @@ namespace OpenGLRenderer {
 
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-		OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+		OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 		gBuffer->Bind();
 		gBuffer->DrawBuffer("FinalLighting");
 

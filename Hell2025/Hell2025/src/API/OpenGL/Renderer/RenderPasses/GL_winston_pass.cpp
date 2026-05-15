@@ -15,8 +15,8 @@ namespace OpenGLRenderer {
         
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLShader* shader = GetShader("Winston");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("Winston");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 
         static float time = 0.0f;
         time += Game::GetDeltaTime();

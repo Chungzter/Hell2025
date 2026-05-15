@@ -11,9 +11,11 @@ void RigidDynamic::Update(float deltaTime) {
 
     const PxTransform currentGlobalPose = m_pxRigidDynamic->getGlobalPose();
 
-    m_isDirty = !Physics::PxTransformNearlyEqual(m_previousGlobalPose, currentGlobalPose);
+    m_isDirty = m_lifeTime < 0.1f || !Physics::PxTransformNearlyEqual(m_previousGlobalPose, currentGlobalPose);
     m_worldTransform = Physics::PxMat44ToGlmMat4(currentGlobalPose);
     m_previousGlobalPose = currentGlobalPose;
+
+    m_lifeTime += deltaTime;
 }
 
 void RigidDynamic::MarkForRemoval() {

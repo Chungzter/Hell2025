@@ -35,7 +35,5 @@ namespace Bible {
 		meshNodes->DisableMarkingStaticSceneBvhAsDirty();
 		meshNodes->DisableCSMShadows();
 		meshNodes->DisablePointLightShadows();
-
-
 	}
 }

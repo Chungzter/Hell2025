@@ -11,10 +11,12 @@
 namespace OpenGLRenderer {
 
     void FurPass() {
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer"); 
-        OpenGLFrameBuffer* hairFrameBuffer = GetFrameBuffer("Hair");
-        OpenGLShader* shader = GetShader("Fur");
-        OpenGLShader* compositeShader = GetShader("FurComposite");
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer"); 
+        OpenGLFrameBuffer* hairFrameBuffer = GetFrameBufferOLD("Hair");
+        OpenGLShader* shader = GetShaderOLD("Fur");
+        OpenGLShader* compositeShader = GetShaderOLD("FurComposite");
         OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
         OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
 
@@ -36,16 +38,20 @@ namespace OpenGLRenderer {
 
         ForceRasterizerState("GeometryPass_Blended");
 
-        static bool skip = false;
-        if (Input::KeyPressed(HELL_KEY_X)) {
-            skip = !skip;
-        }
-        if (skip) {
-            return;
-        }
+        //static bool skip = false;
+        //if (Input::KeyPressed(HELL_KEY_X)) {
+        //    skip = !skip;
+        //}
+        //if (skip) {
+        //    return;
+        //}
 
         glEnable(GL_BLEND);
-        int hairLayerCount = 25;
+        int hairLayerCount = 15;
+
+        glDepthMask(GL_FALSE);
+        glDisable(GL_CULL_FACE);
+        //glDisable(GL_BLEND);
 
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("BlueNoise")->GetGLTexture().GetHandle());
@@ -93,6 +99,8 @@ namespace OpenGLRenderer {
                 }
             }
         }
+
+        //glDepthMask(GL_TRUE);
 
         // Skinned models
         //glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());

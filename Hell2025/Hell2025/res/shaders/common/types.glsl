@@ -3,12 +3,14 @@ struct ViewportData {
     mat4 projectionReverseZ;
     mat4 inverseProjectionReverseZ;
     mat4 projectionViewReverseZ;
+    mat4 prevProjectionViewReverseZ;
     mat4 inverseProjectionViewReverseZ;
     mat4 projection;
     mat4 inverseProjection;
     mat4 view;
     mat4 inverseView;
     mat4 projectionView;
+    mat4 prevProjectionView;
     mat4 inverseProjectionView;
     mat4 skyboxProjectionView;
     mat4 flashlightProjectionView;
@@ -73,6 +75,7 @@ struct RendererData {
 
 struct RenderItem {
     mat4 modelMatrix;
+    mat4 prevModelMatrix;
     mat4 inverseModelMatrix;
     vec4 aabbMin;
     vec4 aabbMax;
@@ -113,7 +116,7 @@ struct RenderItem {
     int additionalTextureIndex3;
 
     int localMeshNodeIndex;
-    int padding0;
+    int opacityTextureIndex;
     int padding1;
     int padding2;
 

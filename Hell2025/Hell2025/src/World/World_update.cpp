@@ -14,6 +14,7 @@
 
 #include "AssetManagement/AssetManager.h"
 
+#include "Bible/Bible.h"
 #include "Types/Misc/DoorChain.h"
 
 #include <Hell/SlotMap.h>
@@ -32,6 +33,7 @@ namespace World {
 
     uint64_t g_trapKingID = 0;
     uint64_t g_ratKidAO = 0;
+
     AnimatedGameObject* GetTrapKingAO() {
         return GetAnimatedGameObjectByObjectId(g_trapKingID);
     }
@@ -44,170 +46,9 @@ namespace World {
         RemoveObject(g_ratKidAO);
 
 		g_ratKidAO = CreateAnimatedGameObject();
-		AnimatedGameObject* ratKidAO = GetRadKidAO();
+        AnimatedGameObject* ratKidAO = GetRadKidAO();
 
-		ratKidAO->SetSkinnedModel(modelName);
-		ratKidAO->SetAnimationModeToBindPose();
-
-
-
-		ratKidAO->SetMeshMaterialByMeshName("Slim_Jeans", "Jeans");
-
-		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body", "RatKingHead");
-		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body2", "RatKingTorso");
-		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body3", "RatKingArms");
-		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body4", "RatKingLegs");
-		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body5", "RatKingNails");
-		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Body6", "RatKingLashes2");
-		ratKidAO->SetBlendingModeByMeshName("CC_Base_Body6", BlendingMode::BLENDED);
-
-		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Eye", "RatKingEye");
-		ratKidAO->SetBlendingModeByMeshName("CC_Base_Eye2", BlendingMode::DO_NOT_RENDER);
-		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Eye3", "RatKingEye");
-		ratKidAO->SetBlendingModeByMeshName("CC_Base_Eye4", BlendingMode::DO_NOT_RENDER);
-
-		ratKidAO->SetBlendingModeByMeshName("CC_Base_TearLine", BlendingMode::DO_NOT_RENDER);
-		ratKidAO->SetBlendingModeByMeshName("CC_Base_TearLine2", BlendingMode::DO_NOT_RENDER);
-
-		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Tongue", "TrapKingTongue");
-
-		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Teeth", "TrapKingTeethUpper");
-		ratKidAO->SetMeshMaterialByMeshName("CC_Base_Teeth2", "TrapKingTeethLower");
-
-		ratKidAO->SetBlendingModeByMeshName("Brows_Bushy", BlendingMode::DO_NOT_RENDER);
-		ratKidAO->SetMeshMaterialByMeshName("Brows_Bushy2", "RatKingBrows");
-		ratKidAO->SetBlendingModeByMeshName("Brows_Bushy2", BlendingMode::BLENDED);
-		ratKidAO->SetBlendingModeByMeshName("Brows_Bushy3", BlendingMode::DO_NOT_RENDER);
-
-		// NEW
-		ratKidAO->SetMeshMaterialByMeshName("Chunky_Highlights_Bangs", "RatKingHair2");
-		ratKidAO->SetBlendingModeByMeshName("Chunky_Highlights_Bangs", BlendingMode::HAIR);
-		ratKidAO->SetMeshMaterialByMeshName("Chunky_Highlights_Bangs2", "RatKingHair2");
-		ratKidAO->SetBlendingModeByMeshName("Chunky_Highlights_Bangs2", BlendingMode::HAIR);
-		ratKidAO->SetMeshMaterialByMeshName("Chunky_Highlights_Bangs.001", "RatKingHair2");
-		ratKidAO->SetBlendingModeByMeshName("Chunky_Highlights_Bangs.001", BlendingMode::HAIR);
-		ratKidAO->SetMeshMaterialByMeshName("Chunky_Highlights_Bangs.0012", "RatKingHair2");
-        ratKidAO->SetBlendingModeByMeshName("Chunky_Highlights_Bangs.0012", BlendingMode::HAIR);
-        //
-
-		ratKidAO->SetMeshMaterialByMeshName("Side_swept_L", "RatKingHair");
-		ratKidAO->SetBlendingModeByMeshName("Side_swept_L", BlendingMode::HAIR);
-
-
-		ratKidAO->SetMeshMaterialByMeshName("Long_Hair_R", "RatKingHair");
-		ratKidAO->SetBlendingModeByMeshName("Long_Hair_R", BlendingMode::HAIR);
-		
-		ratKidAO->SetMeshMaterialByMeshName("Long_Hair_R2", "RatKingHair");
-		ratKidAO->SetBlendingModeByMeshName("Long_Hair_R2", BlendingMode::HAIR);
-
-		ratKidAO->SetMeshMaterialByMeshName("Side_swept_Long_Hair_L", "RatKingScalp");
-		ratKidAO->SetBlendingModeByMeshName("Side_swept_Long_Hair_L", BlendingMode::BLENDED);
-		ratKidAO->SetMeshMaterialByMeshName("Side_swept_Long_Hair_L2", "RatKingHair");
-		ratKidAO->SetBlendingModeByMeshName("Side_swept_Long_Hair_L2", BlendingMode::HAIR);
-
-		ratKidAO->SetMeshMaterialByMeshName("Side_swept_Long_Hair_R", "RatKingScalp");
-		ratKidAO->SetBlendingModeByMeshName("Side_swept_Long_Hair_R", BlendingMode::BLENDED);
-		ratKidAO->SetMeshMaterialByMeshName("Side_swept_Long_Hair_R2", "RatKingHair");
-		ratKidAO->SetBlendingModeByMeshName("Side_swept_Long_Hair_R2", BlendingMode::HAIR);
-
-		ratKidAO->SetMeshMaterialByMeshName("Long_bangs", "RatKingHair2");
-		ratKidAO->SetBlendingModeByMeshName("Long_bangs", BlendingMode::HAIR);
-
-
-		ratKidAO->SetMeshMaterialByMeshName("Scalp_Male", "RatKingScalp");
-		ratKidAO->SetBlendingModeByMeshName("Scalp_Male", BlendingMode::BLENDED);
-
-		ratKidAO->SetMeshMaterialByMeshName("Side_swept_L2", "RatKingScalp");
-		ratKidAO->SetBlendingModeByMeshName("Side_swept_L2", BlendingMode::BLENDED);
-
-
-		ratKidAO->SetBlendingModeByMeshName("CC_Base_EyeOcclusion", BlendingMode::DO_NOT_RENDER);
-		ratKidAO->SetBlendingModeByMeshName("CC_Base_EyeOcclusion2", BlendingMode::DO_NOT_RENDER);
-
-		ratKidAO->SetBlendingModeByMeshName("Lash_Low_Short_Sparse", BlendingMode::BLENDED);
-		ratKidAO->SetBlendingModeByMeshName("Lash_Low_Sparse", BlendingMode::BLENDED);
-		ratKidAO->SetBlendingModeByMeshName("Lash_Up_Downward", BlendingMode::BLENDED);
-		ratKidAO->SetBlendingModeByMeshName("Lash_Up_Short_Sparse", BlendingMode::BLENDED);
-
-		ratKidAO->SetMeshMaterialByMeshName("Lash_Low_Short_Sparse", "RatKingLashes");
-		ratKidAO->SetMeshMaterialByMeshName("Lash_Low_Sparse", "RatKingLashes");
-		ratKidAO->SetMeshMaterialByMeshName("Lash_Up_Downward", "RatKingLashes");
-		ratKidAO->SetMeshMaterialByMeshName("Lash_Up_Short_Sparse", "RatKingLashes");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		ratKidAO->SetMeshMaterialByMeshName("Jeans", "Jeans");
-
-		ratKidAO->SetMeshMaterialByMeshName("Body", "RatKingHead");
-		ratKidAO->SetMeshMaterialByMeshName("Body2", "RatKingTorso");
-		ratKidAO->SetMeshMaterialByMeshName("Body3", "RatKingArms");
-		ratKidAO->SetMeshMaterialByMeshName("Body4", "RatKingLegs");
-		ratKidAO->SetMeshMaterialByMeshName("Body5", "RatKingNails");
-		ratKidAO->SetMeshMaterialByMeshName("Body6", "RatKingLashes2");
-		ratKidAO->SetBlendingModeByMeshName("Body6", BlendingMode::BLENDED);
-
-		ratKidAO->SetMeshMaterialByMeshName("Eye", "RatKingEye");
-		ratKidAO->SetBlendingModeByMeshName("Eye2", BlendingMode::DO_NOT_RENDER);
-		ratKidAO->SetMeshMaterialByMeshName("Eye3", "RatKingEye");
-		ratKidAO->SetBlendingModeByMeshName("Eye4", BlendingMode::DO_NOT_RENDER);
-
-		ratKidAO->SetBlendingModeByMeshName("TearLine", BlendingMode::DO_NOT_RENDER);
-		ratKidAO->SetBlendingModeByMeshName("TearLine2", BlendingMode::DO_NOT_RENDER);
-
-		ratKidAO->SetMeshMaterialByMeshName("Tongue", "TrapKingTongue");
-
-		ratKidAO->SetMeshMaterialByMeshName("Teeth", "TrapKingTeethUpper");
-		ratKidAO->SetMeshMaterialByMeshName("Teeth2", "TrapKingTeethLower");
-
-		ratKidAO->SetBlendingModeByMeshName("Brows", BlendingMode::DO_NOT_RENDER);
-		ratKidAO->SetMeshMaterialByMeshName("Brows2", "RatKingBrows");
-		ratKidAO->SetBlendingModeByMeshName("Brows2", BlendingMode::BLENDED);
-		ratKidAO->SetBlendingModeByMeshName("Brows3", BlendingMode::DO_NOT_RENDER);
-
-		ratKidAO->SetMeshMaterialByMeshName("HairL", "RatKingHair");
-		ratKidAO->SetMeshMaterialByMeshName("HairR", "RatKingHair");
-		ratKidAO->SetMeshMaterialByMeshName("HairLong", "RatKingHair");
-		ratKidAO->SetBlendingModeByMeshName("HairL", BlendingMode::HAIR);
-		ratKidAO->SetBlendingModeByMeshName("HairR", BlendingMode::HAIR);
-		ratKidAO->SetBlendingModeByMeshName("HairLong", BlendingMode::HAIR);
-
-		ratKidAO->SetMeshMaterialByMeshName("Scalp", "RatKingScalp");
-		ratKidAO->SetMeshMaterialByMeshName("Scalp2", "RatKingScalp");
-		ratKidAO->SetMeshMaterialByMeshName("Scalp3", "RatKingScalp");
-		ratKidAO->SetBlendingModeByMeshName("Scalp", BlendingMode::DO_NOT_RENDER);
-		ratKidAO->SetBlendingModeByMeshName("Scalp2", BlendingMode::DO_NOT_RENDER);
-		ratKidAO->SetBlendingModeByMeshName("Scalp3", BlendingMode::DO_NOT_RENDER);
-
-		ratKidAO->SetMeshMaterialByMeshName("Scalp4", "RatKingScalp2");
-		ratKidAO->SetBlendingModeByMeshName("Scalp4", BlendingMode::BLENDED);
-
-		ratKidAO->SetBlendingModeByMeshName("EyeOcclusion", BlendingMode::DO_NOT_RENDER);
-		ratKidAO->SetBlendingModeByMeshName("EyeOcclusion2", BlendingMode::DO_NOT_RENDER);
-
-		ratKidAO->SetBlendingModeByMeshName("Lashes", BlendingMode::BLENDED);
-		ratKidAO->SetBlendingModeByMeshName("Lashes2", BlendingMode::BLENDED);
-		ratKidAO->SetBlendingModeByMeshName("Lashes3", BlendingMode::BLENDED);
-		ratKidAO->SetBlendingModeByMeshName("Lashes4", BlendingMode::BLENDED);
-
-		ratKidAO->SetMeshMaterialByMeshName("Lashes", "RatKingLashes");
-		ratKidAO->SetMeshMaterialByMeshName("Lashes2", "RatKingLashes");
-		ratKidAO->SetMeshMaterialByMeshName("Lashes3", "RatKingLashes");
-		ratKidAO->SetMeshMaterialByMeshName("Lashes4", "RatKingLashes");
-
+        ratKidAO->SetSkinnedModel(modelName, "RatKing");
 		ratKidAO->SetPosition(glm::vec3(36.8f, 31.0f, 36.23f));
 		//ratKidAO->PlayAndLoopAnimation("Main", "RatKid_PistolWalk2", 1.0f);
 		ratKidAO->PrintMeshNames();
@@ -338,36 +179,58 @@ namespace World {
             trapKingAO->SetMeshMaterialByMeshName("Pants", "TrapKingPants");
             trapKingAO->SetMeshMaterialByMeshName("Boxers", "TrapKingBoxes");
 
-            
-            
             trapKingAO->SetPosition(glm::vec3(37.4f, 31.0f, 36.23f));
             trapKingAO->PrintMeshNames();
+
+            //trapKingAO->SetSkinnedModel("Remington870", "Remington870");
+            //trapKingAO->SetPosition(glm::vec3(37.4f, 32.0f, 36.23f));
+
             trapKingAO->SetAnimationModeToBindPose();
             //trapKingAO->PlayAndLoopAnimation("Main", "RatKid_PistolWalk3", 1.0f);
-
         }
+
+        glm::vec3 bunnyPos = glm::vec3(41.05f, 31.0f, 40.25f);
+        GetGameObjects()[0].SetPosition(bunnyPos);
+        GetGameObjects()[0].SetRotationY(-2.2f);
+        GetGameObjects()[0].m_meshNodes.EnablePointLightShadows();
 
       if (g_ratKidAO == 0) {
 		  InitRatKing("RatKing");
-	  }
-	  if (Input::KeyPressed(HELL_KEY_NUMPAD_7)) {
-		  InitRatKing("RatKingSam");
-		  Audio::PlayAudio(AUDIO_SELECT, 1.0f);
-	  }
-	  if (Input::KeyPressed(HELL_KEY_NUMPAD_8)) {
-		  InitRatKing("RatKingNew");
-		  Audio::PlayAudio(AUDIO_SELECT, 1.0f);
-	  }
-	  if (Input::KeyPressed(HELL_KEY_NUMPAD_9)) {
-		  AnimatedGameObject* ratKidAO = GetRadKidAO();
-		  ratKidAO->SetAnimationModeToBindPose();
-		  Audio::PlayAudio(AUDIO_SELECT, 1.0f);
-	  }
-	  if (Input::KeyPressed(HELL_KEY_NUMPAD_0)) {
-		  AnimatedGameObject* ratKidAO = GetRadKidAO();
-		  ratKidAO->PlayAndLoopAnimation("Main", "RatKingSamTest", 1.0f);
-		  Audio::PlayAudio(AUDIO_SELECT, 1.0f);
-	  }
+      }
+
+      AnimatedGameObject* ratKidAO = GetRadKidAO();
+      ratKidAO->SetSkinnedModel("RatKing", "RatKing");
+
+      //static MeshNodes spasTest;
+      //static bool runOnce = true;
+      //if (runOnce) {
+      //    runOnce = false;
+      //    Bible::ConfigureMeshNodesByItemName(0, "Remington870", &spasTest, false);
+      //}
+      //
+      //float scale = 0.875f;
+      //
+      //Transform transform;
+      //transform.position = glm::vec3(37.325f, 32.575f, 36.54f);
+      //transform.rotation.y = HELL_PI * -0.5f;
+      //transform.scale = glm::vec3(scale);
+      //
+      //spasTest.Update(transform.to_mat4());
+      //RenderDataManager::SubmitRenderItems(spasTest.GetRenderItems());
+
+      //AnimatedGameObject* trapKingAO = GetTrapKingAO();
+      //trapKingAO->SetScale(scale);
+
+      //if (Input::KeyPressed(HELL_KEY_NUMPAD_9)) {
+      //    AnimatedGameObject* ratKidAO = GetRadKidAO();
+      //    ratKidAO->SetAnimationModeToBindPose();
+      //    Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+      //}
+      //if (Input::KeyPressed(HELL_KEY_NUMPAD_0)) {
+      //    AnimatedGameObject* ratKidAO = GetRadKidAO();
+      //    ratKidAO->PlayAndLoopAnimation("Main", "RatKingSamTest", 1.0f);
+      //    Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+      //}
      
        
         auto& ragdolls = RagdollManager::GetRagdolls();
@@ -438,8 +301,7 @@ namespace World {
 
         for (AnimatedGameObject& object : GetAnimatedGameObjects()) object.Update(deltaTime);
         for (BulletCasing& object : GetBulletCasings())             object.Update(deltaTime);
-        for (ChristmasLightSet& object : GetChristmasLightSets())        object.Update(deltaTime);
-        for (ChristmasPresent& object : GetChristmasPresents())     object.Update(deltaTime);
+        for (ChristmasLightSet& object : GetChristmasLightSets())   object.Update(deltaTime);
         for (ChristmasTree& object : GetChristmasTrees())           object.Update(deltaTime);
         for (Decal& object : GetDecals())                           object.Update();
         for (Dobermann& object : GetDobermanns())                   object.Update(deltaTime);

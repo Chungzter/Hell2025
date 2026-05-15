@@ -3,8 +3,8 @@
 namespace OpenGLRenderer {
 
     void DownSampleFinalImage() {
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* finalImageFbo = GetFrameBuffer("FinalImage");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* finalImageFbo = GetFrameBufferOLD("FinalImage");
 
         int dstWidth = finalImageFbo->GetWidth();
         int dstHeight = finalImageFbo->GetHeight();

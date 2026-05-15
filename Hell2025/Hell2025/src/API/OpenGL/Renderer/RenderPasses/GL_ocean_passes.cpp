@@ -23,14 +23,14 @@ namespace OpenGLRenderer {
             return;
         }
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBuffer("Water");
-        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBuffer("FFT_band0");
-        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBuffer("FFT_band1");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
+        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
+        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
         OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
         OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
         OpenGLMeshPatch* oceanMeshPatch = GetOceanMeshPatch();
-        OpenGLShader* shader = GetShader("OceanGeometry");
+        OpenGLShader* shader = GetShaderOLD("OceanGeometry");
 
         if (!gBuffer) return;
         if (!waterFrameBuffer) return;
@@ -176,14 +176,14 @@ namespace OpenGLRenderer {
             return;
         }
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBuffer("Water");
-        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBuffer("FFT_band0");
-        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBuffer("FFT_band1");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
+        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
+        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
         OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
         OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
         OpenGLMeshPatch* oceanMeshPatch = GetOceanMeshPatch();
-        OpenGLShader* shader = GetShader("OceanGeometry");
+        OpenGLShader* shader = GetShaderOLD("OceanGeometry");
 
         if (!gBuffer) return;
         if (!waterFrameBuffer) return;
@@ -288,10 +288,10 @@ namespace OpenGLRenderer {
             return;
         }
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBuffer("Water");
-        OpenGLFrameBuffer* quaterSizeFrameBuffer = GetFrameBuffer("QuarterSize");
-        OpenGLShader* shader = GetShader("OceanSurfaceComposite");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
+        OpenGLFrameBuffer* quaterSizeFrameBuffer = GetFrameBufferOLD("QuarterSize");
+        OpenGLShader* shader = GetShaderOLD("OceanSurfaceComposite");
 
         if (!gBuffer) return;
         if (!shader) return;
@@ -337,15 +337,15 @@ namespace OpenGLRenderer {
     void OceanUnderwaterCompositePass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLShader* gaussianBlurShader = GetShader("GaussianBlur");
-        OpenGLShader* underwaterMaskPreProcessShader = GetShader("OceanUnderwaterMaskPreProcess");
-        OpenGLShader* underwaterCompositeShader = GetShader("OceanUnderwaterComposite");
+        OpenGLShader* gaussianBlurShader = GetShaderOLD("GaussianBlur");
+        OpenGLShader* underwaterMaskPreProcessShader = GetShaderOLD("OceanUnderwaterMaskPreProcess");
+        OpenGLShader* underwaterCompositeShader = GetShaderOLD("OceanUnderwaterComposite");
 
-        OpenGLFrameBuffer* miscFullSizeFrameBuffer = GetFrameBuffer("MiscFullSize");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBuffer("Water");
-        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBuffer("FFT_band0");
-        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBuffer("FFT_band1");
+        OpenGLFrameBuffer* miscFullSizeFrameBuffer = GetFrameBufferOLD("MiscFullSize");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
+        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
+        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
 
         if (!gaussianBlurShader) return;
         if (!underwaterMaskPreProcessShader) return;
@@ -429,9 +429,9 @@ namespace OpenGLRenderer {
     void OceanHeightReadback() {
         if (!World::HasOcean()) return;
 
-        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBuffer("FFT_band0");
-        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBuffer("FFT_band1");
-        OpenGLShader* shader = GetShader("OceanPositionReadback");
+        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
+        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
+        OpenGLShader* shader = GetShaderOLD("OceanPositionReadback");
 
         if (!fftFrameBuffer_band0) return;
         if (!fftFrameBuffer_band1) return;

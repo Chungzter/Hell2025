@@ -85,14 +85,14 @@ namespace Renderer {
         Debug::BlitQuickDebugMessage("Irradiance Probe Sampling: " + onOff);
     }
 
-    void ToggleIndirectDiffuseOverrideState() {
+    void ToggleOverrideState(RendererOverrideState state) {
         Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
-        if (rendererSettings.rendererOverrideState == RendererOverrideState::INDIRECT_DIFFUSE) {
+        if (rendererSettings.rendererOverrideState == state) {
             SetRendererOverrideState(RendererOverrideState::NONE);
         }
         else {
-            SetRendererOverrideState(RendererOverrideState::INDIRECT_DIFFUSE);
+            SetRendererOverrideState(state);
         }
     }
 

@@ -36,28 +36,14 @@ namespace AssetManager {
         // Defaults
 		int defaultNormal = -1;
 		int defaultRma = -1;
-		int defaultEmi = -1;
-		int defaulthairFlowMap = -1;
-        int defaulthairIdMap = -1;
-        int defaulthairRootMap = -1;
-        int defaulthairBlendMap = -1;
+        int white = -1;
+        int black = -1;
 
         for (int i = 0; i < textures.size(); i++) {
-            if (textures[i].GetFileName() == "DefaultNRM") {
-                defaultNormal = i;
-			}
-			if (textures[i].GetFileName() == "DefaultRMA") {
-				defaultRma = i;
-            }
-            if (textures[i].GetFileName() == "Black") {
-                defaultEmi = i;
-                defaulthairFlowMap = i;
-                defaulthairIdMap = i;
-                defaulthairRootMap = i;
-            }
-            if (textures[i].GetFileName() == "White") {
-                defaulthairBlendMap = i;
-            }
+            if (textures[i].GetFileName() == "DefaultNRM") defaultNormal = i;
+			if (textures[i].GetFileName() == "DefaultRMA") defaultRma = i;
+            if (textures[i].GetFileName() == "Black")      black = i;
+            if (textures[i].GetFileName() == "White")      white = i;
         }
 
         // Look for textures with _ALB suffix, create a material, and search for accompanying _NRM & _RMA textures
@@ -72,12 +58,12 @@ namespace AssetManager {
                 material.m_name = GetMaterialNameFromFileInfo(texture.GetFileInfo());
                 material.m_basecolor = i;
 				material.m_normal = defaultNormal;
-				material.m_rma = defaultRma;
-				material.m_emissive = defaultEmi;
-				material.m_hairFlowMap = defaulthairFlowMap;
-                material.m_hairIdMap = defaulthairIdMap;
-                material.m_hairRootMap = defaulthairRootMap;
-                material.m_hairBlendMap = defaulthairBlendMap;
+                material.m_rma = defaultRma;
+                material.m_emissive = black;
+                material.m_opacity = white;
+				material.m_hairFlowMap = black;
+                material.m_hairIdMap = black;
+                material.m_hairRootMap = black;
 
                 for (int j = 0; j < textures.size(); j++) {
                     if (textures[j].GetFileName() == material.m_name + "_ALB") {
@@ -104,9 +90,9 @@ namespace AssetManager {
                         std::cout << textures[j].GetFileName() << " found\n";
                         material.m_hairRootMap = j;
                     }
-                    if (textures[j].GetFileName() == material.m_name + "_HAIR_BLEND") {
+                    if (textures[j].GetFileName() == material.m_name + "_OPA") {
                         std::cout << textures[j].GetFileName() << " found\n";
-                        material.m_hairBlendMap = j;
+                        material.m_opacity = j;
                     }
 				}
             }

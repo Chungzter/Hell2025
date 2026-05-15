@@ -8,14 +8,15 @@ layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 layout(rgba16f, binding = 0) uniform image2D OutputImage;
 
 #ifdef MSAA_ENABLED
-layout (binding = 2) uniform sampler2D ResolveNormalTexture;
+layout (binding = 1) uniform sampler2DMS MSAABaseColorTexture;
+layout (binding = 2) uniform sampler2DMS MSAANormalTexture;
 layout (binding = 3) uniform sampler2DMS MSAAMaterialTexture;
 layout (binding = 8) uniform sampler2D IndirectDiffuseTexture;
 #else
 layout (binding = 1) uniform sampler2D GBufferBaseColorTexture;
 layout (binding = 2) uniform sampler2D GBufferNormalTexture;
 layout (binding = 3) uniform sampler2D GBufferRMATexture;
-layout (binding = 4) uniform sampler2D GBufferWorldPositionexture;
+layout (binding = 4) uniform sampler2D VelocityOcclusionSubSurface;
 layout (binding = 5) uniform usampler2D ViewportIndexTexture;
 layout (binding = 6) uniform sampler2D GBufferWorldMirrorMaskTexture;
 layout (binding = 7) uniform sampler2D GBufferEmissiveTexture;
@@ -43,14 +44,15 @@ void main() {
 #ifdef MSAA_ENABLED
     ivec2 pixelCoordsMS = ivec2(uv_screenspace * vec2(textureSize(MSAAMaterialTexture)));
 	vec3 lightingColor = imageLoad(OutputImage, pixelCoords).rgb;
-    vec3 baseColor = vec3(0);
+    vec3 baseColor = texelFetch(MSAABaseColorTexture, pixelCoords, 0).rgb;
     vec3 rma = texelFetch(MSAAMaterialTexture, pixelCoordsMS, 0).rgb;
     vec3 emissive = vec3(0);
     float mirrorMask = 0.0;
     uint viewportIndex = 0; // TODO!!!!!!!!!! Reconstruct from screen coords
     
-    vec3 rawNormal = texture(ResolveNormalTexture, uv_screenspace).rgb;
+    vec3 rawNormal = texelFetch(MSAANormalTexture, pixelCoords, 0).rgb;
     vec3 normal = normalize(rawNormal * 2.0 - 1.0);
+    vec2 velocity = vec2(0, 0);
 #else
 	vec3 lightingColor = imageLoad(OutputImage, pixelCoords).rgb;
     vec3 baseColor = texture(GBufferBaseColorTexture, uv_screenspace).rgb;
@@ -59,6 +61,7 @@ void main() {
     vec3 emissive = texture(GBufferEmissiveTexture, uv_screenspace).rgb;
     float mirrorMask = texture(GBufferWorldMirrorMaskTexture, uv_screenspace).r;   
     uint viewportIndex = texture(ViewportIndexTexture, uv_screenspace).r;
+    vec2 velocity = texture(VelocityOcclusionSubSurface, uv_screenspace).rg;
 
 #endif
 
@@ -101,7 +104,13 @@ void main() {
     else if (rendererData.rendererOverrideState == 11) {
         finalColor = indirectDiffuseTexture;// * 1.5;
     }
-    
+
+    // Velocity
+    else if (rendererData.rendererOverrideState == 12) {
+        float gain = 20.0; 
+        finalColor = vec3(velocity * gain + 0.5, 0.5);
+    }
+
     // Below did work, but you commented it out when implementing MSAA coz u have no world pos texture for MSAA. Reconstruct pos from depth!
 
     // Height map paint dot

@@ -1,5 +1,4 @@
 #version 460 core
-
 #include "../common/util.glsl"
 #include "../common/types.glsl"
 #include "../common/constants.glsl"
@@ -32,7 +31,7 @@ uniform mat3 u_normalMatrix;
 
 // bunny
 uniform int u_hairLayerCount; 
-uniform float u_furLength = 0.015 * 0.15;// * 10;
+uniform float u_furLength = 0.015 * 0.2;// * 10;
 uniform float u_displacementStrength = 0.0005;
 uniform float u_shellDistanceAttenuation = 1.5;
 
@@ -60,4 +59,6 @@ void main() {
 
     WorldPos = u_model * vec4(pos, 1.0);
     gl_Position = viewportData[u_viewportIndex].projectionView * WorldPos;
+
+
 }

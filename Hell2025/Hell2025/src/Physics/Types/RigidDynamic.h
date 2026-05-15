@@ -34,4 +34,5 @@ private:
     glm::mat4 m_worldTransform = glm::mat4(1.0f);
     bool m_markedForRemoval = false;
     bool m_isDirty = true;
+    float m_lifeTime = 0.0f;
 };

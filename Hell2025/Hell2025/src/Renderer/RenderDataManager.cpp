@@ -204,6 +204,9 @@ namespace RenderDataManager {
                 g_viewportData[i].previousProjectionView = g_viewportData[i].projectionView;
             }
 
+            g_viewportData[i].prevProjectionView = g_viewportData[i].projectionView;
+            g_viewportData[i].prevProjectionViewReverseZ = g_viewportData[i].projectionViewReverseZ;
+
             g_viewportData[i].cameraForward = glm::vec4(cameraForward, 0.0f);
             g_viewportData[i].cameraRight = glm::vec4(cameraRight, 0.0f);
 			g_viewportData[i].cameraUp = glm::vec4(cameraUp, 0.0f);

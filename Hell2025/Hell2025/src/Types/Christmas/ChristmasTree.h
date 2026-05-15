@@ -15,8 +15,6 @@ struct ChristmasTree {
     const std::vector<RenderItem>& GetRenderItems() const   { return m_renderItems; }
 
 private:
-    void SpawnPresents(glm::vec3 localOffset);
-
     ChristmasTreeCreateInfo m_createInfo;
     glm::vec3 m_position = glm::vec3(0.0f);
     glm::vec3 m_rotation = glm::vec3(0.0f);

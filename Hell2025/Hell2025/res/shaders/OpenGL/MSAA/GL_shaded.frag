@@ -24,6 +24,7 @@ layout (binding = 12) uniform sampler2D hairIDMap;
 layout (binding = 13) uniform sampler2D hairRootMap;
 
 #include "../../common/lighting.glsl"
+#include "../../common/normal_encoding.glsl"
 #include "../../common/post_processing.glsl"
 
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
@@ -32,9 +33,11 @@ readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { Render
 readonly restrict layout(std430, binding = 4) buffer lightsBuffer       { Light lights[]; };
 readonly restrict layout(std430, binding = 5) buffer tileLightsBuffer   { TileLights tileLights[];   };
 
-layout (location = 0) out vec4 ColorOut;
-layout (location = 1) out vec4 NormalOut;
-layout (location = 2) out vec4 MaterialOut;
+layout (location = 0) out vec4 LightingOut;
+layout (location = 1) out vec4 BaseColorOut;
+layout (location = 2) out vec4 NormalOut;
+layout (location = 3) out vec4 MaterialOut;
+layout (location = 4) out vec4 RENormalOut;
 
 centroid in vec2 TexCoord;
 centroid in vec3 Normal;
@@ -116,7 +119,7 @@ void main() {
     //roughness = clamp(roughness + (normalMapVariation * 0.5), 0.0, 1.0);
 
     vec3 directLighting = vec3(0.0);
-    for (int i = 0; i < 6; i++) {
+    for (int i = 2; i < 4; i++) {
         int lightIndex = i; //int(tileLights[tileIndex].lightIndices[i]);
 
         Light light = lights[lightIndex];
@@ -128,23 +131,32 @@ void main() {
         float shadow = ShadowCalculation(lightIndex, lightPosition, lightRadius, WorldPos.xyz, viewPos, normal.xyz, shadowMapArray);
         vec3 directLight = GetDirectLighting(lightPosition, lightColor, lightRadius, lightStrength, normal.xyz, WorldPos.xyz, gammaBaseColor.rgb, roughness, metallic, viewPos) * shadow;
 
+        #if ENABLE_BINDLESS == 1
         if (light.iesTextureIndex != 0) {
             sampler2D iesSampler = sampler2D(textureSamplers[(light.iesTextureIndex)]);
             float candelas = ApplyIESProfile(WorldPos.xyz, light, iesSampler);
             directLight *= candelas;
         }
-        
+        #endif
+
         directLighting += directLight;
     }
 
     vec3 finalLitColor = directLighting * ao;
     
-    
-    
-    ColorOut.rgb = finalLitColor;
-    ColorOut.a = baseColor.a;
+    LightingOut.rgb = finalLitColor;
+    LightingOut.a = baseColor.a;
     
     NormalOut = vec4(normalize(normal) * 0.5 + 0.5, 1.0);
 
-    //ColorOut.rgb  = gammaBaseColor.rgb;
+    RENormalOut.rg = EncodeNormal(normal);
+    RENormalOut.b = metallic;
+    RENormalOut.a = 0.0; // Misc 4 bit value
+
+    //RENormalOut = vec4(1,0,0,1);
+
+    BaseColorOut = baseColor;
+
+    
+    //LightingOut.rgba = vec4(baseColor.rgb, 0);
 }

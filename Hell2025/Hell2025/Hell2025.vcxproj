@@ -311,6 +311,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\BackEnd\Integration\GLFW.cpp" />
     <ClCompile Include="src\BackEnd\Integration\SDL.cpp" />
     <ClCompile Include="src\Bible\Bible_text.cpp" />
+    <ClCompile Include="src\Bible\MeshNodesConfig\Bible_AnimatedMeshNodes.cpp" />
     <ClCompile Include="src\Bible\MeshNodesConfig\Bible_WeaponMeshNodes.cpp" />
     <ClCompile Include="src\Bible\Misc\CashRewards.cpp" />
     <ClCompile Include="src\Bible\Items\Bible_items.cpp" />
@@ -417,7 +418,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\GlobalIllumination\GlobalIllumination.cpp" />
     <ClCompile Include="src\Types\Animation\Animator.cpp" />
     <ClCompile Include="src\Types\Christmas\ChristmasLights.cpp" />
-    <ClCompile Include="src\Types\Christmas\ChristmasPresent.cpp" />
     <ClCompile Include="src\Types\Christmas\ChristmasTree.cpp" />
     <ClCompile Include="src\Types\Effects\ScreenSpaceBloodDecal.cpp" />
     <ClCompile Include="src\Types\Effects\VolumetricBloodSplatter.cpp" />
@@ -579,6 +579,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   <ItemGroup>
     <None Include="res\shaders\common\alpha_to_coverage.glsl" />
     <None Include="res\shaders\common\constants.glsl" />
+    <None Include="res\shaders\common\hair.glsl" />
+    <None Include="res\shaders\common\normal_encoding.glsl" />
     <None Include="res\shaders\common\raytracing.glsl" />
     <None Include="res\shaders\common\types.glsl" />
     <None Include="res\shaders\common\util.glsl" />
@@ -601,7 +603,12 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\common\pbr_functions.glsl" />
     <None Include="res\shaders\OpenGL\MSAA\GL_depth_prepass_alpha_discard.frag" />
     <None Include="res\shaders\OpenGL\MSAA\GL_depth_prepass_alpha_discard.vert" />
+    <None Include="res\shaders\OpenGL\MSAA\GL_hair_mlab.frag" />
+    <None Include="res\shaders\OpenGL\MSAA\GL_hair_mlab.vert" />
+    <None Include="res\shaders\OpenGL\MSAA\GL_lighting_composite.comp" />
     <None Include="res\shaders\OpenGL\MSAA\GL_shaded_hair.frag" />
+    <None Include="res\shaders\OpenGL\PostProcessing\GL_fxaa.comp" />
+    <None Include="res\shaders\OpenGL\PostProcessing\GL_taa.comp" />
     <None Include="res\shaders\terrain.frag" />
     <None Include="res\shaders\terrain.vert" />
     <None Include="res\shaders\skybox.frag" />
@@ -702,7 +709,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\GlobalIllumination\GlobalIllumination.h" />
     <ClInclude Include="src\Types\Animation\Animator.h" />
     <ClInclude Include="src\Types\Christmas\ChristmasLights.h" />
-    <ClInclude Include="src\Types\Christmas\ChristmasPresent.h" />
     <ClInclude Include="src\Types\Christmas\ChristmasTree.h" />
     <ClInclude Include="src\Hell\SlotMap.h" />
     <ClInclude Include="src\Types\Game\Decal.h" />

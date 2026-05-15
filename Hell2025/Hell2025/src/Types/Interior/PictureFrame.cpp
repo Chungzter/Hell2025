@@ -34,6 +34,7 @@ void PictureFrame::UpdateRenderItems() {
             uint32_t meshIndex = model->GetMeshIndices()[i];
             RenderItem& renderItem = m_renderItems.emplace_back();
             renderItem.modelMatrix = transform.to_mat4();
+            renderItem.prevModelMatrix = renderItem.modelMatrix;
             renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
             renderItem.meshIndex = meshIndex;
             renderItem.baseColorTextureIndex = material->m_basecolor;

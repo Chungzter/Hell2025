@@ -9,12 +9,12 @@ namespace OpenGLRenderer {
     float g_globalTime = 50.0f;
 
     void ComputeOceanFFTPass() {
-        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBuffer("FFT_band0");
-        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBuffer("FFT_band1");
+        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
+        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
         OpenGLMeshPatch* oceanMeshPatch = GetOceanMeshPatch();
 
-        OpenGLShader* oceanCalculateSpectrumShader = GetShader("OceanCalculateSpectrum");
-        OpenGLShader* oceanUpdateTexturesShader = GetShader("OceanUpdateTextures");
+        OpenGLShader* oceanCalculateSpectrumShader = GetShaderOLD("OceanCalculateSpectrum");
+        OpenGLShader* oceanUpdateTexturesShader = GetShaderOLD("OceanUpdateTextures");
 
         OpenGLSSBO* fftH0SSBO_band0 = GetSSBO("ffth0Band0");
         OpenGLSSBO* fftH0SSBO_band1 = GetSSBO("ffth0Band1");
@@ -141,10 +141,10 @@ namespace OpenGLRenderer {
     }
 
     void ComputeInverseFFT2D(GLuint handleA, GLuint handleB) {
-        OpenGLShader* radix64Vert = GetShader("FttRadix64Vertical");
-        OpenGLShader* radix8Vert = GetShader("FttRadix8Vertical");
-        OpenGLShader* radix64Hori = GetShader("FttRadix64Horizontal");
-        OpenGLShader* radix8Hori = GetShader("FttRadix8Horizontal");
+        OpenGLShader* radix64Vert = GetShaderOLD("FttRadix64Vertical");
+        OpenGLShader* radix8Vert = GetShaderOLD("FttRadix8Vertical");
+        OpenGLShader* radix64Hori = GetShaderOLD("FttRadix64Horizontal");
+        OpenGLShader* radix8Hori = GetShaderOLD("FttRadix8Horizontal");
 
         if (!radix64Vert) return;
         if (!radix8Vert) return;

@@ -84,8 +84,8 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLShader* shader = GetShader("MetaBalls");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("MetaBalls");
         Mesh* mesh = AssetManager::GetMeshByModelNameMeshIndex("SphereLowRes", 0);
 
         if (!gBuffer) return;
@@ -410,9 +410,9 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLFrameBuffer* bloodFluidFbo = GetFrameBuffer("BloodFluid");
-        OpenGLShader* depthShader = GetShader("BloodFluidDepth");
-        OpenGLShader* thicknessShader = GetShader("BloodFluidThickness");
+        OpenGLFrameBuffer* bloodFluidFbo = GetFrameBufferOLD("BloodFluid");
+        OpenGLShader* depthShader = GetShaderOLD("BloodFluidDepth");
+        OpenGLShader* thicknessShader = GetShaderOLD("BloodFluidThickness");
         Mesh* mesh = AssetManager::GetMeshByModelNameMeshIndex("SphereLowRes", 0);
 
         if (!bloodFluidFbo) return;
@@ -420,8 +420,8 @@ namespace OpenGLRenderer {
         if (!thicknessShader) return;
 
         bloodFluidFbo->Bind();
-        bloodFluidFbo->ClearAttachment("Depth", -1000.0f);
-        bloodFluidFbo->ClearAttachment("Thickness", 0.0f);
+        bloodFluidFbo->ClearAttachmentR("Depth", -1000.0f);
+        bloodFluidFbo->ClearAttachmentR("Thickness", 0.0f);
 
         std::vector<glm::mat4> modelMatrices;
         for (const glm::vec3& position : positions) {
@@ -489,7 +489,7 @@ namespace OpenGLRenderer {
 
         glm::ivec2 size = glm::ivec2(bloodFluidFbo->GetWidth(), bloodFluidFbo->GetHeight());
 
-        OpenGLShader* blurShader = GetShader("BloodFluidBlur");
+        OpenGLShader* blurShader = GetShaderOLD("BloodFluidBlur");
         blurShader->Bind();
         blurShader->SetIVec2("u_screenSize", size);
 

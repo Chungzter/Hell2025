@@ -12,10 +12,10 @@ namespace OpenGLRenderer {
     void WeatherBoardsPass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         //OpenGLShader* shader = GetShader("GBuffer");
-        OpenGLShader* editorMeshShader = GetShader("EditorMesh");
-        OpenGLShader* debugShader = GetShader("DebugTextured");
+        OpenGLShader* editorMeshShader = GetShaderOLD("EditorMesh");
+        OpenGLShader* debugShader = GetShaderOLD("DebugTextured");
 
         if (!gBuffer) return;
         //if (!shader) return;

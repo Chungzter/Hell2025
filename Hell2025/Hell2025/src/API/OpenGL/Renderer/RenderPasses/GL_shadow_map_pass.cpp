@@ -23,7 +23,7 @@ namespace OpenGLRenderer {
     void RenderFlashLightShadowMaps() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLShader* shader = GetShader("ShadowMap");
+        OpenGLShader* shader = GetShaderOLD("ShadowMap");
         OpenGLShadowMap* shadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
         OpenGLHeightMapMesh& heightMapMesh = OpenGLBackEnd::GetHeightMapMesh();
         //const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
@@ -120,7 +120,7 @@ namespace OpenGLRenderer {
     void RenderPointLightShadowMaps() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLShader* shader = GetShader("ShadowCubeMap");
+        OpenGLShader* shader = GetShaderOLD("ShadowCubeMap");
         OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
 
@@ -232,7 +232,7 @@ namespace OpenGLRenderer {
 
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
 
-        OpenGLShader* shader = GetShader("ShadowMap");
+        OpenGLShader* shader = GetShaderOLD("ShadowMap");
         OpenGLShadowMapArray* shadowMapArray = GetShadowMapArray("MoonlightCSM");
 
         if (!shader) return;

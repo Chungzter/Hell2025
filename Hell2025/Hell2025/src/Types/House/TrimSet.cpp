@@ -223,6 +223,11 @@ void TrimSet::CreateRenderItems() {
 		Util::UpdateRenderItemAABB(renderItem);
 		Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }
+
+    // Fill previous model matrices. These never move
+    for (RenderItem& renderItem : m_renderItems) {
+        renderItem.prevModelMatrix = renderItem.modelMatrix;
+    }
 }
 
 void TrimSet::Update() {

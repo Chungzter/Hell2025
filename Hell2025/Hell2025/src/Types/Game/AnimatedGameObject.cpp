@@ -1,5 +1,6 @@
 #include "AnimatedGameObject.h"
 #include "AssetManagement/AssetManager.h"
+#include "Bible/Bible.h"
 #include "Core/Game.h"
 #include <Hell/Logging.h>
 #include "Input/Input.h"
@@ -376,7 +377,7 @@ void AnimatedGameObject::SetName(std::string name) {
 }
 
 
-void AnimatedGameObject::SetSkinnedModel(std::string name) {
+void AnimatedGameObject::SetSkinnedModel(const std::string& name, const std::string& presetName) {
     SkinnedModel* ptr = AssetManager::GetSkinnedModelByName(name);
     if (ptr) {
         m_skinnedModel = ptr;
@@ -386,7 +387,12 @@ void AnimatedGameObject::SetSkinnedModel(std::string name) {
         std::cout << "Could not SetSkinnedModel(name) with name: \"" << name << "\", it does not exist\n";
     }
 
-    m_animatedMeshNodes.SetSkinnedModel(m_objectId, name);
+    if (presetName != UNDEFINED_STRING) {
+        Bible::ConfigureAnimatedMeshNodes(m_objectId, &m_animatedMeshNodes, presetName);
+    }
+    else {
+        m_animatedMeshNodes.SetSkinnedModel(m_objectId, name);
+    }
 }
 
 

@@ -122,7 +122,7 @@ namespace OpenGLRenderer {
             g_grassGeometryMesh.AllocateBuffers(maxVertexCount, maxIndexCount);
         }
 
-        OpenGLShader* geometryShader = GetShader("GrassGeometryGeneration");
+        OpenGLShader* geometryShader = GetShaderOLD("GrassGeometryGeneration");
         geometryShader->Bind();
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_grassGeometryMesh.GetVBO());
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, g_grassGeometryMesh.GetEBO());
@@ -140,10 +140,10 @@ namespace OpenGLRenderer {
         //    CreateGrassGeometry();
         //}
 
-        OpenGLFrameBuffer* worldFramebuffer = GetFrameBuffer("World");
-        OpenGLFrameBuffer* roadFramebuffer = GetFrameBuffer("Road");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* wipBuffer = GetFrameBuffer("WIP");
+        OpenGLFrameBuffer* worldFramebuffer = GetFrameBufferOLD("World");
+        OpenGLFrameBuffer* roadFramebuffer = GetFrameBufferOLD("Road");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* wipBuffer = GetFrameBufferOLD("WIP");
         OpenGLSSBO* bladeositionsSSBO = GetSSBO("BladePositions");
 
         BlitFrameBuffer(gBuffer, wipBuffer, "WorldPosition", "WorldPosition", GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -275,7 +275,7 @@ namespace OpenGLRenderer {
         int maxIndexCount = bladeCount * 12;
 
         // Uniforms
-        OpenGLShader* generationShader = GetShader("GrassPositionGeneration");
+        OpenGLShader* generationShader = GetShaderOLD("GrassPositionGeneration");
         generationShader->Bind();
         generationShader->SetInt("gridSize", BLADES_PER_TILE_AXIS);
         generationShader->SetInt("u_viewportIndex", viewportIndex);
@@ -295,8 +295,8 @@ namespace OpenGLRenderer {
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
         OpenGLSSBO* bladeositionsSSBO = GetSSBO("BladePositions");
-        OpenGLShader* geometryShader = GetShader("Grass");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLShader* geometryShader = GetShaderOLD("Grass");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 
         Viewport* viewport = ViewportManager::GetViewportByIndex(viewportIndex);
         if (!viewport->IsVisible()) return;

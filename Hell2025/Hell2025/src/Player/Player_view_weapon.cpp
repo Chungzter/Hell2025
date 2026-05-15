@@ -81,6 +81,7 @@ void Player::UpdateViewWeapon(float deltaTime) {
         GetCurrentWeaponInfo()->itemInfoName == "P90"
         ) {
         weaponScale *= 100.0;
+        //weaponScale = 1.0;
     }
 
     //if (Input::KeyPressed(HELL_KEY_E) && GetCurrentWeaponInfo()->itemInfoName == "P90") {

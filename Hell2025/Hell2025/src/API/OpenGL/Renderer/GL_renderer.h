@@ -163,7 +163,8 @@ namespace OpenGLRenderer {
 
     OpenGLCubemapView* GetCubemapView(const std::string& name);
     OpenGLFrameBuffer* GetBlurBuffer(int viewportIndex, int bufferIndex);
-    OpenGLShader* GetShader(const std::string& name);
+    OpenGLShader& GetShader(const std::string& name);
+    OpenGLShader* GetShaderOLD(const std::string& name);
     OpenGLShadowMap* GetShadowMap(const std::string& name);
     OpenGLShadowCubeMapArray* GetShadowCubeMapArray(const std::string& name);
     OpenGLShadowCubeMapArray* GetLightAABBCubeMapArray(const std::string& name);
@@ -179,13 +180,14 @@ namespace OpenGLRenderer {
     OpenGLFrameBuffer& CreateFrameBuffer(const std::string& name, int32_t width, int32_t height);
     OpenGLFrameBuffer& CreateMultisampledFrameBuffer(const std::string& name, glm::ivec2 resolution, uint32_t sampleCount);
     OpenGLFrameBuffer& CreateMultisampledFrameBuffer(const std::string& name, int32_t width, int32_t height, uint32_t sampleCount);
-    OpenGLFrameBuffer* GetFrameBuffer(const std::string& name);
+    OpenGLFrameBuffer& GetFrameBuffer(const std::string& name);
+    OpenGLFrameBuffer* GetFrameBufferOLD(const std::string& name);
 
     OpenGLCubemapFrameBuffer& CreateCubemapFrameBuffer(const std::string& name, int32_t size);
     OpenGLCubemapFrameBuffer& GetCubemapFrameBuffer(const std::string& name);
 
     // Textures
-    void BindImageTexture(uint32_t bindingIndex, uint32_t textureHandle, uint32_t access, uint32_t format);
+    void BindImageTexture(uint32_t bindingIndex, uint32_t textureHandle, uint32_t access, uint32_t format, bool layered = false);
     void BindImageTextureArray(uint32_t bindingIndex, uint32_t textureHandle, uint32_t access, uint32_t format);
     void BindTextureUnit(uint32_t bindingIndex, uint32_t textureHandle);
 

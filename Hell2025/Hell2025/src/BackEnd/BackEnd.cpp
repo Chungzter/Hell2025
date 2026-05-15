@@ -337,7 +337,8 @@ namespace BackEnd {
             if (Input::KeyPressed(HELL_KEY_COMMA))        Renderer::TogglePointCloud();
             if (Input::KeyPressed(HELL_KEY_PERIOD))       Renderer::NextProbeDebugState();
             if (Input::KeyPressed(HELL_KEY_SLASH))        Renderer::ToggleIrradianceProbeSampling();
-            if (Input::KeyPressed(HELL_KEY_RIGHT_SHIFT))  Renderer::ToggleIndirectDiffuseOverrideState();
+            if (Input::KeyPressed(HELL_KEY_RIGHT_SHIFT))  Renderer::ToggleOverrideState(RendererOverrideState::INDIRECT_DIFFUSE);
+            if (Input::KeyPressed(HELL_KEY_DELETE))       Renderer::ToggleOverrideState(RendererOverrideState::VELOCITY);
             if (Input::KeyPressed(HELL_KEY_APOSTROPHE))   Renderer::TogglePointCloudGrid();
             if (Input::KeyPressed(HELL_KEY_BACKSLASH))    Renderer::NextRendererOverrideState();
             if (Input::KeyPressed(HELL_KEY_LEFT_BRACKET)) Renderer::ToggleMSAA();

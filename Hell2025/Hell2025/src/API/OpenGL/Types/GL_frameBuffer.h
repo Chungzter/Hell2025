@@ -33,7 +33,9 @@ public:
     void DrawBuffer(GLenum buffer);
     void DrawBuffer(const std::string& attachmentName);
     void DrawBuffers(const std::vector<std::string>& attachmentNames);
-    void ClearAttachment(const std::string& attachmentName, GLfloat r, GLfloat g = 0.0f, GLfloat b = 0.0f, GLfloat a = 0.0f);
+    void ClearAttachment(const std::string& attachmentName, float r, float g, float b, float a);
+    void ClearAttachment2(const std::string& attachmentName, float r, float g, float b, float a);
+    void ClearAttachmentR(const std::string& attachmentName, GLfloat r);
     void ClearTexImage(const std::string& attachmentName, GLfloat r, GLfloat g, GLfloat b, GLfloat a);
     void ClearAttachmentI(const std::string& attachmentName, GLint r, GLint g = 0, GLint b = 0, GLint a = 0);
     void ClearAttachmentUI(const std::string& attachmentName, GLint r, GLint g = 0, GLint b = 0, GLint a = 0);
@@ -47,7 +49,6 @@ public:
     GLuint GetColorAttachmentHandleByName(const std::string& name) const;
     GLenum GetColorAttachmentSlotByName(const std::string& name) const;
     void BlitToDefaultFrameBuffer(const std::string& srcName, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
-
 
     GLuint GetHandle() const                { return m_handle; }
     GLuint GetWidth() const                 { return m_width; }

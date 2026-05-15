@@ -40,8 +40,8 @@ namespace OpenGLRenderer {
 
         // World heightmap
         if (false) {
-            OpenGLFrameBuffer* worldFrameBuffer = GetFrameBuffer("World");
-            OpenGLFrameBuffer* roadFrameBuffer = GetFrameBuffer("Road");
+            OpenGLFrameBuffer* worldFrameBuffer = GetFrameBufferOLD("World");
+            OpenGLFrameBuffer* roadFrameBuffer = GetFrameBufferOLD("Road");
             DebugBlitFrameBufferTexture("World", "HeightMap", 0, 0, worldFrameBuffer->GetWidth(), worldFrameBuffer->GetHeight());
             DebugBlitFrameBufferTexture("Road", "RoadMask", worldFrameBuffer->GetWidth(), 0, roadFrameBuffer->GetWidth(), roadFrameBuffer->GetHeight());
         }
@@ -79,7 +79,7 @@ namespace OpenGLRenderer {
     }
 
     void DebugBlitOpenGLTexture(GLuint textureHandle, float scale) {
-        OpenGLShader* shader = GetShader("DebugTextureBlit");
+        OpenGLShader* shader = GetShaderOLD("DebugTextureBlit");
         if (!shader) return;
 
         shader->Bind();
@@ -103,7 +103,7 @@ namespace OpenGLRenderer {
     }
 
     void DebugBlitFrameBufferTexture(const std::string& frameBufferName, const std::string& attachmentName, GLint dstX, GLint dstY, GLint width, GLint height) {
-        OpenGLFrameBuffer* frameBuffer = GetFrameBuffer(frameBufferName);
+        OpenGLFrameBuffer* frameBuffer = GetFrameBufferOLD(frameBufferName);
         if (!frameBuffer) {
             std::cout << "DebugBlitFrameBufferTexture() failed because frameBufferName '" << frameBufferName << "' was not found\n";
             return;

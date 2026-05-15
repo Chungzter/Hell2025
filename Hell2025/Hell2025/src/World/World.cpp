@@ -44,7 +44,6 @@ namespace World {
     std::vector<ScreenSpaceBloodDecal> g_screenSpaceBloodDecals;
     std::vector<Bullet> g_bullets;
     std::vector<BulletCasing> g_bulletCasings;
-    std::vector<ChristmasPresent> g_christmasPresents;
     std::vector<ChristmasTree> g_christmasTrees;
     std::vector<ClippingCube> g_clippingCubes;
     std::vector<Decal> g_newDecals;
@@ -824,7 +823,15 @@ namespace World {
        //animatedGameObject->SetMeshMaterialByMeshName("ArmsMale", "Hands");
        //animatedGameObject->SetMeshMaterialByMeshName("ArmsFemale", "FemaleArms");
 
+        g_gameObjects.clear();
 
+        GameObjectCreateInfo createInfo2;
+        createInfo2.position = glm::vec3(49.0f, 31.0f, 39.0f);
+        createInfo2.scale = glm::vec3(1.0f);
+        createInfo2.modelName = "Bunny";
+        AddGameObject(createInfo2);
+        g_gameObjects[0].m_meshNodes.SetMeshMaterials("Leopard");
+        g_gameObjects[0].SetPosition(glm::vec3(39.0f, 31.0f, 39.0f));
     }
 
     void ClearAllObjects() {
@@ -832,8 +839,7 @@ namespace World {
         MirrorManager::CleanUp();
 
         for (BulletCasing& bulletCasing : g_bulletCasings)              bulletCasing.CleanUp();
-        for (ChristmasLightSet& christmasLights : g_christmasLightSets)      christmasLights.CleanUp();
-        for (ChristmasPresent& christmasPresent : g_christmasPresents)  christmasPresent.CleanUp();
+        for (ChristmasLightSet& christmasLights : g_christmasLightSets) christmasLights.CleanUp();
         for (ChristmasTree& christmasTree : g_christmasTrees)           christmasTree.CleanUp();
         for (DDGIVolume& object : g_ddgiVolumes)                        object.CleanUp();
         for (Door& door : g_doors)                                      door.CleanUp();
@@ -863,7 +869,6 @@ namespace World {
         g_bulletCasings.clear();
         g_screenSpaceBloodDecals.clear();
         g_christmasLightSets.clear();
-        g_christmasPresents.clear();
         g_christmasTrees.clear();
         g_ddgiVolumes.clear();
         g_doors.clear();
@@ -1050,10 +1055,6 @@ namespace World {
     void AddKangaroo(const KangarooCreateInfo& createInfo) {
         Kangaroo& kangaroo = g_kangaroos.emplace_back();
         kangaroo.Init(createInfo);        
-    }
-
-    void AddChristmasPresent(ChristmasPresentCreateInfo createInfo, SpawnOffset spawnOffset) {
-        g_christmasPresents.push_back(ChristmasPresent(createInfo, spawnOffset));
     }
 
     void AddChristmasTree(ChristmasTreeCreateInfo createInfo, SpawnOffset spawnOffset) {
@@ -1388,7 +1389,6 @@ namespace World {
     std::vector<ScreenSpaceBloodDecal>& GetScreenSpaceBloodDecals()     { return g_screenSpaceBloodDecals; }
     std::vector<Bullet>& GetBullets()                                   { return g_bullets; }
     std::vector<BulletCasing>& GetBulletCasings()                       { return g_bulletCasings; }
-    std::vector<ChristmasPresent>& GetChristmasPresents()               { return g_christmasPresents; }
     std::vector<ChristmasTree>& GetChristmasTrees()                     { return g_christmasTrees; }
     std::vector<ClippingCube>& GetClippingCubes()                       { return g_clippingCubes; }
     std::vector<Decal>& GetDecals()                                     { return g_newDecals; }

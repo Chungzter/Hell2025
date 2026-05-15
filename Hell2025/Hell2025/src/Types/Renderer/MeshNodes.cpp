@@ -43,7 +43,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
         meshNode.materialIndex = AssetManager::GetMaterialIndexByName(DEFAULT_MATERIAL_NAME);
 		meshNode.transform = Transform();
 		meshNode.worldMatrix = glm::mat4(1.0f);
-		meshNode.worldModelMatrixPreviousFrame = glm::mat4(0.0f); // Forces dirty
+		meshNode.prevWorldMatrix = glm::mat4(1.0f);
         meshNode.inverseWorldMatrix = glm::mat4(1.0f);
         meshNode.localParentIndex = mesh->parentIndex;
         meshNode.localTransform = mesh->localTransform;
@@ -406,6 +406,8 @@ Material* MeshNodes::GetMaterial(int nodeIndex) {
 
 void MeshNodes::UpdateHierarchy() {
     for (MeshNode& meshNode : m_meshNodes) {
+        //meshNode.prevlocalMatrix = meshNode.localMatrix;
+
         MeshNode* parentMeshNode = GetMeshNodeByLocalIndex(meshNode.localParentIndex);
         if (parentMeshNode) {
             meshNode.localMatrix = parentMeshNode->localMatrix * meshNode.localTransform * meshNode.transform.to_mat4() * meshNode.scaleMatrix;
@@ -420,6 +422,7 @@ void MeshNodes::UpdateHierarchy() {
                 }
             }
         }
+
         meshNode.movedThisFrame = true;
     }
 }
@@ -434,7 +437,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
     //}
 
     // Check if the world matrix changed this frame
-    const bool worldMatrixDirty = (!Util::Mat4NearlyEqual(worldMatrix, m_worldMatrixPreviousFrame));
+    const bool worldMatrixDirty = (m_firstFrame || !Util::Mat4NearlyEqual(worldMatrix, m_worldMatrixPreviousFrame));
 
     // Is the hierarchy dirty?
     bool hierarchyDirty = false;
@@ -479,6 +482,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
     // Compute world matrices FIRST
     for (size_t i = 0; i < m_meshNodes.size(); i++) {
         MeshNode& meshNode = m_meshNodes[i];
+        //meshNode.prevWorldMatrix = meshNode.worldMatrix;
 
         const bool physicsDrivesThis =
             (!m_firstFrame) &&
@@ -513,11 +517,13 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         Material* material = GetMaterial(i);
         if (!material) continue;
 
+        // Update render item
         meshNode.inverseWorldMatrix = glm::inverse(meshNode.worldMatrix);
         meshNode.renderItem.objectType = (int)UniqueID::GetType(meshNode.parentObjectId);
         meshNode.renderItem.openableId = meshNode.openableId;
         meshNode.renderItem.customId = meshNode.customId;
         meshNode.renderItem.modelMatrix = meshNode.worldMatrix;
+        meshNode.renderItem.prevModelMatrix = meshNode.prevWorldMatrix;
         meshNode.renderItem.inverseModelMatrix = meshNode.inverseWorldMatrix;
         meshNode.renderItem.meshIndex = GetGlobalMeshIndex(i);
         meshNode.renderItem.baseColorTextureIndex = material->m_basecolor;
@@ -535,6 +541,11 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.renderItem.tintColorR = meshNode.tintColor.r;
         meshNode.renderItem.tintColorG = meshNode.tintColor.g;
         meshNode.renderItem.tintColorB = meshNode.tintColor.b;
+        meshNode.renderItem.opacityTextureIndex = material->m_opacity;
+
+        if (m_firstFrame) {
+            meshNode.renderItem.prevModelMatrix = meshNode.worldMatrix;
+        }
 
         Util::PackUint64(meshNode.parentObjectId, meshNode.renderItem.objectIdLowerBit, meshNode.renderItem.objectIdUpperBit);
 
@@ -551,7 +562,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         }
 
         // If this is a static node and its transform is different than the previous frame, mark the World's static scene as dirty
-        if (m_marksStaticSceneBvhAsDirty && MeshNodeIsStatic(i) && !Util::Mat4NearlyEqual(meshNode.worldMatrix, meshNode.worldModelMatrixPreviousFrame)) {
+        if (m_marksStaticSceneBvhAsDirty && MeshNodeIsStatic(i) && !Util::Mat4NearlyEqual(meshNode.worldMatrix, meshNode.prevWorldMatrix)) {
             World::MarkStaticSceneBvhDirty();
 
             if (Mesh* mesh = AssetManager::GetMeshByIndex(meshNode.globalMeshIndex)) {
@@ -562,7 +573,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
 
     // Store previous frame data
     for (MeshNode& meshNode : m_meshNodes) {
-        meshNode.worldModelMatrixPreviousFrame = meshNode.worldMatrix;
+        meshNode.prevWorldMatrix = meshNode.worldMatrix;
 
         //if (!m_firstFrame) {
         //    meshNode.movedThisFrame = !Util::Mat4NearlyEqual(meshNode.worldMatrix, meshNode.worldModelMatrixPreviousFrame);

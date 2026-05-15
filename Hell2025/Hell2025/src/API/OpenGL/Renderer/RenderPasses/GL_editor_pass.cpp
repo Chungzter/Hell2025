@@ -9,8 +9,8 @@ namespace OpenGLRenderer {
 
     void EditorPass() {
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLShader* shader = GetShader("SolidColor");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("SolidColor");
 
         if (!shader) return;
         if (!Editor::IsOpen()) return;

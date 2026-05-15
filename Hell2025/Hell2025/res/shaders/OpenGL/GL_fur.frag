@@ -1,4 +1,7 @@
 #version 460 core
+#extension GL_ARB_bindless_texture : enable
+#extension GL_EXT_nonuniform_qualifier : enable
+
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"
@@ -15,6 +18,7 @@ layout (binding = 7) uniform sampler2D FurMaskTexture;
 
 layout (location = 0) out vec4 FinalLightingOut;
 
+readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData  rendererData;   };
 readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData  viewportData[]; };
 readonly restrict layout(std430, binding = 4) buffer lightsBuffer       { Light         lights[];       };
@@ -25,15 +29,12 @@ in vec3 Normal;
 in vec3 Tangent;
 in vec3 BiTangent;
 in vec4 WorldPos;
-
 uniform int u_viewportIndex;
-
 in float H0;
 
 void main() {
-    vec2 uv = TexCoord * 20.0; //bunny
-    //vec2 uv = TexCoord * 25.0;
-    const float MAX_LOD = 2.0;
+    vec2 uv = TexCoord * 20.0; // bunny
+    const float MAX_LOD = 3.0;
 
     float furMask = texture(BaseColorTexture, TexCoord).r;
 
@@ -45,19 +46,31 @@ void main() {
        discard;
     }
 
-    float alpha = (1 - H0 * 1) * blueNoise;
+    float taper = pow(1.0 - H0, 2.0); 
+    float alpha = taper * blueNoise;
+    
+    alpha *= 2;
     alpha = clamp(alpha, 0, 1);
+
     if (alpha < 0.05) {
        discard;
     }
     
     vec3 viewPos = viewportData[u_viewportIndex].viewPos.xyz;
-
     vec4 baseColor = texture(BaseColorTexture, TexCoord);
     vec3 gammaBaseColor = pow(baseColor.rgb, vec3(2.2));
-    vec4 normalMap = texture(NormalTexture, TexCoord) * 2.0 - 1.0;
+
+    vec4 normalMapData = texture(NormalTexture, TexCoord) * 2.0 - 1.0;
+    
+    float normalMapStrength = 1.0 - (H0 * 0.8); 
+    vec3 blendedMap = mix(vec3(0.0, 0.0, 1.0), normalMapData.rgb, normalMapStrength);
+    
     mat3 TBN = mat3(normalize(Tangent), normalize(BiTangent), normalize(Normal));
-    vec3 normal = normalize(TBN * normalMap.rgb);
+    vec3 normal = normalize(TBN * blendedMap);
+
+    if (!gl_FrontFacing) {
+        normal = -normal;
+    }
 
     vec4 rma = texture(RMATexture, TexCoord);
     float roughness = rma.r;
@@ -72,9 +85,32 @@ void main() {
         uint lightIndex = tileLights[tileIndex].lightIndices[i];
         Light light = lights[lightIndex];
         vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
-        vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
-        float shadow = ShadowCalculationFast(int(lightIndex), lightPosition, light.radius, WorldPos.xyz, viewPos, normal, highResShadowCubeMapArray);
-        directLighting += GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal, WorldPos.xyz, gammaBaseColor, roughness, metallic, viewPos) * shadow;
+
+        vec3 L = lightPosition - WorldPos.xyz;
+        float distSq = dot(L, L);
+        //float radiusSq = light.radius * light.radius;
+        float radiusSq = 3.5 * 3.5;
+        
+        if (distSq < radiusSq) {
+            float nDotL = dot(normal, normalize(L));
+
+            // Only bother lighting if it's hitting the front face
+            if (nDotL > 0.0) { 
+                vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
+                
+                float shadow = ShadowCalculationFast(int(lightIndex), lightPosition, light.radius, WorldPos.xyz, viewPos, normal, highResShadowCubeMapArray);
+                
+                if (shadow > 0.01) {
+                    vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal, WorldPos.xyz, gammaBaseColor, roughness, metallic, viewPos) * shadow;
+                    
+                    if (light.iesTextureIndex != 0) {
+                        sampler2D iesSampler = sampler2D(textureSamplers[(light.iesTextureIndex)]);
+                        directLight *= ApplyIESProfile(WorldPos.xyz, light, iesSampler);
+                    }
+                    directLighting += directLight;
+                }
+            }
+        }
     }
 
     // Flashlights
@@ -90,9 +126,11 @@ void main() {
             vec3 spotLightColor = vec3(0.9, 0.95, 1.1);
             float innerAngle = cos(radians(5.0 * flashlightModifer));
             float outerAngle = cos(radians(25.0));
+            
             vec3 cookie = ApplyCookie(flashlightProjectionView, WorldPos.xyz, spotLightPos, spotLightColor, 10, FlashlightCookieTexture);
             float shadow = 1 - SpotlightShadowCalculationFast(flashlightProjectionView * WorldPos, normal, spotLightDir, WorldPos.xyz, spotLightPos, flashlightViewPos, FlashlighShadowMapArrayTexture, i); 
             vec3 spotLighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, 50.0, 3.0, innerAngle, outerAngle, normal, WorldPos.xyz, gammaBaseColor, roughness, metallic, flashlightViewPos, flashlightProjectionView) * shadow;
+            
             directLighting += spotLighting * flashlightModifer * cookie * spotLightColor;
         }
     }
@@ -106,19 +144,16 @@ void main() {
     vec3 ambientLighting = ambientColor * ambientIntensity;
 
     // Ambient hack
-	float factor = min(1, 1 - metallic * 1.0);
-	ambientLighting *= (1.0) * vec3(factor);
+    float factor = min(1, 1 - metallic * 1.0);
+    ambientLighting *= (1.0) * vec3(factor);
 
     // composite PBR
     vec3 finalColor = directLighting + ambientLighting;
-
     finalColor = clamp(finalColor, 0, 1);
 
-    alpha*= furMask;
+    // silhouette boost logic (keeping your structure)
+    vec3 V = normalize(viewPos - WorldPos.xyz);
+    float ndotv = dot(normal, V);
     
-    FinalLightingOut = vec4(finalColor, alpha * 2);  // 2 is bunny, not sure about roo 
-    //FinalLightingOut = vec4(vec3(furMask), 1);
-
-
-
+    FinalLightingOut = vec4(finalColor, alpha);
 }

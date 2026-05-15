@@ -184,7 +184,7 @@ namespace OpenGLRenderer {
 
         BindShader("ProbeStateUpdate");
 
-        OpenGLShader* shader = GetShader("ProbeStateUpdate");
+        OpenGLShader* shader = GetShaderOLD("ProbeStateUpdate");
         shader->SetInt("u_dirtyDoorAABBCount", (int)World::GetDirtyDoorAABBS().size());
 
         DispatchCompute((ddgiVolume.GetTotalProbeCount() + 63) / 64, 1, 1);
@@ -193,7 +193,7 @@ namespace OpenGLRenderer {
     void ComputePointCloudLighting(DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
-        OpenGLShader* shader = GetShader("PointCloudLighting");
+        OpenGLShader* shader = GetShaderOLD("PointCloudLighting");
         shader->Bind();
         shader->SetInt("u_lightCount", World::GetLightCount());
 
@@ -224,14 +224,14 @@ namespace OpenGLRenderer {
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
 		if (Renderer::MSAAEnabled()) {
-			OpenGLFrameBuffer* msaaRenderer = GetFrameBuffer("MSAA");
+			OpenGLFrameBuffer* msaaRenderer = GetFrameBufferOLD("MSAA");
 			if (!msaaRenderer) return;
 
             BindTextureUnit(0, msaaRenderer->GetDepthAttachmentHandle());
 			BindTextureUnit(1, msaaRenderer->GetColorAttachmentHandleByName("Normal"));
 
             // TODO: REMOVE ME
-			OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+			OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 			BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
             // TODO: REMOVE ME
 
@@ -240,7 +240,7 @@ namespace OpenGLRenderer {
 			glDispatchCompute((quarterWidth + 7) / 8, (quarterHeight + 7) / 8, 1);
         }
 		else {
-			OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+			OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 			if (!gBuffer) return;
 
 			BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
@@ -256,9 +256,9 @@ namespace OpenGLRenderer {
     void ComputeProbeDistance(DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
-        OpenGLShader* distanceShader = GetShader("ProbeDistance");
-        OpenGLShader* listShader = GetShader("ProbeDistanceList");
-        OpenGLShader* argsShader = GetShader("ProbeDistanceDispatchArgs");
+        OpenGLShader* distanceShader = GetShaderOLD("ProbeDistance");
+        OpenGLShader* listShader = GetShaderOLD("ProbeDistanceList");
+        OpenGLShader* argsShader = GetShaderOLD("ProbeDistanceDispatchArgs");
 
         if (!distanceShader || !listShader || !argsShader) return;
 
@@ -295,7 +295,7 @@ namespace OpenGLRenderer {
     void ComputeProbeDistanceBorder(DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
-        OpenGLShader* shader = GetShader("ProbeDistanceBorder");
+        OpenGLShader* shader = GetShaderOLD("ProbeDistanceBorder");
         if (!shader) return;
 
         BindShader("ProbeDistanceBorder");
@@ -355,7 +355,7 @@ namespace OpenGLRenderer {
     void ComputeProbeIrradiance(DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
-        OpenGLShader* shader = GetShader("ProbeIrradiance");
+        OpenGLShader* shader = GetShaderOLD("ProbeIrradiance");
         if (!shader) return;
 
         static int frameIndex = 0;
@@ -396,7 +396,7 @@ namespace OpenGLRenderer {
     void ComputeProbeIrradianceBorder(DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
-        OpenGLShader* shader = GetShader("ProbeIrradianceBorder");
+        OpenGLShader* shader = GetShaderOLD("ProbeIrradianceBorder");
         if (!shader) return;
 
         BindSSBO("DDGIVolume", 4);
@@ -418,7 +418,7 @@ namespace OpenGLRenderer {
             return;
 		}
 
-        OpenGLShader* shader = GetShader("PointCloudBaseColor");
+        OpenGLShader* shader = GetShaderOLD("PointCloudBaseColor");
         if (!shader) return;
 
         const std::vector<CloudPointTextureInfo>& pointCloundTextureInfo = ddgiVolume.GetPointCloudTextureInfo();
@@ -471,8 +471,8 @@ namespace OpenGLRenderer {
     void DrawPointCloud(DDGIVolume& ddgiVolume) {
         if (g_pointCloudVao == 0) return;
 
-        OpenGLShader* shader = GetShader("DebugPointCloud");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("DebugPointCloud");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 
         if (!gBuffer) return;
         if (!shader) return;
@@ -494,7 +494,7 @@ namespace OpenGLRenderer {
 		OpenGLFrameBuffer* fbo = nullptr;
 
 		if (Renderer::MSAAEnabled()) {
-			fbo = GetFrameBuffer("MSAA");
+			fbo = GetFrameBufferOLD("MSAA");
 			if (!fbo) return;
 
 			fbo->Bind();
@@ -509,7 +509,7 @@ namespace OpenGLRenderer {
 			ForceRasterizerState(state);
 		}
 		else {
-			fbo = GetFrameBuffer("GBuffer");
+			fbo = GetFrameBufferOLD("GBuffer");
 			if (!fbo) return;
 
 			fbo->Bind();
@@ -549,7 +549,7 @@ namespace OpenGLRenderer {
     }
 
     void DrawProbes(DDGIVolume& ddgiVolume) {
-        OpenGLShader* shader = GetShader("DebugProbes");
+        OpenGLShader* shader = GetShaderOLD("DebugProbes");
 
         if (!shader) return;
 
@@ -566,7 +566,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* fbo = nullptr;
         
         if (Renderer::MSAAEnabled()) {
-            fbo = GetFrameBuffer("MSAA");
+            fbo = GetFrameBufferOLD("MSAA");
             if (!fbo) return;
 
             fbo->Bind();
@@ -581,7 +581,7 @@ namespace OpenGLRenderer {
             ForceRasterizerState(state);
         }
         else {
-            fbo = GetFrameBuffer("GBuffer");
+            fbo = GetFrameBufferOLD("GBuffer");
 			if (!fbo) return;
 
             fbo->Bind();
@@ -626,8 +626,8 @@ namespace OpenGLRenderer {
     void RaytracedSceneDebug() {
         ProfilerOpenGLZoneFunctionLightGreen();
 
-        OpenGLFrameBuffer* fbo = GetFrameBuffer("IndirectDiffuse");
-        OpenGLShader* shader = GetShader("RaytraceScene");
+        OpenGLFrameBuffer* fbo = GetFrameBufferOLD("IndirectDiffuse");
+        OpenGLShader* shader = GetShaderOLD("RaytraceScene");
 
         if (!fbo) return;
         if (!shader) return;
@@ -653,8 +653,8 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLFrameBuffer* fbo = GetFrameBuffer("IndirectDiffuse");
-        OpenGLShader* shader = GetShader("ProbeIrradianceTexture");
+        OpenGLFrameBuffer* fbo = GetFrameBufferOLD("IndirectDiffuse");
+        OpenGLShader* shader = GetShaderOLD("ProbeIrradianceTexture");
 
         if (!fbo) return;
         if (!shader) return;
@@ -682,14 +682,14 @@ namespace OpenGLRenderer {
         glBindImageTexture(0, fbo->GetColorAttachmentHandleByName("Color"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 
         if (Renderer::MSAAEnabled()) {
-            OpenGLFrameBuffer* msaaRenderer = GetFrameBuffer("MSAA");
+            OpenGLFrameBuffer* msaaRenderer = GetFrameBufferOLD("MSAA");
             if (!msaaRenderer) return;
 
             BindTextureUnit(6, msaaRenderer->GetColorAttachmentHandleByName("Normal"));
             BindTextureUnit(7, msaaRenderer->GetDepthAttachmentHandle());
         }
         else {
-            OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+            OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
             if (!gBuffer) return;
 
             BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));

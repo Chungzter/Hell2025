@@ -30,7 +30,9 @@ struct MeshNode {
     RenderItem renderItem;
     glm::mat4 localMatrix = glm::mat4(1.0f);
     glm::mat4 worldMatrix = glm::mat4(1.0f);
-    glm::mat4 worldModelMatrixPreviousFrame = glm::mat4(0.0f); // Intentionally invalid matrix (forces static World scene bvh update)
+    //glm::mat4 prevWorldMatrix = glm::mat4(1.0f);
+    //glm::mat4 prevlocalMatrix = glm::mat4(1.0f);
+    glm::mat4 prevWorldMatrix = glm::mat4(0.0f); // Intentionally invalid matrix (forces static World scene bvh update)
     glm::mat4 inverseWorldMatrix = glm::mat4(1.0f);
     DecalType decalType = DecalType::PLASTER;
     bool forceDynamic;

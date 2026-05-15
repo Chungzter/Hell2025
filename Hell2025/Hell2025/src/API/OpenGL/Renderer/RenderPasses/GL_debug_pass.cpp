@@ -29,9 +29,9 @@ namespace OpenGLRenderer {
     void DebugPass() {
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLShader* shader2D = GetShader("DebugVertex2D");
-        OpenGLShader* shader3D = GetShader("DebugVertex3D");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLShader* shader2D = GetShaderOLD("DebugVertex2D");
+        OpenGLShader* shader3D = GetShaderOLD("DebugVertex3D");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 
         if (!gBuffer) return;
         if (!shader2D) return;
@@ -107,7 +107,7 @@ namespace OpenGLRenderer {
         OpenGLMeshBuffer& debugGridMesh = AStarMap::GetDebugGridMeshBuffer().GetGLMeshBuffer();
         OpenGLMeshBuffer& debugSolidMesh = AStarMap::GetDebugSolidMeshBuffer().GetGLMeshBuffer();
 
-        OpenGLShader* solidColorShader = GetShader("DebugSolidColor");
+        OpenGLShader* solidColorShader = GetShaderOLD("DebugSolidColor");
         if (!solidColorShader) return;
 
         solidColorShader->Bind();
@@ -192,9 +192,9 @@ namespace OpenGLRenderer {
     void DebugViewPass() {
         RendererSettings& rendererSettings = Renderer::GetCurrentRendererSettings();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* indirectDiffuseFbo = GetFrameBuffer("IndirectDiffuse");
-        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBuffer("MiscFullSize");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* indirectDiffuseFbo = GetFrameBufferOLD("IndirectDiffuse");
+        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBufferOLD("MiscFullSize");
 
         if (!gBuffer) return;
         if (!indirectDiffuseFbo) return;
@@ -205,7 +205,7 @@ namespace OpenGLRenderer {
             rendererSettings.rendererOverrideState == RendererOverrideState::TILE_HEATMAP_BLOOD_DECALS ||
             rendererSettings.rendererOverrideState == RendererOverrideState::TILE_HEATMAP_CHRISTMAS_LIGHTS) {
 
-            OpenGLShader* shader = GetShader("DebugTileView");
+            OpenGLShader* shader = GetShaderOLD("DebugTileView");
             if (!shader) return;
 
             shader->Bind();
@@ -240,11 +240,12 @@ namespace OpenGLRenderer {
             rendererSettings.rendererOverrideState == RendererOverrideState::AO ||
             rendererSettings.rendererOverrideState == RendererOverrideState::CAMERA_NDOTL ||
             rendererSettings.rendererOverrideState == RendererOverrideState::ROUGHNESS ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::INDIRECT_DIFFUSE) {
+            rendererSettings.rendererOverrideState == RendererOverrideState::INDIRECT_DIFFUSE ||
+            rendererSettings.rendererOverrideState == RendererOverrideState::VELOCITY) {
 
             std::string shaderName = Renderer::MSAAEnabled() ? "DebugViewMSAA" : "DebugView";
 
-            OpenGLShader* shader = GetShader(shaderName);
+            OpenGLShader* shader = GetShaderOLD(shaderName);
             if (!shader) return;
 
             shader->Bind();
@@ -252,17 +253,19 @@ namespace OpenGLRenderer {
             shader->SetBool("u_heightMapEditor", (Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Editor::IsOpen());
 
             if (Renderer::MSAAEnabled()) {
-                OpenGLFrameBuffer* msaaFbo = GetFrameBuffer("MSAA");
-                OpenGLFrameBuffer* resolveFbo = GetFrameBuffer("Resolve");
-                glBindImageTexture(0, resolveFbo->GetColorAttachmentHandleByName("Color"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+                OpenGLFrameBuffer* msaaFbo = GetFrameBufferOLD("MSAA");
+                OpenGLFrameBuffer* resolveFbo = GetFrameBufferOLD("Resolve");
+                glBindImageTexture(0, resolveFbo->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 
-                //glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
-                glBindTextureUnit(2, resolveFbo->GetColorAttachmentHandleByName("Normal"));
+                glBindTextureUnit(1, msaaFbo->GetColorAttachmentHandleByName("BaseColor"));
+                glBindTextureUnit(2, msaaFbo->GetColorAttachmentHandleByName("Normal"));
                 glBindTextureUnit(3, msaaFbo->GetColorAttachmentHandleByName("Material"));
                 //glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
                 //glBindTextureUnit(5, miscFullSizeFBO->GetColorAttachmentHandleByName("ViewportIndex"));
                 //glBindTextureUnit(7, gBuffer->GetColorAttachmentHandleByName("Emissive"));
                 glBindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
+
+                
 
                 glDispatchCompute(resolveFbo->GetWidth() / TILE_SIZE, resolveFbo->GetHeight() / TILE_SIZE, 1);
             }
@@ -272,7 +275,7 @@ namespace OpenGLRenderer {
                 glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
                 glBindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
                 glBindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
-                glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
+                glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("VelocityOcclusionSubSurface"));
                 glBindTextureUnit(5, miscFullSizeFBO->GetColorAttachmentHandleByName("ViewportIndex"));
                 glBindTextureUnit(7, gBuffer->GetColorAttachmentHandleByName("Emissive"));
                 glBindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));

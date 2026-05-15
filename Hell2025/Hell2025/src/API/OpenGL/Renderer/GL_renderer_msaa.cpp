@@ -8,73 +8,184 @@
 // remove me
 #include "World/World.h"
 #include "AssetManagement/AssetManager.h"
+#include "Core/Game.h"
 
 namespace OpenGLRenderer {
 
+    struct MSAASettings {
+        glm::ivec2 msaaTargetResolution = glm::ivec2(1920, 1080);
+        glm::ivec2 finalImageResolution = glm::ivec2(1920, 1080) / 2;
+        uint32_t g_mssaSampleCount = 4;
+    } g_settings;
+
+
+    bool hairOG = true;
+    uint32_t g_mlabFrameIndex = 0;
+
+    void BindShadowMaps();
     void ClearRenderTargetsMSAA();
-	void CompositeLighting();
+    void CreateFramebuffersMSAA();
+    void CompositeLighting();
     void DepthPrePass();
-    void MSAAResolve();
-    void ShadedGeometry();
+    void HairHalfResDepthPrePass();
+    void HairHalfResShading();
+    void LoadShadersMSAA();
+    void HairMLAB();
+    void ResolveDepthNormalsMaterials();
+    void ResolveLighting();
+    void ShadingOpaque();
+    void ShadingAlphaDiscard();
+    void ShadingHair();
+    void ShadingBlended();
     void PostProcessingPassMSAA();
 
-    void MultiDrawScene();                    // would these be good?
-    void MultiDrawSkinnedScene();             // would these be good?
-    void MultiDrawSkinnedNonDeformingScene(); // would these be good?
+    void HairMLABSolid();
+    void HairMLAB();
+    void ResolveHairMLAB();
 
     void MultiDrawPerViewport(OpenGLFrameBuffer * fbo, OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
 
     void InitMSAA() {
-        const Resolutions& resolutions = Config::GetResolutions();
+        CreateFramebuffersMSAA();
+        LoadShadersMSAA();
+    }
 
-		OpenGLFrameBuffer& mssaFbo = CreateMultisampledFrameBuffer("MSAA", resolutions.gBuffer, 4);
-		mssaFbo.CreateAttachment("Lighting", GL_RGBA16F);
-		mssaFbo.CreateAttachment("Normal", GL_RGB10_A2);
-		mssaFbo.CreateAttachment("Material", GL_RGBA8);
+    void CreateFramebuffersMSAA() {
+        OpenGLFrameBuffer& mssaFbo = CreateMultisampledFrameBuffer("MSAA", g_settings.msaaTargetResolution, g_settings.g_mssaSampleCount);
+        mssaFbo.CreateAttachment("Lighting", GL_RGBA16F);
+        mssaFbo.CreateAttachment("BaseColor", GL_RGBA8);
+        mssaFbo.CreateAttachment("Normal", GL_RGB10_A2);
+        mssaFbo.CreateAttachment("RENormal", GL_RGB10_A2);
+        mssaFbo.CreateAttachment("Material", GL_RGBA8);
         mssaFbo.CreateDepthAttachment(GL_DEPTH_COMPONENT32F);
 
-        OpenGLFrameBuffer& resolveFbo = CreateFrameBuffer("Resolve", mssaFbo.GetWidth(), mssaFbo.GetHeight());
-		resolveFbo.CreateAttachment("Color", GL_RGBA16F);
-		resolveFbo.CreateAttachment("Normal", GL_RGB10_A2);
-		resolveFbo.CreateAttachment("Material", GL_RGBA8);
-		resolveFbo.CreateDepthAttachment(GL_DEPTH_COMPONENT32F);
+        OpenGLFrameBuffer& resolveFbo = CreateFrameBuffer("Resolve", g_settings.msaaTargetResolution);
+        resolveFbo.CreateAttachment("Lighting", GL_RGBA16F);
+        resolveFbo.CreateAttachment("BaseColor", GL_RGBA8);
+        resolveFbo.CreateAttachment("Normal", GL_RGB10_A2);
+        resolveFbo.CreateAttachment("Material", GL_RGBA8);
+        resolveFbo.CreateAttachment("HairMLAB", GL_RGBA16F);
+        resolveFbo.CreateDepthAttachment(GL_DEPTH_COMPONENT32F);
 
-		LoadShader("MSAA", "DepthPrePass", { "GL_depth_prepass.vert", "GL_depth_prepass.frag" });
-		LoadShader("MSAA", "DepthPrePassAlphaDiscard", { "GL_depth_prepass_alpha_discard.vert", "GL_depth_prepass_alpha_discard.frag" });
-		LoadShader("MSAA", "ShadedHardSurface", { "GL_shaded.vert", "GL_shaded.frag" });
-		LoadShader("MSAA", "ShadedHair", { "GL_shaded.vert", "GL_shaded_hair.frag" });
+        OpenGLFrameBuffer& halfResFbo = CreateFrameBuffer("HalfRes", g_settings.msaaTargetResolution / 2);
+        halfResFbo.CreateAttachment("HairMLAB", GL_RGBA16F);
+        halfResFbo.CreateAttachment("HairTest", GL_RGBA16F);
+        halfResFbo.CreateDepthAttachment(GL_DEPTH_COMPONENT32F);
+
+        OpenGLFrameBuffer& hairFbo = CreateMultisampledFrameBuffer("HairMSAA", g_settings.msaaTargetResolution / 2, 4);
+        hairFbo.CreateAttachment("Lighting", GL_RGBA16F);
+        hairFbo.CreateAttachment("BaseColor", GL_RGBA8);
+        hairFbo.CreateAttachment("Normal", GL_RGB10_A2);
+        hairFbo.CreateAttachment("Material", GL_RGBA8);
+        hairFbo.CreateDepthAttachment(GL_DEPTH_COMPONENT32F);
+
+        struct MlabNode {
+            uint32_t color;
+            float depth;
+        };
+
+        int bucketCount = 4;
+        int size = sizeof(MlabNode) * resolveFbo.GetWidth() * resolveFbo.GetHeight() * bucketCount * 2;
+
+        CreateSSBO("HairMLABNodes", size, GL_DYNAMIC_STORAGE_BIT);
+    }
+
+    void LoadShadersMSAA() {
+        LoadShader("MSAA", "DepthPrePass", { "GL_depth_prepass.vert", "GL_depth_prepass.frag" });
+        LoadShader("MSAA", "DepthPrePassAlphaDiscard", { "GL_depth_prepass_alpha_discard.vert", "GL_depth_prepass_alpha_discard.frag" });
+        LoadShader("MSAA", "LightingComposite", { "GL_lighting_composite.comp" });
+        LoadShader("MSAA", "ShadedHardSurface", { "GL_shaded.vert", "GL_shaded.frag" });
+        LoadShader("MSAA", "ShadedHair", { "GL_shaded.vert", "GL_shaded_hair.frag" });
+        LoadShader("MSAA", "HairMLAB", { "GL_hair_mlab.vert", "GL_hair_mlab.frag" });
+        LoadShader("MSAA", "HairMLABResolve", { "GL_hair_mlab_resolve.vert", "GL_hair_mlab_resolve.frag" });
     }
 
     void RenderGameMSAA() {
         ProfilerOpenGLFrame();
-		glDisable(GL_DITHER);
-		glDisable(GL_SAMPLE_SHADING);
+
+        OpenGLRasterizerState defaultState;
+        defaultState.colorMask = true;
+        defaultState.depthMask = true;
+        SetRasterizerState(defaultState);
+
+        if (g_mlabFrameIndex == 0) {
+            ClearSSBO("HairMLABNodes");
+        }
+        g_mlabFrameIndex++;
+
+        glDisable(GL_DITHER);
+        glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+        glDisable(GL_SAMPLE_ALPHA_TO_ONE);
+        glDisable(GL_SAMPLE_COVERAGE);
+        glDisable(GL_SAMPLE_SHADING);
         glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // TODO: not do this every frame
 
-        OpenGLFrameBuffer* finalImageFbo = GetFrameBuffer("FinalImage");
-        OpenGLFrameBuffer* resolveFbo = GetFrameBuffer("Resolve");
-        OpenGLFrameBuffer* msaaFbo = GetFrameBuffer("MSAA");
+        if (Input::KeyPressed(HELL_KEY_NUMPAD_6)) {
+            hairOG = !hairOG;
+            Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        }
 
-		ComputeSkinningPass();
-		UpdateSSBOS();
-		RenderShadowMaps();
+        if (Input::KeyPressed(HELL_KEY_NUMPAD_8)) {
+            Player* player = Game::GetLocalPlayerByIndex(0);
+            player->SetFootPosition(glm::vec3(36.53f, 31.0f, 36.36f));
+            player->GetCamera().SetEulerRotation(glm::vec3(-0.06f, 5.17f, 0.0f));
+            Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        }
+
+        if (Input::KeyPressed(HELL_KEY_NUMPAD_1)) {
+            g_settings.msaaTargetResolution = glm::ivec2(1920, 1080);
+            g_settings.g_mssaSampleCount = 4;
+            CreateFramebuffersMSAA();
+            Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        }
+        if (Input::KeyPressed(HELL_KEY_NUMPAD_2)) {
+            g_settings.msaaTargetResolution = glm::ivec2(1920, 1080) / 2;
+            g_settings.g_mssaSampleCount = 4;
+            CreateFramebuffersMSAA();
+            Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        }
+        if (Input::KeyPressed(HELL_KEY_NUMPAD_3)) {
+            g_settings.msaaTargetResolution = glm::ivec2(1920, 1080) / 2;
+            g_settings.g_mssaSampleCount = 8;
+            CreateFramebuffersMSAA();
+            Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        }
+        if (Input::KeyPressed(HELL_KEY_NUMPAD_4)) {
+            g_settings.msaaTargetResolution = glm::ivec2(1920, 1080) / 2;
+            g_settings.g_mssaSampleCount = 16;
+            CreateFramebuffersMSAA();
+            Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        }
+
+        OpenGLFrameBuffer* finalImageFbo = GetFrameBufferOLD("FinalImage");
+        OpenGLFrameBuffer* resolveFbo = GetFrameBufferOLD("Resolve");
+        OpenGLFrameBuffer* msaaFbo = GetFrameBufferOLD("MSAA");
+
+        ComputeSkinningPass();
+        UpdateSSBOS();
+        RenderShadowMaps();
         ClearRenderTargetsMSAA();
 
-		glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
-		glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
 
-		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
-		glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetSkinnedVertexDataVBO());
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetSkinnedVertexDataVBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
 
-		glBindVertexArray(0);
+        glBindVertexArray(0);
 
         DepthPrePass();
+        ShadingOpaque();
+        ShadingAlphaDiscard();
+        if (hairOG) ShadingHair();
+        ShadingBlended();
+
+		ResolveDepthNormalsMaterials();
 
 
-        ShadedGeometry();
-        MSAAResolve();
+        SetRasterizerState(defaultState);
 
         UpdateGlobalIllumintation();
 
@@ -84,32 +195,34 @@ namespace OpenGLRenderer {
         BindSSBO("InstanceData", 3);
         BindSSBO("Lights", 4);
 
-        CompositeLighting();
-
 		// DDGI Debug
 		DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
 		if (Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
 		if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
 		if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
 
-        // Resolve lighting
-        OpenGLRenderer::BlitFrameBuffer(msaaFbo, resolveFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		ResolveLighting();
+
+        //if (!hairOG) HairMLABSolid();
+        //if (!hairOG) HairMLAB();
+        //if (!hairOG) ResolveHairMLAB();
+
+        if (!hairOG) HairHalfResDepthPrePass();
+        if (!hairOG) HairHalfResShading();
+
+        CompositeLighting();
 
 		DebugViewPass();
 		PostProcessingPassMSAA();
 
         // Downscale blit
-        OpenGLRenderer::BlitFrameBuffer(resolveFbo, finalImageFbo, "Color", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        OpenGLRenderer::BlitFrameBuffer(resolveFbo, finalImageFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
         // Blit to swapchain
         OpenGLRenderer::BlitToDefaultFrameBuffer(finalImageFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-        glDisable(GL_CULL_FACE); // Must be disabled before UI pass
-
         UIPass();
-        ImGuiPass();
     }
-
 
     void ClearRenderTargetsMSAA() {
 		OpenGLRasterizerState state;
@@ -120,12 +233,26 @@ namespace OpenGLRenderer {
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		glDepthMask(GL_TRUE);
 
-        OpenGLFrameBuffer* msaaFbo = GetFrameBuffer("MSAA");
-		msaaFbo->Bind();
-		msaaFbo->ClearAttachment("Lighting", 0.0f, 0.0f, 0.0f, 1.0f);
-		msaaFbo->ClearAttachment("Normal", 0.0f, 0.0f, 0.0f, 1.0f);
-		msaaFbo->ClearAttachment("Material", 0.0f, 0.0f, 0.0f, 0.0f);
-        msaaFbo->ClearDepthAttachment(0.0f);
+        OpenGLFrameBuffer& msaaFbo = GetFrameBuffer("MSAA");
+		msaaFbo.Bind();
+        msaaFbo.ClearAttachment("BaseColor", 0.0f, 0.0f, 0.0f, 0.0f);
+        msaaFbo.ClearAttachment("Normal", 0.0f, 0.0f, 0.0f, 0.0f);
+        msaaFbo.ClearAttachment("RENormal", 0.0f, 0.0f, 0.0f, 0.0f);
+        msaaFbo.ClearAttachment("Material", 0.0f, 0.0f, 0.0f, 0.0f);
+        msaaFbo.ClearAttachment("Lighting", 0.0f, 0.0f, 0.0f, 0.0f);
+        msaaFbo.ClearDepthAttachment(0.0f);
+
+        OpenGLFrameBuffer& hairFbo = GetFrameBuffer("HairMSAA");
+        hairFbo.Bind();
+        hairFbo.ClearAttachment("BaseColor", 0.0f, 0.0f, 0.0f, 0.0f);
+        hairFbo.ClearAttachment("Normal", 0.0f, 0.0f, 0.0f, 0.0f);
+        hairFbo.ClearAttachment("Material", 0.0f, 0.0f, 0.0f, 0.0f);
+        hairFbo.ClearAttachment("Lighting", 0.0f, 0.0f, 0.0f, 0.0f);
+        hairFbo.ClearDepthAttachment(0.0f);
+
+        OpenGLFrameBuffer& resolveFbo = GetFrameBuffer("Resolve");
+        resolveFbo.Bind();
+        resolveFbo.ClearAttachment("HairMLAB", 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
 	void DepthPrePass() {
@@ -133,7 +260,7 @@ namespace OpenGLRenderer {
 
 		const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
 
-		OpenGLFrameBuffer* msaaFbo = GetFrameBuffer("MSAA");
+		OpenGLFrameBuffer* msaaFbo = GetFrameBufferOLD("MSAA");
 		msaaFbo->Bind();
 		msaaFbo->DrawBuffer(GL_NONE);
 
@@ -142,15 +269,18 @@ namespace OpenGLRenderer {
 		opaqueDepthState.blendEnable = false;
 		opaqueDepthState.cullfaceEnable = true;
 		opaqueDepthState.depthMask = true;
-		opaqueDepthState.colorMask = true;
+		opaqueDepthState.colorMask = false;
 		opaqueDepthState.depthFunc = GL_GREATER;
 
 		OpenGLRasterizerState maskedDepthState = opaqueDepthState;
 		maskedDepthState.cullfaceEnable = false;
 
-		// Opaque pass
-		OpenGLShader* opaqueShader = GetShader("DepthPrePass");
+		// Opaque
+		OpenGLShader* opaqueShader = GetShaderOLD("DepthPrePass");
 		opaqueShader->Bind();
+
+        glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
+        MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.house, opaqueDepthState);
 
 		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 		MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.standard, opaqueDepthState);
@@ -161,13 +291,10 @@ namespace OpenGLRenderer {
 		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
 		MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.skinnedStandard, opaqueDepthState);
 
-		glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
-		MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.house, opaqueDepthState);
+        if (!hairOG) return;
 
-		// Masked pass
-		//glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-
-		OpenGLShader* maskedShader = GetShader("DepthPrePassAlphaDiscard");
+		// Masked
+		OpenGLShader* maskedShader = GetShaderOLD("DepthPrePassAlphaDiscard");
 		maskedShader->Bind();
 
 		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
@@ -176,24 +303,44 @@ namespace OpenGLRenderer {
 
 		glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
 		MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedNonDeformingAlphaDiscard, maskedDepthState);
-		MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedNonDeformingHair, maskedDepthState);
+        MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedNonDeformingHair, maskedDepthState);
 
 		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
 		MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedAlphaDiscard, maskedDepthState);
-		MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedHair, maskedDepthState);
+        MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedHair, maskedDepthState);
 
-		//glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-		glBindVertexArray(0);
+        glBindVertexArray(0);
 	}
 
-    void ShadedGeometry() {
+    void BindShadowMaps() {
+        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
+        OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
+        OpenGLShadowMapArray* shadowMapArray = GetShadowMapArray("MoonlightCSM");
+
+        glBindTextureUnit(7, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
+        glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
+
+        glActiveTexture(GL_TEXTURE9);
+        glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, hiResShadowMaps->GetDepthTexture());
+
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMapArray->GetDepthTexture());
+
+    }
+
+    void ShadingOpaque() {
 		ProfilerOpenGLZoneFunction();
 
 		const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
 
-		OpenGLFrameBuffer* msaaFbo = GetFrameBuffer("MSAA");
-		msaaFbo->Bind();
-		msaaFbo->DrawBuffers({ "Lighting", "Normal", "Material" });
+		OpenGLFrameBuffer& msaaFbo = GetFrameBuffer("MSAA");
+		msaaFbo.Bind();
+        msaaFbo.DrawBuffers({ "Lighting", "BaseColor", "Normal", "Material", "RENormal" });
+
+        OpenGLShader& shader = GetShader("ShadedHardSurface");
+        shader.Bind();
+        
+        BindShadowMaps();
 
 		OpenGLRasterizerState opaqueState;
 		opaqueState.blendEnable = false;
@@ -215,89 +362,384 @@ namespace OpenGLRenderer {
 		blendedState.depthMask = false;
 		blendedState.depthTestEnabled = true;
 		
-		OpenGLShader* hairShader = GetShader("ShadedHair");
-		OpenGLShader* hardSurfaeShader = GetShader("ShadedHardSurface");
-
-		OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
-		OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
-		OpenGLShadowMapArray* shadowMapArray = GetShadowMapArray("MoonlightCSM");
-
-		glBindTextureUnit(7, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
-		glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
-
-		glActiveTexture(GL_TEXTURE9);
-		glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, hiResShadowMaps->GetDepthTexture());
-
-		glActiveTexture(GL_TEXTURE10);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMapArray->GetDepthTexture());
-
-		glBindTextureUnit(11, AssetManager::GetTextureByName("RatKingHair_HAIR_FLOW")->GetGLTexture().GetHandle());
-		glBindTextureUnit(12, AssetManager::GetTextureByName("RatKingHair_HAIR_ID")->GetGLTexture().GetHandle());
-		glBindTextureUnit(13, AssetManager::GetTextureByName("RatKingHair_HAIR_ROOT")->GetGLTexture().GetHandle());
-
-		// Opaque and masked passes
-		hardSurfaeShader->Bind();
-
 		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.standard, opaqueState);
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.alphaDiscard, maskedState);
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.hair, maskedState);
+		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.standard, opaqueState);
+		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.alphaDiscard, maskedState);
 
 		glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.skinnedNonDeformingStandard, opaqueState);
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.skinnedNonDeformingAlphaDiscard, maskedState);
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.skinnedNonDeformingHair, maskedState);
+		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingStandard, opaqueState);
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingAlphaDiscard, maskedState);
 
 		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.skinnedStandard, opaqueState);
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.skinnedAlphaDiscard, maskedState);
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.skinnedHair, maskedState);
+		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedStandard, opaqueState);
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedAlphaDiscard, maskedState);
 
 		glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.house, opaqueState);
-
-		// Hair passes
-		hairShader->Bind();
-
-		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-		MultiDrawPerViewport(msaaFbo, hairShader, drawInfoSet.hair, maskedState);
-
-		glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
-		MultiDrawPerViewport(msaaFbo, hairShader, drawInfoSet.skinnedNonDeformingHair, maskedState);
-
-		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
-		MultiDrawPerViewport(msaaFbo, hairShader, drawInfoSet.skinnedHair, maskedState);
-
-		// Blended passes
-		hardSurfaeShader->Bind();
-
-		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.blended, blendedState);
-
-		glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.skinnedNonDeformingBlended, blendedState);
-
-		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
-		MultiDrawPerViewport(msaaFbo, hardSurfaeShader, drawInfoSet.skinnedBlended, blendedState);
+		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.house, opaqueState);
 
 		glBindVertexArray(0);
     }
 
-    void MSAAResolve() {
+    void ShadingAlphaDiscard() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* msaaFbo = GetFrameBuffer("MSAA");
-        OpenGLFrameBuffer* resolveFbo = GetFrameBuffer("Resolve");
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
 
-        if (!msaaFbo) return;
-        if (!resolveFbo) return;
+        OpenGLFrameBuffer& msaaFbo = GetFrameBuffer("MSAA");
+        msaaFbo.Bind();
+        msaaFbo.DrawBuffers({ "Lighting", "BaseColor", "Normal", "Material" });
 
-		OpenGLRenderer::BlitFrameBuffer(msaaFbo, resolveFbo, "Normal", "Normal", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        OpenGLShader& shader = GetShader("ShadedHardSurface");
+        shader.Bind();
+
+        BindShadowMaps();
+
+        OpenGLRasterizerState maskedState;
+        maskedState.blendEnable = false;
+        maskedState.cullfaceEnable = false;
+        maskedState.colorMask = true;
+        maskedState.depthFunc = GL_EQUAL;
+        maskedState.depthMask = false;
+        maskedState.depthTestEnabled = true;
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.alphaDiscard, maskedState);
+
+        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingAlphaDiscard, maskedState);
+
+        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedAlphaDiscard, maskedState);
+
+        glBindVertexArray(0);
+    }
+
+    void HairHalfResDepthPrePass() {
+        ProfilerOpenGLZoneFunction();
+
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLFrameBuffer* msaaFbo = GetFrameBufferOLD("HairMSAA");
+        msaaFbo->Bind();
+        msaaFbo->DrawBuffer(GL_NONE);
+        //msaaFbo->ClearDepthAttachment(0.0f);
+
+        OpenGLRasterizerState opaqueDepthState;
+        opaqueDepthState.depthTestEnabled = true;
+        opaqueDepthState.blendEnable = false;
+        opaqueDepthState.cullfaceEnable = true;
+        opaqueDepthState.depthMask = true;
+        opaqueDepthState.colorMask = false;
+        opaqueDepthState.depthFunc = GL_GREATER;
+
+        OpenGLRasterizerState maskedDepthState = opaqueDepthState;
+        maskedDepthState.cullfaceEnable = false;
+
+        // Opaque
+        //OpenGLShader* opaqueShader = GetShaderOLD("DepthPrePass");
+        //opaqueShader->Bind();
+        //
+        //glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
+        //MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.house, opaqueDepthState);
+        //
+        //glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        //MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.standard, opaqueDepthState);
+        //
+        //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.skinnedNonDeformingStandard, opaqueDepthState);
+        //
+        //glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        //MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.skinnedStandard, opaqueDepthState);
+
+        // Masked
+        OpenGLShader* maskedShader = GetShaderOLD("DepthPrePassAlphaDiscard");
+        maskedShader->Bind();
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        //MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.alphaDiscard, maskedDepthState);
+        MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.hair, maskedDepthState);
+
+        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedNonDeformingAlphaDiscard, maskedDepthState);
+        MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedNonDeformingHair, maskedDepthState);
+
+        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        //MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedAlphaDiscard, maskedDepthState);
+        MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedHair, maskedDepthState);
+
+        glBindVertexArray(0);
+    }
+
+    void HairHalfResShading() {
+        ProfilerOpenGLZoneFunction();
+
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLFrameBuffer& msaaFbo = GetFrameBuffer("HairMSAA");
+        msaaFbo.Bind();
+        msaaFbo.DrawBuffers({ "Lighting", "BaseColor", "Normal", "Material" });
+
+        OpenGLShader& shader = GetShader("ShadedHair");
+        shader.Bind();
+        shader.SetFloat("u_renderResolutionScale", 0.5f);
+
+        BindShadowMaps();
+
+        OpenGLRasterizerState maskedState;
+        maskedState.blendEnable = false;
+        maskedState.cullfaceEnable = false;
+        maskedState.colorMask = true;
+        maskedState.depthFunc = GL_EQUAL;
+        maskedState.depthMask = false;
+        maskedState.depthTestEnabled = true;
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.hair, maskedState);
+
+        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingHair, maskedState);
+
+        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedHair, maskedState);
+    }
+
+    void ShadingHair() {
+        ProfilerOpenGLZoneFunction();
+
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLFrameBuffer& msaaFbo = GetFrameBuffer("MSAA");
+        msaaFbo.Bind();
+        msaaFbo.DrawBuffers({ "Lighting", "BaseColor", "Normal", "Material" });
+        //msaaFbo.DrawBuffers({ "Lighting" });
+
+        OpenGLShader& shader = GetShader("ShadedHair");
+        shader.Bind();
+        shader.SetFloat("u_renderResolutionScale", 1.0f);
+
+        BindShadowMaps();
+
+        OpenGLRasterizerState maskedState;
+        maskedState.blendEnable = false;
+        maskedState.cullfaceEnable = false;
+        maskedState.colorMask = true;
+        maskedState.depthFunc = GL_EQUAL;
+        maskedState.depthMask = false;
+        maskedState.depthTestEnabled = true;
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.hair, maskedState);
+
+        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingHair, maskedState);
+
+        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedHair, maskedState);
+    }
+
+
+    void HairMLABSolid() {
+        ProfilerOpenGLZoneFunction();
+
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLFrameBuffer& msaaFbo = GetFrameBuffer("Resolve");
+        msaaFbo.Bind();
+        msaaFbo.DrawBuffers({ "Lighting", "BaseColor", "Normal", "Material" });
+        //msaaFbo.DrawBuffers({ "Lighting" });
+
+        OpenGLShader& shader = GetShader("ShadedHair");
+        shader.Bind();
+        shader.SetFloat("u_renderResolutionScale", 1.0f);
+
+        BindShadowMaps();
+
+        OpenGLRasterizerState maskedState;
+        maskedState.blendEnable = false;
+        maskedState.cullfaceEnable = false;
+        maskedState.colorMask = true;
+        maskedState.depthFunc = GL_GREATER;
+        maskedState.depthMask = true;
+        maskedState.depthTestEnabled = true;
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.hair, maskedState);
+
+        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingHair, maskedState);
+
+        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedHair, maskedState);
+    }
+
+    void HairMLAB() {
+        ProfilerOpenGLZoneFunction();
+
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("Resolve");
+        //OpenGLFrameBuffer& fbo = GetFrameBuffer("HalfRes");
+        fbo.Bind();
+        fbo.DrawBuffer(GL_NONE);
+
+        OpenGLShader& shader = GetShader("HairMLAB");
+        shader.Bind();
+        shader.SetInt("u_renderTargetWidth", fbo.GetWidth());
+        shader.SetUInt("u_mlabFrameIndex", g_mlabFrameIndex);
+
+        BindSSBO("HairMLABNodes", 6);
+
+        BindShadowMaps();
+
+        OpenGLRasterizerState state;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.colorMask = false;
+        state.depthFunc = GL_GREATER;
+        state.depthMask = false;
+        state.depthTestEnabled = true;
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        MultiDrawPerViewport(&fbo, &shader, drawInfoSet.hair, state);
+
+        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        MultiDrawPerViewport(&fbo, &shader, drawInfoSet.skinnedNonDeformingHair, state);
+
+        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        MultiDrawPerViewport(&fbo, &shader, drawInfoSet.skinnedHair, state);
+    }
+
+
+
+    void ResolveHairMLAB() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("Resolve");
+        //OpenGLFrameBuffer& fbo = GetFrameBuffer("HalfRes");
+        fbo.Bind();
+        fbo.DrawBuffer({ "HairMLAB" });
+
+        OpenGLShader& shader = GetShader("HairMLABResolve");
+        shader.Bind();
+        shader.SetInt("u_renderTargetWidth", fbo.GetWidth());
+        shader.SetFloat("u_renderResolutionScale", 0.5f);
+        shader.SetUInt("u_mlabFrameIndex", g_mlabFrameIndex);
+
+        BindSSBO("HairMLABNodes", 6);
+        BindTextureUnit(0, fbo.GetDepthAttachmentHandle());
+
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+        OpenGLRasterizerState state;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.colorMask = true;
+        state.depthTestEnabled = false;
+        state.depthMask = false;
+        SetRasterizerState(state);
+
+        static GLuint emptyVAO = 0;
+        if (emptyVAO == 0) {
+            glCreateVertexArrays(1, &emptyVAO);
+        }
+
+        glBindVertexArray(emptyVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0);
+    }
+
+
+    void ShadingBlended() {
+        ProfilerOpenGLZoneFunction();
+
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLFrameBuffer& msaaFbo = GetFrameBuffer("MSAA");
+        msaaFbo.Bind();
+        msaaFbo.DrawBuffers({ "Lighting", "BaseColor", "Normal", "Material" });
+
+        OpenGLShader& shader = GetShader("ShadedHardSurface");
+        shader.Bind();
+
+        BindShadowMaps();
+
+        OpenGLRasterizerState blendedState;
+        blendedState.blendEnable = true;
+        blendedState.blendFuncSrcfactor = GL_SRC_ALPHA;
+        blendedState.blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
+        blendedState.cullfaceEnable = false; // test this
+        blendedState.depthFunc = GL_GEQUAL;
+        blendedState.depthMask = false;
+        blendedState.depthTestEnabled = true;
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.blended, blendedState);
+
+        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingBlended, blendedState);
+
+        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedBlended, blendedState);
+
+        glBindVertexArray(0);
+    }
+
+    void ResolveDepthNormalsMaterials() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer& msaaFbo = GetFrameBuffer("MSAA");
+        OpenGLFrameBuffer& resolveFbo = GetFrameBuffer("Resolve");
+        OpenGLFrameBuffer& hairFbo = GetFrameBuffer("HairMSAA");
+        OpenGLFrameBuffer& halfResFbo = GetFrameBuffer("HalfRes");
+
+        OpenGLRenderer::BlitFrameBufferDepth(&msaaFbo, &resolveFbo);
+        OpenGLRenderer::BlitFrameBufferDepth(&resolveFbo, &halfResFbo);
+        OpenGLRenderer::BlitFrameBufferDepth(&halfResFbo, &hairFbo);
+
+        OpenGLRenderer::BlitFrameBuffer(&msaaFbo, &resolveFbo, "Normal", "Normal", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        OpenGLRenderer::BlitFrameBuffer(&msaaFbo, &resolveFbo, "Material", "Material", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        OpenGLRenderer::BlitFrameBuffer(&msaaFbo, &resolveFbo, "Lighting", "Lighting", GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
 
-	void CompositeLighting() {
-		// TODO: Add indirect lighting here
-		// TODO: Add emissive lighting here
+    void ResolveLighting() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer& msaaFbo = GetFrameBuffer("MSAA");
+        OpenGLFrameBuffer& resolveFbo = GetFrameBuffer("Resolve");
+
+        OpenGLRenderer::BlitFrameBuffer(&msaaFbo, &resolveFbo, "Lighting", "Lighting", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	}
+
+    void CompositeLighting() {
+        if (hairOG)
+            return;
+
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer& indirectDiffuseFbo = GetFrameBuffer("IndirectDiffuse");
+        OpenGLFrameBuffer& halfRes = GetFrameBuffer("HalfRes");
+        OpenGLFrameBuffer& hairFbo = GetFrameBuffer("HairMSAA");
+        OpenGLFrameBuffer& msaaFbo = GetFrameBuffer("MSAA");
+        OpenGLFrameBuffer& resolveFbo = GetFrameBuffer("Resolve");
+        
+        BindShader("LightingComposite");
+        
+        BindImageTexture(0, resolveFbo.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
+        BindTextureUnit(1, resolveFbo.GetColorAttachmentHandleByName("Material"));
+        BindTextureUnit(2, hairFbo.GetColorAttachmentHandleByName("Lighting"));
+        BindTextureUnit(3, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
+        
+        OpenGLRenderer::BlitFrameBuffer(&hairFbo, &halfRes, "Lighting", "HairTest", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        BindTextureUnit(4, halfRes.GetColorAttachmentHandleByName("HairTest"));
+
+        BindTextureUnit(6, msaaFbo.GetColorAttachmentHandleByName("Normal"));
+        BindTextureUnit(7, msaaFbo.GetColorAttachmentHandleByName("RENormal"));
+
+        //BindTextureUnit(5, resolveFbo.GetColorAttachmentHandleByName("HairMLAB"));
+        //BindTextureUnit(5, halfRes.GetColorAttachmentHandleByName("HairMLAB"));
+        
+        glDispatchCompute((resolveFbo.GetWidth() + 7) / 8, (resolveFbo.GetHeight() + 7) / 8, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	}
 
 	void PostProcessingPassMSAA() {
@@ -310,10 +752,10 @@ namespace OpenGLRenderer {
 			rendererSettings.rendererOverrideState == RendererOverrideState::CAMERA_NDOTL ||
 			rendererSettings.rendererOverrideState == RendererOverrideState::INDIRECT_DIFFUSE) {
 
-			OpenGLFrameBuffer* fbo = GetFrameBuffer("Resolve");
-			OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-			OpenGLFrameBuffer* msaaFbo = GetFrameBuffer("MSAA");
-			OpenGLShader* shader = GetShader("PostProcessing");
+			OpenGLFrameBuffer* fbo = GetFrameBufferOLD("Resolve");
+			OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+			OpenGLFrameBuffer* msaaFbo = GetFrameBufferOLD("MSAA");
+			OpenGLShader* shader = GetShaderOLD("PostProcessing");
 
 			if (!fbo) return;
 			if (!shader) return;
@@ -321,7 +763,7 @@ namespace OpenGLRenderer {
 			shader->Bind();
 			shader->SetBool("u_msaaRenderer", true);
 
-			glBindImageTexture(0, fbo->GetColorAttachmentHandleByName("Color"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+			glBindImageTexture(0, fbo->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 
 			BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
 			BindTextureUnit(4, gBuffer->GetDepthAttachmentHandle());

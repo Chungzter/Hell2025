@@ -15,9 +15,9 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLShader* shader = GetShader("Glass");
-        OpenGLShader* compositeShader = GetShader("GlassComposite");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("Glass");
+        OpenGLShader* compositeShader = GetShaderOLD("GlassComposite");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
 
         if (!shader) return;

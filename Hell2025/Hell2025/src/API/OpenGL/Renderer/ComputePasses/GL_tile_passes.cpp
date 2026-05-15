@@ -8,8 +8,8 @@ namespace OpenGLRenderer {
     void ComputeTileWorldBounds() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLShader* shader = GetShader("TileWorldBounds");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("TileWorldBounds");
 
         if (!gBuffer) return;
         if (!shader) return;
@@ -30,7 +30,7 @@ namespace OpenGLRenderer {
     void LightCullingPass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLShader* shader = GetShader("LightCulling");
+        OpenGLShader* shader = GetShaderOLD("LightCulling");
 
         if (!shader) return;
 
@@ -70,7 +70,7 @@ namespace OpenGLRenderer {
         //    Renderer::DrawPoint(light.position, light.color);
         //}
         
-        OpenGLShader* shader = GetShader("ChristmasLightCulling");
+        OpenGLShader* shader = GetShaderOLD("ChristmasLightCulling");
         if (!shader) return;
 
         shader->Bind();
@@ -90,7 +90,7 @@ namespace OpenGLRenderer {
     void BloodDecalTileCulling() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLShader* shader = GetShader("BloodDecalsCulling");
+        OpenGLShader* shader = GetShaderOLD("BloodDecalsCulling");
         if (!shader) return;
 
         shader->Bind();

@@ -21,7 +21,7 @@ namespace Renderer {
 
     // Debug toggles
     void ToggleLighting();
-    void ToggleIndirectDiffuseOverrideState();
+    void ToggleOverrideState(RendererOverrideState state);
     void ToggleIrradianceProbeSampling();
     void TogglePointCloud();
     void TogglePointCloudGrid();

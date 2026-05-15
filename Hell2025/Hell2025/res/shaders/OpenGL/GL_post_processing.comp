@@ -189,5 +189,5 @@ void main() {
         //imageStore(LightingImage, pixelCoords, vec4(vec3(ao), 1));
     }
     
-    //imageStore(LightingImage, pixelCoords, vec4(rawLighting, 1));
+    // imageStore(LightingImage, pixelCoords, vec4(rawLighting, 1));
 }

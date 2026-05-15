@@ -21,7 +21,7 @@ public:
     void UpdateRenderItems();
     void Update(float deltaTime);
     void SetName(std::string name);
-    void SetSkinnedModel(std::string skinnedModelName);
+    void SetSkinnedModel(const std::string& skinnedModelName, const std::string& presetName = UNDEFINED_STRING);
     void SetScale(float scale);
     void SetPosition(glm::vec3 position);
     void SetRotationX(float rotation);
@@ -93,6 +93,8 @@ public:
     const glm::vec3& GetPosition() const                                              { return m_transform.position;  }
 
     SkinnedModel* GetSkinnedModel()                                                   { return m_skinnedModel; }
+    AnimatedMeshNodes& GetAnimatedMeshNodes()                                         { return m_animatedMeshNodes; }
+
     bool RenderingEnabled()                                                           { return m_animatedMeshNodes.RenderingEnabled(); }
     const uint64_t& GetObjectId() const                                               { return m_objectId; }
     const uint64_t& GetRagdollId() const                                              { return m_ragdollId; }
@@ -100,12 +102,9 @@ public:
     const uint32_t& GetIgnoredViewportIndex() const                                   { return m_animatedMeshNodes.GetIgnoredViewportIndex(); };
     const uint32_t& GetExclusiveViewportIndex() const                                 { return m_animatedMeshNodes.GetExclusiveViewportIndex(); };
     const glm::vec3 GetScale() const                                                  { return m_transform.scale; }
-
-    const AnimatedMeshNodes& GetAnimatedMeshNodes() const                             { return m_animatedMeshNodes; }
-    const std::vector<RenderItem>& GetDeformingRenderItems() { return m_animatedMeshNodes.m_deformingRenderItems; }
-    const std::vector<RenderItem>& GetNonDeformingRenderItems() { return m_animatedMeshNodes.m_nonDeformingRenderItems; }
+    const std::vector<RenderItem>& GetDeformingRenderItems() const                    { return m_animatedMeshNodes.m_deformingRenderItems; }
+    const std::vector<RenderItem>& GetNonDeformingRenderItems() const                 { return m_animatedMeshNodes.m_nonDeformingRenderItems; }
     const std::vector<RenderItem>& GetNonDeformingRenderItemsDepthPeeledTransparent() { return m_animatedMeshNodes.m_nonDeformingRenderItemsDepthPeeledTransparent; }
-
     const std::vector<glm::mat4>& GetGlobalBlendedNodeTransforms()                    { return m_animator.m_globalBlendedNodeTransforms; }
     const std::vector<glm::mat4>& GetBoneSkinningMatrices()                           { return m_boneSkinningMatrices; }
     const std::string& GetName() const                                                { return m_name; }

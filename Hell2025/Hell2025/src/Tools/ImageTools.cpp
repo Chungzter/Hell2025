@@ -23,6 +23,8 @@
 #include <bitset>  // For binary debugging
 #include <lodepng/lodepng.h>
 
+#include <Hell/Logging.h>
+
 namespace ImageTools {
 
     bool m_CMPFrameworkInitilized = false;
@@ -212,6 +214,7 @@ namespace ImageTools {
         }
         else {
             textureData.m_data = imageData;
+            Logging::Debug() << filepath << " " << textureData.m_channelCount << " channels\n";
         }
 
         // If mipmaps are requested, allocate space for them

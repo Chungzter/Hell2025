@@ -29,19 +29,38 @@ void OpenGLFrameBuffer::SetViewport() {
 }
 
 void OpenGLFrameBuffer::CleanUp() {
+    for (ColorAttachment& colorAttachment : m_colorAttachments) {
+        if (colorAttachment.handle != 0) {
+            glDeleteTextures(1, &colorAttachment.handle);
+        }
+    }
     m_colorAttachments.clear();
-    glDeleteFramebuffers(1, &m_handle);
+
+    if (m_depthAttachment.handle != 0) glDeleteTextures(1, &m_depthAttachment.handle);
+    if (m_handle != 0) glDeleteFramebuffers(1, &m_handle);
+    
+    m_width = 0;
+    m_height = 0;
+    m_sampleCount = 0;
+    m_name.clear();
     m_handle = 0;
+    m_depthAttachment.handle = 0;
 }
 
-void OpenGLFrameBuffer::CreateAttachment(const std::string& name, GLenum internalFormat, GLenum minFilter, GLenum magFilter, GLenum wrap, bool allocateMips) {
+void OpenGLFrameBuffer::CreateAttachment(const std::string& name, GLenum internalFormat, GLenum minFilter, GLenum magFilter, GLenum wrapFilter, bool allocateMips) {
+    GLenum target = IsMultisampled() ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
+
     ColorAttachment& colorAttachment = m_colorAttachments.emplace_back();
     colorAttachment.name = name;
     colorAttachment.internalFormat = internalFormat;
     colorAttachment.format = OpenGLUtil::GLInternalFormatToGLFormat(internalFormat);
     colorAttachment.type = OpenGLUtil::GLInternalFormatToGLType(internalFormat);
+    colorAttachment.target = target;
+    colorAttachment.minFilter = minFilter;
+    colorAttachment.magFilter = magFilter;
+    colorAttachment.wrapFilter = wrapFilter;
+    colorAttachment.allocateMips = allocateMips;
 
-    GLenum target = IsMultisampled() ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
     glCreateTextures(target, 1, &colorAttachment.handle);
 
     if (IsMultisampled()) {
@@ -55,24 +74,25 @@ void OpenGLFrameBuffer::CreateAttachment(const std::string& name, GLenum interna
         }
 
         glTextureStorage2D(colorAttachment.handle, levels, internalFormat, m_width, m_height);
-        glTextureParameteri(colorAttachment.handle, GL_TEXTURE_MIN_FILTER, minFilter);
+        glTextureParameteri(colorAttachment.handle, GL_TEXTURE_MIN_FILTER, allocateMips ? GL_LINEAR_MIPMAP_LINEAR : minFilter);
         glTextureParameteri(colorAttachment.handle, GL_TEXTURE_MAG_FILTER, magFilter);
-        glTextureParameteri(colorAttachment.handle, GL_TEXTURE_WRAP_S, wrap);
-        glTextureParameteri(colorAttachment.handle, GL_TEXTURE_WRAP_T, wrap);
-
-        if (allocateMips) {
-            glTextureParameteri(colorAttachment.handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTextureParameteri(colorAttachment.handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        }
+        glTextureParameteri(colorAttachment.handle, GL_TEXTURE_WRAP_S, wrapFilter);
+        glTextureParameteri(colorAttachment.handle, GL_TEXTURE_WRAP_T, wrapFilter);
     }
 
-    glNamedFramebufferTexture(m_handle, GL_COLOR_ATTACHMENT0 + m_colorAttachments.size() - 1, colorAttachment.handle, 0);
+    GLenum attachment = GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(m_colorAttachments.size() - 1);
+    glNamedFramebufferTexture(m_handle, attachment, colorAttachment.handle, 0);
+
     std::string debugLabel = "Texture (FBO: " + m_name + " Tex: " + name + ")";
     glObjectLabel(GL_TEXTURE, colorAttachment.handle, static_cast<GLsizei>(debugLabel.length()), debugLabel.c_str());
 }
 
 void OpenGLFrameBuffer::CreateDepthAttachment(GLenum internalFormat, GLenum minFilter, GLenum magFilter, GLint wrap, glm::vec4 borderColor) {
     m_depthAttachment.internalFormat = internalFormat;
+    m_depthAttachment.minFilter = minFilter;
+    m_depthAttachment.magFilter = magFilter;
+    m_depthAttachment.wrapFilter = wrap;
+    m_depthAttachment.borderColor = borderColor;
 
     GLenum target = IsMultisampled() ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
     glCreateTextures(target, 1, &m_depthAttachment.handle);
@@ -82,12 +102,10 @@ void OpenGLFrameBuffer::CreateDepthAttachment(GLenum internalFormat, GLenum minF
     }
     else {
         glTextureStorage2D(m_depthAttachment.handle, 1, internalFormat, m_width, m_height);
-
         glTextureParameteri(m_depthAttachment.handle, GL_TEXTURE_MIN_FILTER, minFilter);
         glTextureParameteri(m_depthAttachment.handle, GL_TEXTURE_MAG_FILTER, magFilter);
         glTextureParameteri(m_depthAttachment.handle, GL_TEXTURE_WRAP_S, wrap);
         glTextureParameteri(m_depthAttachment.handle, GL_TEXTURE_WRAP_T, wrap);
-
         glTextureParameterfv(m_depthAttachment.handle, GL_TEXTURE_BORDER_COLOR, &borderColor[0]);
     }
 
@@ -145,14 +163,29 @@ void OpenGLFrameBuffer::ClearTexImage(const std::string& attachmentName, GLfloat
     }
 }
 
-void OpenGLFrameBuffer::ClearAttachment(const std::string& attachmentName, GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
-    for (int i = 0; i < m_colorAttachments.size(); i++) {
+void OpenGLFrameBuffer::ClearAttachment2(const std::string& attachmentName, float r, float g, float b, float a) {
+    for (int i = 0; i < (int)m_colorAttachments.size(); i++) {
         if (attachmentName == m_colorAttachments[i].name) {
-            GLuint texture = m_colorAttachments[i].handle;
-            GLenum format = m_colorAttachments[i].format;
-            GLenum type = m_colorAttachments[i].type;
-            GLfloat clearColor[4] = { r, g, b, a };
-            glClearTexSubImage(texture, 0, 0, 0, 0, GetWidth(), GetHeight(), 1, format, type, clearColor);
+            float clearColor[4] = { r, g, b, a };
+            GLenum drawBuffer = GL_COLOR_ATTACHMENT0 + i;
+            glNamedFramebufferDrawBuffers(m_handle, 1, &drawBuffer);
+            glClearNamedFramebufferfv(m_handle, GL_COLOR, 0, clearColor);
+            return;
+        }
+    }
+}
+
+void OpenGLFrameBuffer::ClearAttachmentR(const std::string& attachmentName, GLfloat r) {
+    ClearAttachment(attachmentName, r, 0.0f, 0.0f, 0.0f);
+}
+
+void OpenGLFrameBuffer::ClearAttachment(const std::string& attachmentName, float r, float g, float b, float a) {
+    for (int i = 0; i < (int)m_colorAttachments.size(); i++) {
+        if (attachmentName == m_colorAttachments[i].name) {
+            float clearColor[4] = { r, g, b, a };
+            GLenum drawBuffer = GL_COLOR_ATTACHMENT0 + i;
+            glNamedFramebufferDrawBuffers(m_handle, 1, &drawBuffer);
+            glClearNamedFramebufferfv(m_handle, GL_COLOR, 0, clearColor);
             return;
         }
     }
@@ -233,53 +266,23 @@ void OpenGLFrameBuffer::ClearDepthAttachment(float value) {
 }
 
 void OpenGLFrameBuffer::Resize(int width, int height) {
-	m_width = std::max(width, 1);
-	m_height = std::max(height, 1);
+    if (width <= 0 || height <= 0) {
+        return;
+    }
 
-	for (size_t i = 0; i < m_colorAttachments.size(); ++i) {
-		ColorAttachment& colorAttachment = m_colorAttachments[i];
-		glDeleteTextures(1, &colorAttachment.handle);
+    std::vector<ColorAttachment> colorAttachments = m_colorAttachments;
+    DepthAttachment depthAttachment = m_depthAttachment;
 
-		GLenum target = IsMultisampled() ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
-		glCreateTextures(target, 1, &colorAttachment.handle);
+    CleanUp();
+    Create(m_name, width, height, m_sampleCount);
 
-		if (IsMultisampled()) {
-			glTextureStorage2DMultisample(colorAttachment.handle, m_sampleCount, colorAttachment.internalFormat, m_width, m_height, GL_TRUE);
-		}
-		else {
-			glTextureStorage2D(colorAttachment.handle, 1, colorAttachment.internalFormat, m_width, m_height);
-			glTextureParameteri(colorAttachment.handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTextureParameteri(colorAttachment.handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTextureParameteri(colorAttachment.handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTextureParameteri(colorAttachment.handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		}
+    for (const ColorAttachment& colorAttachment : colorAttachments) {
+        CreateAttachment(colorAttachment.name, colorAttachment.internalFormat, colorAttachment.minFilter, colorAttachment.magFilter, colorAttachment.wrapFilter, colorAttachment.allocateMips);
+    }
 
-		glNamedFramebufferTexture(m_handle, GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(i), colorAttachment.handle, 0);
-		std::string debugLabel = "Texture (FBO: " + m_name + " Tex: " + colorAttachment.name + ")";
-		glObjectLabel(GL_TEXTURE, colorAttachment.handle, static_cast<GLsizei>(debugLabel.length()), debugLabel.c_str());
-	}
-
-	if (m_depthAttachment.handle != 0) {
-		glDeleteTextures(1, &m_depthAttachment.handle);
-
-		GLenum target = IsMultisampled() ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
-		glCreateTextures(target, 1, &m_depthAttachment.handle);
-
-		if (IsMultisampled()) {
-			glTextureStorage2DMultisample(m_depthAttachment.handle, m_sampleCount, m_depthAttachment.internalFormat, m_width, m_height, GL_TRUE);
-		}
-		else {
-			glTextureStorage2D(m_depthAttachment.handle, 1, m_depthAttachment.internalFormat, m_width, m_height);
-			glTextureParameteri(m_depthAttachment.handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTextureParameteri(m_depthAttachment.handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTextureParameteri(m_depthAttachment.handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTextureParameteri(m_depthAttachment.handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		}
-
-		glNamedFramebufferTexture(m_handle, GL_DEPTH_ATTACHMENT, m_depthAttachment.handle, 0);
-		std::string debugLabel = "Texture (FBO: " + m_name + " Tex: Depth)";
-		glObjectLabel(GL_TEXTURE, m_depthAttachment.handle, static_cast<GLsizei>(debugLabel.length()), debugLabel.c_str());
-	}
+    if (depthAttachment.internalFormat != GL_NONE) {
+        CreateDepthAttachment(depthAttachment.internalFormat, depthAttachment.minFilter, depthAttachment.magFilter, depthAttachment.wrapFilter, depthAttachment.borderColor);
+    }
 }
 
 GLuint OpenGLFrameBuffer::GetColorAttachmentHandleByName(const std::string& name) const {

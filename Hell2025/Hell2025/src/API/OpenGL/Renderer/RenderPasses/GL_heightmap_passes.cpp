@@ -71,9 +71,9 @@ namespace OpenGLRenderer {
 
     void BlitWorldMap() {
         Map* map = MapManager::GetMapByName("Shit");
-        OpenGLFrameBuffer* worldFramebuffer = GetFrameBuffer("World");
-        OpenGLFrameBuffer* roadFramebuffer = GetFrameBuffer("Road"); 
-        OpenGLShader* shader = GetShader("HeightMapToWorldBlit");
+        OpenGLFrameBuffer* worldFramebuffer = GetFrameBufferOLD("World");
+        OpenGLFrameBuffer* roadFramebuffer = GetFrameBufferOLD("Road"); 
+        OpenGLShader* shader = GetShaderOLD("HeightMapToWorldBlit");
 
         if (!map) return;
         if (!shader) return;
@@ -115,9 +115,9 @@ namespace OpenGLRenderer {
         if (Editor::GetEditorMode() != EditorMode::MAP_HEIGHT_EDITOR) return;
         if (ImGuiBackEnd::OwnsMouse()) return;
 
-        OpenGLFrameBuffer* worldFramebuffer = GetFrameBuffer("World");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLShader* shader = GetShader("HeightMapPaint");
+        OpenGLFrameBuffer* worldFramebuffer = GetFrameBufferOLD("World");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("HeightMapPaint");
 
         if (Input::LeftMouseDown() || Input::RightMouseDown()) {
             shader->Bind();
@@ -140,9 +140,9 @@ namespace OpenGLRenderer {
     }
 
     void GenerateHeightMapVertexData() {
-        OpenGLFrameBuffer* worldFramebuffer = GetFrameBuffer("World");
+        OpenGLFrameBuffer* worldFramebuffer = GetFrameBufferOLD("World");
         OpenGLHeightMapMesh& heightMapMesh = OpenGLBackEnd::GetHeightMapMesh();
-        OpenGLShader* shader = GetShader("HeightMapVertexGeneration");
+        OpenGLShader* shader = GetShaderOLD("HeightMapVertexGeneration");
 
         int heightMapWidth = 256;
         int heightMapDepth = 512;
@@ -176,7 +176,7 @@ namespace OpenGLRenderer {
     }
 
     void GeneratePhysXTextures() {
-        OpenGLFrameBuffer* worldFramebuffer = GetFrameBuffer("World");
+        OpenGLFrameBuffer* worldFramebuffer = GetFrameBufferOLD("World");
 
         GLuint handle = worldFramebuffer->GetColorAttachmentHandleByName("HeightMap");
         GLint level = 0;
@@ -249,9 +249,9 @@ namespace OpenGLRenderer {
     void DrawHeightMap() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* roadFramebuffer = GetFrameBuffer("Road");
-        OpenGLShader* shader = GetShader("HeightMapColor");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* roadFramebuffer = GetFrameBufferOLD("Road");
+        OpenGLShader* shader = GetShaderOLD("HeightMapColor");
 
         if (!gBuffer) return;
         if (!roadFramebuffer) return;
@@ -351,7 +351,7 @@ namespace OpenGLRenderer {
             return;
         }
 
-        OpenGLFrameBuffer* worldFramebuffer = GetFrameBuffer("World");
+        OpenGLFrameBuffer* worldFramebuffer = GetFrameBufferOLD("World");
         if (!worldFramebuffer) {
             Logging::Error() << "OpenGLRenderer::ReadBackHeightMapData() failed coz could not retrieve World framebuffer";
             return;

@@ -150,15 +150,18 @@ namespace OpenGLRenderer {
         lightAABBfbo.CreateAttachment(GL_RGBA32F, GL_NEAREST);
         lightAABBfbo.CreateDepthAttachment(GL_DEPTH_COMPONENT32F);
 
+        OpenGLFrameBuffer& postProcessing = CreateFrameBuffer("PostProcessing", resolutions.gBuffer);
+        postProcessing.CreateAttachment("Scratch", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
+
         OpenGLFrameBuffer& gBuffer = CreateFrameBuffer("GBuffer", resolutions.gBuffer);
         gBuffer.CreateAttachment("BaseColor", GL_RGBA8);
         gBuffer.CreateAttachment("Normal", GL_RGBA16F);
         gBuffer.CreateAttachment("RMA", GL_RGBA8); // In alpha is screenspace blood decal mask
         gBuffer.CreateAttachment("FinalLighting", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
-        gBuffer.CreateAttachment("FinalLightingCopy", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
         gBuffer.CreateAttachment("WorldPosition", GL_RGBA32F);
         gBuffer.CreateAttachment("Emissive", GL_RGBA8);
         gBuffer.CreateAttachment("Glass", GL_RGBA16F);
+        gBuffer.CreateAttachment("VelocityOcclusionSubSurface", GL_RGBA16F);
         gBuffer.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
         OpenGLFrameBuffer& IndirectDiffuseFbo = CreateFrameBuffer("IndirectDiffuse", resolutions.gBuffer / 2);
@@ -204,12 +207,13 @@ namespace OpenGLRenderer {
         g_frameBuffers["HalfSize"].CreateAttachment("SSRHistoryB", GL_RGBA16F);
         g_frameBuffers["HalfSize"].CreateAttachment("SSRCurrent", GL_RGBA16F);
 
-        g_frameBuffers["MiscFullSize"].Create("FullSize", resolutions.gBuffer);
+        g_frameBuffers["MiscFullSize"].Create("MiscFullSize", resolutions.gBuffer);
         g_frameBuffers["MiscFullSize"].CreateAttachment("GaussianFinalLightingIntermediate", GL_RGBA16F);
         g_frameBuffers["MiscFullSize"].CreateAttachment("GaussianFinalLighting", GL_RGBA16F);
         g_frameBuffers["MiscFullSize"].CreateAttachment("ScreenSpaceBloodDecalMask", GL_R8);
         g_frameBuffers["MiscFullSize"].CreateAttachment("ViewportIndex", GL_R8UI, GL_NEAREST, GL_NEAREST);
         g_frameBuffers["MiscFullSize"].CreateAttachment("ViewspaceDepth", GL_R32F, GL_NEAREST, GL_NEAREST);
+        g_frameBuffers["MiscFullSize"].CreateAttachment("FinalLightingCopy", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
 
         g_frameBuffers["Water"] = OpenGLFrameBuffer("Water", resolutions.gBuffer);
         g_frameBuffers["Water"].CreateAttachment("Color", GL_RGBA16F);
@@ -375,10 +379,11 @@ namespace OpenGLRenderer {
         LoadShader("DDGI", "ProbeRelocation", { "GL_probe_state_update.comp" });
         LoadShader("DDGI", "ProbeStateUpdate", { "GL_probe_state_update.comp" });
 
-
         LoadShader("LightAABBPosition", { "GL_light_aabb_position.vert", "GL_light_aabb_position.frag" });
         LoadShader("LightAABBMinMax", { "GL_light_aabb_min_max.comp" });
 
+        LoadShader("PostProcessing", "FXAA", { "GL_fxaa.comp" });
+        LoadShader("PostProcessing", "TAA", { "GL_taa.comp" });
 
 		//LoadShader("TightLightAABBTest", { "GL_light_aabb_test.comp" }); // TODO: delete this shader from res/shaders/
     }
@@ -540,7 +545,7 @@ namespace OpenGLRenderer {
             glBindVertexArray(vao);
         }
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         gBuffer->Bind();
         gBuffer->DrawBuffer("FinalLighting");
 
@@ -619,7 +624,7 @@ namespace OpenGLRenderer {
 
         LightingPass();
 
-        //FurPass();
+        FurPass();
         OceanGeometryPass();
         OceanSurfaceCompositePass();
 
@@ -708,15 +713,15 @@ namespace OpenGLRenderer {
     }
 
     void ClearRenderTargets() {
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBuffer("Water");
-        OpenGLFrameBuffer* finalImageFBO = GetFrameBuffer("FinalImage");
-        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBuffer("MiscFullSize");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
+        OpenGLFrameBuffer* finalImageFBO = GetFrameBufferOLD("FinalImage");
+        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBufferOLD("MiscFullSize");
 
         // Water
         waterFrameBuffer->Bind();
         waterFrameBuffer->ClearAttachment("Color", 0, 0, 0, 0);
-        waterFrameBuffer->ClearAttachment("UnderwaterMask", 0);
+        waterFrameBuffer->ClearAttachmentR("UnderwaterMask", 0);
         waterFrameBuffer->ClearAttachment("WorldPosition", 0, 0, 0, 0);
 
         // GBuffer
@@ -725,9 +730,10 @@ namespace OpenGLRenderer {
         gBuffer->ClearAttachment("BaseColor", 0, 0, 0, 0);
         gBuffer->ClearAttachment("Normal", 0, 0, 0, 0);
         gBuffer->ClearAttachment("RMA", 0, 0, 0, 0);
-        gBuffer->ClearAttachment("WorldPosition", 0, 0);
+        gBuffer->ClearAttachment("WorldPosition", 0, 0, 0, 0);
         gBuffer->ClearAttachment("Emissive", 0, 0, 0, 0);
-        gBuffer->ClearAttachment("Glass", 0, 1, 0, 0);
+        gBuffer->ClearAttachment("Glass", 0, 0, 0, 0);
+        gBuffer->ClearAttachment("VelocityOcclusionSubSurface", 0, 0, 0, 1);
         gBuffer->ClearDepthAttachment();
 
         // Decal mask
@@ -884,7 +890,7 @@ namespace OpenGLRenderer {
 	}
 
     void BindShader(const std::string& name) {
-        OpenGLShader* shader = GetShader(name);
+        OpenGLShader* shader = GetShaderOLD(name);
 
         if (!shader) return;
 
@@ -990,8 +996,8 @@ namespace OpenGLRenderer {
         }
     }
 
-    void BindImageTexture(uint32_t bindingIndex, uint32_t textureHandle, uint32_t access, uint32_t format) {
-        glBindImageTexture(static_cast<GLuint>(bindingIndex), static_cast<GLuint>(textureHandle), 0, GL_FALSE, 0, static_cast<GLenum>(access), static_cast<GLenum>(format));
+    void BindImageTexture(uint32_t bindingIndex, uint32_t textureHandle, uint32_t access, uint32_t format, bool layered) {
+        glBindImageTexture(static_cast<GLuint>(bindingIndex), static_cast<GLuint>(textureHandle), 0, layered, 0, static_cast<GLenum>(access), static_cast<GLenum>(format));
     }
 
     void BindImageTextureArray(uint32_t bindingIndex, uint32_t textureHandle, uint32_t access, uint32_t format) {
@@ -1006,7 +1012,20 @@ namespace OpenGLRenderer {
         return &g_tesselationPatch;
     }
 
-    OpenGLShader* GetShader(const std::string& name) {
+
+    OpenGLShader& GetShader(const std::string& name) {
+        static OpenGLShader invald;
+
+        auto it = g_shaders.find(name);
+        if (it == g_shaders.end()) {
+            Logging::Error() << "Renderer::GetShader() failed to get '" << name << "'\n";
+            return invald;
+        }
+
+        return it->second;
+    }
+
+    OpenGLShader* GetShaderOLD(const std::string& name) {
         auto it = g_shaders.find(name);
         if (it == g_shaders.end()) {
             Logging::Error() << "Renderer::GetShader() failed to get '" << name << "'\n";
@@ -1023,7 +1042,6 @@ namespace OpenGLRenderer {
         auto it = g_frameBuffers.find(name);
 
         if (it != g_frameBuffers.end()) {
-            Logging::Warning() << "Renderer::CreateFrameBuffer() warning: '" << name << "' already existed and you just overwrote it with a new one of the same name!\n";
             it->second.CleanUp();
             it->second = OpenGLFrameBuffer(name, width, height);
             return it->second;
@@ -1041,7 +1059,6 @@ namespace OpenGLRenderer {
         auto it = g_frameBuffers.find(name);
 
         if (it != g_frameBuffers.end()) {
-            Logging::Warning() << "Renderer::CreateMultisampledFrameBuffer() warning: '" << name << "' already existed and you just overwrote it with a new one of the same name!\n";
             it->second.CleanUp();
             it->second = OpenGLFrameBuffer(name, width, height, sampleCount);
             return it->second;
@@ -1051,13 +1068,24 @@ namespace OpenGLRenderer {
         return result.first->second;
     }
 
-    OpenGLFrameBuffer* GetFrameBuffer(const std::string& name) {
+    OpenGLFrameBuffer* GetFrameBufferOLD(const std::string& name) {
         auto it = g_frameBuffers.find(name);
         if (it == g_frameBuffers.end()) {
             Logging::Error() << "Renderer::GetFrameBuffer() failed to get '" << name << "'\n";
             return nullptr;
         }
         return &it->second;
+    }
+
+    OpenGLFrameBuffer& GetFrameBuffer(const std::string& name) {
+        static OpenGLFrameBuffer invalid;
+
+        auto it = g_frameBuffers.find(name);
+        if (it == g_frameBuffers.end()) {
+            Logging::Error() << "Renderer::GetFrameBuffer() failed to get '" << name << "'\n";
+            return invalid;
+        }
+        return it->second;
     }
 
     OpenGLCubemapFrameBuffer& CreateCubemapFrameBuffer(const std::string& name, int32_t size) {

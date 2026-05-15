@@ -2,6 +2,8 @@
 #include "AssetManagement/AssetManager.h"
 #include "Util/Util.h"
 
+#include <Hell/Logging.h>
+
 void AnimatedMeshNodes::Init(uint64_t parentId, const std::string& modelName, const std::vector<AnimatedMeshNodeCreateInfo>& createInfoSet) {
 
 }
@@ -50,6 +52,7 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         renderItem.baseColorTextureIndex = material->m_basecolor;
         renderItem.rmaTextureIndex = material->m_rma;
         renderItem.normalMapTextureIndex = material->m_normal;
+        renderItem.prevModelMatrix = renderItem.modelMatrix; // TODO: write logic for on the first frame where this is identity
         renderItem.modelMatrix = modelMatrix;
         renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
         renderItem.meshIndex = m_skinnedModel->GetMeshIndices()[i];
@@ -60,6 +63,7 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         renderItem.furShellDistanceAttenuation = m_nodes[i].furShellDistanceAttenuation;
         renderItem.woundMaskTexutreIndex = m_woundMaskTextureIndices[i];
         renderItem.blockScreenSpaceBloodDecals = (int)true;
+        renderItem.opacityTextureIndex = material->m_opacity;
         Util::PackUint64(m_parentId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
 
         // Additional textures (hair)
@@ -79,19 +83,27 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
 
         // Put it where it belongs
         if (mesh->requiresSkinning) {
+            renderItem.prevModelMatrix = renderItem.modelMatrix; // Hack because you are compute skinning and can't rely on shit here. FIGURE THIS OUT
             m_deformingRenderItems.push_back(renderItem);
         }
         else {
             // Update the model matrix to include the animated bone transform
             int boneIndex = mesh->nonDeformingBoneIndex;
-            renderItem.modelMatrix = modelMatrix * boneSkinningMatrices[boneIndex];
-            renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
 
-            if (mesh->name == "P90_Magazine") {
-                m_nonDeformingRenderItemsDepthPeeledTransparent.push_back(renderItem);
+            if (boneIndex >= 0 && boneIndex < boneSkinningMatrices.size()) {
+                renderItem.prevModelMatrix = renderItem.modelMatrix * boneSkinningMatrices[boneIndex]; // Hack because you are compute skinning and can't rely on shit here. FIGURE THIS OUT
+                renderItem.modelMatrix = modelMatrix * boneSkinningMatrices[boneIndex];
+                renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
+
+                if (mesh->name == "P90_Magazine") {
+                    m_nonDeformingRenderItemsDepthPeeledTransparent.push_back(renderItem);
+                }
+                else {
+                    m_nonDeformingRenderItems.push_back(renderItem);
+                }
             }
             else {
-                m_nonDeformingRenderItems.push_back(renderItem);
+                Logging::Error() << "AnimatedMeshNodes::UpdateRenderItems(..) wants to access boneSkinningMatrices[" << boneIndex << "] but size is " << boneSkinningMatrices.size() << "\n";
             }
         }
     }
@@ -118,17 +130,20 @@ void AnimatedMeshNodes::SetBlendingModeByMeshName(const std::string& meshName, B
     }
 }
 
-void AnimatedMeshNodes::SetMeshMaterialByMeshName(const std::string& meshName, const std::string& materialName) {
+void AnimatedMeshNodes::SetMeshMaterialByMeshName(const std::string& meshName, const std::string& materialName, BlendingMode blendingMode) {
+    int materialIndex = AssetManager::GetMaterialIndexByName(materialName);
+
+    if (materialIndex == -1) {
+        Logging::Error() << "AnimatedMeshNodes::SetMeshMaterialByMeshName(..) failed because '" << materialName << "' was not found\n";
+        return;
+    }
+    
     for (AnimatedMeshNode& node : m_nodes) {
         if (node.meshName == meshName) {
-            node.materialIndex = AssetManager::GetMaterialIndexByName(materialName);
+            node.materialIndex = materialIndex;
+            node.blendingMode = blendingMode;
         }
     }
-    if (AssetManager::GetMaterialIndexByName(materialName) == -1) {
-        std::cout << materialName << " NOT FOUND!!!\n";
-    }
-    //
-    //PrintMeshNames();
 }
 
 void AnimatedMeshNodes::SetMeshFurLength(const std::string& meshName, float furLength) {

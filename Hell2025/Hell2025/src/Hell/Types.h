@@ -23,6 +23,7 @@ struct BlitRect {
 
 struct RenderItem {
     glm::mat4 modelMatrix = glm::mat4(1);
+    glm::mat4 prevModelMatrix = glm::mat4(1);
     glm::mat4 inverseModelMatrix = glm::mat4(1);
     glm::vec4 aabbMin = glm::vec4(0);
     glm::vec4 aabbMax = glm::vec4(0);
@@ -63,7 +64,7 @@ struct RenderItem {
     int32_t additionalTextureIndex3 = 0;
 
     int32_t localMeshNodeIndex = 0;
-    int32_t padding0 = 0;
+    int32_t opacityTextureIndex = 0;
     int32_t padding1 = 0;
     int32_t padding2 = 0;
 
@@ -284,6 +285,7 @@ struct Material {
     int m_hairIdMap = 0;
     int m_hairRootMap = 0;
     int m_hairBlendMap = 0;
+    int m_opacity = 0;
 };
 
 struct QueuedTextureBake {
@@ -301,14 +303,16 @@ struct QueuedTextureBake {
 
 struct ViewportData {
 	glm::mat4 projectionReverseZ;
-	glm::mat4 inverseProjectionReverseZ;
-	glm::mat4 projectionViewReverseZ;
+    glm::mat4 inverseProjectionReverseZ;
+    glm::mat4 projectionViewReverseZ;
+    glm::mat4 prevProjectionViewReverseZ;
 	glm::mat4 inverseProjectionViewReverseZ;
     glm::mat4 projection;
     glm::mat4 inverseProjection;
     glm::mat4 view;
-	glm::mat4 inverseView;
-	glm::mat4 projectionView;
+    glm::mat4 inverseView;
+    glm::mat4 projectionView;
+    glm::mat4 prevProjectionView;
     glm::mat4 inverseProjectionView;
     glm::mat4 skyboxProjectionView;
     glm::mat4 flashlightProjectionView;

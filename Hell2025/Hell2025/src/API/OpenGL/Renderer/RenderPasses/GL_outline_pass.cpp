@@ -81,11 +81,11 @@ namespace OpenGLRenderer {
     
 
     void OutlinePass() {
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* outlineFBO = GetFrameBuffer("Outline");
-        OpenGLShader* maskShader = GetShader("OutlineMask");
-        OpenGLShader* outlineShader = GetShader("Outline");
-        OpenGLShader* compositeShader = GetShader("OutlineComposite");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* outlineFBO = GetFrameBufferOLD("Outline");
+        OpenGLShader* maskShader = GetShaderOLD("OutlineMask");
+        OpenGLShader* outlineShader = GetShaderOLD("Outline");
+        OpenGLShader* compositeShader = GetShaderOLD("OutlineComposite");
 
         // Compute offsets given the outline width
         const int outlineWidth = 3;

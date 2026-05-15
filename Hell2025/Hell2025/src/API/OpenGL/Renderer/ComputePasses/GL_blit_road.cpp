@@ -4,8 +4,8 @@
 namespace OpenGLRenderer {
 
     void BlitRoads() {
-        OpenGLFrameBuffer* roadFramebuffer = GetFrameBuffer("Road");
-        OpenGLShader* shader = GetShader("BlitRoad");
+        OpenGLFrameBuffer* roadFramebuffer = GetFrameBufferOLD("Road");
+        OpenGLShader* shader = GetShaderOLD("BlitRoad");
 
         if (!roadFramebuffer) return;
         if (!shader) return;

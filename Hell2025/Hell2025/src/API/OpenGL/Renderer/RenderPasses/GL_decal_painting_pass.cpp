@@ -19,10 +19,10 @@ namespace OpenGLRenderer {
         const std::vector<DecalPaintingInfo>& decalPaintingInfoSet = RenderDataManager::GetDecalPaintingInfo();
         for (const DecalPaintingInfo& decalPaintingInfo : decalPaintingInfoSet) {
 
-            OpenGLFrameBuffer* decalPaintingFBO = GetFrameBuffer("DecalPainting");
-            OpenGLFrameBuffer* decalMasksFBO = GetFrameBuffer("DecalMasks");
-            OpenGLShader* uvShader = GetShader("DecalPaintUVs");
-            OpenGLShader* maskShader = GetShader("DecalPaintMask");
+            OpenGLFrameBuffer* decalPaintingFBO = GetFrameBufferOLD("DecalPainting");
+            OpenGLFrameBuffer* decalMasksFBO = GetFrameBufferOLD("DecalMasks");
+            OpenGLShader* uvShader = GetShaderOLD("DecalPaintUVs");
+            OpenGLShader* maskShader = GetShaderOLD("DecalPaintMask");
             OpenGLTextureArray* woundMaskArray = GetTextureArray("WoundMasks");
 
             if (!decalPaintingFBO) return;

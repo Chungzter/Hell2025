@@ -44,6 +44,8 @@ out flat int EmissiveTextureIndex; // WARNING! this doens't work when bindless t
 out flat int WoundMaskTextureIndex;
 out flat int BlockScreenSpaceBloodDecalsFlag;
 
+out vec4 v_currPos;
+out vec4 v_prevPos;
 
 // temporarily here
 uniform bool u_useMirrorMatrix;
@@ -74,8 +76,10 @@ void main() {
 
     RenderItem renderItem = renderItems[globalInstanceIndex]; 
     mat4 modelMatrix = renderItem.modelMatrix;
+    mat4 prevModelMatrix = renderItem.prevModelMatrix;
     mat4 inverseModelMatrix = renderItem.inverseModelMatrix;
-	mat4 projectionView = viewportData[viewportIndex].projectionView;   
+	mat4 projectionView = viewportData[viewportIndex].projectionView; 
+	mat4 prevProjectionView = viewportData[viewportIndex].prevProjectionView;   
 	mat4 projection = viewportData[viewportIndex].projection;    
 	mat4 view = viewportData[viewportIndex].view;
     mat4 normalMatrix = transpose(inverseModelMatrix);
@@ -89,9 +93,12 @@ void main() {
     ViewPos = viewportData[viewportIndex].inverseView[3].xyz;
     EmissiveColor = vec3(renderItems[globalInstanceIndex].emissiveR, renderItems[globalInstanceIndex].emissiveG, renderItems[globalInstanceIndex].emissiveB);
 
-    // Absolute world position
     WorldPos = modelMatrix * vec4(vPosition, 1.0);
+    vec4 prevWorldPos = prevModelMatrix * vec4(vPosition, 1.0);
     
+    v_currPos = projectionView * WorldPos;
+    v_prevPos = prevProjectionView * prevWorldPos;
+
     // Planar reflections
     if (u_useMirrorMatrix) {  
         projection[0][0] *= -1.0;      

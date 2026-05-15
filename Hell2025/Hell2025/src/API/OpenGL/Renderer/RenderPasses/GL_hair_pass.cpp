@@ -23,6 +23,7 @@ namespace OpenGLRenderer {
         RendererSettings& renderSettings = Renderer::GetCurrentRendererSettings();
         int peelCount = renderSettings.depthPeelCount;
         if (Input::KeyPressed(HELL_KEY_RIGHT) && peelCount < 7) {
+            Audio::PlayAudio("UI_Select.wav", 1.0f);
             renderSettings.depthPeelCount++;
             Debug::BlitQuickDebugMessage("Hair depth peel count: " + std::to_string(renderSettings.depthPeelCount));
         }
@@ -46,11 +47,11 @@ namespace OpenGLRenderer {
         const RendererSettings& renderSettings = Renderer::GetCurrentRendererSettings();
         const Resolutions& resolutions = Config::GetResolutions();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* hairFrameBuffer = GetFrameBuffer("Hair");
-        OpenGLShader* depthPeelShader = GetShader("HairDepthPeel");
-        OpenGLShader* hairLightingShader = GetShader("HairLighting");
-        OpenGLShader* finalCompositeShader = GetShader("HairFinalComposite");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* hairFrameBuffer = GetFrameBufferOLD("Hair");
+        OpenGLShader* depthPeelShader = GetShaderOLD("HairDepthPeel");
+        OpenGLShader* hairLightingShader = GetShaderOLD("HairLighting");
+        OpenGLShader* finalCompositeShader = GetShaderOLD("HairFinalComposite");
         OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
 
         if (!finalCompositeShader) return;
@@ -65,7 +66,7 @@ namespace OpenGLRenderer {
         // Clear textures do initial values
         hairFrameBuffer->Bind();
         hairFrameBuffer->ClearAttachment("Composite", 0, 0, 0, 0);
-        hairFrameBuffer->ClearAttachment("ViewspaceDepthPrevious", 0.0f);
+        hairFrameBuffer->ClearAttachmentR("ViewspaceDepthPrevious", 0.0f);
 
         // Bind skinned VBO to weighted VAO
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());

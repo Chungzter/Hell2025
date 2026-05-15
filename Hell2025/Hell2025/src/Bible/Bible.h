@@ -4,6 +4,7 @@
 
 #include "Inventory/Inventory.h"
 #include "Types/Core/ItemInfo.h"
+#include "Types/Renderer/AnimatedMeshNodes.h"
 #include "Types/Renderer/MeshNodes.h"
 #include "Weapon/WeaponCommon.h"        // put me and my contents somewhere better!
 
@@ -36,6 +37,8 @@ namespace Bible {
     void ConfigureTestModel2(uint64_t id, MeshNodes* meshNodes);
     void ConfigureTestModel3(uint64_t id, MeshNodes* meshNodes);
     void ConfigureTestModel4(uint64_t id, MeshNodes* meshNodes);
+
+    void ConfigureAnimatedMeshNodes(uint64_t id, AnimatedMeshNodes* meshNodes, const std::string& presetName);
 
     // Generic Objects
     void ConfigureMeshNodesChristmasPresentSmall(uint64_t id, MeshNodes* meshNodes);

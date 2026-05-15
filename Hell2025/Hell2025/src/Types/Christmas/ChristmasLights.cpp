@@ -61,6 +61,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
     std::vector<glm::mat4> modelMatrices;
     m_renderItems.clear();
 
+    // Wire
     for (Wire& wire : m_wires) {
         for (const glm::vec3& position : wire.GetSegmentPoints()) {
             Transform transform;
@@ -90,6 +91,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         Util::UpdateRenderItemAABB(renderItem);
         m_renderItems.push_back(renderItem);
     }
+
     // Plastic
     for (const glm::mat4& modelMatrix : modelMatrices) {
         Material* material = AssetManager::GetMaterialByIndex(blackMaterialIndex);
@@ -104,6 +106,11 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
         Util::UpdateRenderItemAABB(renderItem);
         m_renderItems.push_back(renderItem);
+    }
+
+    // Fill previous model matrices. These never move
+    for (RenderItem& renderItem : m_renderItems) {
+        renderItem.prevModelMatrix = renderItem.modelMatrix;
     }
 }
 

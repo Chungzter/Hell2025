@@ -15,8 +15,8 @@ namespace OpenGLRenderer {
         //ProfilerOpenGLZoneFunction();
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-        OpenGLShader* shader = GetShader("SpriteSheet");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("SpriteSheet");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         Mesh* mesh = AssetManager::GetMeshByModelNameMeshName("Primitives", "Quad");
 
         gBuffer->Bind();

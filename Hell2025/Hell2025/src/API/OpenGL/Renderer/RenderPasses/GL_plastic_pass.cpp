@@ -32,8 +32,9 @@ namespace OpenGLRenderer {
 		const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 		const std::vector<RenderItem>& renderItems = RenderDataManager::GetPlasticRenderItems();
 
-		OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-		OpenGLShader* shader = GetShader("Plastic");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* miscFullSizeFbo = GetFrameBufferOLD("MiscFullSize");
+		OpenGLShader* shader = GetShaderOLD("Plastic");
         OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
 
         if (!gBuffer) return;
@@ -41,7 +42,7 @@ namespace OpenGLRenderer {
         if (!hiResShadowMaps) return;
 
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		BlitFrameBuffer(gBuffer, gBuffer, "FinalLighting", "FinalLightingCopy", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		BlitFrameBuffer(gBuffer, miscFullSizeFbo, "FinalLighting", "FinalLightingCopy", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		gBuffer->Bind();
 		gBuffer->DrawBuffers({ "FinalLighting" });
@@ -92,7 +93,7 @@ namespace OpenGLRenderer {
 		glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(material->m_rma)->GetGLTexture().GetHandle());
 
 		glActiveTexture(GL_TEXTURE6);
-		glBindTexture(GL_TEXTURE_2D, gBuffer->GetColorAttachmentHandleByName("FinalLightingCopy"));
+		glBindTexture(GL_TEXTURE_2D, miscFullSizeFbo->GetColorAttachmentHandleByName("FinalLightingCopy"));
 		glActiveTexture(GL_TEXTURE7);
 		glBindTexture(GL_TEXTURE_2D, gBuffer->GetDepthAttachmentHandle());
 
@@ -152,8 +153,8 @@ namespace OpenGLRenderer {
 		const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
 		const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-		OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-		OpenGLShader* shader = GetShader("Plastic");
+		OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+		OpenGLShader* shader = GetShaderOLD("Plastic");
 
 		if (!gBuffer) return;
 		if (!shader) return;

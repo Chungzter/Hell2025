@@ -34,9 +34,9 @@ namespace OpenGLRenderer {
     void BloodDecalDraw() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBuffer("MiscFullSize");
-        OpenGLShader* shader = GetShader("BloodDecalsDraw");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBufferOLD("MiscFullSize");
+        OpenGLShader* shader = GetShaderOLD("BloodDecalsDraw");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 
         if (!miscFullSizeFBO) return;
         if (!shader) return;
@@ -75,9 +75,9 @@ namespace OpenGLRenderer {
     void BloodDecalComposite() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLShader* shader = GetShader("BloodDecalsComposite");
-        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBuffer("MiscFullSize");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("BloodDecalsComposite");
+        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBufferOLD("MiscFullSize");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 
         if (!miscFullSizeFBO) return;
         if (!shader) return;
@@ -143,9 +143,9 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBuffer("MiscFullSize");
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLShader* shader = GetShader("BloodDecalsRaster");
+        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBufferOLD("MiscFullSize");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("BloodDecalsRaster");
 
         if (!miscFullSizeFBO) return;
         if (!gBuffer) return;

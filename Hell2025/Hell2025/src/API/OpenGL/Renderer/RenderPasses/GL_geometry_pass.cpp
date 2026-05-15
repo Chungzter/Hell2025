@@ -29,67 +29,84 @@ namespace OpenGLRenderer {
 	void HouseGeometryPass() {
 		ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLShader* shader = GetShader("DebugTextured");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("GBuffer");
 
         if (!gBuffer) return;
         if (!shader) return;
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive", "VelocityOcclusionSubSurface" });
         ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
 
         shader->Bind();
         shader->SetMat4("u_model", glm::mat4(1));
         shader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
+        shader->SetBool("u_alphaDiscard", false);
 
         MeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer();
         OpenGLMeshBuffer& glHouseMeshBuffer = houseMeshBuffer.GetGLMeshBuffer();
 
         glBindVertexArray(glHouseMeshBuffer.GetVAO());
 
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+
         // ATTENTION! You are not frustum culling your house mesh bro
         // ATTENTION! You are not frustum culling your house mesh bro
         // ATTENTION! You are not frustum culling your house mesh bro
+
+        //for (int i = 0; i < 4; i++) {
+        //    Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+        //    if (!viewport->IsVisible()) continue;
+        //    if (glHouseMeshBuffer.GetIndexCount() <= 0) continue;
+        //
+        //    OpenGLRenderer::SetViewport(gBuffer, viewport);
+        //    shader->SetInt("u_viewportIndex", i);
+        //
+        //    const std::vector<HouseRenderItem>& renderItems = RenderDataManager::GetHouseRenderItems();
+        //
+        //    for (const HouseRenderItem& renderItem : renderItems) {
+        //        int indexCount = renderItem.indexCount;
+        //        int baseVertex = renderItem.baseVertex;
+        //        int baseIndex = renderItem.baseIndex;
+        //
+        //        glActiveTexture(GL_TEXTURE0);
+        //        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+        //        glActiveTexture(GL_TEXTURE1);
+        //        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+        //        glActiveTexture(GL_TEXTURE2);
+        //        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+        //        glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
+        //    }
+		//}
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
-            if (glHouseMeshBuffer.GetIndexCount() <= 0) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
-            shader->SetInt("u_viewportIndex", i);
 
-            const std::vector<HouseRenderItem>& renderItems = RenderDataManager::GetHouseRenderItems();
-
-            for (const HouseRenderItem& renderItem : renderItems) {
-                int indexCount = renderItem.indexCount;
-                int baseVertex = renderItem.baseVertex;
-                int baseIndex = renderItem.baseIndex;
-
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
-                glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
+            if (BackEnd::RenderDocFound()) {
+                SplitMultiDrawIndirect(shader, drawInfoSet.house[i], true, false);
             }
-		}
-		//glFinish();
+            else {
+                MultiDrawIndirect(drawInfoSet.house[i]);
+            }
+        }
     }
 
 
     void RenderNonDeformingAnimatedGameObjects() {
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLShader* shader = GetShader("GBuffer");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("GBuffer");
 
         if (!gBuffer) return;
         if (!shader) return;
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive", "VelocityOcclusionSubSurface" });
 
         shader->Bind();
 
@@ -173,9 +190,9 @@ namespace OpenGLRenderer {
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLShader* shader = GetShader("GBuffer");
-        OpenGLShader* editorMeshShader = GetShader("EditorMesh");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLShader* shader = GetShaderOLD("GBuffer");
+        OpenGLShader* editorMeshShader = GetShaderOLD("EditorMesh");
         OpenGLTextureArray* woundMaskArray = GetTextureArray("WoundMasks");
 
         if (!gBuffer) return;
@@ -191,10 +208,10 @@ namespace OpenGLRenderer {
         shader->Bind();
         shader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
-        OpenGLFrameBuffer* decalMasksFBO = GetFrameBuffer("DecalMasks");
+        OpenGLFrameBuffer* decalMasksFBO = GetFrameBufferOLD("DecalMasks");
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive", "VelocityOcclusionSubSurface" });
 
         // Default (Non blended)
         shader->SetBool("u_alphaDiscard", false);
@@ -272,7 +289,7 @@ namespace OpenGLRenderer {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
 
         shader->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive", "VelocityOcclusionSubSurface" });
 
         // Skinned mesh (non blended)
         shader->SetBool("u_alphaDiscard", false);
@@ -347,7 +364,7 @@ namespace OpenGLRenderer {
 
 
 
-        OpenGLShader* christmasLightWireShader = GetShader("ChristmasLightsWire");
+        OpenGLShader* christmasLightWireShader = GetShaderOLD("ChristmasLightsWire");
         christmasLightWireShader->Bind();
         ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
@@ -385,7 +402,7 @@ namespace OpenGLRenderer {
             }
         }
 
-        OpenGLShader* ragdollShader = GetShader("DebugRagdoll");
+        OpenGLShader* ragdollShader = GetShaderOLD("DebugRagdoll");
         ragdollShader->Bind();
         ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
@@ -477,11 +494,11 @@ namespace OpenGLRenderer {
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer* gBufferBackup = GetFrameBuffer("GBufferBackup");
-        OpenGLShader* geometryShader = GetShader("GBuffer");
-        OpenGLShader* houseGeometryShader = GetShader("DebugTextured");
-        OpenGLShader* solidColorShader = GetShader("DebugSolidColor");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer* gBufferBackup = GetFrameBufferOLD("GBufferBackup");
+        OpenGLShader* geometryShader = GetShaderOLD("GBuffer");
+        OpenGLShader* houseGeometryShader = GetShaderOLD("DebugTextured");
+        OpenGLShader* solidColorShader = GetShaderOLD("DebugSolidColor");
 
         if (!gBuffer) return;
         if (!gBufferBackup) return;
