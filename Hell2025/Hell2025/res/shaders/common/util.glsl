@@ -218,3 +218,9 @@ bool PointInSphere(vec3 p, vec3 center, float radius) {
     float distSq = dot(diff, diff);
     return distSq <= (radius * radius);
 }
+
+vec3 ReconstructWorldPos(vec2 uv, float depth, mat4 invProjectionView) {
+    vec4 clip = vec4(uv * 2.0 - 1.0, depth, 1.0);
+    vec4 worldH = invProjectionView * clip;
+    return worldH.xyz / worldH.w;
+}

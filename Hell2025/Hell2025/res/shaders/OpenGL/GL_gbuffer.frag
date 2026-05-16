@@ -80,7 +80,7 @@ void main() {
             discard;
         }
     }
-    
+
 
     // Sensible defaults for wound texture
     vec4 woundBaseColor = vec4(0,0,0,0);
@@ -131,7 +131,7 @@ void main() {
     vec3 normal = normalize(tbn * (normalMap));
 
     if (!gl_FrontFacing) {
-        normal = -normal; 
+        normal = -normal;
     }
 
     BaseColorOut = vec4(baseColor);
@@ -147,7 +147,7 @@ void main() {
 
     // Emissive
     EmissiveOut.a = thickness;
-    
+
     // Velocity
     vec2 currNDC = v_currPos.xy / v_currPos.w;
     vec2 prevNDC = v_prevPos.xy / v_prevPos.w;

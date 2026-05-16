@@ -12,6 +12,13 @@ enum class WindowedMode {
     FULLSCREEN
 };
 
+enum struct RendererMode {
+    OLD_DEFERRED,
+    MSAA,
+    RE_STYLE,
+    RENDERER_MODE_COUNT
+};
+
 enum struct Shortcut {
     F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
     CTRL_A, CTRL_B, CTRL_C, CTRL_D, CTRL_E, CTRL_F, CTRL_G, CTRL_H, CTRL_I, CTRL_J,

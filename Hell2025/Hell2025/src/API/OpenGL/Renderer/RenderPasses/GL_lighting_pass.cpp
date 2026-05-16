@@ -12,7 +12,6 @@
 
 namespace OpenGLRenderer {
 
-
     void ComputeViewspaceDepth() {
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLFrameBuffer* fullSizeFBO = GetFrameBufferOLD("MiscFullSize");
@@ -36,9 +35,9 @@ namespace OpenGLRenderer {
 
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLFrameBuffer* finalImageFBO = GetFrameBufferOLD("FinalImage");
-        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
+        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
         OpenGLFrameBuffer* indirectDiffuseFbo = GetFrameBufferOLD("IndirectDiffuse");
-        OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
+        OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArrayOLD("HiRes");
         OpenGLShader* shader = GetShaderOLD("Lighting");
         OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBufferOLD("MiscFullSize");
 
@@ -93,7 +92,7 @@ namespace OpenGLRenderer {
         glActiveTexture(GL_TEXTURE9);
         glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, hiResShadowMaps->GetDepthTexture());
 
-        OpenGLShadowMapArray* shadowMapArray = GetShadowMapArray("MoonlightCSM");
+        OpenGLShadowMapArray* shadowMapArray = GetShadowMapArrayOLD("MoonlightCSM");
         glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMapArray->GetDepthTexture());
 

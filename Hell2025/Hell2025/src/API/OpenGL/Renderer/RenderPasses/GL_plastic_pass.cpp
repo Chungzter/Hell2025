@@ -35,7 +35,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLFrameBuffer* miscFullSizeFbo = GetFrameBufferOLD("MiscFullSize");
 		OpenGLShader* shader = GetShaderOLD("Plastic");
-        OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
+        OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArrayOLD("HiRes");
 
         if (!gBuffer) return;
         if (!shader) return;

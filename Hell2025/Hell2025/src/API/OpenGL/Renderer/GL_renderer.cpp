@@ -35,7 +35,7 @@
 #define NONE_BIT 0
 
 namespace OpenGLRenderer {
-    
+
     std::unordered_map<std::string, OpenGLCubemapFrameBuffer> g_cubemapFrameBuffers;
     std::unordered_map<std::string, OpenGLCubemapView> g_cubemapViews;
     std::unordered_map<std::string, OpenGLFrameBuffer> g_frameBuffers;
@@ -110,7 +110,8 @@ namespace OpenGLRenderer {
         InitGrass();
         InitOceanHeightReadback();
 
-        InitMSAA();
+		InitMSAA();
+		InitREStyle();
     }
 
     void InitMain() {
@@ -317,7 +318,6 @@ namespace OpenGLRenderer {
         LoadShader("OutlineComposite", { "GL_outline_composite.comp" });
         LoadShader("OutlineMask", { "GL_outline_mask.vert", "GL_outline_mask.frag" });
         LoadShader("PerlinNoise3D", { "GL_perlin_noise_3d.comp" });
-        LoadShader("PostProcessing", { "GL_post_processing.comp" });
         LoadShader("ShadowMap", { "GL_shadow_map.vert", "GL_shadow_map.frag" });
         LoadShader("ShadowCubeMap", { "GL_shadow_cube_map.vert", "GL_shadow_cube_map.frag" });
         LoadShader("SolidColor", { "GL_solid_color.vert", "GL_solid_color.frag" });
@@ -358,8 +358,9 @@ namespace OpenGLRenderer {
         LoadShader("Debug", "DebugTileView", { "GL_debug_tile_view.comp" });
         LoadShader("Debug", "DebugVertex2D", { "GL_debug_vertex_2D.vert", "GL_debug_vertex_2D.frag" });
         LoadShader("Debug", "DebugVertex3D", { "GL_debug_vertex_3D.vert", "GL_debug_vertex_3D.frag" });
-        LoadShader("Debug", "DebugView", { "GL_debug_view.comp" });
-        LoadShader("Debug", "DebugViewMSAA", { "GL_debug_view.comp" }, { "MSAA_ENABLED" });
+		LoadShader("Debug", "DebugView", { "GL_debug_view.comp" });
+		LoadShader("Debug", "DebugViewMSAA", { "GL_debug_view.comp" }, { "MSAA_ENABLED" });
+		LoadShader("Debug", "DebugViewRE", { "GL_debug_view.comp" }, { "RE_ENABLED" });
 
         // DDGI
 		LoadShader("DDGI", "PointCloudBaseColor", { "GL_point_cloud_basecolor.comp" });
@@ -382,8 +383,10 @@ namespace OpenGLRenderer {
         LoadShader("LightAABBPosition", { "GL_light_aabb_position.vert", "GL_light_aabb_position.frag" });
         LoadShader("LightAABBMinMax", { "GL_light_aabb_min_max.comp" });
 
+
         LoadShader("PostProcessing", "FXAA", { "GL_fxaa.comp" });
         LoadShader("PostProcessing", "TAA", { "GL_taa.comp" });
+		LoadShader("PostProcessing", "PostProcessing", { "GL_post_processing.comp" });
 
 		//LoadShader("TightLightAABBTest", { "GL_light_aabb_test.comp" }); // TODO: delete this shader from res/shaders/
     }
@@ -563,11 +566,15 @@ namespace OpenGLRenderer {
     }
 
 
-    void RenderGame() {
-        if (Renderer::MSAAEnabled()) {
-            RenderGameMSAA();
-            return;
-        }
+	void RenderGame() {
+		if (Renderer::GetRendererMode() == RendererMode::MSAA) {
+			RenderGameMSAA();
+			return;
+		}
+		else  if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+			RenderGameREStyle();
+			return;
+		}
 
         ProfilerOpenGLFrame();
 
@@ -624,7 +631,7 @@ namespace OpenGLRenderer {
 
         LightingPass();
 
-        FurPass();
+        //FurPass();
         OceanGeometryPass();
         OceanSurfaceCompositePass();
 
@@ -866,6 +873,40 @@ namespace OpenGLRenderer {
             }
         }
     }
+
+	void MultiDrawPerViewport(OpenGLFrameBuffer* fbo, OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
+		SetRasterizerState(rasterizerState);
+
+		for (int i = 0; i < 4; i++) {
+			Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+			if (viewport->IsVisible()) {
+				OpenGLRenderer::SetViewport(fbo, viewport);
+				if (BackEnd::RenderDocFound()) {
+					SplitMultiDrawIndirect(shader, drawCommands[i], true, false);
+				}
+				else {
+					MultiDrawIndirect(drawCommands[i]);
+				}
+			}
+		}
+	}
+
+	void MultiDrawPerViewport(OpenGLFrameBuffer& fbo, OpenGLShader& shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
+		SetRasterizerState(rasterizerState);
+
+		for (int i = 0; i < 4; i++) {
+			Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+			if (viewport->IsVisible()) {
+				OpenGLRenderer::SetViewport(&fbo, viewport);
+				if (BackEnd::RenderDocFound()) {
+					SplitMultiDrawIndirect(&shader, drawCommands[i], true, false);
+				}
+				else {
+					MultiDrawIndirect(drawCommands[i]);
+				}
+			}
+		}
+	}
 
     void DispatchCompute(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) {
         glDispatchCompute(groupsX, groupsY, groupsZ);
@@ -1113,7 +1154,7 @@ namespace OpenGLRenderer {
         return it->second;
     }
 
-    OpenGLShadowMap* GetShadowMap(const std::string& name) {
+    OpenGLShadowMap* GetShadowMapOLD(const std::string& name) {
         auto it = g_shadowMaps.find(name);
         if (it == g_shadowMaps.end()) {
             Logging::Error() << "Renderer::GetShadowMap() failed to get '" << name << "'\n";
@@ -1122,23 +1163,56 @@ namespace OpenGLRenderer {
         return &it->second;
     }
 
-    OpenGLShadowCubeMapArray* GetShadowCubeMapArray(const std::string& name) {
-        auto it = g_shadowCubeMapArrays.find(name);
-        if (it == g_shadowCubeMapArrays.end()) {
-            Logging::Error() << "Renderer::GetShadowCubeMapArray() failed to get '" << name << "'\n";
-            return nullptr;
-        }
-        return &it->second;
-    }
+	OpenGLShadowMap& GetShadowMap(const std::string& name) {
+        static OpenGLShadowMap invalid;
 
-    OpenGLShadowMapArray* GetShadowMapArray(const std::string& name) {
-        auto it = g_shadowMapArrays.find(name);
-        if (it == g_shadowMapArrays.end()) {
-            Logging::Error() << "Renderer::GetShadowMapArray() failed to get '" << name << "'\n";
-            return nullptr;
-        }
-        return &it->second;
-    }
+		auto it = g_shadowMaps.find(name);
+		if (it == g_shadowMaps.end()) {
+			Logging::Error() << "Renderer::GetShadowMap() failed to get '" << name << "'\n";
+			return invalid;
+		}
+		return it->second;
+	}
+
+	OpenGLShadowCubeMapArray* GetShadowCubeMapArrayOLD(const std::string& name) {
+		auto it = g_shadowCubeMapArrays.find(name);
+		if (it == g_shadowCubeMapArrays.end()) {
+			Logging::Error() << "Renderer::GetShadowCubeMapArray() failed to get '" << name << "'\n";
+			return nullptr;
+		}
+		return &it->second;
+	}
+
+	OpenGLShadowCubeMapArray& GetShadowCubeMapArray(const std::string& name) {
+        static OpenGLShadowCubeMapArray invalid;
+
+        auto it = g_shadowCubeMapArrays.find(name);
+		if (it == g_shadowCubeMapArrays.end()) {
+			Logging::Error() << "Renderer::GetShadowCubeMapArray() failed to get '" << name << "'\n";
+			return invalid;
+		}
+		return it->second;
+	}
+
+	OpenGLShadowMapArray* GetShadowMapArrayOLD(const std::string& name) {
+		auto it = g_shadowMapArrays.find(name);
+		if (it == g_shadowMapArrays.end()) {
+			Logging::Error() << "Renderer::GetShadowMapArray() failed to get '" << name << "'\n";
+			return nullptr;
+		}
+		return &it->second;
+	}
+
+	OpenGLShadowMapArray& GetShadowMapArray(const std::string& name) {
+        static OpenGLShadowMapArray invalid;
+
+		auto it = g_shadowMapArrays.find(name);
+		if (it == g_shadowMapArrays.end()) {
+			Logging::Error() << "Renderer::GetShadowMapArray() failed to get '" << name << "'\n";
+			return invalid;
+		}
+		return it->second;
+	}
 
     OpenGLTextureArray* GetTextureArray(const std::string& name) {
         auto it = g_textureArrays.find(name);

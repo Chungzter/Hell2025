@@ -18,7 +18,7 @@ namespace OpenGLRenderer {
         OpenGLShader* shader = GetShaderOLD("Glass");
         OpenGLShader* compositeShader = GetShaderOLD("GlassComposite");
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
+        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
 
         if (!shader) return;
         if (!compositeShader) return;

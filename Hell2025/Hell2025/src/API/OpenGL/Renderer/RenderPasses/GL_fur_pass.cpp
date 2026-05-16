@@ -17,8 +17,8 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* hairFrameBuffer = GetFrameBufferOLD("Hair");
         OpenGLShader* shader = GetShaderOLD("Fur");
         OpenGLShader* compositeShader = GetShaderOLD("FurComposite");
-        OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
-        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
+        OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArrayOLD("HiRes");
+        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
 
         if (!gBuffer) return;
         if (!hairFrameBuffer) return;

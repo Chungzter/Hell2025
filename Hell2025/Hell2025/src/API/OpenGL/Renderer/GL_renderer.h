@@ -44,6 +44,9 @@ namespace OpenGLRenderer {
     void InitMSAA();
     void RenderGameMSAA();
 
+	void InitREStyle();
+	void RenderGameREStyle();
+
     void CreateSSBOs();
     void InitSSBOs();
     void UpdateSSBOS();
@@ -165,15 +168,20 @@ namespace OpenGLRenderer {
     OpenGLFrameBuffer* GetBlurBuffer(int viewportIndex, int bufferIndex);
     OpenGLShader& GetShader(const std::string& name);
     OpenGLShader* GetShaderOLD(const std::string& name);
-    OpenGLShadowMap* GetShadowMap(const std::string& name);
-    OpenGLShadowCubeMapArray* GetShadowCubeMapArray(const std::string& name);
+    OpenGLShadowMap& GetShadowMap(const std::string& name);
+    OpenGLShadowMap* GetShadowMapOLD(const std::string& name);
+	OpenGLShadowCubeMapArray* GetShadowCubeMapArrayOLD(const std::string& name);
+    OpenGLShadowCubeMapArray& GetShadowCubeMapArray(const std::string& name);
     OpenGLShadowCubeMapArray* GetLightAABBCubeMapArray(const std::string& name);
-    OpenGLShadowMapArray* GetShadowMapArray(const std::string& name);
+    OpenGLShadowMapArray* GetShadowMapArrayOLD(const std::string& name);
+    OpenGLShadowMapArray& GetShadowMapArray(const std::string& name);
     OpenGLTextureArray* GetTextureArray(const std::string& name);
     OpenGLTexture3D* GetTexture3D(const std::string& name);
     OpenGLMeshPatch* GetOceanMeshPatch();
 
     std::vector<float>& GetShadowCascadeLevels();
+    void MultiDrawPerViewport(OpenGLFrameBuffer* fbo, OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
+    void MultiDrawPerViewport(OpenGLFrameBuffer& fbo, OpenGLShader& shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
 
     // Frame Buffers
     OpenGLFrameBuffer& CreateFrameBuffer(const std::string& name, glm::ivec2 resolution);
@@ -205,7 +213,7 @@ namespace OpenGLRenderer {
     void SetUniformUVec3(const std::string& name, const glm::uvec3& value);
 	void SetUniformVec4(const std::string& name, const glm::vec4& value);
 	void SetUniformMat4(const std::string& name, const glm::mat4& value);
-    
+
 
     // SSBOs
     void CreateSSBO(const std::string& name, size_t size, GLbitfield flags);

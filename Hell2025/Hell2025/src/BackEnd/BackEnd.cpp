@@ -341,7 +341,7 @@ namespace BackEnd {
             if (Input::KeyPressed(HELL_KEY_DELETE))       Renderer::ToggleOverrideState(RendererOverrideState::VELOCITY);
             if (Input::KeyPressed(HELL_KEY_APOSTROPHE))   Renderer::TogglePointCloudGrid();
             if (Input::KeyPressed(HELL_KEY_BACKSLASH))    Renderer::NextRendererOverrideState();
-            if (Input::KeyPressed(HELL_KEY_LEFT_BRACKET)) Renderer::ToggleMSAA();
+            if (Input::KeyPressed(HELL_KEY_LEFT_BRACKET)) Renderer::NextRendererMode();
         }
 
         // Editor only

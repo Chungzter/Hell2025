@@ -13,7 +13,6 @@ namespace Renderer {
 
     std::vector<bool> g_freeWoundMaskIndices;
     bool g_gameIsRendering = false;
-    bool g_msaaEnabled = false;
 
     void InitMain() {
         if (BackEnd::GetAPI() == API::OPENGL) {
@@ -180,7 +179,7 @@ namespace Renderer {
             Logging::ToDo() << "Vulkan: ReadBackHeightMapData()";
         }
     }
-    
+
     int32_t GetNextFreeWoundMaskIndexAndMarkItTaken() {
         for (int i = 0; i < g_freeWoundMaskIndices.size(); i++) {
             if (g_freeWoundMaskIndices[i] == true) {
@@ -290,18 +289,7 @@ namespace Renderer {
 		return (resolutions.gBuffer.y + TILE_SIZE - 1) / TILE_SIZE;
     }
 
-    void ToggleMSAA() {
-        g_msaaEnabled = !g_msaaEnabled;
-
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
-        Debug::BlitQuickDebugMessage(g_msaaEnabled ? "MSAA Enabled" : "MSAA Disabled");
-    }
-
     bool GameIsRendering() {
         return g_gameIsRendering;
-    }
-
-    bool MSAAEnabled() {
-        return g_msaaEnabled;
     }
 }

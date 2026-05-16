@@ -60,7 +60,7 @@ void main() {
     vec3 normalMap = texture(sampler2D(textureSamplers[item.normalMapTextureIndex]), TexCoord).rgb;
     vec4 rma = texture(sampler2D(textureSamplers[item.rmaTextureIndex]), TexCoord).rgba;
     vec3 emissiveMapColor = texture(sampler2D(textureSamplers[item.emissiveTextureIndex]), TexCoord).rgb;
-    
+
     // these were being fetched but not used in the lighting loop yet
     vec3 additionalTex0 = texture(sampler2D(textureSamplers[item.additionalTextureIndex0]), TexCoord).rgb;
     vec3 additionalTex1 = texture(sampler2D(textureSamplers[item.additionalTextureIndex1]), TexCoord).rgb;
@@ -112,7 +112,7 @@ void main() {
     //roughness = max(roughness, geometricRoughness * filterRadius);
 
     float variation = length(fwidth(normal));
-    float smoothnessFactor = 0.5; 
+    float smoothnessFactor = 0.5;
     roughness = clamp(roughness + (variation * smoothnessFactor), 0.0, 1.0);
 
     //float normalMapVariation = length(fwidth(normalMap.rgb));
@@ -143,10 +143,10 @@ void main() {
     }
 
     vec3 finalLitColor = directLighting * ao;
-    
+
     LightingOut.rgb = finalLitColor;
     LightingOut.a = baseColor.a;
-    
+
     NormalOut = vec4(normalize(normal) * 0.5 + 0.5, 1.0);
 
     RENormalOut.rg = EncodeNormal(normal);
@@ -157,6 +157,6 @@ void main() {
 
     BaseColorOut = baseColor;
 
-    
+
     //LightingOut.rgba = vec4(baseColor.rgb, 0);
 }

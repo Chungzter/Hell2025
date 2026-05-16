@@ -274,7 +274,7 @@ void main() {
     vec4 rma = texture(RMATexture, uv_screenspace);
 
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, outputImageSize, rendererData.splitscreenMode);
-    
+
     float sssRadius = texture(EmissiveTexture, uv_screenspace).a;
 
     float sssIntensity = 5;

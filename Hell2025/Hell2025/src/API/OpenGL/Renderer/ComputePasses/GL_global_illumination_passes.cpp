@@ -219,38 +219,38 @@ namespace OpenGLRenderer {
 
 		BindShader("ProbeRelevance");
 		SetUniformVec3("u_viewPos", RenderDataManager::GetViewportData()[0].viewPos);
-		SetUniformBool("u_msaaRenderer", Renderer::MSAAEnabled());
+		SetUniformBool("u_msaaRenderer", Renderer::GetRendererMode() == RendererMode::MSAA);
+		SetUniformBool("u_octNormals", Renderer::GetRendererMode() == RendererMode::RE_STYLE);
 
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
-		if (Renderer::MSAAEnabled()) {
-			OpenGLFrameBuffer* msaaRenderer = GetFrameBufferOLD("MSAA");
-			if (!msaaRenderer) return;
+		if (Renderer::GetRendererMode() == RendererMode::MSAA) {
+			OpenGLFrameBuffer& msaaRenderer = GetFrameBuffer("MSAA");
+			int32_t quarterWidth = (msaaRenderer.GetWidth() + 3) / 4;
+			int32_t quarterHeight = (msaaRenderer.GetHeight() + 3) / 4;
 
-            BindTextureUnit(0, msaaRenderer->GetDepthAttachmentHandle());
-			BindTextureUnit(1, msaaRenderer->GetColorAttachmentHandleByName("Normal"));
-
-            // TODO: REMOVE ME
-			OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-			BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
-            // TODO: REMOVE ME
-
-			int32_t quarterWidth = (msaaRenderer->GetWidth() + 3) / 4;
-			int32_t quarterHeight = (msaaRenderer->GetHeight() + 3) / 4;
+            BindTextureUnit(0, msaaRenderer.GetDepthAttachmentHandle());
+			BindTextureUnit(1, msaaRenderer.GetColorAttachmentHandleByName("Normal"));
 			glDispatchCompute((quarterWidth + 7) / 8, (quarterHeight + 7) / 8, 1);
-        }
+		}
+		else if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+			OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
+			int32_t quarterWidth = (gBuffer.GetWidth() + 3) / 4;
+			int32_t quarterHeight = (gBuffer.GetHeight() + 3) / 4;
+
+			BindTextureUnit(2, gBuffer.GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
+			BindTextureUnit(3, gBuffer.GetDepthAttachmentHandle());
+			glDispatchCompute((quarterWidth + 7) / 8, (quarterHeight + 7) / 8, 1);
+		}
 		else {
-			OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-			if (!gBuffer) return;
+			OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
+			int32_t quarterWidth = (gBuffer.GetWidth() + 3) / 4;
+			int32_t quarterHeight = (gBuffer.GetHeight() + 3) / 4;
 
-			BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
-			BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-			BindTextureUnit(4, gBuffer->GetDepthAttachmentHandle());
-
-			int32_t quarterWidth = (gBuffer->GetWidth() + 3) / 4;
-			int32_t quarterHeight = (gBuffer->GetHeight() + 3) / 4;
+			BindTextureUnit(2, gBuffer.GetColorAttachmentHandleByName("Normal"));
+			BindTextureUnit(3, gBuffer.GetDepthAttachmentHandle());
 			glDispatchCompute((quarterWidth + 7) / 8, (quarterHeight + 7) / 8, 1);
-        }
+		}
 	}
 
     void ComputeProbeDistance(DDGIVolume& ddgiVolume) {
@@ -491,23 +491,30 @@ namespace OpenGLRenderer {
         BindSSBO("PointCloudGridCounts", 6);
         BindSSBO("PointCloudGridDirtyFlags", 7);
 
+		OpenGLRasterizerState state;
+		state.depthTestEnabled = true;
+		state.cullfaceEnable = true;
+		state.blendEnable = false;
+		state.depthMask = true;
+		state.depthFunc = GL_GREATER;
+		ForceRasterizerState(state);
+
 		OpenGLFrameBuffer* fbo = nullptr;
 
-		if (Renderer::MSAAEnabled()) {
+		if (Renderer::GetRendererMode() == RendererMode::MSAA) {
 			fbo = GetFrameBufferOLD("MSAA");
 			if (!fbo) return;
 
 			fbo->Bind();
 			fbo->DrawBuffer("Lighting");
-
-			OpenGLRasterizerState state;
-			state.depthTestEnabled = true;
-			state.cullfaceEnable = true;
-			state.blendEnable = false;
-			state.depthMask = true;
-			state.depthFunc = GL_GREATER;
-			ForceRasterizerState(state);
 		}
+		else if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+			fbo = GetFrameBufferOLD("GBufferRE");
+			if (!fbo) return;
+
+			fbo->Bind();
+			fbo->DrawBuffer("Lighting");
+        }
 		else {
 			fbo = GetFrameBufferOLD("GBuffer");
 			if (!fbo) return;
@@ -515,11 +522,6 @@ namespace OpenGLRenderer {
 			fbo->Bind();
 			fbo->DrawBuffer("FinalLighting");
 
-			OpenGLRasterizerState state;
-			state.depthTestEnabled = true;
-			state.cullfaceEnable = true;
-			state.blendEnable = false;
-			state.depthMask = true;
 			state.depthFunc = GL_LESS;
 			ForceRasterizerState(state);
 		}
@@ -531,11 +533,11 @@ namespace OpenGLRenderer {
             OpenGLRenderer::SetViewport(fbo, viewport);
             shader->SetInt("u_viewportIndex", i);
 
-			if (Renderer::MSAAEnabled()) {
-				shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+			if (Renderer::GetRendererMode() == RendererMode::OLD_DEFERRED) {
+				shader->SetMat4("u_projectionView", viewportData[i].projectionView);
 			}
 			else {
-				shader->SetMat4("u_projectionView", viewportData[i].projectionView);
+				shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 			}
 
             glBindVertexArray(g_pointCloudVao);
@@ -562,23 +564,31 @@ namespace OpenGLRenderer {
 
         OpenGLTextureArray& probeIrradianceTexture = GetProbeIrradianceTextureArray();
         BindTextureUnit(1, probeIrradianceTexture.GetHandle());
-        
+
+		OpenGLRasterizerState state;
+		state.depthTestEnabled = true;
+		state.cullfaceEnable = true;
+		state.blendEnable = false;
+		state.depthMask = true;
+		state.depthFunc = GL_GREATER;
+		ForceRasterizerState(state);
+
         OpenGLFrameBuffer* fbo = nullptr;
-        
-        if (Renderer::MSAAEnabled()) {
+
+        if (Renderer::GetRendererMode() == RendererMode::MSAA) {
             fbo = GetFrameBufferOLD("MSAA");
             if (!fbo) return;
 
             fbo->Bind();
             fbo->DrawBuffer("Lighting");
 
-			OpenGLRasterizerState state;
-			state.depthTestEnabled = true;
-			state.cullfaceEnable = true;
-			state.blendEnable = false;
-			state.depthMask = true;
-            state.depthFunc = GL_GREATER;
-            ForceRasterizerState(state);
+		}
+		else if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+			fbo = GetFrameBufferOLD("GBufferRE");
+			if (!fbo) return;
+
+			fbo->Bind();
+			fbo->DrawBuffer("Lighting");
         }
         else {
             fbo = GetFrameBufferOLD("GBuffer");
@@ -587,11 +597,6 @@ namespace OpenGLRenderer {
             fbo->Bind();
             fbo->DrawBuffer("FinalLighting");
 
-			OpenGLRasterizerState state;
-			state.depthTestEnabled = true;
-			state.cullfaceEnable = true;
-			state.blendEnable = false;
-			state.depthMask = true;
 			state.depthFunc = GL_LESS;
 			ForceRasterizerState(state);
         }
@@ -609,14 +614,14 @@ namespace OpenGLRenderer {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(fbo, viewport);
-            shader->SetInt("u_viewportIndex", i);
+			OpenGLRenderer::SetViewport(fbo, viewport);
+			shader->SetInt("u_viewportIndex", i);
 
-            if (Renderer::MSAAEnabled()) {
-                shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
-			}
-			else {
-				shader->SetMat4("u_projectionView", viewportData[i].projectionView);
+            if (Renderer::GetRendererMode() == RendererMode::OLD_DEFERRED) {
+                shader->SetMat4("u_projectionView", viewportData[i].projectionView);
+            }
+            else {
+				shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
             }
 
 			glDrawElementsInstancedBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), ddgiVolume.GetTotalProbeCount(), mesh->baseVertex);
@@ -666,7 +671,7 @@ namespace OpenGLRenderer {
         shader->SetVec3("u_cameraPos", viewportData[0].viewPos);
         shader->SetMat4("u_viewMatrix", viewportData[0].view);
         shader->SetBool("u_useSH", Renderer::GetCurrentRendererSettings().irradianceUsesSH);
-        shader->SetBool("u_msaaRenderer", Renderer::MSAAEnabled());
+        shader->SetBool("u_msaaRenderer", (int)Renderer::GetRendererMode());
 
         BindSSBO("EntityInstances", 0);
         BindSSBO("TriangleData", 1);
@@ -681,12 +686,15 @@ namespace OpenGLRenderer {
 
         glBindImageTexture(0, fbo->GetColorAttachmentHandleByName("Color"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 
-        if (Renderer::MSAAEnabled()) {
+        if (Renderer::GetRendererMode() == RendererMode::MSAA) {
             OpenGLFrameBuffer* msaaRenderer = GetFrameBufferOLD("MSAA");
             if (!msaaRenderer) return;
 
             BindTextureUnit(6, msaaRenderer->GetColorAttachmentHandleByName("Normal"));
             BindTextureUnit(7, msaaRenderer->GetDepthAttachmentHandle());
+        }
+        else if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+            // TODO
         }
         else {
             OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");

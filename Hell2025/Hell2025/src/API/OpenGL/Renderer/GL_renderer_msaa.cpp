@@ -313,9 +313,9 @@ namespace OpenGLRenderer {
 	}
 
     void BindShadowMaps() {
-        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
-        OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
-        OpenGLShadowMapArray* shadowMapArray = GetShadowMapArray("MoonlightCSM");
+        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
+        OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArrayOLD("HiRes");
+        OpenGLShadowMapArray* shadowMapArray = GetShadowMapArrayOLD("MoonlightCSM");
 
         glBindTextureUnit(7, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
         glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
@@ -325,7 +325,6 @@ namespace OpenGLRenderer {
 
         glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMapArray->GetDepthTexture());
-
     }
 
     void ShadingOpaque() {
@@ -339,7 +338,7 @@ namespace OpenGLRenderer {
 
         OpenGLShader& shader = GetShader("ShadedHardSurface");
         shader.Bind();
-        
+
         BindShadowMaps();
 
 		OpenGLRasterizerState opaqueState;
@@ -361,7 +360,7 @@ namespace OpenGLRenderer {
 		blendedState.depthFunc = GL_GEQUAL;
 		blendedState.depthMask = false;
 		blendedState.depthTestEnabled = true;
-		
+
 		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.standard, opaqueState);
 		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.alphaDiscard, maskedState);
@@ -721,14 +720,14 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer& hairFbo = GetFrameBuffer("HairMSAA");
         OpenGLFrameBuffer& msaaFbo = GetFrameBuffer("MSAA");
         OpenGLFrameBuffer& resolveFbo = GetFrameBuffer("Resolve");
-        
+
         BindShader("LightingComposite");
-        
+
         BindImageTexture(0, resolveFbo.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
         BindTextureUnit(1, resolveFbo.GetColorAttachmentHandleByName("Material"));
         BindTextureUnit(2, hairFbo.GetColorAttachmentHandleByName("Lighting"));
         BindTextureUnit(3, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
-        
+
         OpenGLRenderer::BlitFrameBuffer(&hairFbo, &halfRes, "Lighting", "HairTest", GL_COLOR_BUFFER_BIT, GL_LINEAR);
         BindTextureUnit(4, halfRes.GetColorAttachmentHandleByName("HairTest"));
 
@@ -737,7 +736,7 @@ namespace OpenGLRenderer {
 
         //BindTextureUnit(5, resolveFbo.GetColorAttachmentHandleByName("HairMLAB"));
         //BindTextureUnit(5, halfRes.GetColorAttachmentHandleByName("HairMLAB"));
-        
+
         glDispatchCompute((resolveFbo.GetWidth() + 7) / 8, (resolveFbo.GetHeight() + 7) / 8, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	}
@@ -752,44 +751,12 @@ namespace OpenGLRenderer {
 			rendererSettings.rendererOverrideState == RendererOverrideState::CAMERA_NDOTL ||
 			rendererSettings.rendererOverrideState == RendererOverrideState::INDIRECT_DIFFUSE) {
 
-			OpenGLFrameBuffer* fbo = GetFrameBufferOLD("Resolve");
-			OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-			OpenGLFrameBuffer* msaaFbo = GetFrameBufferOLD("MSAA");
-			OpenGLShader* shader = GetShaderOLD("PostProcessing");
+			OpenGLFrameBuffer& gBuffer = GetFrameBuffer("Resolve");
 
-			if (!fbo) return;
-			if (!shader) return;
+			BindShader("PostProcessing");
+			BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
 
-			shader->Bind();
-			shader->SetBool("u_msaaRenderer", true);
-
-			glBindImageTexture(0, fbo->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-
-			BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-			BindTextureUnit(4, gBuffer->GetDepthAttachmentHandle());
-			BindTextureUnit(5, msaaFbo->GetDepthAttachmentHandle());
-			BindTextureUnit(6, msaaFbo->GetColorAttachmentHandleByName("Normal"));
-			BindTextureUnit(7, msaaFbo->GetColorAttachmentHandleByName("Material"));
-
-			glDispatchCompute((fbo->GetWidth() + 7) / 8, (fbo->GetHeight() + 7) / 8, 1);
-            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+			glDispatchCompute(gBuffer.GetWidth() / 8, gBuffer.GetHeight() / 8, 1);
 		}
 	}
-
-    void MultiDrawPerViewport(OpenGLFrameBuffer* fbo, OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
-		SetRasterizerState(rasterizerState);
-
-        for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(fbo, viewport);
-                if (BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(shader, drawCommands[i], true, false);
-                }
-                else {
-                    MultiDrawIndirect(drawCommands[i]);
-                }
-            }
-        }
-    }
 }

@@ -27,7 +27,10 @@ namespace Renderer {
     void TogglePointCloudGrid();
     void ToggleScreenSpaceReflections();
     void ToggleSphericalHarmonics();
-    void ToggleMSAA();
+
+    void NextRendererMode();
+	void SetRendererMode(RendererMode rendererMode);
+	RendererMode GetRendererMode();
 
     int32_t GetNextFreeWoundMaskIndexAndMarkItTaken();
     void MarkWoundMaskIndexAsAvailable(int32_t index);
@@ -58,7 +61,6 @@ namespace Renderer {
     const std::string& GetZoneCPUTimings();
     const std::string& GetTotalGPUTime();
     const std::string& GetTotalCPUTime();
-    
+
     bool GameIsRendering();
-    bool MSAAEnabled();
 }

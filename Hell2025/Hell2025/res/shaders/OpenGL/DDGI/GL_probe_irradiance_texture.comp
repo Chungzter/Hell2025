@@ -108,7 +108,7 @@ vec3 SampleSHProbes(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
     }
 
     vec3 direction = normal;
-    
+
     // Precompute SH basis once per pixel because it only depends on the normal
     float shBasis[9];
     GetSHBasis(normal, shBasis);
@@ -122,15 +122,15 @@ vec3 SampleSHProbes(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
     // float3 biasedWorldPosition = (worldPosition + surfaceBias);
     vec3 surfaceBias = DDGIGetSurfaceBias(worldPosition, normal, cameraPos); // Uses PROBE_NORMAL_BIAS and PROBE_VIEW_BIAS
     vec3 biasedWorldPosition = worldPosition + surfaceBias;
-    
+
     // Get the 3D grid coordinates of the probe nearest the biased world position (i.e. the "base" probe)
     // int3 baseProbeCoords = DDGIGetBaseProbeGridCoords(biasedWorldPosition, volume);
     ivec3 baseProbeCoords = DDGIGetBaseProbeGridCoords(biasedWorldPosition, volume);
-    
+
     // Get the world-space position of the base probe (ignore relocation)
     // float3 baseProbeWorldPosition = DDGIGetProbeWorldPosition(baseProbeCoords, volume);
     vec3 baseProbeWorldPosition = DDGIGetProbeBaseWorldPosition(baseProbeCoords, volume); // their DDGIGetProbeWorldPosition without probeData 3rd param returns base world pos, confusing!
-    
+
     // Clamp the distance (in grid space) between the given point and the base probe's world position (on each axis) to [0, 1]
     // float3 gridSpaceDistance = (biasedWorldPosition - baseProbeWorldPosition);
     // if(!IsVolumeMovementScrolling(volume)) gridSpaceDistance = RTXGIQuaternionRotate(gridSpaceDistance, RTXGIQuaternionConjugate(volume.rotation));
@@ -145,7 +145,7 @@ vec3 SampleSHProbes(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
         // int3 adjacentProbeOffset = int3(probeIndex, probeIndex >> 1, probeIndex >> 2) & int3(1, 1, 1);
         ivec3 adjacentProbeOffset = ivec3(probeIndex, probeIndex >> 1, probeIndex >> 2) & ivec3(1, 1, 1);
 
-        // Get the 3D grid coordinates of the adjacent probe by adding the offset to 
+        // Get the 3D grid coordinates of the adjacent probe by adding the offset to
         // the base probe and clamping to the grid boundaries
         // int3 adjacentProbeCoords = clamp(baseProbeCoords + adjacentProbeOffset, int3(0, 0, 0), volume.probeCounts - int3(1, 1, 1));
         ivec3 adjacentProbeCoords = clamp(baseProbeCoords + adjacentProbeOffset, ivec3(0, 0, 0), volume.probeCounts - ivec3(1, 1, 1));
@@ -184,7 +184,7 @@ vec3 SampleSHProbes(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
         // A naive soft backface weight would ignore a probe when
         // it is behind the surface. That's good for walls, but for
         // small details inside of a room, the normals on the details
-        // might rule out all of the probes that have mutual visibility 
+        // might rule out all of the probes that have mutual visibility
         // to the point. We instead use a "wrap shading" test. The small
         // offset at the end reduces the "going to zero" impact.
         //float wrapShading = (dot(worldPosToAdjProbe, direction) + 1.f) * 0.5f;
@@ -211,9 +211,9 @@ vec3 SampleSHProbes(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
 
         // Occlusion test (1:1 with the hlsl already)
         float chebyshevWeight = 1.0;
-        if(biasedPosToAdjProbeDist > filteredDistance.x) { 
+        if(biasedPosToAdjProbeDist > filteredDistance.x) {
             // if occluded...
-            
+
             // v must be greater than 0, which is guaranteed by the if condition above.
             float v = biasedPosToAdjProbeDist - filteredDistance.x;
             // chebyshevWeight = variance / (variance + (v * v));
@@ -223,7 +223,7 @@ vec3 SampleSHProbes(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
             //chebyshevWeight = max((chebyshevWeight * chebyshevWeight * chebyshevWeight), 0.0);
 
             // Better than the above but not the same as NVIDIA
-            chebyshevWeight = pow(chebyshevWeight, 6.0); 
+            chebyshevWeight = pow(chebyshevWeight, 6.0);
         }
 
         // Avoid visibility weights ever going all the way to zero because
@@ -255,7 +255,7 @@ vec3 SampleSHProbes(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
 
         // Sample the probe's irradiance
         // float3 probeIrradiance = resources.probeIrradiance.SampleLevel(resources.bilinearSampler, probeTextureUV, 0).rgb;
-        
+
         // You are using SH instead. Maybe this is why you have leaks???
         //vec3 probeIrradiance = vec3(0.0);
         //for(int j = 0; j < 9; j++) {
@@ -272,11 +272,11 @@ vec3 SampleSHProbes(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
         // This ensures that (L^0.2)^2.5 = L^0.5 inside the loop
         vec3 encodedRadiance = pow(linearRadiance, vec3(1.0 / 5.0));
 
-        // 3. Partial Decode: match HLSL pow(sample, gamma * 0.5) 
+        // 3. Partial Decode: match HLSL pow(sample, gamma * 0.5)
         vec3 probeIrradiance = pow(encodedRadiance, vec3(2.5));
-        
+
         //vec3 sqrtIrradiance = sqrt(max(vec3(0.0), probeIrradiance / (2.0 * 3.14159265)));
-        
+
         // Decode the tone curve, but leave a gamma = 2 curve to approximate sRGB blending
         // float3 exponent = volume.probeIrradianceEncodingGamma * 0.5f;
         // probeIrradiance = pow(probeIrradiance, exponent);
@@ -300,7 +300,7 @@ vec3 SampleSHProbes(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
     //    irradiance *= 1.0989f;
     //}
     // YOU ARE USING RGB16F so this probably doesnt matter
-    
+
     return irradiance;
 }
 
@@ -361,9 +361,9 @@ vec3 SampleIrradianceAtlas(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
 
     vec3 surfaceBias = DDGIGetSurfaceBias(worldPosition, normal, cameraPos);
     vec3 biasedWorldPosition = worldPosition + surfaceBias;
-    
+
     ivec3 baseProbeCoords = DDGIGetBaseProbeGridCoords(biasedWorldPosition, volume);
-    vec3 baseProbeWorldPosition = DDGIGetProbeBaseWorldPosition(baseProbeCoords, volume); 
+    vec3 baseProbeWorldPosition = DDGIGetProbeBaseWorldPosition(baseProbeCoords, volume);
     vec3 gridSpaceDistance = (biasedWorldPosition - baseProbeWorldPosition);
     vec3 alpha = clamp((gridSpaceDistance / volume.probeSpacing), vec3(0.0), vec3(1.0));
 
@@ -381,7 +381,7 @@ vec3 SampleIrradianceAtlas(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
 
         vec3 trilinear = max(vec3(0.001), mix(1.0 - alpha, alpha, vec3(adjacentProbeOffset)));
         float trilinearWeight = (trilinear.x * trilinear.y * trilinear.z);
-        
+
         float weight = 1.0;
         float wrapShading = (dot(worldPosToAdjProbe, direction) + 1.0) * 0.5;
         weight *= (wrapShading * wrapShading) + 0.2;
@@ -392,7 +392,7 @@ vec3 SampleIrradianceAtlas(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
 
         float variance = abs((filteredDistance.x * filteredDistance.x) - filteredDistance.y);
         float chebyshevWeight = 1.0;
-        if(biasedPosToAdjProbeDist > filteredDistance.x) { 
+        if(biasedPosToAdjProbeDist > filteredDistance.x) {
             float v = biasedPosToAdjProbeDist - filteredDistance.x;
             chebyshevWeight = variance / (variance + (v * v) + 1e-5);
             chebyshevWeight = max((chebyshevWeight * chebyshevWeight * chebyshevWeight), 0.0);
@@ -414,9 +414,9 @@ vec3 SampleIrradianceAtlas(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
         vec2 octantCoordsIrrad = DDGIGetOctahedralCoordinates(normal);
         vec3 probeTextureUVIrrad = DDGIGetProbeUV(adjacentProbeIndex, octantCoordsIrrad, 6, volume);
         vec3 probeIrradiance = texture(u_irradianceAtlas, probeTextureUVIrrad).rgb;
-        
+
         probeIrradiance = pow(max(vec3(0.0), probeIrradiance), vec3(encodingGamma * 0.5));
-        
+
         irradiance += (weight * probeIrradiance);
         accumulatedWeights += weight;
     }
@@ -442,14 +442,14 @@ vec3 SampleSHProbesStochastic(vec3 worldPosition, vec3 normal, vec3 cameraPos, i
 
     vec3 surfaceBias = DDGIGetSurfaceBias(worldPosition, normal, cameraPos);
     vec3 biasedPos = worldPosition + surfaceBias;
-    
+
     ivec3 baseProbeCoords = DDGIGetBaseProbeGridCoords(biasedPos, volume);
     vec3 baseProbeWorldPos = DDGIGetProbeBaseWorldPosition(baseProbeCoords, volume);
     vec3 alpha = clamp((biasedPos - baseProbeWorldPos) / volume.probeSpacing, 0.0, 1.0);
 
     // use interleaved noise to pick 1 of 8 neighbors
     float noise = InterleavedGradientNoise(vec2(pixelCoords));
-    
+
     // map noise to a 3D binary offset using trilinear weights
     ivec3 offset;
     offset.x = (noise < alpha.x) ? 1 : 0;
@@ -463,7 +463,7 @@ vec3 SampleSHProbesStochastic(vec3 worldPosition, vec3 normal, vec3 cameraPos, i
 
     // perform 1 single reconstruction instead of 8
     vec3 probeIrradiance = ReconstructSH(probeColors[pIdx], normal);
-    
+
     // visibility and weight logic for the single probe
     vec3 adjPos = DDGIGetProbeWorldPosition(adjCoords, volume, probeStates[pIdx]);
     float dist = length(adjPos - biasedPos);
@@ -473,7 +473,7 @@ vec3 SampleSHProbesStochastic(vec3 worldPosition, vec3 normal, vec3 cameraPos, i
     vec2 octDist = DDGIGetOctahedralCoordinates(-dir);
     vec3 uvDist = DDGIGetProbeUV(pIdx, octDist, 14, volume);
     vec2 filteredDist = 2.0 * textureLod(u_distanceAtlas, uvDist, 0).rg;
-    
+
     float weight = 1.0;
     float wrap = (dot(normalize(adjPos - worldPosition), normal) + 1.0) * 0.5;
     weight *= (wrap * wrap) + 0.2;
@@ -505,9 +505,9 @@ vec3 SampleSHProbesNew(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
 
     vec3 surfaceBias = DDGIGetSurfaceBias(worldPosition, normal, cameraPos);
     vec3 biasedWorldPosition = worldPosition + surfaceBias;
-    
+
     ivec3 baseProbeCoords = DDGIGetBaseProbeGridCoords(biasedWorldPosition, volume);
-    vec3 baseProbeWorldPosition = DDGIGetProbeBaseWorldPosition(baseProbeCoords, volume); 
+    vec3 baseProbeWorldPosition = DDGIGetProbeBaseWorldPosition(baseProbeCoords, volume);
     vec3 alpha = clamp((biasedWorldPosition - baseProbeWorldPosition) / volume.probeSpacing, vec3(0.0), vec3(1.0));
 
     for (int probeIndex = 0; probeIndex < 8; probeIndex++) {
@@ -524,24 +524,24 @@ vec3 SampleSHProbesNew(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
 
         vec3 trilinear = max(vec3(0.001), mix(1.0 - alpha, alpha, vec3(adjacentProbeOffset)));
         float trilinearWeight = (trilinear.x * trilinear.y * trilinear.z);
-        
+
         float weight = 1.0;
         float wrapShading = (dot(worldPosToAdjProbe, direction) + 1.0) * 0.5;
         weight *= (wrapShading * wrapShading) + 0.2;
 
         vec2 octantCoords = DDGIGetOctahedralCoordinates(-biasedPosToAdjProbe);
         vec3 probeTextureUV = DDGIGetProbeUV(adjacentProbeIndex, octantCoords, 14, volume);
-        
+
         vec2 filteredDistance = 2.0 * textureLod(u_distanceAtlas, probeTextureUV, 0.0).rg;
 
         float variance = abs((filteredDistance.x * filteredDistance.x) - filteredDistance.y);
         float chebyshevWeight = 1.0;
-        if(biasedPosToAdjProbeDist > filteredDistance.x) { 
+        if(biasedPosToAdjProbeDist > filteredDistance.x) {
             float v = biasedPosToAdjProbeDist - filteredDistance.x;
             chebyshevWeight = variance / (variance + (v * v) + 1e-5);
-            
+
             // Power of 6 to crush leaking probes
-            chebyshevWeight = pow(chebyshevWeight, 6.0); 
+            chebyshevWeight = pow(chebyshevWeight, 6.0);
         }
 
         weight *= max(0.05, chebyshevWeight);
@@ -559,9 +559,9 @@ vec3 SampleSHProbesNew(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
         for(int j = 0; j < 9; j++) {
             probeIrradiance += probeColors[adjacentProbeIndex].sh[j].rgb * shBasis[j];
         }
-        
+
         vec3 sqrtIrradiance = sqrt(max(vec3(0.0), probeIrradiance / (2.0 * 3.14159265)));
-        
+
         irradiance += (weight * sqrtIrradiance);
         accumulatedWeights += weight;
     }
@@ -575,33 +575,33 @@ vec3 SampleSHProbesNew(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
     return irradiance;
 }
 
-vec3 ReconstructWorldPos(vec2 uv, float depth, mat4 invProjectionView) {
-    vec4 clip = vec4(uv * 2.0 - 1.0, depth, 1.0);
-    vec4 worldH = invProjectionView * clip;
-    return worldH.xyz / worldH.w;
-}
+//vec3 ReconstructWorldPos(vec2 uv, float depth, mat4 invProjectionView) {
+//    vec4 clip = vec4(uv * 2.0 - 1.0, depth, 1.0);
+//    vec4 worldH = invProjectionView * clip;
+//    return worldH.xyz / worldH.w;
+//}
 
 void main() {
     ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
     ivec2 outputImageSize = imageSize(outputImage);
     ivec2 outputSize = imageSize(outputImage);
-    
+
     if (pixelCoords.x >= outputImageSize.x || pixelCoords.y >= outputImageSize.y) {
         return;
     }
 
     vec2 viewportUV = (vec2(pixelCoords) + 0.5) / vec2(outputImageSize);
 
-    
+
 
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, outputImageSize, rendererData.splitscreenMode);
 
     ViewportData vp = viewportData[viewportIndex];
     vec3 viewPos = vp.viewPos.xyz;
-    
+
     vec3 worldPos = vec3(0.0);
     vec3 normal = vec3(0.0);
-    
+
     if (u_msaaRenderer) {
         //ivec2 inputCoords = ivec2(viewportUV * vec2(textureSize(u_normalTextureMS)));
         //vec3 rawNormal = texelFetch(u_normalTextureMS, inputCoords, 0).rgb;
@@ -637,16 +637,16 @@ void main() {
     else {
        ivec2 inputCoords = ivec2(viewportUV * vec2(textureSize(u_normalTexture, 0)));
        normal = texelFetch(u_normalTexture, inputCoords, 0).rgb;
-    
+
        float depth = texelFetch(u_depthTexture, inputCoords, 0).r;
        vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
        vec4 worldH = vp.inverseProjectionView * clip;
        worldPos = worldH.xyz / worldH.w;
     }
-    
+
     vec3 finalIrradiance = vec3(0.0);
-    finalIrradiance = u_useSH ? SampleSHProbes(worldPos, normal, viewPos) : SampleIrradianceAtlas(worldPos, normal, viewPos); 
-    //finalIrradiance = u_useSH ? SampleSHProbesWithoutDistance(worldPos, normal) : SampleIrradianceAtlasWithoutDistance(worldPos, normal); 
+    finalIrradiance = u_useSH ? SampleSHProbes(worldPos, normal, viewPos) : SampleIrradianceAtlas(worldPos, normal, viewPos);
+    //finalIrradiance = u_useSH ? SampleSHProbesWithoutDistance(worldPos, normal) : SampleIrradianceAtlasWithoutDistance(worldPos, normal);
 
     //finalIrradiance = SampleSHProbes(worldPos, normal, u_cameraPos);
     //finalIrradiance = SampleSHProbesWithoutDistance(worldPos, normal);
@@ -656,7 +656,7 @@ void main() {
 
     //finalIrradiance = SampleSHProbesStochastic(worldPos, normal, u_cameraPos, pixelCoords);
 
-    
+
     //finalIrradiance = SampleSHProbesNew(worldPos, normal, u_cameraPos);
 
     finalIrradiance *= IRRADIANCE_DAMPENING;
@@ -665,7 +665,7 @@ void main() {
     //float dither = InterleavedGradientNoise(pixelCoords);
     //float centeredDither = dither - 0.25;
     //finalIrradiance += centeredDither * ditherStrength;
-    
+
     imageStore(outputImage, pixelCoords, vec4(finalIrradiance, 1.0));
     //imageStore(outputImage, pixelCoords, vec4(normal, 1.0));
 }

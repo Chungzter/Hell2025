@@ -52,7 +52,7 @@ namespace OpenGLRenderer {
         OpenGLShader* depthPeelShader = GetShaderOLD("HairDepthPeel");
         OpenGLShader* hairLightingShader = GetShaderOLD("HairLighting");
         OpenGLShader* finalCompositeShader = GetShaderOLD("HairFinalComposite");
-        OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArray("HiRes");
+        OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArrayOLD("HiRes");
 
         if (!finalCompositeShader) return;
         if (!gBuffer) return;

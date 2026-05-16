@@ -28,7 +28,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
         OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
         OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
-        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
+        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
         OpenGLMeshPatch* oceanMeshPatch = GetOceanMeshPatch();
         OpenGLShader* shader = GetShaderOLD("OceanGeometry");
 
@@ -181,7 +181,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
         OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
         OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
-        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMap("FlashlightShadowMaps");
+        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
         OpenGLMeshPatch* oceanMeshPatch = GetOceanMeshPatch();
         OpenGLShader* shader = GetShaderOLD("OceanGeometry");
 

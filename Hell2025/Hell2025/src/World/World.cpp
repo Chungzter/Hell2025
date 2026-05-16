@@ -116,7 +116,7 @@ namespace World {
     }
 
     void LoadMapInstance(const std::string& mapName) {
-        ResetWorld();
+        //ResetWorld();
 
         MapInstanceCreateInfo createInfo;
         createInfo.mapName = mapName;
@@ -468,8 +468,8 @@ namespace World {
 
     DDGIVolume* GetDDGIVolumeByObjectId(uint64_t id) {
         return g_ddgiVolumes.get(id);
-    }    
-    
+    }
+
     Door* GetDoorByObjectId(uint64_t objectId) {
         return g_doors.get(objectId);
     }
@@ -741,7 +741,7 @@ namespace World {
                     light.ForceDirty();
                 }
             }
-            
+
             g_pickUps.get(objectId)->CleanUp();
             g_pickUps.erase(objectId);
             return true;
@@ -864,7 +864,7 @@ namespace World {
         for (Window& window : g_windows)                                window.CleanUp();
 
         //for (auto& [id, drawers] : g_drawers) drawers.CleanUp();
-        
+
         // Clear all containers
         g_bulletCasings.clear();
         g_screenSpaceBloodDecals.clear();
@@ -1054,7 +1054,7 @@ namespace World {
 
     void AddKangaroo(const KangarooCreateInfo& createInfo) {
         Kangaroo& kangaroo = g_kangaroos.emplace_back();
-        kangaroo.Init(createInfo);        
+        kangaroo.Init(createInfo);
     }
 
     void AddChristmasTree(ChristmasTreeCreateInfo createInfo, SpawnOffset spawnOffset) {
@@ -1282,7 +1282,7 @@ namespace World {
         if (GenericObject* object = GetGenericObjectById(id))   return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
         if (Piano* object = GetPianoByObjectId(id))             return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
         if (Window* object = GetWindowByObjectId(id))           return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-         
+
         return nullptr;
     }
 
@@ -1373,7 +1373,7 @@ namespace World {
 
 
     Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects() { return g_animatedGameObjects; }
-    Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets()   { return g_christmasLightSets; }    
+    Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets()   { return g_christmasLightSets; }
     Hell::SlotMap<DDGIVolume>& GetDDGIVolumes()                 { return g_ddgiVolumes; }
     Hell::SlotMap<Door>& GetDoors()                             { return g_doors; }
     Hell::SlotMap<GenericObject>& GetGenericObjects()           { return g_genericObjects; }

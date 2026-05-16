@@ -12,6 +12,8 @@ namespace Renderer {
         RendererSettings mapObjectEditor;
     } g_rendererSettingsSet;
 
+    RendererMode g_rendererMode = RendererMode::OLD_DEFERRED;
+
     RendererSettings& GetCurrentRendererSettings() {
         if (Editor::IsOpen()) {
             switch (Editor::GetEditorMode()) {
@@ -120,6 +122,22 @@ namespace Renderer {
 		SetProbeDebugState(static_cast<ProbeDebugState>(i));
     }
 
+	void NextRendererMode() {
+		int i = static_cast<int>(g_rendererMode);
+		i = (i + 1) % static_cast<int>(RendererMode::RENDERER_MODE_COUNT);
+		SetRendererMode(static_cast<RendererMode>(i));
+	}
+
+	void SetRendererMode(RendererMode rendererMode) {
+        g_rendererMode = rendererMode;
+
+		Debug::BlitQuickDebugMessage("Renderer Mode: " + Util::EnumToString(rendererMode));
+		Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+	}
+
+    RendererMode GetRendererMode() {
+        return g_rendererMode;
+    }
 
 	void SetProbeDebugState(ProbeDebugState state) {
 		RendererSettings& rendererSettings = GetCurrentRendererSettings();

@@ -88,8 +88,8 @@ void Player::UpdateUI(float deltaTime) {
 //   location = glm::ivec2(750, yTop + 64);
 //   //UIBackEnd::BlitTexture("inv2", location, Alignment::TOP_LEFT, WHITE, size, TextureFilter::LINEAR);
 //
-    
-    
+
+
     // Multiplayer Mode Text
     if (IsAlive() && Debug::GetDebugTextMode() == DebugTextMode::NONE) {
         std::string text = "Health: " + std::to_string(m_health) + "\n";
@@ -169,7 +169,7 @@ void Player::UpdateUI(float deltaTime) {
                 }
             }
         }
-        
+
 
 
 
@@ -186,6 +186,18 @@ void Player::UpdateUI(float deltaTime) {
             AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
             SkinnedModel* model = viewWeapon->GetSkinnedModel();
 
+
+			// Some matrices
+			if (true) {
+				const ViewportData& viewportData = RenderDataManager::GetViewportData()[0];
+				text += "Projection Matrix:\n";
+				text += Util::Mat4ToString10(viewportData.projection) + "\n\n";;
+				text += "Projection Matrix Reverse Z:\n";
+				text += Util::Mat4ToString10(viewportData.projectionReverseZ) + "\n\n";;
+				text += "View Matrix:\n";
+				text += Util::Mat4ToString10(viewportData.view) + "\n\n";
+			}
+
             // Magazine matrices
             if (false) {
                 text += "Magazine Inverse Bind Transform:\n";
@@ -195,7 +207,7 @@ void Player::UpdateUI(float deltaTime) {
             }
 
             // Camera matrices
-            if (true) {
+            if (false) {
                 text += "Camera Inverse Bind Transform:\n";
                 text += Util::Mat4ToString10(viewWeapon->GetInverseBindTransformByBoneName("camera")) + "\n\n";
                 text += "Camera Animated Transform:\n";
@@ -284,7 +296,7 @@ void Player::UpdateUI(float deltaTime) {
 
                 if (m_bvhRayResult.hitFound) {
                     MeshNode* meshNode = World::GetMeshNodeByObjectIdAndLocalNodeIndex(m_bvhRayResult.objectId, m_bvhRayResult.localMeshNodeIndex);
-                   
+
                     uint64_t hitId = m_bvhRayResult.objectId;
                     ObjectType hitType = UniqueID::GetType(hitId);
                     text += "- Hit pos: " + Util::Vec3ToString(m_bvhRayResult.hitPosition) + "\n";
@@ -318,9 +330,9 @@ void Player::UpdateUI(float deltaTime) {
 
             UIBackEnd::BlitText(text, "StandardFont", xLeft, yTop, Alignment::TOP_LEFT, 2.0f);
         }
-    
+
     }
-    
+
     // Press Start
     if (RespawnAllowed()) {
         static Texture* texture = AssetManager::GetTextureByName("PressStart");

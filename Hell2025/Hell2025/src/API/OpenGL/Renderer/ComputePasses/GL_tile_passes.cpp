@@ -8,21 +8,23 @@ namespace OpenGLRenderer {
     void ComputeTileWorldBounds() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-        OpenGLShader* shader = GetShaderOLD("TileWorldBounds");
+        uint32_t depthHandle = 0;
 
-        if (!gBuffer) return;
-        if (!shader) return;
+		switch (Renderer::GetRendererMode()) {
+		    case RendererMode::OLD_DEFERRED: depthHandle = GetFrameBuffer("GBuffer").GetDepthAttachmentHandle();   break;
+		    case RendererMode::MSAA:         depthHandle = GetFrameBuffer("Resolve").GetDepthAttachmentHandle();   break;
+            case RendererMode::RE_STYLE:     depthHandle = GetFrameBuffer("GBufferRE").GetDepthAttachmentHandle(); break;
+		}
 
-        shader->Bind();
-        shader->SetInt("u_tileXCount", GetTileCountX());
-        shader->SetInt("u_tileYCount", GetTileCountY());
+        BindShader("TileWorldBounds");
+        SetUniformInt("u_tileXCount", GetTileCountX());
+		SetUniformInt("u_tileYCount", GetTileCountY());
 
         BindSSBO("RendererData", 1);
         BindSSBO("ViewportData", 2);
         BindSSBO("TileWorldBounds", 6);
 
-        BindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
+        BindTextureUnit(0, depthHandle);
 
         glDispatchCompute(GetTileCountX(), GetTileCountY(), 1);
     }
@@ -69,7 +71,7 @@ namespace OpenGLRenderer {
         //for (const GPUChristmasLight& light : g_gpuLights) {
         //    Renderer::DrawPoint(light.position, light.color);
         //}
-        
+
         OpenGLShader* shader = GetShaderOLD("ChristmasLightCulling");
         if (!shader) return;
 

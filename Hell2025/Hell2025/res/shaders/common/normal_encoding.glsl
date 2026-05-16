@@ -1,4 +1,4 @@
-float SignNotZero(float value) {
+float SignAintZero(float value) {
     return value >= 0.0 ? 1.0 : -1.0;
 }
 
@@ -13,8 +13,8 @@ vec3 DecodeNormal(vec2 encodedNormal) {
     if (normal.y < 0.0) {
         vec2 foldedNormalXZ = normal.xz;
 
-        normal.x = (1.0 - abs(foldedNormalXZ.y)) * SignNotZero(foldedNormalXZ.x);
-        normal.z = (1.0 - abs(foldedNormalXZ.x)) * SignNotZero(foldedNormalXZ.y);
+        normal.x = (1.0 - abs(foldedNormalXZ.y)) * SignAintZero(foldedNormalXZ.x);
+        normal.z = (1.0 - abs(foldedNormalXZ.x)) * SignAintZero(foldedNormalXZ.y);
     }
 
     return normalize(normal);
