@@ -66,13 +66,13 @@ inline DDSFormatInfo GetDDSFormatInfo(const DDSHeader& header, DDSHeaderDX10* dx
         // DX10 header is present, check dxgiFormat
         switch (dx10Header->dxgiFormat) {
         case 98: // DXGI_FORMAT_BC7_UNORM
-            formatInfo.internalFormat = GL_COMPRESSED_RGBA_BPTC_UNORM_ARB;
+            formatInfo.internalFormat = GL_COMPRESSED_RGBA_BPTC_UNORM;
             formatInfo.format = GL_RGBA; // BC7 represents RGBA data
             formatInfo.blockSize = 16;
             formatInfo.channelCount = 4; // BC7 is always RGBA
             break;
         case 99: // DXGI_FORMAT_BC7_UNORM_SRGB
-            formatInfo.internalFormat = GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB;
+            formatInfo.internalFormat = GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM;
             formatInfo.format = GL_SRGB_ALPHA; // BC7 in sRGB
             formatInfo.blockSize = 16;
             formatInfo.channelCount = 4; // BC7 is always RGBA

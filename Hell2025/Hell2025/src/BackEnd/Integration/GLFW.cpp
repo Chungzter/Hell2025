@@ -1,5 +1,5 @@
 #include "GLFW.h"
-#include <glad/glad.h>
+#include <glad/gl.h>
 #define NOMINMAX
 #include <Windows.h>
 #ifdef _MSC_VER

@@ -1,5 +1,5 @@
 #include "GL_shader.h"
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <filesystem>
 #include <iostream>
 #include <fstream>
@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include "BackEnd/BackEnd.h"
+#include <Hell/Logging.h>
 
 struct ShaderParseContext {
     std::unordered_set<std::string> includedPaths;
@@ -115,6 +116,7 @@ bool OpenGLShader::Load(std::vector<std::string> shaderPaths) {
         std::cout << "-------------------------------------------------------------------------\n";
         for (OpenGLShaderModule& module : modules) {
             glDeleteShader(module.GetHandle());
+            Logging::Debug() << module.GetFinalSource() << "\n\n";
         }
         return false;
     }
@@ -291,7 +293,9 @@ OpenGLShaderModule::OpenGLShaderModule(const std::string& filename, const std::v
         {".geom", GL_GEOMETRY_SHADER},
         {".tesc", GL_TESS_CONTROL_SHADER},
         {".tese", GL_TESS_EVALUATION_SHADER},
-        {".comp", GL_COMPUTE_SHADER}
+        {".comp", GL_COMPUTE_SHADER},
+        {".task", GL_TASK_SHADER_EXT},
+        {".mesh", GL_MESH_SHADER_EXT}
     };
     int shaderType = shaderTypeMap.contains(extension) ? shaderTypeMap.at(extension) : GL_NONE;
 
@@ -305,6 +309,9 @@ OpenGLShaderModule::OpenGLShaderModule(const std::string& filename, const std::v
 
     // Keep the line map (your GetLineMap() currently returned an uninitialized member)
     m_lineMap = lineMap;
+
+    // Store for debug output
+    m_finalSource = prasedShaderSource;
 }
 
 int OpenGLShaderModule::GetHandle() {

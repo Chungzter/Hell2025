@@ -27,6 +27,7 @@ void AnimatedMeshNodes::SetSkinnedModel(uint64_t parentId, std::string name) {
             node.meshIndex = m_skinnedModel->GetMeshIndices()[i];
             node.meshName = skinnedMesh->name;
             node.deforming = skinnedMesh->requiresSkinning;
+            node.baseSkinningVertex = skinnedMesh->baseVertexWeight;
             m_woundMaskTextureIndices[i] = -1;
         }
     }
@@ -58,9 +59,10 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         renderItem.meshIndex = m_skinnedModel->GetMeshIndices()[i];
         renderItem.ignoredViewportIndex = m_ignoredViewportIndex;
         renderItem.exclusiveViewportIndex = m_exclusiveViewportIndex;
-        renderItem.furLength = m_nodes[i].furLength;
-        renderItem.furUVScale = m_nodes[i].furUVScale;
-        renderItem.furShellDistanceAttenuation = m_nodes[i].furShellDistanceAttenuation;
+        renderItem.baseVertexWeight = mesh->baseVertexWeight;
+        //renderItem.furLength = m_nodes[i].furLength;
+        //renderItem.furUVScale = m_nodes[i].furUVScale;
+        //renderItem.furShellDistanceAttenuation = m_nodes[i].furShellDistanceAttenuation;
         renderItem.woundMaskTexutreIndex = m_woundMaskTextureIndices[i];
         renderItem.blockScreenSpaceBloodDecals = (int)true;
         renderItem.opacityTextureIndex = material->m_opacity;

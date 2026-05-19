@@ -422,6 +422,11 @@ namespace OpenGLRenderer {
         g_ssbos["SkinningTransforms"] = OpenGLSSBO(sizeof(glm::mat4) * MAX_ANIMATED_TRANSFORMS, GL_DYNAMIC_STORAGE_BIT);
         g_ssbos["Lights"] = OpenGLSSBO(sizeof(GPULight) * MAX_GPU_LIGHTS, GL_DYNAMIC_STORAGE_BIT);
 
+        // Vertices
+        CreateSSBOStatic("Indices2");
+        CreateSSBOStatic("Vertices2");
+        CreateSSBOStatic("VertexWeights");
+
         // Raytracing
 		CreateSSBO("TriangleData", dummySize, GL_DYNAMIC_STORAGE_BIT);
 		CreateSSBO("SceneBvh", dummySize, GL_DYNAMIC_STORAGE_BIT);
@@ -891,6 +896,18 @@ namespace OpenGLRenderer {
 		}
 	}
 
+    void MultiDrawPerViewportRE(OpenGLFrameBuffer& fbo, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
+        SetRasterizerState(rasterizerState);
+
+        for (int i = 0; i < 4; i++) {
+            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            if (viewport->IsVisible()) {
+                OpenGLRenderer::SetViewport(&fbo, viewport);
+                    MultiDrawIndirect(drawCommands[i]);
+            }
+        }
+    }
+
 	void MultiDrawPerViewport(OpenGLFrameBuffer& fbo, OpenGLShader& shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
 		SetRasterizerState(rasterizerState);
 
@@ -998,6 +1015,14 @@ namespace OpenGLRenderer {
 
     void CreateSSBO(const std::string& name, size_t size, GLbitfield flags) {
         const auto [it, inserted] = g_ssbos.try_emplace(name, size, flags);
+        if (!inserted) {
+            Logging::Error() << "Renderer::CreateSSBO() failed: '" << name << "' already exists\n";
+        }
+    }
+
+
+    void CreateSSBOStatic(const std::string& name) {
+        const auto [it, inserted] = g_ssbos.try_emplace(name);
         if (!inserted) {
             Logging::Error() << "Renderer::CreateSSBO() failed: '" << name << "' already exists\n";
         }
@@ -1283,6 +1308,14 @@ namespace OpenGLRenderer {
             ssbo->Update(size, data);
         }
     }
+
+    void UploadSSBOStatic(const std::string& name, size_t size, const void* data) {
+        OpenGLSSBO* ssbo = GetSSBO(name);
+        if (ssbo && size > 0) {
+            ssbo->UploadStatic(size, data);
+        }
+    }
+
 
     void EditorRasterizerStateOverride() {
         if (Editor::IsOpen() && Editor::BackfaceCullingDisabled()) {

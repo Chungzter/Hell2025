@@ -3,7 +3,7 @@
 #include "API/OpenGL/Types/GL_heightmap_mesh.h"
 #include "Types/GL_texture.h"
 #include "Types/Renderer/Texture.h"
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <string>
 #include <iostream>
@@ -24,7 +24,7 @@ namespace OpenGLBackEnd {
 
     // Buffers
     void UploadVertexData(std::vector<Vertex>& vertices, std::vector<unsigned int>& indices);
-    void UploadWeightedVertexData(std::vector<WeightedVertex>& vertices, std::vector<uint32_t>& indices);
+    void UploadWeightedVertexDataOLD();
     void AllocateSkinnedVertexBufferSpace(uint32_t vertexCount);
 
     void SetDepthClearValue(float value);

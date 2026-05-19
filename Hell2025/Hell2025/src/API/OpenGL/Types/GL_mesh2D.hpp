@@ -1,7 +1,7 @@
 #pragma once
 #include <Hell/Types.h>
 #include <vector>
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 struct OpenGLMesh2D {
 private:

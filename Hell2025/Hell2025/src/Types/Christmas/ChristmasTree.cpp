@@ -39,17 +39,24 @@ void ChristmasTree::CreateRenderItems() {
     }
 
     for (uint32_t meshIndex : m_model->GetMeshIndices()) {
+        Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex);
+        if (!mesh) continue;
+
         RenderItem& renderItem = m_renderItems.emplace_back();
         renderItem.objectType = (int)ObjectType::GAME_OBJECT;
         renderItem.modelMatrix = m_modelMatrix;
         renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
         renderItem.meshIndex = meshIndex;
         renderItem.castShadows = false;
+        renderItem.baseVertex = mesh->baseVertex;
+        renderItem.baseIndex = mesh->baseIndex;
+
         if (m_material) {
             renderItem.baseColorTextureIndex = m_material->m_basecolor;
             renderItem.normalMapTextureIndex = m_material->m_normal;
             renderItem.rmaTextureIndex = m_material->m_rma;
         }
+
         Util::UpdateRenderItemAABB(renderItem);
     }
 }

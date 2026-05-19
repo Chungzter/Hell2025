@@ -12,11 +12,14 @@ public:
     std::string& GetFilename();
     std::string& GetErrors();
     std::vector<std::string>& GetLineMap();
+    const std::string& GetFinalSource() const { return m_finalSource; }
+
 private:
     int m_handle = -1;
     std::string m_filename = "";
     std::string m_errors = "";
     std::vector<std::string> m_lineMap;
+    std::string m_finalSource = "";
 };
 
 struct OpenGLShader {

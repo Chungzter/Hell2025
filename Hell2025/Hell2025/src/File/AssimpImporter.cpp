@@ -248,7 +248,7 @@ namespace AssimpImporter {
             }
 
             meshData.localBaseVertex = localBaseVertex;
-            meshData.vertices.reserve(meshData.vertexCount);
+            meshData.weightedVertices.reserve(meshData.vertexCount);
             meshData.indices.reserve(meshData.indexCount);
 
             // Get vertices
@@ -270,7 +270,7 @@ namespace AssimpImporter {
 
                 vertex.uv = { assimpMesh->HasTextureCoords(0) ? glm::vec2(assimpMesh->mTextureCoords[0][j].x, assimpMesh->mTextureCoords[0][j].y) : glm::vec2(0.0f, 0.0f) };
 
-                meshData.vertices.push_back(vertex);
+                meshData.weightedVertices.push_back(vertex);
                 meshData.aabbMin.x = std::min(meshData.aabbMin.x, vertex.position.x);
                 meshData.aabbMin.y = std::min(meshData.aabbMin.y, vertex.position.y);
                 meshData.aabbMin.z = std::min(meshData.aabbMin.z, vertex.position.z);
@@ -287,7 +287,7 @@ namespace AssimpImporter {
             }
 
             // Get vertex weights and bone IDs
-            std::vector<unsigned int> influenceCount(meshData.vertices.size(), 0);
+            std::vector<unsigned int> influenceCount(meshData.weightedVertices.size(), 0);
 
             for (unsigned int i = 0; i < assimpMesh->mNumBones; i++) {
                 std::string boneName = assimpMesh->mBones[i]->mName.data;
@@ -296,7 +296,7 @@ namespace AssimpImporter {
                 for (unsigned int j = 0; j < assimpMesh->mBones[i]->mNumWeights; j++) {
                     unsigned int vertexIndex = assimpMesh->mBones[i]->mWeights[j].mVertexId;
                     float weight = assimpMesh->mBones[i]->mWeights[j].mWeight;
-                    WeightedVertex& vertex = meshData.vertices[vertexIndex];
+                    WeightedVertex& vertex = meshData.weightedVertices[vertexIndex];
 
                     if (influenceCount[vertexIndex] < 4) {
                         switch (influenceCount[vertexIndex]) {
@@ -324,8 +324,8 @@ namespace AssimpImporter {
 
             // Ingore broken weights
             float threshold = 0.05f;
-            for (unsigned int j = 0; j < meshData.vertices.size(); j++) {
-                WeightedVertex& vertex = meshData.vertices[j];
+            for (unsigned int j = 0; j < meshData.weightedVertices.size(); j++) {
+                WeightedVertex& vertex = meshData.weightedVertices[j];
                 std::vector<float> validWeights;
                 for (int i = 0; i < 4; ++i) {
                     if (vertex.weight[i] < threshold) {
@@ -349,7 +349,7 @@ namespace AssimpImporter {
             // Check if all vertices have only one weight
             bool allVerticeHaveOnlyOneWeight = true;
 
-            for (WeightedVertex& vertex : meshData.vertices) {
+            for (WeightedVertex& vertex : meshData.weightedVertices) {
                 if (vertex.weight.y != 0 &&
                     vertex.weight.z != 0 &&
                     vertex.weight.w != 0) {
@@ -358,12 +358,12 @@ namespace AssimpImporter {
             }
 
             // If they do, now check they all reference the same bone
-            int foundBoneIndex = meshData.vertices[0].boneID[0];
+            int foundBoneIndex = meshData.weightedVertices[0].boneID[0];
             bool allVerticesAlsoOnlyReferenceTheSameBone = true;
 
             if (allVerticeHaveOnlyOneWeight) {
-                for (int i = 1; i < meshData.vertices.size(); i++) {
-                    WeightedVertex& vertex = meshData.vertices[i];
+                for (int i = 1; i < meshData.weightedVertices.size(); i++) {
+                    WeightedVertex& vertex = meshData.weightedVertices[i];
                     if (vertex.boneID.x != foundBoneIndex) {
                         allVerticesAlsoOnlyReferenceTheSameBone = false;
                         break;
@@ -383,8 +383,8 @@ namespace AssimpImporter {
 
             std::cout << modelData.name << " [" << meshData.name << "]: " << Util::BoolToString(meshData.requiresSkinning) << " " << foundBoneIndex << " nonDeformingBoneIndex " << meshData.vertexCount << " verts \n";
 
-            localBaseVertex += (uint32_t)meshData.vertices.size();
-            modelData.vertexCount += (uint32_t)meshData.vertices.size();
+            localBaseVertex += (uint32_t)meshData.weightedVertices.size();
+            modelData.vertexCount += (uint32_t)meshData.weightedVertices.size();
             modelData.indexCount += (uint32_t)meshData.indices.size();
         }
 

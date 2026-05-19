@@ -2,7 +2,7 @@
 #include "GL_heightmap_mesh.h"
 #include <Hell/Logging.h>
 #include <Hell/GLM.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 void OpenGLHeightMapMesh::Create() {
     if (m_vao != 0) {

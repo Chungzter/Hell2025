@@ -4,6 +4,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"
+#include "Viewport/ViewportManager.h"
 
 namespace OpenGLRenderer {
 	struct RESettings {
@@ -25,6 +26,10 @@ namespace OpenGLRenderer {
 	void LoadShadersRE();
 	void PostProcessingPassRE();
 
+    void VisibilityPass();
+    void MaterialResolvePass();
+	void VisibilityDebugPass();
+
 	void InitREStyle() {
 		CreateFramebuffersRE();
 		LoadShadersRE();
@@ -43,14 +48,29 @@ namespace OpenGLRenderer {
 		RenderShadowMaps();
 		ClearRenderTargetsRE();
 
-		DepthPrePassRE();
-		GBufferPass();
+        VisibilityPass();
+        MaterialResolvePass();
 
-		ComputeTileWorldBounds();
-		ChristmasLightCullingPass();
-		LightCullingPass();
+        static bool test = false;
 
-		UpdateGlobalIllumintation();
+        if (!test) {
+            VisibilityDebugPass();
+		}
+
+		if (Input::KeyPressed(HELL_KEY_NUMPAD_2)) {
+			test = !test;
+		}
+
+		if (test) {
+			//DepthPrePassRE();
+			//GBufferPass();
+
+			ComputeTileWorldBounds();
+			ChristmasLightCullingPass();
+			LightCullingPass();
+
+			UpdateGlobalIllumintation();
+		}
 
 		// TODO: Don't let this renderer just assume these SSBOs are always bound here.
 		// It's a nightmare. Explicitly rebind them for every render pass that needs them.
@@ -60,28 +80,30 @@ namespace OpenGLRenderer {
 		BindSSBO("InstanceData", 3);
 		BindSSBO("Lights", 4);
 
-		LightingPassRE();
-		BlendedLighting();
+		if (test) {
+			LightingPassRE();
+			BlendedLighting();
 
-		HairDepthPrep();
-		HairDepthPrePassRE();
-		HairPassRE();
-		HairCompositeRE();
+			HairDepthPrep();
+			HairDepthPrePassRE();
+			HairPassRE();
+			HairCompositeRE();
 
-		PostProcessingPassRE();
-
+			PostProcessingPassRE();
+		}
+		 
 		DebugViewPass();
-
+		 
 		// DDGI Debug
-		DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
-		if (Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
-		if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
-		if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
+        DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
+        if (Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
+        if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
+        if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
 
 		// Downscale and blit to swapchain
 		OpenGLFrameBuffer& finalImageFbo = GetFrameBuffer("FinalImage");
-		OpenGLFrameBuffer& gBufferRE = GetFrameBuffer("GBufferRE");
-		OpenGLRenderer::BlitFrameBuffer(&gBufferRE, &finalImageFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        OpenGLFrameBuffer& gBufferRE = GetFrameBuffer("GBufferRE");
+        OpenGLRenderer::BlitFrameBuffer(&gBufferRE, &finalImageFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
 		OpenGLRenderer::BlitToDefaultFrameBuffer(&finalImageFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		UIPass();
@@ -93,6 +115,7 @@ namespace OpenGLRenderer {
 		gBufferRE.CreateAttachment("BaseColorMetallic", GL_RGBA8);
 		gBufferRE.CreateAttachment("NormalXYRoughnessMisc", GL_RGB10_A2);
 		gBufferRE.CreateAttachment("VelocityXYOcclusionSubSurface", GL_RGBA16F);
+		gBufferRE.CreateAttachment("Visibility", GL_RG32UI);
 		gBufferRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
 		OpenGLFrameBuffer& hairFboRE = CreateMultisampledFrameBuffer("HairRE", g_settings.gBufferResolution, 4);
@@ -108,14 +131,126 @@ namespace OpenGLRenderer {
 		LoadShader("RE", "HairLightingRE", { "GL_hair_lighting_re.vert", "GL_hair_lighting_re.frag" });
 		LoadShader("RE", "HairCompositeRE", { "GL_hair_composite_re.comp" });
 		LoadShader("RE", "HairDepthPrep", { "GL_fullscreen_triangle.vert", "GL_hair_depth_prep.frag" });
+
+        LoadShader("RE", "Mesh", { "GL_mesh_shader.mesh", "GL_mesh_shader.frag" });
+        LoadShader("RE", "Visibility", { "GL_visibility.vert", "GL_visibility.frag" });
+        LoadShader("RE", "VisibilityDebug", { "GL_visibility_debug.comp" });
+		LoadShader("RE", "MaterialResolve", { "GL_material_resolve.vert", "GL_material_resolve.frag" });
 	}
+
+
+	void VisibilityPass() {
+        ProfilerOpenGLZoneFunction();
+
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
+        fbo.Bind();
+        fbo.DrawBuffers({ "Visibility" });
+
+        OpenGLRasterizerState visibilityState;
+        visibilityState.depthTestEnabled = true;
+        visibilityState.blendEnable = false;
+        visibilityState.cullfaceEnable = true;
+        visibilityState.depthMask = true;
+        visibilityState.colorMask = true;
+        visibilityState.depthFunc = GL_GREATER;
+
+		BindShader("Visibility");
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        MultiDrawPerViewportRE(fbo, drawInfoSet.standard, visibilityState);
+	}
+	
+    void MaterialResolvePass2() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer& gbufferFbo = GetFrameBuffer("GBufferRE");
+        gbufferFbo.Bind();
+        gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
+
+        BindShader("MaterialResolve");
+
+        BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
+        BindImageTexture(1, gbufferFbo.GetColorAttachmentHandleByName("BaseColorMetallic"), GL_WRITE_ONLY, GL_RGBA8);
+        BindImageTexture(2, gbufferFbo.GetColorAttachmentHandleByName("NormalXYRoughnessMisc"), GL_WRITE_ONLY, GL_RGB10_A2);
+        BindImageTexture(3, gbufferFbo.GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"), GL_WRITE_ONLY, GL_RGBA16F);
+        BindTextureUnit(4, gbufferFbo.GetDepthAttachmentHandle());
+
+        BindSSBO(OpenGLBackEnd::GetVertexDataVBO(), 0);
+        BindSSBO(OpenGLBackEnd::GetVertexDataEBO(), 1);
+        BindSSBO("ViewportData", 2);
+        BindSSBO("InstanceData", 3);
+        BindSSBO("Samplers", 4);
+        BindSSBO("RendererData", 5);
+
+        unsigned int width = gbufferFbo.GetWidth();
+        unsigned int height = gbufferFbo.GetHeight();
+        unsigned int groupX = (width + 15) / 16;
+        unsigned int groupY = (height + 15) / 16;
+
+        glDispatchCompute(groupX, groupY, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    }
+
+    void MaterialResolvePass() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer& gbufferFbo = GetFrameBuffer("GBufferRE");
+        gbufferFbo.Bind();
+        gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
+
+        BindShader("MaterialResolve");
+
+        BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
+        BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
+
+        BindSSBO(OpenGLBackEnd::GetVertexDataVBO(), 0);
+        BindSSBO(OpenGLBackEnd::GetVertexDataEBO(), 1);
+        BindSSBO("ViewportData", 2);
+        BindSSBO("InstanceData", 3);
+        BindSSBO("Samplers", 4);
+        BindSSBO("RendererData", 5);
+
+        OpenGLRasterizerState resolveState;
+        resolveState.depthTestEnabled = false;
+        resolveState.blendEnable = false;
+        resolveState.cullfaceEnable = false;
+        resolveState.depthMask = false;
+        resolveState.colorMask = true;
+        SetRasterizerState(resolveState);
+
+        // Procedural fullscreen draw
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+	void VisibilityDebugPass() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer& gbufferFbo = GetFrameBuffer("GBufferRE");
+
+        BindShader("VisibilityDebug");
+        BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
+        BindImageTexture(1, gbufferFbo.GetColorAttachmentHandleByName("Lighting"), GL_WRITE_ONLY, GL_RGBA16F);
+
+        unsigned int width = gbufferFbo.GetWidth();
+        unsigned int height = gbufferFbo.GetHeight();
+        unsigned int groupX = (width + 15) / 16;
+        unsigned int groupY = (height + 15) / 16;
+
+        glDispatchCompute(groupX, groupY, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	}
+
 
 	void ClearRenderTargetsRE() {
 		OpenGLFrameBuffer& gBufferRE = GetFrameBuffer("GBufferRE");
 		gBufferRE.ClearAttachment("Lighting", 0, 0, 0, 1);
 		gBufferRE.ClearAttachment("BaseColorMetallic", 0, 0, 0, 1);
 		gBufferRE.ClearAttachment("NormalXYRoughnessMisc", 0, 0, 0, 1);
-		gBufferRE.ClearAttachment("VelocityXYOcclusionSubSurface", 0, 0, 0, 1);
+        gBufferRE.ClearAttachment("VelocityXYOcclusionSubSurface", 0, 0, 0, 1);
+		gBufferRE.ClearAttachmentUI("Visibility", 0, 0, 0, 0);
 		gBufferRE.ClearDepthAttachment(0.0f);
 
 		OpenGLFrameBuffer& hairFboRE = GetFrameBuffer("HairRE");
@@ -145,16 +280,16 @@ namespace OpenGLRenderer {
 		opaqueShader.Bind();
 
 		glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
-		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.house, opaqueDepthState);
+		MultiDrawPerViewportRE(fbo, drawInfoSet.house, opaqueDepthState);
 
 		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.standard, opaqueDepthState);
+		MultiDrawPerViewportRE(fbo, drawInfoSet.standard, opaqueDepthState);
 
 		glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
-		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.skinnedNonDeformingStandard, opaqueDepthState);
+		MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingStandard, opaqueDepthState);
 
 		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
-		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.skinnedStandard, opaqueDepthState);
+		MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedStandard, opaqueDepthState);
 	}
 
 	void GBufferPass() {

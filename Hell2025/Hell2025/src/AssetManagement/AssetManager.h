@@ -72,7 +72,7 @@ namespace AssetManager {
     // Skinned Mesh
     std::vector<SkinnedMesh>& GetSkinnedMeshes();
     SkinnedMesh* GetSkinnedMeshByIndex(int index);
-    int CreateSkinnedMesh(const std::string& name, std::vector<WeightedVertex>& vertices, std::vector<uint32_t>& indices, uint32_t baseVertexLocal, const glm::vec3& aabbMin, const glm::vec3& aabbMax, bool requiresSkinning, int32_t nonDeformingBoneIndex);
+    int CreateSkinnedMesh2(const SkinnedMeshData& skinnedMeshData);
     int GetSkinnedMeshIndexByName(const std::string& name);
 
     // Textures
@@ -95,6 +95,7 @@ namespace AssetManager {
 
     // Vertex Data
     std::vector<Vertex>& GetVertices();
+    std::vector<VertexWeight>& GetVertexWeights();
     std::span<Vertex> GetVerticesSpan(uint32_t baseVertex, uint32_t vertexCount);
     std::vector<uint32_t>& GetIndices();
     std::span<uint32_t> GetIndicesSpan(uint32_t baseIndex, uint32_t indexCount);
@@ -130,7 +131,8 @@ namespace AssetManager {
     // Vertex data
     std::vector<Vertex>& GetVertices();
     std::vector<uint32_t>& GetIndies();
-    std::vector<WeightedVertex>& GetWeightedVertices();
+
+    std::vector<Vertex>& GetWeightedVertices();
     std::vector<uint32_t>& GetWeightedIndies();
 
     // Index maps

@@ -121,7 +121,9 @@ struct MeshData {
 
 struct SkinnedMeshData {
     std::string name;
-    std::vector<WeightedVertex> vertices;
+    std::vector<WeightedVertex> weightedVertices;
+    std::vector<Vertex> vertices;
+    std::vector<VertexWeight> vertexWeights;
     std::vector<uint32_t> indices;
     glm::vec3 aabbMin = glm::vec3(std::numeric_limits<float>::max());
     glm::vec3 aabbMax = glm::vec3(-std::numeric_limits<float>::max());

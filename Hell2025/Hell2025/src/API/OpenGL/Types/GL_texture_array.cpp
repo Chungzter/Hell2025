@@ -1,6 +1,6 @@
 #include "GL_texture_array.h"
 #include "API/OpenGL/GL_util.h"
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 void OpenGLTextureArray::AllocateMemory(uint32_t width, uint32_t height, uint32_t internalFormat, uint32_t mipmapLevelCount, uint32_t count) {
     if (m_memoryAllocated) return;

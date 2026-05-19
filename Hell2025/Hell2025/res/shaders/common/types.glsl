@@ -105,9 +105,9 @@ struct RenderItem {
     float emissiveB;
     int emissiveTextureIndex;           // -1 means nothing, anything else is a texture index
 
-    float furLength;
-    float furShellDistanceAttenuation;
-    float furUVScale;
+    int baseVertex;
+    int baseIndex;
+    int baseVertexWeight;
     int blockScreenSpaceBloodDecals;    // True or false
 
     int additionalTextureIndex0;

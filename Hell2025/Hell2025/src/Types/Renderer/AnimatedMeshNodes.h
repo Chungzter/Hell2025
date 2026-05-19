@@ -28,6 +28,7 @@ struct AnimatedMeshNode {
     float furShellDistanceAttenuation = 0.0f;
     float furUVScale = 0.0f;
     bool deforming = true;
+    int baseSkinningVertex = -1;
     BlendingMode blendingMode = BlendingMode::DEFAULT;
     RenderItem renderItem;
 };

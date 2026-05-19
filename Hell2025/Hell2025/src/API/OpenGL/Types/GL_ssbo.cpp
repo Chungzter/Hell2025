@@ -30,6 +30,20 @@ void OpenGLSSBO::Update(size_t size, const void* data) {
     glNamedBufferSubData(m_handle, 0, (GLsizeiptr)size, data);
 }
 
+void OpenGLSSBO::UploadStatic(size_t size, const void* data) {
+    if (size == 0 || data == nullptr) {
+        return;
+    }
+
+    CleanUp();
+
+    glCreateBuffers(1, &m_handle);
+    glNamedBufferStorage(m_handle, (GLsizeiptr)size, data, 0);
+
+    m_bufferSize = size;
+    m_flags = 0;
+}
+
 void OpenGLSSBO::Bind(uint32_t index) const {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, m_handle);
 }

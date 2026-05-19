@@ -41,6 +41,7 @@ namespace OpenGLRenderer {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, OpenGLBackEnd::GetSkinnedVertexDataVBO());
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, OpenGLBackEnd::GetWeightedVertexDataVBO());
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, skinningTransformsSSBO->GetHandle());
+        BindSSBO("VertexWeights", 3);
 
         shader->Bind();
 
@@ -53,8 +54,11 @@ namespace OpenGLRenderer {
 
             shader->SetInt("vertexCount", mesh->vertexCount);
             shader->SetInt("baseInputVertex", mesh->baseVertexGlobal);
+            shader->SetInt("baseInputVertexWeight", renderItem.baseVertexWeight);
             shader->SetInt("baseOutputVertex", renderItem.baseSkinnedVertex);
             shader->SetInt("baseTransformIndex", renderItem.baseSkinningTransformIndex);
+
+            //std::cout << mesh->name << " " << renderItem.baseVertexWeight << "\n";
 
             GLuint workgroupSize = 128;
             GLuint groupCountX = (mesh->vertexCount + workgroupSize - 1) / workgroupSize;

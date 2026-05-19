@@ -240,11 +240,8 @@ void Player::SubmitP90MagsRenderItems() {
 		//RenderDataManager::SubmitRenderItems(m_p90MagMeshNodes.GetRenderItems());
 		//RenderDataManager::SubmitRenderItemsPlastic(m_p90MagMeshNodes.GetRenderItemsPlastic());
 
-
 		//if (m_viewportIndex == 0) {
         //    std::cout << "Player 0 has " << m_p90MagMeshNodes.GetRenderItemsPlastic().size() << " plastic render items\n";
 		//}
-
-
 	}
 }

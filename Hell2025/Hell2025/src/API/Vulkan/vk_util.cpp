@@ -1,6 +1,6 @@
 #pragma once
 #include "vk_util.h"
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <iostream>
 
 namespace VulkanUtil {
@@ -33,10 +33,10 @@ namespace VulkanUtil {
         case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT: return VK_FORMAT_BC3_UNORM_BLOCK;
 
             // BPTC/BC7 Formats
-        case GL_COMPRESSED_RGBA_BPTC_UNORM_ARB: return VK_FORMAT_BC7_UNORM_BLOCK;
-        case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB: return VK_FORMAT_BC7_SRGB_BLOCK;
-        case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB: return VK_FORMAT_BC6H_SFLOAT_BLOCK;
-        case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB: return VK_FORMAT_BC6H_UFLOAT_BLOCK;
+        case GL_COMPRESSED_RGBA_BPTC_UNORM: return VK_FORMAT_BC7_UNORM_BLOCK;
+        case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM: return VK_FORMAT_BC7_SRGB_BLOCK;
+        case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT: return VK_FORMAT_BC6H_SFLOAT_BLOCK;
+        case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT: return VK_FORMAT_BC6H_UFLOAT_BLOCK;
 
             // RGTC Formats (BC4 and BC5)
         case GL_COMPRESSED_RED_RGTC1: return VK_FORMAT_BC4_UNORM_BLOCK;

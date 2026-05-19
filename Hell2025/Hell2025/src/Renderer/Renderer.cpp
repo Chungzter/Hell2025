@@ -1,7 +1,9 @@
 #include "Renderer.h"
 #include "Audio/Audio.h"
+#include "API/OpenGL/GL_backend.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/Vulkan/Renderer/VK_renderer.h"
+#include "AssetManagement/AssetManager.h"
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
 #include "Core/Debug.h"
@@ -194,6 +196,19 @@ namespace Renderer {
             std::cout << i << ": " << g_freeWoundMaskIndices[i] << "\n";
         }
         return -1;
+    }
+
+    void UploadVertexData() {
+        if (BackEnd::GetAPI() == API::OPENGL) {
+            OpenGLBackEnd::CleanUpBakingPBOs();
+            OpenGLBackEnd::UploadVertexData(AssetManager::GetVertices(), AssetManager::GetIndices());
+            OpenGLBackEnd::UploadWeightedVertexDataOLD();
+            OpenGLRenderer::UploadVertexWeights();
+            OpenGLRenderer::UploadWeightedVertexData();
+        }
+        else if (BackEnd::GetAPI() == API::VULKAN) {
+            Logging::ToDo() << "Vulkan path for Renderer::UploadVertexData()";
+        }
     }
 
     void InitWoundMaskArray() {

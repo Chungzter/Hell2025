@@ -8,6 +8,11 @@ namespace AssetManager {
     int g_nextVertexInsert = 0;
     int g_nextIndexInsert = 0;
 
+    int g_nextVertexWeightIndexInsert = 0;
+    int g_nextWeightedVertexInsert = 0;
+    int g_nextWeightedIndexInsert = 0;
+
+
     int CreateMesh(const std::string& name, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, glm::vec3 aabbMin, glm::vec3 aabbMax, int parentIndex, glm::mat4 localTransform, glm::mat4 inverseBindTransform) {
         std::vector<Mesh>& meshes = GetMeshes();
         std::vector<Vertex>& allVertices = GetVertices();
@@ -50,6 +55,70 @@ namespace AssetManager {
         }
 
         return CreateMesh(name, vertices, indices, aabbMin, aabbMax, -1, glm::mat4(1.0f), glm::mat4(1.0f));
+    }
+
+    int CreateSkinnedMesh2(const SkinnedMeshData& skinnedMeshData) {
+        std::vector<SkinnedMesh>& skinnedMeshes = GetSkinnedMeshes();
+        std::vector<Vertex>& globalVertices = GetWeightedVertices();
+        std::vector<VertexWeight>& globalVertexWeights = GetVertexWeights();
+        std::vector<uint32_t>& globallIndices = GetWeightedIndies();
+
+        SkinnedMesh& mesh = skinnedMeshes.emplace_back();
+        mesh.baseVertexGlobal = g_nextWeightedVertexInsert;
+        mesh.baseVertexLocal = skinnedMeshData.localBaseVertex;
+        mesh.baseIndex = g_nextWeightedIndexInsert;
+        mesh.vertexCount = (uint32_t)skinnedMeshData.vertices.size();
+        mesh.indexCount = (uint32_t)skinnedMeshData.indices.size();
+        mesh.name = skinnedMeshData.name;
+        mesh.aabbMin = skinnedMeshData.aabbMin;
+        mesh.aabbMax = skinnedMeshData.aabbMax;
+        mesh.requiresSkinning = skinnedMeshData.requiresSkinning;
+        mesh.nonDeformingBoneIndex = skinnedMeshData.nonDeformingBoneIndex;
+
+        globalVertices.reserve(globalVertices.size() + skinnedMeshData.vertices.size());
+        globalVertices.insert(std::end(globalVertices), std::begin(skinnedMeshData.vertices), std::end(skinnedMeshData.vertices));
+
+        globallIndices.reserve(globallIndices.size() + skinnedMeshData.indices.size());
+        globallIndices.insert(std::end(globallIndices), std::begin(skinnedMeshData.indices), std::end(skinnedMeshData.indices));
+
+        g_nextWeightedVertexInsert += mesh.vertexCount;
+        g_nextWeightedIndexInsert += mesh.indexCount;
+
+        if (mesh.requiresSkinning) {
+            mesh.baseVertexWeight = g_nextVertexWeightIndexInsert;
+
+            globalVertexWeights.reserve(globalVertexWeights.size() + skinnedMeshData.vertexWeights.size());
+            globalVertexWeights.insert(std::end(globalVertexWeights), std::begin(skinnedMeshData.vertexWeights), std::end(skinnedMeshData.vertexWeights));
+
+            g_nextVertexWeightIndexInsert += skinnedMeshData.vertexWeights.size();
+        }
+        else {
+            mesh.baseVertexWeight = -1;
+        }
+
+        return skinnedMeshes.size() - 1;
+    }
+
+    SkinnedMesh* GetSkinnedMeshByIndex(int index) {
+        std::vector<SkinnedMesh>& skinnedMeshes = GetSkinnedMeshes();
+        if (index >= 0 && index < skinnedMeshes.size()) {
+            return &skinnedMeshes[index];
+        }
+        else {
+            std::cout << "AssetManager::GetSkinnedMeshByIndex() failed because index '" << index << "' is out of range. Size is " << skinnedMeshes.size() << "!\n";
+            return nullptr;
+        }
+    }
+
+    int GetSkinnedMeshIndexByName(const std::string& name) {
+        std::vector<SkinnedMesh>& skinnedMeshes = GetSkinnedMeshes();
+        for (int i = 0; i < skinnedMeshes.size(); i++) {
+            if (skinnedMeshes[i].name == name) {
+                return i;
+            }
+        }
+        std::cout << "AssetManager::GetSkinnedMeshIndexByName() failed because name '" << name << "' was not found in _skinnedMeshes!\n";
+        return -1;
     }
 
     int GetMeshIndexByName(const std::string& name) {

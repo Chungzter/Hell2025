@@ -1,5 +1,5 @@
 #include "Player.h"
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include "Editor/Editor.h"
 #include "Input/Input.h"

@@ -11,6 +11,7 @@
 #include "Types/GL_pbo.hpp"
 
 // remove me
+#include "AssetManagement/AssetManager.h"
 #include "Renderer/Renderer.h"
 
 namespace OpenGLBackEnd {
@@ -45,7 +46,7 @@ namespace OpenGLBackEnd {
         BackEnd::GLFW::MakeContextCurrent();
 
         // Init glad
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
             std::cout << "Failed to initialize GLAD\n";
             return;
         }
@@ -127,7 +128,9 @@ namespace OpenGLBackEnd {
         glBindVertexArray(0);
     }
 
-    void OpenGLBackEnd::UploadWeightedVertexData(std::vector<WeightedVertex>& vertices, std::vector<uint32_t>& indices) {
+    void UploadWeightedVertexDataOLD() {
+        std::vector<Vertex>& vertices = AssetManager::GetWeightedVertices();
+        std::vector<uint32_t>& indices = AssetManager::GetWeightedIndies();
 
         if (vertices.empty() || indices.empty()) {
             return;
@@ -145,22 +148,18 @@ namespace OpenGLBackEnd {
 
         glBindVertexArray(g_weightedVertexDataVAO);
         glBindBuffer(GL_ARRAY_BUFFER, g_weightedVertexDataVBO);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(WeightedVertex), &vertices[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_weightedVertexDataEBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(WeightedVertex), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(WeightedVertex), (void*)offsetof(WeightedVertex, normal));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(WeightedVertex), (void*)offsetof(WeightedVertex, uv));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(WeightedVertex), (void*)offsetof(WeightedVertex, tangent));
-        glEnableVertexAttribArray(4);
-        glVertexAttribIPointer(4, 4, GL_INT, sizeof(WeightedVertex), (void*)offsetof(WeightedVertex, boneID));
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(WeightedVertex), (void*)offsetof(WeightedVertex, weight));
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
 
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);

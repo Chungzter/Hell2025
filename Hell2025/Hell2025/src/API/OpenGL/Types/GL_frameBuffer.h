@@ -2,7 +2,7 @@
 #include "GL_attachments.h"
 #include "../GL_Util.h"
 #include <Hell/Types.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <iostream>
 #include <string>
 #include <vector>

@@ -45,6 +45,9 @@ struct MeshNode {
     //bool rigidIsKinematic = false;    // You need to be careful this does not get out of sync with actual physx kinematic state
     bool movedThisFrame = true;
     glm::mat4 scaleMatrix = glm::mat4(1.0f);
+
+    uint32_t baseVertex = 0;
+    uint32_t baseIndex = 0;
 };
 
 struct MeshNodes {

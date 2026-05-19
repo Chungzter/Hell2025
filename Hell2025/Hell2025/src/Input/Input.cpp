@@ -1,5 +1,5 @@
 #include "Input.h"
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include "BackEnd/BackEnd.h"
 #include "Util/Util.h"

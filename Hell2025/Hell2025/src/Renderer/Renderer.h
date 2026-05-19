@@ -11,6 +11,7 @@ namespace Renderer {
     void PreGameLogicComputePasses();
     void RenderGame();
     void HotloadShaders();
+    void UploadVertexData();
 
     // Override states
     void SetRendererOverrideState(RendererOverrideState state);

@@ -1,5 +1,5 @@
 #pragma once
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <cstdint>
 
 struct OpenGLSSBO {
@@ -9,6 +9,7 @@ public:
 
     void Reserve(size_t size);
     void Update(size_t size, const void* data);
+    void UploadStatic(size_t size, const void* data);
     void Bind(uint32_t index) const;
     void CleanUp();
     void CopyFrom(const void* hostPtr, size_t sizeInBytes);

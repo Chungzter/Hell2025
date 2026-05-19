@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <cstddef>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <glm/vec3.hpp>
 #include <Hell/Types.h>
 

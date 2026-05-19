@@ -1,7 +1,7 @@
 // GL_timer.h
 #pragma once
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <cstdint>
 #include <string>
 #include <string_view>

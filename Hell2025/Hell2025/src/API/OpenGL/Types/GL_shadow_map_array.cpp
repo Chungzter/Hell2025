@@ -1,5 +1,5 @@
 #include "GL_shadow_map_array.h"
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <iostream>
 
 void OpenGLShadowMapArray::Init(unsigned int layerCount, int size, int internalFormat) {

@@ -1,5 +1,5 @@
 #pragma once
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include "cmp_compressonatorlib/compressonator.h"
 #include <Hell/Types.h>
 

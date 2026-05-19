@@ -53,9 +53,9 @@ struct RenderItem {
     float emissiveB = 0.0f;
     int32_t emissiveTextureIndex = -1;
 
-    float furLength = 0.0f;
-    float furShellDistanceAttenuation = 0.0f;
-    float furUVScale = 0.0f;
+    int baseVertex = 0;
+    int baseIndex = 0;
+    int baseVertexWeight = 0;
     int blockScreenSpaceBloodDecals = 0;  // True or false
 
     int32_t additionalTextureIndex0 = 0;
@@ -72,6 +72,21 @@ struct RenderItem {
     float tintColorG = 1.0f;
     float tintColorB = 1.0f;
     int32_t castCSMShadows = 0;          // True or false
+};
+
+struct BindlessMeshInstance {
+    glm::mat4 modelMatrix;
+    uint32_t meshletOffset;
+    uint32_t primitiveOffset;
+    uint32_t vertexOffset;
+    uint32_t flags;
+};
+
+struct GLSLMeshlet {
+    uint32_t vertexOffset;
+    uint32_t primitiveOffset;
+    uint32_t vertexCount;
+    uint32_t primitiveCount;
 };
 
 struct AABBRayResult {
@@ -174,6 +189,11 @@ struct Vertex {
     glm::vec3 normal = glm::vec3(0);
     glm::vec2 uv = glm::vec2(0);
     glm::vec3 tangent = glm::vec3(0);
+};
+
+struct VertexWeight {
+    glm::ivec4 boneID = glm::ivec4(0);
+    glm::vec4 weight = glm::vec4(0);
 };
 
 struct WeightedVertex {

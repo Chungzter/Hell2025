@@ -63,6 +63,8 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
         meshNode.rigidDynamicId = 0;
         meshNode.worldSpaceObb.SetLocalBounds(AABB(mesh->aabbMin, mesh->aabbMax));
         meshNode.addToNavMesh = false;
+        meshNode.baseVertex = mesh->baseVertex;
+        meshNode.baseIndex = mesh->baseIndex;
     }
 
     // If the model contains armatures, store the first one (TODO: allow more maybe)
@@ -542,6 +544,8 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.renderItem.tintColorG = meshNode.tintColor.g;
         meshNode.renderItem.tintColorB = meshNode.tintColor.b;
         meshNode.renderItem.opacityTextureIndex = material->m_opacity;
+        meshNode.renderItem.baseVertex = meshNode.baseVertex;
+        meshNode.renderItem.baseIndex = meshNode.baseIndex;
 
         if (m_firstFrame) {
             meshNode.renderItem.prevModelMatrix = meshNode.worldMatrix;

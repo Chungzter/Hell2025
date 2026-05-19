@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cstring>
 #include <vector>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <Hell/GLM.h>
 
 void OpenGLMeshPatch::CleanUp() {

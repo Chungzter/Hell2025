@@ -1,6 +1,6 @@
 #include "GL_shadow_cube_map_array.h"
 #include "API/OpenGL/GL_backEnd.h"
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <iostream>
 
 void OpenGLShadowCubeMapArray::Init(unsigned int numberOfCubemaps, int size) {

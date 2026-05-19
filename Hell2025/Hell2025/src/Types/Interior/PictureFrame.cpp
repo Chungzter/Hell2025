@@ -31,6 +31,9 @@ void PictureFrame::UpdateRenderItems() {
         Model* model = AssetManager::GetModelByName("PictureFrame_BigLandscape");
 
         for (int i = 0; i < 2; i++) {
+            Mesh* mesh = AssetManager::GetMeshByIndex(model->GetMeshIndices()[i]);
+            if (!mesh) continue;
+
             uint32_t meshIndex = model->GetMeshIndices()[i];
             RenderItem& renderItem = m_renderItems.emplace_back();
             renderItem.modelMatrix = transform.to_mat4();
@@ -41,11 +44,15 @@ void PictureFrame::UpdateRenderItems() {
             renderItem.rmaTextureIndex = material->m_rma;
             renderItem.normalMapTextureIndex = material->m_normal;
             renderItem.objectType = (int)ObjectType::PICTURE_FRAME;
+            renderItem.baseVertex = mesh->baseVertex;
+            renderItem.baseIndex = mesh->baseIndex;
+
             if (i == 0) {
                 renderItem.baseColorTextureIndex = AssetManager::GetTextureIndexByName(m_pictureTextureName);
                 renderItem.rmaTextureIndex = defaultMaterial->m_rma;
                 renderItem.normalMapTextureIndex = defaultMaterial->m_normal;
             }
+
             Util::UpdateRenderItemAABB(renderItem);
             Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
         }

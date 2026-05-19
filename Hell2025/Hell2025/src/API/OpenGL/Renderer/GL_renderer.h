@@ -182,6 +182,7 @@ namespace OpenGLRenderer {
     std::vector<float>& GetShadowCascadeLevels();
     void MultiDrawPerViewport(OpenGLFrameBuffer* fbo, OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
     void MultiDrawPerViewport(OpenGLFrameBuffer& fbo, OpenGLShader& shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
+    void MultiDrawPerViewportRE(OpenGLFrameBuffer& fbo, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
 
     // Frame Buffers
     OpenGLFrameBuffer& CreateFrameBuffer(const std::string& name, glm::ivec2 resolution);
@@ -214,10 +215,11 @@ namespace OpenGLRenderer {
 	void SetUniformVec4(const std::string& name, const glm::vec4& value);
 	void SetUniformMat4(const std::string& name, const glm::mat4& value);
 
-
     // SSBOs
     void CreateSSBO(const std::string& name, size_t size, GLbitfield flags);
+    void CreateSSBOStatic(const std::string& name);
     void UpdateSSBO(const std::string& name, size_t size, const void* data);
+    void UploadSSBOStatic(const std::string& name, size_t size, const void* data);
     void BindSSBO(const std::string& name, unsigned int bindingIndex);
     void BindSSBO(uint32_t vboHandle, unsigned int bindingIndex);
     void ClearSSBO(const std::string& name);
@@ -245,6 +247,10 @@ namespace OpenGLRenderer {
     void ForceRasterizerState(const std::string& name);
     void ForceRasterizerState(const OpenGLRasterizerState& rasterizerState);
     void SetRasterizerState(const OpenGLRasterizerState& rasterizerState);
+
+    // Vertex Data
+    void UploadWeightedVertexData(); // remove me when u can
+    void UploadVertexWeights();
 
     // Drawing
     void MultiDrawIndirect(const std::vector<DrawIndexedIndirectCommand>& commands);

@@ -2,7 +2,7 @@
 #include <Hell/Types.h>
 #include <Hell/CreateInfo.h>
 /*#include <vector>
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 #include "GlobalIllumination/DDGIVolume.h"
 

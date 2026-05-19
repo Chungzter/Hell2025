@@ -55,8 +55,10 @@ namespace AssetManager {
     //bool g_loadingComplete = false;
 
     std::vector<Vertex> g_vertices;
-    std::vector<WeightedVertex> g_weightedVertices;
+    std::vector<VertexWeight> g_vertexWeights;
     std::vector<uint32_t> g_indices;
+
+    std::vector<Vertex> g_weightedVertices;
     std::vector<uint32_t> g_weightedIndices;
 
     void AddItemToLoadLog(std::string text);
@@ -165,16 +167,11 @@ namespace AssetManager {
 
         LoadIESProfiles();
 
+        Renderer::UploadVertexData();
         HouseManager::Init();
         MapManager::Init();
         Renderer::InitWoundMaskArray();
         World::Init();
-
-        if (BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLBackEnd::CleanUpBakingPBOs();
-            OpenGLBackEnd::UploadVertexData(g_vertices, g_indices);
-            OpenGLBackEnd::UploadWeightedVertexData(g_weightedVertices, g_weightedIndices);
-        }
 
         // Free all cpu texture data
         for (Texture& texture : g_textures) {
@@ -197,7 +194,7 @@ namespace AssetManager {
             Model& model = g_models.emplace_back();
             model.SetFileInfo(fileInfo);
         }
-        // Find skinned model files
+        // Find skinned model filesl
         for (FileInfo& fileInfo : Util::IterateDirectory("res/skinned_models")) {
             SkinnedModel& skinnedModel = g_skinnedModels.emplace_back();
             skinnedModel.SetFileInfo(fileInfo);
@@ -384,6 +381,10 @@ namespace AssetManager {
         return g_vertices;
     }
 
+    std::vector<VertexWeight>& GetVertexWeights() {
+        return g_vertexWeights;
+    }
+
     std::vector<uint32_t>& GetIndices() {
         return g_indices;
     }
@@ -392,7 +393,7 @@ namespace AssetManager {
         return g_weightedIndices;
     }
 
-    std::vector<WeightedVertex>& GetWeightedVertices() {
+    std::vector<Vertex>& GetWeightedVertices() {
         return g_weightedVertices;
     }
 
