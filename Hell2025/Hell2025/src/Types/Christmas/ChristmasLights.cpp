@@ -110,6 +110,12 @@ void ChristmasLightSet::RecreateLightRenderItems() {
 
     // Fill previous model matrices. These never move
     for (RenderItem& renderItem : m_renderItems) {
+        Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+        if (!mesh) continue;
+
+        renderItem.baseVertex = mesh->baseVertex;
+        renderItem.baseIndex = mesh->baseIndex;
+
         renderItem.prevModelMatrix = renderItem.modelMatrix;
     }
 }

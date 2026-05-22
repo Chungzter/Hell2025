@@ -15,79 +15,112 @@ namespace OpenGLRenderer {
 		ForceRasterizerState(*rasterizerState);
 	}
 
-	void ForceRasterizerState(const OpenGLRasterizerState& newState) {
-		newState.blendEnable ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
-		newState.cullfaceEnable ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
-		newState.depthMask ? glDepthMask(GL_TRUE) : glDepthMask(GL_FALSE);
-		newState.depthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
-		newState.colorMask ? glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE) : glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		glCullFace(newState.cullfaceMode);
+    void ForceRasterizerState(const OpenGLRasterizerState& newState) {
+        newState.blendEnable ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+        newState.cullfaceEnable ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
+        newState.depthMask ? glDepthMask(GL_TRUE) : glDepthMask(GL_FALSE);
+        newState.depthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+        newState.colorMask ? glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE) : glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+        glCullFace(newState.cullfaceMode);
 
-		if (newState.blendEnable)      glBlendFunc(newState.blendFuncSrcfactor, newState.blendFuncDstfactor);
-		if (newState.depthTestEnabled) glDepthFunc(newState.depthFunc);
-		if (newState.pointSize > 1.0f) glPointSize(newState.pointSize);
+        if (newState.blendEnable)      glBlendFunc(newState.blendFuncSrcfactor, newState.blendFuncDstfactor);
+        if (newState.depthTestEnabled) glDepthFunc(newState.depthFunc);
+        if (newState.pointSize > 1.0f) glPointSize(newState.pointSize);
 
-		g_globalState = newState;
-		g_stateInitialized = true;
-	}
+        newState.stencilTestEnabled ? glEnable(GL_STENCIL_TEST) : glDisable(GL_STENCIL_TEST);
+        if (newState.stencilTestEnabled) {
+            glStencilFunc(newState.stencilFunc, newState.stencilRef, newState.stencilReadMask);
+            glStencilOp(newState.stencilFailOp, newState.stencilDepthFailOp, newState.stencilPassOp);
+            glStencilMask(newState.stencilWriteMask);
+        }
 
-	void SetRasterizerState(const OpenGLRasterizerState& newState) {
-		if (!g_stateInitialized) {
-			ForceRasterizerState(newState);
-			return;
-		}
+        g_globalState = newState;
+        g_stateInitialized = true;
+    }
 
-		bool blendWasDisabled = !g_globalState.blendEnable;
-		if (g_globalState.blendEnable != newState.blendEnable) {
-			newState.blendEnable ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
-		}
+    void SetRasterizerState(const OpenGLRasterizerState& newState) {
+        if (!g_stateInitialized) {
+            ForceRasterizerState(newState);
+            return;
+        }
 
-		if (newState.blendEnable) {
-			if (blendWasDisabled ||
-				g_globalState.blendFuncSrcfactor != newState.blendFuncSrcfactor ||
-				g_globalState.blendFuncDstfactor != newState.blendFuncDstfactor) {
-				glBlendFunc(newState.blendFuncSrcfactor, newState.blendFuncDstfactor);
-			}
-		}
+        bool blendWasDisabled = !g_globalState.blendEnable;
+        if (g_globalState.blendEnable != newState.blendEnable) {
+            newState.blendEnable ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+        }
 
-		if (g_globalState.cullfaceEnable != newState.cullfaceEnable) {
-			newState.cullfaceEnable ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
-		}
+        if (newState.blendEnable) {
+            if (blendWasDisabled ||
+                g_globalState.blendFuncSrcfactor != newState.blendFuncSrcfactor ||
+                g_globalState.blendFuncDstfactor != newState.blendFuncDstfactor) {
+                glBlendFunc(newState.blendFuncSrcfactor, newState.blendFuncDstfactor);
+            }
+        }
 
-		if (newState.cullfaceEnable) {
-			if (g_globalState.cullfaceMode != newState.cullfaceMode) {
-				glCullFace(newState.cullfaceMode);
-			}
-		}
+        if (g_globalState.cullfaceEnable != newState.cullfaceEnable) {
+            newState.cullfaceEnable ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
+        }
 
-		if (g_globalState.depthMask != newState.depthMask) {
-			glDepthMask(newState.depthMask ? GL_TRUE : GL_FALSE);
-		}
+        if (newState.cullfaceEnable) {
+            if (g_globalState.cullfaceMode != newState.cullfaceMode) {
+                glCullFace(newState.cullfaceMode);
+            }
+        }
 
-		bool depthWasDisabled = !g_globalState.depthTestEnabled;
-		if (g_globalState.depthTestEnabled != newState.depthTestEnabled) {
-			newState.depthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
-		}
+        if (g_globalState.depthMask != newState.depthMask) {
+            glDepthMask(newState.depthMask ? GL_TRUE : GL_FALSE);
+        }
 
-		if (newState.depthTestEnabled) {
-			if (depthWasDisabled || g_globalState.depthFunc != newState.depthFunc) {
-				glDepthFunc(newState.depthFunc);
-			}
-		}
+        bool depthWasDisabled = !g_globalState.depthTestEnabled;
+        if (g_globalState.depthTestEnabled != newState.depthTestEnabled) {
+            newState.depthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+        }
 
-		if (g_globalState.colorMask != newState.colorMask) {
-			if (newState.colorMask) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-			else glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		}
+        if (newState.depthTestEnabled) {
+            if (depthWasDisabled || g_globalState.depthFunc != newState.depthFunc) {
+                glDepthFunc(newState.depthFunc);
+            }
+        }
 
-		if (g_globalState.pointSize != newState.pointSize) {
-			if (newState.pointSize > 1.0f) {
-				glPointSize(newState.pointSize);
-			}
-		}
+        if (g_globalState.colorMask != newState.colorMask) {
+            if (newState.colorMask) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            else glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+        }
 
-		g_globalState = newState;
-	}
+        if (g_globalState.pointSize != newState.pointSize) {
+            if (newState.pointSize > 1.0f) {
+                glPointSize(newState.pointSize);
+            }
+        }
+
+        // Stencil
+        bool stencilWasDisabled = !g_globalState.stencilTestEnabled;
+        if (g_globalState.stencilTestEnabled != newState.stencilTestEnabled) {
+            newState.stencilTestEnabled ? glEnable(GL_STENCIL_TEST) : glDisable(GL_STENCIL_TEST);
+        }
+
+        if (newState.stencilTestEnabled) {
+            if (stencilWasDisabled ||
+                g_globalState.stencilFunc != newState.stencilFunc ||
+                g_globalState.stencilRef != newState.stencilRef ||
+                g_globalState.stencilReadMask != newState.stencilReadMask) {
+                glStencilFunc(newState.stencilFunc, newState.stencilRef, newState.stencilReadMask);
+            }
+
+            if (stencilWasDisabled ||
+                g_globalState.stencilFailOp != newState.stencilFailOp ||
+                g_globalState.stencilDepthFailOp != newState.stencilDepthFailOp ||
+                g_globalState.stencilPassOp != newState.stencilPassOp) {
+                glStencilOp(newState.stencilFailOp, newState.stencilDepthFailOp, newState.stencilPassOp);
+            }
+
+            if (stencilWasDisabled || g_globalState.stencilWriteMask != newState.stencilWriteMask) {
+                glStencilMask(newState.stencilWriteMask);
+            }
+        }
+
+        g_globalState = newState;
+    }
 
 	void VerifyStateCache() {
 		if (!g_stateInitialized) {
@@ -165,6 +198,35 @@ namespace OpenGLRenderer {
 				Logging::Error() << "State Leak: GL_POINT_SIZE out of sync\n";
 			}
 		}
+
+        // Stencil
+        glBool = glIsEnabled(GL_STENCIL_TEST);
+        if (g_globalState.stencilTestEnabled != (glBool == GL_TRUE)) {
+            Logging::Error() << "State Leak: GL_STENCIL_TEST out of sync\n";
+        }
+
+        if (g_globalState.stencilTestEnabled) {
+            glGetIntegerv(GL_STENCIL_FUNC, &glInt);
+            if (g_globalState.stencilFunc != (GLenum)glInt) Logging::Error() << "State Leak: GL_STENCIL_FUNC out of sync\n";
+
+            glGetIntegerv(GL_STENCIL_REF, &glInt);
+            if (g_globalState.stencilRef != glInt) Logging::Error() << "State Leak: GL_STENCIL_REF out of sync\n";
+
+            glGetIntegerv(GL_STENCIL_VALUE_MASK, &glInt);
+            if (g_globalState.stencilReadMask != (GLuint)glInt) Logging::Error() << "State Leak: GL_STENCIL_VALUE_MASK out of sync\n";
+
+            glGetIntegerv(GL_STENCIL_FAIL, &glInt);
+            if (g_globalState.stencilFailOp != (GLenum)glInt) Logging::Error() << "State Leak: GL_STENCIL_FAIL out of sync\n";
+
+            glGetIntegerv(GL_STENCIL_PASS_DEPTH_FAIL, &glInt);
+            if (g_globalState.stencilDepthFailOp != (GLenum)glInt) Logging::Error() << "State Leak: GL_STENCIL_PASS_DEPTH_FAIL out of sync\n";
+
+            glGetIntegerv(GL_STENCIL_PASS_DEPTH_PASS, &glInt);
+            if (g_globalState.stencilPassOp != (GLenum)glInt) Logging::Error() << "State Leak: GL_STENCIL_PASS_DEPTH_PASS out of sync\n";
+
+            glGetIntegerv(GL_STENCIL_WRITEMASK, &glInt);
+            if (g_globalState.stencilWriteMask != (GLuint)glInt) Logging::Error() << "State Leak: GL_STENCIL_WRITEMASK out of sync\n";
+        }
 	}
 
     void InitRasterizerStates() {

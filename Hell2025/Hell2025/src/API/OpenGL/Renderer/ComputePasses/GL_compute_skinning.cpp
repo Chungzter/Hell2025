@@ -39,9 +39,9 @@ namespace OpenGLRenderer {
 
         // Skin
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, OpenGLBackEnd::GetSkinnedVertexDataVBO());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, OpenGLBackEnd::GetWeightedVertexDataVBO());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, OpenGLBackEnd::GetVertexDataVBO());
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, skinningTransformsSSBO->GetHandle());
-        BindSSBO("VertexWeights", 3);
+        BindSSBO(3, "VertexWeights");
 
         shader->Bind();
 

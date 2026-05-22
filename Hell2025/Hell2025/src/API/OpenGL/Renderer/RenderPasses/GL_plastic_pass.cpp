@@ -50,7 +50,7 @@ namespace OpenGLRenderer {
 		shader->Bind();
         shader->SetInt("u_tileXCount", GetTileCountX());
 
-        BindSSBO("TileLights", 5);
+        BindSSBO(5, "TileLights");
 
 		ForceRasterizerState("GeometryPass_Default");
 

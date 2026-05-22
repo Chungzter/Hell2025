@@ -103,7 +103,7 @@ namespace OpenGLRenderer {
         }
 
         UpdateSSBO("MetaBalls", metaBalls.size() * sizeof(GPUMetaBall), gpuMetaBalls.data());
-        BindSSBO("MetaBalls", 5);
+        BindSSBO(6, "MetaBalls");
 
 
         ForceRasterizerState("GeometryPass_Default");

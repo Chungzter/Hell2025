@@ -129,8 +129,9 @@ void Player::Update(float deltaTime) {
     UpdateMelleBulletWave(deltaTime);
     CalculateMuzzleFlashSpawnPosition();
 
+    // TODO: remove the false in this if
     float minimumMermaidInteractYHeight = 28.0f;
-    if (PressedInteract() && GetFootPosition().y > minimumMermaidInteractYHeight && IsFacingClosestMermaid() && !IsInShop()) {
+    if (PressedInteract() && GetFootPosition().y > minimumMermaidInteractYHeight && IsFacingClosestMermaid() && !IsInShop() && false) {
         EnterShop();
     }
 

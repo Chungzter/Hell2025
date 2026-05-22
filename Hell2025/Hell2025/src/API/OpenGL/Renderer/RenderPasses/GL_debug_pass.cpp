@@ -221,9 +221,9 @@ namespace OpenGLRenderer {
 
             shader->SetInt("u_debugMode", debugMode);
 
-            BindSSBO("TileLights", 5);
-            BindSSBO("TileBloodDecals", 6);
-            BindSSBO("TileChristmasLights", 7);
+            BindSSBO(5, "TileLights");
+            BindSSBO(6, "TileBloodDecals");
+            BindSSBO(7, "TileChristmasLights");
 
 			uint32_t attachmentHandle = 0;
 
@@ -248,7 +248,8 @@ namespace OpenGLRenderer {
             rendererSettings.rendererOverrideState == RendererOverrideState::CAMERA_NDOTL ||
             rendererSettings.rendererOverrideState == RendererOverrideState::ROUGHNESS ||
             rendererSettings.rendererOverrideState == RendererOverrideState::INDIRECT_DIFFUSE ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::VELOCITY) {
+            rendererSettings.rendererOverrideState == RendererOverrideState::VELOCITY ||
+            rendererSettings.rendererOverrideState == RendererOverrideState::VISIBILITY) {
 
             if (Renderer::GetRendererMode() == RendererMode::MSAA) {
 				OpenGLShader* shader = GetShaderOLD("DebugViewMSAA");
@@ -279,8 +280,9 @@ namespace OpenGLRenderer {
 				BindImageTexture(0, gBufferRE.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
 				BindTextureUnit(1, gBufferRE.GetColorAttachmentHandleByName("BaseColorMetallic"));
 				BindTextureUnit(2, gBufferRE.GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
-				BindTextureUnit(3, gBufferRE.GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
+                BindTextureUnit(3, gBufferRE.GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
                 BindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
+                BindTextureUnit(9, gBufferRE.GetColorAttachmentHandleByName("Visibility"));
 
                 glDispatchCompute(gBuffer->GetWidth() / TILE_SIZE, gBuffer->GetHeight() / TILE_SIZE, 1);
 			}

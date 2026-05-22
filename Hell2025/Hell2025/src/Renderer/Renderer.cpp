@@ -202,9 +202,7 @@ namespace Renderer {
         if (BackEnd::GetAPI() == API::OPENGL) {
             OpenGLBackEnd::CleanUpBakingPBOs();
             OpenGLBackEnd::UploadVertexData(AssetManager::GetVertices(), AssetManager::GetIndices());
-            OpenGLBackEnd::UploadWeightedVertexDataOLD();
             OpenGLRenderer::UploadVertexWeights();
-            OpenGLRenderer::UploadWeightedVertexData();
         }
         else if (BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan path for Renderer::UploadVertexData()";

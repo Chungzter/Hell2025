@@ -48,15 +48,28 @@ namespace World {
 		g_ratKidAO = CreateAnimatedGameObject();
         AnimatedGameObject* ratKidAO = GetRadKidAO();
 
+        ratKidAO->SetSkinnedModel("RatKing", "RatKing");
         ratKidAO->SetSkinnedModel(modelName, "RatKing");
-		ratKidAO->SetPosition(glm::vec3(36.8f, 31.0f, 36.23f));
-		//ratKidAO->PlayAndLoopAnimation("Main", "RatKid_PistolWalk2", 1.0f);
+		
+        ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.23f));
+        ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle", 1.0f);
 		ratKidAO->PrintMeshNames();
+
     }
     
     static float DegToRad(float degrees) { return degrees * (HELL_PI / 180.0f); }
 
     void Update(float deltaTime) {
+
+
+        if (Input::KeyPressed(HELL_KEY_NUMPAD_1)) {
+            AnimatedGameObject* ratKidAO = GetRadKidAO();
+            ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle", 1.0f);
+        }
+        if (Input::KeyPressed(HELL_KEY_NUMPAD_2)) {
+            AnimatedGameObject* ratKidAO = GetRadKidAO();
+            ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle3", 1.0f);
+        }
 
         // FAILED DOOR CHAIN LINK SHIT
         if (false) {
@@ -134,7 +147,7 @@ namespace World {
         //    }
         //}
 
-        if (g_trapKingID == 0) {
+        if (g_trapKingID == 666) {
             g_trapKingID = CreateAnimatedGameObject();
             AnimatedGameObject* trapKingAO = GetTrapKingAO();
             
@@ -198,8 +211,6 @@ namespace World {
 		  InitRatKing("RatKing");
       }
 
-      AnimatedGameObject* ratKidAO = GetRadKidAO();
-      ratKidAO->SetSkinnedModel("RatKing", "RatKing");
 
       //static MeshNodes spasTest;
       //static bool runOnce = true;

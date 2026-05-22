@@ -84,7 +84,8 @@ namespace OpenGLRenderer {
                     // Render in the UV mask to determine what co-ordinates you need to paint the decal
                     glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
                     glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetSkinnedVertexDataVBO());
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+                    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
                     uint32_t meshIndex = renderItem.meshIndex;
                     glm::mat4 modelMatrix = renderItem.modelMatrix;
                     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));

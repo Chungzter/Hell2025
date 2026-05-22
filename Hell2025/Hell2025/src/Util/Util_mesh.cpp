@@ -5,13 +5,16 @@ namespace Util {
 
     glm::vec2 CalculateUV(const glm::vec3& vertexPosition, const glm::vec3& vertexNormal) {
         glm::vec2 uv;
+        
         // Find the dominant axis of the face normal
         glm::vec3 absNormal = glm::abs(vertexNormal);
+
         if (absNormal.x > absNormal.y && absNormal.x > absNormal.z) {
             // Dominant axis is X, project onto YZ plane
             uv.y = (vertexPosition.y) / absNormal.x;
             uv.x = (vertexPosition.z) / absNormal.x;
             uv.y = 1.0f - uv.y;
+
             if (vertexNormal.x > 0) {
                 uv.x = 1.0f - uv.x;
             }
@@ -21,6 +24,7 @@ namespace Util {
             uv.x = vertexPosition.x / absNormal.y;
             uv.y = vertexPosition.z / absNormal.y;
             uv.y = 1.0f - uv.y;
+
             if (vertexNormal.y < 0) {
                 uv.x = 1.0f - uv.x;
             }
@@ -30,6 +34,7 @@ namespace Util {
             uv.x = (vertexPosition.x) / absNormal.z;
             uv.y = (vertexPosition.y) / absNormal.z;
             uv.y = 1.0f - uv.y;
+
             if (vertexNormal.z < 0) {
                 uv.x = 1.0f - uv.x;
             }

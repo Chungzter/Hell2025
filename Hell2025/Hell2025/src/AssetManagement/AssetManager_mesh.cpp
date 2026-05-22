@@ -9,8 +9,8 @@ namespace AssetManager {
     int g_nextIndexInsert = 0;
 
     int g_nextVertexWeightIndexInsert = 0;
-    int g_nextWeightedVertexInsert = 0;
-    int g_nextWeightedIndexInsert = 0;
+    //int g_nextWeightedVertexInsert = 0;
+    //int g_nextWeightedIndexInsert = 0;
 
 
     int CreateMesh(const std::string& name, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, glm::vec3 aabbMin, glm::vec3 aabbMax, int parentIndex, glm::mat4 localTransform, glm::mat4 inverseBindTransform) {
@@ -59,14 +59,16 @@ namespace AssetManager {
 
     int CreateSkinnedMesh2(const SkinnedMeshData& skinnedMeshData) {
         std::vector<SkinnedMesh>& skinnedMeshes = GetSkinnedMeshes();
-        std::vector<Vertex>& globalVertices = GetWeightedVertices();
+        std::vector<Vertex>& globalVertices = GetVertices();
+        //std::vector<Vertex>& globalVertices = GetWeightedVertices();
         std::vector<VertexWeight>& globalVertexWeights = GetVertexWeights();
-        std::vector<uint32_t>& globallIndices = GetWeightedIndies();
+        std::vector<uint32_t>& globallIndices = GetIndies();
+        //std::vector<uint32_t>& globallIndices = GetWeightedIndies();
 
         SkinnedMesh& mesh = skinnedMeshes.emplace_back();
-        mesh.baseVertexGlobal = g_nextWeightedVertexInsert;
+        mesh.baseVertexGlobal = g_nextVertexInsert;//g_nextWeightedVertexInsert;
         mesh.baseVertexLocal = skinnedMeshData.localBaseVertex;
-        mesh.baseIndex = g_nextWeightedIndexInsert;
+        mesh.baseIndex = g_nextIndexInsert;//g_nextWeightedIndexInsert;
         mesh.vertexCount = (uint32_t)skinnedMeshData.vertices.size();
         mesh.indexCount = (uint32_t)skinnedMeshData.indices.size();
         mesh.name = skinnedMeshData.name;
@@ -81,8 +83,10 @@ namespace AssetManager {
         globallIndices.reserve(globallIndices.size() + skinnedMeshData.indices.size());
         globallIndices.insert(std::end(globallIndices), std::begin(skinnedMeshData.indices), std::end(skinnedMeshData.indices));
 
-        g_nextWeightedVertexInsert += mesh.vertexCount;
-        g_nextWeightedIndexInsert += mesh.indexCount;
+        g_nextVertexInsert += mesh.vertexCount;
+        g_nextIndexInsert += mesh.indexCount;
+        //g_nextWeightedVertexInsert += mesh.vertexCount;
+        //g_nextWeightedIndexInsert += mesh.indexCount;
 
         if (mesh.requiresSkinning) {
             mesh.baseVertexWeight = g_nextVertexWeightIndexInsert;

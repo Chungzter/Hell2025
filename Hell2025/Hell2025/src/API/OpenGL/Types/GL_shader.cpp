@@ -152,7 +152,7 @@ void OpenGLShader::SetInt(const std::string& name, int value) {
     glUniform1i(m_uniformLocations[name], value);
 }
 
-void OpenGLShader::SetUInt(const std::string& name, int value) {
+void OpenGLShader::SetUInt(const std::string& name, uint32_t value) {
     if (m_uniformLocations.find(name) == m_uniformLocations.end()) {
         m_uniformLocations[name] = glGetUniformLocation(m_handle, name.c_str());
     }

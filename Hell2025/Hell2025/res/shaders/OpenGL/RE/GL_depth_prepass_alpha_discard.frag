@@ -31,7 +31,7 @@ void main() {
 
     float alphaPivot = 0.025;
     float alphaSharpness = 0.75;
-    float alphaBaseBoost = 1.0;
+    float alphaBaseBoost = 1.5;
 
     float boost = max(alphaBaseBoost, mipLevel * alphaSharpness);
     alpha = clamp((alpha - alphaPivot) * boost + alphaPivot, 0.0, 1.0);

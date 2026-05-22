@@ -60,8 +60,5 @@ void main() {
         }
     }
 
-    // sum *= 0.95;
-    // sum *= 0.0f;
-
     imageStore(imgDst, uv, sum);
 }

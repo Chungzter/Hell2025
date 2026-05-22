@@ -13,6 +13,8 @@ void OpenGLFrameBuffer::Create(const std::string& name, const glm::ivec2& size, 
 }
 
 void OpenGLFrameBuffer::Create(const std::string& name, int width, int height, uint32_t sampleCount) {
+    CleanUp();
+
     glCreateFramebuffers(1, &m_handle);
     m_name = name;
     m_width = width;
@@ -109,7 +111,11 @@ void OpenGLFrameBuffer::CreateDepthAttachment(GLenum internalFormat, GLenum minF
         glTextureParameterfv(m_depthAttachment.handle, GL_TEXTURE_BORDER_COLOR, &borderColor[0]);
     }
 
-    glNamedFramebufferTexture(m_handle, GL_DEPTH_ATTACHMENT, m_depthAttachment.handle, 0);
+    GLenum attachmentPoint = (internalFormat == GL_DEPTH24_STENCIL8 || internalFormat == GL_DEPTH32F_STENCIL8)
+        ? GL_DEPTH_STENCIL_ATTACHMENT
+        : GL_DEPTH_ATTACHMENT;
+
+    glNamedFramebufferTexture(m_handle, attachmentPoint, m_depthAttachment.handle, 0);
 
     std::string debugLabel = "Texture (FBO: " + m_name + " Tex: Depth)";
     glObjectLabel(GL_TEXTURE, m_depthAttachment.handle, static_cast<GLsizei>(debugLabel.length()), debugLabel.c_str());
@@ -261,8 +267,16 @@ void OpenGLFrameBuffer::ClearDepthAttachment() {
 }
 
 void OpenGLFrameBuffer::ClearDepthAttachment(float value) {
-    // Warning! this does not work for depth stencil
+    if (m_depthAttachment.handle == 0) return;
+
     glClearNamedFramebufferfv(m_handle, GL_DEPTH, 0, &value);
+}
+
+void OpenGLFrameBuffer::ClearStencilBits(GLint value) {
+    if (m_depthAttachment.handle == 0) return;
+
+    glStencilMask(0xFF);
+    glClearNamedFramebufferiv(m_handle, GL_STENCIL, 0, &value);
 }
 
 void OpenGLFrameBuffer::Resize(int width, int height) {
@@ -311,4 +325,14 @@ void OpenGLFrameBuffer::BlitToDefaultFrameBuffer(const std::string& srcName, GLi
     glReadBuffer(GetColorAttachmentSlotByName(srcName));
     glDrawBuffer(GL_BACK);
     glBlitFramebuffer(0, 0, GetWidth(), GetHeight(), dstX0, dstY0, dstX1, dstY1, mask, filter);
+}
+
+void OpenGLFrameBuffer::SetColorAttachmentMipLevel(const std::string& name, int mipLevel) {
+    for (int i = 0; i < m_colorAttachments.size(); i++) {
+        if (name == m_colorAttachments[i].name) {
+            GLenum attachment = GL_COLOR_ATTACHMENT0 + i;
+            glNamedFramebufferTexture(m_handle, attachment, m_colorAttachments[i].handle, mipLevel);
+            return;
+        }
+    }
 }

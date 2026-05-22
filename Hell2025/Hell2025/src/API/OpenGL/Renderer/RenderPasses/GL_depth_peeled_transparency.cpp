@@ -69,9 +69,14 @@ namespace OpenGLRenderer {
 
 		ForceRasterizerState("GeometryPass_Default");
 
-		glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
-		glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataVBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
+
+		//glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+		//glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
 
 		for (int i = 0; i < 4; i++) {
 			Viewport* viewport = ViewportManager::GetViewportByIndex(i);

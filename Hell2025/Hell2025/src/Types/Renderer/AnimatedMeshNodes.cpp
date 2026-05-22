@@ -66,6 +66,9 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         renderItem.woundMaskTexutreIndex = m_woundMaskTextureIndices[i];
         renderItem.blockScreenSpaceBloodDecals = (int)true;
         renderItem.opacityTextureIndex = material->m_opacity;
+        renderItem.baseVertex = mesh->baseVertexGlobal;
+        renderItem.baseIndex = mesh->baseIndex;
+
         Util::PackUint64(m_parentId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
 
         // Additional textures (hair)

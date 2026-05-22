@@ -20,9 +20,9 @@ namespace OpenGLRenderer {
         SetUniformInt("u_tileXCount", GetTileCountX());
 		SetUniformInt("u_tileYCount", GetTileCountY());
 
-        BindSSBO("RendererData", 1);
-        BindSSBO("ViewportData", 2);
-        BindSSBO("TileWorldBounds", 6);
+        BindSSBO(1, "RendererData");
+        BindSSBO(2, "ViewportData");
+        BindSSBO(6, "TileWorldBounds");
 
         BindTextureUnit(0, depthHandle);
 
@@ -41,11 +41,11 @@ namespace OpenGLRenderer {
         shader->SetInt("u_tileXCount", GetTileCountX());
         shader->SetInt("u_tileYCount", GetTileCountY());
 
-        BindSSBO("RendererData", 1);
-        BindSSBO("ViewportData", 2);
-        BindSSBO("Lights", 4);
-        BindSSBO("TileLights", 5);
-        BindSSBO("TileWorldBounds", 6);
+        BindSSBO(1, "RendererData");
+        BindSSBO(2, "ViewportData");
+        BindSSBO(4, "Lights");
+        BindSSBO(5, "TileLights");
+        BindSSBO(6, "TileWorldBounds");
 
         glDispatchCompute(GetTileCountX(), GetTileCountY(), 1);
     }
@@ -80,11 +80,11 @@ namespace OpenGLRenderer {
         shader->SetInt("u_tileXCount", GetTileCountX());
         shader->SetInt("u_tileYCount", GetTileCountY());
 
-        BindSSBO("TileWorldBounds", 6);
-        BindSSBO("TileChristmasLights", 7);
-        BindSSBO("ChristmasLightInstances", 8);
-        BindSSBO("ChristmasLightIndices", 9);
-        BindSSBO("ChristmasLightCounter", 10);
+        BindSSBO(6, "TileWorldBounds");
+        BindSSBO(7, "TileChristmasLights");
+        BindSSBO(8, "ChristmasLightInstances");
+        BindSSBO(9, "ChristmasLightIndices");
+        BindSSBO(10, "ChristmasLightCounter");
 
         glDispatchCompute(GetTileCountX(), GetTileCountY(), 1);
     }
@@ -100,11 +100,11 @@ namespace OpenGLRenderer {
         shader->SetInt("u_tileXCount", GetTileCountX());
         shader->SetInt("u_tileYCount", GetTileCountY());
 
-        BindSSBO("TileWorldBounds", 6);
-        BindSSBO("TileBloodDecals", 7);
-        BindSSBO("BloodDecalInstances", 8);
-        BindSSBO("BloodDecalIndices", 9);
-        BindSSBO("BloodDecalCounter", 10);
+        BindSSBO(6, "TileWorldBounds");
+        BindSSBO(7, "TileBloodDecals");
+        BindSSBO(8, "BloodDecalInstances");
+        BindSSBO(9, "BloodDecalIndices");
+        BindSSBO(10, "BloodDecalCounter");
 
         glDispatchCompute(GetTileCountX(), GetTileCountY(), 1);
 

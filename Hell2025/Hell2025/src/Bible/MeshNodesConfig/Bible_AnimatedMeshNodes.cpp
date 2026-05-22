@@ -12,7 +12,7 @@ namespace Bible {
     }
 
     void ConfigureAnimatedMeshNodesRatKing(uint64_t id, AnimatedMeshNodes* meshNodes) {
-        meshNodes->SetSkinnedModel(id, "RatKingNew2");
+        meshNodes->SetSkinnedModel(id, "RatKing");
 
         // Body
         meshNodes->SetMeshMaterialByMeshName("CC_Base_Body", "RatKingHead");
@@ -60,6 +60,20 @@ namespace Bible {
         // Clothes
         meshNodes->SetMeshMaterialByMeshName("Boxers", "BoxersBlack");
         meshNodes->SetMeshMaterialByMeshName("Slim_Jeans", "Jeans");
+
+        // Glock
+        meshNodes->SetMeshMaterialByMeshName("GlockBarrel", "Glock");
+        meshNodes->SetMeshMaterialByMeshName("GlockMagazine", "Glock");
+        meshNodes->SetMeshMaterialByMeshName("GlockMagazine_02", "Glock");
+        meshNodes->SetMeshMaterialByMeshName("GlockReceiver", "Glock");
+        meshNodes->SetMeshMaterialByMeshName("GlockSlide", "Glock");
+        meshNodes->SetMeshMaterialByMeshName("GlockSlideUnLock", "Glock");
+        meshNodes->SetMeshMaterialByMeshName("GlockTrigger", "Glock");
+
+        // Glock attachments
+        meshNodes->SetMeshMaterialByMeshName("Supressor", "Glock");
+        meshNodes->SetMeshMaterialByMeshName("LeupoldRedDot", "RedDot");
+        meshNodes->SetMeshMaterialByMeshName("LeupoldRedDotGlass", "RedDotGlass", BlendingMode::GLASS);
     }
 
     void ConfigureAnimatedMeshNodesRemington870(uint64_t id, AnimatedMeshNodes* meshNodes) {

@@ -17,8 +17,7 @@ namespace OpenGLRenderer {
 
         if (Editor::IsOpen()) return;
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-        if (!gBuffer) return;
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
 
         for (int i = 0; i < Game::GetLocalPlayerCount(); i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -29,33 +28,13 @@ namespace OpenGLRenderer {
 
             SpaceCoords gBufferSpaceCooords = viewport->GetGBufferSpaceCoords();
 
+            BlitRect blitRect;
+            blitRect.x0 = gBufferSpaceCooords.gpuLeftPixel;
+            blitRect.x1 = gBufferSpaceCooords.gpuRightPixel;
+            blitRect.y0 = gBufferSpaceCooords.gpuTopPixel;
+            blitRect.y1 = gBufferSpaceCooords.gpuBottomPixel;
 
-            if (Game::GetSplitscreenMode() == SplitscreenMode::FULLSCREEN && i == 0) {
-                BlitRect blitRect;
-                blitRect.x0 = 0;
-                blitRect.x1 = 1920;
-                blitRect.y0 = 0;
-                blitRect.y1 = 1080;
-                GaussianBlur(gBuffer, gBuffer, "FinalLighting", "FinalLighting", blitRect, blitRect, 5, 1);
-            }
-
-            if (Game::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER && i == 0) {
-                BlitRect blitRect;
-                blitRect.x0 = 0;
-                blitRect.x1 = 1920;
-                blitRect.y0 = 540;
-                blitRect.y1 = 1080;
-                GaussianBlur(gBuffer, gBuffer, "FinalLighting", "FinalLighting", blitRect, blitRect, 5, 1);
-            }
-
-            if (Game::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER && i == 1) {
-                BlitRect blitRect;
-                blitRect.x0 = 0;
-                blitRect.x1 = 1920;
-                blitRect.y0 = 0;
-                blitRect.y1 = 540;
-                GaussianBlur(gBuffer, gBuffer, "FinalLighting", "FinalLighting", blitRect, blitRect, 5, 1);
-            }
+            GaussianBlur(gBuffer, gBuffer, "FinalLighting", "FinalLighting", blitRect, blitRect, 5, 1);
         }
     }
 

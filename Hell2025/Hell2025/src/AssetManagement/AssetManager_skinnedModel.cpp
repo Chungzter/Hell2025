@@ -76,8 +76,10 @@ namespace AssetManager {
             }
         }
 
-        GetWeightedVertices().reserve(GetWeightedVertices().size() + vertexCount);
-        GetWeightedIndies().reserve(GetWeightedIndies().size() + indexCount);
+        //GetWeightedVertices().reserve(GetWeightedVertices().size() + vertexCount);
+        //GetWeightedIndies().reserve(GetWeightedIndies().size() + indexCount);
+        GetVertices().reserve(GetVertices().size() + vertexCount);
+        GetIndies().reserve(GetIndies().size() + indexCount);
 
         // Copy vertices/indices to asset manager
         for (SkinnedModel& skinnedModel : GetSkinnedModels()) {

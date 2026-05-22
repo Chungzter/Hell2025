@@ -21,6 +21,25 @@ Viewport::Viewport(uint32_t viewportIndex, const glm::vec2& position, const glm:
     UpdateProjectionMatrices();
 }
 
+void Viewport::UpdateSpaceCoords(SpaceCoords& spaceCoords, uint32_t fullResolutionWidth, uint32_t fullResolutionHeight) {
+    spaceCoords.width = fullResolutionWidth * m_size.x;
+    spaceCoords.height = fullResolutionHeight * m_size.y;
+    spaceCoords.localMouseX = Util::MapRange(Input::GetMouseX(), m_leftPixel, m_rightPixel, 0, spaceCoords.width);
+    spaceCoords.localMouseY = Util::MapRange(Input::GetMouseY(), m_bottomPixel, m_topPixel, 0, spaceCoords.height);
+
+    // Base coordinates y-down
+    spaceCoords.leftPixel = m_position.x * fullResolutionWidth;
+    spaceCoords.rightPixel = spaceCoords.leftPixel + spaceCoords.width;
+    spaceCoords.topPixel = fullResolutionHeight - (m_position.y * fullResolutionHeight);
+    spaceCoords.bottomPixel = spaceCoords.topPixel - spaceCoords.height;
+
+    // GPU coordinates y-up
+    spaceCoords.gpuLeftPixel = spaceCoords.leftPixel;
+    spaceCoords.gpuRightPixel = spaceCoords.rightPixel;
+    spaceCoords.gpuTopPixel = fullResolutionHeight - spaceCoords.topPixel;
+    spaceCoords.gpuBottomPixel = fullResolutionHeight - spaceCoords.bottomPixel;
+}
+
 void Viewport::Update() {
     // Pixel bounds
     m_leftPixel = m_position.x * BackEnd::GetCurrentWindowWidth();
@@ -34,18 +53,10 @@ void Viewport::Update() {
     m_windowSpaceCoords.localMouseX = Input::GetMouseX();
     m_windowSpaceCoords.localMouseY = Input::GetMouseY();
 
-    // GBuffer space co-ordinates
+    // Space co-ordinates
     const Resolutions& resolutions = Config::GetResolutions();
-    m_gBufferSpaceCoords.width = resolutions.gBuffer.x * m_size.x;
-    m_gBufferSpaceCoords.height = resolutions.gBuffer.y * m_size.y;
-    m_gBufferSpaceCoords.localMouseX = Util::MapRange(Input::GetMouseX(), m_leftPixel, m_rightPixel, 0, m_gBufferSpaceCoords.width);
-    m_gBufferSpaceCoords.localMouseY = Util::MapRange(Input::GetMouseY(), m_bottomPixel, m_topPixel, 0, m_gBufferSpaceCoords.height);
-
-    // GBuffer space co-ordinates
-    m_uiSpaceCoords.width = resolutions.ui.x * m_size.x;
-    m_uiSpaceCoords.height = resolutions.ui.y * m_size.y;
-    m_uiSpaceCoords.localMouseX = Util::MapRange(Input::GetMouseX(), m_leftPixel, m_rightPixel, 0, m_uiSpaceCoords.width);
-    m_uiSpaceCoords.localMouseY = Util::MapRange(Input::GetMouseY(), m_bottomPixel, m_topPixel, 0, m_uiSpaceCoords.height);
+    UpdateSpaceCoords(m_gBufferSpaceCoords, resolutions.gBuffer.x, resolutions.gBuffer.y);
+    UpdateSpaceCoords(m_uiSpaceCoords, resolutions.ui.x, resolutions.ui.y);
 
     // Viewport mouse hover state
     m_hasHover = (

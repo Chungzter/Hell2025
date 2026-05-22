@@ -113,5 +113,5 @@ void main() {
     //vec4 camRelativeWorldPos = vec4(WorldPos.xyz - ViewPos, 1.0);
     //gl_Position = projection * mat4(mat3(view)) * camRelativeWorldPos;
 
-    //BlockScreenSpaceBloodDecalsFlag = 1; // rethink this?
+    BlockScreenSpaceBloodDecalsFlag = renderItem.blockScreenSpaceBloodDecals; // rethink this?
 }

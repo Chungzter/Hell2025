@@ -155,8 +155,6 @@ void TrimSet::CreateRenderItems() {
             renderItem.baseColorTextureIndex = material->m_basecolor;
             renderItem.rmaTextureIndex = material->m_rma;
             renderItem.normalMapTextureIndex = material->m_normal;
-            Util::UpdateRenderItemAABB(renderItem);
-            Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
         }
         // External corner
         else if (!m_corners[i].m_internal && externalCornerMeshIndex != -1) {
@@ -167,8 +165,6 @@ void TrimSet::CreateRenderItems() {
             renderItem.baseColorTextureIndex = material->m_basecolor;
             renderItem.rmaTextureIndex = material->m_rma;
             renderItem.normalMapTextureIndex = material->m_normal;
-            Util::UpdateRenderItemAABB(renderItem);
-            Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
         }
 
         // Make the trim segments
@@ -192,8 +188,6 @@ void TrimSet::CreateRenderItems() {
                 renderItem.baseColorTextureIndex = material->m_basecolor;
                 renderItem.rmaTextureIndex = material->m_rma;
                 renderItem.normalMapTextureIndex = material->m_normal;
-                Util::UpdateRenderItemAABB(renderItem);
-                Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
             }
 
             cursor += trimLength;
@@ -220,21 +214,28 @@ void TrimSet::CreateRenderItems() {
 		renderItem.baseColorTextureIndex = material->m_basecolor;
 		renderItem.rmaTextureIndex = material->m_rma;
 		renderItem.normalMapTextureIndex = material->m_normal;
-		Util::UpdateRenderItemAABB(renderItem);
-		Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }
 
-    // Fill previous model matrices. These never move
+    // Shared logic
     for (RenderItem& renderItem : m_renderItems) {
-        renderItem.prevModelMatrix = renderItem.modelMatrix;
+        Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+        if (!mesh) continue;
+
+        renderItem.baseVertex = mesh->baseVertex;
+        renderItem.baseIndex = mesh->baseIndex;
+
+        renderItem.prevModelMatrix = renderItem.modelMatrix; // These never move, so use current model matrix
+
+        Util::UpdateRenderItemAABB(renderItem);
+        Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }
 }
 
 void TrimSet::Update() {
-    if (Input::KeyPressed(HELL_KEY_T)) {
-        CreateRenderItems();
-        std::cout << "Recreated TrimSet " << m_objectId << "\n";
-    }
+    //if (Input::KeyPressed(HELL_KEY_T)) {
+    //    CreateRenderItems();
+    //    std::cout << "Recreated TrimSet " << m_objectId << "\n";
+    //}
 }
 
 void TrimSet::CleanUp() {

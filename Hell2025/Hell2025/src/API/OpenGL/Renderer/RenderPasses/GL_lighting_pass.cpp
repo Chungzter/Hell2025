@@ -98,9 +98,9 @@ namespace OpenGLRenderer {
 
         glBindTextureUnit(11, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
 
-        BindSSBO("TileChristmasLights", 7);
-        BindSSBO("ChristmasLightInstances", 8);
-        BindSSBO("ChristmasLightIndices", 9);
+        BindSSBO(7, "TileChristmasLights");
+        BindSSBO(8, "ChristmasLightInstances");
+        BindSSBO(9, "ChristmasLightIndices");
 
         glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 

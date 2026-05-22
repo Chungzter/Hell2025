@@ -2,29 +2,13 @@
 
 namespace OpenGLRenderer {
 
-    void GaussianBlur(OpenGLFrameBuffer* srcFrameBuffer, OpenGLFrameBuffer* dstFrameBuffer, const std::string& srcAttachmentName, const std::string& dstAttachmentName, BlitRect srcRect, BlitRect dstRect, int blurRadius, int passCount) {
+    void GaussianBlur(OpenGLFrameBuffer& srcFrameBuffer, OpenGLFrameBuffer& dstFrameBuffer, const std::string& srcAttachmentName, const std::string& dstAttachmentName, BlitRect srcRect, BlitRect dstRect, int blurRadius, int passCount) {
         OpenGLFrameBuffer* gaussianFrameBuffer = GetFrameBufferOLD("GaussianBlur");
         OpenGLShader* shader = GetShaderOLD("GaussianBlurUtil");
 
         if (!gaussianFrameBuffer) return;
         if (!shader) return;
 
-        if (!srcFrameBuffer) {
-            std::cout << "GaussianBlur() failed: srcFrameBuffer was nullptr\n";
-            return;
-        }
-        if (!dstFrameBuffer) {
-            std::cout << "GaussianBlur() failed: dstFrameBuffer was nullptr\n";
-            return;
-        }
-        if (srcFrameBuffer->GetColorAttachmentSlotByName(srcAttachmentName.c_str()) == GL_INVALID_VALUE) {
-            std::cout << "GaussianBlur() failed: srcAttachmentName of " << srcAttachmentName << " was not found\n";
-            return;
-        }
-        if (dstFrameBuffer->GetColorAttachmentSlotByName(dstAttachmentName.c_str()) == GL_INVALID_VALUE) {
-            std::cout << "GaussianBlur() failed: dstAttachmentName of " << dstAttachmentName << " was not found\n";
-            return;
-        }
         if (passCount < 1) {
             std::cout << "GaussianBlur() failed: passCount of " << passCount << " must be greater than 0\n";
             return;
@@ -34,7 +18,7 @@ namespace OpenGLRenderer {
             return;
         }
 
-        // Initilize with src dimensions / 2
+        // Initialize with src dimensions / 2
         unsigned int width = (srcRect.x1 - srcRect.x0) / 2;
         unsigned int height = (srcRect.y1 - srcRect.y0) / 2;
         width = std::max(1u, width);
@@ -51,7 +35,7 @@ namespace OpenGLRenderer {
         initialDownscaleRect.y0 = 0;
         initialDownscaleRect.x1 = width;
         initialDownscaleRect.y1 = height;
-        BlitFrameBuffer(srcFrameBuffer, gaussianFrameBuffer, srcAttachmentName.c_str(), "ColorA", srcRect, initialDownscaleRect, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        BlitFrameBuffer(&srcFrameBuffer, gaussianFrameBuffer, srcAttachmentName.c_str(), "ColorA", srcRect, initialDownscaleRect, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
         // Store gaussian attachment names as local strings for ping ponging 
         std::string srcGaussianAtttachmentName = "ColorA";
@@ -74,7 +58,7 @@ namespace OpenGLRenderer {
            
            std::swap(srcGaussianAtttachmentName, dstGaussianAtttachmentName);
            
-           // Veritcal pass
+           // Vertical pass
            shader->SetIVec2("u_direction", glm::ivec2(0, 1));
            glBindImageTexture(0, gaussianFrameBuffer->GetColorAttachmentHandleByName(srcGaussianAtttachmentName.c_str()), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
            glBindImageTexture(1, gaussianFrameBuffer->GetColorAttachmentHandleByName(dstGaussianAtttachmentName.c_str()), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F);
@@ -107,7 +91,7 @@ namespace OpenGLRenderer {
                composteRect.y0 = 0;
                composteRect.x1 = width;
                composteRect.y1 = height;
-               BlitFrameBuffer(gaussianFrameBuffer, dstFrameBuffer, dstGaussianAtttachmentName.c_str(), dstAttachmentName.c_str(), composteRect, dstRect, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+               BlitFrameBuffer(gaussianFrameBuffer, &dstFrameBuffer, dstGaussianAtttachmentName.c_str(), dstAttachmentName.c_str(), composteRect, dstRect, GL_COLOR_BUFFER_BIT, GL_LINEAR);
             }
         }
     }

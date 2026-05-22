@@ -20,16 +20,33 @@
 #include "Viewport/Viewport.h"
 
 struct OpenGLRasterizerState {
-    GLboolean depthTestEnabled = true;
+    // Blending
     GLboolean blendEnable = false;
-    GLboolean cullfaceEnable = true;
-    GLboolean colorMask = true;
-    GLboolean depthMask = true;
-    GLfloat pointSize = 1.0f;
     GLenum blendFuncSrcfactor = GL_SRC_ALPHA;
     GLenum blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
+
+    // Color
+    GLboolean colorMask = true;
+
+    // Depth
+    GLboolean depthTestEnabled = true;
+    GLboolean depthMask = true;
     GLenum depthFunc = GL_LESS;
-	GLenum cullfaceMode = GL_BACK;
+
+    // Misc
+    GLboolean cullfaceEnable = true;
+    GLenum cullfaceMode = GL_BACK;
+    GLfloat pointSize = 1.0f;
+
+    // Stencil
+    GLboolean stencilTestEnabled = false;
+    GLenum stencilFunc = GL_ALWAYS;
+    GLint stencilRef = 0;
+    GLuint stencilReadMask = 0xFF;
+    GLuint stencilWriteMask = 0xFF;
+    GLenum stencilFailOp = GL_KEEP;
+    GLenum stencilDepthFailOp = GL_KEEP;
+    GLenum stencilPassOp = GL_KEEP;
 };
 
 namespace OpenGLRenderer {
@@ -205,8 +222,9 @@ namespace OpenGLRenderer {
 	void LoadShader(const std::string& subDirectory, const std::string& name, const std::vector<std::string>& shaderPaths, const std::vector<std::string>& defines = std::vector<std::string>());
     void BindShader(const std::string& name);
 	void HotloadShaders();
-	void SetUniformBool(const std::string& name, bool value);
-	void SetUniformInt(const std::string& name, int value);
+    void SetUniformBool(const std::string& name, bool value);
+    void SetUniformInt(const std::string& name, int value);
+    void SetUniformUInt(const std::string& name, uint32_t value);
     void SetUniformFloat(const std::string& name, float value);
     void SetUniformVec2(const std::string& name, const glm::vec2& value);
     void SetUniformVec3(const std::string& name, const glm::vec3& value);
@@ -220,8 +238,8 @@ namespace OpenGLRenderer {
     void CreateSSBOStatic(const std::string& name);
     void UpdateSSBO(const std::string& name, size_t size, const void* data);
     void UploadSSBOStatic(const std::string& name, size_t size, const void* data);
-    void BindSSBO(const std::string& name, unsigned int bindingIndex);
-    void BindSSBO(uint32_t vboHandle, unsigned int bindingIndex);
+    void BindSSBO(unsigned int bindingIndex, const std::string& name);
+    void BindSSBO(unsigned int bindingIndex, uint32_t vboHandle);
     void ClearSSBO(const std::string& name);
     void ClearSSBORange(const std::string& name, size_t offset, size_t size);
     void ReserveSSBO(const std::string& name, size_t size);
@@ -249,7 +267,6 @@ namespace OpenGLRenderer {
     void SetRasterizerState(const OpenGLRasterizerState& rasterizerState);
 
     // Vertex Data
-    void UploadWeightedVertexData(); // remove me when u can
     void UploadVertexWeights();
 
     // Drawing
@@ -272,7 +289,7 @@ namespace OpenGLRenderer {
     BlitRect BlitRectFromFrameBufferViewport(OpenGLFrameBuffer* framebuffer, Viewport* viewport);
     GLint CreateQuadVAO();
     void CopyDepthBuffer(OpenGLFrameBuffer* srcFrameBuffer, OpenGLFrameBuffer* dstFrameBuffer);
-    void GaussianBlur(OpenGLFrameBuffer* srcFrameBuffer, OpenGLFrameBuffer* dstFrameBuffer, const std::string& srcAttachmentName, const std::string& dstAttachmentName, BlitRect srcRect, BlitRect dstRect, int blurRadius, int passCount);
+    void GaussianBlur(OpenGLFrameBuffer& srcFrameBuffer, OpenGLFrameBuffer& dstFrameBuffer, const std::string& srcAttachmentName, const std::string& dstAttachmentName, BlitRect srcRect, BlitRect dstRect, int blurRadius, int passCount);
     int GetFftDisplayMode();
 
 	uint32_t GetTileCount();

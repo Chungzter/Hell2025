@@ -9,6 +9,14 @@ struct SpaceCoords {
     float height;
     float localMouseX;
     float localMouseY;
+    float leftPixel;       // Base space (y-down)
+    float rightPixel;      // Base space (y-down)
+    float topPixel;        // Base space (y-down)
+    float bottomPixel;     // Base space (y-down)
+    float gpuLeftPixel;    // OpenGL space (y-up)
+    float gpuRightPixel;   // OpenGL space (y-up)
+    float gpuTopPixel;     // OpenGL space (y-up)
+    float gpuBottomPixel;  // OpenGL space (y-up)
 };
 
 struct Viewport {
@@ -82,4 +90,5 @@ private:
     uint64_t m_mirrorId = 0;
 
     void UpdateProjectionMatrices();
+    void UpdateSpaceCoords(SpaceCoords& spaceCoords, uint32_t fullResolutionWidth, uint32_t fullResolutionHeight);
 };

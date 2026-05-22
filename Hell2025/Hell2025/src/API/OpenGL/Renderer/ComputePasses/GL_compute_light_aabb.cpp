@@ -59,7 +59,7 @@ namespace OpenGLRenderer {
         fbo.SetViewport();
 
         shader->Bind();
-        BindSSBO("Lights", 5);
+        BindSSBO(5, "Lights");
 
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
@@ -214,8 +214,8 @@ namespace OpenGLRenderer {
 
 		BindShader("DebugLightAABB");
 
-		BindSSBO("Lights", 4);
-		BindSSBO("LightAABBs", 5);
+		BindSSBO(4, "Lights");
+		BindSSBO(5, "LightAABBs");
 
 		glBindVertexArray(vao);
 

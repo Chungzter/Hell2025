@@ -1,6 +1,8 @@
 #version 460
 #extension GL_ARB_bindless_texture : require
 
+layout(early_fragment_tests) in;
+
 #include "../../common/constants.glsl"
 #include "../../common/lighting.glsl"
 #include "../../common/normal_encoding.glsl"
@@ -51,7 +53,7 @@ void main() {
     uint globalInstanceIndex = visibilityData.x;
     uint primitiveID = visibilityData.y;
 
-    float depth = texelFetch(u_DepthTexture, pixelCoords, 0).r;
+    float depth = texelFetch(u_DepthTexture, pixelCoords, 0).r; // TODO: use visiblity buffer depth
     if (depth == 0.0) {
         discard;
     }
@@ -62,9 +64,16 @@ void main() {
     RenderItem renderItem = renderItems[globalInstanceIndex];
     
     uint triangleIndexOffset = renderItem.baseIndex + (primitiveID * 3);
+
+    #ifdef SKINNED
+    uint i0 = indices[triangleIndexOffset + 0] + renderItem.baseSkinnedVertex;
+    uint i1 = indices[triangleIndexOffset + 1] + renderItem.baseSkinnedVertex;
+    uint i2 = indices[triangleIndexOffset + 2] + renderItem.baseSkinnedVertex;
+    #else 
     uint i0 = indices[triangleIndexOffset + 0] + renderItem.baseVertex;
     uint i1 = indices[triangleIndexOffset + 1] + renderItem.baseVertex;
     uint i2 = indices[triangleIndexOffset + 2] + renderItem.baseVertex;
+    #endif
 
     PackedVertex v0 = vertices[i0];
     PackedVertex v1 = vertices[i1];
@@ -111,7 +120,7 @@ void main() {
     vec3 n2 = normalize(normalMatrix * vec4(v2.nx, v2.ny, v2.nz, 0.0)).xyz;
     vec3 n  = normalize(n0 * bary.x  + n1 * bary.y  + n2 * bary.z);
     
-    // Evaluate pure geometric normals at analytic neighbors
+    // Evaluat geometric normals at analytic neighbors
     vec3 nX = normalize(n0 * baryX.x + n1 * baryX.y + n2 * baryX.z);
     vec3 nY = normalize(n0 * baryY.x + n1 * baryY.y + n2 * baryY.z);
 
@@ -134,7 +143,7 @@ void main() {
 
     float roughness = rma.r;
     float metallic  = rma.g;
-    float ao        = rma.b;
+    float ao = rma.b;
 
     normalMap = normalMap * 2.0 - 1.0;
     vec3 normal = normalize(tbn * normalMap);
@@ -147,8 +156,8 @@ void main() {
 
     vec3 worldPos = ReconstructWorldPos(uv_screenspace, depth, viewportData.inverseProjectionViewReverseZ);
     vec4 localPos = renderItem.inverseModelMatrix * vec4(worldPos, 1.0);
-    vec4 currPos  = viewportData.projectionViewReverseZ * vec4(worldPos, 1.0);
-    vec4 prevPos  = viewportData.prevProjectionViewReverseZ * renderItem.prevModelMatrix * localPos;
+    vec4 currPos = viewportData.projectionViewReverseZ * vec4(worldPos, 1.0);
+    vec4 prevPos = viewportData.prevProjectionViewReverseZ * renderItem.prevModelMatrix * localPos;
 
     vec2 currNDC = currPos.xy / currPos.w;
     vec2 prevNDC = prevPos.xy / prevPos.w;

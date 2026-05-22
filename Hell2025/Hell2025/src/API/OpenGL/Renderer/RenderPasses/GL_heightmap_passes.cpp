@@ -133,6 +133,7 @@ namespace OpenGLRenderer {
             glMemoryBarrier(GL_ALL_BARRIER_BITS);
             glBindImageTexture(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_R16F);
             glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
+            glBindTextureUnit(2, gBuffer->GetDepthAttachmentHandle());
             glDispatchCompute(worldFramebuffer->GetWidth() / 32, worldFramebuffer->GetHeight() / 32, 1);
 
             GenerateHeightMapVertexData();

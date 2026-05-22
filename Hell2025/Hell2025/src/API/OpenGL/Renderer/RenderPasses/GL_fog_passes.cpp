@@ -75,7 +75,6 @@ namespace OpenGLRenderer {
 
 
         BindTextureUnit(3, fullSizeFBO->GetColorAttachmentHandleByName("ViewspaceDepth"));
-        BindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
 
         glBindImageTexture(4, fogFbo->GetColorAttachmentHandleByName("Color"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F);
 

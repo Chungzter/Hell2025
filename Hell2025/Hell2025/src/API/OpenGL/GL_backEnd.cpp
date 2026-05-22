@@ -11,7 +11,6 @@
 #include "Types/GL_pbo.hpp"
 
 // remove me
-#include "AssetManagement/AssetManager.h"
 #include "Renderer/Renderer.h"
 
 namespace OpenGLBackEnd {
@@ -28,9 +27,6 @@ namespace OpenGLBackEnd {
     GLuint g_vertexDataVAO = 0;
     GLuint g_vertexDataVBO = 0;
     GLuint g_vertexDataEBO = 0;
-    GLuint g_weightedVertexDataVAO = 0;
-    GLuint g_weightedVertexDataVBO = 0;
-    GLuint g_weightedVertexDataEBO = 0;
     GLuint g_skinnedVertexDataVAO = 0;
     GLuint g_skinnedVertexDataVBO = 0;
     GLuint g_allocatedSkinnedVertexBufferSize = 0;
@@ -112,44 +108,6 @@ namespace OpenGLBackEnd {
         glBindBuffer(GL_ARRAY_BUFFER, g_vertexDataVBO);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_vertexDataEBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
-
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-    }
-
-    void UploadWeightedVertexDataOLD() {
-        std::vector<Vertex>& vertices = AssetManager::GetWeightedVertices();
-        std::vector<uint32_t>& indices = AssetManager::GetWeightedIndies();
-
-        if (vertices.empty() || indices.empty()) {
-            return;
-        }
-
-        if (g_weightedVertexDataVAO != 0) {
-            glDeleteVertexArrays(1, &g_weightedVertexDataVAO);
-            glDeleteBuffers(1, &g_weightedVertexDataVBO);
-            glDeleteBuffers(1, &g_weightedVertexDataEBO);
-        }
-
-        glGenVertexArrays(1, &g_weightedVertexDataVAO);
-        glGenBuffers(1, &g_weightedVertexDataVBO);
-        glGenBuffers(1, &g_weightedVertexDataEBO);
-
-        glBindVertexArray(g_weightedVertexDataVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, g_weightedVertexDataVBO);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_weightedVertexDataEBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(0);
@@ -463,15 +421,12 @@ namespace OpenGLBackEnd {
     //    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     //}
 
-    GLuint GetVertexDataVAO() { return g_vertexDataVAO; }
-    GLuint GetVertexDataVBO() { return g_vertexDataVBO; }
-    GLuint GetVertexDataEBO() { return g_vertexDataEBO; }
-    GLuint GetWeightedVertexDataVAO() { return g_weightedVertexDataVAO; }
-    GLuint GetWeightedVertexDataVBO() { return g_weightedVertexDataVBO; }
-    GLuint GetWeightedVertexDataEBO() { return g_weightedVertexDataEBO; }
-    GLuint GetSkinnedVertexDataVAO() { return g_skinnedVertexDataVAO; }
-    GLuint GetSkinnedVertexDataVBO() { return g_skinnedVertexDataVBO; }
-    OpenGLHeightMapMesh& GetHeightMapMesh() { return g_heightMapMesh; };
+    GLuint GetVertexDataVAO()                            { return g_vertexDataVAO; }
+    GLuint GetVertexDataVBO()                            { return g_vertexDataVBO; }
+    GLuint GetVertexDataEBO()                            { return g_vertexDataEBO; }
+    GLuint GetSkinnedVertexDataVAO()                     { return g_skinnedVertexDataVAO; }
+    GLuint GetSkinnedVertexDataVBO()                     { return g_skinnedVertexDataVBO; }
+    OpenGLHeightMapMesh& GetHeightMapMesh()              { return g_heightMapMesh; };
     const std::vector<GLuint64>& GetBindlessTextureIDs() { return g_bindlessTextureIDs; }
 
 }

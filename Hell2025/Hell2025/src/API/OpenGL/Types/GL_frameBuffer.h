@@ -44,7 +44,9 @@ public:
     void ClearAttachmenSubRegionUInt(const std::string& attachmentName, GLint xOffset, GLint yOffset, GLsizei width, GLsizei height, GLuint r, GLuint g = 0, GLuint b = 0, GLuint a = 0);
     void ClearDepthAttachment();
     void ClearDepthAttachment(float value);
+    void ClearStencilBits(GLint value);
     void Resize(int width, int height);
+    void SetColorAttachmentMipLevel(const std::string& name, int mipLevel);
 
     GLuint GetColorAttachmentHandleByName(const std::string& name) const;
     GLenum GetColorAttachmentSlotByName(const std::string& name) const;

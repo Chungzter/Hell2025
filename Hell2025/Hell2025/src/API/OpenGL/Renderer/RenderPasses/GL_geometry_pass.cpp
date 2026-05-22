@@ -110,9 +110,12 @@ namespace OpenGLRenderer {
 
         shader->Bind();
 
-        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
-        glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+        //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataVBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
 
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
@@ -286,7 +289,8 @@ namespace OpenGLRenderer {
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
         glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetSkinnedVertexDataVBO());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
 
         shader->Bind();
         gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive", "VelocityOcclusionSubSurface" });

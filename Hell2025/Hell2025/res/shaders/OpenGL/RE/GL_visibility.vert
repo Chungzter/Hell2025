@@ -5,11 +5,13 @@
 #include "../../common/constants.glsl"
 
 layout(location = 0) in vec3 a_position;
+layout(location = 2) in vec2 a_uv;
+
 layout(location = 0) flat out int v_globalInstanceIndex;
+layout(location = 1) out vec2 v_uv;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportData[]; };
+readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { RenderItem renderItems[]; };
-
 
 void main() {
     int viewportIndex = gl_BaseInstance >> VIEWPORT_INDEX_SHIFT;
@@ -17,9 +19,11 @@ void main() {
     v_globalInstanceIndex = instanceOffset + gl_InstanceID;
 
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
-    mat4 projectionView = viewportData[viewportIndex].projectionViewReverseZ;
+    mat4 projectionView = viewportDataArr[viewportIndex].projectionViewReverseZ;
     mat4 modelMatrix = renderItem.modelMatrix;
 
     vec4 worldPos = modelMatrix * vec4(a_position, 1.0);
     gl_Position = projectionView * worldPos;
+    
+    v_uv = a_uv;
 }

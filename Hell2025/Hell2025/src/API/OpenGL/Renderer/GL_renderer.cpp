@@ -160,10 +160,15 @@ namespace OpenGLRenderer {
         gBuffer.CreateAttachment("RMA", GL_RGBA8); // In alpha is screenspace blood decal mask
         gBuffer.CreateAttachment("FinalLighting", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
         gBuffer.CreateAttachment("WorldPosition", GL_RGBA32F);
-        gBuffer.CreateAttachment("Emissive", GL_RGBA8);
+        gBuffer.CreateAttachment("Emissive", GL_RGBA8, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
         gBuffer.CreateAttachment("Glass", GL_RGBA16F);
         gBuffer.CreateAttachment("VelocityOcclusionSubSurface", GL_RGBA16F);
         gBuffer.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
+
+
+        OpenGLFrameBuffer& emissiveBlurFbo = CreateFrameBuffer("EmissiveBlur", resolutions.gBuffer.x, resolutions.gBuffer.y);
+        emissiveBlurFbo.CreateAttachment("ColorA", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
+        emissiveBlurFbo.CreateAttachment("ColorB", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
 
         OpenGLFrameBuffer& IndirectDiffuseFbo = CreateFrameBuffer("IndirectDiffuse", resolutions.gBuffer / 2);
         IndirectDiffuseFbo.CreateAttachment("Color", GL_RGBA16F);
@@ -194,7 +199,11 @@ namespace OpenGLRenderer {
         g_frameBuffers["DecalMasks"] = OpenGLFrameBuffer("DecalMasks", WOUND_MASK_TEXTURE_SIZE, WOUND_MASK_TEXTURE_SIZE);
 
         g_frameBuffers["GBufferBackup"] = OpenGLFrameBuffer("GBufferBackup", resolutions.gBuffer);
-        g_frameBuffers["GBufferBackup"].CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
+        g_frameBuffers["GBufferBackup"].CreateDepthAttachment(GL_DEPTH32F_STENCIL8); // do you really need this? you have WIP below
+
+        g_frameBuffers["WIP"] = OpenGLFrameBuffer("WIP", resolutions.gBuffer);
+        g_frameBuffers["WIP"].CreateAttachment("WorldPosition", GL_RGBA32F);
+        g_frameBuffers["WIP"].CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
         g_frameBuffers["Fog"] = OpenGLFrameBuffer("Fog", resolutions.gBuffer / 2);
         g_frameBuffers["Fog"].CreateAttachment("Color", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
@@ -221,9 +230,6 @@ namespace OpenGLRenderer {
         g_frameBuffers["Water"].CreateAttachment("UnderwaterMask", GL_R8);
         g_frameBuffers["Water"].CreateAttachment("WorldPosition", GL_RGBA32F);
         g_frameBuffers["Water"].CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
-
-        g_frameBuffers["WIP"] = OpenGLFrameBuffer("WIP", resolutions.gBuffer);
-        g_frameBuffers["WIP"].CreateAttachment("WorldPosition", GL_RGBA32F);
 
         g_frameBuffers["Outline"] = OpenGLFrameBuffer("Outline", resolutions.gBuffer);
         g_frameBuffers["Outline"].CreateAttachment("Mask", GL_R8);
@@ -275,6 +281,8 @@ namespace OpenGLRenderer {
         LoadShader("Decals", { "GL_decals.vert", "GL_decals.frag" });
         LoadShader("DownSample2xBox", { "GL_down_sample_2x_box.comp" });
         LoadShader("EditorMesh", { "GL_editor_mesh.vert", "GL_editor_mesh.frag" });
+        LoadShader("EmissiveComposite", { "GL_emissive_composite.comp" });
+        LoadShader("EmissiveCompositeNew", { "GL_emissive_composite_new.comp" });
         LoadShader("ExamineItem", { "GL_examine_item.vert", "GL_examine_item.frag" });
         LoadShader("FogRayMarch", { "GL_fog_ray_march.comp" });
         LoadShader("FogComposite", { "GL_fog_composite.comp" });
@@ -284,7 +292,6 @@ namespace OpenGLRenderer {
         LoadShader("FttRadix8Horizontal", { "GL_ftt_radix_8_horizontal.comp" });
         LoadShader("Fur", { "GL_fur.vert", "GL_fur.frag" });
         LoadShader("FurComposite", { "GL_fur_composite.comp" });
-        LoadShader("EmissiveComposite", { "GL_emissive_composite.comp" });
         LoadShader("GBuffer", { "GL_GBuffer.vert", "GL_gBuffer.frag" });
         LoadShader("Gizmo", { "GL_gizmo.vert", "GL_gizmo.frag" });
         LoadShader("Glass", { "GL_glass.vert", "GL_glass.frag" });
@@ -333,8 +340,6 @@ namespace OpenGLRenderer {
         LoadShader("BloodDecalsCulling", { "GL_blood_decals_culling.comp" });
         LoadShader("BloodDecalsDraw", { "GL_blood_decals_draw.vert", "GL_blood_decals_draw.frag" });
         LoadShader("BloodDecalsComposite", { "GL_blood_decals_composite.comp" });
-        LoadShader("BloodDecalsRaster", { "GL_blood_decals_raster.vert", "GL_blood_decals_raster.frag" });
-        LoadShader("MetaBalls", { "GL_meta_balls.vert", "GL_meta_balls.frag"});
         LoadShader("BloodFluidDepth", { "GL_blood_fluid.vert", "GL_blood_fluid_depth.frag" });
         LoadShader("BloodFluidThickness", { "GL_blood_fluid.vert", "GL_blood_fluid_thickness.frag" });
         LoadShader("BloodFluidBlur", { "GL_blood_fluid_blur.comp" });
@@ -532,11 +537,11 @@ namespace OpenGLRenderer {
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-        BindSSBO("Samplers", 0);
-        BindSSBO("RendererData", 1);
-        BindSSBO("ViewportData", 2);
-        BindSSBO("InstanceData", 3);
-        BindSSBO("Lights", 4);
+        BindSSBO(0, "Samplers");
+        BindSSBO(1, "RendererData");
+        BindSSBO(2, "ViewportData");
+        BindSSBO(3, "InstanceData");
+        BindSSBO(4, "Lights");
     }
 
     void PreGameLogicComputePasses() {
@@ -623,16 +628,16 @@ namespace OpenGLRenderer {
         // GI
         UpdateGlobalIllumintation();
 
-        BindSSBO("Samplers", 0);
-        BindSSBO("RendererData", 1);
-        BindSSBO("ViewportData", 2);
-        BindSSBO("InstanceData", 3);
-        BindSSBO("Lights", 4);
-        BindSSBO("TileLights", 5);
-        BindSSBO("TileWorldBounds", 6);
+        BindSSBO(0, "Samplers");
+        BindSSBO(1, "RendererData");
+        BindSSBO(2, "ViewportData");
+        BindSSBO(3, "InstanceData");
+        BindSSBO(4, "Lights");
+        BindSSBO(5, "TileLights");
+        BindSSBO(6, "TileWorldBounds");
 
-        BindSSBO("ProbeSHColor", 10);
-        BindSSBO("ProbeStates", 11);
+        BindSSBO(10, "ProbeSHColor");
+        BindSSBO(11, "ProbeStates");
 
         LightingPass();
 
@@ -660,19 +665,21 @@ namespace OpenGLRenderer {
             gBuffer.ClearAttachment("FinalLighting", 0, 0, 0, 0);
         }
 
-        DebugViewPass();
-        DebugPass();
-        //RenderDebugHackAABB();
-
-
-        ComputeLightAABBs();
-
-
         if (Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
         if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
         if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
 
         PostProcessingPass();
+
+        DebugViewPass();
+        DebugPass();
+
+        //RenderDebugHackAABB();
+
+
+        ComputeLightAABBs();
+
+        
 
         ExamineItemPass();
         EditorPass();
@@ -863,16 +870,16 @@ namespace OpenGLRenderer {
 
             // Start the first blur buffer at the full viewport dimensions
             SpaceCoords spaceCoords = viewport->GetGBufferSpaceCoords();
-            float width = (float)resolutions.gBuffer.x;
-            float height = (float)resolutions.gBuffer.y;
+            float width = spaceCoords.width;
+            float height = spaceCoords.height;
 
             // Create framebuffers, downscale by 50% each time
             for (int y = 0; y < 4; y++) {
 
                 // Clean up existing framebuffer
                 g_blurBuffers[x][y].Create("BlurBuffer", (int)width, (int)height);
-                g_blurBuffers[x][y].CreateAttachment("ColorA", GL_RGBA8);
-                g_blurBuffers[x][y].CreateAttachment("ColorB", GL_RGBA8);
+                g_blurBuffers[x][y].CreateAttachment("ColorA", GL_RGBA8, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
+                g_blurBuffers[x][y].CreateAttachment("ColorB", GL_RGBA8, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
                 width *= 0.5f;
                 height *= 0.5f;
             }
@@ -971,6 +978,12 @@ namespace OpenGLRenderer {
         }
     }
 
+    void SetUniformUInt(const std::string& name, uint32_t value) {
+        if (g_boundShader) {
+            g_boundShader->SetUInt(name, value);
+        }
+    }
+
     void SetUniformFloat(const std::string& name, float value) {
         if (g_boundShader) {
             g_boundShader->SetFloat(name, value);
@@ -1028,13 +1041,13 @@ namespace OpenGLRenderer {
         }
     }
 
-    void BindSSBO(const std::string& name, unsigned int bindingIndex) {
+    void BindSSBO(unsigned int bindingIndex, const std::string& name) {
         if (OpenGLSSBO* ssbo = GetSSBO(name)) {
             ssbo->Bind(bindingIndex);
         }
     }
 
-    void BindSSBO(uint32_t vboHandle, unsigned int bindingIndex) {
+    void BindSSBO(unsigned int bindingIndex, uint32_t vboHandle) {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingIndex, vboHandle);
     }
 

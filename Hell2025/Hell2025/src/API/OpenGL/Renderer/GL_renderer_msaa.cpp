@@ -166,13 +166,21 @@ namespace OpenGLRenderer {
         RenderShadowMaps();
         ClearRenderTargetsMSAA();
 
-        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
-        glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+        //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
         glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetSkinnedVertexDataVBO());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
+       
+        //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
+        //
+        //glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        //glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetSkinnedVertexDataVBO());
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
 
         glBindVertexArray(0);
 
@@ -189,17 +197,11 @@ namespace OpenGLRenderer {
 
         UpdateGlobalIllumintation();
 
-        BindSSBO("Samplers", 0);
-        BindSSBO("RendererData", 1);
-        BindSSBO("ViewportData", 2);
-        BindSSBO("InstanceData", 3);
-        BindSSBO("Lights", 4);
-
-		// DDGI Debug
-		DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
-		if (Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
-		if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
-		if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
+        BindSSBO(0, "Samplers");
+        BindSSBO(1, "RendererData");
+        BindSSBO(2, "ViewportData");
+        BindSSBO(3, "InstanceData");
+        BindSSBO(4, "Lights");
 
 		ResolveLighting();
 
@@ -212,8 +214,14 @@ namespace OpenGLRenderer {
 
         CompositeLighting();
 
+        // DDGI Debug
+        DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
+        if (Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
+        if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
+        if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
+
+        PostProcessingPassMSAA();
 		DebugViewPass();
-		PostProcessingPassMSAA();
 
         // Downscale blit
         OpenGLRenderer::BlitFrameBuffer(resolveFbo, finalImageFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
@@ -285,7 +293,7 @@ namespace OpenGLRenderer {
 		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 		MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.standard, opaqueDepthState);
 
-		glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+		//glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
 		MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.skinnedNonDeformingStandard, opaqueDepthState);
 
 		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
@@ -301,7 +309,7 @@ namespace OpenGLRenderer {
 		MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.alphaDiscard, maskedDepthState);
 		MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.hair, maskedDepthState);
 
-		glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+		//glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
 		MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedNonDeformingAlphaDiscard, maskedDepthState);
         MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedNonDeformingHair, maskedDepthState);
 
@@ -365,7 +373,7 @@ namespace OpenGLRenderer {
 		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.standard, opaqueState);
 		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.alphaDiscard, maskedState);
 
-		glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+		//glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
 		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingStandard, opaqueState);
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingAlphaDiscard, maskedState);
 
@@ -404,7 +412,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.alphaDiscard, maskedState);
 
-        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingAlphaDiscard, maskedState);
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
@@ -458,7 +466,7 @@ namespace OpenGLRenderer {
         //MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.alphaDiscard, maskedDepthState);
         MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.hair, maskedDepthState);
 
-        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
         //MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedNonDeformingAlphaDiscard, maskedDepthState);
         MultiDrawPerViewport(msaaFbo, maskedShader, drawInfoSet.skinnedNonDeformingHair, maskedDepthState);
 
@@ -495,7 +503,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.hair, maskedState);
 
-        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingHair, maskedState);
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
@@ -529,7 +537,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.hair, maskedState);
 
-        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingHair, maskedState);
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
@@ -564,7 +572,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.hair, maskedState);
 
-        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingHair, maskedState);
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
@@ -586,7 +594,7 @@ namespace OpenGLRenderer {
         shader.SetInt("u_renderTargetWidth", fbo.GetWidth());
         shader.SetUInt("u_mlabFrameIndex", g_mlabFrameIndex);
 
-        BindSSBO("HairMLABNodes", 6);
+        BindSSBO(6, "HairMLABNodes");
 
         BindShadowMaps();
 
@@ -601,7 +609,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         MultiDrawPerViewport(&fbo, &shader, drawInfoSet.hair, state);
 
-        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
         MultiDrawPerViewport(&fbo, &shader, drawInfoSet.skinnedNonDeformingHair, state);
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
@@ -624,7 +632,7 @@ namespace OpenGLRenderer {
         shader.SetFloat("u_renderResolutionScale", 0.5f);
         shader.SetUInt("u_mlabFrameIndex", g_mlabFrameIndex);
 
-        BindSSBO("HairMLABNodes", 6);
+        BindSSBO(6, "HairMLABNodes");
         BindTextureUnit(0, fbo.GetDepthAttachmentHandle());
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -674,7 +682,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.blended, blendedState);
 
-        glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
+        //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedNonDeformingBlended, blendedState);
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());

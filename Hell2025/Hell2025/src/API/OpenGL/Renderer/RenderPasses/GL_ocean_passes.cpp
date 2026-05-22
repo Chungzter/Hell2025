@@ -234,7 +234,7 @@ namespace OpenGLRenderer {
 
         OpenGLRenderer::BlitFrameBufferDepth(gBuffer, waterFrameBuffer); // DO U NEED THIS?
 
-        BindSSBO("OceanPatchTransforms", 10); // Find out what indices are actually safe to use and do not use 22 u psychopath
+        BindSSBO(10, "OceanPatchTransforms"); // Find out what indices are actually safe to use and do not use 22 u psychopath
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);

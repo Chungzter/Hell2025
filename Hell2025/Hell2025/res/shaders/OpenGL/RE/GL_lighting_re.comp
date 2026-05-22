@@ -37,42 +37,44 @@ uniform float u_oceanHeight = 30;
 void main() {
 	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
     ivec2 outputImageSize = imageSize(u_outputImage);
-    vec2 uv_screenspace = (vec2(px) + 0.5) / vec2(outputImageSize);
+    
+    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
+    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
 
-    vec4 normalXYRoughnessMisc = texture(u_normalXYRoughnessMiscTexture, uv_screenspace);
+    vec4 normalXYRoughnessMisc = texture(u_normalXYRoughnessMiscTexture, screenUV);
     vec3 normal = DecodeNormal(normalXYRoughnessMisc.rg);
     float roughness = normalXYRoughnessMisc.b;
     float misc = normalXYRoughnessMisc.a;
 
-    vec4 baseColorMetallic = texture(u_baseColorMetallicTexture, uv_screenspace);
+    vec4 baseColorMetallic = texture(u_baseColorMetallicTexture, screenUV);
     vec3 baseColor = baseColorMetallic.rgb;
     float metallic = baseColorMetallic.a;
     vec3 linearBaseColor = pow(baseColor.rgb, vec3(2.2)); // baseColor.rgb * baseColor.rgb;
 
-    vec4 velocityXYOcclusionSubSurface = texture(u_velocityXYOcclusionSubSurfaceTexture, uv_screenspace).rgba;
+    vec4 velocityXYOcclusionSubSurface = texture(u_velocityXYOcclusionSubSurfaceTexture, screenUV).rgba;
     float ao =velocityXYOcclusionSubSurface.b;
     float subSurface = velocityXYOcclusionSubSurface.a;
     vec2 velocity = velocityXYOcclusionSubSurface.rg;
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
 
     ViewportData viewportData = viewportDataArr[viewportIndex];
     mat4 inverseProjection = viewportData.inverseProjection;
     mat4 inverseProjectionViewReverseZ = viewportData.inverseProjectionViewReverseZ;
     mat4 inverseView = viewportData.inverseView;
     mat4 viewMatrix = viewportData.view;
-    vec3 viewPos = viewportData.inverseView[3].xyz;
+    vec3 viewPos = viewportData.viewPos.xyz;
     bool thisViewportIsInShop = bool(viewportData.isInShop);
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
-    vec3 worldPos = ReconstructWorldPos(uv_screenspace, depth, inverseProjectionViewReverseZ);
+    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionViewReverseZ);
 
     float fragDistance = distance(worldPos, viewPos);
 
     vec3 F0 = mix(vec3(0.04), linearBaseColor, metallic);
 
     vec3 directLighting = vec3(0.0);
-    for (int i = 0; i < 9; i++) {
+    for (int i = 2; i < 4; i++) {
         int lightIndex = i; //int(tileLights[tileIndex].lightIndices[i]);
 
         Light light = lights[lightIndex];
@@ -179,10 +181,10 @@ void main() {
     vec3 indirectDiffuse = vec3(0);
     bool u_sampleProbes = true;
     if (u_sampleProbes) {
-        vec3 probeIrradiance = texture(u_indirectDiffuseTexture, uv_screenspace).rgb;
+        vec3 probeIrradiance = texture(u_indirectDiffuseTexture, screenUV).rgb;
         vec3 diffuseAlbedo = linearBaseColor.rgb * (1.0 - metallic);
         float indirectDiffuseScale = 1.0;
-        vec3 indirectDiffuse = probeIrradiance * diffuseAlbedo * indirectDiffuseScale;
+        indirectDiffuse = probeIrradiance * diffuseAlbedo * indirectDiffuseScale;
     }
 
     vec3 finalColor = (directLighting + indirectDiffuse) * ao;

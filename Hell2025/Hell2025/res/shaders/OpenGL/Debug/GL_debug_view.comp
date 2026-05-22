@@ -2,6 +2,7 @@
 
 #include "../../common/constants.glsl"
 #include "../../common/normal_encoding.glsl"
+#include "../../common/post_processing.glsl"
 #include "../../common/types.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
@@ -18,6 +19,7 @@ layout (binding = 1) uniform sampler2D BaseColorMetallic;
 layout (binding = 2) uniform sampler2D NormalXYRoughnessMisc;
 layout (binding = 3) uniform sampler2D VelocityXYOcclusionSubSurface;
 layout (binding = 8) uniform sampler2D IndirectDiffuseTexture;
+layout (binding = 9) uniform usampler2D VisibilityTexture;
 #else
 layout (binding = 1) uniform sampler2D GBufferBaseColorTexture;
 layout (binding = 2) uniform sampler2D GBufferNormalTexture;
@@ -36,6 +38,40 @@ readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { Viewpo
 
 uniform bool u_heightMapEditor;
 uniform float u_brushSize;
+
+vec3 IntegerToColor(uint x) {
+    x = ((x >> 16) ^ x) * 0x45d9f3bE;
+    x = ((x >> 16) ^ x) * 0x45d9f3bE;
+    x = (x >> 16) ^ x;
+    return vec3(float(x & 0xFFu) / 255.0, float((x >> 8) & 0xFFu) / 255.0, float((x >> 16) & 0xFFu) / 255.0);
+}
+
+vec3 GetVisiblity() {
+	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+
+#if defined(MSAA_ENABLED)
+    uvec2 visibilityData = uvec2(0, 0);
+#elif defined(RE_ENABLED)
+    uvec2 visibilityData = texelFetch(VisibilityTexture, px, 0).rg;
+#else
+    uvec2 visibilityData = uvec2(0, 0);
+#endif
+
+    uint meshID = visibilityData.x;
+    uint primitiveID = visibilityData.y;
+
+    // Check if background pixel
+    if (meshID == 0 && primitiveID == 0) {
+        return vec3(0.05, 0.05, 0.05);
+    }
+
+    // Generate distinctive color configurations
+    vec3 meshColor = IntegerToColor(meshID);
+    vec3 primColor = IntegerToColor(primitiveID);
+
+    // Combine paths to highlight distinct meshes while showing individual triangles
+    return mix(meshColor, primColor, 0.2);
+}
 
 void main() {
 	ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
@@ -129,13 +165,21 @@ void main() {
     }
 
     else if (rendererData.rendererOverrideState == 11) {
-        finalColor = indirectDiffuseTexture;// * 1.5;
+        //finalColor = indirectDiffuseTexture * 1.5;
+        finalColor = Tonemap_ACES(indirectDiffuseTexture);
+        finalColor = pow(finalColor, vec3(1.0 / 2.2));
+        finalColor = clamp(finalColor, 0, 1);
+        finalColor = mix(finalColor, Tonemap_ACES(finalColor), 0.125);
     }
-
+    
     // Velocity
     else if (rendererData.rendererOverrideState == 12) {
         float gain = 20.0;
         finalColor = vec3(velocity * gain + 0.5, 0.5);
+    }
+    // Visiblity
+    else if (rendererData.rendererOverrideState == 13) {
+        finalColor = GetVisiblity();
     }
 
     // Below did work, but you commented it out when implementing MSAA coz u have no world pos texture for MSAA. Reconstruct pos from depth!

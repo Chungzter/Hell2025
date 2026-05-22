@@ -132,8 +132,8 @@ namespace AssetManager {
     std::vector<Vertex>& GetVertices();
     std::vector<uint32_t>& GetIndies();
 
-    std::vector<Vertex>& GetWeightedVertices();
-    std::vector<uint32_t>& GetWeightedIndies();
+    //std::vector<Vertex>& GetWeightedVertices();
+    //std::vector<uint32_t>& GetWeightedIndies();
 
     // Index maps
     std::unordered_map<std::string, int>& GetTextureIndexMap();
