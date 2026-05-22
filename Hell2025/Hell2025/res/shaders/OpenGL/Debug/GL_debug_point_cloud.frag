@@ -9,11 +9,12 @@ in vec4 v_normal;
 in vec4 v_directLighting;
 in vec2 v_uv;
 in vec3 v_baseColor;
+flat in uint v_vertexId;
 
-layout(std430, binding = 4) readonly buffer lightsBuffer            { Light lights[]; };
-layout(std430, binding = 5) readonly buffer GridOffsetsBuffer       { uint cellOffsets[]; };
-layout(std430, binding = 6) readonly buffer GridCountsBuffer        { uint cellCounts[]; };
-layout(std430, binding = 7) buffer GridCellDirtyFlagBuffer          { uint cellDirtyFlags[]; };
+layout(std430, binding = 4) readonly buffer lightsBuffer      { Light lights[]; };
+layout(std430, binding = 5) readonly buffer GridOffsetsBuffer { uint cellOffsets[]; };
+layout(std430, binding = 6) readonly buffer GridCountsBuffer  { uint cellCounts[]; };
+layout(std430, binding = 7) buffer PointCloudDirtyFlagsBuffer { uint pointCloudDirtyFlags[]; };
 
 uniform ivec3 u_pointCloudGridDimensions;
 uniform float u_pointCloudCellSize;
@@ -74,11 +75,16 @@ uniform vec3 u_volumeMinBounds;
 //}
 
 void main() {
-    if (v_directLighting.rgb == vec3(0,0,0)) {
-        discard;
-    }
-    else {
+    //if (v_directLighting.rgb == vec3(0,0,0)) {
+    //    discard;
+    //}
+    //else {
         FragOut.rgba = vec4(v_directLighting.rgb, 1.0);
+    //}
+
+    // Dirty points
+    if (pointCloudDirtyFlags[v_vertexId] == 1u) {
+        FragOut.r += 0.5;
     }
 }
 

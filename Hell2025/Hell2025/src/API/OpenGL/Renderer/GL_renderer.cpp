@@ -165,6 +165,11 @@ namespace OpenGLRenderer {
         gBuffer.CreateAttachment("VelocityOcclusionSubSurface", GL_RGBA16F);
         gBuffer.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
+        OpenGLFrameBuffer& waterFbo = CreateFrameBuffer("Water", resolutions.gBuffer);
+        waterFbo.CreateAttachment("Lighting", GL_RGBA16F);
+        waterFbo.CreateAttachment("OceanFlags", GL_R8UI);
+        waterFbo.CreateAttachment("OceanMask", GL_R8UI);
+        waterFbo.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
         OpenGLFrameBuffer& emissiveBlurFbo = CreateFrameBuffer("EmissiveBlur", resolutions.gBuffer.x, resolutions.gBuffer.y);
         emissiveBlurFbo.CreateAttachment("ColorA", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
@@ -202,7 +207,6 @@ namespace OpenGLRenderer {
         g_frameBuffers["GBufferBackup"].CreateDepthAttachment(GL_DEPTH32F_STENCIL8); // do you really need this? you have WIP below
 
         g_frameBuffers["WIP"] = OpenGLFrameBuffer("WIP", resolutions.gBuffer);
-        g_frameBuffers["WIP"].CreateAttachment("WorldPosition", GL_RGBA32F);
         g_frameBuffers["WIP"].CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
         g_frameBuffers["Fog"] = OpenGLFrameBuffer("Fog", resolutions.gBuffer / 2);
@@ -221,15 +225,8 @@ namespace OpenGLRenderer {
         g_frameBuffers["MiscFullSize"].CreateAttachment("GaussianFinalLightingIntermediate", GL_RGBA16F);
         g_frameBuffers["MiscFullSize"].CreateAttachment("GaussianFinalLighting", GL_RGBA16F);
         g_frameBuffers["MiscFullSize"].CreateAttachment("ScreenSpaceBloodDecalMask", GL_R8);
-        g_frameBuffers["MiscFullSize"].CreateAttachment("ViewportIndex", GL_R8UI, GL_NEAREST, GL_NEAREST);
         g_frameBuffers["MiscFullSize"].CreateAttachment("ViewspaceDepth", GL_R32F, GL_NEAREST, GL_NEAREST);
         g_frameBuffers["MiscFullSize"].CreateAttachment("FinalLightingCopy", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
-
-        g_frameBuffers["Water"] = OpenGLFrameBuffer("Water", resolutions.gBuffer);
-        g_frameBuffers["Water"].CreateAttachment("Color", GL_RGBA16F);
-        g_frameBuffers["Water"].CreateAttachment("UnderwaterMask", GL_R8);
-        g_frameBuffers["Water"].CreateAttachment("WorldPosition", GL_RGBA32F);
-        g_frameBuffers["Water"].CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
         g_frameBuffers["Outline"] = OpenGLFrameBuffer("Outline", resolutions.gBuffer);
         g_frameBuffers["Outline"].CreateAttachment("Mask", GL_R8);
@@ -286,10 +283,6 @@ namespace OpenGLRenderer {
         LoadShader("ExamineItem", { "GL_examine_item.vert", "GL_examine_item.frag" });
         LoadShader("FogRayMarch", { "GL_fog_ray_march.comp" });
         LoadShader("FogComposite", { "GL_fog_composite.comp" });
-        LoadShader("FttRadix64Vertical", { "GL_ftt_radix_64_vertical.comp" });
-        LoadShader("FttRadix8Vertical", { "GL_ftt_radix_8_vertical.comp" });
-        LoadShader("FttRadix64Horizontal", { "GL_ftt_radix_64_horizontal.comp" });
-        LoadShader("FttRadix8Horizontal", { "GL_ftt_radix_8_horizontal.comp" });
         LoadShader("Fur", { "GL_fur.vert", "GL_fur.frag" });
         LoadShader("FurComposite", { "GL_fur_composite.comp" });
         LoadShader("GBuffer", { "GL_GBuffer.vert", "GL_gBuffer.frag" });
@@ -312,14 +305,6 @@ namespace OpenGLRenderer {
         LoadShader("LightCulling", { "GL_light_culling.comp" });
         LoadShader("Lighting", { "GL_lighting.comp" });
         LoadShader("CSMLighting", { "GL_lighting.vert", "GL_lighting.frag" });
-        LoadShader("OceanSurfaceComposite", { "GL_ocean_surface_composite.comp" });
-        LoadShader("OceanGeometry", { "GL_ocean_geometry.vert", "GL_ocean_geometry.frag", "GL_ocean_geometry.tesc", "GL_ocean_geometry.tese" });
-        LoadShader("OceanCalculateSpectrum", { "GL_ocean_calculate_spectrum.comp" });
-        LoadShader("OceanUpdateTextures", { "GL_ocean_update_textures.comp" });
-        LoadShader("OceanUnderwaterComposite", { "GL_ocean_underwater_composite.comp" });
-        LoadShader("OceanUnderwaterMaskPreProcess", { "GL_ocean_underwater_mask_preprocess.comp" });
-        LoadShader("OceanTesseleationEdgeTransitionCleanUp", { "GL_ocean_tessellation_edge_transition_cleanup.comp" });
-        LoadShader("OceanPositionReadback", { "GL_ocean_position_readback.comp" });
         LoadShader("GaussianBlur", { "GL_gaussian_blur.comp" }); // am I needed????
         LoadShader("Outline", { "GL_outline.vert", "GL_outline.frag" });
         LoadShader("OutlineComposite", { "GL_outline_composite.comp" });
@@ -385,6 +370,20 @@ namespace OpenGLRenderer {
         LoadShader("DDGI", "ProbeRelocation", { "GL_probe_state_update.comp" });
         LoadShader("DDGI", "ProbeStateUpdate", { "GL_probe_state_update.comp" });
 
+        // Ocean
+        LoadShader("Water", "FttRadix64Vertical", { "GL_ftt_radix_64_vertical.comp" });
+        LoadShader("Water", "FttRadix8Vertical", { "GL_ftt_radix_8_vertical.comp" });
+        LoadShader("Water", "FttRadix64Horizontal", { "GL_ftt_radix_64_horizontal.comp" });
+        LoadShader("Water", "FttRadix8Horizontal", { "GL_ftt_radix_8_horizontal.comp" });
+        LoadShader("Water", "OceanFlags", { "GL_ocean_flags.comp" });
+        LoadShader("Water", "OceanSurfaceComposite", { "GL_ocean_surface_composite.comp" });
+        LoadShader("Water", "OceanGeometry", { "GL_ocean_geometry.vert", "GL_ocean_geometry.frag", "GL_ocean_geometry.tesc", "GL_ocean_geometry.tese" });
+        LoadShader("Water", "OceanCalculateSpectrum", { "GL_ocean_calculate_spectrum.comp" });
+        LoadShader("Water", "OceanUpdateTextures", { "GL_ocean_update_textures.comp" });
+        LoadShader("Water", "OceanUnderwaterComposite", { "GL_ocean_underwater_composite.comp" });
+        LoadShader("Water", "OceanTesseleationEdgeTransitionCleanUp", { "GL_ocean_tessellation_edge_transition_cleanup.comp" });
+        LoadShader("Water", "OceanPositionReadback", { "GL_ocean_position_readback.comp" });
+
         LoadShader("LightAABBPosition", { "GL_light_aabb_position.vert", "GL_light_aabb_position.frag" });
         LoadShader("LightAABBMinMax", { "GL_light_aabb_min_max.comp" });
 
@@ -444,7 +443,7 @@ namespace OpenGLRenderer {
 		CreateSSBO("DDGIVolume", sizeof(DDGIVolumeGPU), GL_DYNAMIC_STORAGE_BIT);
 		CreateSSBO("DirtyDoorAABBs", sizeof(GPUAABB), GL_DYNAMIC_STORAGE_BIT);
 		CreateSSBO("PointCloudGridCounts", dummySize, GL_DYNAMIC_STORAGE_BIT);
-		CreateSSBO("PointCloudGridDirtyFlags", dummySize, GL_DYNAMIC_STORAGE_BIT);
+		CreateSSBO("PointCloudDirtyFlags", dummySize, GL_DYNAMIC_STORAGE_BIT);
 		CreateSSBO("PointCloudGridOffsets", dummySize, GL_DYNAMIC_STORAGE_BIT);
 		CreateSSBO("PointCloudTextureInfo", dummySize, GL_DYNAMIC_STORAGE_BIT);
 		CreateSSBO("ProbeDistanceCounter", sizeof(uint32_t), GL_DYNAMIC_STORAGE_BIT);
@@ -609,6 +608,8 @@ namespace OpenGLRenderer {
         RenderShadowMaps();
         SkyBoxPass();
         HeightMapPass();
+
+
         DecalPaintingPass();
         HouseGeometryPass();
         GeometryPass();
@@ -623,7 +624,6 @@ namespace OpenGLRenderer {
 
         BloodDecalsPass();
         ComputeViewspaceDepth();
-        TextureReadBackPass();
 
         // GI
         UpdateGlobalIllumintation();
@@ -643,6 +643,7 @@ namespace OpenGLRenderer {
 
         //FurPass();
         OceanGeometryPass();
+        OceanUnderWaterFlags();
         OceanSurfaceCompositePass();
 
         GlassPass();
@@ -732,40 +733,31 @@ namespace OpenGLRenderer {
     }
 
     void ClearRenderTargets() {
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
-        OpenGLFrameBuffer* finalImageFBO = GetFrameBufferOLD("FinalImage");
-        OpenGLFrameBuffer* miscFullSizeFBO = GetFrameBufferOLD("MiscFullSize");
+        glDepthMask(GL_TRUE);
 
         // Water
-        waterFrameBuffer->Bind();
-        waterFrameBuffer->ClearAttachment("Color", 0, 0, 0, 0);
-        waterFrameBuffer->ClearAttachmentR("UnderwaterMask", 0);
-        waterFrameBuffer->ClearAttachment("WorldPosition", 0, 0, 0, 0);
+        OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
+        waterFrameBuffer.Bind();
+        waterFrameBuffer.ClearAttachment("Lighting", 0, 0, 0, 0);
+        waterFrameBuffer.ClearAttachmentUI("OceanFlags", 0, 0, 0, 0);
+        waterFrameBuffer.ClearAttachmentUI("OceanMask", 0, 0, 0, 0);
 
         // GBuffer
-        glDepthMask(GL_TRUE);
-        gBuffer->Bind();
-        gBuffer->ClearAttachment("BaseColor", 0, 0, 0, 0);
-        gBuffer->ClearAttachment("Normal", 0, 0, 0, 0);
-        gBuffer->ClearAttachment("RMA", 0, 0, 0, 0);
-        gBuffer->ClearAttachment("WorldPosition", 0, 0, 0, 0);
-        gBuffer->ClearAttachment("Emissive", 0, 0, 0, 0);
-        gBuffer->ClearAttachment("Glass", 0, 0, 0, 0);
-        gBuffer->ClearAttachment("VelocityOcclusionSubSurface", 0, 0, 0, 1);
-        gBuffer->ClearDepthAttachment();
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
+        gBuffer.Bind();
+        gBuffer.ClearAttachment("BaseColor", 0, 0, 0, 0);
+        gBuffer.ClearAttachment("Normal", 0, 0, 0, 0);
+        gBuffer.ClearAttachment("RMA", 0, 0, 0, 0);
+        gBuffer.ClearAttachment("WorldPosition", 0, 0, 0, 0);
+        gBuffer.ClearAttachment("Emissive", 0, 0, 0, 0);
+        gBuffer.ClearAttachment("Glass", 0, 0, 0, 0);
+        gBuffer.ClearAttachment("VelocityOcclusionSubSurface", 0, 0, 0, 1);
+        gBuffer.ClearDepthAttachment();
 
         // Decal mask
-        miscFullSizeFBO->Bind();
-        miscFullSizeFBO->ClearTexImage("ScreenSpaceBloodDecalMask", 0, 0, 0, 0);
-
-        // Viewport index
-        for (unsigned int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            if (viewport->IsVisible()) {
-                OpenGLRenderer::ClearFrameBufferByViewportUInt(miscFullSizeFBO, "ViewportIndex", viewport, i);
-            }
-        }
+        OpenGLFrameBuffer& miscFullSizeFBO = GetFrameBuffer("MiscFullSize");
+        miscFullSizeFBO.Bind();
+        miscFullSizeFBO.ClearTexImage("ScreenSpaceBloodDecalMask", 0, 0, 0, 0);
     }
 
     void MultiDrawIndirect(const std::vector<DrawIndexedIndirectCommand>& commands) {

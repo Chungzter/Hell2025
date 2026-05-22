@@ -12,6 +12,7 @@ out vec4 v_directLighting;
 out vec2 v_uv;
 out vec3 v_baseColor;
 out vec3 v_worldPos;
+flat out uint v_vertexId;
 
 void main() {
     vec3 position = a_position.xyz;
@@ -25,6 +26,7 @@ void main() {
     v_normal = a_normal;
     v_directLighting = a_directLighting;
     v_baseColor = a_baseColor.rgb;
+    v_vertexId = uint(gl_VertexID);
 
     v_uv = vec2(a_baseColor.x, a_baseColor.y); // They're temporarily baked in here
 }

@@ -85,9 +85,9 @@ vec3 GetDisttanceWithCooldown(int probeIdx) {
 vec3 GetIrradianceCoolDown(int probeIdx) {
     uint cooldown = probeStates[probeIdx].irradianceCooldown;
 
-    if (cooldown == PROBE_MAX_IRRADIANCE_COOLDOWN) {
-        return vec3(0.0); // This is a hack to match your other hack, that probes at max cooldown actually aren't updated
-    }
+    //if (cooldown == PROBE_MAX_IRRADIANCE_COOLDOWN) {
+    //    return vec3(0.0); // This is a hack to match your other hack, that probes at max cooldown actually aren't updated
+    //}
 
     float value = float(cooldown) / float(PROBE_MAX_IRRADIANCE_COOLDOWN);
     return vec3(value, 0.0, value);

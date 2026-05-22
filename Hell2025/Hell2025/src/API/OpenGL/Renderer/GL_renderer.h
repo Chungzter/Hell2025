@@ -106,6 +106,7 @@ namespace OpenGLRenderer {
     void LightCullingPass();
     void LightingPass();
     void OceanGeometryPass();
+    void OceanUnderWaterFlags();
     void OceanSurfaceCompositePass();
     void OceanUnderwaterCompositePass();
     void OutlinePass();
@@ -117,7 +118,6 @@ namespace OpenGLRenderer {
     void SpriteSheetPass();
     void ScreenspaceReflectionsPass();
     void StainedGlassPass();
-    void TextureReadBackPass();
     void UIPass();
     void VatBloodPass();
     void WeatherBoardsPass();
@@ -251,12 +251,6 @@ namespace OpenGLRenderer {
     void EditorRasterizerStateOverride();
     void DispatchCompute(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ);
     void DispatchComputeIndirect();
-
-    // Texture readback
-    bool IsMouseRayWorldPositionReadBackReady();
-    glm::vec3 GetMouseRayWorldPostion();
-    bool IsPlayerRayWorldPositionReadBackReady(int playerIndex);
-    glm::vec3 GetPlayerRayWorldPostion(int playerIndex);
 
     // Rasterizer State
     void InitRasterizerStates();

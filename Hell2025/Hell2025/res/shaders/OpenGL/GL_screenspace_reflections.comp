@@ -12,17 +12,12 @@ layout(rgba16f, binding = 0) uniform image2D LightingImage;
 layout (binding = 1) uniform sampler2D BaseColorTexture;
 layout (binding = 2) uniform sampler2D NormalTexture;
 layout (binding = 3) uniform sampler2D RMATexture;
-layout (binding = 4) uniform sampler2D WorldPositionTexture;
+layout (binding = 4) uniform sampler2D u_depthTexture;
 layout (binding = 5) uniform sampler2D DownsizedLightingTexture;
 layout (binding = 6) uniform sampler2D ViewSpaceDepthTexture;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer {
-    RendererData rendererData;
-};
-
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
-    ViewportData viewportData[];
-};
+readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 uniform float u_maxRayDistance = 8.0;
 uniform int u_minSteps = 24; // The higher the floor, the better the result
@@ -130,26 +125,31 @@ bool BinaryRefineHit(
 }
 
 void main() {
-    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
-    ivec2 outputSize = imageSize(LightingImage);
+    ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 outputImageSize = imageSize(LightingImage);
 
-    if (pixelCoords.x >= outputSize.x || pixelCoords.y >= outputSize.y) {
+    if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) {
         return;
     }
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, outputSize, rendererData.splitscreenMode);
-    ViewportData v = viewportData[viewportIndex];
+    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
+    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
 
-    vec2 uv = (vec2(pixelCoords) + 0.5) / vec2(outputSize);
+    ViewportData viewportData = viewportDataArr[viewportIndex];
+    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
+    mat4 inverseProjectionView = viewportData.inverseProjectionView;
 
-    vec3 normalRaw = texelFetch(NormalTexture, pixelCoords, 0).xyz;
+    float depth = texelFetch(u_depthTexture, px, 0).r;
+    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionView);
+
+    vec3 normalRaw = texelFetch(NormalTexture, px, 0).xyz;
     if (IsSky(normalRaw)) {
         return;
     }
 
     vec3 N_world = normalize(normalRaw);
 
-    vec4 rma = texelFetch(RMATexture, pixelCoords, 0);
+    vec4 rma = texelFetch(RMATexture, px, 0);
     float roughness = rma.r;
     float metallic  = rma.g;
     float ao  = rma.b;
@@ -163,20 +163,19 @@ void main() {
     // Early out for areas with basically no SSR
     if (gloss < 0.15) return;
 
-    mat4 viewMatrix = v.view;
-    mat4 projectionMatrix = v.projection;
-    mat4 inverseView = v.inverseView;
+    mat4 viewMatrix = viewportData.view;
+    mat4 projectionMatrix = viewportData.projection;
+    mat4 inverseView = viewportData.inverseView;
 
     vec3 viewPosWorld = inverseView[3].xyz;
-    vec3 worldPos = texelFetch(WorldPositionTexture, pixelCoords, 0).rgb;
 
     ivec2 viewZSize = textureSize(ViewSpaceDepthTexture, 0);
-    float viewspaceDepth = texelFetch(ViewSpaceDepthTexture, pixelCoords, 0).r;
+    float viewspaceDepth = texelFetch(ViewSpaceDepthTexture, px, 0).r;
 
     vec3 V_world = normalize(viewPosWorld - worldPos);
     vec3 R_world = normalize(reflect(-V_world, N_world));
 
-    vec3 baseColor = texelFetch(BaseColorTexture, pixelCoords, 0).rgb;
+    vec3 baseColor = texelFetch(BaseColorTexture, px, 0).rgb;
     vec3 gammaBaseColor = pow(baseColor, vec3(2.2));
     vec3 F0 = mix(vec3(0.04), gammaBaseColor, metallic);
 
@@ -190,7 +189,7 @@ void main() {
     vec3 P_view = (viewMatrix * vec4(worldPos, 1.0)).xyz;
     vec3 R_view = normalize((viewMatrix * vec4(R_world, 0.0)).xyz);
 
-    float jitter = Hash12(vec2(pixelCoords)) - 0.5;
+    float jitter = Hash12(vec2(px)) - 0.5;
     float rayT = u_stride * (0.5 + jitter);
 
     float hit = 0.0;
@@ -223,7 +222,7 @@ void main() {
             break;
         }
 
-        vec2 sampleGlobalUV = ViewportUVToGlobalUV(sampleViewportUV, v);
+        vec2 sampleGlobalUV = ViewportUVToGlobalUV(sampleViewportUV, viewportData);
         float sceneP_view = FetchViewZ_GlobalUV(sampleGlobalUV, viewZSize);
 
         float thickness = u_thickness + rayT * 0.002;
@@ -237,10 +236,10 @@ void main() {
                 vec2 refineViewportUV;
                 float refineT;
 
-                if (BinaryRefineHit(P_view, R_view, projectionMatrix, v, viewZSize, thickness, tA, tB, refineViewportUV, refineT)) {
+                if (BinaryRefineHit(P_view, R_view, projectionMatrix, viewportData, viewZSize, thickness, tA, tB, refineViewportUV, refineT)) {
                     hit = 1.0;
                     hitViewportUV = refineViewportUV;
-                    hitGlobalUV = ViewportUVToGlobalUV(refineViewportUV, v);
+                    hitGlobalUV = ViewportUVToGlobalUV(refineViewportUV, viewportData);
                     hitRayT = refineT;
                 }
 
@@ -268,16 +267,16 @@ void main() {
         hitColor = textureLod(DownsizedLightingTexture, hitGlobalUV, lod).rgb;
     }
 
-    vec4 base = imageLoad(LightingImage, pixelCoords);
+    vec4 base = imageLoad(LightingImage, px);
 
     float edgeW = (hit > 0.5) ? EdgeFade(hitViewportUV) : 0.0;
 
     if (u_debugMode == 1) {
-        imageStore(LightingImage, pixelCoords, vec4(vec3(hit), 1.0));
+        imageStore(LightingImage, px, vec4(vec3(hit), 1.0));
         return;
     }
     if (u_debugMode == 2) {
-        imageStore(LightingImage, pixelCoords, vec4(hitColor, 1.0));
+        imageStore(LightingImage, px, vec4(hitColor, 1.0));
         return;
     }
 
@@ -291,5 +290,5 @@ void main() {
     vec3 composed = (base.rgb * energyConservation) + reflection;
     composed *= ao;
 
-    imageStore(LightingImage, pixelCoords, vec4(composed, base.a));
+    imageStore(LightingImage, px, vec4(composed, base.a));
 }

@@ -52,7 +52,7 @@ namespace World {
         ratKidAO->SetSkinnedModel(modelName, "RatKing");
 		
         ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.23f));
-        ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle", 1.0f);
+        ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle3", 1.0f);
 		ratKidAO->PrintMeshNames();
 
     }
@@ -60,7 +60,6 @@ namespace World {
     static float DegToRad(float degrees) { return degrees * (HELL_PI / 180.0f); }
 
     void Update(float deltaTime) {
-
 
         if (Input::KeyPressed(HELL_KEY_NUMPAD_1)) {
             AnimatedGameObject* ratKidAO = GetRadKidAO();

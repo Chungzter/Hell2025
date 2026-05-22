@@ -1,8 +1,8 @@
 #version 450
-#include "../common/lighting.glsl"
-#include "../common/post_processing.glsl"
-#include "../common/types.glsl"
-#include "../common/util.glsl"
+#include "../../common/lighting.glsl"
+#include "../../common/post_processing.glsl"
+#include "../../common/types.glsl"
+#include "../../common/util.glsl"
 
 layout(location = 0) in vec3 WorldPos;
 layout(location = 1) in vec3 Normal;
@@ -12,15 +12,13 @@ layout (binding = 1) uniform sampler2D NormalTexture_band0;
 layout (binding = 2) uniform sampler2D DisplacementTexture_band1;
 layout (binding = 3) uniform sampler2D NormalTexture_band1;
 layout (binding = 4) uniform samplerCube cubeMap;
-layout (binding = 5) uniform sampler2D GBufferWorldPositionTexture;
 layout (binding = 6) uniform sampler2D FlashlightCookieTexture;
 
 layout (location = 0) out vec4 ColorOut;
-layout (location = 1) out vec4 UnderwaterMaskOut;
-layout (location = 2) out vec4 WorldPositionOut;
+layout (location = 1) out uint OceanMaskOut;
 
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData  rendererData;   };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData  viewportData[]; };
+readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData  viewportDataArr[]; };
 readonly restrict layout(std430, binding = 4) buffer lightsBuffer       { Light         lights[];       };
 
 uniform vec3 u_wireframeColor;
@@ -209,15 +207,15 @@ void main() {
 
     // Flashlight
     for (int i = 0; i < 2; i++ ) {
-        float flashlightModifer = viewportData[i].flashlightModifer;
+        float flashlightModifer = viewportDataArr[i].flashlightModifer;
 
         if (flashlightModifer > 0.05) {
             vec3 flashlightColor = vec3(0.9, 0.95, 1.1);
 
-            vec3 spotLightPos = viewportData[i].flashlightPosition.xyz;
-            vec3 spotLightDir = normalize(viewportData[i].flashlightDir.xyz);
-            vec3 flashlightViewPos = viewportData[i].inverseView[3].xyz;
-            mat4 flashlightProjectionView = viewportData[i].flashlightProjectionView;
+            vec3 spotLightPos = viewportDataArr[i].flashlightPosition.xyz;
+            vec3 spotLightDir = normalize(viewportDataArr[i].flashlightDir.xyz);
+            vec3 flashlightViewPos = viewportDataArr[i].inverseView[3].xyz;
+            mat4 flashlightProjectionView = viewportDataArr[i].flashlightProjectionView;
 
             vec3 L = normalize(spotLightPos - WorldPos);
             vec3 V = normalize(flashlightViewPos - WorldPos);
@@ -277,18 +275,10 @@ void main() {
         ColorOut = vec4(0.0, 1.0, 0.0, 1.0);
     }
 
-    // Underwater mask output
-    UnderwaterMaskOut = vec4(0.0);
-
-    vec2 gBufferResolution = vec2(textureSize(GBufferWorldPositionTexture, 0));
-    vec2 screenspace_uv = gl_FragCoord.xy / gBufferResolution;
-    vec3 gBufferWorldPosition = texture(GBufferWorldPositionTexture, screenspace_uv).xyz;
-
-    UnderwaterMaskOut.r = 1.0 - step(WorldPos.y, gBufferWorldPosition.y);
-
-    if (!gl_FrontFacing) {
-        UnderwaterMaskOut.r = 0.5;
+    if (gl_FrontFacing) {
+        OceanMaskOut = 1u; // Top side
     }
-
-    WorldPositionOut = vec4(WorldPos, 0.0);
+    else {
+        OceanMaskOut = 2u; // Bottom side
+    }
 }

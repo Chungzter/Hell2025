@@ -10,24 +10,22 @@ void main() {
     ivec2 outputImageSize = imageSize(u_outputImage);
     vec2 uv_screenspace = (vec2(px) + 0.5) / vec2(outputImageSize);
 
-    // Sup
-    vec4 lighting = imageLoad(u_outputImage, px);
+    // Early out if no hair
+    vec4 hair0 = texelFetch(u_hairTexture, px, 0);    
+    if (hair0.rgb == vec3(0)) return;
 
-    // Yeah
-    int sampleCount = textureSamples(u_hairTexture);
-    vec4 hair = vec4(0);
-    for (int i = 0; i < sampleCount; i++) {
-        hair += texelFetch(u_hairTexture, px, i);
-    }
-    hair /= sampleCount;
+    // Sample the rest
+    vec4 hair1 = texelFetch(u_hairTexture, px, 1);    
+    vec4 hair2 = texelFetch(u_hairTexture, px, 2);    
+    vec4 hair3 = texelFetch(u_hairTexture, px, 3);   
+    vec4 lighting = imageLoad(u_outputImage, px); 
+
+    // Sum and average
+    vec4 hair = (hair0 + hair1 + hair2 + hair3) / 4;
 
     // Perform alpha compositing (hair over lighting)
-    vec3 blendedColor = hair.rgb + lighting.rgb * (1.0 - hair.a);
-    float blendedAlpha = hair.a + lighting.a * (1.0 - hair.a);
+    vec3 finalColor = hair.rgb + lighting.rgb * (1.0 - hair.a);
 
-    vec3 finalColor = blendedColor;
-
-    //finalColor = hair.rgb;
-
+    // Output
     imageStore(u_outputImage, px, vec4(finalColor, 1));
 }

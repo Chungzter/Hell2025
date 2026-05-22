@@ -1,0 +1,89 @@
+#version 460 core
+
+#include "../../common/constants.glsl"
+#include "../../common/types.glsl"
+#include "../../common/util.glsl"
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(r8ui, binding = 0) writeonly uniform uimage2D u_oceanFlagsImage; // Output
+layout(r8ui, binding = 1) readonly  uniform uimage2D u_oceanMaskImage;
+layout(binding = 2) uniform sampler2D DisplacementTexture_band0;
+layout(binding = 3) uniform sampler2D DisplacementTexture_band1;
+
+layout(std430, binding = 1) readonly restrict buffer rendererDataBuffer { RendererData rendererData; };
+layout(std430, binding = 2) readonly restrict buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+
+uniform int u_mode;
+uniform float u_oceanOriginY;
+
+void main() {
+    ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 outputImageSize = imageSize(u_oceanFlagsImage);
+
+    if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) return;
+
+    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
+    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
+    mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseProjectionView;
+
+    // Unproject near clipping plane
+    vec4 clipSpaceNear = vec4(viewportUV * 2.0 - 1.0, -1.0, 1.0);
+    vec4 worldNear = inverseProjectionView * clipSpaceNear;
+    vec3 worldPosition = worldNear.xyz / worldNear.w;
+    
+    float fftResoltion_band0 = 512.0;
+    float fftResoltion_band1 = 512.0;
+    float patchSize_band0 = 8.0;
+    float patchSize_band1 = 13.123;
+    
+    highp vec2 uv_band0 = fract(worldPosition.xz / patchSize_band0);
+    highp vec2 uv_band1 = fract(worldPosition.xz / patchSize_band1);
+    
+    float displacementScale_band0 = patchSize_band0 / fftResoltion_band0;
+    float displacementScale_band1 = patchSize_band1 / fftResoltion_band1;
+    
+    float gridCellsPerWorldUnit_band0 = 1.0 / displacementScale_band0;
+    float gridCellsPerWorldUnit_band1 = 1.0 / displacementScale_band1;
+    
+    vec2 bestGuessUV = uv_band0;
+    float dispX = texture(DisplacementTexture_band0, bestGuessUV).x;
+    float dispZ = texture(DisplacementTexture_band0, bestGuessUV).z;
+    vec2 estimatedDisplacement = vec2(dispX, dispZ) / gridCellsPerWorldUnit_band0;
+    vec2 estimatedWorldPosition = worldPosition.xz - estimatedDisplacement;
+    vec2 estimatedUV = fract(estimatedWorldPosition / patchSize_band0);
+    vec3 bestGuessWorldPos_band0 = texture(DisplacementTexture_band0, estimatedUV).xyz * displacementScale_band0;
+    
+    bestGuessUV = uv_band1;
+    dispX = texture(DisplacementTexture_band1, bestGuessUV).x;
+    dispZ = texture(DisplacementTexture_band1, bestGuessUV).z;
+    estimatedDisplacement = vec2(dispX, dispZ) / gridCellsPerWorldUnit_band1;
+    estimatedWorldPosition = worldPosition.xz - estimatedDisplacement;
+    estimatedUV = fract(estimatedWorldPosition / patchSize_band1);
+    vec3 bestGuessWorldPos_band1 = texture(DisplacementTexture_band1, estimatedUV).xyz * displacementScale_band1;
+    
+    float height = bestGuessWorldPos_band0.y + bestGuessWorldPos_band1.y;
+    
+    if (u_mode == 1) {
+        height = bestGuessWorldPos_band0.y;
+    }
+    if (u_mode == 2) {
+        height = bestGuessWorldPos_band1.y;
+    }
+    
+    float waterHeight = height + u_oceanOriginY;
+    bool pixelUnderwater = worldPosition.y < waterHeight;
+    
+    uint oceanMask = imageLoad(u_oceanMaskImage, px).r;
+    bool oceanGeometry = (oceanMask != 0); 
+    
+    uint flag = 0u;
+
+    if (oceanGeometry)  flag = 1u;
+    if (!oceanGeometry) flag = 0u;
+    if (pixelUnderwater && oceanGeometry) flag = 2u;
+    if (pixelUnderwater && !oceanGeometry) flag = 3u;
+
+    imageStore(u_oceanFlagsImage, px, uvec4(flag, 0u, 0u, 0u));
+}

@@ -50,7 +50,8 @@ namespace OpenGLRenderer {
         UpdateSSBO("PointCloudGridOffsets", pointCloud.GetGridCellOffsets().size() * sizeof(uint32_t), pointCloud.GetGridCellOffsets().data());
         UpdateSSBO("PointCloudGridCounts", pointCloud.GetGridCellCounts().size() * sizeof(uint32_t), pointCloud.GetGridCellCounts().data());
 
-        ReserveSSBO("PointCloudGridDirtyFlags", pointCloud.GetGridCellCounts().size() * sizeof(uint32_t));
+        //ReserveSSBO("PointCloudGridDirtyFlags", pointCloud.GetGridCellCounts().size() * sizeof(uint32_t));
+        ReserveSSBO("PointCloudDirtyFlags", pointCloud.GetPointCount() * sizeof(uint32_t));
         ReserveSSBO("ProbePointIndices", sizeof(uint32_t) * ddgiVolume.GetProbePointIndexPoolSize());
         ReserveSSBO("ProbePointOffsets", sizeof(uint32_t) * ddgiVolume.GetTotalProbeCount());
         ReserveSSBO("ProbePointCounts", sizeof(uint32_t) * ddgiVolume.GetTotalProbeCount());
@@ -201,6 +202,7 @@ namespace OpenGLRenderer {
         BindSSBO(5, "LightAABBs");
         BindSSBO(6, g_pointCloudVbo);
         BindSSBO(7, "Samplers");
+        BindSSBO(8, "PointCloudDirtyFlags");
 
         glDispatchCompute((ddgiVolume.GetPointCloundPoints().size() + 127) / 128, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -320,9 +322,11 @@ namespace OpenGLRenderer {
         BindSSBO(7, "ProbePointCounts");
         BindSSBO(8, "DDGIVolume");
         BindSSBO(9, g_pointCloudVbo); // VBO bound as SSBO
+        BindSSBO(10, "PointCloudDirtyFlags");
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        glDispatchCompute((ddgiVolume.GetTotalProbeCount() + 63) / 64, 1, 1);
+        //glDispatchCompute((ddgiVolume.GetTotalProbeCount() + 63) / 64, 1, 1);
+        glDispatchCompute((ddgiVolume.GetTotalProbeCount() + 31) / 32, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
 
@@ -489,7 +493,7 @@ namespace OpenGLRenderer {
         BindSSBO(4, "Lights");
         BindSSBO(5, "PointCloudGridOffsets");
         BindSSBO(6, "PointCloudGridCounts");
-        BindSSBO(7, "PointCloudGridDirtyFlags");
+        BindSSBO(7, "PointCloudDirtyFlags");
 
 		OpenGLRasterizerState state;
 		state.depthTestEnabled = true;

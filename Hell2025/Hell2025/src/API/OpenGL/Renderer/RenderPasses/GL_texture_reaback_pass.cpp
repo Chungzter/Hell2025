@@ -10,6 +10,11 @@
 
 namespace OpenGLRenderer {
 
+    // ATTENTION!!!
+    // 
+    // This does work below.. maybe, but you're not using it anywhere now. 
+    // Keeping for future reference purposes only.
+
     static OpenGLTextureReadBack g_mouseRayReadBack;
     bool g_mouseRayWorldPositionReadBackReady = false;
     glm::vec3 g_mouseRayWorldPosition = glm::vec3(0, 1, 0);
@@ -27,7 +32,7 @@ namespace OpenGLRenderer {
         if (!g_mouseRayReadBack.IsRequestInProgress()) {
             OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
             GLuint fboHandle = gBuffer->GetHandle();
-            GLuint attachment = gBuffer->GetColorAttachmentSlotByName("WorldPosition");
+            GLuint attachment = gBuffer->GetColorAttachmentSlotByName("TEXTURE_NAME"); // This was W0rldPosition but you removed that texture.
             int mappedMouseX = Util::MapRange(Input::GetMouseX(), 0, BackEnd::GetCurrentWindowWidth(), 0, gBuffer->GetWidth());
             int mappedMouseY = Util::MapRange(Input::GetMouseY(), 0, BackEnd::GetCurrentWindowHeight(), gBuffer->GetHeight(), 0);
             int xOffset = mappedMouseX;

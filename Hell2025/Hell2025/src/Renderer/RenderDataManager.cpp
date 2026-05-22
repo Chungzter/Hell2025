@@ -1053,6 +1053,10 @@ namespace RenderDataManager {
         gpuLight.lightIndex = lightIndex;
         gpuLight.isDirtyForRaytracing = light->IsDirtyForRaytracing();
 
+        //if (gpuLight.isDirtyForRaytracing) {
+        //    Renderer::DrawPoint(light->GetPosition(), BLUE);
+        //}
+
         IESProfile* iesProfile = AssetManager::GetIESProfileByIESProfileType(light->GetIESProfileType());
         if (iesProfile) {
             gpuLight.iesExposure = light->GetIESExposure();

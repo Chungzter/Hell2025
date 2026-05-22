@@ -69,6 +69,10 @@ namespace Editor {
     ObjectType GetHoveredObjectType();
     uint64_t GetHoveredObjectId();
 
+    // Height map
+    bool HeightMapMouseHitFound();
+    const glm::vec3& GetHeightMapMouseHitPosition();
+
     // Object selection
     void SelectObject(uint64_t objectId);
     void UnselectAnyObject();

@@ -14,10 +14,8 @@
 namespace Editor {
 
     int g_selectedVertexIndex = 0;
-
-
-
-
+    bool g_heightMapMouseHitFound = false;
+    glm::vec3 g_heightMapMouseHitPosition = glm::vec3(0.0f);
 
     void UpdateObjectHover() {
         // Reset values from last frame
@@ -58,6 +56,12 @@ namespace Editor {
                 SetHoveredObjectId(wall->GetObjectId());
             }
         }
+
+        // Height map mouse position
+        Physics::ActivateAllHeightFields();
+        PhysXRayResult heightMapResult = Physics::CastPhysXRayHeightMap(rayOrigin, rayDir, 10000.0f);
+        g_heightMapMouseHitFound = heightMapResult.hitFound;
+        g_heightMapMouseHitPosition = heightMapResult.hitPosition;
     }
 
     void UpdateObjectSelection() {
@@ -340,5 +344,13 @@ namespace Editor {
     void UnselectAnyObject() {
         SetSelectedObjectType(ObjectType::NO_TYPE);
         SetSelectedObjectId(0);
+    }
+
+    bool HeightMapMouseHitFound() {
+        return g_heightMapMouseHitFound;
+    }
+
+    const glm::vec3& GetHeightMapMouseHitPosition() {
+        return g_heightMapMouseHitPosition;
     }
 }

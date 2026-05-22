@@ -61,7 +61,7 @@ struct Light {
     void ForceDirty();
     void ConfigureMeshNodes();
 
-    // Remove me
+    // Remove me (NO KEEP ME)
     void SetCullBoundsMinX(float x);
     void SetCullBoundsMinY(float y);
     void SetCullBoundsMinZ(float z);
@@ -71,6 +71,9 @@ struct Light {
     // Remove me
 
     Frustum* GetFrustumByFaceIndex(uint32_t faceIndex);
+
+    glm::vec3 GetWorldCullBoundsMin() const                    { return GetPosition() + GetCullBoundsMin(); }
+    glm::vec3 GetWorldCullBoundsMax() const                    { return GetPosition() + GetCullBoundsMax(); }
 
     MeshNodes& GetMeshNodes()                                  { return m_meshNodes; }
     LightType GetType() const                                  { return m_createInfo.type; }

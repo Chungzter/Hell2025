@@ -110,7 +110,6 @@ namespace OpenGLRenderer {
     }
 
     void PaintHeightMap() {
-        if (!IsMouseRayWorldPositionReadBackReady()) return;
         if (!Editor::IsOpen()) return;
         if (Editor::GetEditorMode() != EditorMode::MAP_HEIGHT_EDITOR) return;
         if (ImGuiBackEnd::OwnsMouse()) return;
@@ -119,10 +118,12 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLShader* shader = GetShaderOLD("HeightMapPaint");
 
+        // Bail if no mouse hit with height map
+        if (!Editor::HeightMapMouseHitFound()) return;
+
         if (Input::LeftMouseDown() || Input::RightMouseDown()) {
             shader->Bind();
-            shader->SetInt("u_paintX", static_cast<int>(GetMouseRayWorldPostion().x / (float)worldFramebuffer->GetWidth()));
-            shader->SetInt("u_paintY", static_cast<int>(GetMouseRayWorldPostion().z / (float)worldFramebuffer->GetHeight()));
+            shader->SetVec3("u_mouseHitWorldPos", Editor::GetHeightMapMouseHitPosition());
             shader->SetFloat("u_brushSize", Editor::GetMapHeightBrushSize());
             shader->SetFloat("u_brushStrength", Editor::GetMapHeightBrushStrength() * (Input::RightMouseDown() ? -1.0f : 1.0f));
             shader->SetFloat("u_noiseStrength", Editor::GetMapHeightNoiseStrength());
@@ -132,8 +133,6 @@ namespace OpenGLRenderer {
 
             glMemoryBarrier(GL_ALL_BARRIER_BITS);
             glBindImageTexture(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_R16F);
-            glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-            glBindTextureUnit(2, gBuffer->GetDepthAttachmentHandle());
             glDispatchCompute(worldFramebuffer->GetWidth() / 32, worldFramebuffer->GetHeight() / 32, 1);
 
             GenerateHeightMapVertexData();

@@ -146,7 +146,6 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* wipBuffer = GetFrameBufferOLD("WIP");
         OpenGLSSBO* bladeositionsSSBO = GetSSBO("BladePositions");
 
-        BlitFrameBuffer(gBuffer, wipBuffer, "WorldPosition", "WorldPosition", GL_COLOR_BUFFER_BIT, GL_NEAREST);
         BlitFrameBufferDepth(gBuffer, wipBuffer);
        
         // Bindings
@@ -156,7 +155,6 @@ namespace OpenGLRenderer {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, g_grassGeometryMesh.GetVBO());
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, g_grassGeometryMesh.GetEBO());
         glBindTextureUnit(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"));
-        glBindTextureUnit(1, wipBuffer->GetColorAttachmentHandleByName("WorldPosition"));
         glBindTextureUnit(2, AssetManager::GetTextureByName("Perlin")->GetGLTexture().GetHandle());
         glBindTextureUnit(3, roadFramebuffer->GetColorAttachmentHandleByName("RoadMask"));
         glBindTextureUnit(4, wipBuffer->GetDepthAttachmentHandle());

@@ -116,7 +116,7 @@ bool OpenGLShader::Load(std::vector<std::string> shaderPaths) {
         std::cout << "-------------------------------------------------------------------------\n";
         for (OpenGLShaderModule& module : modules) {
             glDeleteShader(module.GetHandle());
-            Logging::Debug() << module.GetFinalSource() << "\n\n";
+            //Logging::Debug() << module.GetFinalSource() << "\n\n";
         }
         return false;
     }

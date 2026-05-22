@@ -3,7 +3,6 @@
 //#if ENABLE_BINDLESS == 1
 #extension GL_ARB_bindless_texture : enable
 #extension GL_EXT_nonuniform_qualifier : enable
-readonly restrict layout(std430, binding = 7) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 //#endif
 
 #include "../../common/raytracing.glsl"
@@ -15,6 +14,8 @@ layout(local_size_x = 128) in;
 layout(std430, binding = 4) buffer lightsBuffer     { Light lights[];  };
 layout(std430, binding = 5) buffer lightsAABBBuffer { AABB  lightsAABB[];  };
 layout(std430, binding = 6) buffer PointCloudBuffer { CloudPoint points[]; };
+readonly restrict layout(std430, binding = 7) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+layout(std430, binding = 8) buffer PointCloudDirtyFlagsBuffer { uint pointCloudDirtyFlags[]; };
 
 uniform int u_lightCount;
 
@@ -29,7 +30,6 @@ void main() {
 
     vec3 directLight = vec3(0.0);
 
-    
 
     // Does this point even need updating?
     bool needsUpdate = false;
@@ -40,24 +40,31 @@ void main() {
         if (light.isDirtyForRaytracing == 0) continue;
 
         // Light was dirty. so now check the point is within the light's tight aabb bounds
-        AABB lightAABB = lightsAABB[i];
+        // AABB lightAABB = lightsAABB[i];
     
-        if (PointInAABBBounds(pointPosition.xyz, lightAABB.boundsMin.xyz, lightAABB.boundsMax.xyz)) {
+        //if (PointInAABBBounds(pointPosition.xyz, lightAABB.boundsMin.xyz, lightAABB.boundsMax.xyz)) {
+        //    needsUpdate = true;
+        //    break;
+        //}
+
+        // Above is sketchy. For now do point vs sphere intersection
+        vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+        if (PointInSphere(pointPosition.xyz, lightPosition, light.radius)) {
             needsUpdate = true;
             break;
         }
     }
 
-   needsUpdate = true;
+    //needsUpdate = true;
     
     /// Don't raytracing if you don't need to
     if (!needsUpdate) { 
-        points[idx].directLightingRGB_dirty.w = 0.0; // mark this point as not dirty
+        pointCloudDirtyFlags[idx] = 0u;
         return;
     }
+
+    uint pointDirty = 0u;
     
-
-
     // Accumulate light from all sources
     for (int i = 0; i < u_lightCount; i++) {
         Light light = lights[i];
@@ -96,6 +103,7 @@ void main() {
             }
 
             directLight += vec3(lightAttenuation * ndotl) * lightcolor * candelas;
+            pointDirty = 1u;
         }
     }
 
@@ -111,5 +119,6 @@ void main() {
 
     // Write color
     vec3 outgoingRadiance = (directLight * diffuseColor) / 3.14159265359;
-    points[idx].directLightingRGB_dirty = vec4(outgoingRadiance, 1.0);
+    points[idx].directLightingRGB_dirty = vec4(outgoingRadiance, 1.0); // w is unused
+    pointCloudDirtyFlags[idx] = pointDirty;
 }

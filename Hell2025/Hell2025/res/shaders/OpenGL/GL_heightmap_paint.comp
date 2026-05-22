@@ -2,15 +2,8 @@
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 #include "../common/constants.glsl"
-#include "../common/types.glsl"
-#include "../common/util.glsl"
 
 layout (binding = 0, r16f) uniform image2D HeightMapImage;
-layout(binding = 1) uniform sampler2D WorldPositionTexture;
-layout(binding = 2) uniform sampler2D u_depthTexture;
-
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 uniform float u_brushStrength;
 uniform float u_noiseStrength;
@@ -18,6 +11,7 @@ uniform float u_noiseScale;
 uniform float u_minPaintHeight;
 uniform float u_maxPaintHeight;
 uniform float u_brushSize;
+uniform vec3 u_mouseHitWorldPos;
 
 vec2 randomGradient(vec2 p) {
     p = mod(p, vec2(289.0));
@@ -66,29 +60,9 @@ float fbm(vec2 uv, int octaves) {
 void main() {
     ivec2 px = ivec2(gl_GlobalInvocationID.xy);
     ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
-    ivec2 outputImageSize = imageSize(HeightMapImage);
 
-    vec2 mouseUV = vec2(rendererData.normalizedMouseX, 1.0 - rendererData.normalizedMouseY);
-
-    if (mouseUV.x < 0.0 || mouseUV.x > 1.0 || mouseUV.y < 0.0 || mouseUV.y > 1.0) {
-        return;
-    }
-
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-
-    ViewportData viewportData = viewportDataArr[viewportIndex];
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
-    mat4 inverseProjectionView = viewportData.inverseProjectionView;
-
-    float depth = texelFetch(u_depthTexture, px, 0).r;
-    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionView);
-    
-    vec3 mouseWorldPos = texture(WorldPositionTexture, mouseUV).rgb;
-    //vec3 mouseWorldPos = ReconstructWorldPos(viewportUV, mouseUV, inverseProjectionView);;
-    
-    int paintX = int(mouseWorldPos.x / HEIGHTMAP_SCALE_XZ);
-    int paintY = int(mouseWorldPos.z / HEIGHTMAP_SCALE_XZ);
+    int paintX = int(u_mouseHitWorldPos.x / HEIGHTMAP_SCALE_XZ);
+    int paintY = int(u_mouseHitWorldPos.z / HEIGHTMAP_SCALE_XZ);
 
     float dist = length(vec2(pixelCoords) - vec2(paintX, paintY));
 
@@ -108,6 +82,7 @@ void main() {
 
     // Noise
     float noiseDelta = 0.0;
+
     if (u_noiseStrength > 0.0) {
         const float noiseScale = u_noiseScale * 0.1;
         const int noiseOctaves  = 5;

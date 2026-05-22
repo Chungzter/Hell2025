@@ -17,6 +17,7 @@ struct SpaceCoords {
     float gpuRightPixel;   // OpenGL space (y-up)
     float gpuTopPixel;     // OpenGL space (y-up)
     float gpuBottomPixel;  // OpenGL space (y-up)
+    glm::vec2 localMouseUV;
 };
 
 struct Viewport {

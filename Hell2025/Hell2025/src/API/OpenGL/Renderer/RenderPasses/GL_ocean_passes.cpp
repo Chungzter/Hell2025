@@ -19,9 +19,7 @@ namespace OpenGLRenderer {
     void OceanGeometryPass() {
         ProfilerOpenGLZoneFunction();
 
-        if (!World::HasOcean()) {
-            return;
-        }
+        if (!World::HasOcean()) return;
 
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
@@ -68,16 +66,16 @@ namespace OpenGLRenderer {
             offset = Ocean::GetBaseFFTResolution().x * scale;
         }
 
-        // OpenGLRenderer::BlitFrameBufferDepth(gBuffer, waterFrameBuffer); // Does this even do anything? seems like it only slows the pass down
+        // Copy the gbuffer depth to prevent drawing over other geometry
+        OpenGLRenderer::BlitFrameBufferDepth(gBuffer, waterFrameBuffer);
 
         waterFrameBuffer->Bind();
-        waterFrameBuffer->DrawBuffers({ "Color", "UnderwaterMask", "WorldPosition" });
+        waterFrameBuffer->DrawBuffers({ "Lighting", "OceanMask" });
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::BlitFrameBufferDepth(gBuffer, waterFrameBuffer);
             OpenGLRenderer::SetViewport(waterFrameBuffer, viewport);
 
             const ViewportData& viewportData = RenderDataManager::GetViewportData()[i];
@@ -91,8 +89,6 @@ namespace OpenGLRenderer {
             Transform tesseleationTransform;
             tesseleationTransform.scale = glm::vec3(scale);
 
-            shader->SetInt("u_viewportIndex", i);
-
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, fftFrameBuffer_band0->GetColorAttachmentHandleByName("Displacement"));
             glActiveTexture(GL_TEXTURE1);
@@ -103,12 +99,12 @@ namespace OpenGLRenderer {
             glBindTexture(GL_TEXTURE_2D, fftFrameBuffer_band1->GetColorAttachmentHandleByName("Normals"));
             glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemapView->GetHandle());
-            glActiveTexture(GL_TEXTURE5);
-            glBindTexture(GL_TEXTURE_2D, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
             glBindTextureUnit(6, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
             glBindTextureUnit(7, flashLightShadowMapsFBO->GetDepthTextureHandle());
             glActiveTexture(GL_TEXTURE8);
             glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("WaterNormals")->GetGLTexture().GetHandle());
+
+            BindTextureUnit(5, gBuffer->GetDepthAttachmentHandle());
 
             glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
             glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
@@ -119,6 +115,7 @@ namespace OpenGLRenderer {
             // Tessellated ocean
             tesseleationTransform.position.x = -patchOffset;
             shader->Bind();
+            shader->SetInt("u_viewportIndex", i);
             shader->SetMat4("u_projectionView", projectionView);
             shader->SetVec3("u_wireframeColor", GREEN);
             shader->SetMat4("u_model", tesseleationTransform.to_mat4());
@@ -169,168 +166,54 @@ namespace OpenGLRenderer {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
-    void OceanGeometryPassWIP() {
+    void OceanUnderWaterFlags() {
         ProfilerOpenGLZoneFunction();
 
-        if (!World::HasOcean()) {
-            return;
-        }
+        OpenGLFrameBuffer& fftFrameBuffer_band0 = GetFrameBuffer("FFT_band0");
+        OpenGLFrameBuffer& fftFrameBuffer_band1 = GetFrameBuffer("FFT_band1");
+        OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
 
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
-        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
-        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
-        OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
-        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
-        OpenGLMeshPatch* oceanMeshPatch = GetOceanMeshPatch();
-        OpenGLShader* shader = GetShaderOLD("OceanGeometry");
+        BindShader("OceanFlags");
+        
+        SetUniformInt("u_mode", GetFftDisplayMode());
+        SetUniformFloat("u_oceanOriginY", Ocean::GetOceanOriginY());
 
-        if (!gBuffer) return;
-        if (!waterFrameBuffer) return;
-        if (!fftFrameBuffer_band0) return;
-        if (!fftFrameBuffer_band1) return;
-        if (!skyboxCubemapView) return;
-        if (!oceanMeshPatch) return;
-        if (!shader) return;
-        if (!flashLightShadowMapsFBO) return;
-
-        static bool wireframe = false;
-
-        if (Input::KeyPressed(HELL_KEY_9)) {
-            wireframe = !wireframe;
-        }
-
-        waterFrameBuffer->Bind();
-        waterFrameBuffer->DrawBuffers({ "Color", "UnderwaterMask", "WorldPosition" });
-
-        glGenerateTextureMipmap(fftFrameBuffer_band0->GetColorAttachmentHandleByName("Normals"));
-        glGenerateTextureMipmap(fftFrameBuffer_band1->GetColorAttachmentHandleByName("Normals"));
-
-        glBindVertexArray(oceanMeshPatch->GetVAO());
-        glPatchParameteri(GL_PATCH_VERTICES, 4);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fftFrameBuffer_band0->GetColorAttachmentHandleByName("Displacement"));
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, fftFrameBuffer_band0->GetColorAttachmentHandleByName("Normals"));
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, fftFrameBuffer_band1->GetColorAttachmentHandleByName("Displacement"));
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, fftFrameBuffer_band1->GetColorAttachmentHandleByName("Normals"));
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemapView->GetHandle());
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-        glBindTextureUnit(6, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
-        glBindTextureUnit(7, flashLightShadowMapsFBO->GetDepthTextureHandle());
-        glActiveTexture(GL_TEXTURE8);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("WaterNormals")->GetGLTexture().GetHandle());
-
-        glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
-        glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-
-        glEnable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-
-        OpenGLRenderer::BlitFrameBufferDepth(gBuffer, waterFrameBuffer); // DO U NEED THIS?
-
-        BindSSBO(10, "OceanPatchTransforms"); // Find out what indices are actually safe to use and do not use 22 u psychopath
-
-        for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            if (!viewport->IsVisible()) continue;
-
-            OpenGLRenderer::SetViewport(waterFrameBuffer, viewport);
-         
-            const ViewportData& viewportData = RenderDataManager::GetViewportData()[i];
-            glm::mat4 projectionMatrix = viewportData.projection;
-            glm::mat4 viewMatrix = viewportData.view;
-            glm::vec3 viewPos = viewportData.viewPos;
-            glm::mat4 projectionView = viewportData.projectionView;
-
-            // Tessellated ocean
-            shader->Bind();
-            shader->SetInt("u_viewportIndex", i); // previously u were setting this before even binding the shader. its possible u dont even use it.
-            shader->SetMat4("u_projectionView", projectionView);
-            shader->SetVec3("u_wireframeColor", GREEN);
-            shader->SetInt("u_mode", GetFftDisplayMode());
-            shader->SetVec3("u_viewPos", viewPos);
-            shader->SetVec2("u_fftGridSize", Ocean::GetBaseFFTResolution());
-            shader->SetBool("u_wireframe", wireframe);
-            shader->SetFloat("u_meshSubdivisionFactor", Ocean::GetMeshSubdivisionFactor());
-            shader->SetFloat("u_oceanOriginY", Ocean::GetOceanOriginY());
-            shader->SetFloat("u_time", Game::GetTotalTime());
-
-            // Draw water Surface
-            const std::vector<glm::mat4>& oceanPatchTransforms = RenderDataManager::GetOceanPatchTransforms();
-            for (const glm::mat4& transform : oceanPatchTransforms) {
-                shader->SetMat4("u_model", transform);
-                glDrawElements(GL_PATCHES, oceanMeshPatch->GetIndexCount(), GL_UNSIGNED_INT, nullptr);
-            }
-
-            // Draw water Surface
-            //const std::vector<glm::mat4>& oceanPatchTransforms = RenderDataManager::GetOceanPatchTransforms();
-            //GLsizei instancecount = oceanPatchTransforms.size();
-            //glDrawElementsInstanced(GL_PATCHES, oceanMeshPatch->GetIndexCount(), GL_UNSIGNED_INT, nullptr, instancecount);
-        }
-
-        // Cleanup
-        shader->SetBool("u_wireframe", false);
-        glEnable(GL_DEPTH_TEST);
-        glCullFace(GL_BACK);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        BindImageTexture(0, waterFrameBuffer.GetColorAttachmentHandleByName("OceanFlags"), GL_WRITE_ONLY, GL_R8UI);
+        BindImageTexture(1, waterFrameBuffer.GetColorAttachmentHandleByName("OceanMask"), GL_READ_ONLY, GL_R8UI);
+        BindTextureUnit(2, fftFrameBuffer_band0.GetColorAttachmentHandleByName("Displacement"));
+        BindTextureUnit(3, fftFrameBuffer_band1.GetColorAttachmentHandleByName("Displacement"));
+        
+        glDispatchCompute((waterFrameBuffer.GetWidth() + 7) / 8, (waterFrameBuffer.GetHeight() + 7) / 8, 1);
     }
 
     void OceanSurfaceCompositePass() {
         ProfilerOpenGLZoneFunction();
 
-        if (!World::HasOcean()) {
-            return;
-        }
-
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
-        OpenGLFrameBuffer* quaterSizeFrameBuffer = GetFrameBufferOLD("QuarterSize");
+        if (!World::HasOcean()) return;
+        
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
+        OpenGLFrameBuffer& quaterSizeFrameBuffer = GetFrameBuffer("QuarterSize");
         OpenGLShader* shader = GetShaderOLD("OceanSurfaceComposite");
 
-        if (!gBuffer) return;
-        if (!shader) return;
-        if (!waterFrameBuffer) return;
-        if (!quaterSizeFrameBuffer) return;
-
         // Down sample the final lighting to 25%
-        BlitFrameBuffer(gBuffer, quaterSizeFrameBuffer, "FinalLighting", "DownsampledFinalLighting", GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-        const ViewportData& viewportData = RenderDataManager::GetViewportData()[0];
-        glm::mat4 projectionMatrix = viewportData.projection;
-        glm::mat4 viewMatrix = viewportData.view;
-        glm::vec3 viewPos = viewportData.viewPos;
-        glm::mat4 projectionView = viewportData.projectionView;
+        // TODO: try using Gaussian blur of final lighting. It's currently calculated in the underwater composite pass so will have to move it before
+        BlitFrameBuffer(&gBuffer, &quaterSizeFrameBuffer, "FinalLighting", "DownsampledFinalLighting", GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
         // Water surface composite
-        glm::mat4 inverseProjectionView = glm::inverse(projectionView);
-        glm::vec2 resolution = glm::vec2(gBuffer->GetWidth(), gBuffer->GetHeight());
+        glm::vec2 resolution = glm::vec2(gBuffer.GetWidth(), gBuffer.GetHeight());
         shader->Bind();
         shader->SetFloat("u_time", Game::GetTotalTime());
-        shader->SetVec3("u_viewPos", viewPos);
         shader->SetVec2("u_resolution", resolution);
-        shader->SetMat4("u_inverseProjectionView", inverseProjectionView);
         shader->SetFloat("u_oceanYOrigin", Ocean::GetOceanOriginY());
 
-        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, waterFrameBuffer->GetColorAttachmentHandleByName("Color"));
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("WaterNormals")->GetGLTexture().GetHandle());
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("WaterDUDV")->GetGLTexture().GetHandle());
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, waterFrameBuffer->GetColorAttachmentHandleByName("UnderwaterMask"));
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, quaterSizeFrameBuffer->GetColorAttachmentHandleByName("DownsampledFinalLighting"));
+        BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("FinalLighting"), GL_READ_WRITE, GL_RGBA16F);
+        BindImageTexture(1, waterFrameBuffer.GetColorAttachmentHandleByName("OceanMask"), GL_READ_ONLY, GL_R8UI);
+        BindTextureUnit(2, waterFrameBuffer.GetColorAttachmentHandleByName("Lighting"));
+        BindTextureUnit(3, AssetManager::GetTextureByName("WaterDUDV")->GetGLTexture().GetHandle());
+        BindTextureUnit(4, quaterSizeFrameBuffer.GetColorAttachmentHandleByName("DownsampledFinalLighting"));
 
-        glDispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);
-
+        glDispatchCompute((gBuffer.GetWidth() + 7) / 8, (gBuffer.GetHeight() + 7) / 8, 1);
     }
 
 
@@ -338,7 +221,6 @@ namespace OpenGLRenderer {
         ProfilerOpenGLZoneFunction();
 
         OpenGLShader* gaussianBlurShader = GetShaderOLD("GaussianBlur");
-        OpenGLShader* underwaterMaskPreProcessShader = GetShaderOLD("OceanUnderwaterMaskPreProcess");
         OpenGLShader* underwaterCompositeShader = GetShaderOLD("OceanUnderwaterComposite");
 
         OpenGLFrameBuffer* miscFullSizeFrameBuffer = GetFrameBufferOLD("MiscFullSize");
@@ -348,7 +230,6 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
 
         if (!gaussianBlurShader) return;
-        if (!underwaterMaskPreProcessShader) return;
         if (!underwaterCompositeShader) return;
         if (!miscFullSizeFrameBuffer) return;
         if (!gBuffer) return;
@@ -375,43 +256,22 @@ namespace OpenGLRenderer {
             return;
         }
 
-        // Underwater mask pre-process
-        underwaterMaskPreProcessShader->Bind();
-        underwaterMaskPreProcessShader->SetInt("u_mode", GetFftDisplayMode());
-        underwaterMaskPreProcessShader->SetFloat("u_oceanOriginY", Ocean::GetOceanOriginY());
-        glBindImageTexture(0, waterFrameBuffer->GetColorAttachmentHandleByName("UnderwaterMask"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_R8);
-        glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-        glBindTextureUnit(2, fftFrameBuffer_band0->GetColorAttachmentHandleByName("Displacement"));
-        glBindTextureUnit(3, fftFrameBuffer_band1->GetColorAttachmentHandleByName("Displacement"));
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        glDispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);
-
         const ViewportData& viewportData = RenderDataManager::GetViewportData()[0];
-        glm::mat4 projectionMatrix = viewportData.projection;
-        glm::mat4 viewMatrix = viewportData.view;
-        glm::vec3 viewPos = viewportData.viewPos;
-        glm::vec3 cameraForward = viewportData.cameraForward;
-        glm::mat4 projectionView = viewportData.projectionView;
-        glm::mat4 inverseProjectionView = glm::inverse(projectionView);
         glm::vec2 resolution = glm::vec2(gBuffer->GetWidth(), gBuffer->GetHeight());
 
         // Underwater composite
         underwaterCompositeShader->Bind();
         underwaterCompositeShader->SetFloat("u_time", Game::GetTotalTime());
-        underwaterCompositeShader->SetVec3("u_viewPos", viewPos);
-        underwaterCompositeShader->SetVec3("u_cameraForward", cameraForward);
         underwaterCompositeShader->SetVec2("u_resolution", resolution);
-        underwaterCompositeShader->SetMat4("u_inverseProjectionView", inverseProjectionView);
+
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-        glBindTextureUnit(1, waterFrameBuffer->GetColorAttachmentHandleByName("UnderwaterMask"));
-        glBindTextureUnit(2, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLighting"));
-        glBindTextureUnit(3, waterFrameBuffer->GetColorAttachmentHandleByName("Color"));
-        glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-        glBindTextureUnit(5, gBuffer->GetColorAttachmentHandleByName("Normal"));
-        glBindTextureUnit(6, waterFrameBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-        glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("WaterDUDV")->GetGLTexture().GetHandle());
+        
+        BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), GL_READ_WRITE, GL_RGBA16F);
+        BindImageTexture(1, waterFrameBuffer->GetColorAttachmentHandleByName("OceanFlags"), GL_READ_ONLY, GL_R8UI);
+        BindTextureUnit(2, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLighting"));
+        BindTextureUnit(3, waterFrameBuffer->GetColorAttachmentHandleByName("Lighting"));
+        BindTextureUnit(4, AssetManager::GetTextureByName("WaterDUDV")->GetGLTexture().GetHandle());
+
         glDispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);
     }
 

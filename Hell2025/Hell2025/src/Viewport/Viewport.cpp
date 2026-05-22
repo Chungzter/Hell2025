@@ -38,6 +38,10 @@ void Viewport::UpdateSpaceCoords(SpaceCoords& spaceCoords, uint32_t fullResoluti
     spaceCoords.gpuRightPixel = spaceCoords.rightPixel;
     spaceCoords.gpuTopPixel = fullResolutionHeight - spaceCoords.topPixel;
     spaceCoords.gpuBottomPixel = fullResolutionHeight - spaceCoords.bottomPixel;
+
+    // Local mouse UVs
+    spaceCoords.localMouseUV.x = glm::clamp(spaceCoords.localMouseX / spaceCoords.width, 0.0f, 1.0f);
+    spaceCoords.localMouseUV.y = 1.0f - glm::clamp(spaceCoords.localMouseY / spaceCoords.height, 0.0f, 1.0f);
 }
 
 void Viewport::Update() {

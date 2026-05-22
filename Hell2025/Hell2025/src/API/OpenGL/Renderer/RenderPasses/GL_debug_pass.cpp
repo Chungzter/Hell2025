@@ -251,6 +251,9 @@ namespace OpenGLRenderer {
             rendererSettings.rendererOverrideState == RendererOverrideState::VELOCITY ||
             rendererSettings.rendererOverrideState == RendererOverrideState::VISIBILITY) {
 
+            OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
+            BindTextureUnit(9, waterFrameBuffer.GetColorAttachmentHandleByName("OceanFlags"));
+
             if (Renderer::GetRendererMode() == RendererMode::MSAA) {
 				OpenGLShader* shader = GetShaderOLD("DebugViewMSAA");
 				if (!shader) return;
@@ -299,7 +302,6 @@ namespace OpenGLRenderer {
 				glBindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
 				glBindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
 				glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("VelocityOcclusionSubSurface"));
-				glBindTextureUnit(5, miscFullSizeFBO->GetColorAttachmentHandleByName("ViewportIndex"));
 				glBindTextureUnit(7, gBuffer->GetColorAttachmentHandleByName("Emissive"));
 				glBindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
 

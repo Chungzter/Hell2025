@@ -1,4 +1,4 @@
-#version 450
+ #version 450
 #include "../../common/ddgi.glsl"
 #include "../../common/types.glsl"
 

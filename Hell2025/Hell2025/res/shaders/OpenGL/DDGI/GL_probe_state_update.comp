@@ -42,12 +42,18 @@ void main() {
     uint probeIdx = gl_GlobalInvocationID.x;
     if (probeIdx >= volume.totalProbes) return;
 
+    // If probe was irrelevant last frame, wipe it's cooldown
+    if (!probeStates[probeIdx].isRelevant) {
+        probeStates[probeIdx].irradianceCooldown = 0;
+    }
+
     probeStates[probeIdx].isRelevant = false;
 
     if (probeStates[probeIdx].distanceCooldown > 0u) {
         probeStates[probeIdx].distanceCooldown--;
     }
 
+    // ATTENTION 
     // Irradiance cool down decrement is now in the probe dirty point check shader, coz it deppends on relevance which is calculated later!
 
     UpdateDistanceCooldown(probeIdx);

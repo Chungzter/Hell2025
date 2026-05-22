@@ -4,6 +4,7 @@
 #include "Imgui/ImguiBackEnd.h"
 #include <ImGui/imgui.h>
 #include "Imgui/Types/Types.h"
+#include "Renderer/Renderer.h"
 #include "Managers/MapManager.h"
 #include "World/World.h"
 
@@ -209,9 +210,11 @@ namespace Editor {
         // Object properties
         if (GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR || GetEditorMode() == EditorMode::HOUSE_EDITOR) {
             if (g_objectPropertiesHeader.CreateImGuiElement()) {
-                //if (GetSelectedObjectType() != ObjectType::NO_TYPE) {
-                //    g_objectNameInput.CreateImGuiElement();
-                //}
+
+                // Begin scrollable child thing
+                float currentY = ImGui::GetCursorScreenPos().y;
+                float remainingHeight = BackEnd::GetCurrentWindowHeight() - currentY - 10.0f;
+                ImGui::BeginChild("ObjectPropertiesScrollRegion", ImVec2(0.0f, remainingHeight), false);
 
                 // DDGI Volume
                 if (DDGIVolume* object = World::GetDDGIVolumeByObjectId(GetSelectedObjectId())) {
@@ -235,6 +238,9 @@ namespace Editor {
 
                 // Lights
                 if (Light* light = World::GetLightByObjectId(GetSelectedObjectId())) {
+                    AABB aabb(light->GetWorldCullBoundsMin(), light->GetWorldCullBoundsMax());
+                    Renderer::DrawAABB(aabb, YELLOW);
+
                     EditorUI::DropDown type;
                     type.SetText("Type");
                     type.SetOptions(Util::GetEnumNamesAsVector<LightType>());
@@ -502,6 +508,9 @@ namespace Editor {
                 }
 
                 ImGui::Dummy(ImVec2(0.0f, 20.0f));
+
+                // End scrollable region
+                ImGui::EndChild();
             }
         }
 

@@ -29,21 +29,10 @@ layout(std430, binding = 6) buffer IndirectDraw {
     int baseInstance;
 } drawCmd;
 
-readonly layout(std430, binding = 2) buffer viewportDataBuffer {
-	ViewportData viewportDataArr[];
-};
-
-layout(std430, binding = 10) buffer inputVertexBuffer {
-    Vertex InputVertexBuffer[];
-};
-
-layout(std430, binding = 11) buffer inputIndexBuffer {
-    uint InputIndexBuffer[];
-};
-
-layout(std430, binding = 9) buffer BladePositions {
-    vec4 bladePositions[];
-};
+readonly layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+layout(std430, binding = 10) buffer inputVertexBuffer { Vertex InputVertexBuffer[]; };
+layout(std430, binding = 11) buffer inputIndexBuffer { uint InputIndexBuffer[]; };
+layout(std430, binding = 9) buffer BladePositions { vec4 bladePositions[]; };
 
 float SignedDistance(vec3 point, vec4 plane) {
     return dot(plane.xyz, point) + plane.w;
@@ -167,19 +156,36 @@ void main() {
     if (any(lessThan(biasedScreenUV, vec2(0.0))) || any(greaterThan(biasedScreenUV, vec2(1.0)))) return;
 
     // Occlusion cull
-    vec3 sceneWorldPos = texture(WorldPositionTexture, biasedScreenUV).rgb;
-
-    //float depth = texture(u_depthTexture, biasedScreenUV).r;
-    //vec3 sceneWorldPos = ReconstructWorldPos(biasedScreenUV, depth, inverseProjection);
-
+    float depth = texture(u_depthTexture, biasedScreenUV).r;
+    vec3 sceneWorldPos = ReconstructWorldPos(biasedScreenUV, depth, inverseProjectionView);
 
     float sceneDistanceToCamera = length(sceneWorldPos - viewPos);
     float baseDistanceToCamera = length(basePos - viewPos);        
     float boundingRadius = bladeHeight;
+
     if ((baseDistanceToCamera - boundingRadius) > sceneDistanceToCamera) {
         return;
     }
         
+    // this may be faster?
+
+    // float sceneDepth = texture(u_depthTexture, biasedScreenUV).r;
+    // 
+    // // offset point toward camera by blade height bounding radius
+    // vec3 dirToCamera = normalize(viewPos - basePos);
+    // vec3 testPos = basePos + (dirToCamera * bladeHeight);
+    // 
+    // // project to clip space
+    // vec4 clipPos = projectionView * vec4(testPos, 1.0);
+    // if (clipPos.w <= 0.0) return;
+    // 
+    // float ndcZ = clipPos.z / clipPos.w;
+    // 
+    // float grassDepth = ndcZ;
+    // // if (grassDepth > sceneDepth) return;
+    // // if (grassDepth < sceneDepth) return; // revere Z
+
+
     // Don't sample skybox
     //if (sceneWorldPos.x == 0.0 && sceneWorldPos.y == 0.0 && sceneWorldPos.z == 0.0) {
     //    return;

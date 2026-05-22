@@ -23,8 +23,7 @@ namespace OpenGLRenderer {
 
         shader->Bind();
         BindImageTexture(0, fullSizeFBO->GetColorAttachmentHandleByName("ViewspaceDepth"), GL_WRITE_ONLY, GL_R32F);
-        BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-        BindTextureUnit(2, fullSizeFBO->GetColorAttachmentHandleByName("ViewportIndex"));
+        BindTextureUnit(1, gBuffer->GetDepthAttachmentHandle());
 
         glDispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -84,7 +83,6 @@ namespace OpenGLRenderer {
         glBindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("RMA"));
         glBindTextureUnit(3, gBuffer->GetDepthAttachmentHandle());
         glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
-        //glBindTextureUnit(5, miscFullSizeFBO->GetColorAttachmentHandleByName("ViewportIndex"));
         glBindTextureUnit(6, gBuffer->GetColorAttachmentHandleByName("Emissive"));
         glBindTextureUnit(7, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
         glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());

@@ -24,7 +24,7 @@ namespace OpenGLRenderer {
         BlitFrameBuffer(gBuffer, halfSizeFbo, "FinalLighting", "DownsampledFinalLighting", GL_COLOR_BUFFER_BIT, GL_LINEAR);
         glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
 
-        // Generate mips
+        // Generate Mipmaps
         glGenerateTextureMipmap(halfSizeFbo->GetColorAttachmentHandleByName("DownsampledFinalLighting"));
         glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
@@ -33,11 +33,10 @@ namespace OpenGLRenderer {
         BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
         BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
         BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
-        BindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
+        BindTextureUnit(4, gBuffer->GetDepthAttachmentHandle());
         BindTextureUnit(5, halfSizeFbo->GetColorAttachmentHandleByName("DownsampledFinalLighting"));
         BindTextureUnit(6, fullSizeFBO->GetColorAttachmentHandleByName("ViewspaceDepth"));
 
-        // Screenspace Reflections
         glDispatchCompute(gBuffer->GetWidth() / TILE_SIZE, gBuffer->GetHeight() / TILE_SIZE, 1);
     }
 }
