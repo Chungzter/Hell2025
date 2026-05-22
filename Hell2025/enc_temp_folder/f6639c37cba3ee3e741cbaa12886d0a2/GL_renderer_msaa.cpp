@@ -87,7 +87,7 @@ namespace OpenGLRenderer {
         int bucketCount = 4;
         int size = sizeof(MlabNode) * resolveFbo.GetWidth() * resolveFbo.GetHeight() * bucketCount * 2;
 
-        //CreateSSBO("HairMLABNodes", size, GL_DYNAMIC_STORAGE_BIT);
+        CreateSSBO("HairMLABNodes", size, GL_DYNAMIC_STORAGE_BIT);
     }
 
     void LoadShadersMSAA() {
@@ -96,7 +96,7 @@ namespace OpenGLRenderer {
         LoadShader("MSAA", "LightingComposite", { "GL_lighting_composite.comp" });
         LoadShader("MSAA", "ShadedHardSurface", { "GL_shaded.vert", "GL_shaded.frag" });
         LoadShader("MSAA", "ShadedHair", { "GL_shaded.vert", "GL_shaded_hair.frag" });
-        //LoadShader("MSAA", "HairMLAB", { "GL_hair_mlab.vert", "GL_hair_mlab.frag" });
+        LoadShader("MSAA", "HairMLAB", { "GL_hair_mlab.vert", "GL_hair_mlab.frag" });
         LoadShader("MSAA", "HairMLABResolve", { "GL_hair_mlab_resolve.vert", "GL_hair_mlab_resolve.frag" });
     }
 

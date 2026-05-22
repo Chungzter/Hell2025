@@ -237,7 +237,7 @@ struct Triangle {
     vec4 e2z_and_normal; // e2.z,   normal.xyz
 };
 
-struct DispatchIndirectCommand {
+struct DispatchIndirectArgs {
     uint num_groups_x;
     uint num_groups_y;
     uint num_groups_z;

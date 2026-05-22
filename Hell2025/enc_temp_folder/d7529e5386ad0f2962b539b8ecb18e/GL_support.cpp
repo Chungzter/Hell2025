@@ -33,7 +33,7 @@ namespace OpenGLBackEnd {
 
         std::vector<SupportQuery> requirements = {
             { "Bindless Textures", { GLAD_GL_ARB_bindless_texture } },
-            // { "Mesh Shaders", { GLAD_GL_NV_mesh_shader, GLAD_GL_EXT_mesh_shader } }
+            { "Mesh Shaders", { GLAD_GL_NV_mesh_shader, GLAD_GL_EXT_mesh_shader } }
         };
 
         bool allFound = true;
@@ -62,7 +62,7 @@ namespace OpenGLBackEnd {
             return true;
         }
         else {
-            Logging::Fatal() << "Hardware does not meet minimum requirements\n";
+            Logging::Fatal() << "Hardware does not meet minimum requirements for the Ragdoll engine\n";
             return false;
         }
 	}
