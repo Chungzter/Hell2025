@@ -188,7 +188,7 @@ void Player::UpdateUI(float deltaTime) {
 
 
 			// Some matrices
-			if (true) {
+			if (false) {
 				const ViewportData& viewportData = RenderDataManager::GetViewportData()[0];
 				text += "Projection Matrix:\n";
 				text += Util::Mat4ToString10(viewportData.projection) + "\n\n";;
@@ -291,7 +291,7 @@ void Player::UpdateUI(float deltaTime) {
             text += "Flip normal map Y: " + Util::BoolToString(OpenGLRenderer::ShouldFlipNormalMapY()) + "\n";
 
             // Override with BVH CPU RAYS if that render mode is set
-            if (Debug::GetDebugRenderMode() == DebugRenderMode::BVH_CPU_PLAYER_RAYS) {
+            if (Debug::GetDebugRenderMode() == DebugRenderMode::BVH_CPU_PLAYER_RAYS || true) {
                 text += "\nBVH ray hit: " + Util::BoolToString(m_bvhRayResult.hitFound) + "\n";
 
                 if (m_bvhRayResult.hitFound) {

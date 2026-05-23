@@ -9,6 +9,7 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const ChristmasLightsCreateInfo& info);
     void to_json(nlohmann::json& j, const DDGIVolumeCreateInfo& info);
     void to_json(nlohmann::json& j, const DoorCreateInfo& info);
+    void to_json(nlohmann::json& j, const FenceCreateInfo& info);
     void to_json(nlohmann::json& j, const FireplaceCreateInfo& info);
     void to_json(nlohmann::json& j, const GenericObjectCreateInfo& info);
     void to_json(nlohmann::json& j, const HouseLocation& houseLocation);
@@ -19,6 +20,7 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const PianoCreateInfo& info);
     void to_json(nlohmann::json& j, const PickUpCreateInfo& info);
     void to_json(nlohmann::json& j, const PictureFrameCreateInfo& info);
+    void to_json(nlohmann::json& j, const PowerPoleSetCreateInfo& info);
     void to_json(nlohmann::json& j, const SpawnPoint& spawnPoint);
     void to_json(nlohmann::json& j, const StaircaseCreateInfo& info);
     void to_json(nlohmann::json& j, const TreeCreateInfo& info);
@@ -28,6 +30,7 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, ChristmasLightsCreateInfo& info);
     void from_json(const nlohmann::json& j, DDGIVolumeCreateInfo& info);
     void from_json(const nlohmann::json& j, DoorCreateInfo& info);
+    void from_json(const nlohmann::json& j, FenceCreateInfo& info);
     void from_json(const nlohmann::json& j, FireplaceCreateInfo& info);
     void from_json(const nlohmann::json& j, GenericObjectCreateInfo& info);
     void from_json(const nlohmann::json& j, HouseLocation& houseLocation);
@@ -38,18 +41,21 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, PianoCreateInfo& info);
     void from_json(const nlohmann::json& j, PickUpCreateInfo& info);
     void from_json(const nlohmann::json& j, PictureFrameCreateInfo& info);
+    void from_json(const nlohmann::json& j, PowerPoleSetCreateInfo& info);
     void from_json(const nlohmann::json& j, SpawnPoint& info);
     void from_json(const nlohmann::json& j, StaircaseCreateInfo& info);
     void from_json(const nlohmann::json& j, TreeCreateInfo& info);
     void from_json(const nlohmann::json& j, WallCreateInfo& info);
     void from_json(const nlohmann::json& j, WindowCreateInfo& info);
 
+    void to_json(nlohmann::json& j, const glm::vec2& v);
     void to_json(nlohmann::json& j, const glm::vec3& v);
     void to_json(nlohmann::json& j, const std::map<ivecXZ, std::string>& map);
 
     void from_json(const json& j, glm::mat4& m);
     void from_json(const json& j, glm::quat& q);
 
+    void from_json(const nlohmann::json& j, glm::vec2& v);
     void from_json(const nlohmann::json& j, glm::vec3& v);
     void from_json(const nlohmann::json& j, MeshRenderingInfo& info);
 }

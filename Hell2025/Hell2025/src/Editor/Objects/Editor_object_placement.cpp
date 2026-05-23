@@ -109,6 +109,66 @@ namespace Editor {
             }
         }
 
+        // Power poles
+        if (GetEditorState() == EditorState::PLACE_POWER_POLES) {
+            if (Input::LeftMousePressed() && hitFound) {
+                glm::vec3 worldPosition = Physics::GetHeightMapPositionAtXZ(hitPosition.x, hitPosition.z);
+                glm::vec2 controlPoint2D = glm::vec2(worldPosition.x, worldPosition.z);
+
+                // Create first control point
+                if (g_placementObjectId == 0) {
+                 
+                    PowerPoleSetCreateInfo createInfo;
+                    createInfo.controlPoints2D = { controlPoint2D };
+        
+                    g_placementObjectId = World::AddPowerPoleSet(createInfo, SpawnOffset());
+                    Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+                }
+                // Add new control point
+                else {
+                    if (PowerPoleSet* powerPoleSet = World::GetPowerPoleSetByObjectId(g_placementObjectId)) {
+                        powerPoleSet->AddControlPoint(controlPoint2D);
+                        Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+                    }
+                }
+            }
+
+            if (Input::RightMousePressed()) {
+                Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+                ExitObjectPlacement();
+            }
+        }
+
+        // Fences
+        if (GetEditorState() == EditorState::PLACE_FENCE) {
+            if (Input::LeftMousePressed() && hitFound) {
+                glm::vec3 worldPosition = Physics::GetHeightMapPositionAtXZ(hitPosition.x, hitPosition.z);
+                glm::vec2 controlPoint2D = glm::vec2(worldPosition.x, worldPosition.z);
+
+                // Create first control point
+                if (g_placementObjectId == 0) {
+
+                    FenceCreateInfo createInfo;
+                    createInfo.controlPoints2D = { controlPoint2D };
+
+                    g_placementObjectId = World::AddFence(createInfo, SpawnOffset());
+                    Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+                }
+                // Add new control point
+                else {
+                    if (Fence* fence = World::GetFenceByObjectId(g_placementObjectId)) {
+                        fence->AddControlPoint(controlPoint2D);
+                        Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+                    }
+                }
+            }
+
+            if (Input::RightMousePressed()) {
+                Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+                ExitObjectPlacement();
+            }
+        }
+
         // Christmas lights
         if (GetEditorState() == EditorState::PLACE_CHRISTMAS_LIGHTS) {
 

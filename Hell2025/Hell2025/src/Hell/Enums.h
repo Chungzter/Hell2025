@@ -90,6 +90,7 @@ enum class ObjectType : uint16_t {
     DOOR,
     DOOR_FRAME,
     DRAWER,
+    FENCE,
     FIREPLACE,
     GAME_OBJECT,
     GENERIC_BOUNCABLE,
@@ -102,6 +103,7 @@ enum class ObjectType : uint16_t {
     PIANO,
     PICK_UP,
     PICTURE_FRAME,
+    POWER_POLE_SET,
     RAGDOLL_ENEMY,
     RAGDOLL_V2,
     RAGDOLL_PLAYER,
@@ -192,7 +194,9 @@ enum struct EditorState {
 
     PLACE_CHRISTMAS_LIGHTS,
     PLACE_DDGI_VOLUME,
+    PLACE_FENCE,
     PLACE_OBJECT,
+    PLACE_POWER_POLES,
     PLACE_WALL,
 
     // Object placement REMOVEEEEEEE MEEEEEEEE

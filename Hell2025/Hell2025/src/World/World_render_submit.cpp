@@ -170,10 +170,16 @@ namespace World {
 
         for (PowerPoleSet& powerPoleSet : GetPowerPoleSets()) {
             RenderDataManager::SubmitRenderItems(powerPoleSet.GetRenderItems());
+            if (Editor::GetSelectedObjectId() == powerPoleSet.GetObjectId()) {
+                RenderDataManager::SubmitOutlineRenderItems(powerPoleSet.GetRenderItems());
+            }
         }
 
         for (Fence& fence: GetFences()) {
             RenderDataManager::SubmitRenderItems(fence.GetRenderItems());
+            if (Editor::GetSelectedObjectId() == fence.GetObjectId()) {
+                RenderDataManager::SubmitOutlineRenderItems(fence.GetRenderItems());
+            }
         }
 
         for (ChristmasTree& christmasTree : GetChristmasTrees()) {

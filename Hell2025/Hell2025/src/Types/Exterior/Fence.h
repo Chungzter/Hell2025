@@ -1,18 +1,35 @@
 #pragma once
+#include <Hell/CreateInfo.h>
 #include <Hell/Types.h>
 #include "Types/Generics/Wire.h"
 #include "Types/Renderer/MeshNodes.h"
 
 struct Fence {
+    Fence() = default;
+    Fence(uint64_t id, FenceCreateInfo& createInfo, SpawnOffset& spawnOffset);
+    Fence(const Fence&) = delete;
+    Fence& operator=(const Fence&) = delete;
+    Fence(Fence&&) noexcept = default;
+    Fence& operator=(Fence&&) noexcept = default;
+    ~Fence() = default;
+
+    void AddControlPoint(const glm::vec2& controlPoint2D);
     void Init();
     void Update();
     void CleanUp();
 
-    const std::vector<RenderItem>& const GetRenderItems();
-
     std::vector<Wire>& GetWires() { return m_wires; }
 
+    const std::vector<RenderItem>& const GetRenderItems();
+
+    const uint64_t GetObjectId() const           { return m_objectId; }
+    const FenceCreateInfo& GetCreateInfo() const { return m_createInfo; }
+
 private:
+    uint64_t m_objectId = 0;
+    FenceCreateInfo m_createInfo;
+    SpawnOffset m_spawnOffset;
+
     RenderItem CreateWireRenderItem(RenderItem& localSpaceRenderItem, glm::vec3& position, glm::vec3 nextPosition);
 
     std::vector<glm::vec3> m_finalPositions;

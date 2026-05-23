@@ -31,11 +31,13 @@ namespace World {
     Hell::SlotMap<ChristmasLightSet> g_christmasLightSets;
     Hell::SlotMap<DDGIVolume> g_ddgiVolumes;
     Hell::SlotMap<Door> g_doors;
+    Hell::SlotMap<Fence> g_fences;
     Hell::SlotMap<Fireplace> g_fireplaces;
     Hell::SlotMap<GenericObject> g_genericObjects;
     Hell::SlotMap<HousePlane> g_housePlanes;
     Hell::SlotMap<Ladder> g_ladders;
     Hell::SlotMap<PickUp> g_pickUps;
+    Hell::SlotMap<PowerPoleSet> g_powerPoleSets;
     Hell::SlotMap<Staircase> g_staircases;
     Hell::SlotMap<TrimSet> g_trimSets;
     Hell::SlotMap<Wall> g_walls;
@@ -48,7 +50,6 @@ namespace World {
     std::vector<ClippingCube> g_clippingCubes;
     std::vector<Decal> g_newDecals;
     std::vector<Dobermann> g_dobermanns;
-    std::vector<Fence> g_fences;
     std::vector<GameObject> g_gameObjects;
     std::vector<Kangaroo> g_kangaroos;
     std::vector<HeightMapChunk> g_heightMapChunks;
@@ -56,7 +57,6 @@ namespace World {
     std::vector<MapInstance> g_mapInstances;
     std::vector<Mermaid> g_mermaids;
     std::vector<PictureFrame> g_pictureFrames;
-    std::vector<PowerPoleSet> g_powerPoleSets;
     std::vector<Piano> g_pianos;
     std::vector<Road> g_roads;
     std::vector<Shark> g_sharks;
@@ -169,13 +169,6 @@ namespace World {
 
         //GlobalIllumination::SetGlobalIlluminationStructuresDirtyState(true);
 
-        // REMOVE ME BELOW TO MAP FILE
-        PowerPoleSet& powerPoleSet = g_powerPoleSets.emplace_back();
-        powerPoleSet.Init();
-
-        Fence& fence = g_fences.emplace_back();
-        fence.Init();
-
         GameObjectCreateInfo createInfo;
         //createInfo.position = glm::vec3(40.65f, 31.0f, 34.1f);
         //createInfo.modelName = "Drawers2";
@@ -208,7 +201,7 @@ namespace World {
         //dobermannCreateInfo.position = glm::vec3(41.0f, 31.0f, 35.0f);
         //AddDobermann(dobermannCreateInfo);
 
-        dobermannCreateInfo.position = glm::vec3(36.8f, 31.0f, 35.5f);
+        dobermannCreateInfo.position = glm::vec3(37.2f, 31.0f, 35.3f);
         AddDobermann(dobermannCreateInfo);
     }
 
@@ -478,6 +471,10 @@ namespace World {
         return g_genericObjects.get(objectId);
     }
 
+    Fence* GetFenceByObjectId(uint64_t objectId) {
+        return g_fences.get(objectId);
+    }
+
     Fireplace* GetFireplaceById(uint64_t objectId) {
         return g_fireplaces.get(objectId);
     }
@@ -492,6 +489,10 @@ namespace World {
 
     PickUp* GetPickUpByObjectId(uint64_t objectId) {
         return g_pickUps.get(objectId);
+    }
+
+    PowerPoleSet* GetPowerPoleSetByObjectId(uint64_t objectId) {
+        return g_powerPoleSets.get(objectId);
     }
 
     Staircase* GetStaircaseByObjectId(uint64_t objectId) {
@@ -707,6 +708,11 @@ namespace World {
             g_doors.erase(objectId);
             return true;
         }
+        if (g_fences.contains(objectId)) {
+            g_fences.get(objectId)->CleanUp();
+            g_fences.erase(objectId);
+            return true;
+        }
         if (g_fireplaces.contains(objectId)) {
             g_fireplaces.get(objectId)->CleanUp();
             g_fireplaces.erase(objectId);
@@ -720,6 +726,11 @@ namespace World {
         if (g_housePlanes.contains(objectId)) {
             g_housePlanes.get(objectId)->CleanUp();
             g_housePlanes.erase(objectId);
+            return true;
+        }
+        if (g_powerPoleSets.contains(objectId)) {
+            g_powerPoleSets.get(objectId)->CleanUp();
+            g_powerPoleSets.erase(objectId);
             return true;
         }
         if (g_staircases.contains(objectId)) {
@@ -974,6 +985,12 @@ namespace World {
         return id;
     }
 
+    uint64_t AddFence(FenceCreateInfo createInfo, SpawnOffset spawnOffset) {
+        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::FENCE);
+        g_fences.emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
     uint64_t AddLadder(LadderCreateInfo createInfo, SpawnOffset spawnOffset) {
         const uint64_t id = UniqueID::GetNextObjectId(ObjectType::LADDER);
         g_ladders.emplace_with_id(id, id, createInfo, spawnOffset);
@@ -989,6 +1006,12 @@ namespace World {
         const uint64_t id = UniqueID::GetNextObjectId(ObjectType::PICK_UP);
         g_pickUps.emplace_with_id(id, id, createInfo, spawnOffset);
 
+        return id;
+    }
+
+    uint64_t AddPowerPoleSet(PowerPoleSetCreateInfo createInfo, SpawnOffset spawnOffset) {
+        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::POWER_POLE_SET);
+        g_powerPoleSets.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
 
@@ -1377,10 +1400,12 @@ namespace World {
     Hell::SlotMap<DDGIVolume>& GetDDGIVolumes()                 { return g_ddgiVolumes; }
     Hell::SlotMap<Door>& GetDoors()                             { return g_doors; }
     Hell::SlotMap<GenericObject>& GetGenericObjects()           { return g_genericObjects; }
+    Hell::SlotMap<Fence>& GetFences()                           { return g_fences; }
     Hell::SlotMap<Fireplace>& GetFireplaces()                   { return g_fireplaces; }
     Hell::SlotMap<HousePlane>& GetHousePlanes()                 { return g_housePlanes; }
     Hell::SlotMap<Ladder>& GetLadders()                         { return g_ladders; }
     Hell::SlotMap<PickUp>& GetPickUps()                         { return g_pickUps; }
+    Hell::SlotMap<PowerPoleSet>& GetPowerPoleSets()             { return g_powerPoleSets; }
     Hell::SlotMap<Staircase>& GetStaircases()                   { return g_staircases; }
     Hell::SlotMap<TrimSet>& GetTrimSets()                       { return g_trimSets; }
     Hell::SlotMap<Wall>& GetWalls()                             { return g_walls; }
@@ -1393,7 +1418,6 @@ namespace World {
     std::vector<ClippingCube>& GetClippingCubes()                       { return g_clippingCubes; }
     std::vector<Decal>& GetDecals()                                     { return g_newDecals; }
     std::vector<Dobermann>& GetDobermanns()                             { return g_dobermanns; }
-    std::vector<Fence>& GetFences()                                     { return g_fences; }
     std::vector<GameObject>& GetGameObjects()                           { return g_gameObjects; }
     std::vector<Light>& GetLights()                                     { return g_lights; };
     std::vector<Kangaroo>& GetKangaroos()                               { return g_kangaroos; }
@@ -1401,7 +1425,6 @@ namespace World {
     std::vector<Mermaid>& GetMermaids()                                 { return g_mermaids; }
     std::vector<Piano>& GetPianos()                                     { return g_pianos; }
     std::vector<PictureFrame>& GetPictureFrames()                       { return g_pictureFrames; }
-    std::vector<PowerPoleSet>& GetPowerPoleSets()                       { return g_powerPoleSets; }
     std::vector<SpawnPoint>& GetCampaignSpawnPoints()                   { return g_spawnCampaignPoints; }
     std::vector<SpawnPoint>& GetDeathmatchSpawnPoints()                 { return g_spawnDeathmatchPoints; }
     std::vector<Transform>& GetDoorAndWindowCubeTransforms()            { return g_doorAndWindowCubeTransforms; }

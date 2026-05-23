@@ -17,5 +17,7 @@ void main() {
         FragOut.rgb = vec3(1, 1, 1);
     }
     
-        FragOut.rgb = vec3(1, 1, 1);
+    FragOut = vec4(u_color, 1.0);
+
+    //FragOut.rgb = vec3(1, 1, 1);
 }

@@ -88,8 +88,10 @@ namespace World {
     void AddDecal2(Decal2CreateInfo createInfo);
 
     uint64_t AddChristmasLights(ChristmasLightsCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddFence(FenceCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddLadder(LadderCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddPickUp(PickUpCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddPowerPoleSet(PowerPoleSetCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddStaircase(StaircaseCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddTrimSet(TrimSetCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddWall(WallCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
@@ -179,11 +181,13 @@ namespace World {
     ChristmasLightSet* GetChristmasLightsByObjectId(uint64_t objectId);
     DDGIVolume* GetDDGIVolumeByObjectId(uint64_t objectId);
     Door* GetDoorByObjectId(uint64_t objectId);
+    Fence* GetFenceByObjectId(uint64_t objectId);
     Fireplace* GetFireplaceById(uint64_t objectId);
     GenericObject* GetGenericObjectById(uint64_t objectId);
     HousePlane* GetHousePlaneByObjectId(uint64_t objectId);
     Ladder* GetLadderByObjectId(uint64_t objectId);
     Light* GetLightByObjectId(uint64_t objectId); // Does not use slot map
+    PowerPoleSet* GetPowerPoleSetByObjectId(uint64_t objectId);
     Staircase* GetStaircaseByObjectId(uint64_t objectId);
 
     Piano* GetPianoByObjectId(uint64_t objectId);
@@ -207,11 +211,13 @@ namespace World {
     Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets();
     Hell::SlotMap<DDGIVolume>& GetDDGIVolumes();
     Hell::SlotMap<Door>& GetDoors();
-    Hell::SlotMap<GenericObject>& GetGenericObjects();
+    Hell::SlotMap<Fence>& GetFences();
     Hell::SlotMap<Fireplace>& GetFireplaces();
+    Hell::SlotMap<GenericObject>& GetGenericObjects();
     Hell::SlotMap<HousePlane>& GetHousePlanes();
     Hell::SlotMap<Ladder>& GetLadders();
     Hell::SlotMap<PickUp>& GetPickUps();
+    Hell::SlotMap<PowerPoleSet>& GetPowerPoleSets();
     Hell::SlotMap<Staircase>& GetStaircases();
     Hell::SlotMap<TrimSet>& GetTrimSets();
     Hell::SlotMap<Wall>& GetWalls();
@@ -224,7 +230,6 @@ namespace World {
     std::vector<ClippingCube>& GetClippingCubes();
     std::vector<Decal>& GetDecals();
     std::vector<Dobermann>& GetDobermanns();
-    std::vector<Fence>& GetFences();
     std::vector<GameObject>& GetGameObjects();
     std::vector<HeightMapChunk>& GetHeightMapChunks();
     std::vector<Light>& GetLights();
@@ -233,7 +238,6 @@ namespace World {
     std::vector<Mermaid>& GetMermaids();
     std::vector<Piano>& GetPianos();
     std::vector<PictureFrame>& GetPictureFrames();
-    std::vector<PowerPoleSet>& GetPowerPoleSets();
     std::vector<SpawnPoint>& GetCampaignSpawnPoints();
     std::vector<SpawnPoint>& GetDeathmatchSpawnPoints();
     std::vector<Transform>& GetDoorAndWindowCubeTransforms();

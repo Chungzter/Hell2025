@@ -4,24 +4,31 @@
 #include "Renderer/Renderer.h"
 #include "Util.h"
 
+PowerPoleSet::PowerPoleSet(uint64_t id, PowerPoleSetCreateInfo& createInfo, SpawnOffset& spawnOffset) {
+    m_objectId = id;
+    m_createInfo = createInfo;
+    m_spawnOffset = spawnOffset;
+
+    Init();
+}
+
+void PowerPoleSet::AddControlPoint(const glm::vec2& controlPoint2D) {
+    m_createInfo.controlPoints2D.push_back(controlPoint2D);
+
+    Init();
+}
+
 void PowerPoleSet::Init() {
+    CleanUp();
+
     std::vector<MeshNodeCreateInfo> emptyMeshNodeCreateInfoSet;
 
     m_meshNodes.Init(NO_ID, "PowerPole", emptyMeshNodeCreateInfoSet);
     m_meshNodes.SetMeshMaterials("PowerPole");
     m_meshNodes.Update(glm::mat4(1.0f));
 
-    std::vector<glm::vec2> controlPoints2D;
-    controlPoints2D.push_back(glm::vec2(24.172f, 7.79272f));
-    controlPoints2D.push_back(glm::vec2(28.9881f, 4.15977f));
-    controlPoints2D.push_back(glm::vec2(33.348f, 3.38889f));
-    controlPoints2D.push_back(glm::vec2(36.1279f, 4.16378f));
-    controlPoints2D.push_back(glm::vec2(38.2437f, 1.94902f));
-    controlPoints2D.push_back(glm::vec2(41.4394f, 0.514656f));
-    controlPoints2D.push_back(glm::vec2(49.1863f, 1.213f));
-
     std::vector<glm::vec3> controlPoints3D;
-    for (glm::vec2& point : controlPoints2D) {
+    for (glm::vec2& point : m_createInfo.controlPoints2D) {
         glm::vec3 worldPosition = Physics::GetHeightMapPositionAtXZ(point.x, point.y);
         controlPoints3D.push_back(worldPosition);
     }
@@ -87,6 +94,11 @@ void PowerPoleSet::Init() {
         Wire& wireD = m_wires.emplace_back();
         wireD.Init(m_wirePositionsBackD[i], m_wirePositionsFrontD[i + 1], 0.5f, 0.015f, spacing);
     }
+
+    for (RenderItem& renderItem : m_renderItems) {
+        Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+        Util::UpdateRenderItemAABB(renderItem);
+    }
 }
 
 void PowerPoleSet::Update() {
@@ -95,10 +107,13 @@ void PowerPoleSet::Update() {
 
 void PowerPoleSet::CleanUp() {
     for (Wire& wire : m_wires) {
-        wire.GetMeshBuffer().Reset();
+        wire.CleanUp();
     }
 
     m_meshNodes.CleanUp();
+
+    m_renderItems.clear();
+    m_wires.clear();
 }
 
 const std::vector<RenderItem>& const PowerPoleSet::GetRenderItems() {

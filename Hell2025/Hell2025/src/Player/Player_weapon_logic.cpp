@@ -121,17 +121,16 @@ void Player::GiveDefaultLoadout() {
 
     // Dev load out
     m_inventory.GiveWeapon("Glock");
-	m_inventory.GiveAmmo("Glock", 40);
+    m_inventory.GiveWeapon("GoldenGlock");
+    m_inventory.GiveWeapon("SPAS");
+    m_inventory.GiveWeapon("P90");
+    m_inventory.GiveWeapon("AKS74U");
+    m_inventory.GiveWeapon("Remington870");
 
-	m_inventory.GiveAmmo("Tokarev", 400);
-
-
-	m_inventory.GiveWeapon("SPAS");
-
-
-	m_inventory.GiveWeapon("P90");
-	m_inventory.GiveAmmo("P90", 420);
-
+    m_inventory.GiveAmmo("Glock", 800);
+    m_inventory.GiveAmmo("AKS74U", 20000);
+    m_inventory.GiveAmmo("Tokarev", 400);
+    m_inventory.GiveAmmo("P90", 420);
 
 	// hack fill the shop
 	m_shopInventory.GiveWeapon("GoldenGlock");

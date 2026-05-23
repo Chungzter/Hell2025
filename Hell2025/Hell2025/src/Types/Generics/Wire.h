@@ -5,6 +5,7 @@
 struct Wire {
     void Init(glm::vec3 begin, glm::vec3 end, float sag, float radius, float spacing);
     void Update();
+    void CleanUp();
 
     MeshBuffer& GetMeshBuffer()                             { return m_meshBuffer; }
     const std::vector<glm::vec3>& GetSegmentPoints() const  { return m_segmentPoints; }

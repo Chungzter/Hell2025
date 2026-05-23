@@ -112,6 +112,11 @@ void Wire::Init(glm::vec3 begin, glm::vec3 end, float sag, float radius, float s
     m_meshBuffer.UpdateBuffers();
 }
 
+void Wire::CleanUp() {
+    m_meshBuffer.Reset();
+    m_segmentPoints.clear();
+}
+
 void Wire::Update() {
     for (glm::vec3& point : m_segmentPoints) {
         Renderer::DrawPoint(point, OUTLINE_COLOR);

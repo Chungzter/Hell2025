@@ -26,6 +26,8 @@ namespace Editor {
             BackEnd::SetCursor(HELL_CURSOR_VRESIZE);
         }
         else if (GetEditorState() == EditorState::PLACE_CHRISTMAS_LIGHTS ||
+                 GetEditorState() == EditorState::PLACE_FENCE ||
+                 GetEditorState() == EditorState::PLACE_POWER_POLES ||
                  GetEditorState() == EditorState::PLACE_DDGI_VOLUME ||
                  GetEditorState() == EditorState::PLACE_DOOR ||
                  GetEditorState() == EditorState::PLACE_HOUSE ||

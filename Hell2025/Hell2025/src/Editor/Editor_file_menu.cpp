@@ -36,6 +36,10 @@ namespace Editor {
             christmas.AddChild("Present Large", Shortcut::NONE, Editor::PlaceGenericObject, GenericObjectType::CHRISTMAS_PRESENT_LARGE);
             christmas.AddChild("Tree",          Shortcut::NONE, Editor::PlaceGenericObject, GenericObjectType::CHRISTMAS_TREE);
 
+            EditorUI::FileMenuNode& exterior = insert.AddChild("Exterior", Shortcut::NONE);
+            exterior.AddChild("Power Poles",   Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_POWER_POLES);
+            exterior.AddChild("Fence (Farm)",  Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_FENCE);
+
             EditorUI::FileMenuNode& interior = insert.AddChild("Interior", Shortcut::NONE);
             interior.AddChild("Chair RE",           Shortcut::NONE, Editor::PlaceGenericObject, GenericObjectType::CHAIR_RE);
             interior.AddChild("Chair Spindle Back", Shortcut::NONE, Editor::PlaceGenericObject, GenericObjectType::CHAIR_SPINDLE_BACK);

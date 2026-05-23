@@ -9,6 +9,9 @@ namespace nlohmann {
         j = json::array({ v.x, v.y, v.z });
     }
 
+    void to_json(nlohmann::json& j, const glm::vec2& v) {
+        j = json::array({ v.x, v.y });
+    }
 
     void to_json(nlohmann::json& j, const ChristmasLightsCreateInfo& info) {
         j = nlohmann::json{
@@ -47,6 +50,13 @@ namespace nlohmann {
             {"MaxOpenValue", createInfo.maxOpenValue},
             {"HasDeadLock", createInfo.hasDeadLock},
             {"DeadLockedAtStart", createInfo.deadLockedAtInit}
+        };
+    }
+
+    void to_json(nlohmann::json& j, const FenceCreateInfo& createInfo) {
+        j = nlohmann::json{
+            {"ControlPoints2D", createInfo.controlPoints2D },
+            {"EditorName", createInfo.editorName}
         };
     }
 
@@ -146,6 +156,13 @@ namespace nlohmann {
             {"Rotation", createInfo.rotation},
             {"Scale", createInfo.scale},
             {"Type", Util::PictureFrameTypeToString(createInfo.type)},
+        };
+    }
+
+    void to_json(nlohmann::json& j, const PowerPoleSetCreateInfo& createInfo) {
+        j = nlohmann::json{
+            {"ControlPoints2D", createInfo.controlPoints2D },
+            {"EditorName", createInfo.editorName}
         };
     }
 
@@ -261,12 +278,9 @@ namespace nlohmann {
         info.maxOpenValue = j.value("MaxOpenValue", 2.1f);
     }
 
-    void from_json(const nlohmann::json& j, GenericObjectCreateInfo& info) {
-        info.position = j.value("Position", glm::vec3(0.0f));
-        info.rotation = j.value("Rotation", glm::vec3(0.0f));
-        info.scale = j.value("Scale", glm::vec3(1.0f));
+    void from_json(const nlohmann::json& j, FenceCreateInfo& info) {
+        info.controlPoints2D = j.value("ControlPoints2D", std::vector<glm::vec2>());
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
-        info.type = Util::StringToGenericObjectType(j.value("Type", UNDEFINED_STRING));
     }
 
     void from_json(const nlohmann::json& j, FireplaceCreateInfo& info) {
@@ -275,7 +289,15 @@ namespace nlohmann {
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
         info.type = Util::StringToFireplaceType(j.value("Type", UNDEFINED_STRING));
     }
-    
+
+    void from_json(const nlohmann::json& j, GenericObjectCreateInfo& info) {
+        info.position = j.value("Position", glm::vec3(0.0f));
+        info.rotation = j.value("Rotation", glm::vec3(0.0f));
+        info.scale = j.value("Scale", glm::vec3(1.0f));
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
+        info.type = Util::StringToGenericObjectType(j.value("Type", UNDEFINED_STRING));
+    }
+
     void from_json(const nlohmann::json& j, HouseLocation& houseLocation) {
         houseLocation.position = j.value("Position", glm::vec3(0.0f));
         houseLocation.rotation = j.value("Rotation", 0.0f);
@@ -342,6 +364,11 @@ namespace nlohmann {
         info.type = Util::StringToPictureFrameType(j.value("Type", UNDEFINED_STRING));
     }
 
+    void from_json(const nlohmann::json& j, PowerPoleSetCreateInfo& info) {
+        info.controlPoints2D = j.value("ControlPoints2D", std::vector<glm::vec2>());
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
+    }
+
     void from_json(const nlohmann::json& j, StaircaseCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
@@ -382,6 +409,16 @@ namespace nlohmann {
         glm::vec3 position = j.value("Position", glm::vec3(0.0f));
         glm::vec3 camEuler = j.value("CamEuler", glm::vec3(0.0f));
         spawnPoint = SpawnPoint(position, camEuler);
+    }
+
+    void from_json(const nlohmann::json& j, glm::vec2& v) {
+        try {
+            std::array<float, 2> arr = j.get<std::array<float, 2>>();
+            v = glm::vec2(arr[0], arr[1]);
+        }
+        catch (const nlohmann::json::exception& e) {
+            v = glm::vec2(0.0f, 0.0f);
+        }
     }
 
     void from_json(const nlohmann::json& j, glm::vec3& v) {
@@ -481,6 +518,7 @@ namespace JSON {
         createInfoCollection.christmasLights = json.value("ChristmasLights", std::vector<ChristmasLightsCreateInfo>{});
         createInfoCollection.ddgiVolumes = json.value("DDGIVolumes", std::vector<DDGIVolumeCreateInfo>{});
         createInfoCollection.doors = json.value("Doors", std::vector<DoorCreateInfo>{});
+        createInfoCollection.fences = json.value("Fences", std::vector<FenceCreateInfo>{});
         createInfoCollection.fireplaces = json.value("Fireplaces", std::vector<FireplaceCreateInfo>{});
         createInfoCollection.genericObjects = json.value("Drawers", std::vector<GenericObjectCreateInfo>{});
         createInfoCollection.housePlanes = json.value("Planes", std::vector<HousePlaneCreateInfo>{});
@@ -489,6 +527,7 @@ namespace JSON {
         createInfoCollection.pianos = json.value("Pianos", std::vector<PianoCreateInfo>{});
         createInfoCollection.pickUps = json.value("PickUps", std::vector<PickUpCreateInfo>{});
         createInfoCollection.pictureFrames = json.value("PictureFrames", std::vector<PictureFrameCreateInfo>{});
+        createInfoCollection.powerPoleSets = json.value("PowerPoleSets", std::vector<PowerPoleSetCreateInfo>{});
         createInfoCollection.staircases = json.value("Staircases", std::vector<StaircaseCreateInfo>{});
         createInfoCollection.trees = json.value("Trees", std::vector<TreeCreateInfo>{});
         createInfoCollection.walls = json.value("Walls", std::vector<WallCreateInfo>{});
@@ -503,12 +542,14 @@ namespace JSON {
         json["DDGIVolumes"] = createInfoCollection.ddgiVolumes;
         json["Doors"] = createInfoCollection.doors;
         json["Drawers"] = createInfoCollection.genericObjects;
+        json["Fences"] = createInfoCollection.fences;
         json["Fireplaces"] = createInfoCollection.fireplaces;
         json["Ladders"] = createInfoCollection.ladders;
         json["Lights"] = createInfoCollection.lights;
         json["Pianos"] = createInfoCollection.pianos;
         json["PickUps"] = createInfoCollection.pickUps;
         json["PictureFrames"] = createInfoCollection.pictureFrames;
+        json["PowerPoleSets"] = createInfoCollection.powerPoleSets;
         json["Planes"] = createInfoCollection.housePlanes;
         json["Staircases"] = createInfoCollection.staircases;
         json["Trees"] = createInfoCollection.trees;

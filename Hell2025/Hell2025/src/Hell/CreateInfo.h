@@ -5,6 +5,16 @@
 #include "Types/Game/SpawnPoint.h"
 #include <map>
 
+struct FenceCreateInfo {
+    std::vector<glm::vec2> controlPoints2D;
+    std::string editorName = UNDEFINED_STRING;
+};
+
+struct PowerPoleSetCreateInfo {
+    std::vector<glm::vec2> controlPoints2D;
+    std::string editorName = UNDEFINED_STRING;
+};
+
 struct DDGIVolumeCreateInfo {
     glm::vec3 origin = glm::vec3(0.0f);
     glm::vec3 extents = glm::vec3(0.0f);
@@ -333,6 +343,7 @@ struct CreateInfoCollection {
     std::vector<ChristmasLightsCreateInfo> christmasLights;
     std::vector<DDGIVolumeCreateInfo> ddgiVolumes;
     std::vector<DoorCreateInfo> doors;
+    std::vector<FenceCreateInfo> fences;
     std::vector<FireplaceCreateInfo> fireplaces;
     std::vector<GenericObjectCreateInfo> genericObjects;
     std::vector<HousePlaneCreateInfo> housePlanes;
@@ -341,6 +352,7 @@ struct CreateInfoCollection {
     std::vector<PianoCreateInfo> pianos;
     std::vector<PickUpCreateInfo> pickUps;
     std::vector<PictureFrameCreateInfo> pictureFrames;
+    std::vector<PowerPoleSetCreateInfo> powerPoleSets;
     std::vector<StaircaseCreateInfo> staircases;
     std::vector<TreeCreateInfo> trees;
     std::vector<WallCreateInfo> walls;
