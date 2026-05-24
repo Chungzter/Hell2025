@@ -620,6 +620,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\OpenGL\RE\GL_gbuffer_re.vert" />
     <None Include="res\shaders\OpenGL\RE\GL_hair_composite_re.comp" />
     <None Include="res\shaders\OpenGL\RE\GL_lighting_re.comp" />
+    <None Include="res\shaders\OpenGL\RE\GL_hair_lighting_deferred.frag" />
+    <None Include="res\shaders\OpenGL\RE\GL_hair_lighting_deferred.vert" />
     <None Include="res\shaders\OpenGL\Water\GL_ocean_compute_underwater_flags.comp" />
     <None Include="res\shaders\terrain.frag" />
     <None Include="res\shaders\terrain.vert" />

@@ -274,27 +274,18 @@ namespace World {
         CreateInfoCollection& createInfoCollection = house->GetCreateInfoCollection();
         AddCreateInfoCollection(createInfoCollection, spawnOffset);
 
-        // Under water floor
-        //float size = 1000.0f;
-        //float y = -0.1f;
-        //float xMin = -size;
-        //float zMin = -size;
-        //float xMax = size;
-        //float zMax = size;
-        //HousePlaneCreateInfo floorCreateInfo;
-        //floorCreateInfo.materialName = "Ground_MudVeg";
-        //floorCreateInfo.p0 = glm::vec3(xMin, y, zMin);
-        //floorCreateInfo.p1 = glm::vec3(xMin, y, zMax);
-        //floorCreateInfo.p2 = glm::vec3(xMax, y, zMax);
-        //floorCreateInfo.p3 = glm::vec3(xMax, y, zMin);
-        //floorCreateInfo.parentDoorId = 1;
-        //AddHousePlane(floorCreateInfo, SpawnOffset());
+
 
         MermaidCreateInfo mermaidCreateInfo;
+        
         mermaidCreateInfo.position = glm::vec3(14.0f, 29.0f, 36.5f); // outdoors
-        //mermaidCreateInfo.position = glm::vec3(36.0f, 31.0f, 36.5f); // indoors
-        mermaidCreateInfo.rotation.y = 0.05f;
+        
+        mermaidCreateInfo.position = glm::vec3(36.0f, 31.0f, 36.5f); // indoors
+        mermaidCreateInfo.rotation.y = 0.05f;                        // indoors
+        
         AddMermaid(mermaidCreateInfo);
+
+
 
         // Add shark
         for (Shark& shark : GetSharks()) {

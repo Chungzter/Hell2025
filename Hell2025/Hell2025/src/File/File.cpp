@@ -184,7 +184,7 @@ SkinnedModelData File::ImportSkinnedModel(const std::string& filepath) {
         std::cerr << "ile::ImportSkinnedModel() failed: Could not open: " << filepath << "\n";
         return skinnedModelData;
     }
-    
+
     SkinnedModelHeader skinnedModelHeader;
 
     // Read 18 bytes for HELL_SKINNED_MODEL
@@ -301,7 +301,7 @@ SkinnedModelData File::ImportSkinnedModel(const std::string& filepath) {
         // Read the "requiresSkinning" value and non-deforming bone index
         file.read(reinterpret_cast<char*>(&requiresSkinning), sizeof(bool));
         file.read(reinterpret_cast<char*>(&nonDeformingBoneIndex), sizeof(int32_t));
-        
+
         // Now set up the mesh data.
         SkinnedMeshData& meshData = skinnedModelData.meshes[i];
         meshData.name = meshName;
@@ -318,7 +318,16 @@ SkinnedModelData File::ImportSkinnedModel(const std::string& filepath) {
         meshData.indices.resize(indexCount);
 
         // Read the vertices and indices.
+
+
+        //file.read(reinterpret_cast<char*>(meshData.vertices.data()), vertexCount * sizeof(Vertex));
+        //file.read(reinterpret_cast<char*>(meshData.vertexWeights.data()), vertexCount * sizeof(VertexWeight));
+
+        // You are tryna remove me
         file.read(reinterpret_cast<char*>(meshData.weightedVertices.data()), vertexCount * sizeof(WeightedVertex));
+        // You are tryna remove me
+
+
         file.read(reinterpret_cast<char*>(meshData.indices.data()), indexCount * sizeof(uint32_t));
 
 

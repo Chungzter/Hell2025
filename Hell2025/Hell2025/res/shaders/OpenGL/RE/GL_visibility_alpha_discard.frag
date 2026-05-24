@@ -21,31 +21,33 @@ const float bayerMatrix[16] = float[16](
 uniform uint u_frameCount;
 
 void main() {
+
+    discard;
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
     float alpha = texture(sampler2D(textureSamplers[renderItem.baseColorTextureIndex]), v_uv).a;
 
     bool useStochasticDiscard = false;
-    float hardAlphaCutoff = 0.5; 
+    float hardAlphaCutoff = 0.5;
 
     if (useStochasticDiscard) {
         ivec2 pixelCoords = ivec2(gl_FragCoord.xy);
 
         // Offset jitter coords over time
         ivec2 temporalOffset = ivec2(
-            int(u_frameCount % 4), 
+            int(u_frameCount % 4),
             int((u_frameCount / 4) % 4)
         );
-    
+
         ivec2 jitteredCoords = pixelCoords + temporalOffset;
         uint bayerIndex = ((jitteredCoords.y & 3) << 2) | (jitteredCoords.x & 3);
         float ditherThreshold = bayerMatrix[bayerIndex];
 
         // Stochastic Discard
-        float baseCutoff = 0.001; 
+        float baseCutoff = 0.001;
         if (alpha - baseCutoff < ditherThreshold) {
             discard;
         }
-    } 
+    }
     else {
         // Hard Discard
         if (alpha < hardAlphaCutoff) {

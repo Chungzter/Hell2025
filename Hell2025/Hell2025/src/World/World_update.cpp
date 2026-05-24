@@ -242,7 +242,10 @@ namespace World {
       //    Audio::PlayAudio(AUDIO_SELECT, 1.0f);
       //}
      
-       
+      AnimatedGameObject* ratKidAO = GetRadKidAO();
+      ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.73f));
+
+
         auto& ragdolls = RagdollManager::GetRagdolls();
         for (auto it = ragdolls.begin(); it != ragdolls.end(); ) {
             RagdollV2& ragdoll = it->second;

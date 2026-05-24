@@ -125,20 +125,14 @@ namespace OpenGLBackEnd {
     }
 
     void OpenGLBackEnd::AllocateSkinnedVertexBufferSpace(uint32_t vertexCount) {
+        const uint32_t requiredSize = vertexCount * sizeof(Vertex);
+
         if (g_skinnedVertexDataVAO == 0) {
             glGenVertexArrays(1, &g_skinnedVertexDataVAO);
-        }
-
-        if (g_allocatedSkinnedVertexBufferSize < (uint32_t)(vertexCount * sizeof(Vertex))) {
-            if (g_skinnedVertexDataVBO != 0) {
-                glDeleteBuffers(1, &g_skinnedVertexDataVBO);
-            }
-
             glBindVertexArray(g_skinnedVertexDataVAO);
+
             glGenBuffers(1, &g_skinnedVertexDataVBO);
             glBindBuffer(GL_ARRAY_BUFFER, g_skinnedVertexDataVBO);
-
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(vertexCount * sizeof(Vertex)), nullptr, GL_STATIC_DRAW);
 
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)0);
@@ -153,10 +147,54 @@ namespace OpenGLBackEnd {
             glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)offsetof(Vertex, tangent));
 
             glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glBindVertexArray(0);
+        }
 
-            g_allocatedSkinnedVertexBufferSize = (uint32_t)(vertexCount * sizeof(Vertex));
+        if (g_allocatedSkinnedVertexBufferSize < requiredSize) {
+            uint32_t newSize = requiredSize;
+
+            glBindBuffer(GL_ARRAY_BUFFER, g_skinnedVertexDataVBO);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)newSize, nullptr, GL_DYNAMIC_DRAW);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            g_allocatedSkinnedVertexBufferSize = newSize;
+            std::cout << "Recreated skinned vertex buffer. Size: " << g_allocatedSkinnedVertexBufferSize << "\n";
         }
     }
+
+    //void AllocateSkinnedVertexBufferSpaceOLD(uint32_t vertexCount) {
+    //    if (g_skinnedVertexDataVAO == 0) {
+    //        glGenVertexArrays(1, &g_skinnedVertexDataVAO);
+    //    }
+    //
+    //    if (g_allocatedSkinnedVertexBufferSize < (uint32_t)(vertexCount * sizeof(Vertex))) {
+    //        if (g_skinnedVertexDataVBO != 0) {
+    //            glDeleteBuffers(1, &g_skinnedVertexDataVBO);
+    //        }
+    //
+    //        glBindVertexArray(g_skinnedVertexDataVAO);
+    //        glGenBuffers(1, &g_skinnedVertexDataVBO);
+    //        glBindBuffer(GL_ARRAY_BUFFER, g_skinnedVertexDataVBO);
+    //
+    //        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(vertexCount * sizeof(Vertex)), nullptr, GL_STATIC_DRAW);
+    //
+    //        glEnableVertexAttribArray(0);
+    //        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)0);
+    //
+    //        glEnableVertexAttribArray(1);
+    //        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    //
+    //        glEnableVertexAttribArray(2);
+    //        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)offsetof(Vertex, uv));
+    //
+    //        glEnableVertexAttribArray(3);
+    //        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)offsetof(Vertex, tangent));
+    //
+    //        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //
+    //        g_allocatedSkinnedVertexBufferSize = (uint32_t)(vertexCount * sizeof(Vertex));
+    //    }
+    //}
 
     void AllocateTextureMemory(Texture& texture) {
         OpenGLTexture& glTexture = texture.GetGLTexture();

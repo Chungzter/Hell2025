@@ -6,6 +6,11 @@
 #include "World/World.h"
 #include "Viewport/ViewportManager.h"
 
+#define STENCIL_REF_STATIC       1 // Includes alpha discarded
+#define STENCIL_REF_SKINNED      2 // Includes alpha discarded
+#define STENCIL_REF_STATIC_HAIR  1 // TODO: Make this 3 and process hair lighting separately
+#define STENCIL_REF_SKINNED_HAIR 4 // TODO: Make this 4 and process hair lighting separately
+
 namespace OpenGLRenderer {
 	struct RESettings {
 		glm::ivec2 gBufferResolution = glm::ivec2(1920, 1080);
@@ -16,9 +21,9 @@ namespace OpenGLRenderer {
 	void BlendedLighting();
 	void ClearRenderTargetsRE();
     void CreateFramebuffersRE();
-    void DepthPrePassRE();
-    void DepthPrePassAlphaDiscardRE();
-	void GBufferPass();
+    void DepthPrePassRE();             // OLD
+    void DepthPrePassAlphaDiscardRE(); // OLD
+	void GBufferPass();                // OLD
 	void HairDepthPrep();
 	void HairDepthPrePassRE();
 	void HairPassRE();
@@ -30,8 +35,11 @@ namespace OpenGLRenderer {
     void VisibilityPass();
     void VisibilityAlphaDiscardPass();
     void VisibilitySkinnedPass();
+    void VisibilitySkinnedHairPass();
+
     void MaterialResolvePass();
 	void MaterialResolveSkinnedPass();
+    void MaterialResolveSkinnedHairPass();
 	void RenderFullscreenTriangle();
 
 	void InitREStyle() {
@@ -61,8 +69,11 @@ namespace OpenGLRenderer {
             VisibilityPass();
             VisibilitySkinnedPass();
             VisibilityAlphaDiscardPass();
-			MaterialResolvePass();
-			MaterialResolveSkinnedPass();
+            VisibilitySkinnedHairPass();
+
+            MaterialResolvePass();
+            MaterialResolveSkinnedPass();
+            //MaterialResolveSkinnedHairPass();
 		}
 		else {
 			DepthPrePassRE();
@@ -95,7 +106,7 @@ namespace OpenGLRenderer {
 
         PostProcessingPassRE();
 		DebugViewPass();
-		 
+
 		// Downscale and blit to swapchain
 		OpenGLFrameBuffer& finalImageFbo = GetFrameBuffer("FinalImage");
         OpenGLFrameBuffer& gBufferRE = GetFrameBuffer("GBufferRE");
@@ -124,7 +135,9 @@ namespace OpenGLRenderer {
 		LoadShader("RE", "DepthPrePassAlphaDiscardRE", { "GL_depth_prepass_alpha_discard.vert", "GL_depth_prepass_alpha_discard.frag" });
 		LoadShader("RE", "GBufferRE", { "GL_gbuffer_re.vert", "GL_gbuffer_re.frag" });
 		LoadShader("RE", "LightingRE", { "GL_lighting_re.comp" });
-		LoadShader("RE", "HairLightingRE", { "GL_hair_lighting_re.vert", "GL_hair_lighting_re.frag" });
+
+        LoadShader("RE", "HairLightingForward", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward.frag" } );
+        LoadShader("RE", "HairLightingDeferred", { "GL_fullscreen_triangle.vert", "GL_hair_lighting_deferred.frag" } );
 		LoadShader("RE", "HairCompositeRE", { "GL_hair_composite_re.comp" });
 		LoadShader("RE", "HairDepthPrep", { "GL_fullscreen_triangle.vert", "GL_hair_depth_prep.frag" });
 
@@ -154,7 +167,7 @@ namespace OpenGLRenderer {
 
         state.stencilTestEnabled = true;
         state.stencilFunc = GL_ALWAYS;
-        state.stencilRef = 1; // Write 1
+        state.stencilRef = STENCIL_REF_STATIC;
         state.stencilReadMask = 0xFF;
         state.stencilWriteMask = 0xFF;
         state.stencilFailOp = GL_KEEP;
@@ -180,7 +193,7 @@ namespace OpenGLRenderer {
 
         BindShader("VisibilityAlphaDiscard");
 		SetUniformUInt("u_frameCount", frameCount);
-        
+
 		BindSSBO(0, "Samplers");
         BindSSBO(1, "RendererData");
         BindSSBO(2, "ViewportData");
@@ -196,7 +209,7 @@ namespace OpenGLRenderer {
 
         state.stencilTestEnabled = true;
         state.stencilFunc = GL_ALWAYS;
-        state.stencilRef = 1; // Write 1
+        state.stencilRef = STENCIL_REF_STATIC;
         state.stencilReadMask = 0xFF;
         state.stencilWriteMask = 0xFF;
         state.stencilFailOp = GL_KEEP;
@@ -229,7 +242,7 @@ namespace OpenGLRenderer {
 
         state.stencilTestEnabled = true;
         state.stencilFunc = GL_ALWAYS;
-        state.stencilRef = 2; // Write 2
+        state.stencilRef = STENCIL_REF_SKINNED;
         state.stencilReadMask = 0xFF;
         state.stencilWriteMask = 0xFF;
         state.stencilFailOp = GL_KEEP;
@@ -239,7 +252,38 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedStandard, state);
     }
-	
+
+    void VisibilitySkinnedHairPass() {
+        ProfilerOpenGLZoneFunction();
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
+        fbo.Bind();
+        fbo.DrawBuffers({ "Visibility" });
+
+        BindShader("Visibility");
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = true;
+        state.colorMask = true;
+        state.depthFunc = GL_GREATER;
+
+        state.stencilTestEnabled = true;
+        state.stencilFunc = GL_ALWAYS;
+        state.stencilRef = STENCIL_REF_SKINNED_HAIR;
+        state.stencilReadMask = 0xFF;
+        state.stencilWriteMask = 0xFF;
+        state.stencilFailOp = GL_KEEP;
+        state.stencilDepthFailOp = GL_KEEP;
+        state.stencilPassOp = GL_REPLACE;
+
+        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedHair, state);
+    }
+
     void MaterialResolvePass() {
         ProfilerOpenGLZoneFunction();
 
@@ -269,7 +313,7 @@ namespace OpenGLRenderer {
 
         resolveState.stencilTestEnabled = true;
         resolveState.stencilFunc = GL_EQUAL;
-        resolveState.stencilRef = 1; // Only process 1
+        resolveState.stencilRef = STENCIL_REF_STATIC;
         resolveState.stencilReadMask = 0xFF;
         resolveState.stencilWriteMask = 0x00;
         resolveState.stencilFailOp = GL_KEEP;
@@ -309,7 +353,7 @@ namespace OpenGLRenderer {
 
         resolveState.stencilTestEnabled = true;
         resolveState.stencilFunc = GL_EQUAL;
-        resolveState.stencilRef = 2; // Only process 2
+        resolveState.stencilRef = STENCIL_REF_SKINNED;
         resolveState.stencilReadMask = 0xFF;
         resolveState.stencilWriteMask = 0x00;
         resolveState.stencilFailOp = GL_KEEP;
@@ -318,6 +362,46 @@ namespace OpenGLRenderer {
 
         SetRasterizerState(resolveState);
 		RenderFullscreenTriangle();
+    }
+
+    void MaterialResolveSkinnedHairPass() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer& gbufferFbo = GetFrameBuffer("GBufferRE");
+        gbufferFbo.Bind();
+        gbufferFbo.SetViewport();
+        gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
+
+        BindShader("MaterialResolveSkinning");
+
+        BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
+        BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
+
+        BindSSBO(0, OpenGLBackEnd::GetSkinnedVertexDataVBO());
+        BindSSBO(1, OpenGLBackEnd::GetVertexDataEBO());
+        BindSSBO(2, "ViewportData");
+        BindSSBO(3, "InstanceData");
+        BindSSBO(4, "Samplers");
+        BindSSBO(5, "RendererData");
+
+        OpenGLRasterizerState resolveState;
+        resolveState.depthTestEnabled = false;
+        resolveState.blendEnable = false;
+        resolveState.cullfaceEnable = false;
+        resolveState.depthMask = false;
+        resolveState.colorMask = true;
+
+        resolveState.stencilTestEnabled = true;
+        resolveState.stencilFunc = GL_EQUAL;
+        resolveState.stencilRef = STENCIL_REF_SKINNED_HAIR;
+        resolveState.stencilReadMask = 0xFF;
+        resolveState.stencilWriteMask = 0x00;
+        resolveState.stencilFailOp = GL_KEEP;
+        resolveState.stencilDepthFailOp = GL_KEEP;
+        resolveState.stencilPassOp = GL_KEEP;
+
+        SetRasterizerState(resolveState);
+        RenderFullscreenTriangle();
     }
 
 	void ClearRenderTargetsRE() {
@@ -535,7 +619,7 @@ namespace OpenGLRenderer {
 		fbo.Bind();
 		fbo.DrawBuffers({ "Lighting" });
 
-		OpenGLShader& shader = GetShader("ShadedHair");
+		OpenGLShader& shader = GetShader("HairLightingForward");
 		shader.Bind();
 		shader.SetFloat("u_renderResolutionScale", 1.0f);
 

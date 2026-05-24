@@ -78,14 +78,14 @@ vec3 GetVisiblity() {
 void main() {
 	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
     ivec2 u_outputImageSize = imageSize(u_outputImage);
-    
+
     // Don't process out of bounds pixels
     if (px.x >= u_outputImageSize.x || px.y >= u_outputImageSize.y) return;
 
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, u_outputImageSize, rendererData.splitscreenMode);
     vec2 screenUV = (vec2(px) + 0.5) / vec2(u_outputImageSize);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
-    
+
     ViewportData viewportData = viewportDataArr[viewportIndex];
     mat4 viewMatrix = viewportData.view;
     mat4 inverseView = viewportData.inverseView;
@@ -180,7 +180,7 @@ void main() {
         else if (flag == 3) finalColor = vec3(0, 0, 1);
         else if (flag == 4) finalColor = vec3(0, 1, 1);
     }
-    
+
     // Velocity
     else if (rendererData.rendererOverrideState == 12) {
         float gain = 20.0;
@@ -210,6 +210,6 @@ void main() {
     //        finalColor = mix(finalColor, dotColor, 0.75);
     //    }
     //}
-    
+
     imageStore(u_outputImage, px, vec4(finalColor, 1));
 }

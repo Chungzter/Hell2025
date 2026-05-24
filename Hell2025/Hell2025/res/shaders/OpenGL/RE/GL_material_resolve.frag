@@ -33,7 +33,7 @@ readonly restrict layout(std430, binding = 5) buffer rendererDataBuffer { Render
 
 vec3 ComputeScreenBarycentrics(vec2 p, vec2 s0, vec2 s1, vec2 s2, vec3 invW) {
     float area = (s1.x - s0.x) * (s2.y - s0.y) - (s2.x - s0.x) * (s1.y - s0.y);
-    if (abs(area) < 0.01) return vec3(1.0, 0.0, 0.0); 
+    if (abs(area) < 0.01) return vec3(1.0, 0.0, 0.0);
 
     float v = ((s2.y - s0.y) * (p.x - s0.x) + (s0.x - s2.x) * (p.y - s0.y)) / area;
     float w = ((s0.y - s1.y) * (p.x - s0.x) + (s1.x - s0.x) * (p.y - s0.y)) / area;
@@ -53,23 +53,18 @@ void main() {
     uint globalInstanceIndex = visibilityData.x;
     uint primitiveID = visibilityData.y;
 
-    float depth = texelFetch(u_DepthTexture, pixelCoords, 0).r; // TODO: use visiblity buffer depth
-    if (depth == 0.0) {
-        discard;
-    }
-
     vec2 uv_screenspace = gl_FragCoord.xy / vec2(texSize);
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, texSize, rendererData.splitscreenMode);
     ViewportData viewportData = viewportDataArr[viewportIndex];
     RenderItem renderItem = renderItems[globalInstanceIndex];
-    
+
     uint triangleIndexOffset = renderItem.baseIndex + (primitiveID * 3);
 
     #ifdef SKINNED
     uint i0 = indices[triangleIndexOffset + 0] + renderItem.baseSkinnedVertex;
     uint i1 = indices[triangleIndexOffset + 1] + renderItem.baseSkinnedVertex;
     uint i2 = indices[triangleIndexOffset + 2] + renderItem.baseSkinnedVertex;
-    #else 
+    #else
     uint i0 = indices[triangleIndexOffset + 0] + renderItem.baseVertex;
     uint i1 = indices[triangleIndexOffset + 1] + renderItem.baseVertex;
     uint i2 = indices[triangleIndexOffset + 2] + renderItem.baseVertex;
@@ -91,7 +86,7 @@ void main() {
     vec2 s2 = (clip2.xy / clip2.w * 0.5 + 0.5) * vpScale + vpOffset;
 
     float area = (s1.x - s0.x) * (s2.y - s0.y) - (s2.x - s0.x) * (s1.y - s0.y);
-    bool isFrontFacing = area > 0.0; 
+    bool isFrontFacing = area > 0.0;
 
     vec3 invW = vec3(1.0 / clip0.w, 1.0 / clip1.w, 1.0 / clip2.w);
 
@@ -114,12 +109,12 @@ void main() {
     dPdy = clamp(dPdy, vec2(-1.0), vec2(1.0));
 
     mat4 normalMatrix = transpose(renderItem.inverseModelMatrix);
-    
+
     vec3 n0 = normalize(normalMatrix * vec4(v0.nx, v0.ny, v0.nz, 0.0)).xyz;
     vec3 n1 = normalize(normalMatrix * vec4(v1.nx, v1.ny, v1.nz, 0.0)).xyz;
     vec3 n2 = normalize(normalMatrix * vec4(v2.nx, v2.ny, v2.nz, 0.0)).xyz;
     vec3 n  = normalize(n0 * bary.x  + n1 * bary.y  + n2 * bary.z);
-    
+
     // Evaluat geometric normals at analytic neighbors
     vec3 nX = normalize(n0 * baryX.x + n1 * baryX.y + n2 * baryX.z);
     vec3 nY = normalize(n0 * baryY.x + n1 * baryY.y + n2 * baryY.z);
@@ -154,6 +149,7 @@ void main() {
     float variance = (dot(dNdx, dNdx) + dot(dNdy, dNdy)) * 0.1591549; // 1.0 / 2PI
     roughness = sqrt(clamp(roughness * roughness + min(variance, 0.18), 0.0, 1.0));
 
+    float depth = texelFetch(u_DepthTexture, pixelCoords, 0).r; // TODO: use visiblity buffer depth
     vec3 worldPos = ReconstructWorldPos(uv_screenspace, depth, viewportData.inverseProjectionViewReverseZ);
     vec4 localPos = renderItem.inverseModelMatrix * vec4(worldPos, 1.0);
     vec4 currPos = viewportData.projectionViewReverseZ * vec4(worldPos, 1.0);

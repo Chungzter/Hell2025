@@ -55,7 +55,7 @@ void Mermaid::Update(float deltaTime) {
     UpdateRenderItems();
 
     static bool titties = false;
-    if (Input::KeyPressed(HELL_KEY_I)) {
+    if (Input::KeyPressed(HELL_KEY_3)) {
         titties = !titties;
         if (titties) {
             m_meshNodes.SetBlendingModeByMeshName("BoobTube", BlendingMode::DO_NOT_RENDER);
