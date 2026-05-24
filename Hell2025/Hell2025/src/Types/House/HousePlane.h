@@ -13,8 +13,9 @@ struct HousePlane {
 
     void UpdateVertexDataFromCreateInfo();
     void UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter);
-    void SetMaterial(const std::string& materialName);
+    void SetMaterial(const std::string& materialName); // TODO: remove me when you switch entirely to MeshbufferV2
     void SetMeshIndex(uint32_t index);
+    void SetMeshId(uint64_t meshId);
     void SetTextureScale(float value);
     void SetTextureOffsetU(float value);
     void SetTextureOffsetV(float value);
@@ -55,6 +56,7 @@ private:
     std::vector<glm::vec2> m_navMeshPoly;
     HousePlaneCreateInfo m_createInfo;
     bool m_hiddenInEditor = false;
+    uint64_t m_meshId = 0;
 
     void CreatePhysicsObject();
 };

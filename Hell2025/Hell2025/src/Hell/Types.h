@@ -65,7 +65,7 @@ struct RenderItem {
 
     int32_t localMeshNodeIndex = 0;
     int32_t opacityTextureIndex = 0;
-    int32_t padding1 = 0;
+    int32_t meshId = 0;
     int32_t padding2 = 0;
 
     float tintColorR = 1.0f;

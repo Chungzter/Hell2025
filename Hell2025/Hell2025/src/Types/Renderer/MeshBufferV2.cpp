@@ -296,7 +296,7 @@ void MeshBufferV2::PreAllocate(size_t maxVertices, size_t maxIndices) {
     initialIndexBlock.begin = 0;
     initialIndexBlock.end = static_cast<uint32_t>(maxIndices);
     m_freeIndexMemoryBlocks.push_back(initialIndexBlock);
-    
+
     m_initilized = true;
 }
 
@@ -392,7 +392,7 @@ void MeshBufferV2::PrintDebugInfo() {
         message += "  [" + std::to_string(i) + "] begin: " + std::to_string(block.begin) + ", end: " + std::to_string(block.end) + ", size: " + std::to_string(block.end - block.begin) + "\n";
     }
     message += "\n";
-    
+
     message += "Mesh list\n";
     for (const auto& [meshId, mesh] : m_meshes) {
         message += "  Mesh id: " + std::to_string(meshId) + "\n";

@@ -1,6 +1,7 @@
 #include "WallSegment.h"
 #include "Modelling/Clipping.h"
 #include "Physics/Physics.h"
+#include "Renderer/Renderer.h"
 #include "Util.h"
 #include "Hell/UniqueID.h"
 
@@ -34,8 +35,13 @@ void WallSegment::SetMeshIndex(uint32_t index) {
     m_meshIndex = index;
 }
 
+void WallSegment::SetMeshId(uint64_t meshId) {
+    m_meshId = meshId;
+}
+
 void WallSegment::CleanUp() {
     Physics::MarkRigidStaticForRemoval(m_physicsId);
+    Renderer::RemoveProcedualMeshByMeshId(m_meshId);
 }
 
 void WallSegment::CreateVertexData(std::vector<ClippingCube>& clippingCubes, float texOffsetX, float texOffsetY, float texScale) {

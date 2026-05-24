@@ -277,12 +277,12 @@ namespace World {
 
 
         MermaidCreateInfo mermaidCreateInfo;
-        
+
         mermaidCreateInfo.position = glm::vec3(14.0f, 29.0f, 36.5f); // outdoors
-        
+
         mermaidCreateInfo.position = glm::vec3(36.0f, 31.0f, 36.5f); // indoors
         mermaidCreateInfo.rotation.y = 0.05f;                        // indoors
-        
+
         AddMermaid(mermaidCreateInfo);
 
 
@@ -792,6 +792,8 @@ namespace World {
         g_heightMapChunks.clear();
         g_validChunks.clear();
         g_mapInstances.clear();
+
+        Renderer::ResetProcedualMeshBuffer();
 
         //RemoveAllHouseBvhs();
 

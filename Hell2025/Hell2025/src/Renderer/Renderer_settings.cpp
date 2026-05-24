@@ -128,7 +128,11 @@ namespace Renderer {
 		SetRendererMode(static_cast<RendererMode>(i));
 	}
 
-	void SetRendererMode(RendererMode rendererMode) {
+    void SetRendererMode(RendererMode rendererMode) {
+        if (rendererMode == RendererMode::MSAA) {
+            rendererMode = RendererMode::RE_STYLE;
+        }
+
         g_rendererMode = rendererMode;
 
 		Debug::BlitQuickDebugMessage("Renderer Mode: " + Util::EnumToString(rendererMode));

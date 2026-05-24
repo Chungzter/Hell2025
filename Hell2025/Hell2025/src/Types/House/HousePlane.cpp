@@ -84,6 +84,8 @@ void HousePlane::CleanUp() {
     m_p2 = glm::vec3(0.0f);
     m_p3 = glm::vec3(0.0f);
     Material* m_material = nullptr;
+
+    Renderer::RemoveProcedualMeshByMeshId(m_meshId);
 }
 
 void HousePlane::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {
@@ -102,6 +104,10 @@ void HousePlane::SetMaterial(const std::string& materialName) {
 
 void HousePlane::SetMeshIndex(uint32_t index) {
     m_meshIndex = index;
+}
+
+void HousePlane::SetMeshId(uint64_t meshId) {
+    m_meshId = meshId;
 }
 
 void HousePlane::SetTextureScale(float value) {
@@ -142,6 +148,7 @@ void HousePlane::SubmitRenderItem() {
     Mesh* mesh = World::GetHouseMeshByIndex(m_meshIndex);
     if (!mesh) return;
 
+    // TODO: Remove me. Only shadow mapping uses me. Render shadow maps with MeshBufferV2 version ya fool
     HouseRenderItem renderItemOLD;
     renderItemOLD.baseColorTextureIndex = m_material->m_basecolor;
     renderItemOLD.normalMapTextureIndex = m_material->m_normal;
@@ -152,6 +159,10 @@ void HousePlane::SubmitRenderItem() {
     renderItemOLD.indexCount = mesh->indexCount;
     renderItemOLD.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
     renderItemOLD.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
+    // TODO: Remove me. Only shadow mapping uses me. Render shadow maps with MeshBufferV2 version ya fool
+
+    Mesh* meshV2 = Renderer::GetProcedualMeshByMeshId(m_meshId);
+    if (!meshV2) return;
 
 	RenderItem renderItem;
 	renderItem.baseColorTextureIndex = m_material->m_basecolor;
@@ -160,8 +171,11 @@ void HousePlane::SubmitRenderItem() {
 	renderItem.meshIndex = m_meshIndex;
 	renderItem.modelMatrix = glm::mat4(1.0f);
 	renderItem.inverseModelMatrix = glm::mat4(1.0f);
-	renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
-	renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
+	renderItem.aabbMin = glm::vec4(meshV2->aabbMin, 0.0f);
+	renderItem.aabbMax = glm::vec4(meshV2->aabbMax, 0.0f);
+    renderItem.meshId = m_meshId;
+    renderItem.baseVertex = meshV2->baseVertex;
+    renderItem.baseIndex = meshV2->baseIndex;
 
 	RenderDataManager::SubmitHouseRenderItemOLD(renderItemOLD);
 	RenderDataManager::SubmitHouseRenderItem(renderItem);

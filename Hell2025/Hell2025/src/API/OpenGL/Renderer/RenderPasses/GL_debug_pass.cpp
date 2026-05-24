@@ -30,68 +30,69 @@ namespace OpenGLRenderer {
     void RenderAStarDebugMesh();
 
     void MeshBufferDebugPass() {
+        return;
+
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
         OpenGLShader* shader3D = GetShaderOLD("DebugSolidColor");
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 
-        static MeshBufferV2 meshBuffer;
-        static bool runOnce = true;
-        static std::vector<uint64_t> meshIds;
+        //static MeshBufferV2 meshBuffer;
+        //static bool runOnce = true;
+        //static std::vector<uint64_t> meshIds;
+        //
+        //if (runOnce) {
+        //    runOnce = false;
+        //
+        //    std::vector<Vertex> vertices = Util::GenerateCubeVertices();
+        //    std::vector<uint32_t> indices = Util::GenerateCubeIndices();
+        //
+        //    uint64_t meshId = meshBuffer.AddMesh(vertices, indices);
+        //    meshIds.push_back(meshId);
+        //
+        //    std::cout << "\nAdded cube\n";
+        //    meshBuffer.PrintDebugInfo();
+        //}
+        //
+        //if (Input::KeyPressed(HELL_KEY_U)) {
+        //    static uint32_t count = 0;
+        //    count++;
+        //
+        //    std::vector<Vertex> vertices = Util::GenerateCubeVertices();
+        //    std::vector<uint32_t> indices = Util::GenerateCubeIndices();
+        //
+        //    for (Vertex& vertex : vertices) {
+        //        vertex.position.z += (1.5f * count);
+        //    }
+        //
+        //    uint64_t meshId = meshBuffer.AddMesh(vertices, indices);
+        //    meshIds.push_back(meshId);
+        //
+        //    std::cout << "\nAdded cube\n";
+        //    meshBuffer.PrintDebugInfo();
+        //}
+        //
+        //if (Input::KeyPressed(HELL_KEY_J) && meshBuffer.GetMeshCount()) {
+        //    int meshIdIndex = Util::RandomInt(0, meshIds.size() - 1);
+        //    uint64_t meshId = meshIds[meshIdIndex];
+        //    meshBuffer.RemoveMesh(meshId);
+        //    meshIds.erase(meshIds.begin() + meshIdIndex);
+        //
+        //    std::cout << "\nRemoved random cube\n";
+        //    meshBuffer.PrintDebugInfo();
+        //}
 
-        if (runOnce) {
-            runOnce = false;
-
-            std::vector<Vertex> vertices = Util::GenerateCubeVertices();
-            std::vector<uint32_t> indices = Util::GenerateCubeIndices();
-
-            uint64_t meshId = meshBuffer.AddMesh(vertices, indices);
-            meshIds.push_back(meshId);
-
-            std::cout << "\nAdded cube\n";
-            meshBuffer.PrintDebugInfo();
-        }
-
-        if (Input::KeyPressed(HELL_KEY_U)) {
-            static uint32_t count = 0;
-            count++;
-
-            std::vector<Vertex> vertices = Util::GenerateCubeVertices();
-            std::vector<uint32_t> indices = Util::GenerateCubeIndices();
-
-            for (Vertex& vertex : vertices) {
-                vertex.position.z += (1.5f * count);
-            }
-
-            uint64_t meshId = meshBuffer.AddMesh(vertices, indices);
-            meshIds.push_back(meshId);
-
-            std::cout << "\nAdded cube\n";
-            meshBuffer.PrintDebugInfo();
-        }
-
-        if (Input::KeyPressed(HELL_KEY_J) && meshBuffer.GetMeshCount()) {
-            int meshIdIndex = Util::RandomInt(0, meshIds.size() - 1);
-            uint64_t meshId = meshIds[meshIdIndex];
-            meshBuffer.RemoveMesh(meshId);
-            meshIds.erase(meshIds.begin() + meshIdIndex);
-
-            std::cout << "\nRemoved random cube\n";
-            meshBuffer.PrintDebugInfo();
-        }
+        MeshBufferV2& meshBuffer = Renderer::GetProceduralMeshBuffer();
 
         // Draw
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glDisable(GL_BLEND);
+        glDisable(GL_DEPTH_TEST);
 
         shader3D->Bind();
         gBuffer->Bind();
         gBuffer->DrawBuffer("FinalLighting");
-
-        Transform transform;
-        transform.position = glm::vec3(37.0f, 32.0f, 35.0f);
-        transform.scale = glm::vec3(0.25f);
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -99,15 +100,20 @@ namespace OpenGLRenderer {
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
             shader3D->SetMat4("u_projectionView", viewportData[i].projectionView);
-            shader3D->SetMat4("u_model", transform.to_mat4());
+            shader3D->SetMat4("u_model", glm::mat4(1.0f));
             shader3D->SetVec3("u_color", YELLOW);
 
-            for (uint64_t meshId : meshIds) {
-                Mesh* mesh = meshBuffer.GetMeshById(meshId);
-                if (!mesh || mesh->indexCount == 0) continue;
+            //for (uint64_t meshId : meshIds) {
+            for (Wall& wall : World::GetWalls()) {
+                for (WallSegment& wallSegment : wall.GetWallSegments()) {
+                    uint64_t meshId = wallSegment.GetMeshId();
 
-                glBindVertexArray(meshBuffer.GetVAO());
-                glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(mesh->baseIndex * sizeof(uint32_t)), mesh->baseVertex);
+                    Mesh* mesh = meshBuffer.GetMeshById(meshId);
+                    if (!mesh || mesh->indexCount == 0) continue;
+
+                    glBindVertexArray(meshBuffer.GetVAO());
+                    glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(mesh->baseIndex * sizeof(uint32_t)), mesh->baseVertex);
+                }
             }
         }
     }

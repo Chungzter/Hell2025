@@ -3,13 +3,14 @@
 #include "File/JSON.h"
 #include "Managers/HouseManager.h"
 #include "GlobalIllumination/GlobalIllumination.h"
+#include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 
 namespace World {
 
     MeshBuffer g_houseMeshBuffer;
     MeshBuffer g_weatherBoardMeshBuffer;
-    
+
     // Find out why this isn't required for windows and doors, yet still somehow updates all this shit
     void RecreateHouseMesh() {
         UpdateClippingCubes();
@@ -44,17 +45,29 @@ namespace World {
     }
 
     void UpdateHouseMeshBuffer() {
+
+        // TODO: remove me when you switch entirely to MeshBufferV2
         g_houseMeshBuffer.Reset();
 
         for (Wall& wall : GetWalls()) {
             for (WallSegment& wallSegment : wall.GetWallSegments()) {
+                // TODO: remove me once you switch entirely to MeshBufferV2
                 uint32_t meshIndex = g_houseMeshBuffer.AddMesh(wallSegment.GetVertices(), wallSegment.GetIndices());
                 wallSegment.SetMeshIndex(meshIndex);
+                // TODO: remove me once you switch entirely to MeshBufferV2
+
+                uint64_t meshId = Renderer::AddProcedualMesh(wallSegment.GetVertices(), wallSegment.GetIndices(), "WallSegment");
+                wallSegment.SetMeshId(meshId);
             }
         }
         for (HousePlane& housePlane : GetHousePlanes()) {
+            // TODO: remove me once you switch entirely to MeshBufferV2
             uint32_t meshIndex = g_houseMeshBuffer.AddMesh(housePlane.GetVertices(), housePlane.GetIndices());
             housePlane.SetMeshIndex(meshIndex);
+            // TODO: remove me once you switch entirely to MeshBufferV2
+
+            uint64_t meshId = Renderer::AddProcedualMesh(housePlane.GetVertices(), housePlane.GetIndices(), "HousePlane");
+            housePlane.SetMeshId(meshId);
         }
 
         g_houseMeshBuffer.UpdateBuffers();

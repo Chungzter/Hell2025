@@ -169,4 +169,7 @@ void main() {
     VelocityXYOcclusionSubSurfaceOut.rg = velocity;
     VelocityXYOcclusionSubSurfaceOut.b = ao;
     VelocityXYOcclusionSubSurfaceOut.a = 0.0;
+
+
+    //BaseColorMetallicOut.rgb = vec3(uv, 0);
 }

@@ -1,8 +1,10 @@
 #pragma once
-#include <Hell/Types.h>
 #include "Math/AABB.h"
 #include "Math/OBB.h"
 #include "Types/Map/Map.h"
+#include <Types/Renderer/MeshBufferV2.h>
+
+#include <Hell/Types.h>
 
 namespace Renderer {
     void InitMain();
@@ -56,6 +58,14 @@ namespace Renderer {
 	uint32_t GetTileCountY();
 
     RendererSettings& GetCurrentRendererSettings();
+
+    // Procedural mesh
+    MeshBufferV2& GetProceduralMeshBuffer();
+    Mesh* GetProcedualMeshByMeshId(uint64_t meshId);
+    uint64_t AddProcedualMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name = UNDEFINED_STRING);
+    void RemoveProcedualMeshByMeshId(uint64_t meshId);
+    void ResetProcedualMeshBuffer();
+
 
     const std::string& GetZoneNames();
     const std::string& GetZoneGPUTimings();

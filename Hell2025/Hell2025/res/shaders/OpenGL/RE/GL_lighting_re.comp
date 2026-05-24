@@ -37,7 +37,7 @@ uniform float u_oceanHeight = 30;
 void main() {
 	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
     ivec2 outputImageSize = imageSize(u_outputImage);
-    
+
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
@@ -74,7 +74,7 @@ void main() {
     vec3 F0 = mix(vec3(0.04), linearBaseColor, metallic);
 
     vec3 directLighting = vec3(0.0);
-    for (int i = 2; i < 4; i++) {
+    for (int i = 2; i < 8; i++) {
         int lightIndex = i; //int(tileLights[tileIndex].lightIndices[i]);
 
         Light light = lights[lightIndex];

@@ -172,13 +172,13 @@ void main() {
         finalColor = clamp(finalColor, 0, 1);
         finalColor = mix(finalColor, Tonemap_ACES(finalColor), 0.125);
 
-        uint flag = texelFetch(u_oceanFlagsTexture, px, 0).r;
-
-        if      (flag == 0) finalColor = vec3(0, 0, 0);
-        else if (flag == 1) finalColor = vec3(1, 0, 0);
-        else if (flag == 2) finalColor = vec3(0, 1, 0);
-        else if (flag == 3) finalColor = vec3(0, 0, 1);
-        else if (flag == 4) finalColor = vec3(0, 1, 1);
+        //uint flag = texelFetch(u_oceanFlagsTexture, px, 0).r;
+        //
+        //if      (flag == 0) finalColor = vec3(0, 0, 0);
+        //else if (flag == 1) finalColor = vec3(1, 0, 0);
+        //else if (flag == 2) finalColor = vec3(0, 1, 0);
+        //else if (flag == 3) finalColor = vec3(0, 0, 1);
+        //else if (flag == 4) finalColor = vec3(0, 1, 1);
     }
 
     // Velocity

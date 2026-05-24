@@ -22,7 +22,6 @@ uniform uint u_frameCount;
 
 void main() {
 
-    discard;
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
     float alpha = texture(sampler2D(textureSamplers[renderItem.baseColorTextureIndex]), v_uv).a;
 

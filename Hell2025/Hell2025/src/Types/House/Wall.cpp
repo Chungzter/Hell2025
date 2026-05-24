@@ -270,6 +270,9 @@ void Wall::SubmitRenderItems() {
         renderItemOLD.meshIndex = wallSegment.GetMeshIndex();
         RenderDataManager::SubmitHouseRenderItemOLD(renderItemOLD);
 
+        Mesh* meshV2 = Renderer::GetProcedualMeshByMeshId(wallSegment.GetMeshId());
+        if (!meshV2) return;
+
 		RenderItem renderItem;
 		renderItem.baseColorTextureIndex = m_material->m_basecolor;
 		renderItem.normalMapTextureIndex = m_material->m_normal;
@@ -277,8 +280,11 @@ void Wall::SubmitRenderItems() {
 		renderItem.meshIndex = wallSegment.GetMeshIndex();
 		renderItem.modelMatrix = glm::mat4(1.0f);
 		renderItem.inverseModelMatrix = glm::mat4(1.0f);
-		renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
-		renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
+		renderItem.aabbMin = glm::vec4(meshV2->aabbMin, 0.0f);
+		renderItem.aabbMax = glm::vec4(meshV2->aabbMax, 0.0f);
+        renderItem.meshId = wallSegment.GetMeshId();
+        renderItem.baseVertex = meshV2->baseVertex;
+        renderItem.baseIndex = meshV2->baseIndex;
 
 		RenderDataManager::SubmitHouseRenderItem(renderItem);
 
@@ -319,7 +325,7 @@ void Wall::DrawSegmentLines(glm::vec4 color) {
         Renderer::DrawLine(p1, p3, color);
         Renderer::DrawLine(p2, p4, color);
 
-        glm::vec3 midPoint = Util::GetMidPoint(wallSegment.GetStart(), wallSegment.GetEnd()); 
+        glm::vec3 midPoint = Util::GetMidPoint(wallSegment.GetStart(), wallSegment.GetEnd());
         glm::vec3 normal = wallSegment.GetNormal();
         glm::vec3 projectedMidPoint = midPoint + (normal * 0.2f);
         Renderer::DrawLine(midPoint, projectedMidPoint, color);

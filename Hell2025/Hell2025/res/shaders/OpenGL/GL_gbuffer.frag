@@ -154,4 +154,9 @@ void main() {
     vec2 velocity = currNDC - prevNDC;
     velocity *= 0.5;
     VelocityOcclusionSubSurfaceOut = vec4(velocity, rmat.a, 1.0);
+
+
+    //BaseColorOut.rgb = vec3(TexCoord, 0);
+
+
 }

@@ -8,29 +8,30 @@
 
 #define STENCIL_REF_STATIC       1 // Includes alpha discarded
 #define STENCIL_REF_SKINNED      2 // Includes alpha discarded
+#define STENCIL_REF_PROCEDUAL    3 //
 #define STENCIL_REF_STATIC_HAIR  1 // TODO: Make this 3 and process hair lighting separately
 #define STENCIL_REF_SKINNED_HAIR 4 // TODO: Make this 4 and process hair lighting separately
 
 namespace OpenGLRenderer {
-	struct RESettings {
-		glm::ivec2 gBufferResolution = glm::ivec2(1920, 1080);
-		glm::ivec2 finalImageResolution = glm::ivec2(1920, 1080) / 2;
-	} g_settings;
+    struct RESettings {
+        glm::ivec2 gBufferResolution = glm::ivec2(1920, 1080);
+        glm::ivec2 finalImageResolution = glm::ivec2(1920, 1080) / 2;
+    } g_settings;
 
-	void BindShadowMapsRE();
-	void BlendedLighting();
-	void ClearRenderTargetsRE();
+    void BindShadowMapsRE();
+    void BlendedLighting();
+    void ClearRenderTargetsRE();
     void CreateFramebuffersRE();
     void DepthPrePassRE();             // OLD
     void DepthPrePassAlphaDiscardRE(); // OLD
-	void GBufferPass();                // OLD
-	void HairDepthPrep();
-	void HairDepthPrePassRE();
-	void HairPassRE();
-	void HairCompositeRE();
-	void LightingPassRE();
-	void LoadShadersRE();
-	void PostProcessingPassRE();
+    void GBufferPass();                // OLD
+    void HairDepthPrep();
+    void HairDepthPrePassRE();
+    void HairPassRE();
+    void HairCompositeRE();
+    void LightingPassRE();
+    void LoadShadersRE();
+    void PostProcessingPassRE();
 
     void VisibilityPass();
     void VisibilityAlphaDiscardPass();
@@ -38,57 +39,72 @@ namespace OpenGLRenderer {
     void VisibilitySkinnedHairPass();
 
     void MaterialResolvePass();
-	void MaterialResolveSkinnedPass();
+    void MaterialResolveSkinnedPass();
     void MaterialResolveSkinnedHairPass();
-	void RenderFullscreenTriangle();
+    void MaterialResolveProceduralPass();
+    void RenderFullscreenTriangle();
 
-	void InitREStyle() {
-		CreateFramebuffersRE();
-		LoadShadersRE();
-	}
+    void PlebRenderProceduralGeometryIntoGBuffer();
 
-	void RenderGameREStyle() {
-		ProfilerOpenGLFrame();
+    void InitREStyle() {
+        CreateFramebuffersRE();
+        LoadShadersRE();
+    }
 
-		OpenGLRasterizerState state;
-		state.depthMask = true;
-		state.colorMask = true;
-		ForceRasterizerState(state);
+    void RenderGameREStyle() {
+        ProfilerOpenGLFrame();
 
-		ComputeSkinningPass();
-		UpdateSSBOS();
-		RenderShadowMaps();
-		ClearRenderTargetsRE();
+        OpenGLRasterizerState state;
+        state.depthMask = true;
+        state.colorMask = true;
+        ForceRasterizerState(state);
+
+        ComputeSkinningPass();
+        UpdateSSBOS();
+        RenderShadowMaps();
+        ClearRenderTargetsRE();
 
         static bool visibilityPath = true;
-		if (Input::KeyPressed(HELL_KEY_NUMPAD_2)) {
-			visibilityPath = !visibilityPath;
-		}
+        if (Input::KeyPressed(HELL_KEY_NUMPAD_2)) {
+            visibilityPath = !visibilityPath;
+        }
 
-		if (visibilityPath) {
-            VisibilityPass();
-            VisibilitySkinnedPass();
-            VisibilityAlphaDiscardPass();
-            VisibilitySkinnedHairPass();
+        VisibilityPass();
+        VisibilitySkinnedPass();
+        VisibilityAlphaDiscardPass();
 
-            MaterialResolvePass();
-            MaterialResolveSkinnedPass();
-            //MaterialResolveSkinnedHairPass();
-		}
-		else {
-			DepthPrePassRE();
-			GBufferPass();
-		}
+        PlebRenderProceduralGeometryIntoGBuffer();
+
+        MaterialResolvePass();
+        MaterialResolveSkinnedPass();
+
+        // if (visibilityPath) {
+        //     VisibilityPass();
+        //     VisibilitySkinnedPass();
+        //     VisibilityAlphaDiscardPass();
+        //     //VisibilitySkinnedHairPass();
+        //
+        //     MaterialResolvePass();
+        //     MaterialResolveSkinnedPass();
+        //     //MaterialResolveProceduralPass();
+        //     //MaterialResolveSkinnedHairPass();
+        //
+        //     PlebRenderProcedualGeometryIntoGBuffer();
+        // }
+        // else {
+        //     DepthPrePassRE();
+        //     GBufferPass();
+        // }
 
         UpdateGlobalIllumintation();
 
-		// TODO: Don't let this renderer just assume these SSBOs are always bound here.
-		// It's a nightmare. Explicitly rebind them for every render pass that needs them.
-		BindSSBO(0, "Samplers");
-		BindSSBO(1, "RendererData");
-		BindSSBO(2, "ViewportData");
-		BindSSBO(3, "InstanceData");
-		BindSSBO(4, "Lights");
+        // TODO: Don't let this renderer just assume these SSBOs are always bound here.
+        // It's a nightmare. Explicitly rebind them for every render pass that needs them.
+        BindSSBO(0, "Samplers");
+        BindSSBO(1, "RendererData");
+        BindSSBO(2, "ViewportData");
+        BindSSBO(3, "InstanceData");
+        BindSSBO(4, "Lights");
 
         LightingPassRE();
         BlendedLighting();
@@ -105,49 +121,49 @@ namespace OpenGLRenderer {
         if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
 
         PostProcessingPassRE();
-		DebugViewPass();
+        DebugViewPass();
 
-		// Downscale and blit to swapchain
-		OpenGLFrameBuffer& finalImageFbo = GetFrameBuffer("FinalImage");
+        // Downscale and blit to swapchain
+        OpenGLFrameBuffer& finalImageFbo = GetFrameBuffer("FinalImage");
         OpenGLFrameBuffer& gBufferRE = GetFrameBuffer("GBufferRE");
         OpenGLRenderer::BlitFrameBuffer(&gBufferRE, &finalImageFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		OpenGLRenderer::BlitToDefaultFrameBuffer(&finalImageFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        OpenGLRenderer::BlitToDefaultFrameBuffer(&finalImageFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-		UIPass();
-	}
+        UIPass();
+    }
 
-	void CreateFramebuffersRE() {
-		OpenGLFrameBuffer& gBufferRE = CreateFrameBuffer("GBufferRE", g_settings.gBufferResolution);
-		gBufferRE.CreateAttachment("Lighting", GL_RGBA16F);
-		gBufferRE.CreateAttachment("BaseColorMetallic", GL_RGBA8);
-		gBufferRE.CreateAttachment("NormalXYRoughnessMisc", GL_RGB10_A2);
-		gBufferRE.CreateAttachment("VelocityXYOcclusionSubSurface", GL_RGBA16F);
-		gBufferRE.CreateAttachment("Visibility", GL_RG32UI);
-		gBufferRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
+    void CreateFramebuffersRE() {
+        OpenGLFrameBuffer& gBufferRE = CreateFrameBuffer("GBufferRE", g_settings.gBufferResolution);
+        gBufferRE.CreateAttachment("Lighting", GL_RGBA16F);
+        gBufferRE.CreateAttachment("BaseColorMetallic", GL_RGBA8);
+        gBufferRE.CreateAttachment("NormalXYRoughnessMisc", GL_RGB10_A2);
+        gBufferRE.CreateAttachment("VelocityXYOcclusionSubSurface", GL_RGBA16F);
+        gBufferRE.CreateAttachment("Visibility", GL_RG32UI);
+        gBufferRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
-		OpenGLFrameBuffer& hairFboRE = CreateMultisampledFrameBuffer("HairRE", g_settings.gBufferResolution, 4);
-		hairFboRE.CreateAttachment("Lighting", GL_RGBA16F);
-		hairFboRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
-	}
+        OpenGLFrameBuffer& hairFboRE = CreateMultisampledFrameBuffer("HairRE", g_settings.gBufferResolution, 4);
+        hairFboRE.CreateAttachment("Lighting", GL_RGBA16F);
+        hairFboRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
+    }
 
-	void LoadShadersRE() {
-		LoadShader("RE", "DepthPrePassRE", { "GL_depth_prepass.vert", "GL_depth_prepass.frag" });
-		LoadShader("RE", "DepthPrePassAlphaDiscardRE", { "GL_depth_prepass_alpha_discard.vert", "GL_depth_prepass_alpha_discard.frag" });
-		LoadShader("RE", "GBufferRE", { "GL_gbuffer_re.vert", "GL_gbuffer_re.frag" });
-		LoadShader("RE", "LightingRE", { "GL_lighting_re.comp" });
+    void LoadShadersRE() {
+        LoadShader("RE", "DepthPrePassRE", { "GL_depth_prepass.vert", "GL_depth_prepass.frag" });
+        LoadShader("RE", "DepthPrePassAlphaDiscardRE", { "GL_depth_prepass_alpha_discard.vert", "GL_depth_prepass_alpha_discard.frag" });
+        LoadShader("RE", "GBufferRE", { "GL_gbuffer_re.vert", "GL_gbuffer_re.frag" });
+        LoadShader("RE", "LightingRE", { "GL_lighting_re.comp" });
 
-        LoadShader("RE", "HairLightingForward", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward.frag" } );
-        LoadShader("RE", "HairLightingDeferred", { "GL_fullscreen_triangle.vert", "GL_hair_lighting_deferred.frag" } );
-		LoadShader("RE", "HairCompositeRE", { "GL_hair_composite_re.comp" });
-		LoadShader("RE", "HairDepthPrep", { "GL_fullscreen_triangle.vert", "GL_hair_depth_prep.frag" });
+        LoadShader("RE", "HairLightingForward", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward.frag" });
+        LoadShader("RE", "HairLightingDeferred", { "GL_fullscreen_triangle.vert", "GL_hair_lighting_deferred.frag" });
+        LoadShader("RE", "HairCompositeRE", { "GL_hair_composite_re.comp" });
+        LoadShader("RE", "HairDepthPrep", { "GL_fullscreen_triangle.vert", "GL_hair_depth_prep.frag" });
 
         LoadShader("RE", "Visibility", { "GL_visibility.vert", "GL_visibility.frag" });
-		LoadShader("RE", "VisibilityAlphaDiscard", { "GL_visibility.vert", "GL_visibility_alpha_discard.frag" });
+        LoadShader("RE", "VisibilityAlphaDiscard", { "GL_visibility.vert", "GL_visibility_alpha_discard.frag" });
         LoadShader("RE", "MaterialResolve", { "GL_material_resolve.vert", "GL_material_resolve.frag" });
-        LoadShader("RE", "MaterialResolveSkinning", { "GL_material_resolve.vert", "GL_material_resolve.frag" }, { "SKINNED" } );
-	}
+        LoadShader("RE", "MaterialResolveSkinning", { "GL_material_resolve.vert", "GL_material_resolve.frag" }, { "SKINNED" });
+    }
 
-	void VisibilityPass() {
+    void VisibilityPass() {
         ProfilerOpenGLZoneFunction();
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
 
@@ -155,7 +171,7 @@ namespace OpenGLRenderer {
         fbo.Bind();
         fbo.DrawBuffers({ "Visibility" });
 
-		BindShader("Visibility");
+        BindShader("Visibility");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -175,12 +191,17 @@ namespace OpenGLRenderer {
         state.stencilPassOp = GL_REPLACE;
 
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-
         MultiDrawPerViewportRE(fbo, drawInfoSet.standard, state);
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingStandard, state);
-	}
 
-	void VisibilityAlphaDiscardPass() {
+        // Procedural geometry
+        state.stencilRef = STENCIL_REF_PROCEDUAL;
+
+        glBindVertexArray(Renderer::GetProceduralMeshBuffer().GetVAO());
+        MultiDrawPerViewportRE(fbo, drawInfoSet.house, state);
+    }
+
+    void VisibilityAlphaDiscardPass() {
         ProfilerOpenGLZoneFunction();
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
 
@@ -188,13 +209,13 @@ namespace OpenGLRenderer {
         fbo.Bind();
         fbo.DrawBuffers({ "Visibility" });
 
-		static int frameCount = 0;
-		frameCount++;
+        static int frameCount = 0;
+        frameCount++;
 
         BindShader("VisibilityAlphaDiscard");
-		SetUniformUInt("u_frameCount", frameCount);
+        SetUniformUInt("u_frameCount", frameCount);
 
-		BindSSBO(0, "Samplers");
+        BindSSBO(0, "Samplers");
         BindSSBO(1, "RendererData");
         BindSSBO(2, "ViewportData");
         BindSSBO(3, "InstanceData");
@@ -220,7 +241,7 @@ namespace OpenGLRenderer {
 
         MultiDrawPerViewportRE(fbo, drawInfoSet.alphaDiscard, state);
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingAlphaDiscard, state);
-	}
+    }
 
     void VisibilitySkinnedPass() {
         ProfilerOpenGLZoneFunction();
@@ -321,7 +342,7 @@ namespace OpenGLRenderer {
         resolveState.stencilPassOp = GL_KEEP;
 
         SetRasterizerState(resolveState);
-		RenderFullscreenTriangle();
+        RenderFullscreenTriangle();
     }
 
     void MaterialResolveSkinnedPass() {
@@ -361,7 +382,47 @@ namespace OpenGLRenderer {
         resolveState.stencilPassOp = GL_KEEP;
 
         SetRasterizerState(resolveState);
-		RenderFullscreenTriangle();
+        RenderFullscreenTriangle();
+    }
+
+    void MaterialResolveProceduralPass() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer& gbufferFbo = GetFrameBuffer("GBufferRE");
+        gbufferFbo.Bind();
+        gbufferFbo.SetViewport();
+        gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
+
+        BindShader("MaterialResolve");
+
+        BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
+        BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
+
+        BindSSBO(0, Renderer::GetProceduralMeshBuffer().GetVBO());
+        BindSSBO(1, Renderer::GetProceduralMeshBuffer().GetEBO());
+        BindSSBO(2, "ViewportData");
+        BindSSBO(3, "InstanceData");
+        BindSSBO(4, "Samplers");
+        BindSSBO(5, "RendererData");
+
+        OpenGLRasterizerState resolveState;
+        resolveState.depthTestEnabled = false;
+        resolveState.blendEnable = false;
+        resolveState.cullfaceEnable = false;
+        resolveState.depthMask = false;
+        resolveState.colorMask = true;
+
+        resolveState.stencilTestEnabled = true;
+        resolveState.stencilFunc = GL_EQUAL;
+        resolveState.stencilRef = STENCIL_REF_PROCEDUAL;
+        resolveState.stencilReadMask = 0xFF;
+        resolveState.stencilWriteMask = 0x00;
+        resolveState.stencilFailOp = GL_KEEP;
+        resolveState.stencilDepthFailOp = GL_KEEP;
+        resolveState.stencilPassOp = GL_KEEP;
+
+        SetRasterizerState(resolveState);
+        RenderFullscreenTriangle();
     }
 
     void MaterialResolveSkinnedHairPass() {
@@ -402,6 +463,33 @@ namespace OpenGLRenderer {
 
         SetRasterizerState(resolveState);
         RenderFullscreenTriangle();
+    }
+
+    void PlebRenderProceduralGeometryIntoGBuffer() {
+        ProfilerOpenGLZoneFunction();
+
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
+        fbo.Bind();
+        fbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = false;
+        state.cullfaceEnable = true;
+        state.depthMask = true;
+        state.colorMask = true;
+        state.depthFunc = GL_GEQUAL;
+
+        // Opaque
+        OpenGLShader& opaqueShader = GetShader("GBufferRE");
+        opaqueShader.Bind();
+
+        glBindVertexArray(Renderer::GetProceduralMeshBuffer().GetVAO());
+        MultiDrawPerViewportRE(fbo, drawInfoSet.house, state);
+
+        glBindVertexArray(0);
     }
 
 	void ClearRenderTargetsRE() {

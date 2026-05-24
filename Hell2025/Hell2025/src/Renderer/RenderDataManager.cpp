@@ -90,7 +90,7 @@ namespace RenderDataManager {
     void CreateMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
     void CreateMultiDrawIndirectCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
     void CreateMultiDrawIndirectCommandsSkinnedNonDeforming(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
-	
+
     void CreateHouseDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex);
 	void CreateHouseMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
 
@@ -301,6 +301,12 @@ namespace RenderDataManager {
         });
     }
 
+    void SortRenderItemsByMeshId(std::vector<RenderItem>& renderItems) {
+        std::sort(renderItems.begin(), renderItems.end(), [](const RenderItem& a, const RenderItem& b) {
+            return a.meshId < b.meshId;
+        });
+    }
+
     void CreateMoonLightShadowMapDrawCommands() {
         auto& set = g_drawCommandsSet;
         int viewportCount = 4;
@@ -379,7 +385,7 @@ namespace RenderDataManager {
         SortRenderItems(g_renderItemsAlphaDiscarded);
 		SortRenderItems(g_renderItemsHairLayer);
 		SortRenderItems(g_renderItemsPlastic);
-		SortRenderItems(g_houseRenderItems);
+		SortRenderItemsByMeshId(g_houseRenderItems);
 
         // Lil hack to include bullet decals in mirrors
         int count = g_renderItems.size() + g_renderItemsAlphaDiscarded.size();
@@ -499,15 +505,21 @@ namespace RenderDataManager {
     }
 
     void CreateHouseMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset) {
-        std::unordered_map<int, std::size_t> commandMap;
+        std::unordered_map<uint64_t, std::size_t> commandMap;
         commands.reserve(renderItems.size());
 
+        MeshBufferV2& meshBuffer = Renderer::GetProceduralMeshBuffer();
+
         for (const RenderItem& renderItem : renderItems) {
-            int meshIndex = renderItem.meshIndex;
-            Mesh* mesh = World::GetHouseMeshByIndex(meshIndex);
+            //int meshIndex = renderItem.meshIndex;
+            uint64_t meshId = renderItem.meshId;
+            //Mesh* mesh = World::GetHouseMeshByIndex(meshIndex);
+
+            Mesh* mesh = meshBuffer.GetMeshById(meshId);
+            if (!mesh) continue;
 
             // If the command exists, increment its instance count
-            auto it = commandMap.find(meshIndex);
+            auto it = commandMap.find(meshId);
             if (it != commandMap.end()) {
                 commands[it->second].instanceCount++;
             }
@@ -521,7 +533,7 @@ namespace RenderDataManager {
                 cmd.baseInstance = EncodeBaseInstance(viewportIndex, instanceOffset);
                 cmd.instanceCount = 1;
 
-                commandMap[meshIndex] = index;
+                commandMap[meshId] = index;
             }
             instanceOffset++;
         }

@@ -4,6 +4,7 @@
 #include "BackEnd/Backend.h"
 #include "Viewport/ViewportManager.h"
 #include "Editor/Editor.h"
+#include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Modelling/Clipping.h"
 #include "Modelling/Unused/Modelling.h"
@@ -45,42 +46,15 @@ namespace OpenGLRenderer {
         shader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
         shader->SetBool("u_alphaDiscard", false);
 
-        MeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer();
-        OpenGLMeshBuffer& glHouseMeshBuffer = houseMeshBuffer.GetGLMeshBuffer();
+        //MeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer();
+        //OpenGLMeshBuffer& glHouseMeshBuffer = houseMeshBuffer.GetGLMeshBuffer();
+        //glBindVertexArray(glHouseMeshBuffer.GetVAO());
 
-        glBindVertexArray(glHouseMeshBuffer.GetVAO());
+        MeshBufferV2& meshBuffer = Renderer::GetProceduralMeshBuffer();
+        glBindVertexArray(meshBuffer.GetVAO());
 
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-
-        // ATTENTION! You are not frustum culling your house mesh bro
-        // ATTENTION! You are not frustum culling your house mesh bro
-        // ATTENTION! You are not frustum culling your house mesh bro
-
-        //for (int i = 0; i < 4; i++) {
-        //    Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-        //    if (!viewport->IsVisible()) continue;
-        //    if (glHouseMeshBuffer.GetIndexCount() <= 0) continue;
-        //
-        //    OpenGLRenderer::SetViewport(gBuffer, viewport);
-        //    shader->SetInt("u_viewportIndex", i);
-        //
-        //    const std::vector<HouseRenderItem>& renderItems = RenderDataManager::GetHouseRenderItems();
-        //
-        //    for (const HouseRenderItem& renderItem : renderItems) {
-        //        int indexCount = renderItem.indexCount;
-        //        int baseVertex = renderItem.baseVertex;
-        //        int baseIndex = renderItem.baseIndex;
-        //
-        //        glActiveTexture(GL_TEXTURE0);
-        //        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
-        //        glActiveTexture(GL_TEXTURE1);
-        //        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
-        //        glActiveTexture(GL_TEXTURE2);
-        //        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
-        //        glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
-        //    }
-		//}
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);

@@ -5,7 +5,8 @@
 
 struct WallSegment {
     void Init(glm::vec3 start, glm::vec3 end, float height, uint64_t parentObjectId, const SpawnOffset& spawnOffset);
-    void SetMeshIndex(uint32_t index);
+    void SetMeshIndex(uint32_t index); // TODO: remove me after fully switching to MeshBufferV2
+    void SetMeshId(uint64_t meshId);
     void CleanUp();
     void CreateVertexData(std::vector<ClippingCube>& clippingCubes, float texOffsetX, float texOffsetY, float texScale);
     void CreatePhysicsObject();
@@ -13,15 +14,16 @@ struct WallSegment {
     const glm::vec3& GetStart()                 const { return m_start; }
     const glm::vec3& GetEnd()                   const { return m_end; }
     const glm::vec3& GetNormal()                const { return m_normal; }
-    const uint32_t GetMeshIndex()               const { return m_meshIndex; }
+    const uint32_t GetMeshIndex()               const { return m_meshIndex; } // TODO: remove me after fully switching to MeshBufferV2
     const uint64_t GetObjectId()                const { return m_objectId; }
+    const uint64_t GetMeshId()                  const { return m_meshId; }
     const uint64_t GetParentObjectId()          const { return m_parentObjectId; }
     const float GetHeight()                     const { return m_height; }
     const AABB& GetAABB()                       const { return m_aabb; }
     const std::vector<glm::vec3>& GetCorners()  const { return m_corners; }
     const std::vector<Vertex>& GetVertices()    const { return m_vertices; }
     const std::vector<uint32_t>& GetIndices()   const { return m_indices; }
-                                                               
+
 private:
     glm::vec3 m_start;
     glm::vec3 m_end;
@@ -34,6 +36,7 @@ private:
     std::vector<glm::vec3> m_corners;
     std::vector<Vertex> m_vertices;
     std::vector<uint32_t> m_indices;
-    uint32_t m_meshIndex = 0;
+    uint32_t m_meshIndex = 0; // TODO: remove me after fully switching to MeshBufferV2
+    uint64_t m_meshId = 0;
     SpawnOffset m_spawnOffset;
 };
