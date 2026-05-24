@@ -163,7 +163,8 @@ void File::ExportSkinnedModel(const SkinnedModelData& skinnedModelData) {
         file.write(reinterpret_cast<const char*>(&skinnedMeshHeader.aabbMax), sizeof(glm::vec3));
         file.write(reinterpret_cast<const char*>(&skinnedMeshHeader.requiresSkinning), sizeof(bool));
         file.write(reinterpret_cast<const char*>(&skinnedMeshHeader.nonDeformingBoneIndex), sizeof(int32_t));
-        file.write(reinterpret_cast<const char*>(skinnedMeshData.weightedVertices.data()), skinnedMeshData.weightedVertices.size() * sizeof(WeightedVertex));
+        file.write(reinterpret_cast<const char*>(skinnedMeshData.vertices.data()), skinnedMeshData.vertices.size() * sizeof(Vertex));
+        file.write(reinterpret_cast<const char*>(skinnedMeshData.vertexWeights.data()), skinnedMeshData.vertexWeights.size() * sizeof(VertexWeight));
         file.write(reinterpret_cast<const char*>(skinnedMeshData.indices.data()), skinnedMeshData.indices.size() * sizeof(uint32_t));
 
         //file.write((char*)&skinnedMeshHeader.requiresSkinning, sizeof(skinnedMeshHeader.requiresSkinning));
@@ -314,48 +315,15 @@ SkinnedModelData File::ImportSkinnedModel(const std::string& filepath) {
         meshData.nonDeformingBoneIndex = nonDeformingBoneIndex;
 
         // Allocate space for vertices and indices.
-        meshData.weightedVertices.resize(vertexCount);
+        //meshData.weightedVertices.resize(vertexCount);
+        meshData.vertices.resize(vertexCount);
+        meshData.vertexWeights.resize(vertexCount);
         meshData.indices.resize(indexCount);
 
-        // Read the vertices and indices.
-
-
-        //file.read(reinterpret_cast<char*>(meshData.vertices.data()), vertexCount * sizeof(Vertex));
-        //file.read(reinterpret_cast<char*>(meshData.vertexWeights.data()), vertexCount * sizeof(VertexWeight));
-
-        // You are tryna remove me
-        file.read(reinterpret_cast<char*>(meshData.weightedVertices.data()), vertexCount * sizeof(WeightedVertex));
-        // You are tryna remove me
-
-
+        // Read the vertices, vertex weights, and indices.
+        file.read(reinterpret_cast<char*>(meshData.vertices.data()), vertexCount * sizeof(Vertex));
+        file.read(reinterpret_cast<char*>(meshData.vertexWeights.data()), vertexCount * sizeof(VertexWeight));
         file.read(reinterpret_cast<char*>(meshData.indices.data()), indexCount * sizeof(uint32_t));
-
-
-        //std::cout << i << ": " << meshData.name << " ";
-        //std::cout << meshData.vertices.size() << " verts, ";
-        //std::cout << meshData.indices.size() << " indices, ";
-        //std::cout << Util::Vec3ToString(meshData.aabbMin) << " ";
-        //std::cout << Util::Vec3ToString(meshData.aabbMax) << "\n";
-
-        //#if PRINT_SKINNED_MESH_HEADERS_ON_READ
-        //    PrintSkinnedMeshHeader(meshData, "Read skinned mesh: " + meshData.name);
-        //#endif
-
-        // TODO: don't do this here. do it when you export to .skinnedModel
-        meshData.vertices.reserve(meshData.vertexCount);
-        meshData.vertexWeights.reserve(meshData.vertexCount);
-
-        for (const WeightedVertex& weightedVertex : meshData.weightedVertices) {
-            Vertex& vertex = meshData.vertices.emplace_back();
-            vertex.position = weightedVertex.position;
-            vertex.uv = weightedVertex.uv;
-            vertex.normal = weightedVertex.normal;
-            vertex.tangent = weightedVertex.tangent;
-
-            VertexWeight& vertexWeight = meshData.vertexWeights.emplace_back();
-            vertexWeight.boneID = weightedVertex.boneID;
-            vertexWeight.weight = weightedVertex.weight;
-        }
     }
 
     return skinnedModelData;

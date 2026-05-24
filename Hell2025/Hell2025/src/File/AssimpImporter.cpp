@@ -386,6 +386,37 @@ namespace AssimpImporter {
             localBaseVertex += (uint32_t)meshData.weightedVertices.size();
             modelData.vertexCount += (uint32_t)meshData.weightedVertices.size();
             modelData.indexCount += (uint32_t)meshData.indices.size();
+
+
+
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////
+            //
+            // TODO: don't hack tack me onto the end here. Perform this as you actually process the vertices above.
+            //
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            meshData.vertices.clear();
+            meshData.vertices.reserve(meshData.vertexCount);
+
+            meshData.vertexWeights.clear();
+            meshData.vertexWeights.reserve(meshData.vertexCount);
+
+            for (const WeightedVertex& weightedVertex : meshData.weightedVertices) {
+                Vertex& vertex = meshData.vertices.emplace_back();
+                vertex.position = weightedVertex.position;
+                vertex.uv = weightedVertex.uv;
+                vertex.normal = weightedVertex.normal;
+                vertex.tangent = weightedVertex.tangent;
+
+                VertexWeight& vertexWeight = meshData.vertexWeights.emplace_back();
+                vertexWeight.boneID = weightedVertex.boneID;
+                vertexWeight.weight = weightedVertex.weight;
+            }
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
         }
 
         // Cleanup

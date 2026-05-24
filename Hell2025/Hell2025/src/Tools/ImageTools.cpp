@@ -174,7 +174,7 @@ namespace ImageTools {
         kernelOptions.format = CMP_FORMAT_BC7;
         kernelOptions.fquality = 0.88;
         kernelOptions.threads = 0;
-       
+
         memset(&mipSetOut, 0, sizeof(CMP_MipSet));
         status = CMP_ProcessTexture(&mipSetIn, &mipSetOut, kernelOptions, CompressionCallback);
         std::cout << "\n";
@@ -214,7 +214,7 @@ namespace ImageTools {
         }
         else {
             textureData.m_data = imageData;
-            Logging::Debug() << filepath << " " << textureData.m_channelCount << " channels\n";
+            //Logging::Debug() << filepath << " " << textureData.m_channelCount << " channels\n";
         }
 
         // If mipmaps are requested, allocate space for them
@@ -392,7 +392,7 @@ namespace ImageTools {
         }
     }
 
-  
+
 
     void SaveBitmap(const std::string& filename, void* data, int width, int height, int format) {
         std::vector<float> floatData;
@@ -408,7 +408,7 @@ namespace ImageTools {
             std::cout << "SaveTextureAsBitmap() failed: Unsupported format " << format << "\n";
             return;
         }
-        
+
         int channelCount = formatChannelMap[format];
         size_t pixelCount = width * height * formatChannelMap[format];
 
@@ -433,7 +433,7 @@ namespace ImageTools {
 
         for (int i = 0; i < width * height; ++i) {
             float r, g, b;
-            size_t index = i * channelCount; 
+            size_t index = i * channelCount;
 
             if (channelCount == 1) {
                 r = g = b = floatData[i];
@@ -757,7 +757,7 @@ namespace ImageTools {
         std::cout << "Mipmaps: " << mipset.m_nMaxMipLevels << "\n";
     }
 
-   
+
     // Broken do not use!
     void ConvertRGBA8ToR16F(TextureData& textureData) {
         if (textureData.m_format != GL_RGBA || textureData.m_internalFormat != GL_RGBA8) {
