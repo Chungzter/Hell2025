@@ -680,7 +680,7 @@ namespace OpenGLRenderer {
 
         ComputeLightAABBs();
 
-        
+
 
         ExamineItemPass();
         EditorPass();
@@ -752,7 +752,7 @@ namespace OpenGLRenderer {
         gBuffer.ClearAttachment("Emissive", 0, 0, 0, 0);
         gBuffer.ClearAttachment("Glass", 0, 0, 0, 0);
         gBuffer.ClearAttachment("VelocityOcclusionSubSurface", 0, 0, 0, 1);
-        gBuffer.ClearDepthAttachment();
+        gBuffer.ClearDepthAttachment(0.0f);
 
         // Decal mask
         OpenGLFrameBuffer& miscFullSizeFBO = GetFrameBuffer("MiscFullSize");

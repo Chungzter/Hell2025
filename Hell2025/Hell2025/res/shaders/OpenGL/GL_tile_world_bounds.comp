@@ -8,7 +8,7 @@ layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 layout (binding = 0) uniform sampler2D u_depthTexture;
 
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportData[]; };
+readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 layout(std430, binding = 6) buffer tileWorldBoundsBuffer { TileWorldBounds tileWorldBounds[]; };
 
 uniform int u_tileXCount;
@@ -35,51 +35,64 @@ float InverseOrderPreservingFloatMap(uint value) {
 }
 
 void main() {
-	const int tileSize = TILE_SIZE;	
-    
-	ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);    
+	const int tileSize = TILE_SIZE;
+
+	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
     vec2 resolution = vec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
-    
+
     // Don't process out of bounds pixels
-    if (pixelCoords.x >= resolution.x || pixelCoords.y >= resolution.y) {
+    if (px.x >= resolution.x || px.y >= resolution.y) {
         return;
-    }   
-    
+    }
+
 	uint tileIndex = gl_WorkGroupID.y * u_tileXCount + gl_WorkGroupID.x;
 
 	// Defaults
-	if (gl_LocalInvocationIndex == 0) {	
+	if (gl_LocalInvocationIndex == 0) {
 		minWorldSpaceXInt = 0xFFFFFFFF;
 		minWorldSpaceYInt = 0xFFFFFFFF;
 		minWorldSpaceZInt = 0xFFFFFFFF;
 		maxWorldSpaceXInt = 0;
 		maxWorldSpaceYInt = 0;
-		maxWorldSpaceZInt = 0;		
+		maxWorldSpaceZInt = 0;
 		validDepthSampleCount = 0;
 	}
 	barrier();
 
 	// World position (reconstruction from depth)
-	uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, ivec2(resolution), rendererData.splitscreenMode);
-	mat4 inverseProjectionView = viewportData[viewportIndex].inverseProjectionView;
-	vec2 screenUV = (vec2(pixelCoords) + 0.5) / resolution;
-	vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData[viewportIndex]);
-	float depth = texelFetch(u_depthTexture, pixelCoords, 0).r;
-	vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
-	vec4 worldH = inverseProjectionView * clip;
-	vec3 worldSpacePosition = worldH.xyz / max(worldH.w, 1e-6);
-	
-	// Background pixels are irrelevant for anything that uses this tile data, so don't consider them in the tile's hworldspace AABB
-	bool isBackground = (depth >= 0.999999); 
-    
-	// Atomically store min max depth 
+	// uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, ivec2(resolution), rendererData.splitscreenMode);
+	// mat4 inverseProjectionView = viewportData[viewportIndex].inverseProjectionView;
+	// vec2 screenUV = (vec2(px) + 0.5) / resolution;
+	// vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData[viewportIndex]);
+	// float depth = texelFetch(u_depthTexture, px, 0).r;
+	// vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
+	// vec4 worldH = inverseProjectionView * clip;
+	// vec3 worldSpacePosition = worldH.xyz / max(worldH.w, 1e-6);
+
+    ivec2 outputImageSize = textureSize(u_depthTexture, 0);
+
+    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
+    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
+
+    ViewportData viewportData = viewportDataArr[viewportIndex];
+    mat4 inverseProjectionViewReverseZ = viewportData.inverseProjectionViewReverseZ;
+
+    float depth = texelFetch(u_depthTexture, px, 0).r;
+    vec3 worldSpacePosition = ReconstructWorldPos(screenUV, depth, viewportData.inverseProjectionViewReverseZ);
+
+	// Background pixels are irrelevant for anything that uses this tile data, so don't consider them in the tile's worldspace AABB
+	//bool isBackground = (depth >= 0.999999);
+    bool isBackground = (depth <= 0.000001);
+
+	// Atomically store min max depth
 	if (!isBackground) {
         uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
 		uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);
-		uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);	
+		uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);
 		atomicMin(minWorldSpaceXInt, worldSpaceXInt);
 		atomicMin(minWorldSpaceYInt, worldSpaceYInt);
-		atomicMin(minWorldSpaceZInt, worldSpaceZInt);  
+		atomicMin(minWorldSpaceZInt, worldSpaceZInt);
 		atomicMax(maxWorldSpaceXInt, worldSpaceXInt);
 		atomicMax(maxWorldSpaceYInt, worldSpaceYInt);
 		atomicMax(maxWorldSpaceZInt, worldSpaceZInt);
@@ -95,8 +108,8 @@ void main() {
 	float worldSpaceYMax = InverseOrderPreservingFloatMap(maxWorldSpaceYInt);
 	float worldSpaceZMax = InverseOrderPreservingFloatMap(maxWorldSpaceZInt);
 	vec3 worldSpaceMin = vec3(worldSpaceXMin, worldSpaceYMin, worldSpaceZMin);
-	vec3 worldSpaceMax = vec3(worldSpaceXMax, worldSpaceYMax, worldSpaceZMax);	
-	
+	vec3 worldSpaceMax = vec3(worldSpaceXMax, worldSpaceYMax, worldSpaceZMax);
+
 	if (gl_LocalInvocationIndex == 0) {
 		tileWorldBounds[tileIndex].boundsMin = vec4(worldSpaceMin, float(validDepthSampleCount));
 		tileWorldBounds[tileIndex].boundsMax = vec4(worldSpaceMax, 0.0);

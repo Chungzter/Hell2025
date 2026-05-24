@@ -33,7 +33,7 @@ void main() {
 
     float frameWidth = 1.0 / u_columnCount;
     float frameHeight = 1.0 / u_rowCount;
-    
+
     int frameX = u_frameIndex % u_columnCount;
     int frameY = (u_frameIndex - (u_frameIndex % u_columnCount)) / u_columnCount;
     vec2 frameOffset = vec2(frameX * frameWidth, frameY * frameHeight);
@@ -43,12 +43,12 @@ void main() {
     int frameNextY = (u_frameNextIndex - (u_frameNextIndex % u_columnCount)) / u_columnCount;
     vec2 frameNextOffset = vec2(frameNextX * frameWidth, frameNextY * frameHeight);
     TexCoordNext = frameNextOffset + uv * vec2(frameWidth, frameHeight);
-    
+
     bool billboard = true;
     int viewportIndex = gl_BaseInstance;
-	mat4 projectionView = viewportData[viewportIndex].projectionView;
+	mat4 projectionView = viewportData[viewportIndex].projectionViewReverseZ;
 	mat4 inverseView = viewportData[viewportIndex].inverseView;
-    
+
     // Compute model matrix
     vec3 position = u_position.xyz;
     vec3 rotation = u_rotation.xyz;
@@ -81,7 +81,7 @@ void main() {
 
         modelMatrix = billboardMatrix * localMatrix;
     }
-    
+
     // Apply offset
     vec3 localPosition = vPosition + vec3(u_uOffset * 0.5, u_vOffset * 0.5, 0.0);
     WorldPos = modelMatrix * vec4(localPosition, 1.0);

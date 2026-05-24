@@ -1,6 +1,6 @@
 #version 460 core
 
-uniform mat4 projectionView;
+uniform mat4 u_projectionView;
 
 out vec3 Normal;
 out vec3 WorldPos;
@@ -28,13 +28,13 @@ layout(std430, binding = 11) buffer inputIndexBuffer {
 
 uint HashMix(vec2 v) {
     uint x = floatBitsToUint(v.x);
-    uint y = floatBitsToUint(v.y);    
+    uint y = floatBitsToUint(v.y);
     x ^= (x >> 17);
     y ^= (y << 13);
     x *= 374761393u;
     y *= 668265263u;
     x ^= (x >> 15);
-    y ^= (y << 17);    
+    y ^= (y << 17);
     return x ^ y;
 }
 
@@ -49,7 +49,7 @@ void main() {
 
     const uint hashVal = HashMix(vec2(basePos.z, basePos.x));
     const uint baseVertex = (hashVal % hashMod) * verticesPerBlade;
-    
+
     const uint index = baseVertex + (gl_VertexID % indicesPerBlade);
     const uint vertex = InputIndexBuffer[index];
     const Vertex v = InputVertexBuffer[vertex];
@@ -57,5 +57,5 @@ void main() {
     WorldPos = vec3(v.posX, v.posY, v.posZ) + basePos.xyz;
     Normal = vec3(v.normX, v.normY, v.normZ);
 
-	gl_Position = projectionView * vec4(WorldPos, 1.0);
+	gl_Position = u_projectionView * vec4(WorldPos, 1.0);
 }

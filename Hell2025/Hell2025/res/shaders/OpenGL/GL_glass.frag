@@ -25,7 +25,7 @@ in vec4 WorldPos;
 in vec3 ViewPos;
 uniform int u_viewportIndex;
 uniform bool u_flipNormalMapY;
-    
+
 
 void main() {
 
@@ -53,14 +53,13 @@ void main() {
     //uint tileIndex = tile.y * rendererData.tileCountX + tile.x;
     //uint lightCount = tileData[tileIndex].lightCount;
 
-    
-    mat4 inverseProjection = viewportData[u_viewportIndex].inverseProjection;
+
     mat4 inverseView = viewportData[u_viewportIndex].inverseView;
     mat4 viewMatrix = viewportData[u_viewportIndex].view;
-    vec3 viewPos = inverseView[3].xyz;    
+    vec3 viewPos = inverseView[3].xyz;
 
 
-    vec3 directLighting = vec3(0); 
+    vec3 directLighting = vec3(0);
 
     //for (uint i = 0; i < lightCount; ++i) {
     //    uint lightIndex = tileData[tileIndex].lightIndices[i];
@@ -73,9 +72,9 @@ void main() {
         vec3 lightColor =  vec3(light.colorR, light.colorG, light.colorB);
         float lightStrength = light.strength;
         float lightRadius = light.radius;
-             
+
         directLighting += GetDirectLighting(lightPosition, lightColor, lightRadius, lightStrength, normal.xyz, WorldPos.xyz, gammaBaseColor.rgb, roughness, metallic, ViewPos);
-        
+
         vec3 toLight = lightPosition - WorldPos.xyz;
         float dist = length(toLight);
         vec3 lightDir = toLight / dist;
@@ -84,32 +83,32 @@ void main() {
         directLighting += vec3(roughness * roughness * 0.01 * att) * lightColor;
     }
 
-    
+
     mat4 flashlightProjectionView = viewportData[u_viewportIndex].flashlightProjectionView;
     vec4 flashlightDir = viewportData[u_viewportIndex].flashlightDir;
     vec4 flashlightPosition = viewportData[u_viewportIndex].flashlightPosition;
     float flashlightModifer = viewportData[u_viewportIndex].flashlightModifer;
-    
+
     flashlightDir = viewportData[u_viewportIndex].cameraForward;
     flashlightPosition = viewportData[u_viewportIndex].viewPos;
 
-    //if (flashlightModifer > 0.1) { 
+    //if (flashlightModifer > 0.1) {
     //    // Player flashlight
     //    int layerIndex = 0;
-	//	vec3 forward = -normalize(vec3(inverseView[2].xyz));				
+	//	vec3 forward = -normalize(vec3(inverseView[2].xyz));
 	//	vec3 spotLightPos = flashlightPosition.xyz;
 	//	vec3 spotLightDir = flashlightDir.xyz;
     //    vec3 spotLightColor = vec3(0.9, 0.95, 1.1);
     //    float fresnelReflect = 0.9;
     //    float spotLightRadius = 50.0;
-    //    float spotLightStregth = 3.0;        
+    //    float spotLightStregth = 3.0;
     //    float innerAngle = cos(radians(0.0 * flashlightModifer));
-    //    float outerAngle = cos(radians(30.0));         
+    //    float outerAngle = cos(radians(30.0));
     //    mat4 lightProjectionView = flashlightProjectionView;
     //    vec3 cookie = ApplyCookie(lightProjectionView, WorldPos.xyz, spotLightPos, spotLightColor, 10, FlashlightCookieTexture);
     //    vec3 spotLighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, spotLightRadius, spotLightStregth, innerAngle, outerAngle, normal.xyz, WorldPos.xyz, gammaBaseColor.rgb, roughness, metallic, viewPos, lightProjectionView);
     //    vec4 FragPosLightSpace = lightProjectionView * vec4(WorldPos.xyz, 1.0);
-    //    float shadow = SpotlightShadowCalculation(FragPosLightSpace, normal.xyz, spotLightDir, WorldPos.xyz, spotLightPos, viewPos, FlashlighShadowMapTextureArray, layerIndex);  
+    //    float shadow = SpotlightShadowCalculation(FragPosLightSpace, normal.xyz, spotLightDir, WorldPos.xyz, spotLightPos, viewPos, FlashlighShadowMapTextureArray, layerIndex);
     //    spotLighting *= vec3(1 - shadow);
     //    spotLighting *= cookie * cookie * 5 * spotLightColor;
     //    directLighting += vec3(spotLighting) * flashlightModifer;
@@ -120,13 +119,13 @@ void main() {
 
     for (int i = 0; i < 2; i++) {
         float flashlightModifer = viewportData[i].flashlightModifer;
-        if (flashlightModifer > 0.05) { 
+        if (flashlightModifer > 0.05) {
             mat4 flashlightProjectionView = viewportData[i].flashlightProjectionView;
             vec4 flashlightDir = viewportData[i].flashlightDir;
             vec4 flashlightPosition = viewportData[i].flashlightPosition;
             vec3 flashlightViewPos = viewportData[i].inverseView[3].xyz;
             vec3 playerForward = -normalize(viewportData[i].inverseView[2].xyz);
-            int layerIndex = i;			
+            int layerIndex = i;
 		    vec3 spotLightPos = flashlightPosition.xyz;
             vec3 camightRight = normalize(viewportData[i].inverseView[0].xyz);
 		    vec3 spotLightDir = flashlightDir.xyz;
@@ -141,20 +140,20 @@ void main() {
             spotLightColor = mix(defaultLightColor, spotLightColor, 0.95);
             spotLightRadius = 20.0;
             spotLightStregth = 5.0;
-            
+
             if (worldSpacePosition.y < 10) {
                 spotLightStregth = 25;
             }
 
             float innerAngle = cos(radians(5.0 * flashlightModifer));
-            float outerAngle = cos(radians(25.0));         
+            float outerAngle = cos(radians(25.0));
             mat4 lightProjectionView = flashlightProjectionView;
             vec3 spotLighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, spotLightRadius, spotLightStregth, innerAngle, outerAngle, normal.xyz, worldSpacePosition.xyz, gammaBaseColor.rgb, roughness, metallic, flashlightViewPos, lightProjectionView);
-            
-            
-            
+
+
+
             vec4 FragPosLightSpace = lightProjectionView * vec4(worldSpacePosition.xyz, 1.0);
-            float shadow = SpotlightShadowCalculation(FragPosLightSpace, normal.xyz, spotLightDir, worldSpacePosition.xyz, spotLightPos, flashlightViewPos, FlashlighShadowMapTextureArray, layerIndex);  
+            float shadow = SpotlightShadowCalculation(FragPosLightSpace, normal.xyz, spotLightDir, worldSpacePosition.xyz, spotLightPos, flashlightViewPos, FlashlighShadowMapTextureArray, layerIndex);
 
             vec3 cookie = ApplyCookie(lightProjectionView, worldSpacePosition.xyz, spotLightPos, spotLightColor, spotLightRadius, FlashlightCookieTexture);
 
@@ -194,8 +193,8 @@ void main() {
     FragOut.rgb = vec3(finalColor);
 	FragOut.a = 1.0;
 
-    
+
 
     //finalColor.rgb = vec3(1,0,0);
-    
+
 }

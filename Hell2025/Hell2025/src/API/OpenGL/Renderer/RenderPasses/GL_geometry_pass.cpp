@@ -353,8 +353,7 @@ namespace OpenGLRenderer {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
 
                 christmasLightWireShader->SetInt("playerIndex", i);
-                christmasLightWireShader->SetMat4("projection", viewportData[i].projection);
-                christmasLightWireShader->SetMat4("view", viewportData[i].view);
+                christmasLightWireShader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 
                 // Draw Christmas light wires
                 for (ChristmasLightSet& lights : World::GetChristmasLightSets()) {

@@ -85,7 +85,7 @@ uint RandomUInt(vec2 seedVec, uint max) {
     return seed % (max + 1u);
 }
 
-void main() {    
+void main() {
     // tweakables
     float bendStrength = 0.1;
     float bladeHeight = 0.075;
@@ -96,15 +96,15 @@ void main() {
     spacing = 0.0185185185185185;
 
     int viewportIndex = u_viewportIndex;
-    
+
     //uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
     vec2 screenUV = (vec2(gl_GlobalInvocationID.xy) + 0.5) / vec2(textureSize(u_depthTexture, 0));
 
     ViewportData viewportData = viewportDataArr[viewportIndex];
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
-    mat4 projectionView = viewportData.projectionView;
-    mat4 inverseProjectionView = viewportData.inverseProjectionView;
-    mat4 inverseProjection = viewportData.inverseProjection;
+    mat4 projectionView = viewportData.projectionViewReverseZ;
+    mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
+    mat4 inverseProjection = viewportData.inverseProjectionReverseZ;
     mat4 inverseView = viewportData.inverseView;
     vec3 viewPos = viewportData.viewPos.xyz;
     vec2 viewportSize = vec2(viewportData.sizeX, viewportData.sizeY);
@@ -114,12 +114,12 @@ void main() {
     //int index = gid.y * gridSize + gid.x;
 
     // World position
-    //float posX = float(gid.x) * spacing + floor(offset.x / spacing) * spacing;       
+    //float posX = float(gid.x) * spacing + floor(offset.x / spacing) * spacing;
     //float posZ = float(gid.y) * spacing + floor(offset.z / spacing) * spacing;
-    
-    float posX = float(gl_GlobalInvocationID.x) * spacing + offset.x;       
+
+    float posX = float(gl_GlobalInvocationID.x) * spacing + offset.x;
     float posZ = float(gl_GlobalInvocationID.y) * spacing + offset.z;
-    
+
     vec2 heightMapDimensions = textureSize(HeightMapTexture, 0) * HEIGHTMAP_SCALE_XZ;
     vec2 normalizedCoords = vec2(posX / heightMapDimensions.x, posZ / heightMapDimensions.y);
     vec2 texelSize = 1.0 / textureSize(HeightMapTexture, 0);
@@ -137,18 +137,18 @@ void main() {
     if (posY < u_waterHeight) {
         return;
     }
-    
+
     float rr = Rand(vec2(gid.y, gid.x));
     float amt = 0.05;
     posY += rr * amt - (amt / 2);
-    vec3 basePos = vec3(posX, posY, posZ); 
+    vec3 basePos = vec3(posX, posY, posZ);
 
     // Frustum cull
     if (!IntersectsSphere(basePos, bladeHeight * 10, viewportIndex)) {
-        return;        
+        return;
     }
-        
-    // Get screen uv  
+
+    // Get screen uv
     vec2 biasedScreenUV = WorldToScreen(basePos, projectionView, viewportPos, viewportSize);
     biasedScreenUV = clamp(biasedScreenUV, vec2(0.0), vec2(1.0));
 
@@ -160,27 +160,27 @@ void main() {
     vec3 sceneWorldPos = ReconstructWorldPos(biasedScreenUV, depth, inverseProjectionView);
 
     float sceneDistanceToCamera = length(sceneWorldPos - viewPos);
-    float baseDistanceToCamera = length(basePos - viewPos);        
+    float baseDistanceToCamera = length(basePos - viewPos);
     float boundingRadius = bladeHeight;
 
     if ((baseDistanceToCamera - boundingRadius) > sceneDistanceToCamera) {
         return;
     }
-        
+
     // this may be faster?
 
     // float sceneDepth = texture(u_depthTexture, biasedScreenUV).r;
-    // 
+    //
     // // offset point toward camera by blade height bounding radius
     // vec3 dirToCamera = normalize(viewPos - basePos);
     // vec3 testPos = basePos + (dirToCamera * bladeHeight);
-    // 
+    //
     // // project to clip space
     // vec4 clipPos = projectionView * vec4(testPos, 1.0);
     // if (clipPos.w <= 0.0) return;
-    // 
+    //
     // float ndcZ = clipPos.z / clipPos.w;
-    // 
+    //
     // float grassDepth = ndcZ;
     // // if (grassDepth > sceneDepth) return;
     // // if (grassDepth < sceneDepth) return; // revere Z

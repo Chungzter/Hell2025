@@ -79,10 +79,10 @@ namespace OpenGLRenderer {
             OpenGLRenderer::SetViewport(waterFrameBuffer, viewport);
 
             const ViewportData& viewportData = RenderDataManager::GetViewportData()[i];
-            glm::mat4 projectionMatrix = viewportData.projection;
+            glm::mat4 projectionMatrix = viewportData.projectionReverseZ;
             glm::mat4 viewMatrix = viewportData.view;
             glm::vec3 viewPos = viewportData.viewPos;
-            glm::mat4 projectionView = viewportData.projectionView;
+            glm::mat4 projectionView = viewportData.projectionViewReverseZ;
 
             float patchOffset = Ocean::GetBaseFFTResolution().y * scale;
 
@@ -174,7 +174,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
 
         BindShader("OceanFlags");
-        
+
         SetUniformInt("u_mode", GetFftDisplayMode());
         SetUniformFloat("u_oceanOriginY", Ocean::GetOceanOriginY());
 
@@ -182,7 +182,7 @@ namespace OpenGLRenderer {
         BindImageTexture(1, waterFrameBuffer.GetColorAttachmentHandleByName("OceanMask"), GL_READ_ONLY, GL_R8UI);
         BindTextureUnit(2, fftFrameBuffer_band0.GetColorAttachmentHandleByName("Displacement"));
         BindTextureUnit(3, fftFrameBuffer_band1.GetColorAttachmentHandleByName("Displacement"));
-        
+
         glDispatchCompute((waterFrameBuffer.GetWidth() + 7) / 8, (waterFrameBuffer.GetHeight() + 7) / 8, 1);
     }
 
@@ -190,7 +190,7 @@ namespace OpenGLRenderer {
         ProfilerOpenGLZoneFunction();
 
         if (!World::HasOcean()) return;
-        
+
         OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
         OpenGLFrameBuffer& quaterSizeFrameBuffer = GetFrameBuffer("QuarterSize");
@@ -240,7 +240,7 @@ namespace OpenGLRenderer {
         // Gaussian blur the lighting image into a half size texture
         gaussianBlurShader->Bind();
         gaussianBlurShader->SetVec2("u_direction", glm::vec2(0, 1));
-        glBindImageTexture(0, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F); // WARNING! you WERE degrading your image quality by down sampling into a texture of lower bit resolution. Find out if this even matters at this point in the frame. But now you're not. But also. This is a shit load of VRAM so think about this. 
+        glBindImageTexture(0, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F); // WARNING! you WERE degrading your image quality by down sampling into a texture of lower bit resolution. Find out if this even matters at this point in the frame. But now you're not. But also. This is a shit load of VRAM so think about this.
         glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("FinalLighting"));
         glDispatchCompute((miscFullSizeFrameBuffer->GetWidth() + 7) / 8, (miscFullSizeFrameBuffer->GetHeight() + 7) / 8, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -265,7 +265,7 @@ namespace OpenGLRenderer {
         underwaterCompositeShader->SetVec2("u_resolution", resolution);
 
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        
+
         BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), GL_READ_WRITE, GL_RGBA16F);
         BindImageTexture(1, waterFrameBuffer->GetColorAttachmentHandleByName("OceanFlags"), GL_READ_ONLY, GL_R8UI);
         BindTextureUnit(2, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLighting"));

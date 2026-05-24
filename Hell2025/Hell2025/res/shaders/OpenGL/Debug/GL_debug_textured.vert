@@ -48,20 +48,20 @@ mat3 RotationZ(float angle) {
 
 void main() {
     mat4 modelMatrix = u_model;
-    mat4 inverseModelMatrix = inverse(modelMatrix);  
-	mat4 projectionView = viewportData[u_viewportIndex].projectionView;            
+    mat4 inverseModelMatrix = inverse(modelMatrix);
+	mat4 projectionView = viewportData[u_viewportIndex].projectionViewReverseZ;
     mat4 normalMatrix = transpose(inverseModelMatrix);
-    
+
     Normal = normalize(normalMatrix * vec4(vNormal, 0)).xyz;
     Tangent = normalize(normalMatrix * vec4(vTangent, 0)).xyz;
     BiTangent = normalize(cross(Normal, Tangent));
     EmissiveColor = vec3(0,0,0);
     WorldPos = modelMatrix * vec4(vPosition, 1.0);
-    
+
     // Planar reflections
     if (u_useMirrorMatrix) {
-        mat4 projection = viewportData[u_viewportIndex].projection;   
-        projection[0][0] *= -1.0;      
+        mat4 projection = viewportData[u_viewportIndex].projection;
+        projection[0][0] *= -1.0;
         projectionView = projection * u_mirrorViewMatrix;
         gl_ClipDistance[0] = dot(WorldPos, u_mirrorClipPlane);
 
@@ -70,7 +70,7 @@ void main() {
         //WorldPos.xyz = shardMatrix * WorldPos.xyz;
     }
 
-    
+
 	TexCoord = vUV;
 	gl_Position = projectionView * WorldPos;
 }

@@ -1,4 +1,4 @@
-﻿#include "API/OpenGL/Renderer/GL_renderer.h" 
+﻿#include "API/OpenGL/Renderer/GL_renderer.h"
 
 #include <Hell/Logging.h>
 
@@ -101,7 +101,7 @@ namespace OpenGLRenderer {
         //std::cout << "Grass SSBO allocated: " << Util::BytesToMBString(bufferSize) << "\n";
         CreateSSBO("BladePositions", bufferSize, GL_DYNAMIC_STORAGE_BIT);
         CreateGrassGeometry();
-            
+
         // Create indirect buffer
         if (g_indirectBuffer == 0) {
             glGenBuffers(1, &g_indirectBuffer);
@@ -112,7 +112,7 @@ namespace OpenGLRenderer {
         Logging::Init() << "Initialized grass geometry";
     }
 
-    void CreateGrassGeometry() {        
+    void CreateGrassGeometry() {
         int bladeCount = 360;
 
         // Allocate mesh memory
@@ -147,7 +147,7 @@ namespace OpenGLRenderer {
         OpenGLSSBO* bladeositionsSSBO = GetSSBO("BladePositions");
 
         BlitFrameBufferDepth(gBuffer, wipBuffer);
-       
+
         // Bindings
         glBindVertexArray(g_grassGeometryMesh.GetVAO());
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, g_indirectBuffer);
@@ -166,7 +166,7 @@ namespace OpenGLRenderer {
         for (int i = 0; i < 4; i++) {   // CHANGE TO VIEWPORT NOT PLAYER!!!!
 
             int viewportIndex = i;
-                
+
             Viewport* viewport = ViewportManager::GetViewportByIndex(viewportIndex);
             if (!viewport->IsVisible()) continue;
 
@@ -175,7 +175,7 @@ namespace OpenGLRenderer {
             const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
             glm::vec3 viewPos = viewportData[viewportIndex].inverseView[3];
 
-            int maxChunkDrawDistance = 3; 
+            int maxChunkDrawDistance = 3;
 
             ivecXZ cameraChunk(static_cast<int>(std::floor(viewPos.x / HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE)),
                                 static_cast<int>(std::floor(viewPos.z / HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE)));
@@ -221,7 +221,7 @@ namespace OpenGLRenderer {
                     //if (distance >= threshold) {
                     //    continue;
                     //}
-                
+
                     if (frustum.IntersectsAABBFast(chunkAABB)) {
                         float xOffset = x * CHUNK_SIZE_WORLDSPACE;
                         float zOffset = z * CHUNK_SIZE_WORLDSPACE;
@@ -259,7 +259,7 @@ namespace OpenGLRenderer {
             initialCmd.instanceCount = 1;
             glBindBuffer(GL_DRAW_INDIRECT_BUFFER, g_indirectBuffer);
             glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawIndexedIndirectCommand), &initialCmd);
-                                
+
             // Generate grass positions
             for (vecXZ& chunkOffset: chunkOffsets) {
                 GenerateBladePositions(chunkOffset.x, chunkOffset.z, viewportIndex);
@@ -283,7 +283,7 @@ namespace OpenGLRenderer {
         generationShader->SetVec3("offset", glm::vec3(xOffset, 0.0f, zOffset));
         generationShader->SetFloat("u_heightMapWorldSpaceSize", HEIGHT_MAP_SIZE * HEIGHTMAP_SCALE_XZ);
         generationShader->SetFloat("u_waterHeight", Ocean::GetOceanOriginY());
-        
+
         // Dispatch compute shader
         int workGroupsX = BLADES_PER_TILE_AXIS / 16;
         int workGroupsY = BLADES_PER_TILE_AXIS / 16;
@@ -305,33 +305,33 @@ namespace OpenGLRenderer {
 
         gBuffer->Bind();
         gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive" });
-           
-        glm::mat4 projectionView = viewportData[viewportIndex].projectionView;
+
+        glm::mat4 projectionView = viewportData[viewportIndex].projectionViewReverseZ;
 
         geometryShader->Bind();
-        geometryShader->SetMat4("projectionView", projectionView);
+        geometryShader->SetMat4("u_projectionView", projectionView);
 
 
         glMemoryBarrier(GL_COMMAND_BARRIER_BIT);
-        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, g_indirectBuffer); 
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, g_indirectBuffer);
         glDrawArraysIndirect(GL_TRIANGLES, 0);
 
 
-        //float bladeCount = 360;            
+        //float bladeCount = 360;
         //glm::mat4 projectionMatrix = viewportData[i].projection;
-        //glm::mat4 viewMatrix = viewportData[i].view;            
+        //glm::mat4 viewMatrix = viewportData[i].view;
         //Transform transform;
         //transform.position = glm::vec3(17, -4.1, 19);
-        //transform.scale = glm::vec3(5);            
+        //transform.scale = glm::vec3(5);
         //OpenGLShader* shader = GetShader("SolidColor");
         //shader->Use();
         //shader->SetMat4("projection", projectionMatrix);
         //shader->SetMat4("view", viewMatrix);
         //shader->SetMat4("model", transform.to_mat4());
-        //shader->SetBool("useUniformColor", false);            
+        //shader->SetBool("useUniformColor", false);
         //glBindVertexArray(g_grassGeometryMesh.GetVAO());
         //glEnable(GL_CULL_FACE);
         //glDrawElements(GL_TRIANGLES, bladeCount * 24, GL_UNSIGNED_INT, 0);
-      
+
     }
 }

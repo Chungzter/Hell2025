@@ -24,11 +24,11 @@ uniform float u_textureScaling;
 void main() {
     TexCoord = vUV * 50.0 * u_textureScaling;
     int viewportIndex = gl_BaseInstance;
-    mat4 projectionView = viewportData[viewportIndex].projectionView;
-    
+    mat4 projectionView = viewportData[viewportIndex].projectionViewReverseZ;
+
     vec4 worldPos4 = modelMatrix * vec4(vPosition, 1.0);
     WorldPos = worldPos4.xyz;
-    
+
     mat3 normalMatrix = transpose(mat3(inverseModelMatrix));
     Normal = normalize(normalMatrix * vNormal);
     Tangent = normalize(normalMatrix * vTangent);

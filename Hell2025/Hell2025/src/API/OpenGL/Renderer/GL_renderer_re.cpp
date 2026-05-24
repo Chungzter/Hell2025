@@ -153,7 +153,7 @@ namespace OpenGLRenderer {
         LoadShader("RE", "LightingRE", { "GL_lighting_re.comp" });
 
         LoadShader("RE", "HairLightingForward", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward.frag" });
-        LoadShader("RE", "HairLightingDeferred", { "GL_fullscreen_triangle.vert", "GL_hair_lighting_deferred.frag" });
+        // LoadShader("RE", "HairLightingDeferred", { "GL_fullscreen_triangle.vert", "GL_hair_lighting_deferred.frag" });
         LoadShader("RE", "HairCompositeRE", { "GL_hair_composite_re.comp" });
         LoadShader("RE", "HairDepthPrep", { "GL_fullscreen_triangle.vert", "GL_hair_depth_prep.frag" });
 

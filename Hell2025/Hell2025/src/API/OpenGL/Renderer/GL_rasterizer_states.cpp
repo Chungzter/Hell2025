@@ -6,14 +6,14 @@ namespace OpenGLRenderer {
     OpenGLRasterizerState g_globalState;
     bool g_stateInitialized = false;
 
-	void ForceRasterizerState(const std::string& name) {
-		OpenGLRasterizerState* rasterizerState = GetRasterizerState(name);
-		if (!rasterizerState) {
-			std::cout << "OpenGLRenderer::ForceRasterizerState(const std::string& name) failed! " << name << " does not exist!\n";
-			return;
-		}
-		ForceRasterizerState(*rasterizerState);
-	}
+    void ForceRasterizerState(const std::string& name) {
+        OpenGLRasterizerState* rasterizerState = GetRasterizerState(name);
+        if (!rasterizerState) {
+            std::cout << "OpenGLRenderer::ForceRasterizerState(const std::string& name) failed! " << name << " does not exist!\n";
+            return;
+        }
+        ForceRasterizerState(*rasterizerState);
+    }
 
     void ForceRasterizerState(const OpenGLRasterizerState& newState) {
         newState.blendEnable ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
@@ -122,82 +122,82 @@ namespace OpenGLRenderer {
         g_globalState = newState;
     }
 
-	void VerifyStateCache() {
-		if (!g_stateInitialized) {
-			return;
-		}
+    void VerifyStateCache() {
+        if (!g_stateInitialized) {
+            return;
+        }
 
-		GLboolean glBool;
-		GLint glInt;
-		GLfloat glFloat;
+        GLboolean glBool;
+        GLint glInt;
+        GLfloat glFloat;
 
-		// Blend Enable
-		glBool = glIsEnabled(GL_BLEND);
-		if (g_globalState.blendEnable != (glBool == GL_TRUE)) {
-			Logging::Error() << "State Leak: GL_BLEND out of sync\n";
-		}
+        // Blend Enable
+        glBool = glIsEnabled(GL_BLEND);
+        if (g_globalState.blendEnable != (glBool == GL_TRUE)) {
+            Logging::Error() << "State Leak: GL_BLEND out of sync\n";
+        }
 
-		// Cull Face
-		glBool = glIsEnabled(GL_CULL_FACE);
-		if (g_globalState.cullfaceEnable != (glBool == GL_TRUE)) {
-			Logging::Error() << "State Leak: GL_CULL_FACE out of sync\n";
-		}
+        // Cull Face
+        glBool = glIsEnabled(GL_CULL_FACE);
+        if (g_globalState.cullfaceEnable != (glBool == GL_TRUE)) {
+            Logging::Error() << "State Leak: GL_CULL_FACE out of sync\n";
+        }
 
-		// Cull Face Mode
-		if (g_globalState.cullfaceEnable) {
-			glGetIntegerv(GL_CULL_FACE_MODE, &glInt);
-			if (g_globalState.cullfaceMode != (GLenum)glInt) {
-				Logging::Error() << "State Leak: GL_CULL_FACE_MODE out of sync\n";
-			}
-		}
+        // Cull Face Mode
+        if (g_globalState.cullfaceEnable) {
+            glGetIntegerv(GL_CULL_FACE_MODE, &glInt);
+            if (g_globalState.cullfaceMode != (GLenum)glInt) {
+                Logging::Error() << "State Leak: GL_CULL_FACE_MODE out of sync\n";
+            }
+        }
 
-		// Depth Mask
-		glGetBooleanv(GL_DEPTH_WRITEMASK, &glBool);
-		if (g_globalState.depthMask != (glBool == GL_TRUE)) {
-			Logging::Error() << "State Leak: GL_DEPTH_WRITEMASK out of sync\n";
-		}
+        // Depth Mask
+        glGetBooleanv(GL_DEPTH_WRITEMASK, &glBool);
+        if (g_globalState.depthMask != (glBool == GL_TRUE)) {
+            Logging::Error() << "State Leak: GL_DEPTH_WRITEMASK out of sync\n";
+        }
 
-		// Depth Test
-		glBool = glIsEnabled(GL_DEPTH_TEST);
-		if (g_globalState.depthTestEnabled != (glBool == GL_TRUE)) {
-			Logging::Error() << "State Leak: GL_DEPTH_TEST out of sync\n";
-		}
+        // Depth Test
+        glBool = glIsEnabled(GL_DEPTH_TEST);
+        if (g_globalState.depthTestEnabled != (glBool == GL_TRUE)) {
+            Logging::Error() << "State Leak: GL_DEPTH_TEST out of sync\n";
+        }
 
-		// Color Mask
-		GLboolean colorMasks[4];
-		glGetBooleanv(GL_COLOR_WRITEMASK, colorMasks);
-		if (g_globalState.colorMask != (colorMasks[0] == GL_TRUE)) {
-			Logging::Error() << "State Leak: GL_COLOR_WRITEMASK out of sync\n";
-		}
+        // Color Mask
+        GLboolean colorMasks[4];
+        glGetBooleanv(GL_COLOR_WRITEMASK, colorMasks);
+        if (g_globalState.colorMask != (colorMasks[0] == GL_TRUE)) {
+            Logging::Error() << "State Leak: GL_COLOR_WRITEMASK out of sync\n";
+        }
 
-		// Blend Functions
-		if (g_globalState.blendEnable) {
-			glGetIntegerv(GL_BLEND_SRC_RGB, &glInt);
-			if (g_globalState.blendFuncSrcfactor != glInt) {
-				Logging::Error() << "State Leak: GL_BLEND_SRC_RGB out of sync\n";
-			}
+        // Blend Functions
+        if (g_globalState.blendEnable) {
+            glGetIntegerv(GL_BLEND_SRC_RGB, &glInt);
+            if (g_globalState.blendFuncSrcfactor != glInt) {
+                Logging::Error() << "State Leak: GL_BLEND_SRC_RGB out of sync\n";
+            }
 
-			glGetIntegerv(GL_BLEND_DST_RGB, &glInt);
-			if (g_globalState.blendFuncDstfactor != glInt) {
-				Logging::Error() << "State Leak: GL_BLEND_DST_RGB out of sync\n";
-			}
-		}
+            glGetIntegerv(GL_BLEND_DST_RGB, &glInt);
+            if (g_globalState.blendFuncDstfactor != glInt) {
+                Logging::Error() << "State Leak: GL_BLEND_DST_RGB out of sync\n";
+            }
+        }
 
-		// Depth Function
-		if (g_globalState.depthTestEnabled) {
-			glGetIntegerv(GL_DEPTH_FUNC, &glInt);
-			if (g_globalState.depthFunc != glInt) {
-				Logging::Error() << "State Leak: GL_DEPTH_FUNC out of sync\n";
-			}
-		}
+        // Depth Function
+        if (g_globalState.depthTestEnabled) {
+            glGetIntegerv(GL_DEPTH_FUNC, &glInt);
+            if (g_globalState.depthFunc != glInt) {
+                Logging::Error() << "State Leak: GL_DEPTH_FUNC out of sync\n";
+            }
+        }
 
-		// Point Size
-		if (g_globalState.pointSize > 1.0f) {
-			glGetFloatv(GL_POINT_SIZE, &glFloat);
-			if (g_globalState.pointSize != glFloat) {
-				Logging::Error() << "State Leak: GL_POINT_SIZE out of sync\n";
-			}
-		}
+        // Point Size
+        if (g_globalState.pointSize > 1.0f) {
+            glGetFloatv(GL_POINT_SIZE, &glFloat);
+            if (g_globalState.pointSize != glFloat) {
+                Logging::Error() << "State Leak: GL_POINT_SIZE out of sync\n";
+            }
+        }
 
         // Stencil
         glBool = glIsEnabled(GL_STENCIL_TEST);
@@ -227,7 +227,7 @@ namespace OpenGLRenderer {
             glGetIntegerv(GL_STENCIL_WRITEMASK, &glInt);
             if (g_globalState.stencilWriteMask != (GLuint)glInt) Logging::Error() << "State Leak: GL_STENCIL_WRITEMASK out of sync\n";
         }
-	}
+    }
 
     void InitRasterizerStates() {
         OpenGLRasterizerState* decalPass = CreateRasterizerState("DecalPass");
@@ -235,7 +235,7 @@ namespace OpenGLRenderer {
         decalPass->blendEnable = true;
         decalPass->cullfaceEnable = true;
         decalPass->depthMask = false;
-        decalPass->depthFunc = GL_LESS;
+        decalPass->depthFunc = GL_GREATER;
         decalPass->blendFuncSrcfactor = GL_SRC_ALPHA;
         decalPass->blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
 
@@ -244,28 +244,28 @@ namespace OpenGLRenderer {
         emissivePass->blendEnable = false;
         emissivePass->cullfaceEnable = true;
         emissivePass->depthMask = false;
-        emissivePass->depthFunc = GL_LESS;
+        emissivePass->depthFunc = GL_GREATER;
 
         OpenGLRasterizerState* geometryPassDefault = CreateRasterizerState("GeometryPass_Default");
         geometryPassDefault->depthTestEnabled = true;
         geometryPassDefault->blendEnable = false;
         geometryPassDefault->cullfaceEnable = true;
         geometryPassDefault->depthMask = true;
-        geometryPassDefault->depthFunc = GL_LESS;
+        geometryPassDefault->depthFunc = GL_GREATER;
 
         OpenGLRasterizerState* geometryPassAlphaDiscard = CreateRasterizerState("GeometryPass_AlphaDiscard");
         geometryPassAlphaDiscard->depthTestEnabled = true;
         geometryPassAlphaDiscard->blendEnable = false;
         geometryPassAlphaDiscard->cullfaceEnable = true;
         geometryPassAlphaDiscard->depthMask = true;
-        geometryPassAlphaDiscard->depthFunc = GL_LEQUAL;
+        geometryPassAlphaDiscard->depthFunc = GL_GEQUAL;
 
         OpenGLRasterizerState* geometryPassBlended = CreateRasterizerState("GeometryPass_Blended");
         geometryPassBlended->depthTestEnabled = true;
         geometryPassBlended->blendEnable = true;
         geometryPassBlended->cullfaceEnable = false;
         geometryPassBlended->depthMask = false;
-        geometryPassBlended->depthFunc = GL_LEQUAL;
+        geometryPassBlended->depthFunc = GL_GEQUAL;
         geometryPassBlended->blendFuncSrcfactor = GL_SRC_ALPHA;
         geometryPassBlended->blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
 
@@ -274,14 +274,14 @@ namespace OpenGLRenderer {
         glassPass->blendEnable = false;
         glassPass->cullfaceEnable = true;
         glassPass->depthMask = false;
-        glassPass->depthFunc = GL_LESS;
+        glassPass->depthFunc = GL_GREATER;
 
         OpenGLRasterizerState* hairPassViewspaceDepth = CreateRasterizerState("HairViewspaceDepth");
         hairPassViewspaceDepth->depthTestEnabled = true;
         hairPassViewspaceDepth->blendEnable = false;
         hairPassViewspaceDepth->cullfaceEnable = true;
         hairPassViewspaceDepth->depthMask = true;
-        hairPassViewspaceDepth->depthFunc = GL_LESS;
+        hairPassViewspaceDepth->depthFunc = GL_GREATER;
         hairPassViewspaceDepth->blendFuncSrcfactor = GL_SRC_ALPHA;
         hairPassViewspaceDepth->blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
         hairPassViewspaceDepth->pointSize = 8;
@@ -301,7 +301,7 @@ namespace OpenGLRenderer {
         spriteSheet->blendEnable = true;
         spriteSheet->cullfaceEnable = false;
         spriteSheet->depthMask = false;
-        spriteSheet->depthFunc = GL_LESS;
+        spriteSheet->depthFunc = GL_GREATER;
         spriteSheet->blendFuncSrcfactor = GL_SRC_ALPHA;
         spriteSheet->blendFuncDstfactor = GL_ONE; // was GL_ONE_MINUS_SRC_ALPHA
 
@@ -310,6 +310,6 @@ namespace OpenGLRenderer {
         skybox->blendEnable = false;
         skybox->cullfaceEnable = false;
         skybox->depthMask = false;
-        skybox->depthFunc = GL_LESS;
+        skybox->depthFunc = GL_GREATER;
     }
 }
