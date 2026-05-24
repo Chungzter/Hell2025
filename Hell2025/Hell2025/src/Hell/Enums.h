@@ -438,6 +438,8 @@ enum class RendererOverrideState {
     INDIRECT_DIFFUSE,
     VELOCITY,
     VISIBILITY,
+    DEPTH,
+    WORLD_POSITION,
     STATE_COUNT,
 };
 

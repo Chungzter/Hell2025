@@ -343,10 +343,11 @@ namespace OpenGLRenderer {
             rendererSettings.rendererOverrideState == RendererOverrideState::ROUGHNESS ||
             rendererSettings.rendererOverrideState == RendererOverrideState::INDIRECT_DIFFUSE ||
             rendererSettings.rendererOverrideState == RendererOverrideState::VELOCITY ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::VISIBILITY) {
+            rendererSettings.rendererOverrideState == RendererOverrideState::VISIBILITY ||
+            rendererSettings.rendererOverrideState == RendererOverrideState::DEPTH ||
+            rendererSettings.rendererOverrideState == RendererOverrideState::WORLD_POSITION) {
 
             OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
-            BindTextureUnit(9, waterFrameBuffer.GetColorAttachmentHandleByName("OceanFlags"));
 
             if (Renderer::GetRendererMode() == RendererMode::MSAA) {
 				OpenGLShader* shader = GetShaderOLD("DebugViewMSAA");
@@ -358,11 +359,13 @@ namespace OpenGLRenderer {
 
 				OpenGLFrameBuffer* msaaFbo = GetFrameBufferOLD("MSAA");
 				OpenGLFrameBuffer* resolveFbo = GetFrameBufferOLD("Resolve");
-				glBindImageTexture(0, resolveFbo->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-				glBindTextureUnit(1, msaaFbo->GetColorAttachmentHandleByName("BaseColor"));
-				glBindTextureUnit(2, msaaFbo->GetColorAttachmentHandleByName("Normal"));
-				glBindTextureUnit(3, msaaFbo->GetColorAttachmentHandleByName("Material"));
-				glBindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
+                BindImageTexture(0, resolveFbo->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
+                BindTextureUnit(1, msaaFbo->GetColorAttachmentHandleByName("BaseColor"));
+                BindTextureUnit(2, msaaFbo->GetColorAttachmentHandleByName("Normal"));
+                BindTextureUnit(3, msaaFbo->GetColorAttachmentHandleByName("Material"));
+                BindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
+                // 9 is visiblity
+                BindTextureUnit(10, waterFrameBuffer.GetColorAttachmentHandleByName("OceanFlags"));
 
 				glDispatchCompute(resolveFbo->GetWidth() / TILE_SIZE, resolveFbo->GetHeight() / TILE_SIZE, 1);
 			}
@@ -380,6 +383,8 @@ namespace OpenGLRenderer {
                 BindTextureUnit(3, gBufferRE.GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
                 BindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
                 BindTextureUnit(9, gBufferRE.GetColorAttachmentHandleByName("Visibility"));
+                // 10 is ocean flags
+                BindTextureUnit(11, gBufferRE.GetDepthAttachmentHandle());
 
                 glDispatchCompute(gBuffer->GetWidth() / TILE_SIZE, gBuffer->GetHeight() / TILE_SIZE, 1);
 			}
@@ -391,13 +396,16 @@ namespace OpenGLRenderer {
 				shader->SetFloat("u_brushSize", Editor::GetMapHeightBrushSize());
 				shader->SetBool("u_heightMapEditor", (Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Editor::IsOpen());
 
-				glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-				glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
-				glBindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
-				glBindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
-				glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("VelocityOcclusionSubSurface"));
-				glBindTextureUnit(7, gBuffer->GetColorAttachmentHandleByName("Emissive"));
-				glBindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
+                BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), GL_READ_WRITE, GL_RGBA16F);
+                BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
+                BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
+                BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
+                BindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("VelocityOcclusionSubSurface"));
+                BindTextureUnit(7, gBuffer->GetColorAttachmentHandleByName("Emissive"));
+                BindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
+                // 9 is visiblity
+                // 10 is ocean flags
+                BindTextureUnit(11, gBuffer->GetDepthAttachmentHandle());
 
 				glDispatchCompute(gBuffer->GetWidth() / TILE_SIZE, gBuffer->GetHeight() / TILE_SIZE, 1);
             }
