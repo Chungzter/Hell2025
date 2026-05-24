@@ -17,14 +17,14 @@ BulletCasing::BulletCasing(BulletCasingCreateInfo createInfo) {
     if (model->GetMeshCount() < 1) {
         std::cout << "BulletCasing(BulletCasingCreateInfo createInfo) failed from mesh count 0\n";
     }
-    
+
     // Get mesh
     m_meshIndex = model->GetMeshIndices()[0];
     Mesh* mesh = AssetManager::GetMeshByIndex(m_meshIndex);
     if (!mesh) {
         std::cout << "BulletCasing(BulletCasingCreateInfo createInfo) failed from invalid mesh\n";
     }
-    
+
     Transform transform;
     transform.position = createInfo.position;
     transform.rotation = createInfo.rotation;
@@ -63,7 +63,7 @@ void BulletCasing::Update(float deltaTime) {
 
 void BulletCasing::SubmitRenderItem() {
     Material* material = AssetManager::GetMaterialByIndex(GetMaterialIndex());
-    
+
     RenderItem renderItem;
     renderItem.modelMatrix = GetModelMatrix();
     renderItem.inverseModelMatrix = inverse(renderItem.modelMatrix);
@@ -72,6 +72,12 @@ void BulletCasing::SubmitRenderItem() {
     renderItem.normalMapTextureIndex = material->m_normal;
     renderItem.meshIndex = GetMeshIndex();
     renderItem.castShadows = false;
+
+    Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+    if (mesh) {
+        renderItem.baseVertex = mesh->baseVertex;
+        renderItem.baseIndex = mesh->baseIndex;
+    }
 
     Util::UpdateRenderItemAABB(renderItem);
     RenderDataManager::SubmitRenderItem(renderItem);

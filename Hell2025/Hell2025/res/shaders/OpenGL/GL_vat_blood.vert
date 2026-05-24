@@ -27,11 +27,11 @@ readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
 
 void main() {
 
-	mat4 projectionView = viewportData[u_viewportIndex].projectionView;   
-	mat4 inverseView = viewportData[u_viewportIndex].inverseView;   
+	mat4 projectionView = viewportData[u_viewportIndex].projectionViewReverseZ;
+	mat4 inverseView = viewportData[u_viewportIndex].inverseView;
 
     mat4 modelMatrix = u_modelMatrix;
-    mat4 inverseModelMatrix = u_inverseModelMatrix;     
+    mat4 inverseModelMatrix = u_inverseModelMatrix;
     mat4 normalMatrix = transpose(inverseModelMatrix);
 
     int u_NumOfFrames = 81;
@@ -57,11 +57,11 @@ void main() {
 
     Normal = textureNorm.xzy * 2.0 - 1.0;
 	Normal = normalize((normalMatrix * vec4(Normal, 0)).xyz);
-    
+
     WorldPos = modelMatrix * vec4(texturePos.xzy, 1.0);
 
     gl_Position =  projectionView * WorldPos;
-    
+
     // Fix this!!!
     if (u_time > 0.7) {
         gl_Position =  vec4(0);

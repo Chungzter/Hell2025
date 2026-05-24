@@ -6,7 +6,7 @@
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 layout(binding = 0) uniform sampler2D HeightMapTexture;
-layout(binding = 1) uniform sampler2D WorldPositionTexture;
+//layout(binding = 1) uniform sampler2D WorldPositionTexture;
 layout(binding = 3) uniform sampler2D RoadMaskTexture;
 layout(binding = 4) uniform sampler2D u_depthTexture;
 
@@ -102,9 +102,11 @@ void main() {
 
     ViewportData viewportData = viewportDataArr[viewportIndex];
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
+
     mat4 projectionView = viewportData.projectionViewReverseZ;
     mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
     mat4 inverseProjection = viewportData.inverseProjectionReverseZ;
+
     mat4 inverseView = viewportData.inverseView;
     vec3 viewPos = viewportData.viewPos.xyz;
     vec2 viewportSize = vec2(viewportData.sizeX, viewportData.sizeY);
