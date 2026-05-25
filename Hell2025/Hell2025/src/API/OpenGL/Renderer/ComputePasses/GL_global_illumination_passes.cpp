@@ -211,7 +211,6 @@ namespace OpenGLRenderer {
 	void ComputeProbeRelevance(DDGIVolume& ddgiVolume) {
 		ProfilerOpenGLZoneFunctionLightGreen();
 
-
 		ClearSSBO("ProbeIrradianceCounter");
 
 		BindSSBO(4, "ProbeStates");
@@ -226,16 +225,7 @@ namespace OpenGLRenderer {
 
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
-		if (Renderer::GetRendererMode() == RendererMode::MSAA) {
-			OpenGLFrameBuffer& msaaRenderer = GetFrameBuffer("MSAA");
-			int32_t quarterWidth = (msaaRenderer.GetWidth() + 3) / 4;
-			int32_t quarterHeight = (msaaRenderer.GetHeight() + 3) / 4;
-
-            BindTextureUnit(0, msaaRenderer.GetDepthAttachmentHandle());
-			BindTextureUnit(1, msaaRenderer.GetColorAttachmentHandleByName("Normal"));
-			glDispatchCompute((quarterWidth + 7) / 8, (quarterHeight + 7) / 8, 1);
-		}
-		else if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+		if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
 			OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
 			int32_t quarterWidth = (gBuffer.GetWidth() + 3) / 4;
 			int32_t quarterHeight = (gBuffer.GetHeight() + 3) / 4;
@@ -505,14 +495,7 @@ namespace OpenGLRenderer {
 
 		OpenGLFrameBuffer* fbo = nullptr;
 
-		if (Renderer::GetRendererMode() == RendererMode::MSAA) {
-			fbo = GetFrameBufferOLD("MSAA");
-			if (!fbo) return;
-
-			fbo->Bind();
-			fbo->DrawBuffer("Lighting");
-		}
-		else if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+		if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
 			fbo = GetFrameBufferOLD("GBufferRE");
 			if (!fbo) return;
 
@@ -536,13 +519,7 @@ namespace OpenGLRenderer {
 
             OpenGLRenderer::SetViewport(fbo, viewport);
             shader->SetInt("u_viewportIndex", i);
-
-			if (Renderer::GetRendererMode() == RendererMode::OLD_DEFERRED) {
-				shader->SetMat4("u_projectionView", viewportData[i].projectionView);
-			}
-			else {
-				shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
-			}
+            shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 
             glBindVertexArray(g_pointCloudVao);
             glDrawArrays(GL_POINTS, 0, ddgiVolume.GetPointCloudCount());
@@ -579,15 +556,8 @@ namespace OpenGLRenderer {
 
         OpenGLFrameBuffer* fbo = nullptr;
 
-        if (Renderer::GetRendererMode() == RendererMode::MSAA) {
-            fbo = GetFrameBufferOLD("MSAA");
-            if (!fbo) return;
 
-            fbo->Bind();
-            fbo->DrawBuffer("Lighting");
-
-		}
-		else if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+		if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
 			fbo = GetFrameBufferOLD("GBufferRE");
 			if (!fbo) return;
 
@@ -600,9 +570,6 @@ namespace OpenGLRenderer {
 
             fbo->Bind();
             fbo->DrawBuffer("FinalLighting");
-
-			state.depthFunc = GL_LESS;
-			ForceRasterizerState(state);
         }
 
         BindSSBO(6, "ProbeSHColor");
@@ -620,13 +587,7 @@ namespace OpenGLRenderer {
 
 			OpenGLRenderer::SetViewport(fbo, viewport);
 			shader->SetInt("u_viewportIndex", i);
-
-            if (Renderer::GetRendererMode() == RendererMode::OLD_DEFERRED) {
-                shader->SetMat4("u_projectionView", viewportData[i].projectionView);
-            }
-            else {
-				shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
-            }
+            shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 
 			glDrawElementsInstancedBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), ddgiVolume.GetTotalProbeCount(), mesh->baseVertex);
         }
@@ -673,7 +634,6 @@ namespace OpenGLRenderer {
         shader->SetVec3("u_cameraPos", viewportData[0].viewPos);
         shader->SetMat4("u_viewMatrix", viewportData[0].view);
         shader->SetBool("u_useSH", Renderer::GetCurrentRendererSettings().irradianceUsesSH);
-        
 
         BindSSBO(0, "EntityInstances");
         BindSSBO(1, "TriangleData");
@@ -688,16 +648,7 @@ namespace OpenGLRenderer {
 
         glBindImageTexture(0, fbo->GetColorAttachmentHandleByName("Color"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 
-        if (Renderer::GetRendererMode() == RendererMode::MSAA) {
-            OpenGLFrameBuffer* msaaRenderer = GetFrameBufferOLD("MSAA");
-            if (!msaaRenderer) return;
-
-            BindTextureUnit(6, msaaRenderer->GetColorAttachmentHandleByName("Normal"));
-            BindTextureUnit(7, msaaRenderer->GetDepthAttachmentHandle());
-            
-            shader->SetBool("u_msaaRenderer", true);
-        }
-        else if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+        if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
             OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBufferRE");
             if (!gBuffer) return;
 
@@ -705,7 +656,6 @@ namespace OpenGLRenderer {
             BindTextureUnit(3, gBuffer->GetDepthAttachmentHandle());
 
             shader->SetBool("u_octalNormals", true);
-            shader->SetBool("u_msaaRenderer", false);
         }
         else {
             OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
@@ -715,7 +665,6 @@ namespace OpenGLRenderer {
             BindTextureUnit(3, gBuffer->GetDepthAttachmentHandle());
 
             shader->SetBool("u_octalNormals", false);
-            shader->SetBool("u_msaaRenderer", false);
         }
 
         OpenGLTextureArray& probeDistanceTexture = GetProbeDistanceTextureArray();

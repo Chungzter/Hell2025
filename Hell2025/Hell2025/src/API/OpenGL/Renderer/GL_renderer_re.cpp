@@ -44,6 +44,8 @@ namespace OpenGLRenderer {
     void MaterialResolveProceduralPass();
     void RenderFullscreenTriangle();
 
+    void EmissiveForwardPass();
+
     void PlebRenderProceduralGeometryIntoGBuffer();
 
     void InitREStyle() {
@@ -78,6 +80,8 @@ namespace OpenGLRenderer {
         MaterialResolvePass();
         MaterialResolveSkinnedPass();
 
+        EmissiveForwardPass();
+
         // if (visibilityPath) {
         //     VisibilityPass();
         //     VisibilitySkinnedPass();
@@ -96,6 +100,12 @@ namespace OpenGLRenderer {
         //     GBufferPass();
         // }
 
+        ComputeTileWorldBounds();
+        ChristmasLightCullingPass();
+        LightCullingPass();
+
+        // TODO: BloodDecalsPass(); // this pass has a pretty different setup to this renderer, think this one through
+
         UpdateGlobalIllumintation();
 
         // TODO: Don't let this renderer just assume these SSBOs are always bound here.
@@ -105,6 +115,10 @@ namespace OpenGLRenderer {
         BindSSBO(2, "ViewportData");
         BindSSBO(3, "InstanceData");
         BindSSBO(4, "Lights");
+        BindSSBO(5, "TileLights");
+        // TODO: BindSSBO(7, "TileChristmasLights");
+        // TODO: BindSSBO(8, "ChristmasLightInstances");
+        // TODO: BindSSBO(9, "ChristmasLightIndices");
 
         LightingPassRE();
         BlendedLighting();
@@ -120,6 +134,9 @@ namespace OpenGLRenderer {
         if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
         if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
 
+        EmissivePass();
+        SpriteSheetPass(); // Muzzle flash, etc
+
         PostProcessingPassRE();
         DebugViewPass();
 
@@ -132,6 +149,34 @@ namespace OpenGLRenderer {
         UIPass();
     }
 
+    void EmissiveForwardPass() {
+        ProfilerOpenGLZoneFunction();
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
+        fbo.Bind();
+        fbo.DrawBuffers({ "Emissive" });
+
+        BindShader("EmissiveForward");
+
+        BindSSBO(0, "Samplers");
+        BindSSBO(1, "RendererData");
+        BindSSBO(2, "ViewportData");
+        BindSSBO(3, "InstanceData");
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
+        state.depthFunc = GL_EQUAL;
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+
+        MultiDrawPerViewportRE(fbo, drawInfoSet.emissive, state);
+    }
+
     void CreateFramebuffersRE() {
         OpenGLFrameBuffer& gBufferRE = CreateFrameBuffer("GBufferRE", g_settings.gBufferResolution);
         gBufferRE.CreateAttachment("Lighting", GL_RGBA16F);
@@ -139,6 +184,7 @@ namespace OpenGLRenderer {
         gBufferRE.CreateAttachment("NormalXYRoughnessMisc", GL_RGB10_A2);
         gBufferRE.CreateAttachment("VelocityXYOcclusionSubSurface", GL_RGBA16F);
         gBufferRE.CreateAttachment("Visibility", GL_RG32UI);
+        gBufferRE.CreateAttachment("Emissive", GL_RGBA8);
         gBufferRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
         OpenGLFrameBuffer& hairFboRE = CreateMultisampledFrameBuffer("HairRE", g_settings.gBufferResolution, 4);
@@ -161,6 +207,10 @@ namespace OpenGLRenderer {
         LoadShader("RE", "VisibilityAlphaDiscard", { "GL_visibility.vert", "GL_visibility_alpha_discard.frag" });
         LoadShader("RE", "MaterialResolve", { "GL_material_resolve.vert", "GL_material_resolve.frag" });
         LoadShader("RE", "MaterialResolveSkinning", { "GL_material_resolve.vert", "GL_material_resolve.frag" }, { "SKINNED" });
+
+        // TODO: using GL_gbuffer_re.vert is confusing, you probably have a lot of indentical shaders that peform
+        //       what this does, check that, and think of a more unified name.
+        LoadShader("RE", "EmissiveForward", { "GL_gbuffer_re.vert", "GL_emissive_forward.frag" });
     }
 
     void VisibilityPass() {
@@ -498,6 +548,7 @@ namespace OpenGLRenderer {
 		gBufferRE.ClearAttachment("BaseColorMetallic", 0, 0, 0, 1);
 		gBufferRE.ClearAttachment("NormalXYRoughnessMisc", 0, 0, 0, 1);
         gBufferRE.ClearAttachment("VelocityXYOcclusionSubSurface", 0, 0, 0, 1);
+        gBufferRE.ClearAttachment("Emissive", 0.0f, 0.0f, 0.0f, 0.0f);
         gBufferRE.ClearAttachmentUI("Visibility", 0, 0, 0, 0);
         gBufferRE.ClearDepthAttachment(0.0f);
         gBufferRE.ClearStencilBits(0);
@@ -592,10 +643,6 @@ namespace OpenGLRenderer {
 
 		BindShader("LightingRE");
 		BindShadowMapsRE();
-
-		//BindSSBO("TileChristmasLights", 7);
-		//BindSSBO("ChristmasLightInstances", 8);
-		//BindSSBO("ChristmasLightIndices", 9);
 
 		BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
 		BindTextureUnit(1, gBuffer.GetColorAttachmentHandleByName("BaseColorMetallic"));

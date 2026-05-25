@@ -79,7 +79,7 @@ void main() {
     mat4 inverseProjectionViewReverseZ = viewportData.inverseProjectionViewReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
-    vec3 worldSpacePosition = ReconstructWorldPos(screenUV, depth, viewportData.inverseProjectionViewReverseZ);
+    vec3 worldSpacePosition = ReconstructWorldPos(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
 
 	// Background pixels are irrelevant for anything that uses this tile data, so don't consider them in the tile's worldspace AABB
 	//bool isBackground = (depth >= 0.999999);

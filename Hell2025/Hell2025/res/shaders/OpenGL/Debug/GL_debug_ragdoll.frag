@@ -17,7 +17,7 @@ void main() {
 
     BaseColorOut.rgb = u_color;
 	BaseColorOut.a = 1.0;
-    
+
     NormalsOut.rgb = normalize(Normal);
 	NormalsOut.a = 1.0;//u_playerIndex;
 

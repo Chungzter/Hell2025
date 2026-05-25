@@ -616,6 +616,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\OpenGL\RE\GL_depth_prepass.vert" />
     <None Include="res\shaders\OpenGL\RE\GL_depth_prepass_alpha_discard.frag" />
     <None Include="res\shaders\OpenGL\RE\GL_depth_prepass_alpha_discard.vert" />
+    <None Include="res\shaders\OpenGL\RE\GL_emissive_forward.frag" />
     <None Include="res\shaders\OpenGL\RE\GL_gbuffer_re.frag" />
     <None Include="res\shaders\OpenGL\RE\GL_gbuffer_re.vert" />
     <None Include="res\shaders\OpenGL\RE\GL_hair_composite_re.comp" />

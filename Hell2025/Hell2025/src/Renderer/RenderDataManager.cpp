@@ -44,6 +44,10 @@ namespace RenderDataManager {
 	std::vector<RenderItem> g_renderItemsPlastic;
     std::vector<RenderItem> g_stainedGlassRenderItems;
 
+    // Emissive
+    std::vector<RenderItem> g_renderItemsEmissive;
+    void GatherEmissiveRenderItems();
+
     std::vector<RenderItem> g_shadowCasterRenderItems;
 
     std::vector<RenderItem> g_outlineRenderItems;
@@ -295,6 +299,51 @@ namespace RenderDataManager {
         g_rendererData.tileCountY = resolutions.gBuffer.y / TILE_SIZE;
     }
 
+
+    void GatherEmissiveRenderItems() {
+        g_renderItemsEmissive.clear();
+
+        int32_t blackTextureIndex = AssetManager::GetTextureIndexByName("Black");
+
+        for (RenderItem& renderItem : g_renderItems) {
+
+            if (renderItem.emissiveTextureIndex == -1 ||
+                renderItem.emissiveTextureIndex == blackTextureIndex) {
+                // Do nothing
+            }
+            else {
+                g_renderItemsEmissive.push_back(renderItem);
+
+                if (Input::KeyPressed(HELL_KEY_U)) {
+                    Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+                    Texture* texture = AssetManager::GetTextureByIndex(renderItem.emissiveTextureIndex);
+
+                    if (mesh && texture) {
+                        std::cout << "\n";
+                        std::cout << mesh->GetName() << " " << texture->GetFileName() << "\n";
+                    }
+                }
+
+            }
+        }
+
+
+
+
+
+
+              // if (renderItem.emissiveTextureIndex != -1 ||
+              //     renderItem.emissiveR != 0.0f ||
+              //     renderItem.emissiveG != 0.0f ||
+              //     renderItem.emissiveB != 0.0f) {
+
+
+
+
+
+        //std::cout << "You just gathered " << g_renderItemsEmissive.size() << "\n";
+    }
+
     void SortRenderItems(std::vector<RenderItem>& renderItems) {
         std::sort(renderItems.begin(), renderItems.end(), [](const RenderItem& a, const RenderItem& b) {
             return a.meshIndex < b.meshIndex;
@@ -372,8 +421,9 @@ namespace RenderDataManager {
             set.alphaDiscard[i].clear();
             set.hair[i].clear();
 			set.mirrorRenderItems[i].clear();
-			set.plastic[i].clear();
-			set.house[i].clear();
+            set.plastic[i].clear();
+            set.house[i].clear();
+            set.emissive[i].clear();
 
             g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i].clear();
             g_flashLightShadowMapDrawInfo.heightMapChunkIndices[i].clear();
@@ -386,6 +436,9 @@ namespace RenderDataManager {
 		SortRenderItems(g_renderItemsHairLayer);
 		SortRenderItems(g_renderItemsPlastic);
 		SortRenderItemsByMeshId(g_houseRenderItems);
+
+        GatherEmissiveRenderItems();
+        SortRenderItems(g_renderItemsEmissive);
 
         // Lil hack to include bullet decals in mirrors
         int count = g_renderItems.size() + g_renderItemsAlphaDiscarded.size();
@@ -404,7 +457,8 @@ namespace RenderDataManager {
             CreateDrawCommands(set.blended[i], g_renderItemsBlended, &frustum, i);
             CreateDrawCommands(set.alphaDiscard[i], g_renderItemsAlphaDiscarded, &frustum, i);
 			CreateDrawCommands(set.hair[i], g_renderItemsHairLayer, &frustum, i);
-			CreateDrawCommands(set.plastic[i], g_renderItemsPlastic, &frustum, i);
+            CreateDrawCommands(set.plastic[i], g_renderItemsPlastic, &frustum, i);
+            CreateDrawCommands(set.emissive[i], g_renderItemsEmissive, &frustum, i);
 			CreateHouseDrawCommands(set.house[i], g_houseRenderItems, &frustum, i);
 
             if (Mirror* mirror = MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId())) {

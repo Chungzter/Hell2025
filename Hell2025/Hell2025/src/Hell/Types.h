@@ -428,6 +428,10 @@ struct DrawCommandsSet {
 	std::vector<DrawIndexedIndirectCommand> mirrorRenderItems[4];
 	std::vector<DrawIndexedIndirectCommand> plastic[4];
 
+    std::vector<DrawIndexedIndirectCommand> emissive[4];
+    //std::vector<DrawIndexedIndirectCommand> skinnedEmissive[4];
+    //std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingEmissive[4];
+
     std::vector<DrawIndexedIndirectCommand> skinnedAlphaDiscard[4];
 	std::vector<DrawIndexedIndirectCommand> skinnedBlended[4];
 	std::vector<DrawIndexedIndirectCommand> skinnedHair[4];

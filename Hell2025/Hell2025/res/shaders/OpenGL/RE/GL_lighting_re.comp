@@ -57,7 +57,6 @@ void main() {
     float subSurface = velocityXYOcclusionSubSurface.a;
     vec2 velocity = velocityXYOcclusionSubSurface.rg;
 
-
     ViewportData viewportData = viewportDataArr[viewportIndex];
     mat4 inverseProjection = viewportData.inverseProjection;
     mat4 inverseProjectionViewReverseZ = viewportData.inverseProjectionViewReverseZ;
@@ -66,6 +65,11 @@ void main() {
     vec3 viewPos = viewportData.viewPos.xyz;
     bool thisViewportIsInShop = bool(viewportData.isInShop);
 
+    // Tile data
+    uint tileIndex = gl_WorkGroupID.y * rendererData.tileCountX + gl_WorkGroupID.x;
+	uint lightCount = tileLights[tileIndex].lightCount;
+
+    // Depth reconstruction
     float depth = texelFetch(u_depthTexture, px, 0).r;
     vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionViewReverseZ);
 
@@ -73,9 +77,12 @@ void main() {
 
     vec3 F0 = mix(vec3(0.04), linearBaseColor, metallic);
 
+
+
     vec3 directLighting = vec3(0.0);
-    for (int i = 2; i < 8; i++) {
-        int lightIndex = i; //int(tileLights[tileIndex].lightIndices[i]);
+
+    for (int i = 0; i < lightCount; i++) {
+        int lightIndex = int(tileLights[tileIndex].lightIndices[i]);
 
         Light light = lights[lightIndex];
         vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);

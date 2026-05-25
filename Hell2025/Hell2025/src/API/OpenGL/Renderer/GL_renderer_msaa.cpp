@@ -195,7 +195,7 @@ namespace OpenGLRenderer {
 
         SetRasterizerState(defaultState);
 
-        UpdateGlobalIllumintation();
+        //UpdateGlobalIllumintation();
 
         BindSSBO(0, "Samplers");
         BindSSBO(1, "RendererData");

@@ -33,6 +33,7 @@ layout (binding = 8) uniform sampler2D IndirectDiffuseTexture;
 
 layout (binding = 10) uniform usampler2D u_oceanFlagsTexture;
 layout (binding = 11) uniform sampler2D u_depthTexture;
+layout (binding = 12) uniform sampler2D u_emissiveTexture;
 
 shared vec3 sharedDebugOutputColor;
 
@@ -96,13 +97,13 @@ void main() {
 	vec3 lightingColor = imageLoad(u_outputImage, px).rgb;
     vec3 baseColor = texelFetch(MSAABaseColorTexture, px, 0).rgb;
     vec3 rma = texelFetch(MSAAMaterialTexture, pxMS, 0).rgb;
-    vec3 emissive = vec3(0);
     float mirrorMask = 0.0;
     vec3 rawNormal = texelFetch(MSAANormalTexture, px, 0).rgb;
     vec3 normal = normalize(rawNormal * 2.0 - 1.0);
     vec2 velocity = vec2(0, 0);
     float depth = 0.0;
     vec3 worldPos = vec3(0, 0, 0);
+    vec3 emissive = vec3(0, 0, 0);
 
 #elif defined(RE_ENABLED)
     vec4 normalXYRoughnessMisc = texture(NormalXYRoughnessMisc, screenUV);
@@ -124,7 +125,7 @@ void main() {
     float depth = texture(u_depthTexture, screenUV).r;
     vec3 worldPos = ReconstructWorldPos(screenUV, depth, viewportData.inverseProjectionViewReverseZ);
 
-
+    vec3 emissive = texture(u_emissiveTexture, screenUV).rgb;
 
     // Random non GBuffer stuff
 	vec3 lightingColor = imageLoad(u_outputImage, px).rgb;
@@ -134,12 +135,13 @@ void main() {
     vec3 baseColor = texture(GBufferBaseColorTexture, screenUV).rgb;
     vec3 normal = texture(GBufferNormalTexture, screenUV).rgb;
     vec3 rma = texture(GBufferRMATexture, screenUV).rgb;
-    vec3 emissive = texture(GBufferEmissiveTexture, screenUV).rgb;
     float mirrorMask = texture(GBufferWorldMirrorMaskTexture, screenUV).r;
     vec2 velocity = texture(VelocityOcclusionSubSurface, screenUV).rg;
 
     float depth = texture(u_depthTexture, screenUV).r;
     vec3 worldPos = ReconstructWorldPos(screenUV, depth, viewportData.inverseProjectionViewReverseZ);
+
+    vec3 emissive = texture(u_emissiveTexture, screenUV).rgb;
 
 #endif
 
@@ -213,6 +215,13 @@ void main() {
     else if (rendererData.rendererOverrideState == 15) {
         finalColor = worldPos;
     }
+
+    // Emissive
+    else if (rendererData.rendererOverrideState == 16) {
+        finalColor = emissive;
+    }
+
+
 
     // Below did work, but you commented it out when implementing MSAA coz u have no world pos texture for MSAA. Reconstruct pos from depth!
 

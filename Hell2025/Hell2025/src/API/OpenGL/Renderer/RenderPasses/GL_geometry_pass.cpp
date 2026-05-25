@@ -341,6 +341,7 @@ namespace OpenGLRenderer {
 
 
 
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive", "VelocityOcclusionSubSurface" });
 
         OpenGLShader* christmasLightWireShader = GetShaderOLD("ChristmasLightsWire");
         christmasLightWireShader->Bind();
@@ -390,9 +391,7 @@ namespace OpenGLRenderer {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
 
                 ragdollShader->SetInt("u_playerIndex", i);
-                ragdollShader->SetMat4("u_projectionView", viewportData[i].projectionView);
-                ragdollShader->SetMat4("u_projection", viewportData[i].projection);
-                ragdollShader->SetMat4("u_view", viewportData[i].view);
+                ragdollShader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 
                 // Ragdoll
                 auto& ragdolls = RagdollManager::GetRagdolls();

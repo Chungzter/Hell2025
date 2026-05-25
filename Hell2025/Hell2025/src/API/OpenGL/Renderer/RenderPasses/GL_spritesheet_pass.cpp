@@ -16,14 +16,26 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
         OpenGLShader* shader = GetShaderOLD("SpriteSheet");
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         Mesh* mesh = AssetManager::GetMeshByModelNameMeshName("Primitives", "Quad");
 
+        OpenGLFrameBuffer* gBuffer = nullptr;
+        std::string drawBufferName = UNDEFINED_STRING;
+
+        if (Renderer::GetRendererMode() == RendererMode::OLD_DEFERRED) {
+            gBuffer = &GetFrameBuffer("GBuffer");
+            drawBufferName = "FinalLighting";
+        }
+        if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+            gBuffer = &GetFrameBuffer("GBufferRE");
+            drawBufferName = "Lighting";
+        }
+
+        if (!gBuffer) return;
+
         gBuffer->Bind();
-        gBuffer->DrawBuffer("FinalLighting");
+        gBuffer->DrawBuffer(drawBufferName);
         shader->Bind();
         ForceRasterizerState("SpriteSheetPass");
-
 
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 

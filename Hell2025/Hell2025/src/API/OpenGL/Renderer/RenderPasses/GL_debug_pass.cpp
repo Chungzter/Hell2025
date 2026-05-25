@@ -345,7 +345,8 @@ namespace OpenGLRenderer {
             rendererSettings.rendererOverrideState == RendererOverrideState::VELOCITY ||
             rendererSettings.rendererOverrideState == RendererOverrideState::VISIBILITY ||
             rendererSettings.rendererOverrideState == RendererOverrideState::DEPTH ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::WORLD_POSITION) {
+            rendererSettings.rendererOverrideState == RendererOverrideState::WORLD_POSITION ||
+            rendererSettings.rendererOverrideState == RendererOverrideState::EMISSIVE) {
 
             OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
 
@@ -364,8 +365,10 @@ namespace OpenGLRenderer {
                 BindTextureUnit(2, msaaFbo->GetColorAttachmentHandleByName("Normal"));
                 BindTextureUnit(3, msaaFbo->GetColorAttachmentHandleByName("Material"));
                 BindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
-                // 9 is visiblity
+                // 9 is visibility
                 BindTextureUnit(10, waterFrameBuffer.GetColorAttachmentHandleByName("OceanFlags"));
+                // 11 is single sampled depth. NA here
+                // 12 is single sample emissive. NA here.
 
 				glDispatchCompute(resolveFbo->GetWidth() / TILE_SIZE, resolveFbo->GetHeight() / TILE_SIZE, 1);
 			}
@@ -385,6 +388,7 @@ namespace OpenGLRenderer {
                 BindTextureUnit(9, gBufferRE.GetColorAttachmentHandleByName("Visibility"));
                 // 10 is ocean flags
                 BindTextureUnit(11, gBufferRE.GetDepthAttachmentHandle());
+                BindTextureUnit(12, gBufferRE.GetColorAttachmentHandleByName("Emissive"));
 
                 glDispatchCompute(gBuffer->GetWidth() / TILE_SIZE, gBuffer->GetHeight() / TILE_SIZE, 1);
 			}
@@ -401,11 +405,12 @@ namespace OpenGLRenderer {
                 BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
                 BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
                 BindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("VelocityOcclusionSubSurface"));
-                BindTextureUnit(7, gBuffer->GetColorAttachmentHandleByName("Emissive"));
+                // 7 may be free???
                 BindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
-                // 9 is visiblity
+                // 9 is visibility
                 // 10 is ocean flags
                 BindTextureUnit(11, gBuffer->GetDepthAttachmentHandle());
+                BindTextureUnit(12, gBuffer->GetColorAttachmentHandleByName("Emissive"));
 
 				glDispatchCompute(gBuffer->GetWidth() / TILE_SIZE, gBuffer->GetHeight() / TILE_SIZE, 1);
             }

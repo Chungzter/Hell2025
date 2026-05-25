@@ -5,6 +5,7 @@
 // todo remove
 #include "Core/Debug.h"
 #include "Input/Input.h"
+#include "Renderer/Renderer.h"
 #include "Util/Util.h"
 
 namespace OpenGLRenderer {
@@ -12,7 +13,21 @@ namespace OpenGLRenderer {
     void EmissivePass() {
         ProfilerOpenGLZoneFunction();
 
-        static bool old = false;
+        OpenGLFrameBuffer* gBuffer = nullptr;
+        std::string outputTextureName = UNDEFINED_STRING;
+
+        if (Renderer::GetRendererMode() == RendererMode::OLD_DEFERRED) {
+            gBuffer = &GetFrameBuffer("GBuffer");
+            outputTextureName = "FinalLighting";
+        }
+        if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+            gBuffer = &GetFrameBuffer("GBufferRE");
+            outputTextureName = "Lighting";
+
+        }
+        if (!gBuffer) return;
+
+        static bool old = true;
 
         if (Input::KeyPressed(HELL_KEY_NUMPAD_4)) {
             old = !old;
@@ -22,8 +37,8 @@ namespace OpenGLRenderer {
         if (old) {
             ForceRasterizerState("EmissivePass");
 
-            OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-            OpenGLFrameBuffer* finalImageFBO = GetFrameBufferOLD("FinalImage");
+
+            //OpenGLFrameBuffer* finalImageFBO = GetFrameBufferOLD("FinalImage");
             OpenGLShader* horizontalShader = GetShaderOLD("BlurHorizontal");
             OpenGLShader* verticalShader = GetShaderOLD("BlurVertical");
             OpenGLShader* compositeShader = GetShaderOLD("EmissiveComposite");
@@ -91,7 +106,7 @@ namespace OpenGLRenderer {
                 compositeShader->Bind();
                 compositeShader->SetInt("u_viewportIndex", i);
 
-                glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+                glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName(outputTextureName), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
                 glBindTextureUnit(1, GetBlurBuffer(i, 0)->GetColorAttachmentHandleByName("ColorB"));
                 glBindTextureUnit(2, GetBlurBuffer(i, 1)->GetColorAttachmentHandleByName("ColorB"));
                 glBindTextureUnit(3, GetBlurBuffer(i, 2)->GetColorAttachmentHandleByName("ColorB"));
@@ -206,7 +221,7 @@ namespace OpenGLRenderer {
                 compositeShader->Bind();
                 compositeShader->SetInt("u_viewportIndex", i);
 
-                glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+                glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName(outputTextureName), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
                 glBindTextureUnit(1, handleA);
                 glBindTextureUnit(1, handleB);
 

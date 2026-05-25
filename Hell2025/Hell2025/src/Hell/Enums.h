@@ -440,6 +440,7 @@ enum class RendererOverrideState {
     VISIBILITY,
     DEPTH,
     WORLD_POSITION,
+    EMISSIVE,
     STATE_COUNT,
 };
 

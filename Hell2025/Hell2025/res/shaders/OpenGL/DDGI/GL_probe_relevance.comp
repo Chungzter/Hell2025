@@ -12,12 +12,9 @@ layout(std430, binding = 5) readonly buffer DDGIVolumeBuffer { DDGIVolume volume
 layout(std430, binding = 6) readonly buffer rendererDataBuffer { RendererData rendererData; };
 layout(std430, binding = 7) readonly buffer viewportDataBuffer { ViewportData viewportData[]; };
 
-layout (binding = 0) uniform sampler2DMS u_depthTextureMS;
-layout (binding = 1) uniform sampler2DMS u_normalTextureMS;
 layout (binding = 2) uniform sampler2D u_normalTexture;
 layout (binding = 3) uniform sampler2D u_depthTexture;
 
-uniform bool u_msaaRenderer;
 uniform bool u_octNormals;
 uniform vec3 u_viewPos; // THIS MUST BE COMPUTED FROM SCREEN COORDS FOR PLAYESR 2, 3, & 4 to work
 
@@ -36,15 +33,11 @@ void main() {
     int totalProbes = volume.totalProbes;
 
     // Normal
-    vec3 fragNormal = vec3(0);
-    if (u_msaaRenderer) {
-        fragNormal = texelFetch(u_normalTextureMS, pixelCoords, 0).xyz;
-    }
-    else {
-        fragNormal = texelFetch(u_normalTexture, pixelCoords, 0).xyz;
-        if (u_octNormals) {
-            fragNormal = DecodeNormal(fragNormal.rg);
-        }
+    vec3 fragNormal = texelFetch(u_normalTexture, pixelCoords, 0).xyz;
+
+    // Unpack oct normals if needed
+    if (u_octNormals) {
+        fragNormal = DecodeNormal(fragNormal.rg);
     }
 
     if (dot(fragNormal, fragNormal) < 0.0001) return;
@@ -55,33 +48,11 @@ void main() {
     vec2 screenUV = (vec2(px) + 0.5) / vec2(resolution);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData[viewportIndex]);
 
-    // World pos
-    vec3 fragPosition;
-
-    // MSAA
-    if (u_msaaRenderer) {
-        float depth = texelFetch(u_depthTextureMS, px, 0).r;
-        vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
-        vec4 worldH = viewportData[viewportIndex].inverseProjectionViewReverseZ * clip;
-        fragPosition = worldH.xyz / worldH.w;
-    }
-    else {
-        // RE_STYLE
-        if (u_octNormals) {
-            float depth = texelFetch(u_depthTexture, px, 0).r;
-            vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
-            vec4 worldH = viewportData[viewportIndex].inverseProjectionViewReverseZ * clip;
-            fragPosition = worldH.xyz / worldH.w;
-        }
-        // OLD DEFERRERD
-        else {
-            float depth = texelFetch(u_depthTexture, px, 0).r;
-            vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
-            vec4 worldH = viewportData[viewportIndex].inverseProjectionView* clip;
-            fragPosition = worldH.xyz / worldH.w;
-        }
-    }
-
+    // Position from depth
+    float depth = texelFetch(u_depthTexture, px, 0).r;
+    vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
+    vec4 worldH = viewportData[viewportIndex].inverseProjectionViewReverseZ * clip;
+    vec3 fragPosition = worldH.xyz / worldH.w;
 
     vec3 surfaceBias = DDGIGetSurfaceBias(fragPosition, fragNormal, u_viewPos); // Uses PROBE_NORMAL_BIAS and PROBE_VIEW_BIAS
     vec3 biasedWorldPosition = fragPosition + surfaceBias;

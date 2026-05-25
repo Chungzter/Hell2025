@@ -263,7 +263,7 @@ void main() {
 
     // Don't process out of bounds pixels
     if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) return;
-    
+
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
@@ -334,8 +334,8 @@ void main() {
     for (int i = 0; i < lightCount; i++) {
         int lightIndex = int(tileLights[tileIndex].lightIndices[i]);
 
-    //for (int i = 2; i < 3; i++) {
-	//	int lightIndex = 2;
+    //for (int i = 2; i < 9; i++) {
+	//	int lightIndex = i;
 
         Light light = lights[lightIndex];
         vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
@@ -636,9 +636,9 @@ void main() {
         //outputColor.rgb = vec3(1,0,0);
    }
 
- //  outputColor.rgb = vec3(sssRadius);
+   // outputColor.rgb = vec3(sssRadius);
 
- //outputColor.rgb = directLighting;
+   // outputColor.rgb = directLighting;
 
     imageStore(outputImage, px, outputColor);
 

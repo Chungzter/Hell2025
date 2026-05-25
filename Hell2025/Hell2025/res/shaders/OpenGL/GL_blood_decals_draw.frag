@@ -40,14 +40,14 @@ uniform int u_tileYCount;
 void main() {
 	ivec2 px = ivec2(gl_FragCoord.xy);
     ivec2 outputImageSize = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
-    
+
     uvec2 tileCoords = uvec2(px) / TILE_SIZE;
     uint tileIndex = tileCoords.y * u_tileXCount + tileCoords.x;
     uint count = tileBloodDecals[tileIndex].count;
 
     // Skip if this tile has no decals
     if (count == 0) discard;
-    
+
     // Do nothing on walls (assuming Y is up)
     vec3 normal = texelFetch(GBufferNormalTexture, px, 0).rgb;
     if (abs(normal.y) < 0.5) discard;
@@ -55,13 +55,13 @@ void main() {
     // Skip if this tile is masked out
     float blockedOut = texelFetch(GBufferRMATexture, px, 0).a;
     if (blockedOut == 1.0) discard;
-    
+
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
 
     ViewportData viewportData = viewportDataArr[viewportIndex];
-    mat4 inverseProjectionView = viewportData.inverseProjectionView;
+    mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
     vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionView);
@@ -74,7 +74,7 @@ void main() {
         uint decalIdx = globalBloodDecalIndices[tileOffset + i];
 
         vec3 localPos = (bloodDecals[decalIdx].inverseModelMatrix * vec4(worldPos, 1.0)).xyz;
-      
+
         // Explicit clipping
         if (any(greaterThan(abs(localPos), vec3(0.5, 0.5, 0.5)))) {
             continue;
