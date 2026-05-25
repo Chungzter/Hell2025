@@ -30,7 +30,7 @@ namespace OpenGLRenderer {
         shader->SetFloat("u_time", time);
 
         gBuffer->Bind();
-        gBuffer->DrawBuffer("FinalLighting");
+        gBuffer->DrawBuffer("Lighting");
 
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);

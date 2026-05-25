@@ -18,7 +18,7 @@ namespace OpenGLRenderer {
         Mesh* mesh = AssetManager::GetCubeMesh();
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers( {"FinalLighting", "WorldPosition" });
+        gBuffer->DrawBuffers( {"Lighting" });
         shader->Bind();
 
         ForceRasterizerState("SkyBox");

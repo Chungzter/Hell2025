@@ -92,7 +92,7 @@ namespace OpenGLRenderer {
 
         shader3D->Bind();
         gBuffer->Bind();
-        gBuffer->DrawBuffer("FinalLighting");
+        gBuffer->DrawBuffer("Lighting");
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -141,7 +141,7 @@ namespace OpenGLRenderer {
         // 3D
         shader3D->Bind();
         gBuffer->Bind();
-        gBuffer->DrawBuffer("FinalLighting");
+        gBuffer->DrawBuffer("Lighting");
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -322,7 +322,7 @@ namespace OpenGLRenderer {
 			uint32_t attachmentHandle = 0;
 
 			switch (Renderer::GetRendererMode()) {
-			    case RendererMode::OLD_DEFERRED: attachmentHandle = GetFrameBuffer("GBuffer").GetColorAttachmentHandleByName("FinalLighting"); break;
+			    case RendererMode::OLD_DEFERRED: attachmentHandle = GetFrameBuffer("GBuffer").GetColorAttachmentHandleByName("Lighting"); break;
 			    case RendererMode::MSAA:         attachmentHandle = GetFrameBuffer("Resolve").GetColorAttachmentHandleByName("Lighting");      break;
 			    case RendererMode::RE_STYLE:     attachmentHandle = GetFrameBuffer("GBufferRE").GetColorAttachmentHandleByName("Lighting");    break;
 			}
@@ -400,7 +400,7 @@ namespace OpenGLRenderer {
 				shader->SetFloat("u_brushSize", Editor::GetMapHeightBrushSize());
 				shader->SetBool("u_heightMapEditor", (Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Editor::IsOpen());
 
-                BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), GL_READ_WRITE, GL_RGBA16F);
+                BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
                 BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
                 BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
                 BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));

@@ -73,8 +73,24 @@ void main() {
     PackedVertex v0 = vertices[i0];
     PackedVertex v1 = vertices[i1];
     PackedVertex v2 = vertices[i2];
+    
+    // Position from depth reconstruction
+    float depth = texelFetch(u_DepthTexture, pixelCoords, 0).r; // TODO: use visiblity buffer depth
+    vec3 worldPos = ReconstructWorldPos(uv_screenspace, depth, viewportData.inverseProjectionViewReverseZ);
 
+    // Transform vertices to world space
     mat4 modelMatrix = renderItem.modelMatrix;
+    vec3 ws0 = (modelMatrix * vec4(v0.vx, v0.vy, v0.vz, 1.0)).xyz;
+    vec3 ws1 = (modelMatrix * vec4(v1.vx, v1.vy, v1.vz, 1.0)).xyz;
+    vec3 ws2 = (modelMatrix * vec4(v2.vx, v2.vy, v2.vz, 1.0)).xyz;
+
+    // Calculate world space edges matching specific hlsl cross product order
+    vec3 viewDir = normalize(worldPos - viewportData.viewPos.xyz);
+    vec3 e1 = ws1 - ws0;
+    vec3 e2 = ws2 - ws0;
+    vec3 geoNormal = normalize(cross(e1, e2));
+    bool isFrontFacing = dot(geoNormal, viewDir) <= 0.0;
+
     vec4 clip0 = viewportData.projectionViewReverseZ * modelMatrix * vec4(v0.vx, v0.vy, v0.vz, 1.0);
     vec4 clip1 = viewportData.projectionViewReverseZ * modelMatrix * vec4(v1.vx, v1.vy, v1.vz, 1.0);
     vec4 clip2 = viewportData.projectionViewReverseZ * modelMatrix * vec4(v2.vx, v2.vy, v2.vz, 1.0);
@@ -84,9 +100,6 @@ void main() {
     vec2 s0 = (clip0.xy / clip0.w * 0.5 + 0.5) * vpScale + vpOffset;
     vec2 s1 = (clip1.xy / clip1.w * 0.5 + 0.5) * vpScale + vpOffset;
     vec2 s2 = (clip2.xy / clip2.w * 0.5 + 0.5) * vpScale + vpOffset;
-
-    float area = (s1.x - s0.x) * (s2.y - s0.y) - (s2.x - s0.x) * (s1.y - s0.y);
-    bool isFrontFacing = area > 0.0;
 
     vec3 invW = vec3(1.0 / clip0.w, 1.0 / clip1.w, 1.0 / clip2.w);
 
@@ -149,8 +162,6 @@ void main() {
     float variance = (dot(dNdx, dNdx) + dot(dNdy, dNdy)) * 0.1591549; // 1.0 / 2PI
     roughness = sqrt(clamp(roughness * roughness + min(variance, 0.18), 0.0, 1.0));
 
-    float depth = texelFetch(u_DepthTexture, pixelCoords, 0).r; // TODO: use visiblity buffer depth
-    vec3 worldPos = ReconstructWorldPos(uv_screenspace, depth, viewportData.inverseProjectionViewReverseZ);
     vec4 localPos = renderItem.inverseModelMatrix * vec4(worldPos, 1.0);
     vec4 currPos = viewportData.projectionViewReverseZ * vec4(worldPos, 1.0);
     vec4 prevPos = viewportData.prevProjectionViewReverseZ * renderItem.prevModelMatrix * localPos;

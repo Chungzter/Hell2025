@@ -6,11 +6,7 @@
 #include "World/World.h"
 #include "Viewport/ViewportManager.h"
 
-#define STENCIL_REF_STATIC       1 // Includes alpha discarded
-#define STENCIL_REF_SKINNED      2 // Includes alpha discarded
-#define STENCIL_REF_PROCEDUAL    3 //
-#define STENCIL_REF_STATIC_HAIR  1 // TODO: Make this 3 and process hair lighting separately
-#define STENCIL_REF_SKINNED_HAIR 4 // TODO: Make this 4 and process hair lighting separately
+#include "Hell/RendereringConstants.h"
 
 namespace OpenGLRenderer {
     struct RESettings {
@@ -22,26 +18,13 @@ namespace OpenGLRenderer {
     void BlendedLighting();
     void ClearRenderTargetsRE();
     void CreateFramebuffersRE();
-    void DepthPrePassRE();             // OLD
-    void DepthPrePassAlphaDiscardRE(); // OLD
-    void GBufferPass();                // OLD
     void HairDepthPrep();
     void HairDepthPrePassRE();
     void HairPassRE();
     void HairCompositeRE();
     void LightingPassRE();
     void LoadShadersRE();
-    void PostProcessingPassRE();
 
-    void VisibilityPass();
-    void VisibilityAlphaDiscardPass();
-    void VisibilitySkinnedPass();
-    void VisibilitySkinnedHairPass();
-
-    void MaterialResolvePass();
-    void MaterialResolveSkinnedPass();
-    void MaterialResolveSkinnedHairPass();
-    void MaterialResolveProceduralPass();
     void RenderFullscreenTriangle();
 
     void EmissiveForwardPass();
@@ -52,6 +35,7 @@ namespace OpenGLRenderer {
         CreateFramebuffersRE();
         LoadShadersRE();
     }
+
 
     void RenderGameREStyle() {
         ProfilerOpenGLFrame();
@@ -75,30 +59,11 @@ namespace OpenGLRenderer {
         VisibilitySkinnedPass();
         VisibilityAlphaDiscardPass();
 
-        PlebRenderProceduralGeometryIntoGBuffer();
-
         MaterialResolvePass();
         MaterialResolveSkinnedPass();
+        MaterialResolveProceduralPass();
 
         EmissiveForwardPass();
-
-        // if (visibilityPath) {
-        //     VisibilityPass();
-        //     VisibilitySkinnedPass();
-        //     VisibilityAlphaDiscardPass();
-        //     //VisibilitySkinnedHairPass();
-        //
-        //     MaterialResolvePass();
-        //     MaterialResolveSkinnedPass();
-        //     //MaterialResolveProceduralPass();
-        //     //MaterialResolveSkinnedHairPass();
-        //
-        //     PlebRenderProcedualGeometryIntoGBuffer();
-        // }
-        // else {
-        //     DepthPrePassRE();
-        //     GBufferPass();
-        // }
 
         ComputeTileWorldBounds();
         ChristmasLightCullingPass();
@@ -213,335 +178,6 @@ namespace OpenGLRenderer {
         LoadShader("RE", "EmissiveForward", { "GL_gbuffer_re.vert", "GL_emissive_forward.frag" });
     }
 
-    void VisibilityPass() {
-        ProfilerOpenGLZoneFunction();
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-
-        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
-        fbo.Bind();
-        fbo.DrawBuffers({ "Visibility" });
-
-        BindShader("Visibility");
-
-        OpenGLRasterizerState state;
-        state.depthTestEnabled = true;
-        state.blendEnable = false;
-        state.cullfaceEnable = true;
-        state.depthMask = true;
-        state.colorMask = true;
-        state.depthFunc = GL_GREATER;
-
-        state.stencilTestEnabled = true;
-        state.stencilFunc = GL_ALWAYS;
-        state.stencilRef = STENCIL_REF_STATIC;
-        state.stencilReadMask = 0xFF;
-        state.stencilWriteMask = 0xFF;
-        state.stencilFailOp = GL_KEEP;
-        state.stencilDepthFailOp = GL_KEEP;
-        state.stencilPassOp = GL_REPLACE;
-
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-        MultiDrawPerViewportRE(fbo, drawInfoSet.standard, state);
-        MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingStandard, state);
-
-        // Procedural geometry
-        state.stencilRef = STENCIL_REF_PROCEDUAL;
-
-        glBindVertexArray(Renderer::GetProceduralMeshBuffer().GetVAO());
-        MultiDrawPerViewportRE(fbo, drawInfoSet.house, state);
-    }
-
-    void VisibilityAlphaDiscardPass() {
-        ProfilerOpenGLZoneFunction();
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-
-        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
-        fbo.Bind();
-        fbo.DrawBuffers({ "Visibility" });
-
-        static int frameCount = 0;
-        frameCount++;
-
-        BindShader("VisibilityAlphaDiscard");
-        SetUniformUInt("u_frameCount", frameCount);
-
-        BindSSBO(0, "Samplers");
-        BindSSBO(1, "RendererData");
-        BindSSBO(2, "ViewportData");
-        BindSSBO(3, "InstanceData");
-
-        OpenGLRasterizerState state;
-        state.depthTestEnabled = true;
-        state.blendEnable = false;
-        state.cullfaceEnable = false;
-        state.depthMask = true;
-        state.colorMask = true;
-        state.depthFunc = GL_GREATER;
-
-        state.stencilTestEnabled = true;
-        state.stencilFunc = GL_ALWAYS;
-        state.stencilRef = STENCIL_REF_STATIC;
-        state.stencilReadMask = 0xFF;
-        state.stencilWriteMask = 0xFF;
-        state.stencilFailOp = GL_KEEP;
-        state.stencilDepthFailOp = GL_KEEP;
-        state.stencilPassOp = GL_REPLACE;
-
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-
-        MultiDrawPerViewportRE(fbo, drawInfoSet.alphaDiscard, state);
-        MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingAlphaDiscard, state);
-    }
-
-    void VisibilitySkinnedPass() {
-        ProfilerOpenGLZoneFunction();
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-
-        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
-        fbo.Bind();
-        fbo.DrawBuffers({ "Visibility" });
-
-        BindShader("Visibility");
-
-        OpenGLRasterizerState state;
-        state.depthTestEnabled = true;
-        state.blendEnable = false;
-        state.cullfaceEnable = true;
-        state.depthMask = true;
-        state.colorMask = true;
-        state.depthFunc = GL_GREATER;
-
-        state.stencilTestEnabled = true;
-        state.stencilFunc = GL_ALWAYS;
-        state.stencilRef = STENCIL_REF_SKINNED;
-        state.stencilReadMask = 0xFF;
-        state.stencilWriteMask = 0xFF;
-        state.stencilFailOp = GL_KEEP;
-        state.stencilDepthFailOp = GL_KEEP;
-        state.stencilPassOp = GL_REPLACE;
-
-        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
-        MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedStandard, state);
-    }
-
-    void VisibilitySkinnedHairPass() {
-        ProfilerOpenGLZoneFunction();
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-
-        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
-        fbo.Bind();
-        fbo.DrawBuffers({ "Visibility" });
-
-        BindShader("Visibility");
-
-        OpenGLRasterizerState state;
-        state.depthTestEnabled = true;
-        state.blendEnable = false;
-        state.cullfaceEnable = false;
-        state.depthMask = true;
-        state.colorMask = true;
-        state.depthFunc = GL_GREATER;
-
-        state.stencilTestEnabled = true;
-        state.stencilFunc = GL_ALWAYS;
-        state.stencilRef = STENCIL_REF_SKINNED_HAIR;
-        state.stencilReadMask = 0xFF;
-        state.stencilWriteMask = 0xFF;
-        state.stencilFailOp = GL_KEEP;
-        state.stencilDepthFailOp = GL_KEEP;
-        state.stencilPassOp = GL_REPLACE;
-
-        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
-        MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedHair, state);
-    }
-
-    void MaterialResolvePass() {
-        ProfilerOpenGLZoneFunction();
-
-        OpenGLFrameBuffer& gbufferFbo = GetFrameBuffer("GBufferRE");
-        gbufferFbo.Bind();
-        gbufferFbo.SetViewport();
-        gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
-
-        BindShader("MaterialResolve");
-
-        BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
-        BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
-
-        BindSSBO(0, OpenGLBackEnd::GetVertexDataVBO());
-        BindSSBO(1, OpenGLBackEnd::GetVertexDataEBO());
-        BindSSBO(2, "ViewportData");
-        BindSSBO(3, "InstanceData");
-        BindSSBO(4, "Samplers");
-        BindSSBO(5, "RendererData");
-
-        OpenGLRasterizerState resolveState;
-        resolveState.depthTestEnabled = false;
-        resolveState.blendEnable = false;
-        resolveState.cullfaceEnable = false;
-        resolveState.depthMask = false;
-        resolveState.colorMask = true;
-
-        resolveState.stencilTestEnabled = true;
-        resolveState.stencilFunc = GL_EQUAL;
-        resolveState.stencilRef = STENCIL_REF_STATIC;
-        resolveState.stencilReadMask = 0xFF;
-        resolveState.stencilWriteMask = 0x00;
-        resolveState.stencilFailOp = GL_KEEP;
-        resolveState.stencilDepthFailOp = GL_KEEP;
-        resolveState.stencilPassOp = GL_KEEP;
-
-        SetRasterizerState(resolveState);
-        RenderFullscreenTriangle();
-    }
-
-    void MaterialResolveSkinnedPass() {
-        ProfilerOpenGLZoneFunction();
-
-        OpenGLFrameBuffer& gbufferFbo = GetFrameBuffer("GBufferRE");
-        gbufferFbo.Bind();
-        gbufferFbo.SetViewport();
-        gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
-
-        BindShader("MaterialResolveSkinning");
-
-        BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
-        BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
-
-        BindSSBO(0, OpenGLBackEnd::GetSkinnedVertexDataVBO());
-        BindSSBO(1, OpenGLBackEnd::GetVertexDataEBO());
-        BindSSBO(2, "ViewportData");
-        BindSSBO(3, "InstanceData");
-        BindSSBO(4, "Samplers");
-        BindSSBO(5, "RendererData");
-
-        OpenGLRasterizerState resolveState;
-        resolveState.depthTestEnabled = false;
-        resolveState.blendEnable = false;
-        resolveState.cullfaceEnable = false;
-        resolveState.depthMask = false;
-        resolveState.colorMask = true;
-
-        resolveState.stencilTestEnabled = true;
-        resolveState.stencilFunc = GL_EQUAL;
-        resolveState.stencilRef = STENCIL_REF_SKINNED;
-        resolveState.stencilReadMask = 0xFF;
-        resolveState.stencilWriteMask = 0x00;
-        resolveState.stencilFailOp = GL_KEEP;
-        resolveState.stencilDepthFailOp = GL_KEEP;
-        resolveState.stencilPassOp = GL_KEEP;
-
-        SetRasterizerState(resolveState);
-        RenderFullscreenTriangle();
-    }
-
-    void MaterialResolveProceduralPass() {
-        ProfilerOpenGLZoneFunction();
-
-        OpenGLFrameBuffer& gbufferFbo = GetFrameBuffer("GBufferRE");
-        gbufferFbo.Bind();
-        gbufferFbo.SetViewport();
-        gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
-
-        BindShader("MaterialResolve");
-
-        BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
-        BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
-
-        BindSSBO(0, Renderer::GetProceduralMeshBuffer().GetVBO());
-        BindSSBO(1, Renderer::GetProceduralMeshBuffer().GetEBO());
-        BindSSBO(2, "ViewportData");
-        BindSSBO(3, "InstanceData");
-        BindSSBO(4, "Samplers");
-        BindSSBO(5, "RendererData");
-
-        OpenGLRasterizerState resolveState;
-        resolveState.depthTestEnabled = false;
-        resolveState.blendEnable = false;
-        resolveState.cullfaceEnable = false;
-        resolveState.depthMask = false;
-        resolveState.colorMask = true;
-
-        resolveState.stencilTestEnabled = true;
-        resolveState.stencilFunc = GL_EQUAL;
-        resolveState.stencilRef = STENCIL_REF_PROCEDUAL;
-        resolveState.stencilReadMask = 0xFF;
-        resolveState.stencilWriteMask = 0x00;
-        resolveState.stencilFailOp = GL_KEEP;
-        resolveState.stencilDepthFailOp = GL_KEEP;
-        resolveState.stencilPassOp = GL_KEEP;
-
-        SetRasterizerState(resolveState);
-        RenderFullscreenTriangle();
-    }
-
-    void MaterialResolveSkinnedHairPass() {
-        ProfilerOpenGLZoneFunction();
-
-        OpenGLFrameBuffer& gbufferFbo = GetFrameBuffer("GBufferRE");
-        gbufferFbo.Bind();
-        gbufferFbo.SetViewport();
-        gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
-
-        BindShader("MaterialResolveSkinning");
-
-        BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
-        BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
-
-        BindSSBO(0, OpenGLBackEnd::GetSkinnedVertexDataVBO());
-        BindSSBO(1, OpenGLBackEnd::GetVertexDataEBO());
-        BindSSBO(2, "ViewportData");
-        BindSSBO(3, "InstanceData");
-        BindSSBO(4, "Samplers");
-        BindSSBO(5, "RendererData");
-
-        OpenGLRasterizerState resolveState;
-        resolveState.depthTestEnabled = false;
-        resolveState.blendEnable = false;
-        resolveState.cullfaceEnable = false;
-        resolveState.depthMask = false;
-        resolveState.colorMask = true;
-
-        resolveState.stencilTestEnabled = true;
-        resolveState.stencilFunc = GL_EQUAL;
-        resolveState.stencilRef = STENCIL_REF_SKINNED_HAIR;
-        resolveState.stencilReadMask = 0xFF;
-        resolveState.stencilWriteMask = 0x00;
-        resolveState.stencilFailOp = GL_KEEP;
-        resolveState.stencilDepthFailOp = GL_KEEP;
-        resolveState.stencilPassOp = GL_KEEP;
-
-        SetRasterizerState(resolveState);
-        RenderFullscreenTriangle();
-    }
-
-    void PlebRenderProceduralGeometryIntoGBuffer() {
-        ProfilerOpenGLZoneFunction();
-
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-
-        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
-        fbo.Bind();
-        fbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
-
-        OpenGLRasterizerState state;
-        state.depthTestEnabled = true;
-        state.blendEnable = false;
-        state.cullfaceEnable = true;
-        state.depthMask = true;
-        state.colorMask = true;
-        state.depthFunc = GL_GEQUAL;
-
-        // Opaque
-        OpenGLShader& opaqueShader = GetShader("GBufferRE");
-        opaqueShader.Bind();
-
-        glBindVertexArray(Renderer::GetProceduralMeshBuffer().GetVAO());
-        MultiDrawPerViewportRE(fbo, drawInfoSet.house, state);
-
-        glBindVertexArray(0);
-    }
-
 	void ClearRenderTargetsRE() {
 		OpenGLFrameBuffer& gBufferRE = GetFrameBuffer("GBufferRE");
 		gBufferRE.ClearAttachment("Lighting", 0, 0, 0, 1);
@@ -556,72 +192,6 @@ namespace OpenGLRenderer {
 		OpenGLFrameBuffer& hairFboRE = GetFrameBuffer("HairRE");
 		hairFboRE.ClearAttachment("Lighting", 0, 0, 0, 0);
 		hairFboRE.ClearDepthAttachment(0.0f);
-	}
-
-	void DepthPrePassRE() {
-		ProfilerOpenGLZoneFunction();
-
-		const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-
-		OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
-		fbo.Bind();
-		fbo.DrawBuffer(GL_NONE);
-
-		OpenGLRasterizerState state;
-		state.depthTestEnabled = true;
-		state.blendEnable = false;
-		state.cullfaceEnable = true;
-		state.depthMask = true;
-		state.colorMask = false;
-		state.depthFunc = GL_GREATER;
-
-		// Opaque
-		OpenGLShader& opaqueShader = GetShader("DepthPrePassRE");
-		opaqueShader.Bind();
-
-		glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
-		MultiDrawPerViewportRE(fbo, drawInfoSet.house, state);
-
-		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-		MultiDrawPerViewportRE(fbo, drawInfoSet.standard, state);
-		MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingStandard, state);
-
-		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
-		MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedStandard, state);
-	}
-
-	void GBufferPass() {
-		ProfilerOpenGLZoneFunction();
-
-		const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-
-		OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
-		fbo.Bind();
-		fbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
-
-		OpenGLRasterizerState opaqueDepthState;
-		opaqueDepthState.depthTestEnabled = true;
-		opaqueDepthState.blendEnable = false;
-		opaqueDepthState.cullfaceEnable = true;
-		opaqueDepthState.depthMask = false;
-		opaqueDepthState.colorMask = true;
-		opaqueDepthState.depthFunc = GL_EQUAL;
-
-		// Opaque
-		OpenGLShader& opaqueShader = GetShader("GBufferRE");
-		opaqueShader.Bind();
-
-		glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
-		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.house, opaqueDepthState);
-
-		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.standard, opaqueDepthState);
-
-		//glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
-		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.skinnedNonDeformingStandard, opaqueDepthState);
-
-		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
-		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.skinnedStandard, opaqueDepthState);
 	}
 
 	void BindShadowMapsRE() {
@@ -788,25 +358,6 @@ namespace OpenGLRenderer {
 		BindTextureUnit(1, hairFbo.GetColorAttachmentHandleByName("Lighting"));
 
 		glDispatchCompute(gBuffer.GetWidth() / TILE_SIZE, gBuffer.GetHeight() / TILE_SIZE, 1);
-	}
-
-	void PostProcessingPassRE() {
-		ProfilerOpenGLZoneFunction();
-
-		RendererSettings& rendererSettings = Renderer::GetCurrentRendererSettings();
-
-		// Only post process the following modes
-		if (rendererSettings.rendererOverrideState == RendererOverrideState::NONE || // This means the final lit image
-			rendererSettings.rendererOverrideState == RendererOverrideState::CAMERA_NDOTL ||
-			rendererSettings.rendererOverrideState == RendererOverrideState::INDIRECT_DIFFUSE) {
-
-			OpenGLFrameBuffer& gBufferRE = GetFrameBuffer("GBufferRE");
-
-			BindShader("PostProcessing");
-			BindImageTexture(0, gBufferRE.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
-
-			glDispatchCompute(gBufferRE.GetWidth() / 8, gBufferRE.GetHeight() / 8, 1);
-		}
 	}
 
     void RenderFullscreenTriangle() {

@@ -32,7 +32,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "FinalLighting" });
+        gBuffer->DrawBuffers({ "Lighting" });
 
         shader->Bind();
 
@@ -296,7 +296,7 @@ namespace OpenGLRenderer {
 
         // Add fur to final image
         compositeShader->Bind();
-        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
         glBindTextureUnit(1, hairFrameBuffer->GetColorAttachmentHandleByName("Lighting"));
         glDispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);
     }

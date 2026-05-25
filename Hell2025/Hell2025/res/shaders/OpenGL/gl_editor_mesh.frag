@@ -3,7 +3,7 @@
 layout (location = 0) out vec4 BaseColorOut;
 layout (location = 1) out vec4 NormalOut;
 layout (location = 2) out vec4 RMAOut;
-layout (location = 3) out vec4 WorldPosOut;
+layout (location = 3) out vec4 EmissiveOut;
 
 layout (binding = 0) uniform sampler2D baseColorTexture;
 layout (binding = 1) uniform sampler2D normalTexture;
@@ -23,5 +23,5 @@ void main() {
     BaseColorOut = baseColor;
     RMAOut = vec4(rma, 1);
     NormalOut.rgb = normalize(Normal);
-    WorldPosOut = vec4(WorldPos, 1.0);
+    EmissiveOut = vec4(0,0,0,1);
 }

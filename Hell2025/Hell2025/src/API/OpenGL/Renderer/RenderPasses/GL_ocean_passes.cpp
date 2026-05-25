@@ -198,7 +198,7 @@ namespace OpenGLRenderer {
 
         // Down sample the final lighting to 25%
         // TODO: try using Gaussian blur of final lighting. It's currently calculated in the underwater composite pass so will have to move it before
-        BlitFrameBuffer(&gBuffer, &quaterSizeFrameBuffer, "FinalLighting", "DownsampledFinalLighting", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        BlitFrameBuffer(&gBuffer, &quaterSizeFrameBuffer, "Lighting", "DownsampledFinalLighting", GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
         // Water surface composite
         glm::vec2 resolution = glm::vec2(gBuffer.GetWidth(), gBuffer.GetHeight());
@@ -207,7 +207,7 @@ namespace OpenGLRenderer {
         shader->SetVec2("u_resolution", resolution);
         shader->SetFloat("u_oceanYOrigin", Ocean::GetOceanOriginY());
 
-        BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("FinalLighting"), GL_READ_WRITE, GL_RGBA16F);
+        BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
         BindImageTexture(1, waterFrameBuffer.GetColorAttachmentHandleByName("OceanMask"), GL_READ_ONLY, GL_R8UI);
         BindTextureUnit(2, waterFrameBuffer.GetColorAttachmentHandleByName("Lighting"));
         BindTextureUnit(3, AssetManager::GetTextureByName("WaterDUDV")->GetGLTexture().GetHandle());
@@ -241,7 +241,7 @@ namespace OpenGLRenderer {
         gaussianBlurShader->Bind();
         gaussianBlurShader->SetVec2("u_direction", glm::vec2(0, 1));
         glBindImageTexture(0, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F); // WARNING! you WERE degrading your image quality by down sampling into a texture of lower bit resolution. Find out if this even matters at this point in the frame. But now you're not. But also. This is a shit load of VRAM so think about this.
-        glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("FinalLighting"));
+        glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("Lighting"));
         glDispatchCompute((miscFullSizeFrameBuffer->GetWidth() + 7) / 8, (miscFullSizeFrameBuffer->GetHeight() + 7) / 8, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -266,7 +266,7 @@ namespace OpenGLRenderer {
 
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-        BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), GL_READ_WRITE, GL_RGBA16F);
+        BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
         BindImageTexture(1, waterFrameBuffer->GetColorAttachmentHandleByName("OceanFlags"), GL_READ_ONLY, GL_R8UI);
         BindTextureUnit(2, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLighting"));
         BindTextureUnit(3, waterFrameBuffer->GetColorAttachmentHandleByName("Lighting"));

@@ -23,7 +23,7 @@ namespace OpenGLRenderer {
 
         if (Renderer::GetRendererMode() == RendererMode::OLD_DEFERRED) {
             gBuffer = &GetFrameBuffer("GBuffer");
-            drawBufferName = "FinalLighting";
+            drawBufferName = "Lighting";
         }
         if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
             gBuffer = &GetFrameBuffer("GBufferRE");

@@ -2,7 +2,6 @@
 #include "../common/types.glsl"
 
 layout (location = 0) out vec4 FinalLightingOut;
-layout (location = 1) out vec4 WorldPositionOut;
 
 layout (binding = 0) uniform samplerCube cubeMap;
 
@@ -73,6 +72,4 @@ void main() {
     }
 
     FinalLightingOut = vec4(outColor, 1.0);
-
-    WorldPositionOut = vec4(WorldPos.rgb * vec3(10, 1, 10), 1.0);
 }

@@ -265,7 +265,7 @@ namespace OpenGLRenderer {
         glm::mat4 inverseModelMatrix = glm::inverse(modelMatrix);
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
 
         shader->Bind();
         shader->SetMat4("modelMatrix", modelMatrix);

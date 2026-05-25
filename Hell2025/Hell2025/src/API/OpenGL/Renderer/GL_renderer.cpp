@@ -151,19 +151,18 @@ namespace OpenGLRenderer {
         lightAABBfbo.CreateAttachment(GL_RGBA32F, GL_NEAREST);
         lightAABBfbo.CreateDepthAttachment(GL_DEPTH_COMPONENT32F);
 
-        OpenGLFrameBuffer& postProcessing = CreateFrameBuffer("PostProcessing", resolutions.gBuffer);
-        postProcessing.CreateAttachment("Scratch", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
-
         OpenGLFrameBuffer& gBuffer = CreateFrameBuffer("GBuffer", resolutions.gBuffer);
         gBuffer.CreateAttachment("BaseColor", GL_RGBA8);
         gBuffer.CreateAttachment("Normal", GL_RGBA16F);
         gBuffer.CreateAttachment("RMA", GL_RGBA8); // In alpha is screenspace blood decal mask
-        gBuffer.CreateAttachment("FinalLighting", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
-        gBuffer.CreateAttachment("WorldPosition", GL_RGBA32F);
+        gBuffer.CreateAttachment("Lighting", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
         gBuffer.CreateAttachment("Emissive", GL_RGBA8, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
         gBuffer.CreateAttachment("Glass", GL_RGBA16F);
         gBuffer.CreateAttachment("VelocityOcclusionSubSurface", GL_RGBA16F);
         gBuffer.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
+
+        OpenGLFrameBuffer& scratchFbo = CreateFrameBuffer("Scratch", resolutions.gBuffer);
+        scratchFbo.CreateAttachment("RGBA16F", GL_RGBA16F);
 
         OpenGLFrameBuffer& waterFbo = CreateFrameBuffer("Water", resolutions.gBuffer);
         waterFbo.CreateAttachment("Lighting", GL_RGBA16F);
@@ -559,7 +558,7 @@ namespace OpenGLRenderer {
 
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         gBuffer->Bind();
-        gBuffer->DrawBuffer("FinalLighting");
+        gBuffer->DrawBuffer("Lighting");
 
         BindShader("DebugHackAABB");
         glBindVertexArray(vao);
@@ -663,7 +662,7 @@ namespace OpenGLRenderer {
         // Disabling lighting actually just clears it, that way you don't have fog and shit everywhere
         if (!Renderer::GetCurrentRendererSettings().enableLighting) {
             gBuffer.Bind();
-            gBuffer.ClearAttachment("FinalLighting", 0, 0, 0, 0);
+            gBuffer.ClearAttachment("Lighting", 0, 0, 0, 0);
         }
 
         if (Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
@@ -687,7 +686,7 @@ namespace OpenGLRenderer {
         OutlinePass();
 
         // Downscale blit
-        OpenGLRenderer::BlitFrameBuffer(&gBuffer, &finalImageBuffer, "FinalLighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        OpenGLRenderer::BlitFrameBuffer(&gBuffer, &finalImageBuffer, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
         //DownSampleFinalImage();
 
         //if (Input::KeyDown(HELL_KEY_U)) {
@@ -707,7 +706,7 @@ namespace OpenGLRenderer {
         OpenGLRenderer::BlitToDefaultFrameBuffer(&finalImageBuffer, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         // Blit to swapchain
-        //OpenGLRenderer::BlitToDefaultFrameBuffer(&gBuffer, "FinalLighting", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        //OpenGLRenderer::BlitToDefaultFrameBuffer(&gBuffer, "Lighting", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         //BlitFog();
 
@@ -748,7 +747,6 @@ namespace OpenGLRenderer {
         gBuffer.ClearAttachment("BaseColor", 0, 0, 0, 0);
         gBuffer.ClearAttachment("Normal", 0, 0, 0, 0);
         gBuffer.ClearAttachment("RMA", 0, 0, 0, 0);
-        gBuffer.ClearAttachment("WorldPosition", 0, 0, 0, 0);
         gBuffer.ClearAttachment("Emissive", 0, 0, 0, 0);
         gBuffer.ClearAttachment("Glass", 0, 0, 0, 0);
         gBuffer.ClearAttachment("VelocityOcclusionSubSurface", 0, 0, 0, 1);

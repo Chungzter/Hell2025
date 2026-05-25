@@ -34,9 +34,8 @@ layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
 layout (location = 0) out vec4 BaseColorOut;
 layout (location = 1) out vec4 NormalOut;
 layout (location = 2) out vec4 RMAOut;
-layout (location = 3) out vec4 WorldPositionOut;
-layout (location = 4) out vec4 EmissiveOut;
-layout (location = 5) out vec4 VelocityOcclusionSubSurfaceOut;
+layout (location = 3) out vec4 EmissiveOut;
+layout (location = 4) out vec4 VelocityOcclusionSubSurfaceOut;
 
 in vec2 TexCoord;
 in vec3 Normal;
@@ -139,8 +138,6 @@ void main() {
 
     RMAOut.rgb = rmat.rgb;
     RMAOut.a = BlockScreenSpaceBloodDecalsFlag;
-
-    WorldPositionOut = vec4(WorldPos.rgb, 1.0);
 
     // Thickness
     float thickness = rmat.a;

@@ -129,6 +129,24 @@ namespace OpenGLRenderer {
     void ReserveLightAABBSSBOStorage();
     void DebugDrawLightAABBs();
 
+
+
+    // Requiem functions
+    void VisibilityPass();
+    void VisibilityAlphaDiscardPass();
+    void VisibilitySkinnedPass();
+    void VisibilitySkinnedHairPass();
+
+    void MaterialResolvePass();
+    void MaterialResolveSkinnedPass();
+    void MaterialResolveSkinnedHairPass();
+    void MaterialResolveProceduralPass();
+
+    void RenderFullscreenTriangle();
+    void PostProcessingPassRE();
+
+
+
     // Debug passes
     void RaytracedSceneDebug();
     void DrawPointCloud(DDGIVolume& ddgiVolume);

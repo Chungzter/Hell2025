@@ -16,9 +16,9 @@ namespace OpenGLRenderer {
         int dispatchGroupCountY = (dstHeight + groupSizeY - 1) / groupSizeY;
 
         BindShader("DownSample2xBox");
-        BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), GL_READ_ONLY, GL_RGBA16F);
+        BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_ONLY, GL_RGBA16F);
         BindImageTexture(1, finalImageFbo->GetColorAttachmentHandleByName("Color"), GL_WRITE_ONLY, GL_RGBA16F);
-        BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("FinalLighting"));
+        BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Lighting"));
 
         glDispatchCompute(dispatchGroupCountX, dispatchGroupCountY, 1);
 

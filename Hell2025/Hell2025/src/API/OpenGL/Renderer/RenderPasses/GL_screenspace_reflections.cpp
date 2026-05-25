@@ -21,7 +21,7 @@ namespace OpenGLRenderer {
         if (!fullSizeFBO) return;
 
         // Down sample
-        BlitFrameBuffer(gBuffer, halfSizeFbo, "FinalLighting", "DownsampledFinalLighting", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        BlitFrameBuffer(gBuffer, halfSizeFbo, "Lighting", "DownsampledFinalLighting", GL_COLOR_BUFFER_BIT, GL_LINEAR);
         glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
 
         // Generate Mipmaps
@@ -29,7 +29,7 @@ namespace OpenGLRenderer {
         glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
         shader->Bind();
-        BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), GL_READ_WRITE, GL_RGBA16F);
+        BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
         BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
         BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
         BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));

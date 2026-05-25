@@ -190,7 +190,7 @@ namespace OpenGLRenderer {
         // Composite peeled final color back into gbuffer
         finalCompositeShader->Bind();
 
-        BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), GL_READ_WRITE, GL_RGBA16F);
+        BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
         BindTextureUnit(1, hairFrameBuffer->GetColorAttachmentHandleByName("Composite"));
 
         glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);

@@ -4,8 +4,9 @@
 #include "../../common/util.glsl"
 
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
-layout(rgba16f, binding = 0) uniform image2D LightingImage;
-layout(r8ui, binding = 2) uniform uimage2D  ViewportIndexImage;
+
+layout(rgba16f, binding = 0) uniform image2D u_outputImage;
+layout(rgba16f, binding = 1) uniform image2D u_inputImage;
 
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportData[]; };
@@ -42,7 +43,7 @@ vec3 ApplyVignette(vec3 inputColor, vec3 vignetteColor, float intensityScalar, v
 
 // pass in pre-computed data to avoid redundant imageLoad and math
 vec3 RE(vec3 lighting, vec2 uv_screenspace, ivec2 pixelCoords, uint viewportIndex) {
-    vec2 outputImageSize = vec2(imageSize(LightingImage));
+    vec2 outputImageSize = vec2(imageSize(u_outputImage));
     vec3 finalColor = lighting;
     vec3 colorTint = viewportData[viewportIndex].colorTint.rgb;
 
@@ -102,7 +103,7 @@ vec3 RE(vec3 lighting, vec2 uv_screenspace, ivec2 pixelCoords, uint viewportInde
 }
 
 vec3 OG(vec3 lighting, vec2 uv_screenspace, ivec2 pixelCoords, uint viewportIndex) {
-    vec2 outputImageSize = vec2(imageSize(LightingImage));
+    vec2 outputImageSize = vec2(imageSize(u_outputImage));
     vec3 finalColor = lighting;
     vec3 colorTint = viewportData[viewportIndex].colorTint.rgb * vec3(1, 0.925, 0.925);
 
@@ -120,12 +121,12 @@ vec3 OG(vec3 lighting, vec2 uv_screenspace, ivec2 pixelCoords, uint viewportInde
 
 void main() {
     ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
-    vec2 outputSize = vec2(imageSize(LightingImage));
+    vec2 outputSize = vec2(imageSize(u_outputImage));
 
     if (pixelCoords.x >= int(outputSize.x) || pixelCoords.y >= int(outputSize.y)) return;
 
     vec2 uv = (vec2(pixelCoords) + 0.5) / outputSize;
-    vec3 rawLighting = imageLoad(LightingImage, pixelCoords).rgb;
+    vec3 rawLighting = imageLoad(u_inputImage, pixelCoords).rgb;
     uint vIdx = ComputeViewportIndexFromSplitscreenMode(pixelCoords, ivec2(outputSize), rendererData.splitscreenMode);
 
     // compute the two looks
@@ -141,5 +142,5 @@ void main() {
     vec2 viewportUV = (uv - vec2(v.posX, v.posY)) / vec2(v.sizeX, v.sizeY);
     finalColor = ApplyVignette(finalColor, v.vignetteColor.rgb, v.intensityScalar * 0.5, viewportUV);
 
-    imageStore(LightingImage, pixelCoords, vec4(finalColor, 1));
+    imageStore(u_outputImage, pixelCoords, vec4(finalColor, 1));
 }

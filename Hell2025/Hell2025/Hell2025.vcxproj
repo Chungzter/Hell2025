@@ -241,6 +241,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_vat_blood_pass.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_weatherboards_pass.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_winston_pass.cpp" />
+    <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_material_resolve_passes.cpp" />
+    <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_post_processing_re.cpp" />
+    <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_visilibty_passes.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\Utility\GL_height_map_utility.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_debug_pass.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_editor_pass.cpp" />
@@ -644,6 +647,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Core\P90MagManager.h" />
     <ClInclude Include="src\GlobalIllumination\DDGIVolume.h" />
     <ClInclude Include="src\GlobalIllumination\PointCloud.h" />
+    <ClInclude Include="src\Hell\RendereringConstants.h" />
     <ClInclude Include="src\Types\Core\ItemInfo.h" />
     <ClInclude Include="src\Bvh\Gpu\Bvh.h" />
     <ClInclude Include="src\Common\CopyableAtomic.h" />

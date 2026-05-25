@@ -91,7 +91,7 @@ namespace OpenGLRenderer {
 
         // Composite
         compositeShader->Bind();
-        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, fogFbo->GetColorAttachmentHandleByName("Color"));
         glDispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);

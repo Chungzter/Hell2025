@@ -507,7 +507,7 @@ namespace OpenGLRenderer {
 			if (!fbo) return;
 
 			fbo->Bind();
-			fbo->DrawBuffer("FinalLighting");
+			fbo->DrawBuffer("Lighting");
 
 			state.depthFunc = GL_LESS;
 			ForceRasterizerState(state);
@@ -569,7 +569,7 @@ namespace OpenGLRenderer {
 			if (!fbo) return;
 
             fbo->Bind();
-            fbo->DrawBuffer("FinalLighting");
+            fbo->DrawBuffer("Lighting");
         }
 
         BindSSBO(6, "ProbeSHColor");

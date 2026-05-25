@@ -23,7 +23,7 @@ namespace OpenGLRenderer {
         if (!debugShader) return;
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
 
 
 

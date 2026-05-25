@@ -37,7 +37,7 @@ namespace OpenGLRenderer {
         if (!shader) return;
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive", "VelocityOcclusionSubSurface" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityOcclusionSubSurface" });
         ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
 
@@ -80,7 +80,7 @@ namespace OpenGLRenderer {
         if (!shader) return;
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive", "VelocityOcclusionSubSurface" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityOcclusionSubSurface" });
 
         shader->Bind();
 
@@ -188,7 +188,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* decalMasksFBO = GetFrameBufferOLD("DecalMasks");
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive", "VelocityOcclusionSubSurface" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityOcclusionSubSurface" });
 
         // Default (Non blended)
         shader->SetBool("u_alphaDiscard", false);
@@ -267,7 +267,7 @@ namespace OpenGLRenderer {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
 
         shader->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive", "VelocityOcclusionSubSurface" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityOcclusionSubSurface" });
 
         // Skinned mesh (non blended)
         shader->SetBool("u_alphaDiscard", false);
@@ -341,7 +341,7 @@ namespace OpenGLRenderer {
 
 
 
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive", "VelocityOcclusionSubSurface" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityOcclusionSubSurface" });
 
         OpenGLShader* christmasLightWireShader = GetShaderOLD("ChristmasLightsWire");
         christmasLightWireShader->Bind();
@@ -532,7 +532,7 @@ namespace OpenGLRenderer {
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "WorldPosition", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
 
         // Clear the depth buffer so that the mirror world has a clean depth state to test against
         gBuffer->ClearDepthAttachment();

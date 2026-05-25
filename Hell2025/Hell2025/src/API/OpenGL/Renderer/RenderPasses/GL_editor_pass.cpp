@@ -16,7 +16,7 @@ namespace OpenGLRenderer {
         if (!Editor::IsOpen()) return;
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "FinalLighting" });
+        gBuffer->DrawBuffers({ "Lighting" });
 
         gBuffer->Bind();
         gBuffer->SetViewport();

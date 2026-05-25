@@ -42,10 +42,10 @@ namespace OpenGLRenderer {
         if (!hiResShadowMaps) return;
 
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		BlitFrameBuffer(gBuffer, miscFullSizeFbo, "FinalLighting", "FinalLightingCopy", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		BlitFrameBuffer(gBuffer, miscFullSizeFbo, "Lighting", "FinalLightingCopy", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		gBuffer->Bind();
-		gBuffer->DrawBuffers({ "FinalLighting" });
+		gBuffer->DrawBuffers({ "Lighting" });
 
 		shader->Bind();
         shader->SetInt("u_tileXCount", GetTileCountX());
@@ -162,7 +162,7 @@ namespace OpenGLRenderer {
 		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 
 		gBuffer->Bind();
-		gBuffer->DrawBuffers({ "FinalLighting" });
+		gBuffer->DrawBuffers({ "Lighting" });
 
 		shader->Bind();
 

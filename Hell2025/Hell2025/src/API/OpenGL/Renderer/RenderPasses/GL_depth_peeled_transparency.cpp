@@ -157,7 +157,7 @@ namespace OpenGLRenderer {
 
 					OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 					glActiveTexture(GL_TEXTURE6);
-					glBindTexture(GL_TEXTURE_2D, gBuffer->GetColorAttachmentHandleByName("FinalLighting"));
+					glBindTexture(GL_TEXTURE_2D, gBuffer->GetColorAttachmentHandleByName("Lighting"));
 					glActiveTexture(GL_TEXTURE7);
 					glBindTexture(GL_TEXTURE_2D, gBuffer->GetDepthAttachmentHandle());
 
@@ -196,7 +196,7 @@ namespace OpenGLRenderer {
 		if (!shader) return;
 
 		shader->Bind();
-		BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), GL_READ_WRITE, GL_RGBA16F);
+		BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
 		BindImageTexture(1 , depthPeeledTransparencyFbo->GetColorAttachmentHandleByName("Color"), GL_READ_ONLY, GL_RGBA16F);
 
 		int width = gBuffer->GetWidth();

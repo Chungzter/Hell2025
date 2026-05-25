@@ -82,7 +82,6 @@ namespace OpenGLRenderer {
         glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("Normal"));
         glBindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("RMA"));
         glBindTextureUnit(3, gBuffer->GetDepthAttachmentHandle());
-        glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("WorldPosition"));
         glBindTextureUnit(6, gBuffer->GetColorAttachmentHandleByName("Emissive"));
         glBindTextureUnit(7, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
         glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
@@ -100,7 +99,7 @@ namespace OpenGLRenderer {
         BindSSBO(8, "ChristmasLightInstances");
         BindSSBO(9, "ChristmasLightIndices");
 
-        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("FinalLighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 
         glDispatchCompute(gBuffer->GetWidth() / TILE_SIZE, gBuffer->GetHeight() / TILE_SIZE, 1);
     }

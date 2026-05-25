@@ -210,7 +210,7 @@ namespace OpenGLRenderer {
 
 		OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 		gBuffer->Bind();
-		gBuffer->DrawBuffer("FinalLighting");
+		gBuffer->DrawBuffer("Lighting");
 
 		BindShader("DebugLightAABB");
 

@@ -34,7 +34,7 @@ namespace OpenGLRenderer {
             blitRect.y0 = gBufferSpaceCooords.gpuTopPixel;
             blitRect.y1 = gBufferSpaceCooords.gpuBottomPixel;
 
-            GaussianBlur(gBuffer, gBuffer, "FinalLighting", "FinalLighting", blitRect, blitRect, 5, 1);
+            GaussianBlur(gBuffer, gBuffer, "Lighting", "Lighting", blitRect, blitRect, 5, 1);
         }
     }
 
@@ -47,7 +47,7 @@ namespace OpenGLRenderer {
         if (!shader) return;
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "FinalLighting" });
+        gBuffer->DrawBuffers({ "Lighting" });
 
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
