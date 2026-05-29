@@ -10,7 +10,7 @@ namespace OpenGLRenderer {
     // 3. FXAA
 
     void ToneMapping() {
-        ProfilerOpenGLZoneFunction();
+        //ProfilerOpenGLZoneFunction();
 
         OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& scratchFbo = GetFrameBuffer("Scratch");

@@ -37,6 +37,7 @@ namespace World {
     Hell::SlotMap<HousePlane> g_housePlanes;
     Hell::SlotMap<Ladder> g_ladders;
     Hell::SlotMap<PickUp> g_pickUps;
+    Hell::SlotMap<PictureFrame> g_pictureFrames;
     Hell::SlotMap<PowerPoleSet> g_powerPoleSets;
     Hell::SlotMap<Staircase> g_staircases;
     Hell::SlotMap<TrimSet> g_trimSets;
@@ -56,14 +57,13 @@ namespace World {
     std::vector<Light> g_lights;
     std::vector<MapInstance> g_mapInstances;
     std::vector<Mermaid> g_mermaids;
-    std::vector<PictureFrame> g_pictureFrames;
     std::vector<Piano> g_pianos;
     std::vector<Road> g_roads;
     std::vector<Shark> g_sharks;
     std::vector<SpawnPoint> g_spawnCampaignPoints;
     std::vector<SpawnPoint> g_spawnDeathmatchPoints;
     std::vector<Transform> g_doorAndWindowCubeTransforms;
-    std::vector<Tree> g_trees;
+    //std::vector<Tree> g_trees;
     std::vector<VolumetricBloodSplatter> g_volumetricBloodSplatters;
 
     std::vector<GPUAABB> g_dirtyDoorAABBS;
@@ -165,7 +165,7 @@ namespace World {
             i++;
         }
 
-        RecreateHouseMesh();
+        RecreateHouseGeometryOLD();
 
         //GlobalIllumination::SetGlobalIlluminationStructuresDirtyState(true);
 
@@ -261,7 +261,7 @@ namespace World {
     void LoadSingleHouse(const std::string& houseName) {
         ResetWorld();
         LoadHouseInstance(houseName, SpawnOffset());
-        RecreateHouseMesh();
+        RecreateHouseGeometryOLD();
     }
 
     void LoadHouseInstance(const std::string& houseName, SpawnOffset spawnOffset) {
@@ -391,9 +391,9 @@ namespace World {
         for (GameObject& gameObject : g_gameObjects) {
             gameObject.BeginFrame();
         }
-        for (Tree& tree : g_trees) {
-            tree.BeginFrame();
-        }
+        //for (Tree& tree : g_trees) {
+        //    tree.BeginFrame();
+        //}
     }
 
     void EndFrame() {
@@ -531,14 +531,14 @@ namespace World {
         return nullptr;
     }
 
-    Tree* GetTreeByIndex(int32_t index) {
-        if (index >= 0 && index < g_trees.size()) {
-            return &g_trees[index];
-        }
-        else {
-            return nullptr;
-        }
-    }
+    //Tree* GetTreeByIndex(int32_t index) {
+    //    if (index >= 0 && index < g_trees.size()) {
+    //        return &g_trees[index];
+    //    }
+    //    else {
+    //        return nullptr;
+    //    }
+    //}
 
     PianoKey* GetPianoKeyByObjectId(uint64_t objectId) {
         for (Piano& piano : World::GetPianos()) {
@@ -632,9 +632,9 @@ namespace World {
             staircase->SetPosition(position);
         }
 
-        if (Tree* tree = World::GetTreeByObjectId(objectId)) {
-            tree->SetPosition(position);
-        }
+        //if (Tree* tree = World::GetTreeByObjectId(objectId)) {
+        //    tree->SetPosition(position);
+        //}
 
         if (Wall* wall = World::GetWallByObjectId(objectId)) {
             wall->UpdateWorldSpaceCenter(position);
@@ -689,51 +689,61 @@ namespace World {
             g_animatedGameObjects.erase(objectId);
             return true;
         }
+
         if (g_christmasLightSets.contains(objectId)) {
             g_christmasLightSets.get(objectId)->CleanUp();
             g_christmasLightSets.erase(objectId);
             return true;
         }
+
         if (g_doors.contains(objectId)) {
             g_doors.get(objectId)->CleanUp();
             g_doors.erase(objectId);
             return true;
         }
+
         if (g_fences.contains(objectId)) {
             g_fences.get(objectId)->CleanUp();
             g_fences.erase(objectId);
             return true;
         }
+
         if (g_fireplaces.contains(objectId)) {
             g_fireplaces.get(objectId)->CleanUp();
             g_fireplaces.erase(objectId);
             return true;
         }
+
         if (g_genericObjects.contains(objectId)) {
             g_genericObjects.get(objectId)->CleanUp();
             g_genericObjects.erase(objectId);
             return true;
         }
+
         if (g_housePlanes.contains(objectId)) {
             g_housePlanes.get(objectId)->CleanUp();
             g_housePlanes.erase(objectId);
             return true;
         }
+
         if (g_powerPoleSets.contains(objectId)) {
             g_powerPoleSets.get(objectId)->CleanUp();
             g_powerPoleSets.erase(objectId);
             return true;
         }
+
         if (g_staircases.contains(objectId)) {
             g_staircases.get(objectId)->CleanUp();
             g_staircases.erase(objectId);
             return true;
         }
+
         if (g_trimSets.contains(objectId)) {
             g_trimSets.get(objectId)->CleanUp();
             g_trimSets.erase(objectId);
             return true;
         }
+
         if (g_pickUps.contains(objectId)) {
             // Dirty any lights within range... maybe put this somewhere else
             PickUp* pickUp = GetPickUpByObjectId(objectId);
@@ -748,16 +758,25 @@ namespace World {
             g_pickUps.erase(objectId);
             return true;
         }
+        
+        if (g_pictureFrames.contains(objectId)) {
+            g_pictureFrames.get(objectId)->CleanUp();
+            g_pictureFrames.erase(objectId);
+            return true;
+        }
+
         if (g_ladders.contains(objectId)) {
             g_ladders.get(objectId)->CleanUp();
             g_ladders.erase(objectId);
             return true;
         }
+
         if (g_walls.contains(objectId)) {
             g_walls.get(objectId)->CleanUp();
             g_walls.erase(objectId);
             return true;
         }
+
         if (g_windows.contains(objectId)) {
             g_windows.get(objectId)->CleanUp();
             g_windows.erase(objectId);
@@ -772,16 +791,16 @@ namespace World {
             }
         }
 
-        for (int i = 0; i < g_trees.size(); i++) {
-            if (g_trees[i].GetObjectId() == objectId) {
-                Logging::Debug() << "Deleted " << g_trees[i].GetEditorName();
-                g_trees[i].CleanUp();
-                g_trees.erase(g_trees.begin() + i);
-                return true;
-            }
-        }
+        //for (int i = 0; i < g_trees.size(); i++) {
+        //    if (g_trees[i].GetObjectId() == objectId) {
+        //        Logging::Debug() << "Deleted " << g_trees[i].GetEditorName();
+        //        g_trees[i].CleanUp();
+        //        g_trees.erase(g_trees.begin() + i);
+        //        return true;
+        //    }
+        //}
 
-        Logging::Error() << "World::RemoveObject() Failed to remove object " << objectId << ", check you have implemented this type!\n";
+        Logging::Error() << "World::RemoveObject() Failed to remove object " << objectId << ", check you have implemented type " << Util::EnumToString(UniqueID::GetType(objectId)) << "\n";
         return false;
     }
 
@@ -862,7 +881,7 @@ namespace World {
         for (Staircase& staircase: g_staircases)                        staircase.CleanUp();
         for (SpawnPoint& spawnPoint : g_spawnCampaignPoints)            spawnPoint.CleanUp();
         for (SpawnPoint& spawnPoint : g_spawnDeathmatchPoints)          spawnPoint.CleanUp();
-        for (Tree& tree : g_trees)                                      tree.CleanUp();
+        //for (Tree& tree : g_trees)                                      tree.CleanUp();
         for (TrimSet& trimSet : g_trimSets)                             trimSet.CleanUp();
         for (Wall& wall : g_walls)                                      wall.CleanUp();
         for (Window& window : g_windows)                                window.CleanUp();
@@ -892,7 +911,7 @@ namespace World {
         g_sharks.clear();
         g_spawnCampaignPoints.clear();
         g_spawnDeathmatchPoints.clear();
-        g_trees.clear();
+        //g_trees.clear();
         g_trimSets.clear();
         g_walls.clear();
         g_windows.clear();
@@ -1002,6 +1021,12 @@ namespace World {
         return id;
     }
 
+    uint64_t AddPictureFrame(PictureFrameCreateInfo createInfo, SpawnOffset spawnOffset) {
+        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::PICTURE_FRAME);
+        g_pictureFrames.emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
     uint64_t AddPowerPoleSet(PowerPoleSetCreateInfo createInfo, SpawnOffset spawnOffset) {
         const uint64_t id = UniqueID::GetNextObjectId(ObjectType::POWER_POLE_SET);
         g_powerPoleSets.emplace_with_id(id, id, createInfo, spawnOffset);
@@ -1059,7 +1084,7 @@ namespace World {
         g_bulletCasings.push_back(BulletCasing(createInfo));
     }
 
-    void AddDecal2(Decal2CreateInfo createInfo) {
+    void AddDecal2(DecalCreateInfo createInfo) {
         g_newDecals.push_back(Decal(createInfo));
     }
 
@@ -1107,23 +1132,15 @@ namespace World {
         piano.Init(createInfo);
     }
 
-
-    void AddPictureFrame(PictureFrameCreateInfo createInfo, SpawnOffset spawnOffset) {
-        createInfo.position += spawnOffset.translation;
-
-        PictureFrame& pictureFrame = g_pictureFrames.emplace_back();
-        pictureFrame.Init(createInfo);
-    }
-
-    void AddTree(TreeCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Logging::Warning() << "World::AddTree(...) failed cause you removed the that did it, to stop some whack crash";
-        createInfo.position += spawnOffset.translation;
-
-        if (createInfo.editorName == UNDEFINED_STRING) {
-            createInfo.editorName = Editor::GetNextAvailableTreeName(createInfo.type);
-        }
-        g_trees.push_back(Tree(createInfo));
-    }
+    //void AddTree(TreeCreateInfo createInfo, SpawnOffset spawnOffset) {
+    //    Logging::Warning() << "World::AddTree(...) failed cause you removed the that did it, to stop some whack crash";
+    //    createInfo.position += spawnOffset.translation;
+    //
+    //    if (createInfo.editorName == UNDEFINED_STRING) {
+    //        createInfo.editorName = Editor::GetNextAvailableTreeName(createInfo.type);
+    //    }
+    //    g_trees.push_back(Tree(createInfo));
+    //}
 
     void AddVATBlood(glm::vec3 position, glm::vec3 front) {
         int maxAllowed = 4;
@@ -1283,7 +1300,7 @@ namespace World {
             << "Pianos:         " << g_pianos.size() << "\n"
             << "Picture Frames: " << g_pictureFrames.size() << "\n"
             << "Planes:         " << g_housePlanes.size() << "\n"
-            << "Trees:          " << g_trees.size() << "\n"
+            //<< "Trees:          " << g_trees.size() << "\n"
             << "Walls:          " << g_walls.size() << "\n"
             << "Windows:        " << g_windows.size() << "\n"
             << "";
@@ -1353,15 +1370,6 @@ namespace World {
         return nullptr;
     }
 
-
-    Tree* GetTreeByObjectId(uint64_t objectId) {
-        for (Tree& tree : g_trees) {
-            if (tree.GetObjectId() == objectId) {
-                return &tree;
-            }
-        }
-        return nullptr;
-    }
     Window* GetWindowByObjectId(uint64_t objectId) {
         for (Window& window : g_windows) {
             if (window.GetObjectId() == objectId) {
@@ -1398,6 +1406,7 @@ namespace World {
     Hell::SlotMap<HousePlane>& GetHousePlanes()                 { return g_housePlanes; }
     Hell::SlotMap<Ladder>& GetLadders()                         { return g_ladders; }
     Hell::SlotMap<PickUp>& GetPickUps()                         { return g_pickUps; }
+    Hell::SlotMap<PictureFrame>& GetPictureFrames()             { return g_pictureFrames; }
     Hell::SlotMap<PowerPoleSet>& GetPowerPoleSets()             { return g_powerPoleSets; }
     Hell::SlotMap<Staircase>& GetStaircases()                   { return g_staircases; }
     Hell::SlotMap<TrimSet>& GetTrimSets()                       { return g_trimSets; }
@@ -1417,13 +1426,12 @@ namespace World {
     std::vector<MapInstance>& GetMapInstances()                         { return g_mapInstances; }
     std::vector<Mermaid>& GetMermaids()                                 { return g_mermaids; }
     std::vector<Piano>& GetPianos()                                     { return g_pianos; }
-    std::vector<PictureFrame>& GetPictureFrames()                       { return g_pictureFrames; }
     std::vector<SpawnPoint>& GetCampaignSpawnPoints()                   { return g_spawnCampaignPoints; }
     std::vector<SpawnPoint>& GetDeathmatchSpawnPoints()                 { return g_spawnDeathmatchPoints; }
     std::vector<Transform>& GetDoorAndWindowCubeTransforms()            { return g_doorAndWindowCubeTransforms; }
     std::vector<Road>& GetRoads()                                       { return g_roads; }
     std::vector<Shark>& GetSharks()                                     { return g_sharks; }
-    std::vector<Tree>& GetTrees()                                       { return g_trees; }
+    //std::vector<Tree>& GetTrees()                                       { return g_trees; }
     std::vector<VolumetricBloodSplatter>& GetVolumetricBloodSplatters() { return g_volumetricBloodSplatters; }
 
     std::vector<GPULight>& GetGPULightsLowRes()                 { return g_gpuLightsLowRes; }

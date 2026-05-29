@@ -266,12 +266,12 @@ namespace Editor {
                 }
             }
 
-            if (GetSelectedObjectType() == ObjectType::TREE) {
-                Tree* tree = World::GetTreeByObjectId(GetSelectedObjectId());
-                if (tree) {
-                    Gizmo::SetPosition(tree->GetPosition());
-                }
-            }
+            //if (GetSelectedObjectType() == ObjectType::TREE) {
+            //    Tree* tree = World::GetTreeByObjectId(GetSelectedObjectId());
+            //    if (tree) {
+            //        Gizmo::SetPosition(tree->GetPosition());
+            //    }
+            //}
             UpdateOutliner();
         }
     }

@@ -178,7 +178,7 @@ void HousePlane::SubmitRenderItem() {
     renderItem.baseIndex = meshV2->baseIndex;
 
 	RenderDataManager::SubmitHouseRenderItemOLD(renderItemOLD);
-	RenderDataManager::SubmitHouseRenderItem(renderItem);
+	RenderDataManager::SubmitRenderItemProcedural(renderItem);
 }
 
 void HousePlane::DrawVertices(glm::vec4 color) {

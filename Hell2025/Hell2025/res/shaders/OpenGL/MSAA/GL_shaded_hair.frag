@@ -140,7 +140,7 @@ void main() {
     float roughness = rma.r;
     float metallic = rma.g;
     float ao = rma.b;
-    vec3 gammaBaseColor = pow(baseColor.rgb, vec3(2.2));
+    vec3 linearBaseColor = pow(baseColor.rgb, vec3(2.2));
 
     vec3 V = normalize(viewPos - WorldPos.xyz);
     vec3 n = normalize(Normal);
@@ -156,7 +156,7 @@ void main() {
     vec3 t = BuildHairTangentFromFlow(t_mesh, b_mesh, flow);
     vec3 jitteredT = SafeNormalize(t + n * (strandID - 0.5) * u_specularJitter, t);
 
-    vec3 hairBaseColor = gammaBaseColor * mix(u_rootColorFloor, u_tipColorFloor, rootFactor);
+    vec3 hairBaseColor = linearBaseColor * mix(u_rootColorFloor, u_tipColorFloor, rootFactor);
     float hairAO = ao * mix(u_rootAOFloor, u_tipAOFloor, rootFactor);
 
     const float u_specularAARoughnessPerMip = 0.5;

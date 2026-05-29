@@ -68,15 +68,15 @@ namespace OpenGLRenderer {
 
         float viewportWidth = gBuffer->GetWidth();
         float viewportHeight = gBuffer->GetHeight();
-        std::vector<float>& cascadeLevels = GetShadowCascadeLevels();
 
-        shader->SetVec3("u_moonlightDir", Game::GetMoonlightDirection());
-        shader->SetFloat("farPlane", Config::GetFarPlane());
+        std::vector<float>& cascadeLevels = GetShadowCascadeLevels();
+        shader->SetFloat("u_cascadeFarPlane", 256.0f); // ???
+        shader->SetFloat("u_cascadePlaneDistances[0]", cascadeLevels[0]);
+        shader->SetFloat("u_cascadePlaneDistances[1]", cascadeLevels[1]);
+        shader->SetFloat("u_cascadePlaneDistances[2]", cascadeLevels[2]);
+        shader->SetFloat("u_cascadePlaneDistances[3]", cascadeLevels[3]);
+
         shader->SetVec2("u_viewportSize", glm::vec2(viewportWidth, viewportHeight));
-        shader->SetInt("cascadeCount", cascadeLevels.size() + 1);
-        for (size_t i = 0; i < cascadeLevels.size(); ++i) {
-            shader->SetFloat("u_cascadePlaneDistances[" + std::to_string(i) + "]", cascadeLevels[i]);
-        }
 
         glBindTextureUnit(0, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
         glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("Normal"));

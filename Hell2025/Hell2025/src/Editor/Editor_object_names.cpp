@@ -12,20 +12,14 @@ namespace Editor {
                 }
             }
         }
-        if (objectType == ObjectType::DOOR) {
+        else if (objectType == ObjectType::DOOR) {
             for (const Door& object : World::GetDoors()) {
                 if (object.GetEditorName() == desiredName) {
                     return false;
                 }
             }
         }
-        if (objectType == ObjectType::TREE) {
-            for (const Tree& tree : World::GetTrees()) {
-                if (tree.GetEditorName() == desiredName) {
-                    return false;
-                }
-            }
-        }
+        
         else if (objectType == ObjectType::HOUSE_PLANE) {
             for (const HousePlane& housePlane : World::GetHousePlanes()) {
                 if (housePlane.GetEditorName() == desiredName) {
@@ -181,19 +175,6 @@ namespace Editor {
                 names.push_back(housePlane.GetEditorName());
             }
         }
-        return names;
-    }
-
-    const std::vector<std::string>& GetTreeNames() {
-        static std::vector<std::string> names;
-        
-        names.clear();
-        names.reserve(World::GetTrees().size());
-
-        for (const Tree& tree : World::GetTrees()) {
-            names.push_back(tree.GetEditorName());
-        }
-
         return names;
     }
 

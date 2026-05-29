@@ -340,7 +340,7 @@ namespace BackEnd {
             if (Input::KeyPressed(HELL_KEY_RIGHT_SHIFT))  Renderer::ToggleOverrideState(RendererOverrideState::INDIRECT_DIFFUSE);
             //if (Input::KeyPressed(HELL_KEY_RIGHT_SHIFT))  Renderer::ToggleOverrideState(RendererOverrideState::DEPTH);
             if (Input::KeyPressed(HELL_KEY_ENTER))        Renderer::ToggleOverrideState(RendererOverrideState::WORLD_POSITION);
-            if (Input::KeyPressed(HELL_KEY_V))            Renderer::ToggleOverrideState(RendererOverrideState::VISIBILITY);
+            if (Input::KeyPressed(HELL_KEY_V))            Renderer::ToggleOverrideState(RendererOverrideState::VIS_BUFFER);
             if (Input::KeyPressed(HELL_KEY_DELETE))       Renderer::ToggleOverrideState(RendererOverrideState::VELOCITY);
             if (Input::KeyPressed(HELL_KEY_APOSTROPHE))   Renderer::TogglePointCloudGrid();
             if (Input::KeyPressed(HELL_KEY_BACKSLASH))    Renderer::NextRendererOverrideState();

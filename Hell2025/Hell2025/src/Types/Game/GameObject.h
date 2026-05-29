@@ -37,11 +37,10 @@ struct GameObject {
     glm::vec3 GetScale() const;
     const glm::mat4 GetModelMatrix();
 
+    MeshNodes& GetMeshNodes()                                           { return m_meshNodes; }
+
     const GameObjectCreateInfo& GetCreateInfo() const                   { return m_createInfo; }
     const std::vector<RenderItem>& GetRenderItems() const               { return m_meshNodes.GetRenderItems(); }
-    const std::vector<RenderItem>& GetRenderItemsBlended()const         { return m_meshNodes.GetRenderItemsBlended(); }
-    const std::vector<RenderItem>& GetRenderItemsAlphaDiscarded() const { return m_meshNodes.GetRenderItemsAlphaDiscarded(); }
-    const std::vector<RenderItem>& GetRenderItemsHair() const      { return m_meshNodes.GetRenderItemsHair(); }
     const uint64_t GetObjectId() const                                  { return m_objectId; }
 
 private:

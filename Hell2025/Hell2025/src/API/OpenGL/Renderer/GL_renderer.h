@@ -87,7 +87,6 @@ namespace OpenGLRenderer {
     void ChristmasLightCullingPass();
     void DebugPass();
     void DebugViewPass();
-    void DecalPass();
     void DecalPaintingPass();
     void DownSampleFinalImage();
     void EditorPass();
@@ -129,6 +128,8 @@ namespace OpenGLRenderer {
     void ReserveLightAABBSSBOStorage();
     void DebugDrawLightAABBs();
 
+    void GaussianBlur();
+
 
 
     // Requiem functions
@@ -139,11 +140,18 @@ namespace OpenGLRenderer {
 
     void MaterialResolvePass();
     void MaterialResolveSkinnedPass();
-    void MaterialResolveSkinnedHairPass();
     void MaterialResolveProceduralPass();
 
-    void RenderFullscreenTriangle();
+    void HairLightingSkinnedResolvePass();
+    void HairDepthPrep();
+    void HairDepthPrePassRE();
+    void HairForwardLightingPassRE();
+    void HairCompositeRE();
+
     void PostProcessingPassRE();
+
+    void BindShadowMapsRE();
+    void RenderFullscreenTriangle();
 
 
 

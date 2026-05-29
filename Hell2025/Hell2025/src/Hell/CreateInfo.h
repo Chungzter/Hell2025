@@ -89,6 +89,7 @@ struct RigidStaticCreateInfo {
 struct MeshNodeCreateInfo {
     std::string meshName;
     std::string materialName = UNDEFINED_STRING;
+    std::string baseColorOverrideTextureName = UNDEFINED_STRING;
     BlendingMode blendingMode = BlendingMode::DEFAULT;
     OpenableCreateInfo openable;
     RigidDynamicCreateInfo rigidDynamic;
@@ -136,16 +137,6 @@ struct ChristmasTreeCreateInfo {
 };
 
 struct DecalCreateInfo {
-    DecalType decalType;
-    PhysicsType parentPhysicsType = PhysicsType::UNDEFINED;
-    ObjectType parentObjectType = ObjectType::UNDEFINED;
-    glm::vec3 surfaceHitPosition = glm::vec3(0.0f);
-    glm::vec3 surfaceHitNormal = glm::vec3(0.0f);
-    uint64_t parentPhysicsId = 0;
-    uint64_t parentObjectId = 0;
-};
-
-struct Decal2CreateInfo {
     uint32_t localMeshNodeIndex = 0;
     uint64_t parentObjectId = 0;
     glm::vec3 surfaceHitPosition = glm::vec3(0.0f);

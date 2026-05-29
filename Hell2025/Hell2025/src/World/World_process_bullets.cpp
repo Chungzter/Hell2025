@@ -174,7 +174,7 @@ namespace World {
 
                 // Create the decal
                 if (createDecal) {
-                    Decal2CreateInfo decalCreateInfo;
+                    DecalCreateInfo decalCreateInfo;
                     decalCreateInfo.surfaceHitPosition = hitPosition;
                     decalCreateInfo.parentObjectId = objectId;
                     decalCreateInfo.localMeshNodeIndex = localMeshNodeIndex;

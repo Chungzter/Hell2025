@@ -165,6 +165,9 @@ float SpotlightShadowCalculationFast(vec4 fragPosLightSpace, vec3 normal, vec3 l
     return shadow;
 }
 
+
+
+
 vec3 ApplyCookie(mat4 LightViewProj, vec3 worldPos, vec3 lightPos, vec3 lightColor, float maxDistance, sampler2D cookieTexture) {
    vec4 lightSpacePos = LightViewProj * vec4(worldPos, 1.0);
     vec2 cookieUV = lightSpacePos.xy / lightSpacePos.w * 0.5 + 0.5;
@@ -245,6 +248,45 @@ float ShadowCalculationFast(int lightIndex, vec3 lightPos, float lightRadius, ve
     // Return the final shadow factor (1 means fully lit, 0 means fully in shadow)
     return 1.0 - shadow;
 }
+
+
+float ShadowCalculationMedium(int lightIndex, vec3 lightPos, float lightRadius, vec3 fragPos, vec3 viewPos, vec3 Normal, samplerCubeArray shadowCubeMapArray) {
+    vec3 lightToFrag = fragPos - lightPos;
+    vec3 L = normalize(-lightToFrag);
+    float currentDepth = length(lightToFrag);
+    float far_plane = lightRadius;
+    float shadow = 0.0;
+
+    // Bias
+    float cosTheta = clamp(dot(Normal, L), 0.0, 1.0);
+    float bias = max(0.05 * (1.0 - cosTheta), 0.005); 
+
+    int samples = 8;
+    float viewDistance = length(viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 200.0;
+
+    for (int i = 0; i < samples; ++i) {
+        // Sample with offset
+        float closestDepth = texture(shadowCubeMapArray, vec4(lightToFrag + gridSamplingDisk[i] * diskRadius, lightIndex)).r;
+        closestDepth *= far_plane;
+
+        if (currentDepth - bias > closestDepth) {
+            shadow += 1.0;
+        }
+    }
+
+    shadow /= float(samples);
+    return 1.0 - shadow;
+}
+
+
+
+
+
+
+
+
+
 
 //vec3 GetDirectionalLighting(vec3 WorldPos, vec3 Normal, vec3 baseColor, float roughness, float metallic, vec3 viewPos, vec3 lightDir, vec3 lightColor, float strength, float fresnelReflect) {
 //	vec3 viewDir = normalize(viewPos - WorldPos);

@@ -26,7 +26,7 @@ void main() {
     float alpha = texture(sampler2D(textureSamplers[renderItem.baseColorTextureIndex]), v_uv).a;
 
     bool useStochasticDiscard = false;
-    float hardAlphaCutoff = 0.5;
+    float hardAlphaCutoff = 0.25;
 
     if (useStochasticDiscard) {
         ivec2 pixelCoords = ivec2(gl_FragCoord.xy);

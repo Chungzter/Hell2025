@@ -40,7 +40,7 @@ void IESProfile::Load(const FileInfo& fileInfo, int32_t textureIndex) {
     m_hScale = (hRange != 0.0f) ? 1.0f / hRange : 0.0f;
     m_hBias = -GetMinHorizontalAngle() * m_hScale;
 
-    PrintDebugInfo();
+    //PrintDebugInfo();
 }
 
 void IESProfile::PrintDebugInfo() {

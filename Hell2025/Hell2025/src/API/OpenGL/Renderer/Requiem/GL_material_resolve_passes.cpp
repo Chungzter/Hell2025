@@ -25,23 +25,23 @@ namespace OpenGLRenderer {
         BindSSBO(4, "Samplers");
         BindSSBO(5, "RendererData");
 
-        OpenGLRasterizerState resolveState;
-        resolveState.depthTestEnabled = false;
-        resolveState.blendEnable = false;
-        resolveState.cullfaceEnable = false;
-        resolveState.depthMask = false;
-        resolveState.colorMask = true;
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
 
-        resolveState.stencilTestEnabled = true;
-        resolveState.stencilFunc = GL_EQUAL;
-        resolveState.stencilRef = STENCIL_REF_STATIC;
-        resolveState.stencilReadMask = 0xFF;
-        resolveState.stencilWriteMask = 0x00;
-        resolveState.stencilFailOp = GL_KEEP;
-        resolveState.stencilDepthFailOp = GL_KEEP;
-        resolveState.stencilPassOp = GL_KEEP;
+        state.stencilTestEnabled = true;
+        state.stencilFunc = GL_EQUAL;
+        state.stencilRef = STENCIL_BIT_STATIC;
+        state.stencilReadMask = 0xFF;
+        state.stencilWriteMask = 0x00;
+        state.stencilFailOp = GL_KEEP;
+        state.stencilDepthFailOp = GL_KEEP;
+        state.stencilPassOp = GL_KEEP;
 
-        SetRasterizerState(resolveState);
+        SetRasterizerState(state);
         RenderFullscreenTriangle();
     }
 
@@ -65,23 +65,27 @@ namespace OpenGLRenderer {
         BindSSBO(4, "Samplers");
         BindSSBO(5, "RendererData");
 
-        OpenGLRasterizerState resolveState;
-        resolveState.depthTestEnabled = false;
-        resolveState.blendEnable = false;
-        resolveState.cullfaceEnable = false;
-        resolveState.depthMask = false;
-        resolveState.colorMask = true;
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
 
-        resolveState.stencilTestEnabled = true;
-        resolveState.stencilFunc = GL_EQUAL;
-        resolveState.stencilRef = STENCIL_REF_SKINNED;
-        resolveState.stencilReadMask = 0xFF;
-        resolveState.stencilWriteMask = 0x00;
-        resolveState.stencilFailOp = GL_KEEP;
-        resolveState.stencilDepthFailOp = GL_KEEP;
-        resolveState.stencilPassOp = GL_KEEP;
+        state.stencilTestEnabled = true;
+        state.stencilFunc = GL_EQUAL;
+        state.stencilReadMask = 0xFF;
+        state.stencilWriteMask = 0x00;
+        state.stencilFailOp = GL_KEEP;
+        state.stencilDepthFailOp = GL_KEEP;
+        state.stencilPassOp = GL_KEEP;
 
-        SetRasterizerState(resolveState);
+        state.stencilRef = STENCIL_BIT_SKINNED;
+        SetRasterizerState(state);
+        RenderFullscreenTriangle();
+
+        state.stencilRef = STENCIL_BIT_SKINNED_HAIR;
+        SetRasterizerState(state);
         RenderFullscreenTriangle();
     }
 
@@ -105,35 +109,35 @@ namespace OpenGLRenderer {
         BindSSBO(4, "Samplers");
         BindSSBO(5, "RendererData");
 
-        OpenGLRasterizerState resolveState;
-        resolveState.depthTestEnabled = false;
-        resolveState.blendEnable = false;
-        resolveState.cullfaceEnable = false;
-        resolveState.depthMask = false;
-        resolveState.colorMask = true;
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
 
-        resolveState.stencilTestEnabled = true;
-        resolveState.stencilFunc = GL_EQUAL;
-        resolveState.stencilRef = STENCIL_REF_PROCEDUAL;
-        resolveState.stencilReadMask = 0xFF;
-        resolveState.stencilWriteMask = 0x00;
-        resolveState.stencilFailOp = GL_KEEP;
-        resolveState.stencilDepthFailOp = GL_KEEP;
-        resolveState.stencilPassOp = GL_KEEP;
+        state.stencilTestEnabled = true;
+        state.stencilFunc = GL_EQUAL;
+        state.stencilRef = STENCIL_BIT_PROCEDUAL;
+        state.stencilReadMask = 0xFF;
+        state.stencilWriteMask = 0x00;
+        state.stencilFailOp = GL_KEEP;
+        state.stencilDepthFailOp = GL_KEEP;
+        state.stencilPassOp = GL_KEEP;
 
-        SetRasterizerState(resolveState);
+        SetRasterizerState(state);
         RenderFullscreenTriangle();
     }
 
-    void MaterialResolveSkinnedHairPass() {
+    void HairLightingSkinnedResolvePass() {
         ProfilerOpenGLZoneFunction();
 
         OpenGLFrameBuffer& gbufferFbo = GetFrameBuffer("GBufferRE");
         gbufferFbo.Bind();
         gbufferFbo.SetViewport();
-        gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
+        gbufferFbo.DrawBuffers({ "Lighting", "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
 
-        BindShader("MaterialResolveSkinning");
+        BindShader("HairLightingResolve");
 
         BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
@@ -145,23 +149,23 @@ namespace OpenGLRenderer {
         BindSSBO(4, "Samplers");
         BindSSBO(5, "RendererData");
 
-        OpenGLRasterizerState resolveState;
-        resolveState.depthTestEnabled = false;
-        resolveState.blendEnable = false;
-        resolveState.cullfaceEnable = false;
-        resolveState.depthMask = false;
-        resolveState.colorMask = true;
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
 
-        resolveState.stencilTestEnabled = true;
-        resolveState.stencilFunc = GL_EQUAL;
-        resolveState.stencilRef = STENCIL_REF_SKINNED_HAIR;
-        resolveState.stencilReadMask = 0xFF;
-        resolveState.stencilWriteMask = 0x00;
-        resolveState.stencilFailOp = GL_KEEP;
-        resolveState.stencilDepthFailOp = GL_KEEP;
-        resolveState.stencilPassOp = GL_KEEP;
+        state.stencilTestEnabled = true;
+        state.stencilFunc = GL_EQUAL;
+        state.stencilRef = STENCIL_BIT_SKINNED_HAIR;
+        state.stencilReadMask = 0xFF;
+        state.stencilWriteMask = 0x00;
+        state.stencilFailOp = GL_KEEP;
+        state.stencilDepthFailOp = GL_KEEP;
+        state.stencilPassOp = GL_KEEP;
 
-        SetRasterizerState(resolveState);
+        SetRasterizerState(state);
         RenderFullscreenTriangle();
     }
 }

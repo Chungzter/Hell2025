@@ -63,10 +63,10 @@ namespace OpenGLRenderer {
             OpenGLRenderer::SetViewport(gBuffer, viewport);
 
             if (BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.house[i], true, false);
+                SplitMultiDrawIndirect(shader, drawInfoSet.procedural[i], true, false);
             }
             else {
-                MultiDrawIndirect(drawInfoSet.house[i]);
+                MultiDrawIndirect(drawInfoSet.procedural[i]);
             }
         }
     }
@@ -583,6 +583,9 @@ namespace OpenGLRenderer {
         MeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer();
         OpenGLMeshBuffer& glHouseMeshBuffer = houseMeshBuffer.GetGLMeshBuffer();
 
+        MeshBufferV2& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
+        glBindVertexArray(proceduralMeshBuffer.GetVAO());
+
         glBindVertexArray(glHouseMeshBuffer.GetVAO());
 
         for (int i = 0; i < 4; i++) {
@@ -600,12 +603,27 @@ namespace OpenGLRenderer {
             houseGeometryShader->SetMat4("u_mirrorViewMatrix", mirror->GetViewMatrix(i));
             houseGeometryShader->SetVec4("u_mirrorClipPlane", mirror->GetClipPlane(i));
 
-            const std::vector<HouseRenderItem>& renderItems = RenderDataManager::GetHouseRenderItems();
+            //const std::vector<HouseRenderItem>& renderItems = RenderDataManager::GetHouseRenderItems();
+            //
+            //for (const HouseRenderItem& renderItem : renderItems) {
+            //    int indexCount = renderItem.indexCount;
+            //    int baseVertex = renderItem.baseVertex;
+            //    int baseIndex = renderItem.baseIndex;
+            //
+            //    glActiveTexture(GL_TEXTURE0);
+            //    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+            //    glActiveTexture(GL_TEXTURE1);
+            //    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+            //    glActiveTexture(GL_TEXTURE2);
+            //    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+            //    glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
+            //}
 
-            for (const HouseRenderItem& renderItem : renderItems) {
-                int indexCount = renderItem.indexCount;
-                int baseVertex = renderItem.baseVertex;
-                int baseIndex = renderItem.baseIndex;
+            const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
+            for (const RenderItem& renderItem : renderItems) {
+
+                Mesh* mesh = proceduralMeshBuffer.GetMeshById(renderItem.meshId);
+                if (!mesh) continue;
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
@@ -613,6 +631,11 @@ namespace OpenGLRenderer {
                 glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
                 glActiveTexture(GL_TEXTURE2);
                 glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+
+                int indexCount = mesh->indexCount;
+                int baseVertex = renderItem.baseVertex;
+                int baseIndex = renderItem.baseIndex;
+
                 glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
             }
         }

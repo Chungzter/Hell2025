@@ -1,9 +1,5 @@
 #version 460
 
-#ifndef ENABLE_BINDLESS
-    #define ENABLE_BINDLESS 1
-#endif
-
 #include "../../common/util.glsl"
 #include "../../common/types.glsl"
 #include "../../common/constants.glsl"
@@ -24,20 +20,10 @@ centroid out vec3 v_tangent;
 out flat int v_globalInstanceIndex;
 out flat int v_viewportIndex;
 
-#if !ENABLE_BINDLESS
-uniform int u_viewportIndex;
-uniform int u_globalInstanceIndex;
-#endif
-
 void main() {
-#if ENABLE_BINDLESS
     int instanceOffset = gl_BaseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
     v_globalInstanceIndex = instanceOffset + gl_InstanceID;
     v_viewportIndex = gl_BaseInstance >> VIEWPORT_INDEX_SHIFT;
-#else
-    v_globalInstanceIndex = u_globalInstanceIndex;
-    v_viewportIndex = u_viewportIndex;
-#endif
 
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
     mat4 modelMatrix = renderItem.modelMatrix;

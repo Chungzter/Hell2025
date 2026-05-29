@@ -46,16 +46,16 @@ struct RenderItem {
     uint32_t openableId = 0;
     uint32_t customId = 0;
     int32_t skinned = 0;                // True or false
-    int32_t castShadows = 1;            // True or false
+    uint32_t shadowBit = 0;
 
     float emissiveR = 0.0f;
     float emissiveG = 0.0f;
     float emissiveB = 0.0f;
     int32_t emissiveTextureIndex = -1;
 
-    int baseVertex = 0;
-    int baseIndex = 0;
-    int baseVertexWeight = 0;
+    uint32_t baseVertex = 0;
+    uint32_t baseIndex = 0;
+    uint32_t baseVertexWeight = 0;
     int blockScreenSpaceBloodDecals = 0;  // True or false
 
     int32_t additionalTextureIndex0 = 0;
@@ -66,12 +66,12 @@ struct RenderItem {
     int32_t localMeshNodeIndex = 0;
     int32_t opacityTextureIndex = 0;
     int32_t meshId = 0;
-    int32_t padding2 = 0;
+    int32_t blendingMode = static_cast<int32_t>(BlendingMode::DEFAULT);
 
     float tintColorR = 1.0f;
     float tintColorG = 1.0f;
     float tintColorB = 1.0f;
-    int32_t castCSMShadows = 0;          // True or false
+    int32_t UNUSED = 0;
 };
 
 struct BindlessMeshInstance {
@@ -279,13 +279,13 @@ struct AnimatedTransform {
         glm::vec4 perspective;
         glm::decompose(matrix, scale, rotation, translation, skew, perspective);
     }
-    glm::mat4 to_mat4() {
+    glm::mat4 to_mat4() const {
         glm::mat4 m = glm::translate(glm::mat4(1), translation);
         m *= glm::mat4_cast(rotation);
         m = glm::scale(m, scale);
         return m;
     };
-    glm::vec3 to_forward_vector() {
+    glm::vec3 to_forward_vector() const {
         glm::quat q = glm::quat(rotation);
         return glm::normalize(q * glm::vec3(0.0f, 0.0f, 1.0f));
     }
@@ -381,6 +381,7 @@ struct ViewportData {
 };
 
 struct RendererData {
+    glm::vec4 moonLightDir = glm::vec4(0.0f);
     float nearPlane;
     float farPlane;
     float gBufferWidth;
@@ -424,7 +425,7 @@ struct DrawCommandsSet {
 	std::vector<DrawIndexedIndirectCommand> hair[4];
 	std::vector<DrawIndexedIndirectCommand> standard[4];
 
-	std::vector<DrawIndexedIndirectCommand> house[4];
+	std::vector<DrawIndexedIndirectCommand> procedural[4];
 	std::vector<DrawIndexedIndirectCommand> mirrorRenderItems[4];
 	std::vector<DrawIndexedIndirectCommand> plastic[4];
 

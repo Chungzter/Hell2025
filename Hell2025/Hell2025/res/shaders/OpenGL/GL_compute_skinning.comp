@@ -50,7 +50,10 @@ void main() {
 
     vec3 totalLocalPos = (skinMat * vertexPosition).xyz;
     vec3 totalNormal = normalize(skinMat3 * vertexNormal);
-    vec3 totalTangent = skinMat3 * vertexTangent;
+    //vec3 totalTangent = skinMat3 * vertexTangent;
+    
+    vec3 totalTangent = normalize(skinMat3 * vertexTangent);
+    totalTangent = normalize(totalTangent - totalNormal * dot(totalNormal, totalTangent));
 
     Vertex vertexOut;
     vertexOut.position[0] = totalLocalPos.x;

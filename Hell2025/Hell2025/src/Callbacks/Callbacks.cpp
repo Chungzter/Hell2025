@@ -70,16 +70,6 @@ namespace Callbacks {
         Editor::SetEditorState(EditorState::PLACE_PICTURE_FRAME);
     }
 
-    void BeginAddingTree() {
-        Editor::SetPlantType(TreeType::TREE_LARGE_0);
-        Editor::SetEditorState(EditorState::PLACE_TREE);
-    }
-
-    void BeginAddingBlackBerries() {
-        Editor::SetPlantType(TreeType::BLACK_BERRIES);
-        Editor::SetEditorState(EditorState::PLACE_TREE);
-    }
-
     void BeginAddingWindow() {
         Editor::SetEditorState(EditorState::PLACE_WINDOW);
     }

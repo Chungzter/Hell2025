@@ -13,6 +13,8 @@ layout(location = 1) out vec2 v_uv;
 readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { RenderItem renderItems[]; };
 
+uniform bool u_depthOffset;
+
 void main() {
     int viewportIndex = gl_BaseInstance >> VIEWPORT_INDEX_SHIFT;
     int instanceOffset = gl_BaseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
@@ -23,7 +25,12 @@ void main() {
     mat4 modelMatrix = renderItem.modelMatrix;
 
     vec4 worldPos = modelMatrix * vec4(a_position, 1.0);
+
     gl_Position = projectionView * worldPos;
+    
+    if (u_depthOffset) {
+        gl_Position.z -= 0.0001;
+    }
     
     v_uv = a_uv;
 }

@@ -13,8 +13,8 @@ uniform int u_viewportIndex;
 uniform mat4 u_modelMatrix;
 
 out vec2 TexCoord;
-out vec4 WorldPos;
-out vec3 Normal;
+out vec4 v_worldPos;
+out vec3 v_normal;
 out vec3 Tangent;
 out vec3 BiTangent;
 out vec3 ViewPos;
@@ -32,13 +32,13 @@ void main() {
     mat4 inverseModelMatrix = inverse(modelMatrix);
     mat4 normalMatrix = transpose(inverseModelMatrix);
 
-    Normal = normalize(normalMatrix * vec4(vNormal, 0)).xyz;
+    v_normal = normalize(normalMatrix * vec4(vNormal, 0)).xyz;
     Tangent = normalize(normalMatrix * vec4(vTangent, 0)).xyz;
-    BiTangent = normalize(cross(Normal, Tangent));
+    BiTangent = normalize(cross(v_normal, Tangent));
     TexCoord = vUV;
 
-    WorldPos = u_modelMatrix * vec4(vPosition, 1.0);
+    v_worldPos = u_modelMatrix * vec4(vPosition, 1.0);
     ViewPos = inverseView[3].xyz;
 
-	gl_Position = projectionView * WorldPos;
+	gl_Position = projectionView * v_worldPos;
 }

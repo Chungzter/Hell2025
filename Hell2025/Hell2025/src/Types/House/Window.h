@@ -21,7 +21,6 @@ struct Window {
     const glm::vec3& GetPosition() const                        { return m_transform.position; }
     const glm::vec3& GetRotation() const                        { return m_transform.rotation; }
     const std::vector<RenderItem>& GetRenderItems() const       { return m_meshNodes.GetRenderItems(); }
-    const std::vector<RenderItem>& GetGlassRenderItems() const  { return m_meshNodes.GetRenderItemsGlass(); }
     const WindowCreateInfo& GetCreateInfo() const               { return m_createInfo; }
     MeshNodes& GetMeshNodes()                                   { return m_meshNodes; }
 

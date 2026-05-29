@@ -109,12 +109,13 @@ vec3 GetFlashLightColor() {
 }
 
 vec3 GetMoonLightColor() {
-    const vec3 UNDER_WATER_TINT = mix(vec3(0.4, 0.8, 0.6) * 1.75, vec3(0.01, 0.03, 0.04), 0.25); // sort out your includes then make this come from constants.glsl
-    vec3 moonColor = vec3(1.0, 0.9, 0.9);
-    vec3 moonColor2 = vec3(1, 0.7799999713897705, 0.5289999842643738);
-    moonColor = mix(moonColor, moonColor2, 0.5);
-    moonColor = mix(moonColor, UNDER_WATER_TINT, 0.25);
-    return moonColor;
+    return vec3(0.881875, 0.894375, 0.73525);
+    //const vec3 UNDER_WATER_TINT = mix(vec3(0.4, 0.8, 0.6) * 1.75, vec3(0.01, 0.03, 0.04), 0.25); // sort out your includes then make this come from constants.glsl
+    //vec3 moonColor = vec3(1.0, 0.9, 0.9);
+    //vec3 moonColor2 = vec3(1, 0.7799999713897705, 0.5289999842643738);
+    //moonColor = mix(moonColor, moonColor2, 0.5);
+    //moonColor = mix(moonColor, UNDER_WATER_TINT, 0.25);
+    //return moonColor;
 }
 
 // SplitscreenMode: 0 fullscreen, 1 two-player, 2 four-player

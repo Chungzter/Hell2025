@@ -12,7 +12,7 @@ namespace Renderer {
         RendererSettings mapObjectEditor;
     } g_rendererSettingsSet;
 
-    RendererMode g_rendererMode = RendererMode::OLD_DEFERRED;
+    RendererMode g_rendererMode = RendererMode::RE_STYLE;
 
     RendererSettings& GetCurrentRendererSettings() {
         if (Editor::IsOpen()) {

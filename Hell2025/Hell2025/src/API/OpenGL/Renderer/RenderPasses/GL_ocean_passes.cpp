@@ -216,63 +216,49 @@ namespace OpenGLRenderer {
         glDispatchCompute((gBuffer.GetWidth() + 7) / 8, (gBuffer.GetHeight() + 7) / 8, 1);
     }
 
+    void GaussianBlur() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer& miscFullSizeFrameBuffer = GetFrameBuffer("MiscFullSize");
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
+
+        BindShader("GaussianBlur");
+
+        SetUniformVec2("u_direction", glm::vec2(0, 1));
+        glBindImageTexture(0, miscFullSizeFrameBuffer.GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F); // WARNING! you WERE degrading your image quality by down sampling into a texture of lower bit resolution. Find out if this even matters at this point in the frame. But now you're not. But also. This is a shit load of VRAM so think about this.
+        glBindTextureUnit(1, gBuffer.GetColorAttachmentHandleByName("Lighting"));
+        glDispatchCompute((miscFullSizeFrameBuffer.GetWidth() + 7) / 8, (miscFullSizeFrameBuffer.GetHeight() + 7) / 8, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+        SetUniformVec2("u_direction", glm::vec2(1, 0));
+        glBindImageTexture(0, miscFullSizeFrameBuffer.GetColorAttachmentHandleByName("GaussianFinalLighting"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+        glBindTextureUnit(1, miscFullSizeFrameBuffer.GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"));
+        glDispatchCompute((miscFullSizeFrameBuffer.GetWidth() + 7) / 8, (miscFullSizeFrameBuffer.GetHeight() + 7) / 8, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    }
 
     void OceanUnderwaterCompositePass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLShader* gaussianBlurShader = GetShaderOLD("GaussianBlur");
-        OpenGLShader* underwaterCompositeShader = GetShaderOLD("OceanUnderwaterComposite");
+        if (!World::HasOcean()) return;
 
-        OpenGLFrameBuffer* miscFullSizeFrameBuffer = GetFrameBufferOLD("MiscFullSize");
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-        OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
-        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
-        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
+        OpenGLFrameBuffer& miscFullSizeFrameBuffer = GetFrameBuffer("MiscFullSize");
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
+        OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
 
-        if (!gaussianBlurShader) return;
-        if (!underwaterCompositeShader) return;
-        if (!miscFullSizeFrameBuffer) return;
-        if (!gBuffer) return;
-        if (!waterFrameBuffer) return;
-        if (!fftFrameBuffer_band0) return;
-        if (!fftFrameBuffer_band1) return;
+        BindShader("OceanUnderwaterComposite");
+        
+        SetUniformFloat("u_time", Game::GetTotalTime());
+        SetUniformVec2("u_resolution", glm::vec2(gBuffer.GetWidth(), gBuffer.GetHeight()));
 
-        // Gaussian blur the lighting image into a half size texture
-        gaussianBlurShader->Bind();
-        gaussianBlurShader->SetVec2("u_direction", glm::vec2(0, 1));
-        glBindImageTexture(0, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F); // WARNING! you WERE degrading your image quality by down sampling into a texture of lower bit resolution. Find out if this even matters at this point in the frame. But now you're not. But also. This is a shit load of VRAM so think about this.
-        glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("Lighting"));
-        glDispatchCompute((miscFullSizeFrameBuffer->GetWidth() + 7) / 8, (miscFullSizeFrameBuffer->GetHeight() + 7) / 8, 1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-        gaussianBlurShader->SetVec2("u_direction", glm::vec2(1, 0));
-        glBindImageTexture(0, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLighting"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-        glBindTextureUnit(1, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"));
-        glDispatchCompute((miscFullSizeFrameBuffer->GetWidth() + 7) / 8, (miscFullSizeFrameBuffer->GetHeight() + 7) / 8, 1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-        // Early out. Gaussian blur must still run coz it's used for stained glass
-        if (!World::HasOcean()) {
-            return;
-        }
-
-        const ViewportData& viewportData = RenderDataManager::GetViewportData()[0];
-        glm::vec2 resolution = glm::vec2(gBuffer->GetWidth(), gBuffer->GetHeight());
-
-        // Underwater composite
-        underwaterCompositeShader->Bind();
-        underwaterCompositeShader->SetFloat("u_time", Game::GetTotalTime());
-        underwaterCompositeShader->SetVec2("u_resolution", resolution);
-
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-        BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
-        BindImageTexture(1, waterFrameBuffer->GetColorAttachmentHandleByName("OceanFlags"), GL_READ_ONLY, GL_R8UI);
-        BindTextureUnit(2, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLighting"));
-        BindTextureUnit(3, waterFrameBuffer->GetColorAttachmentHandleByName("Lighting"));
+        BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
+        BindImageTexture(1, waterFrameBuffer.GetColorAttachmentHandleByName("OceanFlags"), GL_READ_ONLY, GL_R8UI);
+        BindTextureUnit(2, miscFullSizeFrameBuffer.GetColorAttachmentHandleByName("GaussianFinalLighting"));
+        BindTextureUnit(3, waterFrameBuffer.GetColorAttachmentHandleByName("Lighting"));
         BindTextureUnit(4, AssetManager::GetTextureByName("WaterDUDV")->GetGLTexture().GetHandle());
 
-        glDispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        glDispatchCompute((gBuffer.GetWidth() + 7) / 8, (gBuffer.GetHeight() + 7) / 8, 1);
     }
 
     void InitOceanHeightReadback() {

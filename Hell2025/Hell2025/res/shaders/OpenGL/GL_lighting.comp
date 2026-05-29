@@ -22,7 +22,7 @@ layout (binding = 6) uniform sampler2D EmissiveTexture;
 layout (binding = 7) uniform sampler2D FlashlightCookieTexture;
 layout (binding = 8) uniform sampler2DArray FlashlighShadowMapArrayTexture;
 layout (binding = 9) uniform samplerCubeArray shadowMapArray;
-layout (binding = 10) uniform sampler2DArray shadowMapCSM;
+layout (binding = 10) uniform sampler2DArray u_shadowMapCascadeArray;
 layout (binding = 11) uniform sampler2D IndirectDiffuseTexture;
 
 uniform float u_viewportWidth;
@@ -35,10 +35,8 @@ uniform int u_ambientLightingBoost;
 uniform vec3 u_lightVolumeOffset;
 uniform vec3 u_lightVolumeWorldSize;
 uniform float u_lightVolumeSpacing;
-uniform vec3 u_moonlightDir;
 uniform float u_oceanHeight;
 
-uniform float u_farPlane = 256.0;
 
 // GI
 uniform vec3 u_probeOffset;
@@ -60,182 +58,10 @@ layout(std430, binding = 7)  readonly restrict  buffer tileChristmasLightsBuffer
 layout(std430, binding = 8)  readonly restrict  buffer ChristmasLightsBuffer      { ChristmasLight christmasLights[]; };
 layout(std430, binding = 9)  readonly restrict  buffer ChristmasLightsIndexBuffer { uint globalChristmasLightIndices[]; };
 
+// Moon lighting
+uniform float u_cascadeFarPlane = 256.0;
 uniform float u_cascadePlaneDistances[16];
-uniform int cascadeCount;
-
-vec3 gridSamplingDiskCSM[20] = vec3[](
-    vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1),
-    vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
-    vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
-    vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
-    vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
-);
-
-vec3 ShadowCalculationCSM(vec3 fragPosWorldSpace, vec3 normal, vec3 lightDir, mat4 viewMatrix, uint viewportIndex) {
-    // select cascade layer
-    vec4 fragPosViewSpace = viewMatrix * vec4(fragPosWorldSpace, 1.0);
-    float depthValue = abs(fragPosViewSpace.z);
-
-    int layer = cascadeCount - 1;
-    for (int i = 0; i < cascadeCount - 1; ++i) {
-        if (depthValue < u_cascadePlaneDistances[i]) {
-            layer = i;
-            break;
-        }
-    }
-
-    mat4 lightProjectionView = viewportDataArr[viewportIndex].csmLightProjectionView[layer];
-
-    vec3 normalOffset = normal * 0.05;
-    vec4 fragPosLightSpace = lightProjectionView * vec4(fragPosWorldSpace + normalOffset, 1.0);
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords.xy = projCoords.xy * 0.5 + 0.5;
-
-    // get depth of current fragment from light's perspective
-    float currentDepth = projCoords.z;
-
-    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
-    if (currentDepth > 1.0) {
-       // return vec3(1.0, 0, 0);
-    }
-
-    // original
-    //float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
-    //const float biasModifier = 0.5f;
-
-    // calculate bias (based on depth map resolution and slope)
-    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
-    const float biasModifier = 10.5;
-    float scaledBias = bias;
-    if (layer == cascadeCount)
-    {
-        scaledBias *= 1.0 / (u_farPlane * biasModifier);
-    }
-    else
-    {
-        scaledBias *= 1.0 / (u_cascadePlaneDistances[layer] * biasModifier);
-    }
-
-    //scaledBias = 0.0;
-
-    // Disk Sampling for PCF
-    float shadow = 0.0;
-    int samples = 3;
-    vec2 texelSize = 1.0 / vec2(textureSize(shadowMapCSM, 0));
-    float diskRadius = 2.0; // Radius in texture space (adjust as needed)
-
-    uint SHADOW_CASCADE_COUNT = 5;
-    uint arrayIndex = uint(layer) + (viewportIndex * SHADOW_CASCADE_COUNT);
-
-    for (int i = 0; i < samples; ++i) {
-        // Scale the disk sample by the texture size to get UV offsets
-        vec2 offset = gridSamplingDiskCSM[i].xy * diskRadius * texelSize;
-        float pcfDepth = texture(shadowMapCSM, vec3(clamp(projCoords.xy + offset, 0.0, 1.0), arrayIndex)).r;
-        shadow += (currentDepth - scaledBias) > pcfDepth ? 1.0 : 0.0;
-    }
-
-    shadow /= float(samples);
-
-
-    vec3 result = vec3(1 - shadow);
-
-
-  //if (layer == 0) {
-  //    result *= vec3(0, 1, 0);
-  //}
-  //if (layer == 1) {
-  //    result *= vec3(0, 0, 1);
-  //}
-  //if (layer == 2) {
-  //    result *= vec3(0, 1, 1);
-  //}
-  //if (layer == 3) {
-  //    result *= vec3(1, 0, 0);
-  //}
-
-    return vec3(result);
-}
-
-vec3 SampleSHProbes(vec3 worldPos, vec3 normal) {
-    return vec3(0.0);
-    // float PROBE_NORMAL_BIAS = 0.02;
-    // Bounds check fragment against probe volume
-    //vec3 probeMax = u_probeOffset + vec3(u_probeCountX - 1, u_probeCountY - 1, u_probeCountZ - 1) * u_probeSpacing;
-    //if (any(lessThan(worldPos, u_probeOffset)) || any(greaterThan(worldPos, probeMax))) {
-    //    return vec3(0.0);
-    //}
-    //
-    //vec3 biasedPos = worldPos + (normal * PROBE_NORMAL_BIAS);
-    //vec3 voxelF = (biasedPos - u_probeOffset) / u_probeSpacing;
-    //
-    //ivec3 base = ivec3(floor(voxelF));
-    //vec3 f = fract(voxelF);
-    //
-    //ivec3 maxCoords = ivec3(u_probeCountX, u_probeCountY, u_probeCountZ) - 2;
-    //base = clamp(base, ivec3(0), maxCoords);
-    //
-    //int yStride = u_probeCountX;
-    //int zStride = u_probeCountX * u_probeCountY;
-    //
-    //// Cache base probe indices
-    //int indices[8];
-    //indices[0] = base.x + base.y * yStride + base.z * zStride;
-    //indices[1] = indices[0] + 1;
-    //indices[2] = indices[0] + yStride;
-    //indices[3] = indices[2] + 1;
-    //indices[4] = indices[0] + zStride;
-    //indices[5] = indices[4] + 1;
-    //indices[6] = indices[4] + yStride;
-    //indices[7] = indices[6] + 1;
-    //
-    //// Calc trilinear weights
-    //float w[8];
-    //w[0] = (1.0 - f.x) * (1.0 - f.y) * (1.0 - f.z);
-    //w[1] = f.x         * (1.0 - f.y) * (1.0 - f.z);
-    //w[2] = (1.0 - f.x) * f.y         * (1.0 - f.z);
-    //w[3] = f.x         * f.y         * (1.0 - f.z);
-    //w[4] = (1.0 - f.x) * (1.0 - f.y) * f.z;
-    //w[5] = f.x         * (1.0 - f.y) * f.z;
-    //w[6] = (1.0 - f.x) * f.y         * f.z;
-    //w[7] = f.x         * f.y         * f.z;
-    //
-    //vec3 accumulatedSH[9];
-    //for(int c = 0; c < 9; ++c) {
-    //    accumulatedSH[c] = vec3(0.0);
-    //}
-    //
-    //// Iterate probes first for cache locality
-    //for(int i = 0; i < 8; ++i) {
-    //    int pIdx = indices[i];
-    //    float weight = w[i];
-    //
-    //    for(int c = 0; c < 9; ++c) {
-    //        vec3 probeCoeff = probeColors[pIdx].sh[c].rgb;
-    //        accumulatedSH[c] += probeCoeff * weight;
-    //    }
-    //}
-    //
-    //// Reconstruct final irradiance using normal
-    //const float SH_C0 = 0.28209479177;
-    //const float SH_C1 = 0.4886025119;
-    //const float SH_C2 = 1.09254843059;
-    //const float SH_C3 = 0.31539156525;
-    //const float SH_C4 = 0.54627421529;
-    //
-    //vec3 n = normalize(normal);
-    //vec3 irradiance =
-    //    accumulatedSH[0] * SH_C0 +
-    //    accumulatedSH[1] * (-SH_C1 * n.y) +
-    //    accumulatedSH[2] * ( SH_C1 * n.z) +
-    //    accumulatedSH[3] * (-SH_C1 * n.x) +
-    //    accumulatedSH[4] * ( SH_C2 * n.x * n.y) +
-    //    accumulatedSH[5] * (-SH_C2 * n.y * n.z) +
-    //    accumulatedSH[6] * ( SH_C3 * (3.0 * n.z * n.z - 1.0)) +
-    //    accumulatedSH[7] * (-SH_C2 * n.x * n.z) +
-    //    accumulatedSH[8] * ( SH_C4 * (n.x * n.x - n.y * n.y));
-    //
-    //return max(vec3(0.0), irradiance);
-}
+#include "../common/moon_lighting.glsl"
 
 vec3 retroBRDF(vec3 albedo, vec3 L, vec3 V, vec3 N, float mask, float retroSharpness, float retroGain) {
     float ndotl = max(dot(N, L), 0.0);          // no light from back
@@ -503,56 +329,30 @@ void main() {
     }
 
     // Moon light
-    //vec3 moonColor = vec3(1.0, 0.9, 0.9);
-    //vec3 moonColor2 = vec3(1, 0.7799999713897705, 0.5289999842643738);
-    //moonColor = mix(moonColor, moonColor2, 0.5);
-    //moonColor = mix(moonColor, UNDER_WATER_TINT, 0.25);
-    vec3 moonColor = GetMoonLightColor();
-    float moonLightStrength = 0.05;
+    vec3 moonlightDir = rendererData.moonLightDir.xyz;
+    vec3 moonLighting = vec3(0.0);
+    float moonNdotL = dot(normal.xyz, moonlightDir);
 
-    //float shadow = ShadowCalculation(lightIndex, lightPosition, lightRadius, worldPos, viewPos, normal.xyz, shadowMapArray);
-    vec3 moonLighting = GetDirectionalLighting(u_moonlightDir, moonColor, moonLightStrength, normal.xyz, worldPos, gammaBaseColor.rgb, roughness, metallic, viewPos);
-    vec3 csmShadow = ShadowCalculationCSM(worldPos, normal.xyz, u_moonlightDir, viewMatrix, viewportIndex);
+    if (moonNdotL > 0.0) {
+        vec3 shadow = ShadowCalculationCSM(worldPos, normal.xyz, moonlightDir, viewMatrix, viewportIndex);
 
-    //csmShadow = vec3(0,0,0);
+        if (any(greaterThan(shadow, vec3(0.0)))) {
+            moonLighting = GetDirectionalLighting(moonlightDir, MOON_LIGHT_COLOR, MOON_LIGHT_STRENGTH, normal.xyz, worldPos, gammaBaseColor.rgb, roughness, metallic, viewPos);
+            moonLighting *= shadow;
 
-    //csmShadow = vec3(1,1,1);
+            // DO THIS WHEN YOU DO MATERIAL RESOLVE FOR FOLLAGE
+            // vec3 radius = vec3(sssRadius);
+            // vec3 L = moonlightDir;
+            // float NdotL = max(dot(normal.xyz, L), 0.0);
+            // vec3 sss = 0.2 * exp(-3.0 * abs(NdotL) / (radius + 0.001));
+            // vec3 sssColor = subColor * radius * sss * sssStrength;
+            // moonLighting += sssColor * shadow * 0.5; // OG
+        }
+    }
+    
 
-    moonLighting *= csmShadow;
 
-    // Moonlight subsurface scattering
-    vec3 radius = vec3(sssRadius);
-    //vec3 subColor = Saturate(baseColor.rgb, 1.5);
-    vec3 L = u_moonlightDir;
-    float NdotL = max(dot(normal.xyz, L), 0.0);
-    vec3 sss = 0.2 * exp(-3.0 * abs(NdotL) / (radius + 0.001));
-    vec3 sssColor = subColor * radius * sss * sssStrength;
-    moonLighting += sssColor * csmShadow * 0.5; // OG
-    //moonLighting += sssColor * 0.5;
 
-    // Self light hack (RE7 style)
-    //if (viewportData[viewportIndex].flashlightModifer > 0.1) {
-    //    vec3 spotLightPos = viewPos;
-    //    vec3 spotLightDir = viewportData[viewportIndex].flashlightDir.xyz;
-    //    vec3 spotLightColor = vec3(0.9, 0.95, 1.1);
-    //
-    //    spotLightColor - vec3(1.00, 0.7799999713897705, 0.5289999842643738);
-    //
-    //    float spotLightRadius = 0.085;
-    //    float spotLightStregth = 30.0;
-    //    float innerAngle = cos(radians(00.0 * viewportData[viewportIndex].flashlightModifer));
-    //    float outerAngle = cos(radians(40.0));
-    //
-    //
-    //    mat4 lightProjectionView = viewportData[viewportIndex].flashlightProjectionView;
-    //    vec4 flashlightDir = viewportData[viewportIndex].flashlightDir;
-    //    vec4 flashlightPosition = viewportData[viewportIndex].flashlightPosition;
-    //    vec3 flashlightViewPos = viewportData[viewportIndex].inverseView[3].xyz;
-    //
-    //
-    //    vec3 re7Lighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, spotLightRadius, spotLightStregth, innerAngle, outerAngle, normal.xyz, worldPos, gammaBaseColor.rgb, roughness, metallic, flashlightViewPos, lightProjectionView);
-    //    directLighting += re7Lighting;
-    //}
 
     if (viewportDataArr[viewportIndex].flashlightModifer > 0.1) {
         vec3 offset = viewportDataArr[viewportIndex].cameraForward.xyz * 0.001;
@@ -616,29 +416,13 @@ void main() {
     finalColor.rgb = finalColor.rgb * finalAlpha;
     vec4 outputColor = vec4(finalColor, finalAlpha);
 
-   // THIS DOES NOTHING
-   if (rendererData.rendererOverrideState == 4) {
-        vec3 lightDir = normalize(inverseView[2].xyz);
-        vec3 lightColor = vec3(1.0, 0.7799999713897705, 0.5289999842643738);
-        lightColor = mix(lightColor, vec3(1.0), 0.9);
-        outputColor.rgb = GetDirectionalLighting(lightDir, lightColor, 2, normal.xyz, worldPos, gammaBaseColor.rgb, roughness, metallic, viewPos);
-
-
-        //float ndotl = max(dot(normal.xyz, lightDir), 0.0);
-        //lightColor = vec3(0.5, 0.5, 0.6) * ndotl;
-        //vec3 color = baseColor.rgb * ndotl;
-        //outputColor.rgb = mix(gammaBaseColor.rgb, outputColor.rgb, 0.75);
-
-        //outputColor.rgb = vec3(1,0,0);
-   }
-
    // outputColor.rgb = vec3(sssRadius);
 
    // outputColor.rgb = directLighting;
 
     imageStore(outputImage, px, outputColor);
-
-
+    
+    
     //float thickness = texture(EmissiveTexture, screenUV).a;
     //imageStore(outputImage, px, vec4(vec3(thickness), 1));
     //imageStore(outputImage, px, vec4(vec3(sssDebug), 1));

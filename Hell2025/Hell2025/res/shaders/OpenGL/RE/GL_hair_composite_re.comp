@@ -3,7 +3,8 @@
 layout(local_size_x = 24, local_size_y = 24, local_size_z = 1) in;
 
 layout (rgba16f, binding = 0) uniform image2D u_outputImage; // Gbuffer Lighting
-layout (binding = 1) uniform sampler2DMS u_hairTexture;
+layout (rgba16f, binding = 1) uniform image2D u_emissiveImage; // 
+layout (binding = 2) uniform sampler2DMS u_hairTexture;
 
 void main() {
 	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
@@ -26,6 +27,9 @@ void main() {
     // Perform alpha compositing (hair over lighting)
     vec3 finalColor = hair.rgb + lighting.rgb * (1.0 - hair.a);
 
+    //finalColor = hair.rgb;
+    
     // Output
     imageStore(u_outputImage, px, vec4(finalColor, 1));
+    imageStore(u_emissiveImage, px, vec4(0, 0, 0, 1));
 }

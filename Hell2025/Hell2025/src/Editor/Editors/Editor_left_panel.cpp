@@ -132,7 +132,6 @@ namespace Editor {
                 g_outliner.SetItems("Floors", GetFloorNames());
                 g_outliner.SetItems("Generic Objects", GetGenericObjectNames());
                 g_outliner.SetItems("House Planes", GetUndefinedHousePlaneNames());
-                g_outliner.SetItems("Trees", GetTreeNames());
                 g_outliner.SetItems("Walls", GetWallNames());
 
                 g_objectNameInput.SetLabel("Name");
@@ -159,20 +158,20 @@ namespace Editor {
         }
 
         // move to UpdateObjectProperties()
-        if (GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR || GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
-            if (GetSelectedObjectType() == ObjectType::TREE) {
-                Tree* tree = World::GetTreeByObjectId(GetSelectedObjectId());
-                if (tree) {
-                    g_objectNameInput.SetText(tree->GetEditorName());
-                    g_positionX.SetValue(tree->GetPosition().x);
-                    g_positionY.SetValue(tree->GetPosition().y);
-                    g_positionZ.SetValue(tree->GetPosition().z);
-                    g_rotationX.SetValue(tree->GetRotation().x);
-                    g_rotationY.SetValue(tree->GetRotation().y);
-                    g_rotationZ.SetValue(tree->GetRotation().z);
-                }
-            }
-        }
+        //if (GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR || GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
+        //    if (GetSelectedObjectType() == ObjectType::TREE) {
+        //        Tree* tree = World::GetTreeByObjectId(GetSelectedObjectId());
+        //        if (tree) {
+        //            g_objectNameInput.SetText(tree->GetEditorName());
+        //            g_positionX.SetValue(tree->GetPosition().x);
+        //            g_positionY.SetValue(tree->GetPosition().y);
+        //            g_positionZ.SetValue(tree->GetPosition().z);
+        //            g_rotationX.SetValue(tree->GetRotation().x);
+        //            g_rotationY.SetValue(tree->GetRotation().y);
+        //            g_rotationZ.SetValue(tree->GetRotation().z);
+        //        }
+        //    }
+        //}
     }
 
     void BeginLeftPanel() {
@@ -287,18 +286,18 @@ namespace Editor {
 
 
                 // Trees (LIKELY BROKEN)
-                if (GetSelectedObjectType() == ObjectType::TREE) {
-                    Tree* tree = World::GetTreeByObjectId(GetSelectedObjectId());
-                    if (tree) {
-                        if (g_positionX.CreateImGuiElements())  tree->SetPosition(glm::vec3(g_positionX.GetValue(), g_positionY.GetValue(), g_positionZ.GetValue()));
-                        if (g_positionY.CreateImGuiElements())  tree->SetPosition(glm::vec3(g_positionX.GetValue(), g_positionY.GetValue(), g_positionZ.GetValue()));
-                        if (g_positionZ.CreateImGuiElements())  tree->SetPosition(glm::vec3(g_positionX.GetValue(), g_positionY.GetValue(), g_positionZ.GetValue()));
-
-                        if (g_rotationX.CreateImGuiElements())  tree->SetRotation(glm::vec3(g_rotationX.GetValue(), g_rotationY.GetValue(), g_rotationZ.GetValue()));
-                        if (g_rotationY.CreateImGuiElements())  tree->SetRotation(glm::vec3(g_rotationX.GetValue(), g_rotationY.GetValue(), g_rotationZ.GetValue()));
-                        if (g_rotationZ.CreateImGuiElements())  tree->SetRotation(glm::vec3(g_rotationX.GetValue(), g_rotationY.GetValue(), g_rotationZ.GetValue()));
-                    }
-                }
+                //if (GetSelectedObjectType() == ObjectType::TREE) {
+                //    Tree* tree = World::GetTreeByObjectId(GetSelectedObjectId());
+                //    if (tree) {
+                //        if (g_positionX.CreateImGuiElements())  tree->SetPosition(glm::vec3(g_positionX.GetValue(), g_positionY.GetValue(), g_positionZ.GetValue()));
+                //        if (g_positionY.CreateImGuiElements())  tree->SetPosition(glm::vec3(g_positionX.GetValue(), g_positionY.GetValue(), g_positionZ.GetValue()));
+                //        if (g_positionZ.CreateImGuiElements())  tree->SetPosition(glm::vec3(g_positionX.GetValue(), g_positionY.GetValue(), g_positionZ.GetValue()));
+                //
+                //        if (g_rotationX.CreateImGuiElements())  tree->SetRotation(glm::vec3(g_rotationX.GetValue(), g_rotationY.GetValue(), g_rotationZ.GetValue()));
+                //        if (g_rotationY.CreateImGuiElements())  tree->SetRotation(glm::vec3(g_rotationX.GetValue(), g_rotationY.GetValue(), g_rotationZ.GetValue()));
+                //        if (g_rotationZ.CreateImGuiElements())  tree->SetRotation(glm::vec3(g_rotationX.GetValue(), g_rotationY.GetValue(), g_rotationZ.GetValue()));
+                //    }
+                //}
 
                 // Windows (BARELY FUNCITONAL)
                 if (Window* window = World::GetWindowByObjectId(GetSelectedObjectId())) {

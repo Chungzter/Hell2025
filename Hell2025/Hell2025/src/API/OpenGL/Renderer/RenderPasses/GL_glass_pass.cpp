@@ -47,7 +47,7 @@ namespace OpenGLRenderer {
 
             Player* player = Game::GetLocalPlayerByIndex(i);
 
-            for (const RenderItem& renderItem : RenderDataManager::GetGlassRenderItems()) {
+            for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsGlass()) {
                 shader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
 
                 Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);

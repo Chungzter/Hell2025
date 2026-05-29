@@ -63,7 +63,7 @@ namespace World {
 
     void SubmitRenderItems();
 
-    void RecreateHouseMesh();
+    void RecreateHouseGeometryOLD();
 
     void ResetWorld();
     void ClearAllObjects();
@@ -85,12 +85,13 @@ namespace World {
     const uint32_t GetChunkCount(); 
     const HeightMapChunk* GetChunk(int x, int z);
 
-    void AddDecal2(Decal2CreateInfo createInfo);
+    void AddDecal2(DecalCreateInfo createInfo);
 
     uint64_t AddChristmasLights(ChristmasLightsCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddFence(FenceCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddLadder(LadderCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddPickUp(PickUpCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddPictureFrame(PictureFrameCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddPowerPoleSet(PowerPoleSetCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddStaircase(StaircaseCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddTrimSet(TrimSetCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
@@ -112,8 +113,7 @@ namespace World {
     void AddMermaid(MermaidCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddScreenSpaceBloodDecal(ScreenSpaceBloodDecalCreateInfo createInfo);
     void AddPiano(PianoCreateInfo createInfo, SpawnOffset spawnOffset);
-    void AddPictureFrame(PictureFrameCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    void AddTree(TreeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    //void AddTree(TreeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddVATBlood(glm::vec3 position, glm::vec3 front);
     void AddWindow(WindowCreateInfo createInfo, SpawnOffset spawnOffset);
 
@@ -195,7 +195,7 @@ namespace World {
     PianoKey* GetPianoKeyByObjectId(uint64_t objectId);
     PickUp* GetPickUpByObjectId(uint64_t objectID);
     PictureFrame* GetPictureFrameByObjectId(uint64_t objectId);
-    Tree* GetTreeByObjectId(uint64_t objectId);
+    //Tree* GetTreeByObjectId(uint64_t objectId);
     Wall* GetWallByObjectId(uint64_t objectId);
     Wall* GetWallByWallSegmentObjectId(uint64_t objectId);
     Shark* GetSharkByObjectId(uint64_t objectId);
@@ -203,7 +203,7 @@ namespace World {
     GameObject* GetGameObjectByIndex(int32_t index);
     GameObject* GetGameObjectByName(const std::string& name);
     Light* GetLightByIndex(int32_t index);
-    Tree* GetTreeByIndex(int32_t index);
+    //Tree* GetTreeByIndex(int32_t index);
 
     uint32_t GetLightCount();
 
@@ -217,6 +217,7 @@ namespace World {
     Hell::SlotMap<HousePlane>& GetHousePlanes();
     Hell::SlotMap<Ladder>& GetLadders();
     Hell::SlotMap<PickUp>& GetPickUps();
+    Hell::SlotMap<PictureFrame>& GetPictureFrames();
     Hell::SlotMap<PowerPoleSet>& GetPowerPoleSets();
     Hell::SlotMap<Staircase>& GetStaircases();
     Hell::SlotMap<TrimSet>& GetTrimSets();
@@ -237,13 +238,12 @@ namespace World {
     std::vector<MapInstance>& GetMapInstances();
     std::vector<Mermaid>& GetMermaids();
     std::vector<Piano>& GetPianos();
-    std::vector<PictureFrame>& GetPictureFrames();
     std::vector<SpawnPoint>& GetCampaignSpawnPoints();
     std::vector<SpawnPoint>& GetDeathmatchSpawnPoints();
     std::vector<Transform>& GetDoorAndWindowCubeTransforms();
     std::vector<Road>& GetRoads();
     std::vector<Shark>& GetSharks();
-    std::vector<Tree>& GetTrees();
+    //std::vector<Tree>& GetTrees();
     std::vector<VolumetricBloodSplatter>& GetVolumetricBloodSplatters();
 
     std::vector<uint64_t> GetLightIds();

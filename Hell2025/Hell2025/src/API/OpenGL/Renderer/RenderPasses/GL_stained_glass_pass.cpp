@@ -51,7 +51,7 @@ namespace OpenGLRenderer {
 
             // Sort by distance to camera
             static std::vector<RenderItem> sortedRenderItems;
-            sortedRenderItems = RenderDataManager::GetStainedGlassRenderItems();
+            sortedRenderItems = RenderDataManager::GetRenderItemsStainedGlass();
 
             std::sort(sortedRenderItems.begin(), sortedRenderItems.end(), [player](RenderItem& a, RenderItem& b) {
                 float distA = glm::distance(player->GetCameraPosition(), glm::vec3(a.modelMatrix[3]));

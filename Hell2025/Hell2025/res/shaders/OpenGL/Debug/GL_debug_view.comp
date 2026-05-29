@@ -10,12 +10,7 @@ layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
 layout(rgba16f, binding = 0) uniform image2D u_outputImage;
 
-#if defined(MSAA_ENABLED)
-layout (binding = 1) uniform sampler2DMS MSAABaseColorTexture;
-layout (binding = 2) uniform sampler2DMS MSAANormalTexture;
-layout (binding = 3) uniform sampler2DMS MSAAMaterialTexture;
-layout (binding = 8) uniform sampler2D IndirectDiffuseTexture;
-#elif defined(RE_ENABLED)
+#if defined(RE_ENABLED)
 layout (binding = 1) uniform sampler2D BaseColorMetallic;
 layout (binding = 2) uniform sampler2D NormalXYRoughnessMisc;
 layout (binding = 3) uniform sampler2D VelocityXYOcclusionSubSurface;
@@ -35,13 +30,26 @@ layout (binding = 10) uniform usampler2D u_oceanFlagsTexture;
 layout (binding = 11) uniform sampler2D u_depthTexture;
 layout (binding = 12) uniform sampler2D u_emissiveTexture;
 
-shared vec3 sharedDebugOutputColor;
-
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
-uniform bool u_heightMapEditor;
-uniform float u_brushSize;
+#define NONE 0
+#define BASE_COLOR 1
+#define NORMALS 2
+#define RMA 3
+#define ROUGHNESS 4
+#define METALLIC 5
+#define AO 6
+#define CAMERA_NDOTL 7
+#define TILE_HEATMAP_LIGHTS 8,
+#define TILE_HEATMAP_BLOOD_DECALS 9
+#define TILE_HEATMAP_CHRISTMAS_LIGHTS 10
+#define INDIRECT_DIFFUSE 11
+#define VELOCITY 12
+#define VIS_BUFFER 13
+#define DEPTH 14
+#define WORLD_POSITION 15
+#define EMISSIVE 16
 
 vec3 IntegerToColor(uint x) {
     x = ((x >> 16) ^ x) * 0x45d9f3bE;
@@ -50,16 +58,100 @@ vec3 IntegerToColor(uint x) {
     return vec3(float(x & 0xFFu) / 255.0, float((x >> 8) & 0xFFu) / 255.0, float((x >> 16) & 0xFFu) / 255.0);
 }
 
-vec3 GetVisiblity() {
-	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+vec3 GetBaseColor(ivec2 px) {
+    #if defined(RE_ENABLED)
+        return texelFetch(BaseColorMetallic, px, 0).rgb;
+    #else
+        return texelFetch(GBufferBaseColorTexture, px, 0).rgb;
+    #endif
+}
 
-#if defined(MSAA_ENABLED)
-    uvec2 visibilityData = uvec2(0, 0);
-#elif defined(RE_ENABLED)
+vec3 GetNormal(ivec2 px) {
+    #if defined(RE_ENABLED)
+        vec4 normalXYRoughnessMisc = texelFetch(NormalXYRoughnessMisc, px, 0);
+        return DecodeNormal(normalXYRoughnessMisc.rg);
+    #else
+        return texelFetch(GBufferNormalTexture, px, 0).rgb;
+    #endif
+}
+
+vec3 GetRoughness(ivec2 px) {
+    #if defined(RE_ENABLED)
+        return vec3(texelFetch(NormalXYRoughnessMisc, px, 0).b);
+    #else
+        return vec3(texelFetch(GBufferRMATexture, px, 0).r);
+    #endif
+}
+
+vec3 GetMetallic(ivec2 px) {
+    #if defined(RE_ENABLED)
+        return vec3(texelFetch(BaseColorMetallic, px, 0).a);
+    #else
+        return vec3(texelFetch(GBufferRMATexture, px, 0).g);
+    #endif
+}
+
+vec3 GetAO(ivec2 px) {
+    #if defined(RE_ENABLED)
+        return vec3(texelFetch(VelocityXYOcclusionSubSurface, px, 0).b);
+    #else
+        return vec3(texelFetch(GBufferRMATexture, px, 0).b);
+    #endif
+}
+
+vec3 GetRMA(ivec2 px) {
+    #if defined(RE_ENABLED)
+        return vec3(GetRoughness(px).r, GetMetallic(px).r, GetAO(px).r);
+    #else
+        return texelFetch(GBufferRMATexture, px, 0).rgb;
+    #endif
+}
+
+vec3 GetCameraNdotL(ivec2 px) {
+    ivec2 outputImageSize = imageSize(u_outputImage);
+    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
+    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
+    
+    ViewportData viewportData = viewportDataArr[viewportIndex];
+    mat4 inverseView = viewportData.inverseView;
+    
+    vec3 normal = GetNormal(px);
+    vec3 lightDir = normalize(inverseView[2].xyz);
+    float ndotl = max(dot(normal.xyz, lightDir), 0.0);
+    
+    return GetBaseColor(px) * ndotl;
+    //return vec3(ndotl);
+}
+
+vec3 GetIndirectDiffuse(ivec2 px) {
+    ivec2 outputImageSize = imageSize(u_outputImage);
+    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+    vec3 indirectDiffuseTexture =  texture(IndirectDiffuseTexture, screenUV).rgb;
+    vec3 result = Tonemap_ACES(indirectDiffuseTexture);
+    result = pow(result, vec3(1.0 / 2.2));
+    result = clamp(result, 0, 1);
+    result = mix(result, Tonemap_ACES(result), 0.125);
+    return (result);
+}
+
+vec3 GetVelocity(ivec2 px) {
+    vec2 velocity = vec2(0);
+    #if defined(RE_ENABLED)
+        velocity = texelFetch(VelocityXYOcclusionSubSurface, px, 0).rg;
+    #else
+        velocity = texelFetch(VelocityOcclusionSubSurface, px, 0).rg;
+    #endif
+    float gain = 20.0;
+    return vec3(velocity * gain + 0.5, 0.5);
+}
+
+vec3 GetVisBuffer(ivec2 px) {
+    #if defined(RE_ENABLED)
     uvec2 visibilityData = texelFetch(VisibilityTexture, px, 0).rg;
-#else
+    #else
     uvec2 visibilityData = uvec2(0, 0);
-#endif
+    #endif
 
     uint meshID = visibilityData.x;
     uint primitiveID = visibilityData.y;
@@ -77,170 +169,59 @@ vec3 GetVisiblity() {
     return mix(meshColor, primColor, 0.2);
 }
 
+vec3 GetVisBufferUVs(ivec2 px) {
+    #if defined(RE_ENABLED)
+    uvec2 visibilityData = texelFetch(VisibilityTexture, px, 0).rg;
+
+    #else
+    return vec3(0, 0, 0);
+    #endif
+    
+    return vec3(0, 0, 0);
+}
+
+vec3 GetDepth(ivec2 px) {
+    float depth = texelFetch(u_depthTexture, px, 0).r;
+    return vec3(depth, 0, 0);
+}
+
+vec3 GetWorldPosition(ivec2 px) {
+    ivec2 outputImageSize = imageSize(u_outputImage);
+    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
+    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
+    
+    ViewportData viewportData = viewportDataArr[viewportIndex];
+    mat4 inverseProjectionViewReverseZ = viewportData.inverseProjectionViewReverseZ;
+
+    float depth = texelFetch(u_depthTexture, px, 0).r;
+    return ReconstructWorldPos(screenUV, depth, inverseProjectionViewReverseZ);
+}
+
+vec3 GetEmissive(ivec2 px) {
+    return texelFetch(u_emissiveTexture, px, 0).rgb;
+}
+
 void main() {
 	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
-    ivec2 u_outputImageSize = imageSize(u_outputImage);
+    ivec2 outputImageSize = imageSize(u_outputImage);
+    if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) return;
 
-    // Don't process out of bounds pixels
-    if (px.x >= u_outputImageSize.x || px.y >= u_outputImageSize.y) return;
-
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, u_outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(u_outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
-
-    ViewportData viewportData = viewportDataArr[viewportIndex];
-    mat4 viewMatrix = viewportData.view;
-    mat4 inverseView = viewportData.inverseView;
-
-#if defined(MSAA_ENABLED)
-    ivec2 pxMS = ivec2(screenUV * vec2(textureSize(MSAAMaterialTexture)));
-	vec3 lightingColor = imageLoad(u_outputImage, px).rgb;
-    vec3 baseColor = texelFetch(MSAABaseColorTexture, px, 0).rgb;
-    vec3 rma = texelFetch(MSAAMaterialTexture, pxMS, 0).rgb;
-    float mirrorMask = 0.0;
-    vec3 rawNormal = texelFetch(MSAANormalTexture, px, 0).rgb;
-    vec3 normal = normalize(rawNormal * 2.0 - 1.0);
-    vec2 velocity = vec2(0, 0);
-    float depth = 0.0;
-    vec3 worldPos = vec3(0, 0, 0);
-    vec3 emissive = vec3(0, 0, 0);
-
-#elif defined(RE_ENABLED)
-    vec4 normalXYRoughnessMisc = texture(NormalXYRoughnessMisc, screenUV);
-    vec3 normal = DecodeNormal(normalXYRoughnessMisc.rg);
-    float roughness = normalXYRoughnessMisc.b;
-    float misc = normalXYRoughnessMisc.a;
-
-    vec4 baseColorMetallic = texture(BaseColorMetallic, screenUV);
-    vec3 baseColor = baseColorMetallic.rgb;
-    float metallic = baseColorMetallic.a;
-
-    vec4 velocityXYOcclusionSubSurface = texture(VelocityXYOcclusionSubSurface, screenUV).rgba;
-    float ao =velocityXYOcclusionSubSurface.b;
-    float subSurface = velocityXYOcclusionSubSurface.a;
-
-    vec2 velocity = velocityXYOcclusionSubSurface.rg;
-    vec3 rma = vec3(roughness, metallic, ao);
-
-    float depth = texture(u_depthTexture, screenUV).r;
-    vec3 worldPos = ReconstructWorldPos(screenUV, depth, viewportData.inverseProjectionViewReverseZ);
-
-    vec3 emissive = texture(u_emissiveTexture, screenUV).rgb;
-
-    // Random non GBuffer stuff
-	vec3 lightingColor = imageLoad(u_outputImage, px).rgb;
-
-#else
-	vec3 lightingColor = imageLoad(u_outputImage, px).rgb;
-    vec3 baseColor = texture(GBufferBaseColorTexture, screenUV).rgb;
-    vec3 normal = texture(GBufferNormalTexture, screenUV).rgb;
-    vec3 rma = texture(GBufferRMATexture, screenUV).rgb;
-    float mirrorMask = texture(GBufferWorldMirrorMaskTexture, screenUV).r;
-    vec2 velocity = texture(VelocityOcclusionSubSurface, screenUV).rg;
-
-    float depth = texture(u_depthTexture, screenUV).r;
-    vec3 worldPos = ReconstructWorldPos(screenUV, depth, viewportData.inverseProjectionViewReverseZ);
-
-    vec3 emissive = texture(u_emissiveTexture, screenUV).rgb;
-
-#endif
-
-    vec3 indirectDiffuseTexture =  texture(IndirectDiffuseTexture, screenUV).rgb;
-
-    vec3 finalColor = lightingColor.rgb * vec3(1,0,0);
-
-    // Renderer override states
-    if (rendererData.rendererOverrideState == 1) {
-        finalColor = baseColor;
-    }
-    else if (rendererData.rendererOverrideState == 2) {
-        finalColor = normal;
-    }
-    else if (rendererData.rendererOverrideState == 3) {
-        finalColor = rma;
-    }
-    else if (rendererData.rendererOverrideState == 4) {
-        finalColor = vec3(rma.r);
-    }
-    else if (rendererData.rendererOverrideState == 5) {
-        finalColor =  vec3(rma.g);
-    }
-    else if (rendererData.rendererOverrideState == 6) {
-        finalColor = vec3(rma.b);
-    }
-    else if (rendererData.rendererOverrideState == 7) {
-        return; // for map editor
-
-        vec3 lightDir = normalize(inverseView[2].xyz);
-        float ndotl = max(dot(normal.xyz, lightDir), 0.0);
-        vec3 lightColor = vec3(0.5, 0.5, 0.6) * ndotl;
-        vec3 color = baseColor.rgb * ndotl;
-        finalColor = mix(baseColor.rgb, color, 0.5);
-    }
-
-    else if (rendererData.rendererOverrideState == 11) {
-        //finalColor = indirectDiffuseTexture * 1.5;
-        finalColor = Tonemap_ACES(indirectDiffuseTexture);
-        finalColor = pow(finalColor, vec3(1.0 / 2.2));
-        finalColor = clamp(finalColor, 0, 1);
-        finalColor = mix(finalColor, Tonemap_ACES(finalColor), 0.125);
-
-        //uint flag = texelFetch(u_oceanFlagsTexture, px, 0).r;
-        //
-        //if      (flag == 0) finalColor = vec3(0, 0, 0);
-        //else if (flag == 1) finalColor = vec3(1, 0, 0);
-        //else if (flag == 2) finalColor = vec3(0, 1, 0);
-        //else if (flag == 3) finalColor = vec3(0, 0, 1);
-        //else if (flag == 4) finalColor = vec3(0, 1, 1);
-    }
-
-    // Velocity
-    else if (rendererData.rendererOverrideState == 12) {
-        float gain = 20.0;
-        finalColor = vec3(velocity * gain + 0.5, 0.5);
-
-    }
-    // Visiblity
-    else if (rendererData.rendererOverrideState == 13) {
-        finalColor = GetVisiblity();
-    }
-
-    // Depth
-    else if (rendererData.rendererOverrideState == 14) {
-        //depth = depth * depth * depth;
-        finalColor = vec3(depth, 0, 0);
-    }
-
-    // Position From Depth
-    else if (rendererData.rendererOverrideState == 15) {
-        finalColor = worldPos;
-    }
-
-    // Emissive
-    else if (rendererData.rendererOverrideState == 16) {
-        finalColor = emissive;
-    }
-
-
-
-    // Below did work, but you commented it out when implementing MSAA coz u have no world pos texture for MSAA. Reconstruct pos from depth!
-
-    // Height map paint dot
-    //if (u_heightMapEditor) {
-    //    vec2 mouseUV = vec2(rendererData.normalizedMouseX, 1 - rendererData.normalizedMouseY);
-    //    vec3 mouseWorldPos = texture(GBufferWorldPositionexture, mouseUV).rgb;
-    //
-    //    // If there is no normal, we have no valid sample, aka skybox
-    //    if (normal != vec3(0,0,0)) {
-    //        vec3 fragWorldPos = texture(GBufferWorldPositionexture, screenUV).rgb;
-    //        float brushSize = u_brushSize;
-    //        float worldDist = length(fragWorldPos.xz - mouseWorldPos.xz);
-    //        float pixelDist = worldDist / HEIGHTMAP_SCALE_XZ;
-    //        float falloff = smoothstep(0.0, u_brushSize, pixelDist);
-    //        vec3 dotColor = mix(finalColor, vec3(0.0, 0.5, 1.0), 1.0 - falloff);
-    //        finalColor = mix(finalColor, dotColor, 0.75);
-    //    }
-    //}
+    vec3 finalColor = vec3(0, 0, 0);
+    
+    if (rendererData.rendererOverrideState == BASE_COLOR)       finalColor = GetBaseColor(px);
+    if (rendererData.rendererOverrideState == NORMALS)          finalColor = GetNormal(px);
+    if (rendererData.rendererOverrideState == RMA)              finalColor = GetRMA(px);
+    if (rendererData.rendererOverrideState == ROUGHNESS)        finalColor = GetRoughness(px);
+    if (rendererData.rendererOverrideState == METALLIC)         finalColor = GetMetallic(px);
+    if (rendererData.rendererOverrideState == AO)               finalColor = GetAO(px);
+    if (rendererData.rendererOverrideState == CAMERA_NDOTL)     finalColor = GetCameraNdotL(px);
+    if (rendererData.rendererOverrideState == INDIRECT_DIFFUSE) finalColor = GetIndirectDiffuse(px);
+    if (rendererData.rendererOverrideState == VELOCITY)         finalColor = GetVelocity(px);
+    if (rendererData.rendererOverrideState == VIS_BUFFER)       finalColor = GetVisBuffer(px);
+    if (rendererData.rendererOverrideState == DEPTH)            finalColor = GetDepth(px);
+    if (rendererData.rendererOverrideState == WORLD_POSITION)   finalColor = GetWorldPosition(px);
+    if (rendererData.rendererOverrideState == EMISSIVE)         finalColor = GetEmissive(px);
 
     imageStore(u_outputImage, px, vec4(finalColor, 1));
 }

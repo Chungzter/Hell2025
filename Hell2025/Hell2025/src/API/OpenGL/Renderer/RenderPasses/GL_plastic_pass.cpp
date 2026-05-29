@@ -30,7 +30,7 @@ namespace OpenGLRenderer {
 		ProfilerOpenGLZoneFunction();
 
 		const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-		const std::vector<RenderItem>& renderItems = RenderDataManager::GetPlasticRenderItems();
+		const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsPlastic();
 
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLFrameBuffer* miscFullSizeFbo = GetFrameBufferOLD("MiscFullSize");

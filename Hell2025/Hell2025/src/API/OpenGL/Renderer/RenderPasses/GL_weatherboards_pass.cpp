@@ -10,22 +10,17 @@
 namespace OpenGLRenderer {
 
     void WeatherBoardsPass() {
+
         ProfilerOpenGLZoneFunction();
 
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-        //OpenGLShader* shader = GetShader("GBuffer");
-        OpenGLShader* editorMeshShader = GetShaderOLD("EditorMesh");
         OpenGLShader* debugShader = GetShaderOLD("DebugTextured");
 
         if (!gBuffer) return;
-        //if (!shader) return;
-        if (!editorMeshShader) return;
         if (!debugShader) return;
 
         gBuffer->Bind();
         gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
-
-
 
         Transform transform;
         transform.position = glm::vec3(0.0, 0.0, 0.0f);

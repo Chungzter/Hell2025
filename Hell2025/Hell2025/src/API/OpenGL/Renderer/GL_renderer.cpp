@@ -110,7 +110,7 @@ namespace OpenGLRenderer {
         InitGrass();
         InitOceanHeightReadback();
 
-		InitMSAA();
+		//InitMSAA();
 		InitREStyle();
     }
 
@@ -174,7 +174,7 @@ namespace OpenGLRenderer {
         emissiveBlurFbo.CreateAttachment("ColorA", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
         emissiveBlurFbo.CreateAttachment("ColorB", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
 
-        OpenGLFrameBuffer& IndirectDiffuseFbo = CreateFrameBuffer("IndirectDiffuse", resolutions.gBuffer / 2);
+        OpenGLFrameBuffer& IndirectDiffuseFbo = CreateFrameBuffer("IndirectDiffuse", resolutions.gBuffer);
         IndirectDiffuseFbo.CreateAttachment("Color", GL_RGBA16F);
 
         g_frameBuffers["DepthPeeledTransparency"] = OpenGLFrameBuffer("DepthPeeledTransparency", resolutions.gBuffer);
@@ -184,10 +184,10 @@ namespace OpenGLRenderer {
         g_frameBuffers["DepthPeeledTransparency"].CreateAttachment("Composite", GL_RGBA16F);
         g_frameBuffers["DepthPeeledTransparency"].CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
-        g_frameBuffers["BloodFluid"] = OpenGLFrameBuffer("BloodFluid", resolutions.gBuffer);
-        g_frameBuffers["BloodFluid"].CreateAttachment("Depth", GL_R32F);
-        g_frameBuffers["BloodFluid"].CreateAttachment("Thickness", GL_R32F);
-        g_frameBuffers["BloodFluid"].CreateAttachment("BlurIntermediate", GL_R32F);
+        //g_frameBuffers["BloodFluid"] = OpenGLFrameBuffer("BloodFluid", resolutions.gBuffer);
+        //g_frameBuffers["BloodFluid"].CreateAttachment("Depth", GL_R32F);
+        //g_frameBuffers["BloodFluid"].CreateAttachment("Thickness", GL_R32F);
+        //g_frameBuffers["BloodFluid"].CreateAttachment("BlurIntermediate", GL_R32F);
 
         g_frameBuffers["GaussianBlur"] = OpenGLFrameBuffer("GaussianBlur", resolutions.gBuffer.x / 2, resolutions.gBuffer.y / 2);
         g_frameBuffers["GaussianBlur"].CreateAttachment("ColorA", GL_RGBA16F, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
@@ -646,13 +646,13 @@ namespace OpenGLRenderer {
         OceanSurfaceCompositePass();
 
         GlassPass();
-        DecalPass();
         EmissivePass();
         ScreenspaceReflectionsPass();
         HairPass();
         //DepthPeeledTransparencyPass();
         PlasticPass();
         RayMarchFog();
+        GaussianBlur();
         OceanUnderwaterCompositePass();
         StainedGlassPass();
         WinstonPass();

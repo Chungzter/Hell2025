@@ -162,7 +162,7 @@ HairSurface BuildHairSurface(HairTextureSamples samples, float coverageAlpha, fl
     surface.metallic = samples.rma.g;
 
     float ao = samples.rma.b;
-    vec3 gammaBaseColor = pow(samples.baseColor.rgb, vec3(2.2));
+    vec3 linearBaseColor = pow(samples.baseColor.rgb, vec3(2.2));
 
     vec3 n = normalize(Normal);
 
@@ -177,8 +177,8 @@ HairSurface BuildHairSurface(HairTextureSamples samples, float coverageAlpha, fl
     vec3 t = BuildHairTangentFromFlow(tMesh, bMesh, flow);
     vec3 jitteredT = SafeNormalize(t + n * (strandID - 0.5) * u_specularJitter, t);
 
-    surface.baseColor = gammaBaseColor;
-    surface.hairBaseColor = gammaBaseColor * mix(u_rootColorFloor, u_tipColorFloor, rootFactor);
+    surface.baseColor = linearBaseColor;
+    surface.hairBaseColor = linearBaseColor * mix(u_rootColorFloor, u_tipColorFloor, rootFactor);
     surface.hairAO = ao * mix(u_rootAOFloor, u_tipAOFloor, rootFactor);
     surface.normal = n;
     surface.tangent = t;

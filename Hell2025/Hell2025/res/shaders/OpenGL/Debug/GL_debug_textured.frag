@@ -9,8 +9,7 @@ layout (binding = 7) uniform sampler2D WorldMirrorMaskTexture; // slot 7 because
 layout (location = 0) out vec4 BaseColorOut;
 layout (location = 1) out vec4 NormalOut;
 layout (location = 2) out vec4 RMAOut;
-layout (location = 3) out vec4 WorldPositionOut;
-layout (location = 4) out vec4 EmissiveOut;
+layout (location = 3) out vec4 EmissiveOut;
 
 in vec2 TexCoord;
 in vec3 Normal;
@@ -45,7 +44,5 @@ void main() {
     BaseColorOut = vec4(baseColor);
     NormalOut = vec4(normal, 1.0);
     RMAOut = vec4(rma, 1.0);
-    WorldPositionOut = vec4(WorldPos.rgb, 1.0);
-
     EmissiveOut = vec4(EmissiveColor, 0);
 }

@@ -5,7 +5,9 @@
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"
+
 #include <Hell/Logging.h>
+#include <Hell/RendereringConstants.h>
 
 Wall::Wall(uint64_t id, const WallCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_objectId = id;
@@ -286,7 +288,7 @@ void Wall::SubmitRenderItems() {
         renderItem.baseVertex = meshV2->baseVertex;
         renderItem.baseIndex = meshV2->baseIndex;
 
-		RenderDataManager::SubmitHouseRenderItem(renderItem);
+		RenderDataManager::SubmitRenderItemProcedural(renderItem);
 
         // Outline?
         //if (Editor::GetHoveredObjectId() == m_objectId) {
@@ -407,8 +409,8 @@ void Wall::CreateWeatherBoards() {
         renderItem.baseColorTextureIndex = material->m_basecolor;
         renderItem.rmaTextureIndex = material->m_rma;
         renderItem.normalMapTextureIndex = material->m_normal;
-        renderItem.castCSMShadows = true;
-        renderItem.castShadows = true;
+        renderItem.shadowBit |= (SHADOW_BIT_CAST_SHADOW | SHADOW_BIT_CAST_CSM_SHADOW | SHADOW_BIT_STATIC);
+
         Util::UpdateRenderItemAABB(renderItem);
         Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }

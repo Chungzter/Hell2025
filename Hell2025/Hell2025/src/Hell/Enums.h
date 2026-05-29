@@ -437,7 +437,7 @@ enum class RendererOverrideState {
     TILE_HEATMAP_CHRISTMAS_LIGHTS,
     INDIRECT_DIFFUSE,
     VELOCITY,
-    VISIBILITY,
+    VIS_BUFFER,
     DEPTH,
     WORLD_POSITION,
     EMISSIVE,

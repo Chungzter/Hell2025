@@ -14,16 +14,14 @@ namespace OpenGLRenderer {
         glm::ivec2 finalImageResolution = glm::ivec2(1920, 1080) / 2;
     } g_settings;
 
-    void BindShadowMapsRE();
     void BlendedLighting();
     void ClearRenderTargetsRE();
     void CreateFramebuffersRE();
-    void HairDepthPrep();
-    void HairDepthPrePassRE();
-    void HairPassRE();
-    void HairCompositeRE();
+
     void LightingPassRE();
     void LoadShadersRE();
+    void SkyboxPassRE();
+    void GlassPassRE();
 
     void RenderFullscreenTriangle();
 
@@ -50,14 +48,11 @@ namespace OpenGLRenderer {
         RenderShadowMaps();
         ClearRenderTargetsRE();
 
-        static bool visibilityPath = true;
-        if (Input::KeyPressed(HELL_KEY_NUMPAD_2)) {
-            visibilityPath = !visibilityPath;
-        }
 
         VisibilityPass();
         VisibilitySkinnedPass();
         VisibilityAlphaDiscardPass();
+        VisibilitySkinnedHairPass();
 
         MaterialResolvePass();
         MaterialResolveSkinnedPass();
@@ -88,10 +83,17 @@ namespace OpenGLRenderer {
         LightingPassRE();
         BlendedLighting();
 
-        HairDepthPrep();
-        HairDepthPrePassRE();
-        HairPassRE();
-        HairCompositeRE();
+        SkyboxPassRE();
+
+        {
+            ProfilerOpenGLZoneFunction();
+            HairDepthPrep();
+            HairDepthPrePassRE();
+            HairForwardLightingPassRE();
+            HairCompositeRE();
+        }
+
+        GlassPassRE();
 
         // DDGI Debug
         DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
@@ -112,6 +114,80 @@ namespace OpenGLRenderer {
         OpenGLRenderer::BlitToDefaultFrameBuffer(&finalImageFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         UIPass();
+    }
+
+    void GlassPassRE() {
+        ProfilerOpenGLZoneFunction();
+
+        ForceRasterizerState("GlassPass");
+
+        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+
+        OpenGLShader* shader = GetShaderOLD("Glass");
+        OpenGLShader* compositeShader = GetShaderOLD("GlassComposite");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBufferRE");
+        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
+
+        if (!shader) return;
+        if (!compositeShader) return;
+        if (!gBuffer) return;
+        if (!flashLightShadowMapsFBO) return;
+
+        shader->Bind();
+        shader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
+
+        gBuffer->Bind();
+        gBuffer->DrawBuffer("Lighting");
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = true;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
+        state.depthFunc = GL_GREATER;
+        state.blendFuncSrcfactor = GL_ONE;
+        state.blendFuncDstfactor = GL_ONE;
+        SetRasterizerState(state);
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
+        glBindTextureUnit(7, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
+        glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
+
+        // Forward render each glass render item into each viewport
+        for (int i = 0; i < 4; i++) {
+            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            shader->SetInt("u_viewportIndex", i);
+
+            for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsGlass()) {
+                shader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
+
+                Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+                if (!mesh) continue;
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+
+                glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
+            }
+        }
+
+        // Composite that render back into the lighting texture
+        //gBuffer->SetViewport();
+        //compositeShader->Bind();
+        //glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+        //glBindImageTexture(1, gBuffer->GetColorAttachmentHandleByName("Glass"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+        //glDispatchCompute(gBuffer->GetWidth() / 16, gBuffer->GetHeight() / 4, 1);
+        //
+        //glDepthMask(GL_TRUE);
     }
 
     void EmissiveForwardPass() {
@@ -161,10 +237,10 @@ namespace OpenGLRenderer {
         LoadShader("RE", "DepthPrePassRE", { "GL_depth_prepass.vert", "GL_depth_prepass.frag" });
         LoadShader("RE", "DepthPrePassAlphaDiscardRE", { "GL_depth_prepass_alpha_discard.vert", "GL_depth_prepass_alpha_discard.frag" });
         LoadShader("RE", "GBufferRE", { "GL_gbuffer_re.vert", "GL_gbuffer_re.frag" });
-        LoadShader("RE", "LightingRE", { "GL_lighting_re.comp" });
+        LoadShader("RE", "LightingDeferred", { "GL_fullscreen_triangle.vert", "GL_lighting_deferred.frag" });
 
         LoadShader("RE", "HairLightingForward", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward.frag" });
-        // LoadShader("RE", "HairLightingDeferred", { "GL_fullscreen_triangle.vert", "GL_hair_lighting_deferred.frag" });
+        LoadShader("RE", "HairLightingForwardOLD", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward_old.frag" });
         LoadShader("RE", "HairCompositeRE", { "GL_hair_composite_re.comp" });
         LoadShader("RE", "HairDepthPrep", { "GL_fullscreen_triangle.vert", "GL_hair_depth_prep.frag" });
 
@@ -173,9 +249,12 @@ namespace OpenGLRenderer {
         LoadShader("RE", "MaterialResolve", { "GL_material_resolve.vert", "GL_material_resolve.frag" });
         LoadShader("RE", "MaterialResolveSkinning", { "GL_material_resolve.vert", "GL_material_resolve.frag" }, { "SKINNED" });
 
-        // TODO: using GL_gbuffer_re.vert is confusing, you probably have a lot of indentical shaders that peform
-        //       what this does, check that, and think of a more unified name.
+        // TODO: using GL_gbuffer_re.vert is confusing, you probably have a lot of identical shaders that perform
+        // what this does, check that, and think of a more unified name.
         LoadShader("RE", "EmissiveForward", { "GL_gbuffer_re.vert", "GL_emissive_forward.frag" });
+
+        LoadShader("RE", "LightingForward", { "GL_lighting_forward.vert", "GL_lighting_forward.frag" });
+        LoadShader("RE", "SkyboxRE", { "GL_fullscreen_triangle.vert", "GL_skybox_re.frag" });
     }
 
 	void ClearRenderTargetsRE() {
@@ -208,20 +287,49 @@ namespace OpenGLRenderer {
     void LightingPassRE() {
         ProfilerOpenGLZoneFunction();
 
-		OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
-		OpenGLFrameBuffer& indirectDiffuseFbo = GetFrameBuffer("IndirectDiffuse");
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& indirectDiffuseFbo = GetFrameBuffer("IndirectDiffuse");
 
-		BindShader("LightingRE");
-		BindShadowMapsRE();
+        BindShader("LightingDeferred");
+        BindShadowMapsRE();
 
-		BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
-		BindTextureUnit(1, gBuffer.GetColorAttachmentHandleByName("BaseColorMetallic"));
-		BindTextureUnit(2, gBuffer.GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
-		BindTextureUnit(3, gBuffer.GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
-		BindTextureUnit(4, gBuffer.GetDepthAttachmentHandle());
-		BindTextureUnit(5, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
+        std::vector<float>& cascadeLevels = GetShadowCascadeLevels();
+        SetUniformFloat("u_cascadeFarPlane", 256.0f); // ???
+        SetUniformFloat("u_cascadePlaneDistances[0]", cascadeLevels[0]);
+        SetUniformFloat("u_cascadePlaneDistances[1]", cascadeLevels[1]);
+        SetUniformFloat("u_cascadePlaneDistances[2]", cascadeLevels[2]);
+        SetUniformFloat("u_cascadePlaneDistances[3]", cascadeLevels[3]);
 
-		glDispatchCompute(gBuffer.GetWidth() / TILE_SIZE, gBuffer.GetHeight() / TILE_SIZE, 1);
+        BindTextureUnit(1, gBuffer.GetColorAttachmentHandleByName("BaseColorMetallic"));
+        BindTextureUnit(2, gBuffer.GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
+        BindTextureUnit(3, gBuffer.GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
+        BindTextureUnit(4, gBuffer.GetDepthAttachmentHandle());
+        BindTextureUnit(5, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
+
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
+        fbo.Bind();
+        fbo.SetViewport();
+        fbo.DrawBuffers({ "Lighting" });
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
+
+        state.stencilTestEnabled = true;
+        state.stencilFunc = GL_EQUAL;
+        state.stencilWriteMask = 0x00;
+        state.stencilFailOp = GL_KEEP;
+        state.stencilDepthFailOp = GL_KEEP;
+        state.stencilPassOp = GL_KEEP;
+        state.stencilRef = 0;
+        state.stencilReadMask = STENCIL_BIT_SKINNED_HAIR;
+
+        SetRasterizerState(state);
+
+        RenderFullscreenTriangle();
 	}
 
 	void BlendedLighting() {
@@ -242,7 +350,7 @@ namespace OpenGLRenderer {
 		state.depthFunc = GL_GREATER;
 
 		// Opaque
-		OpenGLShader& opaqueShader = GetShader("ShadedHardSurface");
+		OpenGLShader& opaqueShader = GetShader("LightingForward");
 		opaqueShader.Bind();
 
 		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
@@ -255,110 +363,44 @@ namespace OpenGLRenderer {
 		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.skinnedBlended, state);
 	}
 
-	void HairDepthPrep() {
-		ProfilerOpenGLZoneFunction();
+	
 
-		static uint32_t dummyVao = 0;
-		if (dummyVao == 0) {
-			glGenVertexArrays(1, &dummyVao);
-		}
-
-		OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
-		OpenGLFrameBuffer& hairfbo = GetFrameBuffer("HairRE");
-
-        hairfbo.Bind();
-        hairfbo.SetViewport();
-        hairfbo.DrawBuffer("Lighting");
-
-		BindShader("HairDepthPrep");
-		BindTextureUnit(0, gBuffer.GetDepthAttachmentHandle());
-
-		OpenGLRasterizerState state;
-		state.depthTestEnabled = true;
-		state.blendEnable = false;
-		state.cullfaceEnable = false;
-		state.depthMask = true;
-		state.colorMask = true;
-		state.depthFunc = GL_ALWAYS;
-
-		SetRasterizerState(state);
-		RenderFullscreenTriangle();
-	}
-
-	void HairDepthPrePassRE() {
-		ProfilerOpenGLZoneFunction();
-
-		const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-
-		OpenGLFrameBuffer& fbo = GetFrameBuffer("HairRE");
-		fbo.Bind();
-		fbo.DrawBuffer(GL_NONE);
-
-		OpenGLRasterizerState state;
-		state.depthTestEnabled = true;
-		state.blendEnable = false;
-		state.cullfaceEnable = false;
-		state.depthMask = true;
-		state.colorMask = false;
-		state.depthFunc = GL_GREATER;
-
-		// Masked
-		OpenGLShader& shader = GetShader("DepthPrePassAlphaDiscardRE");
-		shader.Bind();
-
-		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-		MultiDrawPerViewport(&fbo, &shader, drawInfoSet.hair, state);
-		MultiDrawPerViewport(&fbo, &shader, drawInfoSet.skinnedNonDeformingHair, state);
-
-		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
-		MultiDrawPerViewport(&fbo, &shader, drawInfoSet.skinnedHair, state);
-
-		glBindVertexArray(0);
-	}
-
-	void HairPassRE() {
-		ProfilerOpenGLZoneFunction();
-		const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-
-		OpenGLFrameBuffer& fbo = GetFrameBuffer("HairRE");
-		fbo.Bind();
-		fbo.DrawBuffers({ "Lighting" });
-
-		OpenGLShader& shader = GetShader("HairLightingForward");
-		shader.Bind();
-		shader.SetFloat("u_renderResolutionScale", 1.0f);
-
-		BindShadowMapsRE();
-
-		OpenGLRasterizerState maskedState;
-		maskedState.blendEnable = false;
-		maskedState.cullfaceEnable = false;
-		maskedState.colorMask = true;
-		maskedState.depthFunc = GL_EQUAL;
-		maskedState.depthMask = false;
-		maskedState.depthTestEnabled = true;
-
-		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-		MultiDrawPerViewport(&fbo, &shader, drawInfoSet.hair, maskedState);
-		MultiDrawPerViewport(&fbo, &shader, drawInfoSet.skinnedNonDeformingHair, maskedState);
-
-		glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
-		MultiDrawPerViewport(&fbo, &shader, drawInfoSet.skinnedHair, maskedState);
-	}
-
-    void HairCompositeRE() {
+    void SkyboxPassRE() {
         ProfilerOpenGLZoneFunction();
 
-		OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
-		OpenGLFrameBuffer& hairFbo = GetFrameBuffer("HairRE");
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
+        OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
 
-		BindShader("HairCompositeRE");
+        gBuffer.Bind();
+        gBuffer.SetViewport();
+        gBuffer.DrawBuffers({ "Lighting" });
 
-		BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
-		BindTextureUnit(1, hairFbo.GetColorAttachmentHandleByName("Lighting"));
+        BindShader("SkyboxRE");
 
-		glDispatchCompute(gBuffer.GetWidth() / TILE_SIZE, gBuffer.GetHeight() / TILE_SIZE, 1);
-	}
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.depthFunc = GL_GREATER;
+        
+        state.stencilTestEnabled = true;
+        state.stencilFunc = GL_EQUAL;
+        state.stencilRef = 0; // This is any non-rendered pixel
+        state.stencilReadMask = 0xFF;
+        state.stencilWriteMask = 0x00;
+        state.stencilFailOp = GL_KEEP;
+        state.stencilDepthFailOp = GL_KEEP;
+        state.stencilPassOp = GL_KEEP;
+
+        SetRasterizerState(state);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemapView->GetHandle());
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        
+        RenderFullscreenTriangle();
+    }
 
     void RenderFullscreenTriangle() {
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());

@@ -31,7 +31,8 @@ struct Door {
     void DebugDraw();
     bool CameraFacingDoorWorldForward(const glm::vec3& cameraPositon, const glm::vec3& cameraForward);
 
-	MeshNodes& GetMeshNodes() { return m_meshNodes; }
+	MeshNodes& GetMeshNodes()                                           { return m_meshNodes; }
+
     const bool IsDirty() const                                          { return m_meshNodes.IsDirty(); }
     const uint64_t GetObjectId() const                                  { return m_objectId; }
     const glm::vec3& GetPosition() const                                { return m_position; }
@@ -43,9 +44,7 @@ struct Door {
     const Model* GetDoorFrameModel() const                              { return m_frameModel; }
     const OpeningState& GetOpeningState() const                         { return m_openingState; }
     const DoorCreateInfo& GetCreateInfo() const                         { return m_createInfo; }
-    const std::vector<RenderItem>& GetRenderItems() const               { return m_renderItems; } // This includes main MeshNods render items plus any deadlocks renderitems
-    const std::vector<RenderItem>& GetRenderItemsGlass() const          { return m_meshNodes.GetRenderItemsGlass(); }
-    const std::vector<RenderItem>& GetRenderItemsStainedGlass() const   { return m_meshNodes.GetRenderItemsStainedGlass(); }
+    const std::vector<RenderItem>& GetRenderItems() const               { return m_renderItems; } // This includes main MeshNods render items plus any deadlocks renderitems ???
     const std::string& GetEditorName() const                            { return m_createInfo.editorName; }
     const DoorType& GetType() const                                     { return m_createInfo.type; }
     const DoorMaterialType& GetMaterialTypeFront() const                { return m_createInfo.materialTypeFront; }

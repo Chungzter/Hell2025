@@ -1,65 +1,57 @@
 #include "PictureFrame.h"
 #include "AssetManagement/AssetManager.h"
+#include "Hell/Logging.h"
 #include "Hell/UniqueID.h"
 #include "Util.h"
 
-const std::vector<const char*> bigLandscapeImages = {
-    //"Picture_RainbowMage",
-    "Picture_SHNakedLady",
-    "Picture_Minotaur"
-};
+#include "Renderer/Renderer.h"
 
-void PictureFrame::Init(PictureFrameCreateInfo createInfo) {
+PictureFrame::PictureFrame(uint64_t id, PictureFrameCreateInfo& createInfo, SpawnOffset& spawnOffset) {
+    m_objectId = id;
     m_createInfo = createInfo;
-    m_objectId = UniqueID::GetNextObjectId(ObjectType::PICTURE_FRAME);
-    SelectRandomPicture();
-    UpdateRenderItems();   
+
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation += glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+    
+    Init();
 }
 
-void PictureFrame::UpdateRenderItems() {
-    m_renderItems.clear();
+void PictureFrame::Init() {
+    SelectRandomPicture();
 
-    Material* material = AssetManager::GetMaterialByName("PictureFrame0");
-    Material* defaultMaterial = AssetManager::GetDefaultMaterial();
+    std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 
+    MeshNodeCreateInfo& picture = meshNodeCreateInfoSet.emplace_back();
+    picture.meshName = "picture_low.003";
+    picture.baseColorOverrideTextureName = m_pictureTextureName;
+
+    MeshNodeCreateInfo& frame = meshNodeCreateInfoSet.emplace_back();
+    frame.meshName = "frame_side.L_low.022";
+    frame.materialName = "PictureFrame0";
+    
+    m_meshNodes.Init(m_objectId, "PictureFrame_BigLandscape", meshNodeCreateInfoSet);
+}
+
+void PictureFrame::CleanUp() {
+    m_meshNodes.CleanUp();
+}
+
+void PictureFrame::Update() {
     Transform transform;
     transform.position = m_createInfo.position;
     transform.rotation = m_createInfo.rotation;
     transform.scale = m_createInfo.scale;
 
-    if (m_createInfo.type == PictureFrameType::BIG_LANDSCAPE) {
-        Model* model = AssetManager::GetModelByName("PictureFrame_BigLandscape");
-
-        for (int i = 0; i < 2; i++) {
-            Mesh* mesh = AssetManager::GetMeshByIndex(model->GetMeshIndices()[i]);
-            if (!mesh) continue;
-
-            uint32_t meshIndex = model->GetMeshIndices()[i];
-            RenderItem& renderItem = m_renderItems.emplace_back();
-            renderItem.modelMatrix = transform.to_mat4();
-            renderItem.prevModelMatrix = renderItem.modelMatrix;
-            renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-            renderItem.meshIndex = meshIndex;
-            renderItem.baseColorTextureIndex = material->m_basecolor;
-            renderItem.rmaTextureIndex = material->m_rma;
-            renderItem.normalMapTextureIndex = material->m_normal;
-            renderItem.objectType = (int)ObjectType::PICTURE_FRAME;
-            renderItem.baseVertex = mesh->baseVertex;
-            renderItem.baseIndex = mesh->baseIndex;
-
-            if (i == 0) {
-                renderItem.baseColorTextureIndex = AssetManager::GetTextureIndexByName(m_pictureTextureName);
-                renderItem.rmaTextureIndex = defaultMaterial->m_rma;
-                renderItem.normalMapTextureIndex = defaultMaterial->m_normal;
-            }
-
-            Util::UpdateRenderItemAABB(renderItem);
-            Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
-        }
-    }
+    m_meshNodes.Update(transform.to_mat4());
 }
 
 void PictureFrame::SelectRandomPicture() {
+    const std::vector<const char*> bigLandscapeImages = {
+        //"Picture_RainbowMage",
+        "Picture_SHNakedLady",
+        "Picture_Minotaur"
+    };
+
     if (m_createInfo.type == PictureFrameType::BIG_LANDSCAPE) {
         int random = rand() % bigLandscapeImages.size();
         m_pictureTextureName = bigLandscapeImages[random];
@@ -67,19 +59,18 @@ void PictureFrame::SelectRandomPicture() {
     else {
         m_pictureTextureName = "CheckerBoard";
     }
+
+    // TODO: make this trigger an update of the MeshNodes
 }
 
-void PictureFrame::SetPosition(glm::vec3 position) {
+void PictureFrame::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
-    UpdateRenderItems();
 }
 
-void PictureFrame::SetRotation(glm::vec3 rotation) {
+void PictureFrame::SetRotation(const glm::vec3& rotation) {
     m_createInfo.rotation = rotation;
-    UpdateRenderItems();
 }
 
-void PictureFrame::SetScale(glm::vec3 scale) {
+void PictureFrame::SetScale(const glm::vec3& scale) {
     m_createInfo.scale = scale;
-    UpdateRenderItems();
 }

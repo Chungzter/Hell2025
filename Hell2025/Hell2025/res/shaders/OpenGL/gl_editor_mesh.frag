@@ -19,7 +19,7 @@ void main() {
     vec4 baseColor = texture2D(baseColorTexture, TexCoord);
     vec3 normalMap = texture2D(normalTexture, TexCoord).rgb;
     vec3 rma = texture2D(rmaTexture, TexCoord).rgb;
-
+    
     BaseColorOut = baseColor;
     RMAOut = vec4(rma, 1);
     NormalOut.rgb = normalize(Normal);

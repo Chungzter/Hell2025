@@ -220,7 +220,7 @@ void Player::SubmitP90MagsRenderItems() {
 		glm::mat4 modelMatrix = viewWeapon->GetModelMatrix();
 		glm::mat4 finalMatrix = modelMatrix * globalBlendedNodeTransform * boneOffset;
 		m_p90MagMeshNodes.Update(finalMatrix);
-        m_p90MagMeshNodes.SubmitRenderItems();
+        RenderDataManager::SubmitMeshNodes(m_p90MagMeshNodes);
 
         // Now do it all again for the second mag
         {
@@ -233,8 +233,8 @@ void Player::SubmitP90MagsRenderItems() {
 			glm::mat4 modelMatrix = viewWeapon->GetModelMatrix();
 			glm::mat4 finalMatrix = modelMatrix * globalBlendedNodeTransform * boneOffset * offsetMatrix;
 
-			m_p90MagMeshNodes.Update(finalMatrix);
-			m_p90MagMeshNodes.SubmitRenderItems();
+            m_p90MagMeshNodes.Update(finalMatrix);
+            RenderDataManager::SubmitMeshNodes(m_p90MagMeshNodes);
         }
 
 		//RenderDataManager::SubmitRenderItems(m_p90MagMeshNodes.GetRenderItems());

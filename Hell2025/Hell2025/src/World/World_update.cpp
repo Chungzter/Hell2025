@@ -50,11 +50,10 @@ namespace World {
 
         ratKidAO->SetSkinnedModel("RatKing", "RatKing");
         ratKidAO->SetSkinnedModel(modelName, "RatKing");
-		
+
         ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.23f));
         ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle3", 1.0f);
-		ratKidAO->PrintMeshNames();
-
+		//ratKidAO->PrintMeshNames();
     }
     
     static float DegToRad(float degrees) { return degrees * (HELL_PI / 180.0f); }
@@ -63,11 +62,31 @@ namespace World {
 
         if (Input::KeyPressed(HELL_KEY_NUMPAD_1)) {
             AnimatedGameObject* ratKidAO = GetRadKidAO();
-            ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle", 1.0f);
+            ratKidAO->SetAnimationModeToBindPose();
+            for (Light& light : World::GetLights()) {
+                light.ForceDirty();
+            }
         }
         if (Input::KeyPressed(HELL_KEY_NUMPAD_2)) {
             AnimatedGameObject* ratKidAO = GetRadKidAO();
             ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle3", 1.0f);
+            for (Light& light : World::GetLights()) {
+                light.ForceDirty();
+            }
+        }
+        if (Input::KeyPressed(HELL_KEY_NUMPAD_8)) {
+            AnimatedGameObject* ratKidAO = GetRadKidAO();
+            ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.73f));
+            for (Light& light : World::GetLights()) {
+                light.ForceDirty();
+            }
+        }
+        if (Input::KeyPressed(HELL_KEY_NUMPAD_9)) {
+            AnimatedGameObject* ratKidAO = GetRadKidAO();
+            ratKidAO->SetPosition(glm::vec3(35.6f, 31.0f, 36.83f));
+            for (Light& light : World::GetLights()) {
+                light.ForceDirty();
+            }
         }
 
         // FAILED DOOR CHAIN LINK SHIT
@@ -192,7 +211,7 @@ namespace World {
             trapKingAO->SetMeshMaterialByMeshName("Boxers", "TrapKingBoxes");
 
             trapKingAO->SetPosition(glm::vec3(37.4f, 31.0f, 36.23f));
-            trapKingAO->PrintMeshNames();
+            //trapKingAO->PrintMeshNames();
 
             //trapKingAO->SetSkinnedModel("Remington870", "Remington870");
             //trapKingAO->SetPosition(glm::vec3(37.4f, 32.0f, 36.23f));
@@ -207,7 +226,10 @@ namespace World {
         GetGameObjects()[0].m_meshNodes.EnablePointLightShadows();
 
       if (g_ratKidAO == 0) {
-		  InitRatKing("RatKing");
+          InitRatKing("RatKing");
+
+          AnimatedGameObject* ratKidAO = GetRadKidAO();
+          ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.73f));
       }
 
 
@@ -242,8 +264,7 @@ namespace World {
       //    Audio::PlayAudio(AUDIO_SELECT, 1.0f);
       //}
      
-      AnimatedGameObject* ratKidAO = GetRadKidAO();
-      ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.73f));
+
 
 
         auto& ragdolls = RagdollManager::GetRagdolls();
@@ -316,7 +337,6 @@ namespace World {
         for (BulletCasing& object : GetBulletCasings())             object.Update(deltaTime);
         for (ChristmasLightSet& object : GetChristmasLightSets())   object.Update(deltaTime);
         for (ChristmasTree& object : GetChristmasTrees())           object.Update(deltaTime);
-        for (Decal& object : GetDecals())                           object.Update();
         for (Dobermann& object : GetDobermanns())                   object.Update(deltaTime);
         for (Door& object : GetDoors())                             object.Update(deltaTime);
         for (Fence& object : GetFences())                           object.Update();
@@ -329,17 +349,19 @@ namespace World {
         for (Mermaid& object : GetMermaids())                       object.Update(deltaTime);
         for (Piano& object : GetPianos())                           object.Update(deltaTime);
         for (PickUp& object : GetPickUps())                         object.Update(deltaTime);
+        for (PictureFrame& object : GetPictureFrames())             object.Update();
         for (PowerPoleSet& object : GetPowerPoleSets())             object.Update();
         for (Road& object : GetRoads())                             object.Update();
         for (Shark& object : GetSharks())                           object.Update(deltaTime);
         for (Staircase& object : GetStaircases())                   object.Update(deltaTime);
-        for (Tree& object : GetTrees())                             object.Update(deltaTime);
+        //for (Tree& object : GetTrees())                             object.Update(deltaTime);
         for (TrimSet& object : GetTrimSets())                       object.Update();
         for (Window& object : GetWindows())                         object.Update(deltaTime);
 
         // These must run in this order otherwise various dirty flags are stale
         for (DDGIVolume& object : GetDDGIVolumes())                 object.Update();
         for (Light& object : GetLights())                           object.Update(deltaTime);
+        for (Decal& object : GetDecals())                           object.Update();
 
         // Update player weapon attachments. Must happen after AnimatedGameObject updates so that animated transforms are correct
         for (int i = 0; i < Game::GetLocalPlayerCount(); i++) {

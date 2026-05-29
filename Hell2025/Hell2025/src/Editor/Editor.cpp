@@ -103,7 +103,7 @@ namespace Editor {
             World::ClearAllObjects();
             World::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
             World::LoadMapInstanceHouses(Editor::GetEditorMapName(), SpawnOffset());
-            World::RecreateHouseMesh();
+            World::RecreateHouseGeometryOLD();
         }
         if (GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
             // Update the map file with everything in the world
@@ -113,7 +113,7 @@ namespace Editor {
             World::ClearAllObjects();
             World::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
             World::LoadMapInstanceHouses(Editor::GetEditorMapName(), SpawnOffset());
-            World::RecreateHouseMesh();
+            World::RecreateHouseGeometryOLD();
         }
 
         g_isOpen = false;

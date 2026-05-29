@@ -1598,6 +1598,7 @@
       "Type": "CHAIR_SPINDLE_BACK"
     }
   ],
+  "Fences": [],
   "Fireplaces": [
     {
       "EditorName": "UNDEFINED_STRING",
@@ -1694,7 +1695,7 @@
         0.0
       ],
       "SaveToFile": true,
-      "Strength": 1.0,
+      "Strength": 0.75,
       "Twist": 0.0,
       "Type": "HANGING_LIGHT"
     },
@@ -2486,6 +2487,7 @@
       "Type": "CEILING"
     }
   ],
+  "PowerPoleSets": [],
   "Staircases": [
     {
       "EditorName": "UNDEFINED_STRING",

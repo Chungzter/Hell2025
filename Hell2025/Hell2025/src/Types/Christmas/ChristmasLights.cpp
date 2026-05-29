@@ -3,7 +3,9 @@
 #include "Util.h"
 #include "Renderer/Renderer.h"
 #include <array>
+
 #include <Hell/Logging.h>
+#include <Hell/RendereringConstants.h>
 
 ChristmasLightSet::ChristmasLightSet(uint64_t id, ChristmasLightsCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_objectId = id;
@@ -83,7 +85,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         renderItem.rmaTextureIndex = material->m_rma;
         renderItem.normalMapTextureIndex = material->m_normal;
         //renderItem.useEmissiveMask = 1.0f;                            // CHECK IM NOT IMPORTANT
-        renderItem.castShadows = false;
+        renderItem.shadowBit = SHADOW_BIT_NONE;
         renderItem.emissiveR = 1.0f;
         renderItem.emissiveG = 0.0f;
         renderItem.emissiveB = 0.0f;
@@ -102,7 +104,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         renderItem.baseColorTextureIndex = material->m_basecolor;
         renderItem.rmaTextureIndex = material->m_rma;
         renderItem.normalMapTextureIndex = material->m_normal;
-        renderItem.castShadows = false;
+        renderItem.shadowBit = SHADOW_BIT_NONE;
         Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
         Util::UpdateRenderItemAABB(renderItem);
         m_renderItems.push_back(renderItem);

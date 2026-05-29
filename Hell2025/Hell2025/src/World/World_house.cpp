@@ -12,7 +12,7 @@ namespace World {
     MeshBuffer g_weatherBoardMeshBuffer;
 
     // Find out why this isn't required for windows and doors, yet still somehow updates all this shit
-    void RecreateHouseMesh() {
+    void RecreateHouseGeometryOLD() {
         UpdateClippingCubes();
         UpdateAllWallCSG();
         UpdateHouseMeshBuffer();

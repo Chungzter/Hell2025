@@ -198,6 +198,7 @@ void Light::UpdateDirtyState() {
         }
     }
 
+    if (false)
     for (PickUp& object : World::GetPickUps()) {
         if (object.IsDirty()) {
             for (const RenderItem& renderItem : object.GetRenderItems()) {

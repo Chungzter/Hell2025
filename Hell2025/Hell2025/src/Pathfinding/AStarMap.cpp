@@ -5,6 +5,8 @@
 #include "Physics/Physics.h"
 #include "World/World.h"
 
+#include "Hell/Logging.h"
+
 namespace AStarMap {
 
     MeshBuffer g_debugGridMeshBuffer;
@@ -26,6 +28,7 @@ namespace AStarMap {
 
 
     void Init() {
+        Logging::Fatal() << "You called AStarMap::Init(). You don't use this\n";
         g_map.resize(GetCellCount());
 
         // Zero out all obstacles
@@ -37,17 +40,17 @@ namespace AStarMap {
         }
 
         // Mark trees
-        for (Tree& tree : World::GetTrees()) {
-            glm::vec3 position = tree.GetPosition();            
-            int size = 2;
-            glm::ivec2 treeCell = GetCellCoordsFromWorldSpacePosition(position);
-
-            for (int x = -size; x <= size; x++) {
-                for (int y = -size; y <= size; y++) {
-                    MarkCellAsObstacle(treeCell.x + x, treeCell.y + y);
-                }
-            }
-        }
+        //for (Tree& tree : World::GetTrees()) {
+        //    glm::vec3 position = tree.GetPosition();            
+        //    int size = 2;
+        //    glm::ivec2 treeCell = GetCellCoordsFromWorldSpacePosition(position);
+        //
+        //    for (int x = -size; x <= size; x++) {
+        //        for (int y = -size; y <= size; y++) {
+        //            MarkCellAsObstacle(treeCell.x + x, treeCell.y + y);
+        //        }
+        //    }
+        //}
 
 
         // Mark all ocean and house cells as walls

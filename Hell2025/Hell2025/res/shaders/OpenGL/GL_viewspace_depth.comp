@@ -18,7 +18,7 @@ ivec2 px = ivec2(gl_GlobalInvocationID.xy);
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
-    mat4 inverseProjection = viewportDataArr[viewportIndex].inverseProjection;
+    mat4 inverseProjection = viewportDataArr[viewportIndex].inverseProjectionReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
     vec2 ndcXY = viewportUV * 2.0 - 1.0;

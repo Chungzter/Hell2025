@@ -1,6 +1,5 @@
 #include "RenderDataManager.h"
 #include "AssetManagement/AssetManager.h"
-#include <Hell/Constants.h>
 #include "BackEnd/BackEnd.h"
 #include "Camera/Frustum.h"
 #include "Core/Game.h"
@@ -14,7 +13,10 @@
 #include <span>
 #include <unordered_map>
 
+#include <Hell/Constants.h>
 #include <Hell/Logging.h>
+#include <Hell/RendereringConstants.h>
+
 #include "Timer.hpp"
 
 // Get me out of here
@@ -29,20 +31,23 @@ namespace RenderDataManager {
     RendererData g_rendererData;
     std::vector<GPULight> g_gpuLightsHighRes;
 
-	std::vector<RenderItem> g_houseRenderItems;
+	std::vector<RenderItem> g_renderItemsProcedural;
 	std::vector<HouseRenderItem> g_houseRenderItemsOLD;
     std::vector<HouseRenderItem> g_houseOutlineRenderItems;
-    std::vector<RenderItem> g_decalRenderItems;
 
-    std::vector<RenderItem> g_glassRenderItems;
 
     std::vector<RenderItem> g_renderItems;
     std::vector<RenderItem> g_renderItemsBlended;
     std::vector<RenderItem> g_renderItemsAlphaDiscarded;
-    std::vector<RenderItem> g_renderItemsHairLayer;
+    std::vector<RenderItem> g_renderItemsHair;
+    std::vector<RenderItem> g_renderItemsGlass;
 	std::vector<RenderItem> g_renderItemsMirror;
-	std::vector<RenderItem> g_renderItemsPlastic;
-    std::vector<RenderItem> g_stainedGlassRenderItems;
+    std::vector<RenderItem> g_renderItemsPlastic;
+    std::vector<RenderItem> g_renderItemsStainedGlass;
+    std::vector<RenderItem> g_renderItemsToiletWater;
+
+    std::vector<RenderItem> g_renderItemsPointLightShadows;
+    std::vector<RenderItem> g_renderItemsMoonLightShadows;
 
     // Emissive
     std::vector<RenderItem> g_renderItemsEmissive;
@@ -50,7 +55,7 @@ namespace RenderDataManager {
 
     std::vector<RenderItem> g_shadowCasterRenderItems;
 
-    std::vector<RenderItem> g_outlineRenderItems;
+    std::vector<RenderItem> g_renderItemsOutline;
     std::vector<RenderItem> g_shadowMapRenderItems;
 
     std::vector<RenderItem> g_instanceData;
@@ -63,7 +68,7 @@ namespace RenderDataManager {
     std::vector<glm::mat4> g_skinningTransforms;
     std::vector<RenderItem> g_combinedSkinnedRenderItems;
 
-    std::vector<RenderItem> g_skinnedRenderItems;
+    std::vector<RenderItem> g_skinnedRenderItemsDefault;
     std::vector<RenderItem> g_skinnedRenderItemsAlphaDiscard;
     std::vector<RenderItem> g_skinnedRenderItemsBlended;
     std::vector<RenderItem> g_skinnedRenderItemsHair;
@@ -95,7 +100,7 @@ namespace RenderDataManager {
     void CreateMultiDrawIndirectCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
     void CreateMultiDrawIndirectCommandsSkinnedNonDeforming(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
 
-    void CreateHouseDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex);
+    void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex);
 	void CreateHouseMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
 
     void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, uint32_t faceIndex, GPULight& gpuLight);
@@ -110,7 +115,7 @@ namespace RenderDataManager {
 
         // Skinned (deforming)
         g_combinedSkinnedRenderItems.clear();
-        g_skinnedRenderItems.clear();
+        g_skinnedRenderItemsDefault.clear();
         g_skinnedRenderItemsAlphaDiscard.clear();
         g_skinnedRenderItemsBlended.clear();
         g_skinnedRenderItemsHair.clear();
@@ -123,25 +128,27 @@ namespace RenderDataManager {
 
 		g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent.clear();
 
-        g_decalRenderItems.clear();
 		g_houseOutlineRenderItems.clear();
 		g_houseRenderItemsOLD.clear();
-		g_houseRenderItems.clear();
+		g_renderItemsProcedural.clear();
 
         g_renderItems.clear();
 		g_renderItemsMirror.clear();
 		g_renderItemsPlastic.clear();
         g_renderItemsBlended.clear();
         g_renderItemsAlphaDiscarded.clear();
-        g_renderItemsHairLayer.clear();
+        g_renderItemsHair.clear();
+
+        g_renderItemsPointLightShadows.clear();
+        g_renderItemsMoonLightShadows.clear();
 
         // Think about better names for these containers below
-        g_outlineRenderItems.clear();
+        g_renderItemsOutline.clear();
         g_gpuLightsHighRes.clear();
         g_decalPaintingInfo.clear();
 		g_shadowCasterRenderItems.clear();
-		g_stainedGlassRenderItems.clear();
-		g_glassRenderItems.clear();
+		g_renderItemsStainedGlass.clear();
+		g_renderItemsGlass.clear();
     }
 
     void Update() {
@@ -297,6 +304,7 @@ namespace RenderDataManager {
         g_rendererData.normalizedMouseY = Util::MapRange(Input::GetMouseY(), 0, BackEnd::GetCurrentWindowHeight(), 0.0f, 1.0f);
         g_rendererData.tileCountX = resolutions.gBuffer.x / TILE_SIZE;
         g_rendererData.tileCountY = resolutions.gBuffer.y / TILE_SIZE;
+        g_rendererData.moonLightDir = glm::vec4(Game::GetMoonlightDirection(), 0.0f);
     }
 
 
@@ -368,8 +376,8 @@ namespace RenderDataManager {
             }
         }
 
-        std::vector<RenderItem> potentialRenderItems = g_renderItems; // First start with everything in the scene
-        potentialRenderItems.insert(potentialRenderItems.end(), g_shadowCasterRenderItems.begin(), g_shadowCasterRenderItems.end());
+        //std::vector<RenderItem> potentialRenderItems = g_renderItems; // First start with everything in the scene
+        //potentialRenderItems.insert(potentialRenderItems.end(), g_shadowCasterRenderItems.begin(), g_shadowCasterRenderItems.end());
 
         Frustum frustum;
 
@@ -384,11 +392,11 @@ namespace RenderDataManager {
                 int instanceStart = g_instanceData.size();
 
                 // Preallocate an estimate
-                g_instanceData.reserve(g_instanceData.size() + potentialRenderItems.size());
+                g_instanceData.reserve(g_instanceData.size() + g_renderItemsMoonLightShadows.size());
 
                 // Append new render items to the global instance data if its within this cascade's frustum
-                for (const RenderItem& renderItem : potentialRenderItems) {
-                    if (renderItem.castCSMShadows && frustum.IntersectsAABBFast(renderItem)) {
+                for (const RenderItem& renderItem : g_renderItemsMoonLightShadows) {
+                    if (frustum.IntersectsAABBFast(renderItem)) {
                         g_instanceData.push_back(renderItem);
                         //Renderer::DrawAABB(AABB(renderItem.aabbMin, renderItem.aabbMax), YELLOW);
                     }
@@ -422,7 +430,7 @@ namespace RenderDataManager {
             set.hair[i].clear();
 			set.mirrorRenderItems[i].clear();
             set.plastic[i].clear();
-            set.house[i].clear();
+            set.procedural[i].clear();
             set.emissive[i].clear();
 
             g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i].clear();
@@ -433,9 +441,12 @@ namespace RenderDataManager {
         SortRenderItems(g_renderItems);
         SortRenderItems(g_renderItemsBlended);
         SortRenderItems(g_renderItemsAlphaDiscarded);
-		SortRenderItems(g_renderItemsHairLayer);
+		SortRenderItems(g_renderItemsHair);
 		SortRenderItems(g_renderItemsPlastic);
-		SortRenderItemsByMeshId(g_houseRenderItems);
+        SortRenderItemsByMeshId(g_renderItemsProcedural);
+
+        SortRenderItems(g_renderItemsPointLightShadows);
+        SortRenderItems(g_renderItemsMoonLightShadows);
 
         GatherEmissiveRenderItems();
         SortRenderItems(g_renderItemsEmissive);
@@ -456,10 +467,10 @@ namespace RenderDataManager {
             CreateDrawCommands(set.standard[i], g_renderItems, &frustum, i);
             CreateDrawCommands(set.blended[i], g_renderItemsBlended, &frustum, i);
             CreateDrawCommands(set.alphaDiscard[i], g_renderItemsAlphaDiscarded, &frustum, i);
-			CreateDrawCommands(set.hair[i], g_renderItemsHairLayer, &frustum, i);
+			CreateDrawCommands(set.hair[i], g_renderItemsHair, &frustum, i);
             CreateDrawCommands(set.plastic[i], g_renderItemsPlastic, &frustum, i);
             CreateDrawCommands(set.emissive[i], g_renderItemsEmissive, &frustum, i);
-			CreateHouseDrawCommands(set.house[i], g_houseRenderItems, &frustum, i);
+			CreateDrawCommandProcedural(set.procedural[i], g_renderItemsProcedural, &frustum, i);
 
             if (Mirror* mirror = MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId())) {
                 CreateDrawCommands(set.mirrorRenderItems[i], potentialMirrorItems, mirror->GetFrustum(i), i);
@@ -538,7 +549,7 @@ namespace RenderDataManager {
 
 
 
-    void CreateHouseDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex) {
+    void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex) {
 		// Store the instance offset for this list of commands
 		int instanceStart = g_instanceData.size();
 
@@ -611,7 +622,9 @@ namespace RenderDataManager {
 
         // Append new render items to the global instance data
         for (const RenderItem& renderItem : renderItems) {
-            if (ignoreNonShadowCasters && !renderItem.castShadows) continue;
+            bool shadowCasting = ((renderItem.shadowBit & SHADOW_BIT_CAST_SHADOW) != 0u);
+
+            if (ignoreNonShadowCasters && !shadowCasting) continue;
             if (renderItem.ignoredViewportIndex != -1 && renderItem.ignoredViewportIndex == viewportIndex) continue;
             if (renderItem.exclusiveViewportIndex != -1 && renderItem.exclusiveViewportIndex != viewportIndex) continue;
 
@@ -692,17 +705,17 @@ namespace RenderDataManager {
         int instanceStart = g_instanceData.size();
 
         // Preallocate an estimate
-        g_instanceData.reserve(g_instanceData.size() + g_renderItems.size());
+        g_instanceData.reserve(g_instanceData.size() + g_renderItemsPointLightShadows.size());
 
         // Append new render items to the global instance data if it's within light frustum
         // g_renderItems is already sorted by this point
         // but if anything breaks, check here! (maybe you re-ordered things)
-        for (const RenderItem& renderItem : g_renderItems) {
+        for (const RenderItem& renderItem : g_renderItemsPointLightShadows) {
 
             //AABB aabb(renderItem.aabbMin, renderItem.aabbMax);
             //if (frustum->IntersectsAABB(aabb)) {
 
-            if (renderItem.castShadows && frustum->IntersectsAABBFast(renderItem)) {
+            if (frustum->IntersectsAABBFast(renderItem)) {
                 g_instanceData.push_back(renderItem);
 
                 //std::cout << gpuLight.lightIndex << " " << AssetManager::GetMeshByIndex(renderItem.meshIndex)->name << "\n";
@@ -813,7 +826,7 @@ namespace RenderDataManager {
         auto& set = g_drawCommandsSet;
 
         // Sort render items by mesh index
-        SortRenderItems(g_skinnedRenderItems);
+        SortRenderItems(g_skinnedRenderItemsDefault);
         SortRenderItems(g_skinnedRenderItemsAlphaDiscard);
         SortRenderItems(g_skinnedRenderItemsBlended);
         SortRenderItems(g_skinnedRenderItemsHair);
@@ -826,14 +839,14 @@ namespace RenderDataManager {
         // Create the transforms buffer
         g_skinnedTransformIndexMap.clear(); // Maps an AnimatedGameObject Id to its base transform index
         g_baseTransformIndex = 0;
-        SetRenderItemsBaseTransformIndex(g_skinnedRenderItems);
+        SetRenderItemsBaseTransformIndex(g_skinnedRenderItemsDefault);
         SetRenderItemsBaseTransformIndex(g_skinnedRenderItemsAlphaDiscard);
         SetRenderItemsBaseTransformIndex(g_skinnedRenderItemsBlended);
         SetRenderItemsBaseTransformIndex(g_skinnedRenderItemsHair);
 
         // Set their base vertices
         g_baseSkinnedVertex = 0;
-        SetRenderItemsBaseSkinnedVertex(g_skinnedRenderItems);
+        SetRenderItemsBaseSkinnedVertex(g_skinnedRenderItemsDefault);
         SetRenderItemsBaseSkinnedVertex(g_skinnedRenderItemsAlphaDiscard);
         SetRenderItemsBaseSkinnedVertex(g_skinnedRenderItemsBlended);
         SetRenderItemsBaseSkinnedVertex(g_skinnedRenderItemsHair);
@@ -843,7 +856,7 @@ namespace RenderDataManager {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            CreateDrawCommandsSkinned(set.skinnedStandard[i], g_skinnedRenderItems, i);
+            CreateDrawCommandsSkinned(set.skinnedStandard[i], g_skinnedRenderItemsDefault, i);
             CreateDrawCommandsSkinned(set.skinnedAlphaDiscard[i], g_skinnedRenderItemsAlphaDiscard, i);
             CreateDrawCommandsSkinned(set.skinnedBlended[i], g_skinnedRenderItemsBlended, i);
             CreateDrawCommandsSkinned(set.skinnedHair[i], g_skinnedRenderItemsHair, i);
@@ -851,7 +864,7 @@ namespace RenderDataManager {
 
         // Combine all into a single vector for the compute skinning pass
         g_combinedSkinnedRenderItems.clear();
-        g_combinedSkinnedRenderItems.insert(g_combinedSkinnedRenderItems.end(), g_skinnedRenderItems.begin(), g_skinnedRenderItems.end());
+        g_combinedSkinnedRenderItems.insert(g_combinedSkinnedRenderItems.end(), g_skinnedRenderItemsDefault.begin(), g_skinnedRenderItemsDefault.end());
         g_combinedSkinnedRenderItems.insert(g_combinedSkinnedRenderItems.end(), g_skinnedRenderItemsAlphaDiscard.begin(), g_skinnedRenderItemsAlphaDiscard.end());
         g_combinedSkinnedRenderItems.insert(g_combinedSkinnedRenderItems.end(), g_skinnedRenderItemsBlended.begin(), g_skinnedRenderItemsBlended.end());
         g_combinedSkinnedRenderItems.insert(g_combinedSkinnedRenderItems.end(), g_skinnedRenderItemsHair.begin(), g_skinnedRenderItemsHair.end());
@@ -1035,40 +1048,30 @@ namespace RenderDataManager {
         return g_viewportData;
     }
 
-    const std::vector<RenderItem>& GetRenderItems() {
-        return g_renderItems;
-    }
+    const std::vector<RenderItem>& GetRenderItems()             { return g_renderItems; }
+    const std::vector<RenderItem>& GetRenderItemsAlphaDiscard() { return g_renderItemsAlphaDiscarded; }
+    const std::vector<RenderItem>& GetRenderItemsBlended()      { return g_renderItemsBlended; }
+    const std::vector<RenderItem>& GetRenderItemsGlass()        { return g_renderItemsGlass; }
+    const std::vector<RenderItem>& GetRenderItemsHair()         { return g_renderItemsHair; }
+    const std::vector<RenderItem>& GetRenderItemsMirror()       { return g_renderItemsMirror; }
+    const std::vector<RenderItem>& GetRenderItemsOutline()      { return g_renderItemsOutline; }
+    const std::vector<RenderItem>& GetRenderItemsPlastic()      { return g_renderItemsPlastic; }
+    const std::vector<RenderItem>& GetRenderItemsProcedural()   { return g_renderItemsProcedural; }
+    const std::vector<RenderItem>& GetRenderItemsStainedGlass() { return g_renderItemsStainedGlass; }
+    const std::vector<RenderItem>& GetRenderItemsToiletWater()  { return g_renderItemsToiletWater; }
 
-    const std::vector<RenderItem>& GetGlassRenderItems() {
-        return g_glassRenderItems;
-    }
-
-	const std::vector<RenderItem>& GetPlasticRenderItems() {
-        return g_renderItemsPlastic;
-    }
-
-    const std::vector<RenderItem>& GetDecalRenderItems() {
-        return g_decalRenderItems;
-    }
-
-    const std::vector<RenderItem>& GetMirrorRenderItems() {
-        return g_renderItemsMirror;
-    }
-
-    const std::vector<RenderItem>& GetStainedGlassRenderItems() {
-        return g_stainedGlassRenderItems;
-    }
+    const std::vector<RenderItem>& GetSkinnedRenderItemsAlphaDiscard() { return g_skinnedRenderItemsAlphaDiscard; }
+    const std::vector<RenderItem>& GetSkinnedRenderItemsBlended()      { return g_skinnedRenderItemsBlended; }
+    const std::vector<RenderItem>& GetSkinnedRenderItemsDefault()      { return g_skinnedRenderItemsDefault; }
+    const std::vector<RenderItem>& GetSkinnedRenderItemsHair()         { return g_skinnedRenderItemsHair; }
 
     const std::vector<RenderItem>& GetCombinedSkinnedRenderItems() {
         return g_combinedSkinnedRenderItems;
     }
 
+
     const std::vector<RenderItem>& GetInstanceData() {
         return g_instanceData;
-    }
-
-    const std::vector<RenderItem>& GetOutlineRenderItems() {
-        return g_outlineRenderItems;
     }
 
     const DrawCommandsSet& GetDrawInfoSet() {
@@ -1155,80 +1158,27 @@ namespace RenderDataManager {
         }
     }
 
-    void SubmitDecalRenderItem(const RenderItem& renderItem) {
-        g_decalRenderItems.push_back(renderItem);
-    }
-
-    void SubmitRenderItem(const RenderItem& renderItem) {
-        g_renderItems.push_back(renderItem);
-    }
-
-    void SubmitGlassRenderItem(const RenderItem& renderItem) {
-        g_glassRenderItems.push_back(renderItem);
-    }
-
-    void SubmitRenderItemsGlass(const std::vector<RenderItem>& renderItems) {
-        g_glassRenderItems.insert(g_glassRenderItems.begin(), renderItems.begin(), renderItems.end());
-    }
-
-    void SubmitRenderItemsStainedGlass(const std::vector<RenderItem>& renderItems) {
-        g_stainedGlassRenderItems.insert(g_stainedGlassRenderItems.begin(), renderItems.begin(), renderItems.end());
-    }
-
 	void SubmitHouseRenderItemOLD(const HouseRenderItem& renderItem) {
 		g_houseRenderItemsOLD.push_back(renderItem);
 	}
 
-	void SubmitHouseRenderItem(const RenderItem& renderItem) {
-		g_houseRenderItems.push_back(renderItem);
+	void SubmitRenderItemProcedural(const RenderItem& renderItem) {
+		g_renderItemsProcedural.push_back(renderItem);
 	}
 
-	void SubmitRenderItemsPlastic(const std::vector<RenderItem>& renderItems) {
-        g_renderItemsPlastic.insert(g_renderItemsPlastic.begin(), renderItems.begin(), renderItems.end());
-    }
-
-    void SubmitRenderItems(const std::vector<RenderItem>& renderItems) {
-        g_renderItems.insert(g_renderItems.begin(), renderItems.begin(), renderItems.end());
-    }
-
-    void SubmitShadowCasterRenderItems(const std::vector<RenderItem>& renderItems) {
-        g_shadowCasterRenderItems.insert(g_shadowCasterRenderItems.begin(), renderItems.begin(), renderItems.end());
-    }
 
     void SubmitRenderItemsMirror(const std::vector<RenderItem>& renderItems) {
         g_renderItemsMirror.insert(g_renderItemsMirror.begin(), renderItems.begin(), renderItems.end());
     }
 
-    void SubmitRenderItemsBlended(const std::vector<RenderItem>& renderItems) {
-        g_renderItemsBlended.insert(g_renderItemsBlended.begin(), renderItems.begin(), renderItems.end());
-    }
-
-    void SubmitRenderItemsAlphaDiscard(const std::vector<RenderItem>& renderItems) {
-        g_renderItemsAlphaDiscarded.insert(g_renderItemsAlphaDiscarded.begin(), renderItems.begin(), renderItems.end());
-    }
-
-    void SubmitRenderItemsHair(const std::vector<RenderItem>& renderItems) {
-        g_renderItemsHairLayer.insert(g_renderItemsHairLayer.begin(), renderItems.begin(), renderItems.end());
-    }
 
     void SubmitHouseRenderItems(const std::vector<HouseRenderItem>& renderItems) {
         g_houseRenderItemsOLD.insert(g_houseRenderItemsOLD.begin(), renderItems.begin(), renderItems.end());
     }
 
-    void SubmitOutlineRenderItem(const RenderItem& renderItem) {
-        g_outlineRenderItems.push_back(renderItem);
-    }
-
+    
     void SubmitOutlineRenderItem(const HouseRenderItem& renderItem) {
         g_houseOutlineRenderItems.push_back(renderItem);
-    }
-
-    void SubmitOutlineRenderItems(const std::vector<RenderItem>& renderItems) {
-        g_outlineRenderItems.insert(g_outlineRenderItems.begin(), renderItems.begin(), renderItems.end());
-    }
-
-    void SubmitOutlineRenderItems(const std::vector<HouseRenderItem>& renderItems) {
-        g_houseOutlineRenderItems.insert(g_houseOutlineRenderItems.begin(), renderItems.begin(), renderItems.end());
     }
 
     void SubmitDecalPaintingInfo(DecalPaintingInfo decalPaintingInfo) {
@@ -1236,7 +1186,7 @@ namespace RenderDataManager {
     }
 
     void SubmitSkinnedRenderItems(const std::vector<RenderItem>& renderItems) {
-        g_skinnedRenderItems.insert(g_skinnedRenderItems.begin(), renderItems.begin(), renderItems.end());
+        g_skinnedRenderItemsDefault.insert(g_skinnedRenderItemsDefault.begin(), renderItems.begin(), renderItems.end());
     }
 
     void SubmitAnimatedMeshNodes(const AnimatedMeshNodes& animatedMeshNodes) {
@@ -1246,7 +1196,7 @@ namespace RenderDataManager {
             // Deforming
             if (node.deforming) {
                 switch (node.blendingMode) {
-                case BlendingMode::DEFAULT:       g_skinnedRenderItems.push_back(node.renderItem);             break;
+                case BlendingMode::DEFAULT:       g_skinnedRenderItemsDefault.push_back(node.renderItem);             break;
                 case BlendingMode::ALPHA_DISCARD: g_skinnedRenderItemsAlphaDiscard.push_back(node.renderItem); break;
                 case BlendingMode::BLENDED:       g_skinnedRenderItemsBlended.push_back(node.renderItem);      break;
                 case BlendingMode::HAIR:          g_skinnedRenderItemsHair.push_back(node.renderItem);         break;
@@ -1263,6 +1213,63 @@ namespace RenderDataManager {
                 default: break;
                 }
             }
+        }
+    }
+
+    void SubmitMeshNodes(const MeshNodes& meshNodes) {
+        for (const MeshNode& node : meshNodes.GetNodes()) {
+            switch (node.blendingMode) {
+            case BlendingMode::DEFAULT:       g_renderItems.push_back(node.renderItem); break;
+            case BlendingMode::ALPHA_DISCARD: g_renderItemsAlphaDiscarded.push_back(node.renderItem); break;
+            case BlendingMode::BLENDED:       g_renderItemsBlended.push_back(node.renderItem); break;
+            case BlendingMode::GLASS:         g_renderItemsGlass.push_back(node.renderItem); break;
+            case BlendingMode::HAIR:          g_renderItemsHair.push_back(node.renderItem); break;
+            case BlendingMode::MIRROR:        g_renderItemsMirror.push_back(node.renderItem); break;
+            case BlendingMode::TOILET_WATER:  g_renderItemsToiletWater.push_back(node.renderItem); break;
+            case BlendingMode::STAINED_GLASS: g_renderItemsStainedGlass.push_back(node.renderItem); break;
+            case BlendingMode::PLASTIC:       g_renderItemsPlastic.push_back(node.renderItem); break;
+            default: break;
+            }
+
+            if (node.blendingMode != BlendingMode::DO_NOT_RENDER) {
+                if (node.parentObjectId != 0 && node.parentObjectId == Editor::GetSelectedObjectId()) g_renderItemsOutline.push_back(node.renderItem);
+
+                if (node.castShadows)    g_renderItemsPointLightShadows.push_back(node.renderItem);
+                if (node.castCSMShadows) g_renderItemsMoonLightShadows.push_back(node.renderItem);
+            }
+        }
+    }
+
+    void SubmitRenderItem(const RenderItem& renderItem) {
+        BlendingMode blendingMode = (BlendingMode)renderItem.blendingMode;
+
+        switch (blendingMode) {
+        case BlendingMode::DEFAULT:       g_renderItems.push_back(renderItem); break;
+        case BlendingMode::ALPHA_DISCARD: g_renderItemsAlphaDiscarded.push_back(renderItem); break;
+        case BlendingMode::BLENDED:       g_renderItemsBlended.push_back(renderItem); break;
+        case BlendingMode::GLASS:         g_renderItemsGlass.push_back(renderItem); break;
+        case BlendingMode::HAIR:          g_renderItemsHair.push_back(renderItem); break;
+        case BlendingMode::MIRROR:        g_renderItemsMirror.push_back(renderItem); break;
+        case BlendingMode::TOILET_WATER:  g_renderItemsToiletWater.push_back(renderItem); break;
+        case BlendingMode::STAINED_GLASS: g_renderItemsStainedGlass.push_back(renderItem); break;
+        case BlendingMode::PLASTIC:       g_renderItemsPlastic.push_back(renderItem); break;
+        default: break;
+        }
+
+        if (blendingMode != BlendingMode::DO_NOT_RENDER) {
+            uint64_t objectId = 0;
+            Util::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+
+            if (objectId != 0 && objectId == Editor::GetSelectedObjectId()) g_renderItemsOutline.push_back(renderItem);
+
+            if ((renderItem.shadowBit & SHADOW_BIT_CAST_SHADOW) != 0u) g_renderItemsPointLightShadows.push_back(renderItem);
+            if ((renderItem.shadowBit & SHADOW_BIT_CAST_CSM_SHADOW)  != 0u) g_renderItemsMoonLightShadows.push_back(renderItem);
+        }
+    }
+
+    void SubmitRenderItems(const std::vector<RenderItem>& renderItems) {
+        for (const RenderItem& renderItem : renderItems) {
+            SubmitRenderItem(renderItem);
         }
     }
 }

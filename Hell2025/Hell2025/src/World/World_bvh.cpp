@@ -142,20 +142,6 @@ namespace World {
 				CreateObjectInstanceDataFromRenderItem(renderItem, g_dynamicSceneInstances);
 			}
 		}
-		if (Editor::IsOpen()) {
-			for (Tree& tree : GetTrees()) {
-				for (const RenderItem& renderItem : tree.GetRenderItems()) {
-					CreateObjectInstanceDataFromRenderItem(renderItem, g_dynamicSceneInstances);
-				}
-				for (const RenderItem& renderItem : tree.GetRenderItemsAlphaDiscarded()) {
-					CreateObjectInstanceDataFromRenderItem(renderItem, g_dynamicSceneInstances);
-				}
-			}
-		}
-
-
-
-
 
 		// Recreate the TLAS
         Bvh::Cpu::UpdateSceneBvh(g_dynamicSceneBvhId, g_dynamicSceneInstances);

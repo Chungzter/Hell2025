@@ -18,8 +18,6 @@ namespace Callbacks {
     void BeginAddingDoor();
     void BeginAddingHouse();
     void BeginAddingPictureFrame();
-    void BeginAddingTree(); 
-    void BeginAddingBlackBerries();
     void BeginAddingWindow();
 
     void BeginAddingPlayerCampaignSpawn();

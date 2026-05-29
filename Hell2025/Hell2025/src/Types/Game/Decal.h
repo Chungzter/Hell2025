@@ -4,7 +4,7 @@
 
 struct Decal {
     Decal() = default;
-    Decal(const Decal2CreateInfo& createInfo);
+    Decal(const DecalCreateInfo& createInfo);
     Decal(const Decal&) = delete;
     Decal& operator=(const Decal&) = delete;
     Decal(Decal&&) noexcept = default;
@@ -20,7 +20,7 @@ private:
     const glm::mat4& GetParentWorldMatrix();
 
     DecalType m_type = DecalType::UNDEFINED;
-    Decal2CreateInfo m_createInfo;
+    DecalCreateInfo m_createInfo;
     Material* m_material = nullptr;
     RenderItem m_renderItem;
     glm::vec3 m_localPosition = glm::vec3(0.0f);

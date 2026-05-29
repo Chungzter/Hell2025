@@ -343,7 +343,7 @@ namespace OpenGLRenderer {
             rendererSettings.rendererOverrideState == RendererOverrideState::ROUGHNESS ||
             rendererSettings.rendererOverrideState == RendererOverrideState::INDIRECT_DIFFUSE ||
             rendererSettings.rendererOverrideState == RendererOverrideState::VELOCITY ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::VISIBILITY ||
+            rendererSettings.rendererOverrideState == RendererOverrideState::VIS_BUFFER ||
             rendererSettings.rendererOverrideState == RendererOverrideState::DEPTH ||
             rendererSettings.rendererOverrideState == RendererOverrideState::WORLD_POSITION ||
             rendererSettings.rendererOverrideState == RendererOverrideState::EMISSIVE) {

@@ -31,16 +31,28 @@ readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { Render
 readonly restrict layout(std430, binding = 4) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 readonly restrict layout(std430, binding = 5) buffer rendererDataBuffer { RendererData rendererData; };
 
-vec3 ComputeScreenBarycentrics(vec2 p, vec2 s0, vec2 s1, vec2 s2, vec3 invW) {
-    float area = (s1.x - s0.x) * (s2.y - s0.y) - (s2.x - s0.x) * (s1.y - s0.y);
-    if (abs(area) < 0.01) return vec3(1.0, 0.0, 0.0);
+float Cross2D(vec2 a, vec2 b) {
+    return a.x * b.y - a.y * b.x;
+}
 
-    float v = ((s2.y - s0.y) * (p.x - s0.x) + (s0.x - s2.x) * (p.y - s0.y)) / area;
-    float w = ((s0.y - s1.y) * (p.x - s0.x) + (s1.x - s0.x) * (p.y - s0.y)) / area;
-    float u = 1.0 - v - w;
+vec3 ComputeScreenBarycentrics(vec2 p, vec2 s0, vec2 s1, vec2 s2, vec3 invW) {
+    vec2 a = s0 - p;
+    vec2 b = s1 - p;
+    vec2 c = s2 - p;
+
+    float area = Cross2D(b - a, c - a);
+    if (abs(area) < 1e-20) {
+        return vec3(1.0, 0.0, 0.0);
+    }
+
+    float u = Cross2D(b, c) / area;
+    float v = Cross2D(c, a) / area;
+    float w = Cross2D(a, b) / area;
 
     float interpW = u * invW.x + v * invW.y + w * invW.z;
-    if (abs(interpW) < 0.00001) return vec3(1.0, 0.0, 0.0);
+    if (abs(interpW) < 1e-20) {
+        return vec3(1.0, 0.0, 0.0);
+    }
 
     return vec3(u * invW.x, v * invW.y, w * invW.z) / interpW;
 }
@@ -53,10 +65,11 @@ void main() {
     uint globalInstanceIndex = visibilityData.x;
     uint primitiveID = visibilityData.y;
 
-    vec2 uv_screenspace = gl_FragCoord.xy / vec2(texSize);
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, texSize, rendererData.splitscreenMode);
     ViewportData viewportData = viewportDataArr[viewportIndex];
     RenderItem renderItem = renderItems[globalInstanceIndex];
+
+    vec2 uv_screenspace = gl_FragCoord.xy / vec2(texSize);
 
     uint triangleIndexOffset = renderItem.baseIndex + (primitiveID * 3);
 
@@ -73,9 +86,9 @@ void main() {
     PackedVertex v0 = vertices[i0];
     PackedVertex v1 = vertices[i1];
     PackedVertex v2 = vertices[i2];
-    
+
     // Position from depth reconstruction
-    float depth = texelFetch(u_DepthTexture, pixelCoords, 0).r; // TODO: use visiblity buffer depth
+    float depth = texelFetch(u_DepthTexture, pixelCoords, 0).r;
     vec3 worldPos = ReconstructWorldPos(uv_screenspace, depth, viewportData.inverseProjectionViewReverseZ);
 
     // Transform vertices to world space
@@ -84,29 +97,33 @@ void main() {
     vec3 ws1 = (modelMatrix * vec4(v1.vx, v1.vy, v1.vz, 1.0)).xyz;
     vec3 ws2 = (modelMatrix * vec4(v2.vx, v2.vy, v2.vz, 1.0)).xyz;
 
-    // Calculate world space edges matching specific hlsl cross product order
+    // Calculate world space edges
     vec3 viewDir = normalize(worldPos - viewportData.viewPos.xyz);
     vec3 e1 = ws1 - ws0;
     vec3 e2 = ws2 - ws0;
     vec3 geoNormal = normalize(cross(e1, e2));
     bool isFrontFacing = dot(geoNormal, viewDir) <= 0.0;
 
-    vec4 clip0 = viewportData.projectionViewReverseZ * modelMatrix * vec4(v0.vx, v0.vy, v0.vz, 1.0);
-    vec4 clip1 = viewportData.projectionViewReverseZ * modelMatrix * vec4(v1.vx, v1.vy, v1.vz, 1.0);
-    vec4 clip2 = viewportData.projectionViewReverseZ * modelMatrix * vec4(v2.vx, v2.vy, v2.vz, 1.0);
+    // Project vertices to NDC for stable screen space barycentrics
+    vec4 clip0 = viewportData.projectionViewReverseZ * vec4(ws0, 1.0);
+    vec4 clip1 = viewportData.projectionViewReverseZ * vec4(ws1, 1.0);
+    vec4 clip2 = viewportData.projectionViewReverseZ * vec4(ws2, 1.0);
 
-    vec2 vpScale = vec2(viewportData.width, viewportData.height);
-    vec2 vpOffset = vec2(viewportData.xOffset, viewportData.yOffset);
-    vec2 s0 = (clip0.xy / clip0.w * 0.5 + 0.5) * vpScale + vpOffset;
-    vec2 s1 = (clip1.xy / clip1.w * 0.5 + 0.5) * vpScale + vpOffset;
-    vec2 s2 = (clip2.xy / clip2.w * 0.5 + 0.5) * vpScale + vpOffset;
+    vec2 viewportPosition = gl_FragCoord.xy - vec2(viewportData.xOffset, viewportData.yOffset);
+    vec2 viewportSize = vec2(viewportData.width, viewportData.height);
+    vec2 p = viewportPosition / viewportSize * 2.0 - 1.0;
+
+    vec2 s0 = clip0.xy / clip0.w;
+    vec2 s1 = clip1.xy / clip1.w;
+    vec2 s2 = clip2.xy / clip2.w;
 
     vec3 invW = vec3(1.0 / clip0.w, 1.0 / clip1.w, 1.0 / clip2.w);
 
-    vec2 p = gl_FragCoord.xy;
+    vec2 pixelStep = 2.0 / viewportSize;
+
     vec3 bary  = ComputeScreenBarycentrics(p, s0, s1, s2, invW);
-    vec3 baryX = ComputeScreenBarycentrics(p + vec2(1.0, 0.0), s0, s1, s2, invW);
-    vec3 baryY = ComputeScreenBarycentrics(p + vec2(0.0, 1.0), s0, s1, s2, invW);
+    vec3 baryX = ComputeScreenBarycentrics(p + vec2(pixelStep.x, 0.0), s0, s1, s2, invW);
+    vec3 baryY = ComputeScreenBarycentrics(p + vec2(0.0, pixelStep.y), s0, s1, s2, invW);
 
     vec2 uv0 = vec2(v0.u, v0.v);
     vec2 uv1 = vec2(v1.u, v1.v);
@@ -128,7 +145,6 @@ void main() {
     vec3 n2 = normalize(normalMatrix * vec4(v2.nx, v2.ny, v2.nz, 0.0)).xyz;
     vec3 n  = normalize(n0 * bary.x  + n1 * bary.y  + n2 * bary.z);
 
-    // Evaluat geometric normals at analytic neighbors
     vec3 nX = normalize(n0 * baryX.x + n1 * baryX.y + n2 * baryX.z);
     vec3 nY = normalize(n0 * baryY.x + n1 * baryY.y + n2 * baryY.z);
 
@@ -138,7 +154,9 @@ void main() {
     vec3 t = normalize(t0 * bary.x + t1 * bary.y + t2 * bary.z);
 
     if (!isFrontFacing) {
-        n = -n; nX = -nX; nY = -nY;
+        n = -n;
+        nX = -nX;
+        nY = -nY;
     }
 
     t = normalize(t - dot(t, n) * n);
@@ -156,10 +174,9 @@ void main() {
     normalMap = normalMap * 2.0 - 1.0;
     vec3 normal = normalize(tbn * normalMap);
 
-    // Toksvig mapping, constrained to current primitive
     vec3 dNdx = nX - n;
     vec3 dNdy = nY - n;
-    float variance = (dot(dNdx, dNdx) + dot(dNdy, dNdy)) * 0.1591549; // 1.0 / 2PI
+    float variance = (dot(dNdx, dNdx) + dot(dNdy, dNdy)) * 0.1591549;
     roughness = sqrt(clamp(roughness * roughness + min(variance, 0.18), 0.0, 1.0));
 
     vec4 localPos = renderItem.inverseModelMatrix * vec4(worldPos, 1.0);
@@ -180,7 +197,4 @@ void main() {
     VelocityXYOcclusionSubSurfaceOut.rg = velocity;
     VelocityXYOcclusionSubSurfaceOut.b = ao;
     VelocityXYOcclusionSubSurfaceOut.a = 0.0;
-
-
-    //BaseColorMetallicOut.rgb = vec3(uv, 0);
 }

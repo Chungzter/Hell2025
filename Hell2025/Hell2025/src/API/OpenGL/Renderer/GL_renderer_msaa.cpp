@@ -91,6 +91,7 @@ namespace OpenGLRenderer {
     }
 
     void LoadShadersMSAA() {
+        return;
         LoadShader("MSAA", "DepthPrePass", { "GL_depth_prepass.vert", "GL_depth_prepass.frag" });
         LoadShader("MSAA", "DepthPrePassAlphaDiscard", { "GL_depth_prepass_alpha_discard.vert", "GL_depth_prepass_alpha_discard.frag" });
         LoadShader("MSAA", "LightingComposite", { "GL_lighting_composite.comp" });
@@ -98,9 +99,12 @@ namespace OpenGLRenderer {
         LoadShader("MSAA", "ShadedHair", { "GL_shaded.vert", "GL_shaded_hair.frag" });
         //LoadShader("MSAA", "HairMLAB", { "GL_hair_mlab.vert", "GL_hair_mlab.frag" });
         LoadShader("MSAA", "HairMLABResolve", { "GL_hair_mlab_resolve.vert", "GL_hair_mlab_resolve.frag" });
+
+        
     }
 
     void RenderGameMSAA() {
+        return;
         ProfilerOpenGLFrame();
 
         OpenGLRasterizerState defaultState;
@@ -288,7 +292,7 @@ namespace OpenGLRenderer {
 		opaqueShader->Bind();
 
         glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
-        MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.house, opaqueDepthState);
+        MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.procedural, opaqueDepthState);
 
 		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 		MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.standard, opaqueDepthState);
@@ -382,7 +386,7 @@ namespace OpenGLRenderer {
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedAlphaDiscard, maskedState);
 
 		glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
-		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.house, opaqueState);
+		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.procedural, opaqueState);
 
 		glBindVertexArray(0);
     }

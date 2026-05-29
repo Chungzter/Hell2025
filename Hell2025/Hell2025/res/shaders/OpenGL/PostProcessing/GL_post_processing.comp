@@ -127,18 +127,18 @@ void main() {
 
     vec2 uv = (vec2(pixelCoords) + 0.5) / outputSize;
     vec3 rawLighting = imageLoad(u_inputImage, pixelCoords).rgb;
-    uint vIdx = ComputeViewportIndexFromSplitscreenMode(pixelCoords, ivec2(outputSize), rendererData.splitscreenMode);
+    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, ivec2(outputSize), rendererData.splitscreenMode);
 
     // compute the two looks
-    vec3 ogLook = OG(rawLighting, uv, pixelCoords, vIdx);
-    vec3 reLook = RE(rawLighting, uv, pixelCoords, vIdx);
+    vec3 ogLook = OG(rawLighting, uv, pixelCoords, viewportIndex);
+    vec3 reLook = RE(rawLighting, uv, pixelCoords, viewportIndex);
 
     // blend and apply brightness hack
     vec3 finalColor = mix(ogLook, reLook, 0.25);
     finalColor += vec3(0.0125);
 
     // vignette setup
-    ViewportData v = viewportData[vIdx];
+    ViewportData v = viewportData[viewportIndex];
     vec2 viewportUV = (uv - vec2(v.posX, v.posY)) / vec2(v.sizeX, v.sizeY);
     finalColor = ApplyVignette(finalColor, v.vignetteColor.rgb, v.intensityScalar * 0.5, viewportUV);
 

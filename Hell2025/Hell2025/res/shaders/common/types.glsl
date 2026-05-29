@@ -58,18 +58,23 @@ struct ViewportData {
 };
 
 struct RendererData {
+    vec4 moonLightDir;
+
     float nearPlane;
     float farPlane;
     float gBufferWidth;
     float gBufferHeight;
+
     float hairBufferWidth;
     float hairBufferHeight;
     float time;
     int splitscreenMode;
+    
     int rendererOverrideState;
     float normalizedMouseX;
     float normalizedMouseY;
     int tileCountX;
+    
     int tileCountY;
 };
 
@@ -105,9 +110,9 @@ struct RenderItem {
     float emissiveB;
     int emissiveTextureIndex;           // -1 means nothing, anything else is a texture index
 
-    int baseVertex;
-    int baseIndex;
-    int baseVertexWeight;
+    uint baseVertex;
+    uint baseIndex;
+    uint baseVertexWeight;
     int blockScreenSpaceBloodDecals;    // True or false
 
     int additionalTextureIndex0;

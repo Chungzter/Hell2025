@@ -111,7 +111,7 @@ namespace OpenGLRenderer {
             glDisable(GL_BLEND);
             maskShader->Bind();
             maskShader->SetInt("u_viewportIndex", i);
-            for (const RenderItem& renderItem : RenderDataManager::GetOutlineRenderItems()) {
+            for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsOutline()) {
                 maskShader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
                 Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertex);

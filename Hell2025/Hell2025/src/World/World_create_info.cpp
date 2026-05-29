@@ -17,7 +17,7 @@ namespace World {
         for (PowerPoleSetCreateInfo& createInfo : createInfoCollection.powerPoleSets)       AddPowerPoleSet(createInfo, spawnOffset);
         for (HousePlaneCreateInfo& createInfo : createInfoCollection.housePlanes)           AddHousePlane(createInfo, spawnOffset);
         for (StaircaseCreateInfo& createInfo : createInfoCollection.staircases)             AddStaircase(createInfo, spawnOffset);
-        for (TreeCreateInfo& createInfo : createInfoCollection.trees)                       AddTree(createInfo, spawnOffset);
+        //for (TreeCreateInfo& createInfo : createInfoCollection.trees)                       AddTree(createInfo, spawnOffset);
         for (WallCreateInfo& createInfo : createInfoCollection.walls)                       AddWall(createInfo, spawnOffset);
         for (WindowCreateInfo& createInfo : createInfoCollection.windows)                   AddWindow(createInfo, spawnOffset);
     }
@@ -36,7 +36,7 @@ namespace World {
         for (PictureFrame& object : World::GetPictureFrames())           createInfoCollection.pictureFrames.push_back(object.GetCreateInfo());
         for (PowerPoleSet& object : World::GetPowerPoleSets())           createInfoCollection.powerPoleSets.push_back(object.GetCreateInfo());
         for (Staircase& object : World::GetStaircases())                 createInfoCollection.staircases.push_back(object.GetCreateInfo());
-        for (Tree& object : World::GetTrees())                           createInfoCollection.trees.push_back(object.GetCreateInfo());
+        //for (Tree& object : World::GetTrees())                           createInfoCollection.trees.push_back(object.GetCreateInfo());
         for (Wall& object : World::GetWalls())                           createInfoCollection.walls.push_back(object.GetCreateInfo());
         for (Window& object : World::GetWindows())                       createInfoCollection.windows.push_back(object.GetCreateInfo());
 

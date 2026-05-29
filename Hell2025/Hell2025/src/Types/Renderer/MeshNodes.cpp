@@ -1,5 +1,6 @@
 #include "MeshNodes.h"
 #include "AssetManagement/AssetManager.h"
+#include <Hell/RendereringConstants.h>
 #include <Hell/Logging.h>
 #include "Editor/Editor.h"
 #include "Input/Input.h"
@@ -83,6 +84,11 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
             PrintMeshNames();
 			continue;
 		}
+
+        // Base color texture override
+        if (createInfo.baseColorOverrideTextureName != UNDEFINED_STRING) {
+            meshNode->baseColorOverrideTextureIndex = AssetManager::GetTextureIndexByName(createInfo.baseColorOverrideTextureName);
+        }
 
         meshNode->materialIndex = AssetManager::GetMaterialIndexByName(createInfo.materialName);
         meshNode->blendingMode = createInfo.blendingMode;
@@ -277,13 +283,6 @@ void MeshNodes::CleanUp() {
     m_worldMatrixPreviousFrame = glm::mat4(0.0f); // Intentionally (0.0f) to force a dirty update on first use
     // Write this: m_armatureData.CleanUp();
     m_renderItems.clear();
-    m_renderItemsAlphaDiscarded.clear();
-    m_renderItemsBlended.clear();
-    m_renderItemsGlass.clear();
-    m_renderItemsHair.clear();
-    m_renderItemsMirror.clear();
-    m_renderItemsToiletWater.clear();
-    m_renderItemsStainedGlass.clear();
     m_isDirty = true;
     m_forceDirty = true;
     m_firstFrame = true;
@@ -321,6 +320,12 @@ void MeshNodes::SetMaterialByMeshName(const std::string& meshName, const std::st
     }
 }
 
+void MeshNodes::SetBlendingModes(BlendingMode blendingMode) {
+    for (MeshNode& meshNode : m_meshNodes) {
+        meshNode.blendingMode = blendingMode;
+    }
+    ForceDirty();
+}
 void MeshNodes::SetBlendingModeByMeshName(const std::string& meshName, BlendingMode blendingMode) {
     MeshNode* meshNode = GetMeshNodeByMeshName(meshName);
     if (meshNode) {
@@ -505,14 +510,6 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
     UpdateAABBsFromWorldMatrices();
 
     m_renderItems.clear();
-    m_renderItemsAlphaDiscarded.clear();
-    m_renderItemsBlended.clear();
-    m_renderItemsGlass.clear();
-    m_renderItemsHair.clear();
-    m_renderItemsToiletWater.clear();
-	m_renderItemsMirror.clear();
-	m_renderItemsStainedGlass.clear();
-	m_renderItemsPlastic.clear();
 
     for (size_t i = 0; i < m_meshNodes.size(); i++) {
         MeshNode& meshNode = m_meshNodes[i];
@@ -535,8 +532,6 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.renderItem.aabbMin = glm::vec4(meshNode.worldspaceAabb.GetBoundsMin(), 0.0f);
         meshNode.renderItem.aabbMax = glm::vec4(meshNode.worldspaceAabb.GetBoundsMax(), 0.0f);
         meshNode.renderItem.localMeshNodeIndex = i;
-        meshNode.renderItem.castShadows = meshNode.castShadows;
-        meshNode.renderItem.castCSMShadows = meshNode.castCSMShadows;
 		meshNode.renderItem.emissiveR = meshNode.emissiveColor.r;
 		meshNode.renderItem.emissiveG = meshNode.emissiveColor.g;
         meshNode.renderItem.emissiveB = meshNode.emissiveColor.b;
@@ -546,6 +541,14 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.renderItem.opacityTextureIndex = material->m_opacity;
         meshNode.renderItem.baseVertex = meshNode.baseVertex;
         meshNode.renderItem.baseIndex = meshNode.baseIndex;
+        meshNode.renderItem.blendingMode = (int)meshNode.blendingMode;
+
+        Util::SetBitState(meshNode.renderItem.shadowBit, SHADOW_BIT_CAST_SHADOW, meshNode.castShadows);
+        Util::SetBitState(meshNode.renderItem.shadowBit, SHADOW_BIT_CAST_CSM_SHADOW, meshNode.castCSMShadows);
+
+        if (meshNode.baseColorOverrideTextureIndex != -1) {
+            meshNode.renderItem.baseColorTextureIndex = meshNode.baseColorOverrideTextureIndex;
+        }
 
         if (m_firstFrame) {
             meshNode.renderItem.prevModelMatrix = meshNode.worldMatrix;
@@ -553,17 +556,23 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
 
         Util::PackUint64(meshNode.parentObjectId, meshNode.renderItem.objectIdLowerBit, meshNode.renderItem.objectIdUpperBit);
 
-        switch (meshNode.blendingMode) {
-            case BlendingMode::DEFAULT:       m_renderItems.push_back(meshNode.renderItem);                 break;
-            case BlendingMode::ALPHA_DISCARD: m_renderItemsAlphaDiscarded.push_back(meshNode.renderItem);   break;
-            case BlendingMode::BLENDED:       m_renderItemsBlended.push_back(meshNode.renderItem);          break;
-            case BlendingMode::GLASS:         m_renderItemsGlass.push_back(meshNode.renderItem);            break;
-            case BlendingMode::HAIR:          m_renderItemsHair.push_back(meshNode.renderItem);     break;
-			case BlendingMode::TOILET_WATER:  m_renderItemsToiletWater.push_back(meshNode.renderItem);      break;
-			case BlendingMode::STAINED_GLASS: m_renderItemsStainedGlass.push_back(meshNode.renderItem);     break;
-			case BlendingMode::PLASTIC:       m_renderItemsPlastic.push_back(meshNode.renderItem);          break;
-            default: break;
+        //switch (meshNode.blendingMode) {
+        //case BlendingMode::DEFAULT:       m_renderItems.push_back(meshNode.renderItem);                 break;
+        //case BlendingMode::ALPHA_DISCARD: m_renderItemsAlphaDiscarded.push_back(meshNode.renderItem);   break;
+        //case BlendingMode::BLENDED:       m_renderItemsBlended.push_back(meshNode.renderItem);          break;
+        //case BlendingMode::GLASS:         m_renderItemsGlass.push_back(meshNode.renderItem);            break;
+        //case BlendingMode::HAIR:          m_renderItemsHair.push_back(meshNode.renderItem);     break;
+        //case BlendingMode::TOILET_WATER:  m_renderItemsToiletWater.push_back(meshNode.renderItem);      break;
+        //case BlendingMode::STAINED_GLASS: m_renderItemsStainedGlass.push_back(meshNode.renderItem);     break;
+        //case BlendingMode::PLASTIC:       m_renderItemsPlastic.push_back(meshNode.renderItem);          break;
+        //default: break;
+        //}
+
+        if (meshNode.blendingMode != BlendingMode::DO_NOT_RENDER) {
+            m_renderItems.push_back(meshNode.renderItem);
         }
+
+        //RenderDataManager::SubmitRenderItem(meshNode.renderItem);
 
         // If this is a static node and its transform is different than the previous frame, mark the World's static scene as dirty
         if (m_marksStaticSceneBvhAsDirty && MeshNodeIsStatic(i) && !Util::Mat4NearlyEqual(meshNode.worldMatrix, meshNode.prevWorldMatrix)) {
@@ -792,26 +801,6 @@ void MeshNodes::UpdateAABBsFromWorldMatrices() {
     m_worldspaceAABB = found ? AABB(min, max) : AABB();
 
 }*/
-
-const void MeshNodes::SubmitRenderItems() const {
-    RenderDataManager::SubmitRenderItems(m_renderItems);
-    RenderDataManager::SubmitRenderItemsAlphaDiscard(m_renderItemsAlphaDiscarded);
-    RenderDataManager::SubmitRenderItemsBlended(m_renderItemsBlended);
-    RenderDataManager::SubmitRenderItemsGlass(m_renderItemsGlass);
-    RenderDataManager::SubmitRenderItemsHair(m_renderItemsHair);
-	RenderDataManager::SubmitRenderItemsMirror(m_renderItemsMirror);
-	RenderDataManager::SubmitRenderItemsStainedGlass(m_renderItemsStainedGlass);
-	RenderDataManager::SubmitRenderItemsPlastic(m_renderItemsPlastic);
-}
-
-const void MeshNodes::SubmitOutlineRenderItems() const {
-    RenderDataManager::SubmitOutlineRenderItems(m_renderItems);
-    RenderDataManager::SubmitOutlineRenderItems(m_renderItemsAlphaDiscarded);
-    RenderDataManager::SubmitOutlineRenderItems(m_renderItemsBlended);
-    RenderDataManager::SubmitOutlineRenderItems(m_renderItemsGlass);
-    RenderDataManager::SubmitOutlineRenderItems(m_renderItemsHair);
-    RenderDataManager::SubmitOutlineRenderItems(m_renderItemsMirror);
-}
 
 const glm::mat4& MeshNodes::GetLocalModelMatrix(int32_t nodeIndex) const {
     static const glm::mat4 identity = glm::mat4(1.0f);

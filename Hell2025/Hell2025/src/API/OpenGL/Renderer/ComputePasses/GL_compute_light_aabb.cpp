@@ -100,21 +100,22 @@ namespace OpenGLRenderer {
     }
 
     void DrawHouse(OpenGLShader* shader) {
-        OpenGLMeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer().GetGLMeshBuffer();
-        glBindVertexArray(houseMeshBuffer.GetVAO());
-
-        shader->SetMat4("u_model", glm::mat4(1.0f));
-
-        for (const HouseRenderItem& renderItem : RenderDataManager::GetHouseRenderItems()) {
-            glDrawElementsBaseVertex(
-                GL_TRIANGLES,
-                renderItem.indexCount,
-                GL_UNSIGNED_INT,
-                (void*)(sizeof(unsigned int) * renderItem.baseIndex),
-                renderItem.baseVertex
-            );
-        }
-
+        Logging::Fatal() << "You called the suss function DrawHouse()\n";
+        //OpenGLMeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer().GetGLMeshBuffer();
+        //glBindVertexArray(houseMeshBuffer.GetVAO());
+        //
+        //shader->SetMat4("u_model", glm::mat4(1.0f));
+        //
+        //for (const HouseRenderItem& renderItem : RenderDataManager::GetHouseRenderItems()) {
+        //    glDrawElementsBaseVertex(
+        //        GL_TRIANGLES,
+        //        renderItem.indexCount,
+        //        GL_UNSIGNED_INT,
+        //        (void*)(sizeof(unsigned int) * renderItem.baseIndex),
+        //        renderItem.baseVertex
+        //    );
+        //}
+        //
     }
 
     void DrawHeightMap(OpenGLShader* shader, Light* light) {

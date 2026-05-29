@@ -9,8 +9,6 @@
 
 namespace World {
 
-    //std::vector<RenderItem> g_skinnedRenderItems;
-
     void SubmitRenderItems() {
 
         for (int i = 0; i < Game::GetLocalPlayerCount(); i++) {
@@ -20,177 +18,44 @@ namespace World {
             player->SubmitP90MagsRenderItems();
         }
 
-        for (GameObject& gameObject : GetGameObjects()) {
-            gameObject.UpdateRenderItems();
-            RenderDataManager::SubmitRenderItems(gameObject.GetRenderItems());
-            RenderDataManager::SubmitRenderItemsBlended(gameObject.GetRenderItemsBlended());
-            RenderDataManager::SubmitRenderItemsAlphaDiscard(gameObject.GetRenderItemsAlphaDiscarded());
-            RenderDataManager::SubmitRenderItemsHair(gameObject.GetRenderItemsHair());
-
-            // Selected outline?
-            if (gameObject.IsSelected()) {
-                RenderDataManager::SubmitOutlineRenderItems(gameObject.GetRenderItems());
-                RenderDataManager::SubmitOutlineRenderItems(gameObject.GetRenderItemsHair());
-            }
-        }
-
-        // Clear global render item vectors
-        //g_skinnedRenderItems.clear();
-
-        for (Ladder& ladder : GetLadders()) {
-            RenderDataManager::SubmitRenderItems(ladder.GetRenderItems());
-            if (Editor::GetSelectedObjectId() == ladder.GetObjectId()) {
-                RenderDataManager::SubmitOutlineRenderItems(ladder.GetRenderItems());
-            }
-        }
-
-        for (PickUp& pickUp : GetPickUps()) {
-            if (!pickUp.IsDespawned()) {
-                RenderDataManager::SubmitRenderItems(pickUp.GetRenderItems());
-                if (Editor::GetSelectedObjectId() == pickUp.GetObjectId()) {
-                    RenderDataManager::SubmitOutlineRenderItems(pickUp.GetRenderItems());
-                }
-            }
-        }
-
-        for (PictureFrame& pictureFrame : GetPictureFrames()) {
-            RenderDataManager::SubmitRenderItems(pictureFrame.GetRenderItems());
-            if (Editor::GetSelectedObjectId() == pictureFrame.GetObjectId()) {
-                RenderDataManager::SubmitOutlineRenderItems(pictureFrame.GetRenderItems());
-            }
-        }
-
-        for (Mermaid& mermaid: GetMermaids()) {
-            RenderDataManager::SubmitRenderItems(mermaid.GetRenderItems());
-            RenderDataManager::SubmitRenderItemsBlended(mermaid.GetRenderItemsBlended());
-            RenderDataManager::SubmitRenderItemsAlphaDiscard(mermaid.GetRenderItemsAlphaDiscarded());
-            RenderDataManager::SubmitRenderItemsHair(mermaid.GetRenderItemsHair());
-        }
-
         for (HousePlane& housePlane : GetHousePlanes()) {
             housePlane.SubmitRenderItem();
         }
 
-        // Doors
-        for (Door& door : GetDoors()) {
-            RenderDataManager::SubmitRenderItems(door.GetRenderItems());
-            RenderDataManager::SubmitRenderItemsGlass(door.GetRenderItemsGlass());
-            RenderDataManager::SubmitRenderItemsStainedGlass(door.GetRenderItemsStainedGlass());
+        // Main mesh buffer
+        for (Door& object : GetDoors())                   RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (Fireplace& object : GetFireplaces())         RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (GameObject& object : GetGameObjects())       RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (GenericObject& object : GetGenericObjects()) RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (Mermaid& object : GetMermaids())             RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (Piano& object : GetPianos())                 RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (PickUp& object : GetPickUps())               RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (PictureFrame& object : GetPictureFrames())   RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (Window& object : GetWindows())               RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
 
-			if (Editor::GetSelectedObjectId() == door.GetObjectId()) {
-				RenderDataManager::SubmitOutlineRenderItems(door.GetRenderItems());
-			}
-        }
+        // Clean me up
+        for (ChristmasTree& object : GetChristmasTrees())          RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (ChristmasLightSet& object : GetChristmasLightSets())  RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (Fence& object : GetFences())                          RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (Ladder& object : GetLadders())                        RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (Light& object : GetLights())                          RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (Staircase& object : GetStaircases())                  RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (TrimSet& object : GetTrimSets())                      RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (PowerPoleSet& object : GetPowerPoleSets())            RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (Wall& object : GetWalls())                            RenderDataManager::SubmitRenderItems(object.GetWeatherBoardstopRenderItems());
 
-        for (Piano& piano : GetPianos()) {
-            RenderDataManager::SubmitRenderItems(piano.GetRenderItems());
-            if (Editor::GetSelectedObjectId() == piano.GetObjectId()) {
-                RenderDataManager::SubmitOutlineRenderItems(piano.GetRenderItems());
-            }
-        }
-
-        // Generic Object
-        for (GenericObject& genericGameObject : GetGenericObjects()) {
-            if (Editor::GetSelectedObjectId() == genericGameObject.GetObjectId()) {
-                genericGameObject.GetMeshNodes().SubmitOutlineRenderItems();
-            }
-            genericGameObject.GetMeshNodes().SubmitRenderItems();
-            RenderDataManager::SubmitShadowCasterRenderItems(genericGameObject.GetShadowCasterRenderItems());
-            //RenderDataManager::SubmitRenderItems(genericGameObject.GetShadowCasterRenderItems());
-        }
-
-        // Window
-        for (Window& window : GetWindows()) {
-            if (Editor::GetSelectedObjectId() == window.GetObjectId()) {
-                window.GetMeshNodes().SubmitOutlineRenderItems();
-            }
-            window.GetMeshNodes().SubmitRenderItems();
-        }
-
-        // Trees
-        //for (Tree& tree : GetTrees()) {
-        //    RenderDataManager::SubmitRenderItems(tree.GetRenderItems());
-        //    RenderDataManager::SubmitRenderItemsBlended(tree.GetRenderItemsBlended());
-        //    RenderDataManager::SubmitRenderItemsAlphaDiscard(tree.GetRenderItemsAlphaDiscarded());
-        //    RenderDataManager::SubmitRenderItemsAlphaHairTopLayer(tree.GetRenderItemsHairTopLayer());
-        //    RenderDataManager::SubmitRenderItemsAlphaHairBottomLayer(tree.GetRenderItemsHairBottomLayer());
-        //    if (Editor::GetSelectedObjectId() == tree.GetObjectId()) {
-        //        RenderDataManager::SubmitOutlineRenderItems(tree.GetRenderItems());
-        //        RenderDataManager::SubmitOutlineRenderItems(tree.GetRenderItemsAlphaDiscarded());
-        //        RenderDataManager::SubmitOutlineRenderItems(tree.GetRenderItemsBlended());
-        //    }
-        //
-        //    RenderDataManager::SubmitShadowCasterRenderItems(tree.get());
-        //}
-
-        // Lights
-        for (Light& light : GetLights()) {
-            RenderDataManager::SubmitRenderItems(light.GetRenderItems());
-            if (Editor::GetSelectedObjectId() == light.GetObjectId()) {
-                RenderDataManager::SubmitOutlineRenderItems(light.GetRenderItems());
-            }
+        for (Wall& wall : GetWalls()) {
+            wall.SubmitRenderItems();
         }
 
         for (BulletCasing& bulletCasing : GetBulletCasings()) {
             bulletCasing.SubmitRenderItem();
         }
 
+        // Animated mesh nodes
         for (AnimatedGameObject& animatedGameObject : GetAnimatedGameObjects()) {
             animatedGameObject.UpdateRenderItems();
             RenderDataManager::SubmitAnimatedMeshNodes(animatedGameObject.GetAnimatedMeshNodes());
-            //if (animatedGameObject.RenderingEnabled()) {
-            //    animatedGameObject.UpdateRenderItems();
-            //    RenderDataManager::SubmitSkinnedRenderItems(animatedGameObject.GetDeformingRenderItems());
-            //}
-        }
-
-        for (TrimSet& trimSet : GetTrimSets()) {
-            RenderDataManager::SubmitRenderItems(trimSet.GetRenderItems());
-        }
-
-		for (Fireplace& fireplace : GetFireplaces()) {
-			RenderDataManager::SubmitRenderItems(fireplace.GetRenderItems());
-			RenderDataManager::SubmitRenderItemsGlass(fireplace.GetRenderItemsGlass());
-            if (Editor::GetSelectedObjectId() == fireplace.GetObjectId()) {
-                RenderDataManager::SubmitOutlineRenderItems(fireplace.GetRenderItems());
-            }
-        }
-
-        for (ChristmasLightSet& christmasLights : GetChristmasLightSets()) {
-            RenderDataManager::SubmitRenderItems(christmasLights.GetRenderItems());
-            if (Editor::GetSelectedObjectId() == christmasLights.GetObjectId()) {
-                RenderDataManager::SubmitOutlineRenderItems(christmasLights.GetRenderItems());
-            }
-        }
-
-        for (Wall& wall : GetWalls()) {
-            wall.SubmitRenderItems();
-            RenderDataManager::SubmitRenderItems(wall.GetWeatherBoardstopRenderItems());
-        }
-
-        for (PowerPoleSet& powerPoleSet : GetPowerPoleSets()) {
-            RenderDataManager::SubmitRenderItems(powerPoleSet.GetRenderItems());
-            if (Editor::GetSelectedObjectId() == powerPoleSet.GetObjectId()) {
-                RenderDataManager::SubmitOutlineRenderItems(powerPoleSet.GetRenderItems());
-            }
-        }
-
-        for (Fence& fence: GetFences()) {
-            RenderDataManager::SubmitRenderItems(fence.GetRenderItems());
-            if (Editor::GetSelectedObjectId() == fence.GetObjectId()) {
-                RenderDataManager::SubmitOutlineRenderItems(fence.GetRenderItems());
-            }
-        }
-
-        for (ChristmasTree& christmasTree : GetChristmasTrees()) {
-            RenderDataManager::SubmitRenderItemsAlphaDiscard(christmasTree.GetRenderItems());
-        }
-
-        for (Staircase& staircase : GetStaircases()) {
-            RenderDataManager::SubmitRenderItems(staircase.GetRenderItems());
-            if (Editor::GetSelectedObjectId() == staircase.GetObjectId()) {
-                RenderDataManager::SubmitOutlineRenderItems(staircase.GetRenderItems());
-            }
         }
 
         // Hack to render door and window cube transforms
@@ -209,7 +74,35 @@ namespace World {
                 RenderDataManager::SubmitRenderItem(renderItem);
             }
         }
-    }
 
-    //std::vector<RenderItem>& GetSkinnedRenderItems() { return g_skinnedRenderItems; } // remove me when u can
+        // Update UI after all else
+        for (int i = 0; i < Game::GetLocalPlayerCount(); i++) {
+            Player* player = Game::GetLocalPlayerByIndex(i);
+            if (!player) continue;
+
+            player->UpdateUI(Game::GetDeltaTime());
+        }
+
+
+        // This prints the name and type of a RenderItem list
+        // 
+        // if (Input::KeyPressed(HELL_KEY_E)) {
+        //     std::cout << "\n";
+        // 
+        //     for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsAlphaDiscard()) {
+        //         uint64_t objectId = 0;
+        //         Util::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+        // 
+        //         std::cout << objectId << " " << Util::EnumToString(UniqueID::GetType(objectId)) << " ";
+        // 
+        //         Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+        //         if (!mesh) {
+        //             std::cout << "\n";
+        //             continue;
+        //         }
+        // 
+        //         std::cout << mesh->GetName() << "\n";
+        //     }
+        // }
+    }
 }

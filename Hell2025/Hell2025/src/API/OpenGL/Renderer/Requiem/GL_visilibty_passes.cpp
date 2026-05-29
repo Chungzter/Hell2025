@@ -35,12 +35,12 @@ namespace OpenGLRenderer {
         state.stencilDepthFailOp = GL_KEEP;
         state.stencilPassOp = GL_REPLACE;
 
-        state.stencilRef = STENCIL_REF_PROCEDUAL;
+        state.stencilRef = STENCIL_BIT_PROCEDUAL;
 
         glBindVertexArray(Renderer::GetProceduralMeshBuffer().GetVAO());
-        MultiDrawPerViewportRE(fbo, drawInfoSet.house, state);
+        MultiDrawPerViewportRE(fbo, drawInfoSet.procedural, state);
 
-        state.stencilRef = STENCIL_REF_STATIC;
+        state.stencilRef = STENCIL_BIT_STATIC;
 
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.standard, state);
@@ -81,12 +81,18 @@ namespace OpenGLRenderer {
         state.stencilDepthFailOp = GL_KEEP;
         state.stencilPassOp = GL_REPLACE;
 
-        state.stencilRef = STENCIL_REF_STATIC;
+        state.stencilRef = STENCIL_BIT_STATIC;
 
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 
         MultiDrawPerViewportRE(fbo, drawInfoSet.alphaDiscard, state);
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingAlphaDiscard, state);
+
+        // Hair
+        SetUniformBool("u_depthOffset", true);
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        MultiDrawPerViewportRE(fbo, drawInfoSet.hair, state);
+        SetUniformBool("u_depthOffset", false);
     }
 
     void VisibilitySkinnedPass() {
@@ -118,7 +124,7 @@ namespace OpenGLRenderer {
         state.stencilDepthFailOp = GL_KEEP;
         state.stencilPassOp = GL_REPLACE;
 
-        state.stencilRef = STENCIL_REF_SKINNED;
+        state.stencilRef = STENCIL_BIT_SKINNED;
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedStandard, state);
@@ -132,7 +138,7 @@ namespace OpenGLRenderer {
         fbo.Bind();
         fbo.DrawBuffers({ "Visibility" });
 
-        BindShader("Visibility");
+        BindShader("VisibilityAlphaDiscard");
 
         BindSSBO(2, "ViewportData");
         BindSSBO(3, "InstanceData");
@@ -152,10 +158,14 @@ namespace OpenGLRenderer {
         state.stencilFailOp = GL_KEEP;
         state.stencilDepthFailOp = GL_KEEP;
         state.stencilPassOp = GL_REPLACE;
+        
+        state.stencilRef = STENCIL_BIT_SKINNED_HAIR;
 
-        state.stencilRef = STENCIL_REF_SKINNED_HAIR;
+        SetUniformBool("u_depthOffset", true);
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedHair, state);
+
+        SetUniformBool("u_depthOffset", false);
     }
 }

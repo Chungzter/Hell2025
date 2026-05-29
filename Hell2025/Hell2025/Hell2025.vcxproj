@@ -229,7 +229,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_examine_item_pass.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_blood_decals_pass.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_decal_painting_pass.cpp" />
-    <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_decal_pass.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_fur_pass.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_glass_pass.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_metalballs_pass.cpp" />
@@ -241,6 +240,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_vat_blood_pass.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_weatherboards_pass.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_winston_pass.cpp" />
+    <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_hair_passes.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_material_resolve_passes.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_post_processing_re.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_visilibty_passes.cpp" />
@@ -360,7 +360,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Editor\Editor_util.cpp" />
     <ClCompile Include="src\Editor\Objects\Editor_picture_frame_placement.cpp" />
     <ClCompile Include="src\Editor\Objects\Editor_spawn_location_placement.cpp" />
-    <ClCompile Include="src\Editor\Objects\Editor_tree_placement.cpp" />
     <ClCompile Include="src\Editor\Objects\Editor_walls.cpp" />
     <ClCompile Include="src\Editor\Editor_objects.cpp" />
     <ClCompile Include="src\Editor\Objects\Editor_object_placement.cpp" />
@@ -586,6 +585,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\common\alpha_to_coverage.glsl" />
     <None Include="res\shaders\common\constants.glsl" />
     <None Include="res\shaders\common\hair.glsl" />
+    <None Include="res\shaders\common\moon_lighting.glsl" />
     <None Include="res\shaders\common\normal_encoding.glsl" />
     <None Include="res\shaders\common\raytracing.glsl" />
     <None Include="res\shaders\common\types.glsl" />
@@ -623,9 +623,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\OpenGL\RE\GL_gbuffer_re.frag" />
     <None Include="res\shaders\OpenGL\RE\GL_gbuffer_re.vert" />
     <None Include="res\shaders\OpenGL\RE\GL_hair_composite_re.comp" />
-    <None Include="res\shaders\OpenGL\RE\GL_lighting_re.comp" />
-    <None Include="res\shaders\OpenGL\RE\GL_hair_lighting_deferred.frag" />
-    <None Include="res\shaders\OpenGL\RE\GL_hair_lighting_deferred.vert" />
+    <None Include="res\shaders\OpenGL\RE\GL_lighting_deferred.frag" />
     <None Include="res\shaders\OpenGL\Water\GL_ocean_compute_underwater_flags.comp" />
     <None Include="res\shaders\terrain.frag" />
     <None Include="res\shaders\terrain.vert" />
@@ -639,6 +637,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Work\GLRaytracing\BVH\src\OpenGL\Types\GL_timer.h" />
+    <ClInclude Include="res\shaders\OpenGL\RE\test.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_attachments.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_shadow_map_array.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_texture_3d.h" />

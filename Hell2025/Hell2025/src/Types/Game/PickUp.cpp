@@ -35,16 +35,22 @@ void PickUp::Update(float deltaTime) {
     m_respawnCounter += deltaTime;
 
     if (m_despawned && m_respawnCounter >= 0.0f) {
-        m_despawned = false;
-        m_meshNodes.ForceDirty();
+        Respawn();
     }
 }
 
+void PickUp::Respawn() {
+    m_meshNodes.SetBlendingModes(BlendingMode::DEFAULT);
+
+    m_despawned = false;
+    m_meshNodes.ForceDirty();
+}
+
 void PickUp::Despawn() {
+    m_meshNodes.SetBlendingModes(BlendingMode::DO_NOT_RENDER);
+
     m_respawnCounter = -8.0f;
     m_despawned = true;
-    //SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    //std::cout << "DESPAWNDED\n";
 }
 
 void PickUp::CleanUp() {

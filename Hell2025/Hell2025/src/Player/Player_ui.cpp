@@ -255,6 +255,27 @@ void Player::UpdateUI(float deltaTime) {
             //    text += "Feet above height field: " + Util::BoolToString(m_feetAboveHeightField) + "\n";
             //}
 
+
+            // Render items
+            if (true) {
+                text += "RenderItems ALPHA_DISCARD: " + std::to_string(RenderDataManager::GetRenderItemsAlphaDiscard().size()) + "\n";
+                text += "RenderItems BLENDED: " + std::to_string(RenderDataManager::GetRenderItemsBlended().size()) + "\n";
+                text += "RenderItems DEFAULT: " + std::to_string(RenderDataManager::GetRenderItems().size()) + "\n";
+                text += "RenderItems GLASS: " + std::to_string(RenderDataManager::GetRenderItemsGlass().size()) + "\n";
+                text += "RenderItems HAIR: " + std::to_string(RenderDataManager::GetRenderItemsHair().size()) + "\n";
+                text += "RenderItems MIRROR: " + std::to_string(RenderDataManager::GetRenderItemsMirror().size()) + "\n";
+                text += "RenderItems TOILET_WATER: " + std::to_string(RenderDataManager::GetRenderItemsToiletWater().size()) + "\n";
+                text += "RenderItems PLASTIC: " + std::to_string(RenderDataManager::GetRenderItemsPlastic().size()) + "\n";
+                text += "RenderItems STAINED_GLASS: " + std::to_string(RenderDataManager::GetRenderItemsStainedGlass().size()) + "\n";
+                text += "\n";
+                text += "RenderItems Skinned ALPHA_DISCARD: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsAlphaDiscard().size()) + "\n";
+                text += "RenderItems Skinned BLENDED: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsBlended().size()) + "\n";
+                text += "RenderItems Skinned DEFAULT: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsDefault().size()) + "\n";
+                text += "RenderItems Skinned HAIR: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsHair().size()) + "\n";
+                text += "\n";
+                text += "RenderItems PRODEDURAL: " + std::to_string(RenderDataManager::GetRenderItemsProcedural().size()) + "\n";
+            }
+
             // Movement
             if (false) {
                 text += "Movement Dir: " + Util::Vec3ToString(m_movementDirection) + "\n";
@@ -287,11 +308,13 @@ void Player::UpdateUI(float deltaTime) {
             glm::vec3 rayDir = GetCameraForward();
             float maxRayDistance = 100.0f;
 
-            text += "\n";
-            text += "Flip normal map Y: " + Util::BoolToString(OpenGLRenderer::ShouldFlipNormalMapY()) + "\n";
+            if (false) {
+                text += "\n";
+                text += "Flip normal map Y: " + Util::BoolToString(OpenGLRenderer::ShouldFlipNormalMapY()) + "\n";
+            }
 
             // Override with BVH CPU RAYS if that render mode is set
-            if (Debug::GetDebugRenderMode() == DebugRenderMode::BVH_CPU_PLAYER_RAYS || true) {
+            if (Debug::GetDebugRenderMode() == DebugRenderMode::BVH_CPU_PLAYER_RAYS) {
                 text += "\nBVH ray hit: " + Util::BoolToString(m_bvhRayResult.hitFound) + "\n";
 
                 if (m_bvhRayResult.hitFound) {

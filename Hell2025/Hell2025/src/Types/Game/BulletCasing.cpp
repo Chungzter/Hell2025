@@ -3,6 +3,7 @@
 #include "AssetManagement/AssetManager.h"
 #include "Audio/Audio.h"
 #include "Physics/Physics.h"
+#include "Hell/RendereringConstants.h"
 #include "Renderer/RenderDataManager.h"
 
 BulletCasing::BulletCasing(BulletCasingCreateInfo createInfo) {
@@ -71,7 +72,7 @@ void BulletCasing::SubmitRenderItem() {
     renderItem.rmaTextureIndex = material->m_rma;
     renderItem.normalMapTextureIndex = material->m_normal;
     renderItem.meshIndex = GetMeshIndex();
-    renderItem.castShadows = false;
+    renderItem.shadowBit = SHADOW_BIT_NONE;
 
     Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
     if (mesh) {

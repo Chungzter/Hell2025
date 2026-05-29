@@ -6,7 +6,10 @@
 #include "AssetManagement/AssetManager.h"
 #include "Renderer/RenderDataManager.h"
 
-Decal::Decal(const Decal2CreateInfo& createInfo) {
+#include <Hell/Logging.h>
+#include <Hell/RendereringConstants.h>
+
+Decal::Decal(const DecalCreateInfo& createInfo) {
     m_createInfo = createInfo;
 
     m_localPosition = glm::vec3(glm::inverse(GetParentWorldMatrix()) * glm::vec4(createInfo.surfaceHitPosition, 1.0f));
@@ -43,6 +46,24 @@ Decal::Decal(const Decal2CreateInfo& createInfo) {
     m_localMatrix *= Util::RotationMatrixFromForwardVector(m_localNormal, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
     m_localMatrix *= glm::rotate(glm::mat4(1.0f), randomRotation, glm::vec3(0, 0, 1));
     m_localMatrix *= glm::scale(glm::mat4(1.0f), glm::vec3(scale));
+
+    static int meshIndex = AssetManager::GetMeshIndexByModelNameMeshName("Primitives", "Quad");
+
+    Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex);
+    if (!mesh) {
+        Logging::Fatal() << "Decal::Decal(..) failed to get quad mesh index\n";
+        return;
+    }
+
+    // Set persistent RenderItem values
+    m_renderItem.meshIndex = meshIndex;
+    m_renderItem.baseColorTextureIndex = m_material->m_basecolor;
+    m_renderItem.normalMapTextureIndex = m_material->m_normal;
+    m_renderItem.rmaTextureIndex = m_material->m_rma;
+    m_renderItem.baseVertex = mesh->baseVertex;
+    m_renderItem.baseIndex = mesh->baseIndex;
+    m_renderItem.shadowBit = SHADOW_BIT_NONE;
+    m_renderItem.blendingMode = static_cast<int32_t>(BlendingMode::ALPHA_DISCARD);
 }
 
 void Decal::Update() {
@@ -58,22 +79,13 @@ void Decal::Update() {
     glm::vec3 boundsMax = glm::vec3(0.5f);
     AABB m_localAABB(boundsMin, boundsMax);
 
-    static int meshIndex = AssetManager::GetMeshIndexByModelNameMeshName("Primitives", "Quad");
-
-
-    m_renderItem.meshIndex = meshIndex;
     m_renderItem.modelMatrix = m_worldMatrix;
     m_renderItem.inverseModelMatrix = glm::inverse(m_renderItem.modelMatrix);
     m_renderItem.aabbMin = glm::vec4(GetPosition() - m_localAABB.GetBoundsMin(), 1.0);
     m_renderItem.aabbMax = glm::vec4(GetPosition() + m_localAABB.GetBoundsMax(), 1.0);
-    m_renderItem.baseColorTextureIndex = m_material->m_basecolor;
-    m_renderItem.normalMapTextureIndex = m_material->m_normal;
-    m_renderItem.rmaTextureIndex = m_material->m_rma; 
     Util::UpdateRenderItemAABB(m_renderItem);
 
-    //RenderDataManager::SubmitDecalRenderItem(m_renderItem);
-    RenderDataManager::SubmitRenderItemsAlphaDiscard({ m_renderItem });
-
+    RenderDataManager::SubmitRenderItem({ m_renderItem });
 }
 
 

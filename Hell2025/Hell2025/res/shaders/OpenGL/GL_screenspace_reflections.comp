@@ -137,7 +137,7 @@ void main() {
 
     ViewportData viewportData = viewportDataArr[viewportIndex];
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
-    mat4 inverseProjectionView = viewportData.inverseProjectionView;
+    mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
     vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionView);
@@ -164,7 +164,7 @@ void main() {
     if (gloss < 0.15) return;
 
     mat4 viewMatrix = viewportData.view;
-    mat4 projectionMatrix = viewportData.projection;
+    mat4 projectionMatrix = viewportData.projectionReverseZ;
     mat4 inverseView = viewportData.inverseView;
 
     vec3 viewPosWorld = inverseView[3].xyz;

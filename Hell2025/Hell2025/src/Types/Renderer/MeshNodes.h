@@ -48,6 +48,7 @@ struct MeshNode {
 
     uint32_t baseVertex = 0;
     uint32_t baseIndex = 0;
+    int32_t baseColorOverrideTextureIndex = -1;
 };
 
 struct MeshNodes {
@@ -58,6 +59,7 @@ struct MeshNodes {
     void Init(uint64_t parentId, const std::string& modelName, const std::vector<MeshNodeCreateInfo>& meshNodeCreateInfoSet);
     void CleanUp();
     void Update(const glm::mat4& worldMatrix);
+    void SetBlendingModes(BlendingMode blendingMode);
     void SetBlendingModeByMeshName(const std::string& meshName, BlendingMode blendingMode);
     void SetObjectIdByMeshName(const std::string& meshName, uint64_t id);
     void SetOpenableByMeshName(const std::string& meshName, uint64_t openableId, uint64_t parentObjectId);
@@ -79,8 +81,8 @@ struct MeshNodes {
     void DisableCSMShadows();
     void DisableMarkingStaticSceneBvhAsDirty();
 
-    const void SubmitRenderItems() const;
-    const void SubmitOutlineRenderItems() const;
+    //const void SubmitRenderItems() const;
+    //const void SubmitOutlineRenderItems() const;
 
     bool NodeExists(const std::string& meshName);
     bool BoneExists(const std::string& boneName);
@@ -110,14 +112,6 @@ struct MeshNodes {
     const std::string& GetModelName() const                             { return m_modelName; }
     const std::vector<MeshNode>& GetNodes() const                       { return m_meshNodes; }
     const std::vector<RenderItem>& GetRenderItems() const               { return m_renderItems; }
-    const std::vector<RenderItem>& GetRenderItemsAlphaDiscarded() const { return m_renderItemsAlphaDiscarded; }
-    const std::vector<RenderItem>& GetRenderItemsBlended() const        { return m_renderItemsBlended; }
-    const std::vector<RenderItem>& GetRenderItemsHair() const           { return m_renderItemsHair; }
-    const std::vector<RenderItem>& GetRenderItemsGlass() const          { return m_renderItemsGlass; }
-    const std::vector<RenderItem>& GetRenderItemsToiletWater() const    { return m_renderItemsToiletWater; }
-	const std::vector<RenderItem>& GetRenderItemsMirror() const         { return m_renderItemsMirror; }
-	const std::vector<RenderItem>& GetRenderItemsStainedGlass() const   { return m_renderItemsStainedGlass; }
-	const std::vector<RenderItem>& GetRenderItemsPlastic() const        { return m_renderItemsPlastic; }
 
 private:
     void UpdateAABBsFromWorldMatrices();
@@ -131,14 +125,6 @@ private:
     std::string m_modelName = UNDEFINED_STRING;
     glm::mat4 m_worldMatrixPreviousFrame = glm::mat4(0.0f); // Intentionally (0.0f) to force a dirty update on first use
     std::vector<RenderItem> m_renderItems;
-    std::vector<RenderItem> m_renderItemsAlphaDiscarded;
-    std::vector<RenderItem> m_renderItemsBlended;
-    std::vector<RenderItem> m_renderItemsGlass;
-    std::vector<RenderItem> m_renderItemsHair;
-    std::vector<RenderItem> m_renderItemsMirror;
-	std::vector<RenderItem> m_renderItemsToiletWater;
-	std::vector<RenderItem> m_renderItemsStainedGlass;
-	std::vector<RenderItem> m_renderItemsPlastic;
     bool m_isDirty = true;
     bool m_forceDirty = true;
     bool m_firstFrame = true;

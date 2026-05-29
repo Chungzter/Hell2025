@@ -3,6 +3,7 @@
 #include "AssetManagement/AssetManager.h"
 #include "Core/Game.h"
 #include "Renderer/RenderDataManager.h"
+#include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
 
@@ -59,6 +60,8 @@ namespace OpenGLRenderer {
 
             MultiDrawIndirect(flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i]);
 
+
+
             // Heightfield chunks
             std::vector<HeightMapChunk>& chunks = World::GetHeightMapChunks();
             OpenGLHeightMapMesh& heightMapMesh = OpenGLBackEnd::GetHeightMapMesh();
@@ -80,37 +83,36 @@ namespace OpenGLRenderer {
             }
 
             // House render items
-            OpenGLMeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer().GetGLMeshBuffer();
-            glBindVertexArray(houseMeshBuffer.GetVAO());
+           // OpenGLMeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer().GetGLMeshBuffer();
+           // glBindVertexArray(houseMeshBuffer.GetVAO());
+            
+
+            //const std::vector<HouseRenderItem>& renderItems = flashLightShadowMapDrawInfo.houseMeshRenderItems[i];
+            //for (const HouseRenderItem& renderItem : renderItems) {
+            //    int indexCount = renderItem.indexCount;
+            //    int baseVertex = renderItem.baseVertex;
+            //    int baseIndex = renderItem.baseIndex;
+            //    glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
+            //}
+
+
+            // Procedural
             shader->SetMat4("u_modelMatrix", glm::mat4(1.0f));
 
-            const std::vector<HouseRenderItem>& renderItems = flashLightShadowMapDrawInfo.houseMeshRenderItems[i];
-            for (const HouseRenderItem& renderItem : renderItems) {
-                int indexCount = renderItem.indexCount;
+            MeshBufferV2& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
+            glBindVertexArray(proceduralMeshBuffer.GetVAO());
+
+            const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
+            for (const RenderItem& renderItem : renderItems) {
+
+                Mesh* mesh = proceduralMeshBuffer.GetMeshById(renderItem.meshId);
+                if (!mesh) continue;
+
+                int indexCount = mesh->indexCount;
                 int baseVertex = renderItem.baseVertex;
                 int baseIndex = renderItem.baseIndex;
                 glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
             }
-
-            // Ragdoll
-            //auto& ragdolls = RagdollManager::GetRagdolls();
-            //for (auto it = ragdolls.begin(); it != ragdolls.end(); ) {
-            //    RagdollV2& ragdoll = it->second;
-            //    std::cout << "hi\n";
-            //    if (ragdoll.RenderingEnabled()) {
-            //        MeshBuffer& meshBuffer = ragdoll.GetMeshBuffer();
-            //        if (meshBuffer.GetIndices().size() == 0) continue;
-            //
-            //        glBindVertexArray(meshBuffer.GetGLMeshBuffer().GetVAO());
-            //        for (int j = 0; j < meshBuffer.GetMeshCount(); j++) {
-            //            Mesh* mesh = meshBuffer.GetMeshByIndex(j);
-            //            glm::mat4 modelMatrix = ragdoll.GetModelMatrixByRigidIndex(j);
-            //            shader->SetMat4("u_modelMatrix", modelMatrix);
-            //            glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
-            //        }
-            //    }
-            //    ++it;
-            //}
         }
 
         glBindVertexArray(0);
@@ -146,6 +148,7 @@ namespace OpenGLRenderer {
             Light* light = World::GetLightByIndex(gpuLight.lightIndex);
             
             if (light->IsDirtyForShadowMaps()) {
+                std::cout << i << " is dirty\n";
                 hiResShadowMaps->ClearDepthLayer(i, 1.0f);
             }
         }
@@ -178,15 +181,111 @@ namespace OpenGLRenderer {
             }
         }
 
-        OpenGLMeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer().GetGLMeshBuffer();
-        glBindVertexArray(houseMeshBuffer.GetVAO());
+
+
+
+
+
+
+
+
+
+
+
+        // HAIR
+
+        glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
+        glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetSkinnedVertexDataVBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
+
+        for (int i = 0; i < gpuLightsHighRes.size(); i++) {
+            const GPULight& gpuLight = gpuLightsHighRes[i];
+
+            Light* light = World::GetLightByIndex(gpuLight.lightIndex);
+            if (!light || !light->IsDirtyForShadowMaps()) continue;
+
+            shader->SetFloat("farPlane", light->GetRadius());
+            shader->SetVec3("lightPosition", light->GetPosition());
+            shader->SetMat4("shadowMatrices[0]", light->GetProjectionView(0));
+            shader->SetMat4("shadowMatrices[1]", light->GetProjectionView(1));
+            shader->SetMat4("shadowMatrices[2]", light->GetProjectionView(2));
+            shader->SetMat4("shadowMatrices[3]", light->GetProjectionView(3));
+            shader->SetMat4("shadowMatrices[4]", light->GetProjectionView(4));
+            shader->SetMat4("shadowMatrices[5]", light->GetProjectionView(5));
+
+            shader->SetBool("u_useInstanceData", false);
+
+            for (int face = 0; face < 6; ++face) {
+                shader->SetInt("faceIndex", face);
+                int shadowMapIndex = i;
+                GLuint layer = shadowMapIndex * 6 + face;
+
+                glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, hiResShadowMaps->GetDepthTexture(), 0, layer);
+
+               
+
+
+
+                const std::vector<RenderItem>& instanceData = RenderDataManager::GetInstanceData();
+
+                for (const DrawIndexedIndirectCommand& command : drawInfoSet.skinnedStandard[0]) {
+                    int viewportIndex = command.baseInstance >> VIEWPORT_INDEX_SHIFT;
+                    int instanceOffset = command.baseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
+
+                    for (GLuint i = 0; i < command.instanceCount; ++i) {
+                        const RenderItem& renderItem = instanceData[instanceOffset + i];
+
+                        shader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
+
+                        glDrawElementsBaseVertex(GL_TRIANGLES, command.indexCount, GL_UNSIGNED_INT, (GLvoid*)(command.firstIndex * sizeof(GLuint)), command.baseVertex);
+                    }
+                }
+
+                for (const DrawIndexedIndirectCommand& command : drawInfoSet.skinnedHair[0]) {
+                    int viewportIndex = command.baseInstance >> VIEWPORT_INDEX_SHIFT;
+                    int instanceOffset = command.baseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
+
+                    for (GLuint i = 0; i < command.instanceCount; ++i) {
+                        const RenderItem& renderItem = instanceData[instanceOffset + i];
+
+                        shader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
+
+                        glDrawElementsBaseVertex(GL_TRIANGLES, command.indexCount, GL_UNSIGNED_INT, (GLvoid*)(command.firstIndex * sizeof(GLuint)), command.baseVertex);
+                    }
+                }
+
+
+
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         shader->SetBool("u_useInstanceData", false);
         shader->SetMat4("u_modelMatrix", glm::mat4(1.0f));
 
-        // OPTIMIZE ME! 
+        // OPTIMIZE ME!
         // Make lights store a list of their HouseRenderItems per frustum face that is only updated when the map changes
         // That will be when a HousePlane or Wall is added/modified
 
+        MeshBufferV2& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
+        glBindVertexArray(proceduralMeshBuffer.GetVAO());
+        
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
             const GPULight& gpuLight = gpuLightsHighRes[i];
 
@@ -212,14 +311,17 @@ namespace OpenGLRenderer {
                 Frustum* frustum = light->GetFrustumByFaceIndex(face);
                 if (!frustum) return;
 
-                const std::vector<HouseRenderItem>& renderItems = RenderDataManager::GetHouseRenderItems();
-                for (const HouseRenderItem& renderItem : renderItems) {
+                const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
+                for (const RenderItem& renderItem : renderItems) {
 
                     if (!frustum->IntersectsAABBFast(renderItem)) continue;
 
-                    int indexCount = renderItem.indexCount;
+                    Mesh* mesh = proceduralMeshBuffer.GetMeshById(renderItem.meshId);
+                    if (!mesh) continue;
+
+                    int indexCount = mesh->indexCount;
                     int baseVertex = renderItem.baseVertex;
-                    int baseIndex = renderItem.baseIndex; 
+                    int baseIndex = renderItem.baseIndex;
                     glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
                 }
             }
@@ -279,20 +381,23 @@ namespace OpenGLRenderer {
                 shader->SetBool("u_useInstanceData", false);
                 shader->SetMat4("u_modelMatrix", glm::mat4(1.0f));
 
-                // House
-                OpenGLMeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer().GetGLMeshBuffer();
-                glBindVertexArray(houseMeshBuffer.GetVAO());
+                // Procedural
+                MeshBufferV2& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
+                glBindVertexArray(proceduralMeshBuffer.GetVAO());
+
                 //glDisable(GL_CULL_FACE);
-                const std::vector<HouseRenderItem>& renderItems = RenderDataManager::GetHouseRenderItems();
-                for (const HouseRenderItem& renderItem : renderItems) {
-                    int indexCount = renderItem.indexCount;
+                const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
+                for (const RenderItem& renderItem : renderItems) {
+                    Mesh* mesh = proceduralMeshBuffer.GetMeshById(renderItem.meshId);
+                    if (!mesh) continue;
+
+                    int indexCount = mesh->indexCount;
                     int baseVertex = renderItem.baseVertex;
                     int baseIndex = renderItem.baseIndex;
                     glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
                 }
-                // glEnable(GL_CULL_FACE);
 
-                 // Weather boards
+                // Weather boards
                 MeshBuffer weatherboardMeshBuffer = World::GetWeatherBoardMeshBuffer();
                 glBindVertexArray(weatherboardMeshBuffer.GetGLMeshBuffer().GetVAO());
                 int indexCount = weatherboardMeshBuffer.GetGLMeshBuffer().GetIndexCount();

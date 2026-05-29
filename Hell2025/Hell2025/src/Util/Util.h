@@ -208,6 +208,10 @@ namespace Util {
     TrimType StringToTrimType(const std::string& str);
     WallType StringToWallType(const std::string& str);
 
+   inline void SetBitState(uint32_t& bitmask, uint32_t bit, bool state) {
+        bitmask = (bitmask & ~bit) | (state ? bit : 0);
+    }
+
     template <typename T>
     std::vector<std::string> GetEnumNamesAsVector() {
         auto names = magic_enum::enum_names<T>();

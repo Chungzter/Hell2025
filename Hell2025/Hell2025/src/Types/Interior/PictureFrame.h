@@ -1,15 +1,28 @@
 #pragma once
 #include <Hell/Types.h>
 #include <Hell/CreateInfo.h>
+#include "Types/Renderer/MeshNodes.h"
 
 struct PictureFrame {
     PictureFrame() = default;
-    void Init(PictureFrameCreateInfo createInfo);
+    PictureFrame(uint64_t id, PictureFrameCreateInfo& createInfo, SpawnOffset& spawnOffset);
+    PictureFrame(const PictureFrame&) = delete;
+    PictureFrame& operator=(const PictureFrame&) = delete;
+    PictureFrame(PictureFrame&&) noexcept = default;
+    PictureFrame& operator=(PictureFrame&&) noexcept = default;
+    ~PictureFrame() = default;
+
+    void Init();
+    void Update();
+    void CleanUp();
+
     void SelectRandomPicture();
-    void SetPosition(glm::vec3 position);
-    void SetRotation(glm::vec3 rotation);
-    void SetScale(glm::vec3 scale);
+    void SetPosition(const glm::vec3& position);
+    void SetRotation(const glm::vec3& rotation);
+    void SetScale(const glm::vec3& scale);
     void UpdateRenderItems();
+
+    MeshNodes& GetMeshNodes()                               { return m_meshNodes; }
 
     const uint64_t& GetObjectId() const                     { return m_objectId; }
     const glm::vec3& GetPosition() const                    { return m_createInfo.position; }
@@ -17,9 +30,10 @@ struct PictureFrame {
     const glm::vec3& GetScale() const                       { return m_createInfo.scale; }
     const PictureFrameCreateInfo& GetCreateInfo() const     { return m_createInfo; }
     const PictureFrameType& GetType() const                 { return m_createInfo.type; }
-    const std::vector<RenderItem>& GetRenderItems() const   { return m_renderItems; }
+    const std::vector<RenderItem>& GetRenderItems() const   { return m_meshNodes.GetRenderItems(); }
 
 private:
+    MeshNodes m_meshNodes;
     std::string m_pictureTextureName = "CheckerBoard";
     uint64_t m_objectId = 0;
     PictureFrameCreateInfo m_createInfo;

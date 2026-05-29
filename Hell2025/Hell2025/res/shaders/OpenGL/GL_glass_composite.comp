@@ -10,21 +10,10 @@ void main() {
 	ivec2 texCoord = ivec2(gl_GlobalInvocationID.xy);
     vec3 finalLighting = imageLoad(finalLightingTexture, texCoord).rgb;
     vec3 glassColor = imageLoad(glassTexure, texCoord).rgb;
+
+	if (glassColor == vec3(0,0,0)) return;
+
 	finalLighting += glassColor;
-
-	//if (glassColor != vec3(0,0,0)) {
-	//	finalLighting.rgb *= vec3(1, 0, 0);
-	//}
-
-   //if (glassColor != vec3(0,0,0)) {
-   //    finalLighting -= vec3(0.00125);
-   //    finalLighting.r = clamp(finalLighting.r, 0, 1);
-   //    finalLighting.g = clamp(finalLighting.g, 0, 1);
-   //    finalLighting.b = clamp(finalLighting.b, 0, 1);
-   //    // Guasian blur final lighting plz
-   //}
-
-   //finalLighting = glassColor;
 
 	imageStore(finalLightingTexture, texCoord, vec4(finalLighting, 1));
 }

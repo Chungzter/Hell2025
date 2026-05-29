@@ -63,9 +63,9 @@ void main() {
     float metallic = material.g;
     float ao = material.b;
 
-    vec3 gammaBaseColor = material.rgb;
+    vec3 linearBaseColor = material.rgb;
 
-    vec3 diffuseAlbedo = gammaBaseColor.rgb * (1.0 - metallic);
+    vec3 diffuseAlbedo = linearBaseColor.rgb * (1.0 - metallic);
     float indirectDiffuseScale = 1.0;
     vec3 indirectDiffuse = probeIrradiance * diffuseAlbedo * ao * indirectDiffuseScale;
 	//lighting.rgb += indirectDiffuse.rgb;
