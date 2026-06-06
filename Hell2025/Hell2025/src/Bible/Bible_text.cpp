@@ -3,6 +3,8 @@
 
 namespace Bible {
     const std::string& PickRandom(const std::vector<std::string>& vector) {
+        if (vector.empty()) return UNDEFINED_STRING;
+
         int rand = Util::RandomInt(0, vector.size() - 1);
         return vector[rand];
     }

@@ -59,7 +59,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
         meshNode.forceDynamic = false;
         meshNode.castShadows = true;
         meshNode.castCSMShadows = false;
-        meshNode.emissiveColor = glm::vec3(1.0f);
+        meshNode.emissiveColor = glm::vec3(0.0f);
         meshNode.tintColor = glm::vec3(1.0f);
         meshNode.rigidDynamicId = 0;
         meshNode.worldSpaceObb.SetLocalBounds(AABB(mesh->aabbMin, mesh->aabbMax));

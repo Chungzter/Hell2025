@@ -60,6 +60,43 @@ namespace World {
 
     void Update(float deltaTime) {
 
+
+        static bool rotate = false;
+
+        if (Input::KeyPressed(HELL_KEY_P)) {
+            rotate = !rotate;
+        }
+
+        if (rotate) {
+            Player* player = Game::GetLocalPlayerByIndex(0);
+            AnimatedGameObject* ratKidAO = GetRadKidAO();
+
+            static float time = 0;
+            time += Game::GetDeltaTime();
+
+            float dist = 0.4f;
+            float speed = 1.0f;
+
+            glm::vec3 origin = ratKidAO->GetPosition() + glm::vec3(0, 0, 0.15f);
+            //Renderer::DrawPoint(origin + glm::vec3(0.0f, 1.6f, 0.0f), RED);
+
+            float angle = time * speed;
+
+            glm::vec3 offset = glm::vec3(sinf(angle) * dist, 0.0f, cosf(angle) * dist);
+            glm::vec3 position = origin + offset;
+
+            player->SetFootPosition(position);
+
+            glm::vec3 oldEuler = player->GetCamera().GetEulerRotation();
+            glm::vec3 dir = glm::normalize(origin - position);
+
+            glm::vec3 newEuler = oldEuler;
+            newEuler.y = atan2f(-dir.x, -dir.z);
+
+
+            player->GetCamera().SetEulerRotation(newEuler);
+        }
+
         if (Input::KeyPressed(HELL_KEY_NUMPAD_1)) {
             AnimatedGameObject* ratKidAO = GetRadKidAO();
             ratKidAO->SetAnimationModeToBindPose();

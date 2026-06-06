@@ -85,17 +85,17 @@ namespace OpenGLRenderer {
         HairPassRE();
         OceanRE();
         
-        GaussianBlur();
 
         OceanUnderWaterFlags();
         OceanSurfaceCompositePass();
 
         GlassPassRE();
-        StainedGlassPass();
-
         EmissivePass();
-
+        GaussianBlur();
+        
         OceanUnderwaterCompositePass();
+
+        StainedGlassPass();
 
         // DDGI Debug
         DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();

@@ -17,7 +17,12 @@ in vec2 v_uv;
 
 void main() {
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
-    vec3 emissiveMapColor = texture(sampler2D(textureSamplers[renderItem.emissiveTextureIndex]), v_uv).rgb;
+
+    vec3 emissiveMapColor = vec3(1.0);
+    
+    if (renderItem.emissiveTextureIndex != -1) {
+      //  emissiveMapColor = texture(sampler2D(textureSamplers[renderItem.emissiveTextureIndex]), v_uv).rgb;
+    }
 
     vec3 finalColor = emissiveMapColor * vec3(renderItem.emissiveR, renderItem.emissiveG, renderItem.emissiveB);
 

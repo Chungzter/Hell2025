@@ -315,41 +315,39 @@ namespace RenderDataManager {
 
         for (RenderItem& renderItem : g_renderItems) {
 
-            if (renderItem.emissiveTextureIndex == -1 ||
-                renderItem.emissiveTextureIndex == blackTextureIndex) {
-                // Do nothing
+            bool isEmissive = false;
+
+            if (renderItem.emissiveTextureIndex != -1 && renderItem.emissiveTextureIndex != blackTextureIndex) {
+                isEmissive = true;
             }
-            else {
+
+            if (renderItem.emissiveR != 0.0f ||
+                renderItem.emissiveG != 0.0f ||
+                renderItem.emissiveB != 0.0f) {
+                isEmissive = true;
+            }
+
+            if (isEmissive) {
                 g_renderItemsEmissive.push_back(renderItem);
-
-                if (Input::KeyPressed(HELL_KEY_U)) {
-                    Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
-                    Texture* texture = AssetManager::GetTextureByIndex(renderItem.emissiveTextureIndex);
-
-                    if (mesh && texture) {
-                        std::cout << "\n";
-                        std::cout << mesh->GetName() << " " << texture->GetFileName() << "\n";
-                    }
-                }
-
+            
+                //if (Input::KeyPressed(HELL_KEY_U)) {
+                //    Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+                //    std::string textureName = UNDEFINED_STRING;
+                //
+                //    if (renderItem.emissiveTextureIndex != -1) {
+                //        textureName = AssetManager::GetTextureByIndex(renderItem.emissiveTextureIndex)->GetFileName();
+                //    }
+                //
+                //    if (mesh) {
+                //        std::cout << "\n";
+                //        std::cout << mesh->GetName() << " " << textureName << " (";
+                //        std::cout << renderItem.emissiveR << ", ";
+                //        std::cout << renderItem.emissiveG << ", ";
+                //        std::cout << renderItem.emissiveB << ")\n";
+                //    }
+                //}
             }
         }
-
-
-
-
-
-
-              // if (renderItem.emissiveTextureIndex != -1 ||
-              //     renderItem.emissiveR != 0.0f ||
-              //     renderItem.emissiveG != 0.0f ||
-              //     renderItem.emissiveB != 0.0f) {
-
-
-
-
-
-        //std::cout << "You just gathered " << g_renderItemsEmissive.size() << "\n";
     }
 
     void SortRenderItems(std::vector<RenderItem>& renderItems) {

@@ -100,7 +100,7 @@ struct MeshNodeCreateInfo {
     bool forceDynamic = false;
 	bool castShadows = true;
     bool addtoNavMesh = false;
-    glm::vec3 emissiveColor = glm::vec3(1.0f);
+    glm::vec3 emissiveColor = glm::vec3(0.0f);
     glm::vec3 tintColor = glm::vec3(1.0f);
     glm::vec3 scale = glm::vec3(1.0f);
 };

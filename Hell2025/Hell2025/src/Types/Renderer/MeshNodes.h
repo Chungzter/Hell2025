@@ -39,7 +39,7 @@ struct MeshNode {
     bool castShadows;
     bool castCSMShadows;
     bool ownsOpenableId = false;      // Only nodes with this flag set to true receive the transform from the openable ID
-    glm::vec3 emissiveColor = glm::vec3(1.0f);
+    glm::vec3 emissiveColor = glm::vec3(0.0f);
     glm::vec3 tintColor = glm::vec3(1.0f);
     bool addToNavMesh = false;
     //bool rigidIsKinematic = false;    // You need to be careful this does not get out of sync with actual physx kinematic state
