@@ -1,0 +1,75 @@
+#version 450 core 
+layout (local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+struct Vertex {
+    float position[3];
+    float normal[3];
+    float uv[2];
+    float tangent[3];
+};
+
+struct VertexWeight {
+    ivec4 boneID;
+    vec4 weight;
+};
+
+layout(std430, binding = 0) buffer          outputVertexBuffer { Vertex OutputVertexBuffer[]; };
+layout(std430, binding = 1) readonly buffer inputVertexBuffer  { Vertex InputVertexBuffer[]; };
+layout(std140, binding = 2) readonly buffer transformsBuffer   { mat4 data[];} animatedTransforms;
+layout(std430, binding = 3) readonly buffer weightsBuffer      { VertexWeight vertexWeights[]; };
+
+uniform int baseInputVertex;
+uniform int baseInputVertexWeight;
+uniform int baseOutputVertex;
+uniform int baseTransformIndex;
+uniform int vertexCount;
+
+void main() {
+	uint index = gl_GlobalInvocationID.x;
+    if (index >= vertexCount) return;
+
+    Vertex vertexIn = InputVertexBuffer[index + baseInputVertex];
+    VertexWeight vertexWeight = vertexWeights[index + baseInputVertexWeight];
+    
+    vec4 vertexPosition = vec4(vertexIn.position[0], vertexIn.position[1], vertexIn.position[2], 1.0);
+    vec3 vertexNormal = vec3(vertexIn.normal[0], vertexIn.normal[1], vertexIn.normal[2]);
+    vec3 vertexTangent = vec3(vertexIn.tangent[0], vertexIn.tangent[1], vertexIn.tangent[2]);
+    ivec4 boneIDs = vertexWeight.boneID;
+    vec4 weights = vertexWeight.weight;
+    
+    mat4 skinMat = mat4(0.0);
+
+    for(int i = 0; i < 4; i++) {
+        float weight = weights[i];
+        if (weight < 0.0001) continue;
+        
+        skinMat += animatedTransforms.data[boneIDs[i] + baseTransformIndex] * weight;
+    }
+
+    mat3 skinMat3 = mat3(skinMat);
+
+    vec3 totalLocalPos = (skinMat * vertexPosition).xyz;
+    vec3 totalNormal = normalize(skinMat3 * vertexNormal);
+    //vec3 totalTangent = skinMat3 * vertexTangent;
+    
+    vec3 totalTangent = normalize(skinMat3 * vertexTangent);
+    totalTangent = normalize(totalTangent - totalNormal * dot(totalNormal, totalTangent));
+
+    Vertex vertexOut;
+    vertexOut.position[0] = totalLocalPos.x;
+    vertexOut.position[1] = totalLocalPos.y;
+    vertexOut.position[2] = totalLocalPos.z;
+
+    vertexOut.normal[0] = totalNormal.x;
+    vertexOut.normal[1] = totalNormal.y;
+    vertexOut.normal[2] = totalNormal.z;
+
+    vertexOut.tangent[0] = totalTangent.x;
+    vertexOut.tangent[1] = totalTangent.y;
+    vertexOut.tangent[2] = totalTangent.z;
+
+    vertexOut.uv[0] = vertexIn.uv[0];
+    vertexOut.uv[1] = vertexIn.uv[1];
+
+    OutputVertexBuffer[index + baseOutputVertex] = vertexOut;
+}

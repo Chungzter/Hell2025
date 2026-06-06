@@ -1300,10 +1300,21 @@ namespace OpenGLRenderer {
         return &it->second;
     }
 
-    OpenGLCubemapView* GetCubemapView(const std::string& name) {
+    OpenGLCubemapView& GetCubemapView(const std::string& name) {
+        static OpenGLCubemapView invalid;
+
         auto it = g_cubemapViews.find(name);
         if (it == g_cubemapViews.end()) {
             Logging::Error() << "Renderer::GetCubemapView() failed to get '" << name << "'\n";
+            return invalid;
+        }
+        return it->second;
+    }
+
+    OpenGLCubemapView* GetCubemapViewOLD(const std::string& name) {
+        auto it = g_cubemapViews.find(name);
+        if (it == g_cubemapViews.end()) {
+            Logging::Error() << "Renderer::GetCubemapViewOLD() failed to get '" << name << "'\n";
             return nullptr;
         }
         return &it->second;

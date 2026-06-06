@@ -1,5 +1,13 @@
 ﻿#include "types.glsl"
 
+vec3 GetWorldRay(vec2 fragCoordWindow, mat4 inverseProjectionView, vec3 viewPos, vec2 viewportOrigin, vec2 viewportSize) {
+    vec2 fragCoord = fragCoordWindow - viewportOrigin;
+    vec2 ndc = (fragCoord / viewportSize) * 2.0 - 1.0;
+    vec4 worldH = inverseProjectionView * vec4(ndc, 1.0, 1.0);
+    vec3 worldPos = worldH.xyz / worldH.w;
+    return normalize(worldPos - viewPos);
+}
+
 mat4 ToMat4(vec3 position, vec3 rotation, vec3 scale) {
     // Translation matrix
     mat4 translationMatrix = mat4(1.0);

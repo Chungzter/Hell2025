@@ -25,18 +25,14 @@ namespace OpenGLRenderer {
     void SkyboxPassRE();
     void GlassPassRE();
     void OceanRE();
-
-    void RenderFullscreenTriangle();
-
     void EmissiveForwardPass();
 
-    void PlebRenderProceduralGeometryIntoGBuffer();
+    void RenderFullscreenTriangle();
 
     void InitREStyle() {
         CreateFramebuffersRE();
         LoadShadersRE();
     }
-
 
     void RenderGameREStyle() {
         ComputeOceanFFTPass();
@@ -50,7 +46,6 @@ namespace OpenGLRenderer {
         UpdateSSBOS();
         RenderShadowMaps();
         ClearRenderTargetsRE();
-
 
         VisibilityPass();
         VisibilitySkinnedPass();
@@ -96,6 +91,8 @@ namespace OpenGLRenderer {
         OceanSurfaceCompositePass();
 
         GlassPassRE();
+        StainedGlassPass();
+
         EmissivePass();
 
         OceanUnderwaterCompositePass();
@@ -121,179 +118,6 @@ namespace OpenGLRenderer {
         UIPass();
     }
 
-    void OceanRE() {
-        ProfilerOpenGLZoneFunction();
-
-        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
-        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
-
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-
-        OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
-        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
-        OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
-
-        waterFrameBuffer.Bind();
-
-        const int gridSize = 128;
-        const int lodLevels = 6;
-        const int vertexCount = gridSize * gridSize * 6 * lodLevels;
-
-        BindShader("OceanLighting");
-        SetUniformInt("u_gridWidth", gridSize);
-        SetUniformFloat("u_oceanOriginY", Ocean::GetOceanOriginY());
-        SetUniformFloat("u_time", Game::GetTotalTime());
-
-        BindTextureUnit(0, fftFrameBuffer_band0->GetColorAttachmentHandleByName("Displacement"));
-        BindTextureUnit(1, fftFrameBuffer_band0->GetColorAttachmentHandleByName("Normals"));
-        BindTextureUnit(2, fftFrameBuffer_band1->GetColorAttachmentHandleByName("Displacement"));
-        BindTextureUnit(3, fftFrameBuffer_band1->GetColorAttachmentHandleByName("Normals"));
-        BindTextureUnit(4, skyboxCubemapView->GetHandle());
-        BindTextureUnit(5, GetTextureHandleByName("WaterNormals"));
-
-        OpenGLRasterizerState state;
-        state.depthTestEnabled = true;
-        state.blendEnable = false;
-        state.cullfaceEnable = false;
-        state.depthMask = true;
-        state.colorMask = true;
-        state.depthFunc = GL_GREATER;
-
-        SetRasterizerState(state);
-        BindEmptyVAO();
-
-        static bool lines = false;
-        if (Input::KeyPressed(HELL_KEY_L)) {
-            lines = !lines;
-        }
-
-        OpenGLRenderer::BlitFrameBufferDepth(&gBuffer, &waterFrameBuffer);
-
-        OpenGLFrameBuffer& fbo = GetFrameBuffer("Water");
-        fbo.Bind();
-        //fbo.ClearDepthAttachment(0.0f);
-
-        //fbo.InvalidateDrawBufferCache();
-        //fbo.InvalidateReadBufferCache();
-
-        fbo.DrawBuffers({ "Lighting", "OceanMask" });
-
-        for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            if (!viewport->IsVisible()) continue;
-
-            OpenGLRenderer::SetViewport(&waterFrameBuffer, viewport);
-            SetUniformInt("u_viewportIndex", i);
-
-            if (lines) glDrawArrays(GL_LINES, 0, vertexCount);
-            else       glDrawArrays(GL_TRIANGLES, 0, vertexCount);
-        }
-
-        glBindVertexArray(0);
-    }
-
-    void GlassPassRE() {
-        ProfilerOpenGLZoneFunction();
-
-        ForceRasterizerState("GlassPass");
-
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-
-        OpenGLShader* shader = GetShaderOLD("Glass");
-        OpenGLShader* compositeShader = GetShaderOLD("GlassComposite");
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBufferRE");
-        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
-
-        if (!shader) return;
-        if (!compositeShader) return;
-        if (!gBuffer) return;
-        if (!flashLightShadowMapsFBO) return;
-
-        shader->Bind();
-        shader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
-
-        gBuffer->Bind();
-        gBuffer->DrawBuffer("Lighting");
-
-        OpenGLRasterizerState state;
-        state.depthTestEnabled = true;
-        state.blendEnable = true;
-        state.cullfaceEnable = false;
-        state.depthMask = false;
-        state.colorMask = true;
-        state.depthFunc = GL_GREATER;
-        state.blendFuncSrcfactor = GL_ONE;
-        state.blendFuncDstfactor = GL_ONE;
-        SetRasterizerState(state);
-
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-        glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
-        glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
-        glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
-
-        // Forward render each glass render item into each viewport
-        for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            if (!viewport->IsVisible()) continue;
-
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
-            shader->SetInt("u_viewportIndex", i);
-
-            for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsGlass()) {
-                shader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
-
-                Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
-                if (!mesh) continue;
-
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
-
-                glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
-            }
-        }
-
-        // Composite that render back into the lighting texture
-        //gBuffer->SetViewport();
-        //compositeShader->Bind();
-        //glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-        //glBindImageTexture(1, gBuffer->GetColorAttachmentHandleByName("Glass"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
-        //glDispatchCompute(gBuffer->GetWidth() / 16, gBuffer->GetHeight() / 4, 1);
-        //
-        //glDepthMask(GL_TRUE);
-    }
-
-    void EmissiveForwardPass() {
-        ProfilerOpenGLZoneFunction();
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-
-        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
-        fbo.Bind();
-        fbo.DrawBuffers({ "Emissive" });
-
-        BindShader("EmissiveForward");
-
-        BindSSBO(0, "Samplers");
-        BindSSBO(1, "RendererData");
-        BindSSBO(2, "ViewportData");
-        BindSSBO(3, "InstanceData");
-
-        OpenGLRasterizerState state;
-        state.depthTestEnabled = true;
-        state.blendEnable = false;
-        state.cullfaceEnable = false;
-        state.depthMask = false;
-        state.colorMask = true;
-        state.depthFunc = GL_EQUAL;
-
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-
-        MultiDrawPerViewportRE(fbo, drawInfoSet.emissive, state);
-    }
-
     void CreateFramebuffersRE() {
         OpenGLFrameBuffer& gBufferRE = CreateFrameBuffer("GBufferRE", g_settings.gBufferResolution);
         gBufferRE.CreateAttachment("Lighting", GL_RGBA16F);
@@ -303,6 +127,8 @@ namespace OpenGLRenderer {
         gBufferRE.CreateAttachment("Visibility", GL_RG32UI);
         gBufferRE.CreateAttachment("Emissive", GL_RGBA8);
         gBufferRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
+
+        gBufferRE.CreateAttachment("Glass", GL_RGBA16F); // Remove/rethink me
 
         OpenGLFrameBuffer& hairFboRE = CreateMultisampledFrameBuffer("HairRE", g_settings.gBufferResolution, 4);
         hairFboRE.CreateAttachment("Lighting", GL_RGBA16F);
@@ -447,13 +273,11 @@ namespace OpenGLRenderer {
 		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.skinnedBlended, state);
 	}
 
-	
-
     void SkyboxPassRE() {
         ProfilerOpenGLZoneFunction();
 
         OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
-        OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
+        OpenGLCubemapView* skyboxCubemapView = GetCubemapViewOLD("SkyboxNightSky");
 
         gBuffer.Bind();
         gBuffer.SetViewport();
@@ -484,6 +308,171 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         
         RenderFullscreenTriangle();
+    }
+
+    void OceanRE() {
+        ProfilerOpenGLZoneFunction();
+        if (!World::HasOcean()) return;
+        
+        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+
+        OpenGLCubemapView& skyboxCubemapView = GetCubemapView("SkyboxNightSky");
+        OpenGLFrameBuffer& fftBand0Fbo = GetFrameBuffer("FFT_band0");
+        OpenGLFrameBuffer& fftBand1Fbo = GetFrameBuffer("FFT_band1");
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& waterFbo = GetFrameBuffer("Water");
+
+        const int gridSize = 128;
+        const int lodLevels = 6;
+        const int vertexCount = gridSize * gridSize * 6 * lodLevels;
+
+        BindShader("OceanLighting");
+        SetUniformInt("u_gridWidth", gridSize);
+        SetUniformFloat("u_oceanOriginY", Ocean::GetOceanOriginY());
+        SetUniformFloat("u_time", Game::GetTotalTime());
+
+        BindTextureUnit(0, fftBand0Fbo.GetColorAttachmentHandleByName("Displacement"));
+        BindTextureUnit(1, fftBand0Fbo.GetColorAttachmentHandleByName("Normals"));
+        BindTextureUnit(2, fftBand1Fbo.GetColorAttachmentHandleByName("Displacement"));
+        BindTextureUnit(3, fftBand1Fbo.GetColorAttachmentHandleByName("Normals"));
+        BindTextureUnit(4, skyboxCubemapView.GetHandle());
+        BindTextureUnit(5, GetTextureHandleByName("WaterNormals"));
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = true;
+        state.colorMask = true;
+        state.depthFunc = GL_GREATER;
+
+        SetRasterizerState(state);
+        BindEmptyVAO();
+
+        static bool lines = false;
+        if (Input::KeyPressed(HELL_KEY_L)) {
+            lines = !lines;
+        }
+
+        OpenGLRenderer::BlitFrameBufferDepth(&gBuffer, &waterFbo);
+
+        waterFbo.Bind();
+        waterFbo.DrawBuffers({ "Lighting", "OceanMask" });
+
+        for (int i = 0; i < 4; i++) {
+            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            OpenGLRenderer::SetViewport(&waterFbo, viewport);
+            SetUniformInt("u_viewportIndex", i);
+
+            if (lines) glDrawArrays(GL_LINES, 0, vertexCount);
+            else       glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        }
+
+        glBindVertexArray(0);
+    }
+
+    void GlassPassRE() {
+        ProfilerOpenGLZoneFunction();
+
+        ForceRasterizerState("GlassPass");
+
+        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+
+        OpenGLShader* shader = GetShaderOLD("Glass");
+        OpenGLShader* compositeShader = GetShaderOLD("GlassComposite");
+        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBufferRE");
+        OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
+
+        if (!shader) return;
+        if (!compositeShader) return;
+        if (!gBuffer) return;
+        if (!flashLightShadowMapsFBO) return;
+
+        shader->Bind();
+        shader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
+
+        gBuffer->Bind();
+        gBuffer->DrawBuffer("Lighting");
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = true;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
+        state.depthFunc = GL_GREATER;
+        state.blendFuncSrcfactor = GL_ONE;
+        state.blendFuncDstfactor = GL_ONE;
+        SetRasterizerState(state);
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
+        glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
+        glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
+
+        // Forward render each glass render item into each viewport
+        for (int i = 0; i < 4; i++) {
+            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            shader->SetInt("u_viewportIndex", i);
+
+            for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsGlass()) {
+                shader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
+
+                Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+                if (!mesh) continue;
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+
+                glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
+            }
+        }
+
+        // Composite that render back into the lighting texture
+        //gBuffer->SetViewport();
+        //compositeShader->Bind();
+        //glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+        //glBindImageTexture(1, gBuffer->GetColorAttachmentHandleByName("Glass"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+        //glDispatchCompute(gBuffer->GetWidth() / 16, gBuffer->GetHeight() / 4, 1);
+        //
+        //glDepthMask(GL_TRUE);
+    }
+
+    void EmissiveForwardPass() {
+        ProfilerOpenGLZoneFunction();
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
+        fbo.Bind();
+        fbo.DrawBuffers({ "Emissive" });
+
+        BindShader("EmissiveForward");
+
+        BindSSBO(0, "Samplers");
+        BindSSBO(1, "RendererData");
+        BindSSBO(2, "ViewportData");
+        BindSSBO(3, "InstanceData");
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
+        state.depthFunc = GL_EQUAL;
+
+        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+
+        MultiDrawPerViewportRE(fbo, drawInfoSet.emissive, state);
     }
 
     void RenderFullscreenTriangle() {

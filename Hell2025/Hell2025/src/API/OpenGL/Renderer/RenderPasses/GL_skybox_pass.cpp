@@ -14,7 +14,7 @@ namespace OpenGLRenderer {
 
         OpenGLShader* shader = GetShaderOLD("Skybox");
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
-        OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
+        OpenGLCubemapView* skyboxCubemapView = GetCubemapViewOLD("SkyboxNightSky");
         Mesh* mesh = AssetManager::GetCubeMesh();
 
         gBuffer->Bind();

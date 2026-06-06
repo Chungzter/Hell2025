@@ -12,12 +12,12 @@ readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { Render
 readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 uniform int u_viewportIndex;
+uniform float u_oceanOriginY;
 
 out vec3 v_worldPos;
 out vec3 v_normal;
 out vec3 v_debugColor;
 
-const float WATER_HEIGHT = 29.5;
 const int LOD_LEVELS = 6;
 const int GRID_SIZE = 128;
 const float BASE_SPACING = 0.175;
@@ -69,7 +69,7 @@ void main() {
 
     float currentSpacing = BASE_SPACING * pow(LOD_SCALE, float(lodLevel));
 
-    vec3 worldPos = vec3(gridX * currentSpacing, WATER_HEIGHT, gridY * currentSpacing);
+    vec3 worldPos = vec3(gridX * currentSpacing, u_oceanOriginY, gridY * currentSpacing);
 
     // snapping camera to the current lod grid
     vec2 snappedCam = floor(viewPos.xz / currentSpacing) * currentSpacing;

@@ -45,17 +45,17 @@ void main() {
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
 
-    vec4 normalXYRoughnessMisc = texelFetch(u_normalXYRoughnessMiscTexture, px, 0);
+    vec4 normalXYRoughnessMisc = texture(u_normalXYRoughnessMiscTexture, screenUV);
     vec3 normal = DecodeNormal(normalXYRoughnessMisc.rg);
     float roughness = normalXYRoughnessMisc.b;
     float misc = normalXYRoughnessMisc.a;
 
-    vec4 baseColorMetallic = texelFetch(u_baseColorMetallicTexture, px, 0);
+    vec4 baseColorMetallic = texture(u_baseColorMetallicTexture, screenUV);
     vec3 baseColor = baseColorMetallic.rgb;
     float metallic = baseColorMetallic.a;
     vec3 linearBaseColor = pow(baseColor.rgb, vec3(2.2)); // baseColor.rgb * baseColor.rgb;
 
-    vec4 velocityXYOcclusionSubSurface = texelFetch(u_velocityXYOcclusionSubSurfaceTexture, px, 0).rgba;
+    vec4 velocityXYOcclusionSubSurface = texture(u_velocityXYOcclusionSubSurfaceTexture, screenUV).rgba;
     float ao =velocityXYOcclusionSubSurface.b;
     float subSurface = velocityXYOcclusionSubSurface.a;
     vec2 velocity = velocityXYOcclusionSubSurface.rg;
@@ -184,7 +184,7 @@ void main() {
             if (!thisFlashlightIsInShop) {
                 spotLighting *= cookie;
             }
-            
+
             directLighting += vec3(spotLighting) * flashlightModifer;
         }
     }
@@ -235,6 +235,6 @@ void main() {
     }
 
     vec3 finalColor = (directLighting + indirectDiffuse + moonLighting) * ao;
-    
+
     LightingOut = vec4(finalColor, 1);
 }

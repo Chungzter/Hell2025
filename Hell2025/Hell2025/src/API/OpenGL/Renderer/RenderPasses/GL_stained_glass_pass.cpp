@@ -3,6 +3,7 @@
 #include "AssetManagement/AssetManager.h"
 #include "Core/Game.h"
 #include "Renderer/RenderDataManager.h"
+#include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
 
@@ -17,23 +18,24 @@ namespace OpenGLRenderer {
 
         OpenGLShader* shader = GetShaderOLD("StainedGlass");
         OpenGLShader* compositeShader = GetShaderOLD("GlassComposite");
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLFrameBuffer* miscFullSizeFrameBuffer = GetFrameBufferOLD("MiscFullSize");
         OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
 
+        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer(gBufferName);
+
         if (!shader) return;
         if (!compositeShader) return;
-        if (!gBuffer) return;
         if (!flashLightShadowMapsFBO) return;
 
         shader->Bind();
         shader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
-        gBuffer->Bind();
-        gBuffer->DrawBuffer("Lighting");
+        gBuffer.Bind();
+        gBuffer.DrawBuffer("Lighting");
 
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-        glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
+        glBindTextureUnit(0, gBuffer.GetDepthAttachmentHandle());
         glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
         glBindTextureUnit(9, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"));
@@ -46,7 +48,7 @@ namespace OpenGLRenderer {
             Player* player = Game::GetLocalPlayerByIndex(i);
             if (!player) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGLRenderer::SetViewport(&gBuffer, viewport);
             shader->SetInt("u_viewportIndex", i);
 
             // Sort by distance to camera
@@ -81,11 +83,10 @@ namespace OpenGLRenderer {
         }
 
         // Composite that render back into the lighting texture
-        gBuffer->SetViewport();
         compositeShader->Bind();
-        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-        glBindImageTexture(1, gBuffer->GetColorAttachmentHandleByName("Glass"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
-        glDispatchCompute(gBuffer->GetWidth() / 16, gBuffer->GetHeight() / 4, 1);
+        glBindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+        glBindImageTexture(1, gBuffer.GetColorAttachmentHandleByName("Glass"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+        glDispatchCompute(gBuffer.GetWidth() / 16, gBuffer.GetHeight() / 4, 1);
 
         glDepthMask(GL_TRUE);
     }

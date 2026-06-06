@@ -26,7 +26,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
         OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
         OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
-        OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
+        OpenGLCubemapView* skyboxCubemapView = GetCubemapViewOLD("SkyboxNightSky");
         OpenGLShadowMap* flashLightShadowMapsFBO = GetShadowMapOLD("FlashlightShadowMaps");
         OpenGLMeshPatch* oceanMeshPatch = GetOceanMeshPatch();
         OpenGLShader* shader = GetShaderOLD("OceanGeometry");
@@ -169,6 +169,7 @@ namespace OpenGLRenderer {
 
     void OceanUnderWaterFlags() {
         ProfilerOpenGLZoneFunction();
+        if (!World::HasOcean()) return;
 
         OpenGLFrameBuffer& fftFrameBuffer_band0 = GetFrameBuffer("FFT_band0");
         OpenGLFrameBuffer& fftFrameBuffer_band1 = GetFrameBuffer("FFT_band1");
@@ -184,12 +185,12 @@ namespace OpenGLRenderer {
         BindTextureUnit(2, fftFrameBuffer_band0.GetColorAttachmentHandleByName("Displacement"));
         BindTextureUnit(3, fftFrameBuffer_band1.GetColorAttachmentHandleByName("Displacement"));
 
+        glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         glDispatchCompute((waterFrameBuffer.GetWidth() + 7) / 8, (waterFrameBuffer.GetHeight() + 7) / 8, 1);
     }
 
     void OceanSurfaceCompositePass() {
         ProfilerOpenGLZoneFunction();
-
         if (!World::HasOcean()) return;
 
         std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
@@ -197,18 +198,16 @@ namespace OpenGLRenderer {
 
         OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
         OpenGLFrameBuffer& quaterSizeFrameBuffer = GetFrameBuffer("QuarterSize");
-        OpenGLShader* shader = GetShaderOLD("OceanSurfaceComposite");
 
         // Down sample the final lighting to 25%
         // TODO: try using Gaussian blur of final lighting. It's currently calculated in the underwater composite pass so will have to move it before
         BlitFrameBuffer(&gBuffer, &quaterSizeFrameBuffer, "Lighting", "DownsampledFinalLighting", GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
-        // Water surface composite
-        glm::vec2 resolution = glm::vec2(gBuffer.GetWidth(), gBuffer.GetHeight());
-        shader->Bind();
-        shader->SetFloat("u_time", Game::GetTotalTime());
-        shader->SetVec2("u_resolution", resolution);
-        shader->SetFloat("u_oceanYOrigin", Ocean::GetOceanOriginY());
+        BindShader("OceanSurfaceComposite");
+
+        SetUniformFloat("u_time", Game::GetTotalTime());
+        SetUniformFloat("u_oceanYOrigin", Ocean::GetOceanOriginY());
+        SetUniformVec2("u_resolution", glm::vec2(gBuffer.GetWidth(), gBuffer.GetHeight()));
 
         BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
         BindImageTexture(1, waterFrameBuffer.GetColorAttachmentHandleByName("OceanMask"), GL_READ_ONLY, GL_R8UI);
@@ -216,7 +215,9 @@ namespace OpenGLRenderer {
         BindTextureUnit(3, GetTextureHandleByName("WaterDUDV"));
         BindTextureUnit(4, quaterSizeFrameBuffer.GetColorAttachmentHandleByName("DownsampledFinalLighting"));
 
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         glDispatchCompute((gBuffer.GetWidth() + 7) / 8, (gBuffer.GetHeight() + 7) / 8, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT);
     }
 
     void GaussianBlur() {
@@ -244,7 +245,6 @@ namespace OpenGLRenderer {
 
     void OceanUnderwaterCompositePass() {
         ProfilerOpenGLZoneFunction();
-
         if (!World::HasOcean()) return;
 
         OpenGLFrameBuffer& miscFullSizeFrameBuffer = GetFrameBuffer("MiscFullSize");
@@ -266,6 +266,7 @@ namespace OpenGLRenderer {
 
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         glDispatchCompute((gBuffer.GetWidth() + 7) / 8, (gBuffer.GetHeight() + 7) / 8, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT);
     }
 
     void InitOceanHeightReadback() {

@@ -38,20 +38,22 @@ void main() {
     if (flag == 0u || flag == 1u) return;
 
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-
-    
-    // Sample ocean lighting texture
-    vec3 waterColor = texture(WaterColorTexture, screenUV).rgb;
-
-    // Retrieve per viewport data
     ViewportData viewportData = viewportDataArr[viewportIndex];
+
+    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
-    mat4 inverseProjectionView = viewportData.inverseProjectionView;
+
+    // Sample ocean lighting texture
+    vec3 waterColor = texelFetch(WaterColorTexture, px, 0).rgb;
+
+    // Get world ray
+    mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
     vec3 viewPos = viewportData.viewPos.xyz;
+    vec2 viewportOrigin = vec2(viewportData.xOffset, viewportData.yOffset);
+    vec2 viewportSize = vec2(viewportData.width, viewportData.height);
+    vec3 rayDir = GetWorldRay(px, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
 
     // calculate depth-based world ray fog
-    vec3 rayDir = GetWorldRay(vec2(px), u_resolution, inverseProjectionView, viewPos);
     vec3 down = vec3(0.0, -1.0, 0.0);
     float downwardness = clamp(dot(rayDir, down), 0.0, 1.0);
     float darknessCurve = 0.95;

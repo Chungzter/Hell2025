@@ -10,5 +10,5 @@ struct OpenGLCubemapView {
     GLuint GetHandle() const;
 
 private:
-    GLuint m_handle;
+    GLuint m_handle = 0;
 };

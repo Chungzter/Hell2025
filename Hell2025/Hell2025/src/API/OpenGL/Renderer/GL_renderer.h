@@ -207,7 +207,8 @@ namespace OpenGLRenderer {
     void BindEmptyVAO();
     GLuint GetTextureHandleByName(const std::string& name);
 
-    OpenGLCubemapView* GetCubemapView(const std::string& name);
+    OpenGLCubemapView& GetCubemapView(const std::string& name);
+    OpenGLCubemapView* GetCubemapViewOLD(const std::string& name);
     OpenGLFrameBuffer* GetBlurBuffer(int viewportIndex, int bufferIndex);
     OpenGLShader& GetShader(const std::string& name);
     OpenGLShader* GetShaderOLD(const std::string& name);

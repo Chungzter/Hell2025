@@ -58,20 +58,19 @@ vec3 ComputeScreenBarycentrics(vec2 p, vec2 s0, vec2 s1, vec2 s2, vec3 invW) {
 }
 
 void main() {
-    ivec2 px = ivec2(gl_FragCoord.xy);
-    ivec2 outputImageSize = imageSize(u_VisibilityBuffer);
+    ivec2 pixelCoords = ivec2(gl_FragCoord.xy);
+    ivec2 texSize = imageSize(u_VisibilityBuffer);
 
-    uvec4 visibilityData = imageLoad(u_VisibilityBuffer, px);
+    uvec4 visibilityData = imageLoad(u_VisibilityBuffer, pixelCoords);
     uint globalInstanceIndex = visibilityData.x;
     uint primitiveID = visibilityData.y;
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-
+    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, texSize, rendererData.splitscreenMode);
     ViewportData viewportData = viewportDataArr[viewportIndex];
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
-
     RenderItem renderItem = renderItems[globalInstanceIndex];
+
+    vec2 uv_screenspace = gl_FragCoord.xy / vec2(texSize);
+
     uint triangleIndexOffset = renderItem.baseIndex + (primitiveID * 3);
 
     #ifdef SKINNED
@@ -89,8 +88,8 @@ void main() {
     PackedVertex v2 = vertices[i2];
 
     // Position from depth reconstruction
-    float depth = texelFetch(u_DepthTexture, px, 0).r;
-    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
+    float depth = texelFetch(u_DepthTexture, pixelCoords, 0).r;
+    vec3 worldPos = ReconstructWorldPos(uv_screenspace, depth, viewportData.inverseProjectionViewReverseZ);
 
     // Transform vertices to world space
     mat4 modelMatrix = renderItem.modelMatrix;

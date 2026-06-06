@@ -40,7 +40,7 @@ vec3 ShadowCalculationCSM(vec3 fragPosWorldSpace, vec3 normal, vec3 lightDir, ma
     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
     const float biasModifier = 10.5;
     float scaledBias = bias;
-    if (layer == SHADOW_CASCADE_COUNT - 1) {
+    if (layer == SHADOW_CASCADE_COUNT) {
         scaledBias *= 1.0 / (u_cascadeFarPlane * biasModifier);
     }
     else {
@@ -56,9 +56,9 @@ vec3 ShadowCalculationCSM(vec3 fragPosWorldSpace, vec3 normal, vec3 lightDir, ma
     uint arrayIndex = uint(layer) + (viewportIndex * SHADOW_CASCADE_COUNT);
 
     for (int i = 0; i < samples; ++i) {
+        // Scale the disk sample by the texture size to get UV offsets
         vec2 offset = gridSamplingDiskCSM[i].xy * diskRadius * texelSize;
-        vec3 shadowUV = vec3(clamp(projCoords.xy + offset, 0.0, 1.0), float(arrayIndex));
-        float pcfDepth = textureLod(u_shadowMapCascadeArray, shadowUV, 0.0).r;
+        float pcfDepth = texture(u_shadowMapCascadeArray, vec3(clamp(projCoords.xy + offset, 0.0, 1.0), arrayIndex)).r;
         shadow += (currentDepth - scaledBias) > pcfDepth ? 1.0 : 0.0;
     }
 

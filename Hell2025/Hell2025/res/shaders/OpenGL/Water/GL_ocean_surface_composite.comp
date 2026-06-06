@@ -22,16 +22,10 @@ const float distortionFactor = 0.004;
 const float waterUVScaling = 0.15;
 
 vec3 IntersectRayWithGroundPlane(vec3 rayOrigin, vec3 rayDir, float groundHeight) {
-    float t = (groundHeight - rayOrigin.y) / rayDir.y;
+    const float epsilon = 1e-5;
+    float denom = rayDir.y + sign(rayDir.y) * epsilon;
+    float t = (groundHeight - rayOrigin.y) / denom;
     return rayOrigin + rayDir * t;
-}
-
-vec3 GetWorldRay(vec2 fragCoord, vec2 resolution, mat4 inverseProjectionView, vec3 viewPos) {
-    vec2 ndc = (fragCoord / resolution) * 2.0 - 1.0;
-    vec4 clip = vec4(ndc, 1.0, 1.0);
-    vec4 world = inverseProjectionView * clip;
-    world /= world.w;
-    return normalize(world.xyz - viewPos);
 }
 
 void main() {
@@ -48,17 +42,19 @@ void main() {
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
 
-    ViewportData viewportData = viewportDataArr[viewportIndex];
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
-    mat4 inverseProjectionView = viewportData.inverseProjectionView;
-    vec3 viewPos = viewportData.viewPos.xyz;
     
     vec4 lighting = imageLoad(LightingImage, px);
-    vec3 waterColor = texture(WaterColorTexture, screenUV).rgb;
+    vec3 waterColor = texelFetch(WaterColorTexture, px, 0).rgb;
+
+    // Get world ray
+    ViewportData viewportData = viewportDataArr[viewportIndex];
+    mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
+    vec3 viewPos = viewportData.viewPos.xyz;
+    vec2 viewportOrigin = vec2(viewportData.xOffset, viewportData.yOffset);
+    vec2 viewportSize = vec2(viewportData.width, viewportData.height);
+    vec3 rayDir = GetWorldRay(px, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
 
     // Cast ray at water plane
-    vec2 fragCoord = px;
-    vec3 rayDir = GetWorldRay(fragCoord, u_resolution, inverseProjectionView, viewPos);
     vec3 rayOrigin = viewPos;
     float planeHeight = u_oceanYOrigin + 100;
     float t = (planeHeight - rayOrigin.y) / rayDir.y; // distance to ray hit
@@ -74,9 +70,5 @@ void main() {
     vec3 refractedColor = texture(DownSampledFinalLightingTexture, uv_refraction).rgb;
     vec3 finalColor = (refractedColor * UNDER_WATER_TINT * 0.2) + waterColor;
 
-    //vec3 underwaterColor = mix(refractedColor, refractedColor * UNDER_WATER_TINT * 0.5, 0.75);
-    //vec3 finalColor = underwaterColor + waterColor;
-    
     imageStore(LightingImage, px, vec4(vec3(finalColor), 1.0));
-    //imageStore(LightingImage, px, vec4(vec3(waterColor), 1.0));
 }
