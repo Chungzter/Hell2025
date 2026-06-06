@@ -28,8 +28,8 @@ uniform mat4 u_inverseModel;
 void main() {
     mat4 modelMatrix = u_model;
     mat4 inverseModelMatrix = u_inverseModel;  
-	mat4 projection = viewportData[u_viewportIndex].projection; 
-	mat4 projectionView = viewportData[u_viewportIndex].projectionView;            
+	mat4 projection = viewportData[u_viewportIndex].projectionReverseZ; 
+	mat4 projectionView = viewportData[u_viewportIndex].projectionViewReverseZ;            
     mat4 normalMatrix = transpose(inverseModelMatrix);
 
     Normal = normalize(normalMatrix * vec4(vNormal, 0)).xyz;

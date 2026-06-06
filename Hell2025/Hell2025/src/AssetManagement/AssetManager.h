@@ -77,10 +77,13 @@ namespace AssetManager {
 
     // Textures
     std::vector<Texture>& GetTextures();
+    Texture& CreateNewTexture();
     Texture* GetTextureByName(const std::string& name);
     Texture* GetTextureByIndex(int index);
     int GetTextureIndexByName(const std::string& name, bool ignoreWarning = true);
     int GetTextureCount();
+    void ClearCachedTexturePointers();
+    void ReserveTextureStorage(size_t textureCount);
 
     // Spritesheet Textures
     std::vector<SpriteSheetTexture>& GetSpriteSheetTextures();

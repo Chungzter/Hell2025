@@ -221,7 +221,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\API\OpenGL\Renderer\GL_renderer_msaa.cpp" />
     <ClCompile Include="src\API\OpenGL\GL_support.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\GL_renderer_util.cpp" />
-    <ClCompile Include="src\API\OpenGL\Renderer\ComputePasses\GL_global_illumination_passes.cpp" />
+    <ClCompile Include="src\API\OpenGL\Renderer\ComputePasses\GL_ddgi.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\GL_renderer_re.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_christmas_lights.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_depth_peeled_transparency.cpp" />
@@ -624,6 +624,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\OpenGL\RE\GL_gbuffer_re.vert" />
     <None Include="res\shaders\OpenGL\RE\GL_hair_composite_re.comp" />
     <None Include="res\shaders\OpenGL\RE\GL_lighting_deferred.frag" />
+    <None Include="res\shaders\OpenGL\RE\GL_ocean_lighting.frag" />
     <None Include="res\shaders\OpenGL\Water\GL_ocean_compute_underwater_flags.comp" />
     <None Include="res\shaders\terrain.frag" />
     <None Include="res\shaders\terrain.vert" />

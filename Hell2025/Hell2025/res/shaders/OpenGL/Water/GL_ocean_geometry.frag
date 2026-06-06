@@ -154,7 +154,7 @@ void main() {
     vec3 surfaceLighting = vec3(0.0);
 
     // Moon light (direct spec + IBL + SSS)
-    {
+    
         //vec3 moonColor = vec3(1.0, 0.9, 0.9);
         vec3 moonColor = GetMoonLightColor();
         vec3 L = vec3(-0.9284767, 0.3713907, 0.0); // pre-normalized
@@ -203,7 +203,7 @@ void main() {
         vec3 sssColor = subColor * radius * sss * sssFactor;
 
         surfaceLighting += sssColor;
-    }
+    
 
     // Flashlight
     for (int i = 0; i < 2; i++ ) {
@@ -281,4 +281,8 @@ void main() {
     else {
         OceanMaskOut = 2u; // Bottom side
     }
+
+    //ColorOut.rgb = normal;
+    
+    //ColorOut.rgb = vec3(NdotL); 
 }

@@ -16,7 +16,6 @@ struct Frustum {
     bool IntersectsAABB(const AABB& aabb);
     bool IntersectsAABBFast(const AABB& aabb);
     bool IntersectsAABBFast(const RenderItem& renderItem);
-    bool IntersectsAABBFast(const HouseRenderItem& renderItem);
     bool IntersectsPoint(const glm::vec3 point);
 
     const glm::vec3& GetBoundsMin() const       { return m_boundsMin; }

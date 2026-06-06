@@ -141,6 +141,7 @@ void main() {
     ViewportData v = viewportData[viewportIndex];
     vec2 viewportUV = (uv - vec2(v.posX, v.posY)) / vec2(v.sizeX, v.sizeY);
     finalColor = ApplyVignette(finalColor, v.vignetteColor.rgb, v.intensityScalar * 0.5, viewportUV);
-
+    
     imageStore(u_outputImage, pixelCoords, vec4(finalColor, 1));
+    //imageStore(u_outputImage, pixelCoords, vec4(rawLighting, 1));
 }

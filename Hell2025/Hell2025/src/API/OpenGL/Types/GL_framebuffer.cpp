@@ -1,4 +1,5 @@
 #include "GL_frameBuffer.h"
+#include "Hell/Logging.h"
 
 OpenGLFrameBuffer::OpenGLFrameBuffer(const std::string& name, int width, int height, uint32_t sampleCount) {
     Create(name, width, height, sampleCount);
@@ -47,6 +48,9 @@ void OpenGLFrameBuffer::CleanUp() {
     m_name.clear();
     m_handle = 0;
     m_depthAttachment.handle = 0;
+
+    m_cachedAttachmentHandles.clear();;
+    m_cachedAttachmentSlots.clear();
 }
 
 void OpenGLFrameBuffer::CreateAttachment(const std::string& name, GLenum internalFormat, GLenum minFilter, GLenum magFilter, GLenum wrapFilter, bool allocateMips) {
@@ -131,24 +135,20 @@ void OpenGLFrameBuffer::BindDepthAttachmentFrom(const OpenGLFrameBuffer& srcFram
 }
 
 void OpenGLFrameBuffer::DrawBuffers(const std::vector<std::string>& attachmentNames) {
-    std::vector<GLuint> attachments;
+    m_drawBuffers.clear();
     for (const std::string& attachmentName : attachmentNames) {
-        attachments.push_back(GetColorAttachmentSlotByName(attachmentName));
+        m_drawBuffers.push_back(GetColorAttachmentSlotByName(attachmentName));
     }
-    glDrawBuffers(static_cast<GLsizei>(attachments.size()), attachments.data());
+    glDrawBuffers(static_cast<GLsizei>(m_drawBuffers.size()), m_drawBuffers.data());
 }
 
 void OpenGLFrameBuffer::DrawBuffer(GLenum buffer) {
+    m_drawBuffers = { buffer };
     glDrawBuffer(buffer);
 }
 
 void OpenGLFrameBuffer::DrawBuffer(const std::string& attachmentName) {
-    for (int i = 0; i < m_colorAttachments.size(); i++) {
-        if (attachmentName == m_colorAttachments[i].name) {
-            glDrawBuffer(GL_COLOR_ATTACHMENT0 + i);
-            return;
-        }
-    }
+    DrawBuffer(GetColorAttachmentSlotByName(attachmentName));
 }
 
 void OpenGLFrameBuffer::ClearTexImage(const std::string& attachmentName, GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
@@ -299,23 +299,38 @@ void OpenGLFrameBuffer::Resize(int width, int height) {
     }
 }
 
-GLuint OpenGLFrameBuffer::GetColorAttachmentHandleByName(const std::string& name) const {
+GLuint OpenGLFrameBuffer::GetColorAttachmentHandleByName(const std::string& name) {
+    auto it = m_cachedAttachmentHandles.find(name);
+    if (it != m_cachedAttachmentHandles.end()) {
+        return it->second;
+    }
+
     for (int i = 0; i < m_colorAttachments.size(); i++) {
         if (name == m_colorAttachments[i].name) {
+            m_cachedAttachmentHandles[name] = m_colorAttachments[i].handle;
             return m_colorAttachments[i].handle;
         }
     }
-    std::cerr << "GetColorAttachmentHandleByName() with name '" << name << "' failed. Name does not exist in FrameBuffer '" << this->m_name << "'\n";
+
+    Logging::Fatal() << "OpenGLFrameBuffer::GetColorAttachmentHandleByName() with name '" << name << "' failed. Name does not exist in FrameBuffer '" << this->m_name << "'\n";
     return GL_NONE;
 }
 
-GLenum OpenGLFrameBuffer::GetColorAttachmentSlotByName(const std::string& name) const {
+GLenum OpenGLFrameBuffer::GetColorAttachmentSlotByName(const std::string& name) {
+    auto it = m_cachedAttachmentSlots.find(name);
+    if (it != m_cachedAttachmentSlots.end()) {
+        return it->second;
+    }
+
     for (int i = 0; i < m_colorAttachments.size(); i++) {
         if (name == m_colorAttachments[i].name) {
-            return GL_COLOR_ATTACHMENT0 + i;
+            GLenum slot = GL_COLOR_ATTACHMENT0 + i;
+            m_cachedAttachmentSlots[name] = slot;
+            return slot;
         }
     }
-    std::cerr << "GetColorAttachmentSlotByName() with name '" << name << "' failed. Name does not exist in FrameBuffer '" << this->m_name << "'\n";
+
+    Logging::Fatal() << "OpenGLFrameBuffer::GetColorAttachmentSlotByName() with name '" << name << "' failed. Name does not exist in FrameBuffer '" << this->m_name << "'\n";
     return GL_INVALID_VALUE;
 }
 

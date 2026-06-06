@@ -101,9 +101,13 @@ void main() {
 
     // Planar reflections
     if (u_useMirrorMatrix) {
+        mat4 projection = viewportData[viewportIndex].projectionReverseZ;
         projection[0][0] *= -1.0;
-        view = u_mirrorViewMatrix;
+        projectionView = projection * u_mirrorViewMatrix;
         gl_ClipDistance[0] = dot(WorldPos, u_mirrorClipPlane);
+        //projection[0][0] *= -1.0;
+        //view = u_mirrorViewMatrix;
+        //gl_ClipDistance[0] = dot(WorldPos, u_mirrorClipPlane);
     }
 
     // Old

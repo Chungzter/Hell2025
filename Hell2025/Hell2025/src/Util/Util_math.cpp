@@ -655,4 +655,96 @@ namespace Util {
 
         return glm::vec3(u, v, w);
     }
+
+    std::vector<glm::vec3> GenerateRayDirections(int numRays) {
+        std::vector<glm::vec3> rays;
+        rays.reserve(numRays);
+
+        // Golden angle in radians
+        const float phi = glm::pi<float>() * (3.0f - std::sqrt(5.0f));
+
+        for (int i = 0; i < numRays; ++i) {
+            // Map y coordinate from top to bottom of sphere
+            float y = 1.0f - (i / float(numRays - 1)) * 2.0f;
+            float radius = std::sqrt(1.0f - y * y);
+
+            float theta = phi * i;
+
+            float x = std::cos(theta) * radius;
+            float z = std::sin(theta) * radius;
+
+            rays.push_back(glm::vec3(x, y, z));
+        }
+
+        return rays;
+    }
+
+    std::vector<glm::vec3> GenerateFibonacciCone(int numRays, float spreadAngleRadians, glm::vec3 targetDir) {
+        std::vector<glm::vec3> rays;
+        rays.reserve(numRays);
+
+        const float phi = glm::pi<float>() * (3.0f - std::sqrt(5.0f));
+
+        // Lowest y value on the unit sphere for the given angle
+        float cosAlpha = std::cos(spreadAngleRadians);
+
+        // Align the base +Y rays to my target direction
+        glm::vec3 up(0.0f, 1.0f, 0.0f);
+        glm::vec3 dir = glm::normalize(targetDir);
+        glm::quat alignmentRot = glm::rotation(up, dir);
+
+        for (int i = 0; i < numRays; ++i) {
+            // Map y from 1.0 down to the edge of the cone
+            float y = 1.0f - (i / float(numRays - 1)) * (1.0f - cosAlpha);
+            float radius = std::sqrt(1.0f - y * y);
+
+            float theta = phi * i;
+
+            float x = std::cos(theta) * radius;
+            float z = std::sin(theta) * radius;
+
+            glm::vec3 localRay(x, y, z);
+
+            // Rotate ray to point along target direction
+            rays.push_back(alignmentRot * localRay);
+        }
+
+        return rays;
+    }
+
+    std::vector<glm::vec3> GenerateBiasedFibonacciSphere(int numRays, float bias, glm::vec3 targetDir) {
+        std::vector<glm::vec3> rays;
+        rays.reserve(numRays);
+
+        // Golden angle in radians
+        const float phi = glm::pi<float>() * (3.0f - std::sqrt(5.0f));
+
+        // Align the base +Y rays to our target direction
+        glm::vec3 up(0.0f, 1.0f, 0.0f);
+        glm::vec3 dir = glm::normalize(targetDir);
+        glm::quat alignmentRot = glm::rotation(up, dir);
+
+        for (int i = 0; i < numRays; ++i) {
+            // Normalized progress through the sequence
+            float t = i / float(numRays - 1);
+
+            // Curve the distribution to favor the top of the sphere
+            float tBiased = std::pow(t, bias);
+
+            // Map y from 1.0 down to -1.0
+            float y = 1.0f - 2.0f * tBiased;
+            float radius = std::sqrt(1.0f - y * y);
+
+            float theta = phi * i;
+
+            float x = std::cos(theta) * radius;
+            float z = std::sin(theta) * radius;
+
+            glm::vec3 localRay(x, y, z);
+
+            rays.push_back(alignmentRot * localRay);
+        }
+
+        return rays;
+    }
 }

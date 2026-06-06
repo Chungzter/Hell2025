@@ -15,17 +15,17 @@ namespace OpenGLRenderer {
         if (!shader) return;
         if (!Editor::IsOpen()) return;
 
+        OpenGLRasterizerState state;
+        state.depthMask = true;
+        state.depthTestEnabled = true;
+        state.blendEnable = true;
+        state.depthFunc = GL_GREATER;
+        ForceRasterizerState(state);
+
         gBuffer->Bind();
         gBuffer->DrawBuffers({ "Lighting" });
-
-        gBuffer->Bind();
         gBuffer->SetViewport();
-
-        // rewrite this to use your Rasterizer state thing so there is no more funny business!
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_BLEND);
+        gBuffer->ClearDepthAttachment(0.0f);
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -34,7 +34,7 @@ namespace OpenGLRenderer {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
 
                 shader->Bind();
-                shader->SetMat4("projection", viewportData[i].projection);
+                shader->SetMat4("projection", viewportData[i].projectionReverseZ);
                 shader->SetMat4("view", viewportData[i].view);
                 shader->SetBool("useUniformColor", true);
 

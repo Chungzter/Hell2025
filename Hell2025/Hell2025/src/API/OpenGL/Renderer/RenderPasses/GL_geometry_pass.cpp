@@ -492,12 +492,14 @@ namespace OpenGLRenderer {
 
         solidColorShader->Bind();
 
+        //gBuffer->DrawBuffer("BaseColor");
+
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         glDepthMask(GL_FALSE); // Test depth, but don't write it
-        glDepthFunc(GL_LEQUAL);
+        glDepthFunc(GL_GEQUAL);
 
         glEnable(GL_STENCIL_TEST);
         glStencilMask(0xFF);
@@ -505,6 +507,9 @@ namespace OpenGLRenderer {
         glClear(GL_STENCIL_BUFFER_BIT);
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+        //glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        //glDisable(GL_DEPTH_TEST);
 
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 
@@ -516,12 +521,14 @@ namespace OpenGLRenderer {
                 Mirror* mirror = MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());
                 if (!mirror) continue;
 
+                //mirror->DebugDraw();
+
                 Mesh* mesh = AssetManager::GetMeshByIndex(mirror->GetGlobalMeshIndex());
                 if (!mesh) continue;
 
                 glm::mat4 modelMatrix = mirror->GetWorldMatrix();
 
-                solidColorShader->SetMat4("u_projectionView", viewportData[i].projectionView);
+                solidColorShader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
                 solidColorShader->SetMat4("u_model", modelMatrix);
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertex);
@@ -535,7 +542,7 @@ namespace OpenGLRenderer {
         gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
 
         // Clear the depth buffer so that the mirror world has a clean depth state to test against
-        gBuffer->ClearDepthAttachment();
+        gBuffer->ClearDepthAttachment(0.0);
 
         ForceRasterizerState("GeometryPass_Default");
 
@@ -580,18 +587,12 @@ namespace OpenGLRenderer {
         houseGeometryShader->SetMat4("u_model", glm::mat4(1));
         houseGeometryShader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
-        MeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer();
-        OpenGLMeshBuffer& glHouseMeshBuffer = houseMeshBuffer.GetGLMeshBuffer();
-
         MeshBufferV2& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
         glBindVertexArray(proceduralMeshBuffer.GetVAO());
-
-        glBindVertexArray(glHouseMeshBuffer.GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
-            if (glHouseMeshBuffer.GetIndexCount() <= 0) continue;
 
             Mirror* mirror = MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());
             if (!mirror) continue;

@@ -511,11 +511,14 @@ void AnimatedGameObject::DrawBones(int exclusiveViewportIndex) {
 
 
 void AnimatedGameObject::DrawBoneTangentVectors(float size, int exclusiveViewportIndex) {
+    size *= 0.5f;
+
     for (const glm::mat4& boneWorldMatrix : m_animator.m_globalBlendedNodeTransforms) {
         glm::vec3 origin = GetModelMatrix() * boneWorldMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
         glm::vec3 right = glm::normalize(glm::vec3(boneWorldMatrix[0]));
         glm::vec3 up = glm::normalize(glm::vec3(boneWorldMatrix[1]));
         glm::vec3 forward = glm::normalize(glm::vec3(boneWorldMatrix[2]));
+
         Renderer::DrawLine(origin, origin + (forward * size), BLUE, false, exclusiveViewportIndex);
         Renderer::DrawLine(origin, origin + (up * size), GREEN, false, exclusiveViewportIndex);
         Renderer::DrawLine(origin, origin + (right * size), RED, false, exclusiveViewportIndex);

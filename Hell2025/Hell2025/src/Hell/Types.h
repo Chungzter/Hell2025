@@ -97,21 +97,6 @@ struct AABBRayResult {
 	glm::vec3 hitNormalLocal = glm::vec3(0.0f);
 };
 
-struct HouseRenderItem {
-    int baseColorTextureIndex = 0;
-    int normalMapTextureIndex = 0;
-    int rmaTextureIndex = 0;
-    int baseVertex = 0;
-
-    int baseIndex = 0;
-    int vertexCount = 0;
-    int indexCount = 0;
-    int meshIndex = 0;
-
-    glm::vec4 aabbMin;
-    glm::vec4 aabbMax;
-};
-
 struct RenderItem2D {
     glm::mat4 modelMatrix = glm::mat4(1);
     float colorTintR = 1.0f;
@@ -450,7 +435,6 @@ struct DrawCommandsSet {
 struct FlashLightShadowMapDrawInfo {
     std::vector<DrawIndexedIndirectCommand> flashlightShadowMapGeometry[4];
     std::vector<uint32_t> heightMapChunkIndices[4];
-    std::vector<HouseRenderItem> houseMeshRenderItems[4];
 };
 
 struct WaterState {

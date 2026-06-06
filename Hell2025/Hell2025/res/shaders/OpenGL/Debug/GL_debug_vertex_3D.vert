@@ -25,6 +25,6 @@ void main() {
     
     // Manually disable depth testing
     if (vDepthEnabled != 1) {
-        gl_Position.z = 0.00001 * gl_Position.w;
+        gl_Position.z = 0.99999 * gl_Position.w;
     }
 }

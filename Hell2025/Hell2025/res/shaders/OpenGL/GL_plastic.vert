@@ -87,7 +87,7 @@ uniform mat4 u_inverseModel;
 uniform mat4 u_model;
 
 out vec2 TexCoord;
-out vec4 WorldPos;
+out vec4 v_worldPos;
 out vec3 Normal;
 out vec3 Tangent;
 out vec3 BiTangent;
@@ -103,9 +103,8 @@ void main() {
     BiTangent = normalize(cross(Normal, Tangent));
     TexCoord = vUV;
 
-    WorldPos = u_model * vec4(vPosition, 1.0);
+    v_worldPos = u_model * vec4(vPosition, 1.0);
     ViewPos = inverseModelMatrix[3].xyz;
 
-    vec4 worldPos = u_model * vec4(vPosition, 1.0);
-	gl_Position = u_projectionView * worldPos;
+	gl_Position = u_projectionView * v_worldPos;
 }

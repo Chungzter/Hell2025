@@ -23,7 +23,6 @@ namespace OpenGLRenderer {
         if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
             gBuffer = &GetFrameBuffer("GBufferRE");
             outputTextureName = "Lighting";
-
         }
         if (!gBuffer) return;
 

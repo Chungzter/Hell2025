@@ -117,20 +117,6 @@ bool Frustum::IntersectsAABBFast(const RenderItem& renderItem) {
     return true;
 }
 
-bool Frustum::IntersectsAABBFast(const HouseRenderItem& renderItem) {
-    for (int i = 0; i < 6; ++i) {
-        glm::vec3 min_corner = glm::vec3(
-            m_planes[i].normal.x > 0 ? renderItem.aabbMax.x : renderItem.aabbMin.x,
-            m_planes[i].normal.y > 0 ? renderItem.aabbMax.y : renderItem.aabbMin.y,
-            m_planes[i].normal.z > 0 ? renderItem.aabbMax.z : renderItem.aabbMin.z
-        );
-        if (SignedDistance(min_corner, m_planes[i]) <= 0.0f) {
-            return false;
-        }
-    }
-    return true;
-}
-
 //bool Frustum::IntersectsSphere(const Sphere& sphere) {
 //    for (int i = 0; i < 6; ++i) {
 //        float distance = SignedDistance(sphere.origin, m_planes[i]);

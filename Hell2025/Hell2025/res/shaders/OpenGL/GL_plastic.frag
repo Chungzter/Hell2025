@@ -1,4 +1,8 @@
-#version 460
+#version 460 core
+
+#extension GL_ARB_bindless_texture : enable
+readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"
@@ -26,7 +30,7 @@ in vec2 TexCoord;
 in vec3 Normal;
 in vec3 Tangent;
 in vec3 BiTangent;
-in vec4 WorldPos;
+in vec4 v_worldPos;
 
 uniform mat4 u_view;
 uniform vec3 u_viewPos;
@@ -39,9 +43,9 @@ float InterleavedGradientNoise(vec2 uv) {
     return fract(magic.z * fract(dot(uv, magic.xy)));
 }
 
-vec3 GetDirectLightingDiffuseOnly(vec3 lightPos, vec3 lightCol, float lightRadius, float lightStrength, vec3 normal, vec3 worldPos, vec3 gammaBaseColor, float roughness, float transparency, vec3 cameraWorldPos) {
-    vec3 L = normalize(lightPos - worldPos);
-    vec3 V = normalize(cameraWorldPos - worldPos);
+vec3 GetDirectLightingDiffuseOnly(vec3 lightPos, vec3 lightCol, float lightRadius, float lightStrength, vec3 normal, vec3 v_worldPos, vec3 gammaBaseColor, float roughness, float transparency, vec3 camerav_worldPos) {
+    vec3 L = normalize(lightPos - v_worldPos);
+    vec3 V = normalize(camerav_worldPos - v_worldPos);
     vec3 H = normalize(L + V);
 
     float nDl = max(dot(normal, L), 0.0);
@@ -59,7 +63,7 @@ vec3 GetDirectLightingDiffuseOnly(vec3 lightPos, vec3 lightCol, float lightRadiu
     float disneyDiffuse = fresnelL * fresnelV;
 
     // Attenuation
-    float dist = length(lightPos - worldPos);
+    float dist = length(lightPos - v_worldPos);
     float att = smoothstep(lightRadius, 0.0, dist) * lightStrength;
     vec3 radiance = lightCol * att * nDl;
 
@@ -71,11 +75,11 @@ vec3 GetDirectLightingDiffuseOnly(vec3 lightPos, vec3 lightCol, float lightRadiu
     return diffuseResult * kD * radiance;
 }
 
-vec3 GetDirectLightingDiffuseOnly2(vec3 lightPos, vec3 lightCol, float lightRadius, float lightStrength, vec3 normal, vec3 worldPos, vec3 gammaBaseColor, float roughness, float transparency, vec3 cameraWorldPos) {
+vec3 GetDirectLightingDiffuseOnly2(vec3 lightPos, vec3 lightCol, float lightRadius, float lightStrength, vec3 normal, vec3 v_worldPos, vec3 gammaBaseColor, float roughness, float transparency, vec3 camerav_worldPos) {
     float smokeDensity = 1.0;
 
-    vec3 L = normalize(lightPos - worldPos);
-    vec3 V = normalize(cameraWorldPos - worldPos);
+    vec3 L = normalize(lightPos - v_worldPos);
+    vec3 V = normalize(camerav_worldPos - v_worldPos);
     vec3 H = normalize(L + V);
 
     float nDl = max(dot(normal, L), 0.0);
@@ -83,7 +87,7 @@ vec3 GetDirectLightingDiffuseOnly2(vec3 lightPos, vec3 lightCol, float lightRadi
     float hDv = max(dot(H, V), 0.0);
 
     // Attenuation
-    float dist = length(lightPos - worldPos);
+    float dist = length(lightPos - v_worldPos);
     float att = smoothstep(lightRadius, 0.0, dist) * lightStrength;
 
     vec3 diffuse = vec3(0);
@@ -243,8 +247,8 @@ void main() {
     float roughness = rma.r;
     float metallic = rma.g;
 
-    //vec3 cameraWorldPos = vec3(inverse(u_view)[3]);
-    vec3 trueViewDir = normalize(u_viewPos - WorldPos.xyz);
+    //vec3 camerav_worldPos = vec3(inverse(u_view)[3]);
+    vec3 trueViewDir = normalize(u_viewPos - v_worldPos.xyz);
 
     float NdotV = max(dot(normal, trueViewDir), 0.0);
     float F0 = 0.04;
@@ -279,25 +283,41 @@ void main() {
     // for (int i = 0; i < lightCount; i++) {
     for (int lightIndex = 0; lightIndex < 9; lightIndex++) {
 
-        //int lightIndex = int(tileLights[tileIndex].lightIndices[i]);
-
         Light light = lights[lightIndex];
         vec3 lightPos = vec3(light.posX, light.posY, light.posZ);
         vec3 lightCol = vec3(light.colorR, light.colorG, light.colorB);
 
-        vec3 L = normalize(lightPos - WorldPos.xyz);
-        float dist = length(lightPos - WorldPos.xyz);
-        float att = smoothstep(light.radius, 0.0, dist) * light.strength;
-        float nDl = max(dot(normal, L), 0.0);
+        vec3 toLight = lightPos - v_worldPos.xyz;
+        float dist = length(toLight);
 
-        float shadow = ShadowCalculation(lightIndex, lightPos, light.radius, WorldPos.xyz, u_viewPos, normal.xyz, shadowMapArray);
+        if (dist > light.radius) continue;
+
+        vec3 lightVector = lightPos - v_worldPos.xyz;
+        float distanceSquared = max(dot(lightVector, lightVector), 0.0001);
+        vec3 L = lightVector * inversesqrt(distanceSquared);
+
+        float ndotl = dot(normal, L);
+    
+        if (ndotl <= 0.0) {
+            continue;
+        }
+
+        float att = smoothstep(light.radius, 0.0, dist) * light.strength;
+
+        float shadow = ShadowCalculation(lightIndex, lightPos, light.radius, v_worldPos.xyz, u_viewPos, normal.xyz, shadowMapArray);
+
+        float candas = 1.0;
+        if (light.iesTextureIndex != 0) {
+            sampler2D iesSampler = sampler2D(textureSamplers[light.iesTextureIndex]);
+            candas = ApplyIESProfile(v_worldPos.xyz, light, iesSampler);
+        }
 
         maxLightAtt = max(att, maxLightAtt);
 
-        accumulatedSpecular += GetDirectLightingSpecularOnly(lightPos, lightCol, light.radius, light.strength, normal, WorldPos.xyz, gammaBaseColor, roughness, metallic, u_viewPos) * shadow;
+        accumulatedSpecular += GetDirectLightingSpecularOnly(lightPos, lightCol, light.radius, light.strength, normal, v_worldPos.xyz, gammaBaseColor, roughness, metallic, u_viewPos) * shadow * candas;
 
         float transparency = 1.0;
-        accumulatedInternalDiffuse += GetDirectLightingDiffuseOnly(lightPos, lightCol, light.radius, light.strength, normal, WorldPos.xyz, gammaBaseColor, roughness, transparency, u_viewPos) * shadow;
+        accumulatedInternalDiffuse += GetDirectLightingDiffuseOnly(lightPos, lightCol, light.radius, light.strength, normal, v_worldPos.xyz, gammaBaseColor, roughness, transparency, u_viewPos) * shadow * candas;
     }
 
     // Refraction

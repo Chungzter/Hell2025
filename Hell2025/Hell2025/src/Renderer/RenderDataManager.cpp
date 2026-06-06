@@ -32,8 +32,8 @@ namespace RenderDataManager {
     std::vector<GPULight> g_gpuLightsHighRes;
 
 	std::vector<RenderItem> g_renderItemsProcedural;
-	std::vector<HouseRenderItem> g_houseRenderItemsOLD;
-    std::vector<HouseRenderItem> g_houseOutlineRenderItems;
+	//std::vector<HouseRenderItem> g_houseRenderItemsOLD;
+    //std::vector<HouseRenderItem> g_houseOutlineRenderItems;
 
 
     std::vector<RenderItem> g_renderItems;
@@ -128,8 +128,8 @@ namespace RenderDataManager {
 
 		g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent.clear();
 
-		g_houseOutlineRenderItems.clear();
-		g_houseRenderItemsOLD.clear();
+		//g_houseOutlineRenderItems.clear();
+		//g_houseRenderItemsOLD.clear();
 		g_renderItemsProcedural.clear();
 
         g_renderItems.clear();
@@ -435,7 +435,7 @@ namespace RenderDataManager {
 
             g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i].clear();
             g_flashLightShadowMapDrawInfo.heightMapChunkIndices[i].clear();
-            g_flashLightShadowMapDrawInfo.houseMeshRenderItems[i].clear();
+            //g_flashLightShadowMapDrawInfo.houseMeshRenderItems[i].clear();
         }
 
         SortRenderItems(g_renderItems);
@@ -510,13 +510,13 @@ namespace RenderDataManager {
             }
 
             // Frustum cull the house mesh
-            g_flashLightShadowMapDrawInfo.houseMeshRenderItems->reserve(g_houseRenderItemsOLD.size());
-            for (int i = 0; i < g_houseRenderItemsOLD.size(); i++) {
-                HouseRenderItem& renderItem = g_houseRenderItemsOLD[i];
-                if (flashLightFrustum.IntersectsAABBFast(renderItem)) {
-                    g_flashLightShadowMapDrawInfo.houseMeshRenderItems[playerIndex].push_back(renderItem);
-                }
-            }
+            //g_flashLightShadowMapDrawInfo.houseMeshRenderItems->reserve(g_houseRenderItemsOLD.size());
+            //for (int i = 0; i < g_houseRenderItemsOLD.size(); i++) {
+            //    HouseRenderItem& renderItem = g_houseRenderItemsOLD[i];
+            //    if (flashLightFrustum.IntersectsAABBFast(renderItem)) {
+            //        g_flashLightShadowMapDrawInfo.houseMeshRenderItems[playerIndex].push_back(renderItem);
+            //    }
+            //}
         }
 
         // Screenspace blood decals
@@ -1036,14 +1036,6 @@ namespace RenderDataManager {
         return g_rendererData;
     }
 
-    const std::vector<HouseRenderItem>& GetHouseRenderItems() {
-        return g_houseRenderItemsOLD;
-    }
-
-    const std::vector<HouseRenderItem>& GetHouseOutlineRenderItems() {
-        return g_houseOutlineRenderItems;
-    }
-
     const std::vector<ViewportData>& GetViewportData() {
         return g_viewportData;
     }
@@ -1158,27 +1150,12 @@ namespace RenderDataManager {
         }
     }
 
-	void SubmitHouseRenderItemOLD(const HouseRenderItem& renderItem) {
-		g_houseRenderItemsOLD.push_back(renderItem);
-	}
-
 	void SubmitRenderItemProcedural(const RenderItem& renderItem) {
 		g_renderItemsProcedural.push_back(renderItem);
 	}
 
-
     void SubmitRenderItemsMirror(const std::vector<RenderItem>& renderItems) {
         g_renderItemsMirror.insert(g_renderItemsMirror.begin(), renderItems.begin(), renderItems.end());
-    }
-
-
-    void SubmitHouseRenderItems(const std::vector<HouseRenderItem>& renderItems) {
-        g_houseRenderItemsOLD.insert(g_houseRenderItemsOLD.begin(), renderItems.begin(), renderItems.end());
-    }
-
-    
-    void SubmitOutlineRenderItem(const HouseRenderItem& renderItem) {
-        g_houseOutlineRenderItems.push_back(renderItem);
     }
 
     void SubmitDecalPaintingInfo(DecalPaintingInfo decalPaintingInfo) {

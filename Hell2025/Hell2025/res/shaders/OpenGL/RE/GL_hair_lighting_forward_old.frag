@@ -38,7 +38,7 @@ uniform float u_renderResolutionScale;
 uniform int u_hairTextureIndex;
 
 const float u_spec1Intensity   = 0.25;
-const float u_spec2Intensity   = 0.9;
+const float u_spec2Intensity   = 0.1;
 const float u_scatterPower     = 12.0;
 const float u_scatterIntensity = 0.1;
 const float u_rootColorFloor   = 0.2;
@@ -54,59 +54,6 @@ float HairSpecular(vec3 t, vec3 h, float roughness) {
     float dirAtten = smoothstep(-1.0, 0.0, dotTH);
     return dirAtten * pow(sinTH, n) * (n + 2.0) / (2.0 * 3.14159);
 }
-
-vec3 SafeNormalize(vec3 v, vec3 fallback) {
-    float len2 = dot(v, v);
-
-    if (len2 < 0.0001) {
-        return normalize(fallback);
-    }
-
-    return v * inversesqrt(len2);
-}
-
-vec3 BuildHairTangentFromFlow(vec3 tMesh, vec3 bMesh, vec2 flow) {
-    float flowLen2 = dot(flow, flow);
-
-    if (flowLen2 < 0.0001) {
-        return normalize(tMesh);
-    }
-
-    vec2 flowDir = flow * inversesqrt(flowLen2);
-    return normalize(tMesh * flowDir.x + bMesh * flowDir.y);
-}
-
-
-
-void ComputeAlphaToCoverage(float alpha) {
-    vec2 v_uv = v_texCoord;                       // TODO: just rename the actual varying
-    vec2 textureSizePixels = vec2(1920, 1080);    // TODO: do not hardcode this!!!
-
-    vec2 dx = dFdx(v_uv) * textureSizePixels;
-    vec2 dy = dFdy(v_uv) * textureSizePixels;
-    float mipLevel = 0.5 * log2(max(dot(dx, dx), dot(dy, dy)));
-
-    float alphaPivot = 0.025;
-    float alphaSharpness = 0.75;
-    float alphaBaseBoost = 1.0;
-
-    float boost = max(alphaBaseBoost, mipLevel * alphaSharpness);
-    alpha = clamp((alpha - alphaPivot) * boost + alphaPivot, 0.0, 1.0);
-
-    if (alpha <= 0.10) {
-        return;
-    }
-
-    uint mask =
-        (uint(alpha > 0.10) << 0) |
-        (uint(alpha > 0.35) << 1) |
-        (uint(alpha > 0.65) << 2) |
-        (uint(alpha > 0.90) << 3);
-
-    gl_SampleMask[0] = int(mask);
-}
-
-
 
 void ComputeCCNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 flowMap, float hairID, float flipTangentGreen, out vec3 finalNormal, out vec3 finalTangent) {
     vec3 meshTangent = normalize(vertexTangent);
@@ -136,7 +83,6 @@ void ComputeCCNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 flow
 
     finalNormal = meshNormal;
 }
-
 
 void ComputeGhettoNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 flowMap, float hairID, float flipTangentGreen, out vec3 finalNormal, out vec3 finalTangent) {
     vec3 meshTangent = normalize(vertexTangent);
@@ -174,7 +120,6 @@ void ComputeGhettoNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 
     );
 }
 
-
 void main() {
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
 
@@ -187,7 +132,6 @@ void main() {
     //float hairID =     texture(sampler2D(textureSamplers[renderItem.additionalTextureIndex1]), v_texCoord).r;
     //float rootFactor = texture(sampler2D(textureSamplers[renderItem.additionalTextureIndex2]), v_texCoord).r;
 
-    
     vec4 hairTexture = texture(sampler2D(textureSamplers[u_hairTextureIndex]), v_texCoord);
     vec3 flowMap = vec3(hairTexture.rg, 0);
     float hairID = hairTexture.b;

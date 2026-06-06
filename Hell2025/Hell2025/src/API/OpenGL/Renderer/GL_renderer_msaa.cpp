@@ -329,7 +329,7 @@ namespace OpenGLRenderer {
         OpenGLShadowCubeMapArray* hiResShadowMaps = GetShadowCubeMapArrayOLD("HiRes");
         OpenGLShadowMapArray* shadowMapArray = GetShadowMapArrayOLD("MoonlightCSM");
 
-        glBindTextureUnit(7, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
+        glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
 
         glActiveTexture(GL_TEXTURE9);

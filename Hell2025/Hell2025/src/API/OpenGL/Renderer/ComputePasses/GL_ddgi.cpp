@@ -646,7 +646,7 @@ namespace OpenGLRenderer {
         BindSSBO(8, "RendererData");
         BindSSBO(9, "ViewportData");
 
-        glBindImageTexture(0, fbo->GetColorAttachmentHandleByName("Color"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+        BindImageTexture(0, fbo->GetColorAttachmentHandleByName("Color"), GL_WRITE_ONLY, GL_R11F_G11F_B10F);
 
         if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
             OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBufferRE");

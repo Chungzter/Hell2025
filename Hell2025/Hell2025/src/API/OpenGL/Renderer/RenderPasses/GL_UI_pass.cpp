@@ -42,6 +42,7 @@ namespace OpenGLRenderer {
 
         uiFrameBuffer->Bind();
         uiFrameBuffer->SetViewport();
+        //uiFrameBuffer->PrintCacheDebugInfo();
         uiFrameBuffer->DrawBuffer("Color");
         shader->Bind();
 

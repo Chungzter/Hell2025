@@ -15,6 +15,11 @@
 #include "World/World.h"
 
 #include "Audio/MidiFileManager.h"
+#include <vector>
+#include <cmath>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Debug {
     std::string g_text = "";
@@ -158,6 +163,42 @@ namespace Debug {
     }
 
     void UpdateDebugPointsAndLines() {
+
+        if (g_debugRenderMode == DebugRenderMode::LIGHTS) {
+            static uint32_t lightIndex = 2;
+            static bool even = true;
+
+            if (Input::KeyPressed(HELL_KEY_UP)) even =! even;
+            if (Input::KeyPressed(HELL_KEY_LEFT)) lightIndex--;
+            if (Input::KeyPressed(HELL_KEY_RIGHT)) lightIndex++;
+
+            if (lightIndex < 0) lightIndex = World::GetLightCount() - 1;
+            if (lightIndex == World::GetLightCount()) lightIndex = 0;
+
+            Light* light = World::GetLightByIndex(lightIndex);
+
+            AABB cullBounds = AABB(light->GetCullBoundsMin(), light->GetCullBoundsMax());
+            glm::vec4 color = glm::vec4(light->GetColor(), 1.0f);
+            glm::vec3 position = light->GetPosition();
+            
+            Renderer::DrawAABB(cullBounds, color);
+            Renderer::DrawPoint(position, color);
+
+            int numRays = 100;
+            float spreadAngleRadians = 1;
+            glm::vec3 targetDir = glm::vec3(0, -1, 0);
+
+            std::vector<glm::vec3> dirs;
+            
+            if (even) dirs = Util::GenerateRayDirections(numRays);
+            else dirs = Util::GenerateFibonacciCone(numRays, spreadAngleRadians, targetDir);
+
+            for (const glm::vec3& dir : dirs) {
+                glm::vec3 endPoint = position + (dir * light->GetRadius());
+                Renderer::DrawLine(position, endPoint, color);
+            }
+        }
+
         if (g_debugRenderMode == DebugRenderMode::BONES) {
             for (AnimatedGameObject& animatedGameObject : World::GetAnimatedGameObjects()) {
                 animatedGameObject.DrawBones();
@@ -171,12 +212,12 @@ namespace Debug {
         }
         if (g_debugRenderMode == DebugRenderMode::BONE_TANGENTS) {
             for (AnimatedGameObject& animatedGameObject : World::GetAnimatedGameObjects()) {
-                animatedGameObject.DrawBoneTangentVectors();
+                //animatedGameObject.DrawBoneTangentVectors();
             }
             for (int i = 0; i < Game::GetLocalPlayerCount(); i++) {
                 Player* player = Game::GetLocalPlayerByIndex(i);
                 //player->GetCharacterModelAnimatedGameObject()->DrawBoneTangentVectors(0.001f, i);
-                player->GetViewWeaponAnimatedGameObject()->DrawBoneTangentVectors(0.001f, i);
+                player->GetViewWeaponAnimatedGameObject()->DrawBoneTangentVectors(0.0025f, i);
                 //player->GetCharacterModelAnimatedGameObject()->DrawBoneTangentVectors(0.001f, i);
             }
         }
@@ -242,7 +283,7 @@ namespace Debug {
             DECALS,
             BONES,
             BONE_TANGENTS,
-            ASTAR_MAP,
+            LIGHTS,
             BVH_CPU_PLAYER_RAYS
             //PATHFINDING,
             //PHYSX_COLLISION,

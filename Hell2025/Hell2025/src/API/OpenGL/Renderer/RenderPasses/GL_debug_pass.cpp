@@ -127,6 +127,10 @@ namespace OpenGLRenderer {
         OpenGLShader* shader3D = GetShaderOLD("DebugVertex3D");
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
 
+        if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+            gBuffer = GetFrameBufferOLD("GBufferRE");
+        }
+
         if (!gBuffer) return;
         if (!shader2D) return;
         if (!shader3D) return;
@@ -149,7 +153,7 @@ namespace OpenGLRenderer {
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
             shader3D->SetInt("u_viewportIndex", i);
-            shader3D->SetMat4("u_projectionView", viewportData[i].projectionView);
+            shader3D->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 
             if (g_debugMeshLines3D.GetVertexCount() > 0) {
                 glBindVertexArray(g_debugMeshLines3D.GetVAO());
@@ -168,14 +172,14 @@ namespace OpenGLRenderer {
                     cameraTransform.position = glm::vec3(0, 0, 1.5f);
                     glm::mat4 viewMatrix = glm::inverse(cameraTransform.to_mat4());
                     shader3D->SetInt("u_viewportIndex", i);
-                    shader3D->SetMat4("u_projectionView", viewportData[i].projection * viewMatrix);
+                    shader3D->SetMat4("u_projectionView", viewportData[i].projectionReverseZ * viewMatrix);
                     glBindVertexArray(g_debugMeshItemExamineLines.GetVAO());
                     glDrawArrays(GL_LINES, 0, g_debugMeshItemExamineLines.GetVertexCount());
                 }
             }
         }
 
-        if (Debug::GetDebugRenderMode() == DebugRenderMode::ASTAR_MAP) {
+        if (Debug::GetDebugRenderMode() == DebugRenderMode::LIGHTS) {
             RenderAStarDebugMesh();
         }
 
@@ -197,6 +201,7 @@ namespace OpenGLRenderer {
     }
 
     void RenderAStarDebugMesh() {
+        return;
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
         OpenGLMeshBuffer& debugGridMesh = AStarMap::GetDebugGridMeshBuffer().GetGLMeshBuffer();
         OpenGLMeshBuffer& debugSolidMesh = AStarMap::GetDebugSolidMeshBuffer().GetGLMeshBuffer();
@@ -216,7 +221,7 @@ namespace OpenGLRenderer {
                 Viewport* viewport = ViewportManager::GetViewportByIndex(i);
                 if (!viewport->IsVisible()) continue;
 
-                solidColorShader->SetMat4("u_projectionView", viewportData[i].projectionView);
+                solidColorShader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
                 glDrawElements(GL_LINES, debugGridMesh.GetIndexCount(), GL_UNSIGNED_INT, 0);
             }
         }
@@ -253,7 +258,7 @@ namespace OpenGLRenderer {
                 Viewport* viewport = ViewportManager::GetViewportByIndex(i);
                 if (!viewport->IsVisible()) continue;
 
-                solidColorShader->SetMat4("u_projectionView", viewportData[i].projectionView);
+                solidColorShader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
                 //glDrawElements(GL_TRIANGLES, debugSolidMesh.GetIndexCount(), GL_UNSIGNED_INT, 0);
                 //glDrawElements(GL_POINTS, debugSolidMesh.GetIndexCount(), GL_UNSIGNED_INT, 0);
 

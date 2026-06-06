@@ -24,6 +24,7 @@ void main() {
 
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
     float alpha = texture(sampler2D(textureSamplers[renderItem.baseColorTextureIndex]), v_uv).a;
+    //float alpha = texture(sampler2D(textureSamplers[renderItem.opacityTextureIndex]), v_uv).r;
 
     bool useStochasticDiscard = false;
     float hardAlphaCutoff = 0.25;

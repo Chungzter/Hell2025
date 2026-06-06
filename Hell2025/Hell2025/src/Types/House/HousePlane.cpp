@@ -145,24 +145,8 @@ void HousePlane::CreatePhysicsObject() {
 }
 
 void HousePlane::SubmitRenderItem() {
-    Mesh* mesh = World::GetHouseMeshByIndex(m_meshIndex);
+    Mesh* mesh = Renderer::GetProcedualMeshByMeshId(m_meshId);
     if (!mesh) return;
-
-    // TODO: Remove me. Only shadow mapping uses me. Render shadow maps with MeshBufferV2 version ya fool
-    HouseRenderItem renderItemOLD;
-    renderItemOLD.baseColorTextureIndex = m_material->m_basecolor;
-    renderItemOLD.normalMapTextureIndex = m_material->m_normal;
-    renderItemOLD.rmaTextureIndex = m_material->m_rma;
-    renderItemOLD.baseVertex = mesh->baseVertex;
-    renderItemOLD.baseIndex = mesh->baseIndex;
-    renderItemOLD.vertexCount = mesh->vertexCount;
-    renderItemOLD.indexCount = mesh->indexCount;
-    renderItemOLD.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
-    renderItemOLD.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
-    // TODO: Remove me. Only shadow mapping uses me. Render shadow maps with MeshBufferV2 version ya fool
-
-    Mesh* meshV2 = Renderer::GetProcedualMeshByMeshId(m_meshId);
-    if (!meshV2) return;
 
 	RenderItem renderItem;
 	renderItem.baseColorTextureIndex = m_material->m_basecolor;
@@ -171,13 +155,12 @@ void HousePlane::SubmitRenderItem() {
 	renderItem.meshIndex = m_meshIndex;
 	renderItem.modelMatrix = glm::mat4(1.0f);
 	renderItem.inverseModelMatrix = glm::mat4(1.0f);
-	renderItem.aabbMin = glm::vec4(meshV2->aabbMin, 0.0f);
-	renderItem.aabbMax = glm::vec4(meshV2->aabbMax, 0.0f);
+	renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
+	renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
     renderItem.meshId = m_meshId;
-    renderItem.baseVertex = meshV2->baseVertex;
-    renderItem.baseIndex = meshV2->baseIndex;
+    renderItem.baseVertex = mesh->baseVertex;
+    renderItem.baseIndex = mesh->baseIndex;
 
-	RenderDataManager::SubmitHouseRenderItemOLD(renderItemOLD);
 	RenderDataManager::SubmitRenderItemProcedural(renderItem);
 }
 

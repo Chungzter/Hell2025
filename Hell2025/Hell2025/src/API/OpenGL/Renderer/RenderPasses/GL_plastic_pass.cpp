@@ -67,10 +67,10 @@ namespace OpenGLRenderer {
 			OpenGLRenderer::SetViewport(gBuffer, viewport);
 
 			shader->Bind();
-			shader->SetMat4("u_projectionView", viewportData[i].projectionView);
+			shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 			shader->SetMat4("u_view", viewportData[i].view);
 
-			glDepthFunc(GL_LESS);
+			glDepthFunc(GL_GREATER);
 
 			for (const RenderItem& renderItem : renderItems) {
 				Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
@@ -111,7 +111,7 @@ namespace OpenGLRenderer {
 			OpenGLRenderer::SetViewport(gBuffer, viewport);
 
 			shader->Bind();
-            shader->SetMat4("u_projectionView", viewportData[i].projectionView);
+            shader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
             shader->SetMat4("u_view", viewportData[i].view);
             shader->SetVec3("u_viewPos", viewportData[i].viewPos);
 
@@ -139,7 +139,7 @@ namespace OpenGLRenderer {
 
 
 		// Clean up
-		glDepthFunc(GL_LESS);
+		glDepthFunc(GL_GREATER);
 	}
 
 

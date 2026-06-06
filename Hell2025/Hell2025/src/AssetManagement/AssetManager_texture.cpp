@@ -3,11 +3,18 @@
 #include "API/OpenGL/GL_backend.h"
 #include "API/Vulkan/VK_backend.h"
 #include "BackEnd/BackEnd.h"
+#include "Hell/Logging.h"
 #include "Tools/ImageTools.h"
 #include "Util/Util.h"
 #include <future>
 
 namespace AssetManager {
+
+    std::unordered_map<std::string, Texture*> g_cachedTexturePointers;
+
+    void ClearCachedTexturePointers() {
+        g_cachedTexturePointers.clear();
+    }
 
     void CompressMissingDDSTexutres() {
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/compress_me", { "png", "jpg", "tga" })) {
@@ -52,13 +59,29 @@ namespace AssetManager {
     }
 
     Texture* GetTextureByName(const std::string& name) {
-        std::vector<Texture>& textures = GetTextures();
-        for (Texture& texture : textures) {
-            if (texture.GetFileInfo().name == name)
-                return &texture;
+        auto it = g_cachedTexturePointers.find(name);
+        if (it != g_cachedTexturePointers.end()) {
+            return it->second;
         }
-        std::cout << "AssetManager::GetTextureByName(const std::string& name) failed because '" << name << "' does not exist\n";
+
+        for (Texture& texture : GetTextures()) {
+            if (texture.GetFileInfo().name == name) {
+                g_cachedTexturePointers[name] = &texture;
+                return &texture;
+            }
+        }
+
+        Logging::Fatal() << "AssetManager::GetTextureByName(const std::string& name) failed because '" << name << "' does not exist\n";
         return nullptr;
+    }
+
+    Texture* GetTextureByIndex(int index) {
+        if (index < 0 || index >= GetTextureCount()) {
+            std::cout << "AssetManager::GetTextureByIndex() failed because index '" << index << "' was out of range of size " << GetTextureCount() << "\n";
+            return nullptr;
+        }
+
+        return &GetTextures()[index];
     }
 
     int GetTextureIndexByName(const std::string& name, bool ignoreWarning) {
@@ -71,17 +94,6 @@ namespace AssetManager {
             std::cout << "AssetManager::GetTextureIndexByName(const std::string& name) failed because name '" << name << "' was not found in g_textures\n";
         }
         return -1;
-    }
-
-    Texture* GetTextureByIndex(int index) {
-        std::vector<Texture>& textures = GetTextures();
-
-        if (index < 0 || index >= textures.size()) {
-            std::cout << "AssetManager::GetTextureByIndex() failed because index '" << index << "' was out of range of size " << textures.size() << "\n";
-            return nullptr;
-        }
-        
-        return &textures[index];
     }
 
     int GetTextureCount() {

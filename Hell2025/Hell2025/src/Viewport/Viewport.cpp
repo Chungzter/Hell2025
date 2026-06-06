@@ -102,7 +102,8 @@ void Viewport::UpdateProjectionMatrices() {
     float right = m_orthoSize * m_aspect;
     float bottom = -m_orthoSize;
     float top = m_orthoSize;
-    m_orthographicMatrix = glm::orthoZO(left, right, bottom, top, m_nearPlane, m_farPlane);
+    m_orthographicMatrix = glm::orthoZO(left, right, bottom, top, m_farPlane, m_nearPlane); // Reverse Z
+    //m_orthographicMatrix = glm::orthoZO(left, right, bottom, top, m_nearPlane, m_farPlane); // Forward Z
 }
 
 glm::vec2 Viewport::WorldToScreen(const glm::mat4& viewMatrix, const glm::vec3& worldPosition) const {

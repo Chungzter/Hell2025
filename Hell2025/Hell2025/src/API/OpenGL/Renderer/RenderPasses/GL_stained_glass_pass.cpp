@@ -34,7 +34,7 @@ namespace OpenGLRenderer {
 
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
-        glBindTextureUnit(7, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
+        glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
         glBindTextureUnit(9, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"));
 

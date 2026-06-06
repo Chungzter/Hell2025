@@ -7,6 +7,8 @@
 #include "Viewport/ViewportManager.h"
 
 #include "Hell/RendereringConstants.h"
+#include "Ocean/Ocean.h"
+#include "Core/Game.h"
 
 namespace OpenGLRenderer {
     struct RESettings {
@@ -22,6 +24,7 @@ namespace OpenGLRenderer {
     void LoadShadersRE();
     void SkyboxPassRE();
     void GlassPassRE();
+    void OceanRE();
 
     void RenderFullscreenTriangle();
 
@@ -36,7 +39,7 @@ namespace OpenGLRenderer {
 
 
     void RenderGameREStyle() {
-        ProfilerOpenGLFrame();
+        ComputeOceanFFTPass();
 
         OpenGLRasterizerState state;
         state.depthMask = true;
@@ -84,16 +87,18 @@ namespace OpenGLRenderer {
         BlendedLighting();
 
         SkyboxPassRE();
+        HairPassRE();
+        OceanRE();
+        
+        GaussianBlur();
 
-        {
-            ProfilerOpenGLZoneFunction();
-            HairDepthPrep();
-            HairDepthPrePassRE();
-            HairForwardLightingPassRE();
-            HairCompositeRE();
-        }
+        OceanUnderWaterFlags();
+        OceanSurfaceCompositePass();
 
         GlassPassRE();
+        EmissivePass();
+
+        OceanUnderwaterCompositePass();
 
         // DDGI Debug
         DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
@@ -101,11 +106,11 @@ namespace OpenGLRenderer {
         if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
         if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
 
-        EmissivePass();
         SpriteSheetPass(); // Muzzle flash, etc
 
         PostProcessingPassRE();
         DebugViewPass();
+        DebugPass();
 
         // Downscale and blit to swapchain
         OpenGLFrameBuffer& finalImageFbo = GetFrameBuffer("FinalImage");
@@ -114,6 +119,77 @@ namespace OpenGLRenderer {
         OpenGLRenderer::BlitToDefaultFrameBuffer(&finalImageFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         UIPass();
+    }
+
+    void OceanRE() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
+        OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
+
+        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+
+        OpenGLCubemapView* skyboxCubemapView = GetCubemapView("SkyboxNightSky");
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
+
+        waterFrameBuffer.Bind();
+
+        const int gridSize = 128;
+        const int lodLevels = 6;
+        const int vertexCount = gridSize * gridSize * 6 * lodLevels;
+
+        BindShader("OceanLighting");
+        SetUniformInt("u_gridWidth", gridSize);
+        SetUniformFloat("u_oceanOriginY", Ocean::GetOceanOriginY());
+        SetUniformFloat("u_time", Game::GetTotalTime());
+
+        BindTextureUnit(0, fftFrameBuffer_band0->GetColorAttachmentHandleByName("Displacement"));
+        BindTextureUnit(1, fftFrameBuffer_band0->GetColorAttachmentHandleByName("Normals"));
+        BindTextureUnit(2, fftFrameBuffer_band1->GetColorAttachmentHandleByName("Displacement"));
+        BindTextureUnit(3, fftFrameBuffer_band1->GetColorAttachmentHandleByName("Normals"));
+        BindTextureUnit(4, skyboxCubemapView->GetHandle());
+        BindTextureUnit(5, GetTextureHandleByName("WaterNormals"));
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = true;
+        state.colorMask = true;
+        state.depthFunc = GL_GREATER;
+
+        SetRasterizerState(state);
+        BindEmptyVAO();
+
+        static bool lines = false;
+        if (Input::KeyPressed(HELL_KEY_L)) {
+            lines = !lines;
+        }
+
+        OpenGLRenderer::BlitFrameBufferDepth(&gBuffer, &waterFrameBuffer);
+
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("Water");
+        fbo.Bind();
+        //fbo.ClearDepthAttachment(0.0f);
+
+        //fbo.InvalidateDrawBufferCache();
+        //fbo.InvalidateReadBufferCache();
+
+        fbo.DrawBuffers({ "Lighting", "OceanMask" });
+
+        for (int i = 0; i < 4; i++) {
+            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            OpenGLRenderer::SetViewport(&waterFrameBuffer, viewport);
+            SetUniformInt("u_viewportIndex", i);
+
+            if (lines) glDrawArrays(GL_LINES, 0, vertexCount);
+            else       glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        }
+
+        glBindVertexArray(0);
     }
 
     void GlassPassRE() {
@@ -152,7 +228,7 @@ namespace OpenGLRenderer {
 
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
-        glBindTextureUnit(7, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
+        glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
 
         // Forward render each glass render item into each viewport
@@ -255,6 +331,8 @@ namespace OpenGLRenderer {
 
         LoadShader("RE", "LightingForward", { "GL_lighting_forward.vert", "GL_lighting_forward.frag" });
         LoadShader("RE", "SkyboxRE", { "GL_fullscreen_triangle.vert", "GL_skybox_re.frag" });
+
+        LoadShader("RE", "OceanLighting", { "GL_ocean_lighting.vert", "GL_ocean_lighting.frag" });
     }
 
 	void ClearRenderTargetsRE() {
@@ -271,6 +349,12 @@ namespace OpenGLRenderer {
 		OpenGLFrameBuffer& hairFboRE = GetFrameBuffer("HairRE");
 		hairFboRE.ClearAttachment("Lighting", 0, 0, 0, 0);
 		hairFboRE.ClearDepthAttachment(0.0f);
+
+        OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
+        waterFrameBuffer.Bind();
+        waterFrameBuffer.ClearAttachment("Lighting", 0, 0, 0, 0);
+        waterFrameBuffer.ClearAttachmentUI("OceanFlags", 0, 0, 0, 0);
+        waterFrameBuffer.ClearAttachmentUI("OceanMask", 0, 0, 0, 0);
 	}
 
 	void BindShadowMapsRE() {
@@ -278,7 +362,7 @@ namespace OpenGLRenderer {
 		OpenGLShadowCubeMapArray& hiResShadowMaps = GetShadowCubeMapArray("HiRes");
 		OpenGLShadowMapArray& moonShadowCascades = GetShadowMapArray("MoonlightCSM");
 
-		BindTextureUnit(7, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
+		BindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
 		BindTextureUnit(8, flashLightShadowMaps.GetDepthTextureHandle());
 		BindTextureUnit(9, hiResShadowMaps.GetDepthTexture());
 		BindTextureUnit(10, moonShadowCascades.GetDepthTexture());

@@ -31,6 +31,7 @@
 #include <Hell/Logging.h>
 #include "World/World.h"
 #include "Renderer/Renderer.h"
+#include <unordered_map>
 
 #define NONE_BIT 0
 
@@ -62,9 +63,11 @@ namespace OpenGLRenderer {
     int g_fftDisplayMode = 0;
     int g_fftEditBand = 0;
 
+    GLuint g_emptyVao = 0;
+    std::unordered_map<std::string, GLuint> g_cachedTextureHandles;
+
     void LoadShaders();
     void CreateFrameBuffers();
-
 
     IndirectBuffer g_indirectBuffer;
 
@@ -125,12 +128,6 @@ namespace OpenGLRenderer {
             AssetManager::GetTextureByName("ny"),
             AssetManager::GetTextureByName("pz"),
             AssetManager::GetTextureByName("nz"),
-            //AssetManager::GetTextureByName("NightSky_Right"),
-            //AssetManager::GetTextureByName("NightSky_Left"),
-            //AssetManager::GetTextureByName("NightSky_Top"),
-            //AssetManager::GetTextureByName("NightSky_Bottom"),
-            //AssetManager::GetTextureByName("NightSky_Front"),
-            //AssetManager::GetTextureByName("NightSky_Back"),
         };
         std::vector<GLuint> texturesHandles;
         for (Texture* texture : textures) {
@@ -174,8 +171,8 @@ namespace OpenGLRenderer {
         emissiveBlurFbo.CreateAttachment("ColorA", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
         emissiveBlurFbo.CreateAttachment("ColorB", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
 
-        OpenGLFrameBuffer& IndirectDiffuseFbo = CreateFrameBuffer("IndirectDiffuse", resolutions.gBuffer);
-        IndirectDiffuseFbo.CreateAttachment("Color", GL_RGBA16F);
+        OpenGLFrameBuffer& indirectDiffuseFbo = CreateFrameBuffer("IndirectDiffuse", resolutions.gBuffer);
+        indirectDiffuseFbo.CreateAttachment("Color", GL_R11F_G11F_B10F);
 
         g_frameBuffers["DepthPeeledTransparency"] = OpenGLFrameBuffer("DepthPeeledTransparency", resolutions.gBuffer);
         g_frameBuffers["DepthPeeledTransparency"].CreateAttachment("Color", GL_RGBA16F);
@@ -544,8 +541,6 @@ namespace OpenGLRenderer {
 
     void PreGameLogicComputePasses() {
         PaintHeightMap();
-        ComputeOceanFFTPass();
-        OceanHeightReadback();
     }
 
 
@@ -574,17 +569,21 @@ namespace OpenGLRenderer {
     }
 
 
-	void RenderGame() {
+    void RenderGame() {
+        ProfilerOpenGLFrame();
+
 		if (Renderer::GetRendererMode() == RendererMode::MSAA) {
 			RenderGameMSAA();
 			return;
 		}
-		else  if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+		else if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
 			RenderGameREStyle();
 			return;
 		}
 
-        ProfilerOpenGLFrame();
+
+        ComputeOceanFFTPass();
+        OceanHeightReadback();
 
         OpenGLFrameBuffer& gBuffer = g_frameBuffers["GBuffer"];
         OpenGLFrameBuffer& hairFrameBuffer = g_frameBuffers["Hair"];
@@ -803,8 +802,8 @@ namespace OpenGLRenderer {
                         }
                     }
                     // Fall back to black
-                    else if (Texture* blackTexture = AssetManager::GetTextureByName("Black")) {
-                        glBindTexture(GL_TEXTURE_2D, blackTexture->GetGLTexture().GetHandle());
+                    else {
+                        glBindTexture(GL_TEXTURE_2D, GetTextureHandleByName("Black"));
                     }
                 }
                 if (bindWoundMaterial) {
@@ -851,6 +850,10 @@ namespace OpenGLRenderer {
         glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
     }
 
+    void DebugHack(const std::string& message) {
+  
+    }
+
     void CreateBlurBuffers() {
         const Resolutions& resolutions = Config::GetResolutions();
 
@@ -874,6 +877,11 @@ namespace OpenGLRenderer {
                 height *= 0.5f;
             }
         }
+    }
+
+    void BindEmptyVAO() {
+        if (g_emptyVao == 0) glGenVertexArrays(1, &g_emptyVao);
+        glBindVertexArray(g_emptyVao);
     }
 
 	void MultiDrawPerViewport(OpenGLFrameBuffer* fbo, OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
@@ -1077,10 +1085,25 @@ namespace OpenGLRenderer {
         glBindTextureUnit(static_cast<GLuint>(bindingIndex), static_cast<GLuint>(textureHandle));
     }
 
+    GLuint GetTextureHandleByName(const std::string& name) {
+        if (auto it = g_cachedTextureHandles.find(name); it != g_cachedTextureHandles.end()) {
+            return it->second;
+        }
+
+        Texture* texture = AssetManager::GetTextureByName(name);
+        if (!texture) {
+            Logging::Fatal() << "OpenGLRenderer::GetTextureHandleByName() failed because '" << name << "' does not exist\n";
+            return 0;
+        }
+
+        const GLuint textureHandle = texture->GetGLTexture().GetHandle();
+        g_cachedTextureHandles.emplace(name, textureHandle);
+        return textureHandle;
+    }
+
     OpenGLMeshPatch* GetOceanMeshPatch() {
         return &g_tesselationPatch;
     }
-
 
     OpenGLShader& GetShader(const std::string& name) {
         static OpenGLShader invald;
@@ -1300,6 +1323,12 @@ namespace OpenGLRenderer {
         return &g_rasterizerStates[name];
     }
 
+    void CleanUp() {
+        if (g_emptyVao != 0) {
+            glDeleteVertexArrays(1, &g_emptyVao);
+            g_emptyVao = 0;
+        }
+    }
 
     std::vector<float>& GetShadowCascadeLevels() {
         return g_shadowCascadeLevels;
@@ -1318,7 +1347,6 @@ namespace OpenGLRenderer {
             ssbo->UploadStatic(size, data);
         }
     }
-
 
     void EditorRasterizerStateOverride() {
         if (Editor::IsOpen() && Editor::BackfaceCullingDisabled()) {

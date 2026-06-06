@@ -9,10 +9,10 @@ namespace OpenGLRenderer {
     float g_globalTime = 50.0f;
 
     void ComputeOceanFFTPass() {
+        ProfilerOpenGLZoneFunction();
+
         OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
         OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");
-        OpenGLMeshPatch* oceanMeshPatch = GetOceanMeshPatch();
-
         OpenGLShader* oceanCalculateSpectrumShader = GetShaderOLD("OceanCalculateSpectrum");
         OpenGLShader* oceanUpdateTexturesShader = GetShaderOLD("OceanUpdateTextures");
 
@@ -43,7 +43,6 @@ namespace OpenGLRenderer {
         if (!fftDispZOutSSBO) return;
         if (!fftGradXOutSSBO) return;
         if (!fftGradZOutSSBO) return;
-        if (!oceanMeshPatch) return;
         if (!oceanUpdateTexturesShader) return;
         if (!oceanCalculateSpectrumShader) return;
 
@@ -55,8 +54,7 @@ namespace OpenGLRenderer {
         static bool doTime = true;
 
         if (doTime) {
-            g_globalTime += deltaTime;
-            g_globalTime += deltaTime;
+            g_globalTime += deltaTime * 2.0f;
         }
         else {
             g_globalTime = 50.0f;
@@ -138,6 +136,11 @@ namespace OpenGLRenderer {
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
             glDispatchCompute(blockSizeX, blockSizeY, 1);
         }
+
+        // Generate mips for the normals
+        glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
+        glGenerateTextureMipmap(fftFrameBuffer_band0->GetColorAttachmentHandleByName("Normals"));
+        glGenerateTextureMipmap(fftFrameBuffer_band1->GetColorAttachmentHandleByName("Normals"));
     }
 
     void ComputeInverseFFT2D(GLuint handleA, GLuint handleB) {

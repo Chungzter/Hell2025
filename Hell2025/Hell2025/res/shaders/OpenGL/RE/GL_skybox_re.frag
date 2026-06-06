@@ -42,10 +42,66 @@ void main() {
     vec3 skyboxSampleDir = normalize(skyboxRotation * rayDir);
 
     vec3 skyColor = texture(u_skyboxCubeMap, skyboxSampleDir).rgb;
-    vec3 linearSkyColor = pow(skyColor, vec3(2.2));
+    vec3 skyLinear = pow(skyColor, vec3(2.2));
 
-    vec3 finalColor = linearSkyColor;
+    //vec3 finalColor = linearSkyColor;
 
-    FinalLightingOut = vec4(finalColor, 1);
+
+
+
+
+    //vec3 skyColor = texture(cubeMap, TexCoords).rgb;
+    //vec3 skyLinear = pow(skyColor, vec3(2.6));
+
+
+    vec3 horizonColor = vec3(0.6, 0.2, 0.6);
+    vec3 downColor = vec3(0.4);
+
+    float amount = 0.02;
+    float colorCurve = 0.95;
+    float fadeCurve = 0.69;
+
+    float downwardness = clamp(-rayDir.y, 0.0, 1.0);
+    float colorT = pow(downwardness, colorCurve);
+    float fogT = pow(downwardness, fadeCurve);
+
+    vec3 rayFogColor = mix(horizonColor, downColor, colorT) * amount;
+    vec3 outColor = mix(skyLinear, rayFogColor, fogT);
+
+    FinalLightingOut = vec4(outColor, 1.0);
+
+
+
+
+    //float u_cutoffWorldY = viewPos.y;//0.1;
+    //vec3 u_belowColorLinear = vec3(1,0,0);  
+    //
+    //// World ray under water fog
+    //vec3 horizonColor = vec3(0.6, 0.2, 0.6);
+    //vec3 downColor = vec3(0.4);
+    //
+    //float amount = 0.0125;
+    //float curve = 0.5; // higher = stays bright longer, lower = darkens faster
+    //float downwardness = clamp(dot(rayDir, vec3(0.0, -1.0, 0.0)), 0.0, 1.0);
+    //float t = pow(downwardness, curve); // 0 at horizon, 1 when looking down
+    //vec3 finalRayFog = mix(horizonColor, downColor, t) * amount;
+    //    
+    //vec3 outColor = linearSkyColor;
+    //float cutoffWorldY = viewPos.y;
+    //
+    //if (WorldPos.y < cutoffWorldY) {
+    //    float fadeDistance = 50.0;   // world meters to reach full fog color
+    //    float fadeExponent = 0.9;   // >1 slower near cutoff, <1 faster
+    //
+    //    float depthBelow = cutoffWorldY - WorldPos.y;          // 0 at cutoff, increases downward
+    //    float f = clamp(depthBelow / fadeDistance, 0.0, 1.0);  // 0..1
+    //    f = pow(f, fadeExponent);
+    //
+    //    // At cutoff: f=0 so black. Deeper: f->1 so finalRayFog.
+    //    outColor = finalRayFog * f;
+    //}
+    
+   // FinalLightingOut = vec4(finalColor, 1);
+    //FinalLightingOut += vec4(1,0,0, 1);
 }
 

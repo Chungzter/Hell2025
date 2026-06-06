@@ -52,6 +52,7 @@ struct OpenGLRasterizerState {
 namespace OpenGLRenderer {
     void Init();
     void InitMain();
+    void CleanUp();
 
 	void RenderLoadingScreen();
 
@@ -142,11 +143,7 @@ namespace OpenGLRenderer {
     void MaterialResolveSkinnedPass();
     void MaterialResolveProceduralPass();
 
-    void HairLightingSkinnedResolvePass();
-    void HairDepthPrep();
-    void HairDepthPrePassRE();
-    void HairForwardLightingPassRE();
-    void HairCompositeRE();
+    void HairPassRE();
 
     void PostProcessingPassRE();
 
@@ -206,6 +203,9 @@ namespace OpenGLRenderer {
 
     void CreateBlurBuffers();
     void DrawQuad();
+
+    void BindEmptyVAO();
+    GLuint GetTextureHandleByName(const std::string& name);
 
     OpenGLCubemapView* GetCubemapView(const std::string& name);
     OpenGLFrameBuffer* GetBlurBuffer(int viewportIndex, int bufferIndex);
@@ -277,6 +277,8 @@ namespace OpenGLRenderer {
     void EditorRasterizerStateOverride();
     void DispatchCompute(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ);
     void DispatchComputeIndirect();
+
+    void DebugHack(const std::string& message);
 
     // Rasterizer State
     void InitRasterizerStates();

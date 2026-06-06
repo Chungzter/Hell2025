@@ -147,7 +147,7 @@ namespace OpenGLRenderer {
 
             hairLightingShader->Bind();
             hairLightingShader->SetVec3("u_moonlightDir", Game::GetMoonlightDirection());
-            glBindTextureUnit(4, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
+            glBindTextureUnit(4, GetTextureHandleByName("Flashlight2"));
 
             glActiveTexture(GL_TEXTURE9);
             glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, hiResShadowMaps->GetDepthTexture());

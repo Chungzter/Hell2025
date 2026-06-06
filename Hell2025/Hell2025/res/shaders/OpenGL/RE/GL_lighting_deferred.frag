@@ -197,6 +197,29 @@ void main() {
         indirectDiffuse = probeIrradiance * diffuseAlbedo;
     }
 
+    // Extra flashlight lighting
+    if (viewportDataArr[viewportIndex].flashlightModifer > 0.1) {
+        vec3 offset = viewportDataArr[viewportIndex].cameraForward.xyz * 0.001;
+        vec3 spotLightPos = viewPos + offset;
+        vec3 spotLightDir = viewportDataArr[viewportIndex].flashlightDir.xyz;
+        vec3 spotLightColor = vec3(0.9, 0.95, 1.1);
+
+        spotLightColor = mix(spotLightColor, vec3(1, 0.7799999713897705, 0.5289999842643738), 0.5);
+
+        float spotLightRadius = 0.165;
+        float spotLightStregth = 10.0;
+        float innerAngle = cos(radians(00.0 * viewportDataArr[viewportIndex].flashlightModifer));
+        float outerAngle = cos(radians(40.0));
+
+        mat4 lightProjectionView = viewportDataArr[viewportIndex].flashlightProjectionView;
+        vec4 flashlightDir = viewportDataArr[viewportIndex].flashlightDir;
+        vec4 flashlightPosition = viewportDataArr[viewportIndex].flashlightPosition;
+        vec3 flashlightViewPos = viewportDataArr[viewportIndex].inverseView[3].xyz;
+
+        vec3 re7Lighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, spotLightRadius, spotLightStregth, innerAngle, outerAngle, normal.xyz, worldPos, linearBaseColor.rgb, roughness, metallic, flashlightViewPos, lightProjectionView);
+        directLighting += re7Lighting;
+    }
+
     // Moon light
     vec3 moonLighting = vec3(0.0);
     vec3 moonLightDir = rendererData.moonLightDir.xyz;

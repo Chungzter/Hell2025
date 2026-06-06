@@ -6,12 +6,10 @@ layout (location = 0) out vec4 FinalLightingOut;
 layout (binding = 0) uniform samplerCube cubeMap;
 
 in vec3 TexCoords;
-in vec4 WorldPos;
-
 in flat int ViewportIndex;
 
 readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
-	ViewportData viewportData[];
+    ViewportData viewportData[];
 };
 
 vec3 GetWorldRay(vec2 fragCoordWindow, int viewportIndex) {
@@ -20,9 +18,6 @@ vec3 GetWorldRay(vec2 fragCoordWindow, int viewportIndex) {
     vec2 fragCoord = fragCoordWindow - viewportOrigin;
     vec2 ndc = (fragCoord / viewportSize) * 2.0 - 1.0;
     mat4 inverseProjectionView = viewportData[viewportIndex].inverseProjectionView;
-
-    // If you ever feed in top-left coords somewhere, flip ndc.y here
-    // ndc.y = -ndc.y;
 
     vec4 nearH = inverseProjectionView * vec4(ndc, -1.0, 1.0);
     vec4 farH  = inverseProjectionView * vec4(ndc,  1.0, 1.0);
@@ -36,40 +31,21 @@ void main() {
     vec3 skyColor = texture(cubeMap, TexCoords).rgb;
     vec3 skyLinear = pow(skyColor, vec3(2.6));
 
-    vec3 viewPos = viewportData[ViewportIndex].viewPos.xyz;
-    mat4 inverseProjectionView = viewportData[ViewportIndex].inverseProjectionView;
-    vec2 resolution = vec2(viewportData[ViewportIndex].width, viewportData[ViewportIndex].height);
+    vec3 rayDir = GetWorldRay(gl_FragCoord.xy, ViewportIndex);
 
-    FinalLightingOut = vec4(skyLinear, 1.0);
-
-    float u_cutoffWorldY = viewPos.y;//0.1;
-    vec3 u_belowColorLinear = vec3(1,0,0);  
-
-    // World ray under water fog
     vec3 horizonColor = vec3(0.6, 0.2, 0.6);
     vec3 downColor = vec3(0.4);
 
-    vec3 rayDir = GetWorldRay(gl_FragCoord.xy, ViewportIndex);
-    float amount = 0.0125;
-    float curve = 0.5; // higher = stays bright longer, lower = darkens faster
-    float downwardness = clamp(dot(rayDir, vec3(0.0, -1.0, 0.0)), 0.0, 1.0);
-    float t = pow(downwardness, curve); // 0 at horizon, 1 when looking down
-    vec3 finalRayFog = mix(horizonColor, downColor, t) * amount;
-        
-    vec3 outColor = skyLinear;
-    float cutoffWorldY = viewPos.y;
+    float amount = 0.02;
+    float colorCurve = 0.5;
+    float fadeCurve = 0.9;
 
-    if (WorldPos.y < cutoffWorldY) {
-        float fadeDistance = 50.0;   // world meters to reach full fog color
-        float fadeExponent = 0.9;   // >1 slower near cutoff, <1 faster
+    float downwardness = clamp(-rayDir.y, 0.0, 1.0);
+    float colorT = pow(downwardness, colorCurve);
+    float fogT = pow(downwardness, fadeCurve);
 
-        float depthBelow = cutoffWorldY - WorldPos.y;          // 0 at cutoff, increases downward
-        float f = clamp(depthBelow / fadeDistance, 0.0, 1.0);  // 0..1
-        f = pow(f, fadeExponent);
-
-        // At cutoff: f=0 so black. Deeper: f->1 so finalRayFog.
-        outColor = finalRayFog * f;
-    }
+    vec3 rayFogColor = mix(horizonColor, downColor, colorT) * amount;
+    vec3 outColor = mix(skyLinear, rayFogColor, fogT);
 
     FinalLightingOut = vec4(outColor, 1.0);
 }

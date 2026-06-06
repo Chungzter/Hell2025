@@ -34,10 +34,6 @@ namespace RenderDataManager {
 
     // House submissions
     void SubmitRenderItemProcedural(const RenderItem& renderItem);
-    void SubmitHouseRenderItemOLD(const HouseRenderItem& renderItem);
-    void SubmitHouseRenderItems(const std::vector<HouseRenderItem>& renderItems);
-    void SubmitOutlineRenderItem(const HouseRenderItem& renderItem);
-    void SubmitOutlineRenderItems(const std::vector<HouseRenderItem>& renderItems);
 
     void SubmitDecalPaintingInfo(DecalPaintingInfo decalPaintingInfo);
 

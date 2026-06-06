@@ -102,7 +102,7 @@ namespace OpenGLRenderer {
                     glActiveTexture(GL_TEXTURE1);
                     glBindTexture(GL_TEXTURE_2D, decalPaintingFBO->GetColorAttachmentHandleByName("UVMap"));
                     glActiveTexture(GL_TEXTURE2);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("Decal_Wound0")->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, GetTextureHandleByName("Decal_Wound0"));
                     glDispatchCompute((decalPaintingFBO->GetWidth() + 7) / 8, (decalPaintingFBO->GetHeight() + 7) / 8, 1);
                 }
             }

@@ -9,6 +9,7 @@
 #include "Viewport/ViewportManager.h"
 
 #include "Input/Input.h"
+#include "Renderer/Renderer.h"
 
 namespace OpenGLRenderer {
 
@@ -99,10 +100,10 @@ namespace OpenGLRenderer {
             glBindTexture(GL_TEXTURE_2D, fftFrameBuffer_band1->GetColorAttachmentHandleByName("Normals"));
             glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemapView->GetHandle());
-            glBindTextureUnit(6, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
+            glBindTextureUnit(6, GetTextureHandleByName("Flashlight2"));
             glBindTextureUnit(7, flashLightShadowMapsFBO->GetDepthTextureHandle());
             glActiveTexture(GL_TEXTURE8);
-            glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("WaterNormals")->GetGLTexture().GetHandle());
+            glBindTexture(GL_TEXTURE_2D, GetTextureHandleByName("WaterNormals"));
 
             BindTextureUnit(5, gBuffer->GetDepthAttachmentHandle());
 
@@ -191,7 +192,9 @@ namespace OpenGLRenderer {
 
         if (!World::HasOcean()) return;
 
-        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
+        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer(gBufferName);
+
         OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
         OpenGLFrameBuffer& quaterSizeFrameBuffer = GetFrameBuffer("QuarterSize");
         OpenGLShader* shader = GetShaderOLD("OceanSurfaceComposite");
@@ -210,7 +213,7 @@ namespace OpenGLRenderer {
         BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
         BindImageTexture(1, waterFrameBuffer.GetColorAttachmentHandleByName("OceanMask"), GL_READ_ONLY, GL_R8UI);
         BindTextureUnit(2, waterFrameBuffer.GetColorAttachmentHandleByName("Lighting"));
-        BindTextureUnit(3, AssetManager::GetTextureByName("WaterDUDV")->GetGLTexture().GetHandle());
+        BindTextureUnit(3, GetTextureHandleByName("WaterDUDV"));
         BindTextureUnit(4, quaterSizeFrameBuffer.GetColorAttachmentHandleByName("DownsampledFinalLighting"));
 
         glDispatchCompute((gBuffer.GetWidth() + 7) / 8, (gBuffer.GetHeight() + 7) / 8, 1);
@@ -220,7 +223,9 @@ namespace OpenGLRenderer {
         ProfilerOpenGLZoneFunction();
 
         OpenGLFrameBuffer& miscFullSizeFrameBuffer = GetFrameBuffer("MiscFullSize");
-        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
+
+        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer(gBufferName);
 
         BindShader("GaussianBlur");
 
@@ -243,8 +248,10 @@ namespace OpenGLRenderer {
         if (!World::HasOcean()) return;
 
         OpenGLFrameBuffer& miscFullSizeFrameBuffer = GetFrameBuffer("MiscFullSize");
-        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
+
+        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer(gBufferName);
 
         BindShader("OceanUnderwaterComposite");
         
@@ -255,7 +262,7 @@ namespace OpenGLRenderer {
         BindImageTexture(1, waterFrameBuffer.GetColorAttachmentHandleByName("OceanFlags"), GL_READ_ONLY, GL_R8UI);
         BindTextureUnit(2, miscFullSizeFrameBuffer.GetColorAttachmentHandleByName("GaussianFinalLighting"));
         BindTextureUnit(3, waterFrameBuffer.GetColorAttachmentHandleByName("Lighting"));
-        BindTextureUnit(4, AssetManager::GetTextureByName("WaterDUDV")->GetGLTexture().GetHandle());
+        BindTextureUnit(4, GetTextureHandleByName("WaterDUDV"));
 
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         glDispatchCompute((gBuffer.GetWidth() + 7) / 8, (gBuffer.GetHeight() + 7) / 8, 1);

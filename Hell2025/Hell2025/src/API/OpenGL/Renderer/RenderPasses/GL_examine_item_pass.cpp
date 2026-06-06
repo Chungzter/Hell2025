@@ -53,7 +53,7 @@ namespace OpenGLRenderer {
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
 
-        gBuffer->ClearDepthAttachment();
+        gBuffer->ClearDepthAttachment(0.0f);
 
         ForceRasterizerState("GeometryPass_Default");
 

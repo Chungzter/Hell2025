@@ -74,5 +74,9 @@ void main() {
     vec3 refractedColor = texture(DownSampledFinalLightingTexture, uv_refraction).rgb;
     vec3 finalColor = (refractedColor * UNDER_WATER_TINT * 0.2) + waterColor;
 
+    //vec3 underwaterColor = mix(refractedColor, refractedColor * UNDER_WATER_TINT * 0.5, 0.75);
+    //vec3 finalColor = underwaterColor + waterColor;
+    
     imageStore(LightingImage, px, vec4(vec3(finalColor), 1.0));
+    //imageStore(LightingImage, px, vec4(vec3(waterColor), 1.0));
 }

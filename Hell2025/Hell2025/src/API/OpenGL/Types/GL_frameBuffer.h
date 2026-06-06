@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 struct OpenGLFrameBuffer {
 private:
@@ -48,8 +49,8 @@ public:
     void Resize(int width, int height);
     void SetColorAttachmentMipLevel(const std::string& name, int mipLevel);
 
-    GLuint GetColorAttachmentHandleByName(const std::string& name) const;
-    GLenum GetColorAttachmentSlotByName(const std::string& name) const;
+    GLuint GetColorAttachmentHandleByName(const std::string& name);
+    GLenum GetColorAttachmentSlotByName(const std::string& name);
     void BlitToDefaultFrameBuffer(const std::string& srcName, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 
     GLuint GetHandle() const                { return m_handle; }
@@ -57,4 +58,9 @@ public:
     GLuint GetHeight() const                { return m_height; }
     GLuint GetDepthAttachmentHandle() const { return m_depthAttachment.handle; }
     bool IsMultisampled() const             { return m_sampleCount > 1; }
+
+private:
+    std::unordered_map<std::string, GLuint> m_cachedAttachmentHandles;
+    std::unordered_map<std::string, GLenum> m_cachedAttachmentSlots;
+    std::vector<GLenum> m_drawBuffers;
 };

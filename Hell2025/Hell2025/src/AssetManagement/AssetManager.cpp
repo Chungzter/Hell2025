@@ -322,6 +322,15 @@ namespace AssetManager {
         }
     }
 
+    Texture& CreateNewTexture() {
+        ClearCachedTexturePointers();
+        return g_textures.emplace_back();
+    }
+
+    void ReserveTextureStorage(size_t textureCount) {
+        g_textures.reserve(textureCount);
+    }
+
     bool LoadingComplete() {
         return g_loadingComplete.allComplete;
     }

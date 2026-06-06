@@ -54,10 +54,10 @@ namespace OpenGLRenderer {
         //glDisable(GL_BLEND);
 
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("BlueNoise")->GetGLTexture().GetHandle());
+        glBindTexture(GL_TEXTURE_2D, GetTextureHandleByName("BlueNoise"));
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, hiResShadowMaps->GetDepthTexture());
-        glBindTextureUnit(5, AssetManager::GetTextureByName("Flashlight2")->GetGLTexture().GetHandle());
+        glBindTextureUnit(5, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(6, flashLightShadowMapsFBO->GetDepthTextureHandle());
 
         // Non skinned models

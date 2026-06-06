@@ -11,6 +11,19 @@
 
 namespace OpenGLRenderer {
 
+    //void HairLightingSkinnedResolvePass();
+    void HairDepthPrep();
+    void HairDepthPrePassRE();
+    void HairForwardLightingPassRE();
+    void HairCompositeRE();
+
+    void HairPassRE() {
+        HairDepthPrep();
+        HairDepthPrePassRE();
+        HairForwardLightingPassRE();
+        HairCompositeRE();
+    }
+
     void HairDepthPrep() {
         ProfilerOpenGLZoneFunction();
 

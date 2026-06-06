@@ -293,9 +293,10 @@ void Shark::DrawDebug() {
 void Shark::Update(float deltaTime) {
 
     // Draw path
-   //` for (const glm::vec3& point : m_path) {
-   //`     Renderer::DrawPoint(point, RED);
-   //` }
+    //for (const glm::vec3& point : m_path) {
+    //    glm::vec3 p = glm::vec3(point.x, Ocean::GetOceanOriginY(), point.z);
+    //    Renderer::DrawPoint(p, RED);
+    //}
 
     //if (Input::KeyPressed(HELL_KEY_PERIOD)) {
     //    float spacing = 1.0f;
@@ -360,7 +361,7 @@ void Shark::Update(float deltaTime) {
         float yRotation = rot0;
 
         if (IsAlive()) {
-            float magicNumber = 0.73f;
+            float magicNumber = 1.05f;
             float lerpSpeed = 1.0f;
 
             // Start with the target at the ocean surface
@@ -369,7 +370,7 @@ void Shark::Update(float deltaTime) {
             // But if hunting a player overwrite it with their height
             if (m_movementState == SharkMovementState::HUNT_PLAYER) {
                 if (Player* player = Game::GetPlayerByPlayerId(m_huntedPlayerId)) {
-                    targetHeight = std::min(targetHeight, player->GetCameraPosition().y) - (magicNumber * 0.5f);
+                    targetHeight = std::min(targetHeight, player->GetCameraPosition().y) - (magicNumber * 0.0f);
                 }
             }
 
@@ -790,45 +791,30 @@ static inline float ApproxBezierLength(const BezierSegment& s) {
 
 
 void Shark::CalculateForwardVectorFromTarget(float deltaTime) {
-    //// Calculate angular difference from forward to target
-    //glm::vec3 directionToTarget = glm::normalize(GetTargetPosition2D() - GetHeadPosition2D());
-    //float dotProduct = glm::clamp(glm::dot(m_forward, directionToTarget), -1.0f, 1.0f);
-    //float angleDifference = glm::degrees(std::acos(dotProduct));
-    //if (m_forward.x * directionToTarget.z - m_forward.z * directionToTarget.x < 0.0f) {
-    //    angleDifference = -angleDifference;
-    //}
-    //// Clamp it to a max of 4.5 degrees rotation
-    //float maxRotation = 4.5f;
-    //angleDifference = glm::clamp(angleDifference, -maxRotation, maxRotation);
-    //// Calculate new forward vector based on that angle
-    //if (TargetIsOnLeft(m_targetPosition)) {
-    //    float blendFactor = glm::clamp(glm::abs(-angleDifference) / 90.0f, 0.0f, 1.0f);
-    //    m_forward = glm::normalize(glm::mix(m_forward, m_left, blendFactor));
-    //}
-    //else {
-    //    float blendFactor = glm::clamp(glm::abs(angleDifference) / 90.0f, 0.0f, 1.0f);
-    //    m_forward = glm::normalize(glm::mix(m_forward, m_right, blendFactor));
-    //}
-
+    // extract current orientations
     glm::vec3 headPos = GetHeadPosition2D();
     glm::vec3 targetPos = GetTargetPosition2D();
 
+    // compute desired forward
     glm::vec3 forwardXZ = NormalizeXZOr(m_forward, glm::vec3(0.0f, 0.0f, 1.0f));
     glm::vec3 desiredXZ = NormalizeXZOr(targetPos - headPos, forwardXZ);
 
+    // find angle delta
     float dotValue = glm::clamp(glm::dot(forwardXZ, desiredXZ), -1.0f, 1.0f);
     float crossY = forwardXZ.x * desiredXZ.z - forwardXZ.z * desiredXZ.x;
-
-    // Signed angle from forward
     float signedAngle = std::atan2(crossY, dotValue);
 
-    // Turn rate: degrees per second
-    float turnRateDegreesPerSecond = 225.0f;
-    float maxStep = glm::radians(turnRateDegreesPerSecond) * deltaTime;
+    // scale turn rate to ease in as shark aligns
+    float baseTurnRate = glm::radians(225.0f);
+    float alignmentScale = glm::clamp(std::abs(signedAngle) / glm::radians(45.0f), 0.1f, 1.0f);
+    float currentTurnRate = baseTurnRate * alignmentScale;
 
+    // clamp angle delta
+    float maxStep = currentTurnRate * deltaTime;
     if (signedAngle > maxStep) signedAngle = maxStep;
     if (signedAngle < -maxStep) signedAngle = -maxStep;
 
+    // build new forward vector
     float c = std::cos(signedAngle);
     float s = std::sin(signedAngle);
 
@@ -836,10 +822,9 @@ void Shark::CalculateForwardVectorFromTarget(float deltaTime) {
     newForward.x = forwardXZ.x * c - forwardXZ.z * s;
     newForward.z = forwardXZ.x * s + forwardXZ.z * c;
     newForward.y = 0.0f;
-
     m_forward = NormalizeXZOr(newForward, forwardXZ);
 
-    // Keep these coherent
+    // update orthogonal vectors
     const glm::vec3 up(0.0f, 1.0f, 0.0f);
     m_right = NormalizeXZOr(glm::cross(up, m_forward), glm::vec3(1.0f, 0.0f, 0.0f));
     m_left = -m_right;

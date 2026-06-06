@@ -74,6 +74,9 @@ namespace Util {
     inline float DegToRad(float degrees) { return degrees * (HELL_PI / 180.0f); }
     glm::mat4 CreateObliqueProjection(const glm::mat4& projection, const glm::mat4& view, const glm::vec4& plane);
     glm::vec3 GetBarycentric(const glm::vec2& targetPoint, const glm::vec2& v0, const glm::vec2& v1, const glm::vec2& v2);
+    std::vector<glm::vec3> GenerateRayDirections(int numRays);
+    std::vector<glm::vec3> GenerateFibonacciCone(int numRays, float spreadAngleRadians, glm::vec3 targetDir);
+    std::vector<glm::vec3> GenerateBiasedFibonacciSphere(int numRays, float bias, glm::vec3 targetDir);
 
     // Raycasting
     AABBRayResult RayIntersectAABB(glm::vec3 rayOrigin, glm::vec3 rayDir, float maxDistance, const AABB& aabb, const glm::mat4& worldTransform);

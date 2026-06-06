@@ -59,7 +59,7 @@ void main() {
     vec3 finalRayFog = vec3(0.4, 0.8, 0.6) * darkness * 0.00125;
 
     // calculate refraction distortion mapping
-    const float distortionSpeed = 0.05;
+    const float distortionSpeed = 0.075;
     const float distortionFactor = 0.0024;
     float offsetX = fract(u_time * distortionSpeed);
     vec2 uv_dudv = screenUV + vec2(offsetX, 0.0);

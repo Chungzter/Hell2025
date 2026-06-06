@@ -14,16 +14,17 @@ namespace AssetManager{
         profiles.reserve(files.size()); 
         
         // Prevent reallocations during the loop
-        GetTextures().reserve(GetTextures().size() + files.size());
+        size_t newCapacity = GetTextureCount() + files.size();
+        ReserveTextureStorage(newCapacity);
 
         for (FileInfo& fileInfo : files) {
 
             // Create texture
-            Texture& texture = GetTextures().emplace_back();
+            Texture& texture = CreateNewTexture();
             texture.SetMinFilter(TextureFilter::LINEAR);
             texture.SetMagFilter(TextureFilter::LINEAR);
 
-            int32_t textureIndex = GetTextures().size() - 1;
+            int32_t textureIndex = GetTextureCount() - 1;
 
             // Create IES Profile
             IESProfile& profile = profiles.emplace_back();

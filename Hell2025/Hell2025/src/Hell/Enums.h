@@ -276,7 +276,7 @@ enum RaycastGroup {
 
 enum DebugRenderMode {
     NONE = 0,
-    ASTAR_MAP,
+    LIGHTS,
     DECALS,
     RAGDOLLS,
     PATHFINDING_RECAST,
