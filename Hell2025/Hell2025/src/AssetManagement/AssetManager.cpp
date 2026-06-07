@@ -409,10 +409,6 @@ namespace AssetManager {
         return g_modelIndexMap;
     }
 
-    std::unordered_map<std::string, int>& GetTextureIndexMap() {
-        return g_textureIndexMap;
-    }
-
     Mesh* GetCubeMesh() {
         static Mesh* mesh = nullptr;
         

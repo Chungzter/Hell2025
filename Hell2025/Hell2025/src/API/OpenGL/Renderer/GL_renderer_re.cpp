@@ -26,6 +26,7 @@ namespace OpenGLRenderer {
     void GlassPassRE();
     void OceanRE();
     void EmissiveForwardPass();
+    void BubblesPass();
 
     void RenderFullscreenTriangle();
 
@@ -84,18 +85,20 @@ namespace OpenGLRenderer {
         SkyboxPassRE();
         HairPassRE();
         OceanRE();
-        
 
+        BubblesPass();
+        
         OceanUnderWaterFlags();
         OceanSurfaceCompositePass();
 
         GlassPassRE();
         EmissivePass();
         GaussianBlur();
-        
+
         OceanUnderwaterCompositePass();
 
         StainedGlassPass();
+
 
         // DDGI Debug
         DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
@@ -159,6 +162,7 @@ namespace OpenGLRenderer {
         LoadShader("RE", "SkyboxRE", { "GL_fullscreen_triangle.vert", "GL_skybox_re.frag" });
 
         LoadShader("RE", "OceanLighting", { "GL_ocean_lighting.vert", "GL_ocean_lighting.frag" });
+        LoadShader("RE", "Bubbles", { "GL_bubbles.vert", "GL_bubbles.frag" });
     }
 
 	void ClearRenderTargetsRE() {
@@ -193,6 +197,55 @@ namespace OpenGLRenderer {
 		BindTextureUnit(9, hiResShadowMaps.GetDepthTexture());
 		BindTextureUnit(10, moonShadowCascades.GetDepthTexture());
 	}
+
+    void BubblesPass() {
+        ProfilerOpenGLZoneFunction();
+
+        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+
+        OpenGLCubemapView& skyboxCubemapView = GetCubemapView("SkyboxNightSky");
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
+
+        fbo.Bind();
+        fbo.SetViewport();
+        fbo.DrawBuffers({ "Lighting" });
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
+        state.depthFunc = GL_GREATER;
+
+        state.blendEnable = true;
+        state.blendFuncSrcfactor = GL_SRC_ALPHA;
+        state.blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
+
+        SetRasterizerState(state);
+
+        BindShader("Bubbles");
+        SetUniformFloat("u_time", Game::GetTotalTime());
+        BindTextureUnit(0, skyboxCubemapView.GetHandle());
+
+        BindEmptyVAO();
+
+        for (int i = 0; i < 4; i++) {
+            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            OpenGLRenderer::SetViewport(&fbo, viewport);
+            SetUniformInt("u_viewportIndex", i);
+            SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+            SetUniformMat4("u_view", viewportData[i].view);
+            SetUniformVec3("u_viewPos", viewportData[i].viewPos);
+
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+
+
+        //glm::vec3 pos = glm::vec3(36.0, 32.5, 37.0);
+        //DrawPoint(pos, RED);
+    }
 
     void LightingPassRE() {
         ProfilerOpenGLZoneFunction();
