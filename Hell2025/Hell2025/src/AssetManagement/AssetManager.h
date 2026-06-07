@@ -81,8 +81,8 @@ namespace AssetManager {
     Texture* GetTextureByName(const std::string& name);
     Texture* GetTextureByIndex(int index);
     int GetTextureIndexByName(const std::string& name, bool ignoreWarning = true);
-    int GetTextureCount();
-    void ClearCachedTexturePointers();
+    size_t GetTextureCount();
+    void ClearCachedTextureMaps();
     void ReserveTextureStorage(size_t textureCount);
 
     // Spritesheet Textures

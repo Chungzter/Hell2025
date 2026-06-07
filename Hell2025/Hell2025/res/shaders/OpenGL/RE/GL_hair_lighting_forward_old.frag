@@ -35,7 +35,6 @@ in flat int v_viewportIndex;
 uniform bool u_alphaDiscard;
 uniform bool u_flipv_normalMapY;
 uniform float u_renderResolutionScale;
-uniform int u_hairTextureIndex;
 
 const float u_spec1Intensity   = 0.25;
 const float u_spec2Intensity   = 0.1;
@@ -128,16 +127,11 @@ void main() {
 
     vec4 baseColor =   texture(baseColorSampler, v_texCoord);
     vec4 rma =         texture(sampler2D(textureSamplers[renderItem.rmaTextureIndex]), v_texCoord).rgba;
-    //vec3 flowMap =     texture(sampler2D(textureSamplers[renderItem.additionalTextureIndex0]), v_texCoord).rgb;
-    //float hairID =     texture(sampler2D(textureSamplers[renderItem.additionalTextureIndex1]), v_texCoord).r;
-    //float rootFactor = texture(sampler2D(textureSamplers[renderItem.additionalTextureIndex2]), v_texCoord).r;
+    vec4 hairTexture = texture(sampler2D(textureSamplers[renderItem.hairMapTextureIndex]), v_texCoord);
 
-    vec4 hairTexture = texture(sampler2D(textureSamplers[u_hairTextureIndex]), v_texCoord);
     vec3 flowMap = vec3(hairTexture.rg, 0);
     float hairID = hairTexture.b;
     float rootFactor = hairTexture.a;
-
-    //vec3 debugColor = vec3(rootFactor);
 
     float hairMipLevelRaw = ComputeHairMipLevel(v_texCoord, baseTextureSizePixels);
 

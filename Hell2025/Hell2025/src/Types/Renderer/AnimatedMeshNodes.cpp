@@ -53,6 +53,9 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         renderItem.baseColorTextureIndex = material->m_basecolor;
         renderItem.rmaTextureIndex = material->m_rma;
         renderItem.normalMapTextureIndex = material->m_normal;
+        renderItem.hairMapTextureIndex = material->m_hairMaps;
+        renderItem.opacityTextureIndex = material->m_opacity;
+
         renderItem.prevModelMatrix = renderItem.modelMatrix; // TODO: write logic for on the first frame where this is identity
         renderItem.modelMatrix = modelMatrix;
         renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
@@ -65,7 +68,6 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         //renderItem.furShellDistanceAttenuation = m_nodes[i].furShellDistanceAttenuation;
         renderItem.woundMaskTexutreIndex = m_woundMaskTextureIndices[i];
         renderItem.blockScreenSpaceBloodDecals = (int)true;
-        renderItem.opacityTextureIndex = material->m_opacity;
         renderItem.baseVertex = mesh->baseVertexGlobal;
         renderItem.baseIndex = mesh->baseIndex;
 

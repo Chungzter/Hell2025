@@ -71,7 +71,7 @@ struct RenderItem {
     float tintColorR = 1.0f;
     float tintColorG = 1.0f;
     float tintColorB = 1.0f;
-    int32_t UNUSED = 0;
+    int32_t hairMapTextureIndex = -1;
 };
 
 struct BindlessMeshInstance {
@@ -291,6 +291,7 @@ struct Material {
     int m_hairRootMap = 0;
     int m_hairBlendMap = 0;
     int m_opacity = 0;
+    int m_hairMaps = 0;
 };
 
 struct QueuedTextureBake {

@@ -11,9 +11,11 @@
 namespace AssetManager {
 
     std::unordered_map<std::string, Texture*> g_cachedTexturePointers;
+    std::unordered_map<std::string, int> g_cachedTextureIndices;
 
-    void ClearCachedTexturePointers() {
+    void ClearCachedTextureMaps() {
         g_cachedTexturePointers.clear();
+        g_cachedTextureIndices.clear();
     }
 
     void CompressMissingDDSTexutres() {
@@ -85,18 +87,28 @@ namespace AssetManager {
     }
 
     int GetTextureIndexByName(const std::string& name, bool ignoreWarning) {
-        std::unordered_map<std::string, int>& indexMap = GetTextureIndexMap();
-        auto it = indexMap.find(name);
-        if (it != indexMap.end()) {
+        auto it = g_cachedTextureIndices.find(name);
+        if (it != g_cachedTextureIndices.end()) {
             return it->second;
         }
-        if (!ignoreWarning) {
-            std::cout << "AssetManager::GetTextureIndexByName(const std::string& name) failed because name '" << name << "' was not found in g_textures\n";
+
+        std::vector<Texture>& textures = GetTextures();
+
+        for (int i = 0; i < textures.size(); i++) {
+            if (textures[i].GetFileInfo().name == name) {
+                g_cachedTextureIndices[name] = i;
+                return i;
+            }
         }
+        
+        if (!ignoreWarning) {
+            Logging::Fatal() << "AssetManager::GetTextureIndexByName(const std::string& name) failed because '" << name << "' does not exist\n";
+        }
+
         return -1;
     }
 
-    int GetTextureCount() {
+    size_t GetTextureCount() {
         return GetTextures().size();
     }
 }

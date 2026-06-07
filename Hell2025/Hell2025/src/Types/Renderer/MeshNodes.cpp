@@ -539,6 +539,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.renderItem.tintColorG = meshNode.tintColor.g;
         meshNode.renderItem.tintColorB = meshNode.tintColor.b;
         meshNode.renderItem.opacityTextureIndex = material->m_opacity;
+        meshNode.renderItem.hairMapTextureIndex = material->m_hairMaps;
         meshNode.renderItem.baseVertex = meshNode.baseVertex;
         meshNode.renderItem.baseIndex = meshNode.baseIndex;
         meshNode.renderItem.blendingMode = (int)meshNode.blendingMode;

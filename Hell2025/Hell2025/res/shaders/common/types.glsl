@@ -103,7 +103,7 @@ struct RenderItem {
     uint openableId;
     uint customId;
     int skinned;                        // True or false
-    int castShadows;                    // True or false
+    uint shadowBit;
 
     float emissiveR;
     float emissiveG;
@@ -128,7 +128,7 @@ struct RenderItem {
     float tintColorR;
     float tintColorG;
     float tintColorB;
-    int castCSMShadows;                 // True or false
+    int hairMapTextureIndex;
 };
 
 struct Light {

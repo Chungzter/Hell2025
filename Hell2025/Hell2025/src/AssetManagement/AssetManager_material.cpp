@@ -29,72 +29,72 @@ namespace AssetManager {
         }
     }
 
+    enum struct MaterialType {
+        ALB, // RGB: Base color
+        NRM, // RGB: Normal map
+        RMA, // R:   Roughness G: metallic B: ao
+        EMI, // RGB: Emissive
+        OPA, // RGB: Opacity
+        HAR, // RG:  flow map  G: strand   B: root factor
+        UNDEFINED
+    };
+
+    MaterialType GetMaterialType(const std::string& textureName) {
+        if (textureName.size() < 3) return MaterialType::UNDEFINED;
+
+        std::string_view suffix(textureName.data() + textureName.size() - 3, 3);
+
+        if (suffix == "ALB") return MaterialType::ALB;
+        if (suffix == "NRM") return MaterialType::NRM;
+        if (suffix == "RMA") return MaterialType::RMA;
+        if (suffix == "EMI") return MaterialType::EMI;
+        if (suffix == "OPA") return MaterialType::OPA;
+        if (suffix == "HAR") return MaterialType::HAR;
+
+        return MaterialType::UNDEFINED;
+    }
+
+    std::string GetMaterialName(const std::string& textureName) {
+        if (textureName.size() < 4) return "UNDEFINED";
+        return textureName.substr(0, textureName.size() - 4);
+    }
+
+    void SetFallbackIfMissing(int& textureIndex, const std::string& textureName) {
+        if (textureIndex == -1) {
+            textureIndex = GetTextureIndexByName(textureName);
+        }
+    }
+
     void BuildMaterials() {
         std::vector<Material>& materials = GetMaterials();
         std::vector<Texture>& textures = GetTextures();
 
-        // Defaults
-		int defaultNormal = -1;
-		int defaultRma = -1;
-        int white = -1;
-        int black = -1;
-
-        for (int i = 0; i < textures.size(); i++) {
-            if (textures[i].GetFileName() == "DefaultNRM") defaultNormal = i;
-			if (textures[i].GetFileName() == "DefaultRMA") defaultRma = i;
-            if (textures[i].GetFileName() == "Black")      black = i;
-            if (textures[i].GetFileName() == "White")      white = i;
-        }
-
-        // Look for textures with _ALB suffix, create a material, and search for accompanying _NRM & _RMA textures
+        // Start fresh
         materials.clear();
 
-        for (int i = 0; i < textures.size(); i++) {
-            Texture& texture = textures[i];
+        // For any texture with an ALB suffix, create a material, and store indices for accompanying material textures
+        for (Texture& texture : textures) {
+            MaterialType materialType= GetMaterialType(texture.GetFileName());
 
-            if (FileInfoIsAlbedoTexture(texture.GetFileInfo())) {
-                Material& material = materials.emplace_back(Material());
+            // If we found an Albedo texture then create a material
+            if (materialType == MaterialType::ALB) {
 
-                material.m_name = GetMaterialNameFromFileInfo(texture.GetFileInfo());
-                material.m_basecolor = i;
-				material.m_normal = defaultNormal;
-                material.m_rma = defaultRma;
-                material.m_emissive = black;
-                material.m_opacity = white;
-				material.m_hairFlowMap = black;
-                material.m_hairIdMap = black;
-                material.m_hairRootMap = black;
+                std::string materialName = GetMaterialName(texture.GetFileName());
 
-                for (int j = 0; j < textures.size(); j++) {
-                    if (textures[j].GetFileName() == material.m_name + "_ALB") {
-                        material.m_basecolor = j;
-                    }
-                    if (textures[j].GetFileName() == material.m_name + "_NRM") {
-                        material.m_normal = j;
-                    }
-					if (textures[j].GetFileName() == material.m_name + "_RMA") {
-						material.m_rma = j;
-					}
-                    if (textures[j].GetFileName() == material.m_name + "_EMI") {
-                        material.m_emissive = j;
-                    }
-					if (textures[j].GetFileName() == material.m_name + "_HAIR_FLOW") {
-						std::cout << textures[j].GetFileName() << " found\n";
-						material.m_hairFlowMap = j;
-					}
-					if (textures[j].GetFileName() == material.m_name + "_HAIR_ID") {
-						std::cout << textures[j].GetFileName() << " found\n";
-						material.m_hairIdMap = j;
-                    }
-                    if (textures[j].GetFileName() == material.m_name + "_HAIR_ROOT") {
-                        std::cout << textures[j].GetFileName() << " found\n";
-                        material.m_hairRootMap = j;
-                    }
-                    if (textures[j].GetFileName() == material.m_name + "_OPA") {
-                        std::cout << textures[j].GetFileName() << " found\n";
-                        material.m_opacity = j;
-                    }
-				}
+                Material& material = materials.emplace_back();
+                material.m_name = materialName;
+                material.m_basecolor = GetTextureIndexByName(materialName + "_ALB");
+                material.m_normal = GetTextureIndexByName(materialName + "_NRM");
+                material.m_rma = GetTextureIndexByName(materialName + "_RMA");
+                material.m_emissive = GetTextureIndexByName(materialName + "_EMI");
+                material.m_opacity = GetTextureIndexByName(materialName + "_OPA");
+                material.m_hairMaps = GetTextureIndexByName(materialName + "_HAR");
+
+                SetFallbackIfMissing(material.m_normal, "DefaultNRM");
+                SetFallbackIfMissing(material.m_rma, "DefaultRMA");
+                SetFallbackIfMissing(material.m_emissive, "Black");
+                SetFallbackIfMissing(material.m_opacity, "White");
+                SetFallbackIfMissing(material.m_hairMaps, "Black");
             }
         }
     }

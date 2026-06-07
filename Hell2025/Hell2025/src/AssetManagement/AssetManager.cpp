@@ -47,7 +47,6 @@ namespace AssetManager {
     std::vector<Texture> g_textures;
     std::vector<SkinnedMesh> g_skinnedMeshes;
     std::vector<SkinnedModel> g_skinnedModels;
-    std::unordered_map<std::string, int> g_textureIndexMap;
     std::unordered_map<std::string, int> g_materialIndexMap;
     std::unordered_map<std::string, int> g_modelIndexMap;
     std::vector<std::string> g_loadLog;
@@ -309,13 +308,9 @@ namespace AssetManager {
 
     void BuildIndexMaps() {
         g_modelIndexMap.clear();
-        g_textureIndexMap.clear();
         g_materialIndexMap.clear();
         for (int i = 0; i < g_models.size(); i++) {
             g_modelIndexMap[g_models[i].GetName()] = i;
-        }
-        for (int i = 0; i < g_textures.size(); i++) {
-            g_textureIndexMap[g_textures[i].GetFileInfo().name] = i;
         }
         for (int i = 0; i < g_materials.size(); i++) {
             g_materialIndexMap[g_materials[i].m_name] = i;
@@ -323,7 +318,7 @@ namespace AssetManager {
     }
 
     Texture& CreateNewTexture() {
-        ClearCachedTexturePointers();
+        ClearCachedTextureMaps();
         return g_textures.emplace_back();
     }
 
