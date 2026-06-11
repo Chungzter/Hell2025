@@ -13,6 +13,7 @@
 #include "Viewport/ViewportManager.h"
 #include "UI/UIBackEnd.h"
 #include "World/World.h"
+#include "Bvh/Cpu/CpuBvh.h"
 
 #include "Audio/MidiFileManager.h"
 #include <vector>
@@ -20,6 +21,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+
+#include "Types/House/HouseBvhRegion.h"
 
 namespace Debug {
     std::string g_text = "";
@@ -168,6 +171,8 @@ namespace Debug {
             static uint32_t lightIndex = 2;
             static bool even = true;
 
+            //static HouseBvhRegion houseBvhRegion;
+
             if (Input::KeyPressed(HELL_KEY_UP)) even =! even;
             if (Input::KeyPressed(HELL_KEY_LEFT)) lightIndex--;
             if (Input::KeyPressed(HELL_KEY_RIGHT)) lightIndex++;
@@ -176,6 +181,16 @@ namespace Debug {
             if (lightIndex == World::GetLightCount()) lightIndex = 0;
 
             Light* light = World::GetLightByIndex(lightIndex);
+
+            //if (Input::KeyPressed(HELL_KEY_DOWN)) {
+            //    glm::vec3 aabbMin = glm::vec3(-999.0f);
+            //    glm::vec3 aabbMax = glm::vec3(999.0f);
+            //    houseBvhRegion.Update(aabbMin, aabbMax);
+            //}
+            //
+            //if (houseBvhRegion.CpuBvhExists()) {
+            //    Bvh::Cpu::RenderMeshBvh(houseBvhRegion.GetCpuMeshBvhId(), YELLOW, glm::mat4(1.0f));
+            //}
 
             AABB cullBounds = AABB(light->GetCullBoundsMin(), light->GetCullBoundsMax());
             glm::vec4 color = glm::vec4(light->GetColor(), 1.0f);
@@ -194,8 +209,8 @@ namespace Debug {
             else dirs = Util::GenerateFibonacciCone(numRays, spreadAngleRadians, targetDir);
 
             for (const glm::vec3& dir : dirs) {
-                glm::vec3 endPoint = position + (dir * light->GetRadius());
-                Renderer::DrawLine(position, endPoint, color);
+                glm::vec3 endPoint = position + (dir * light->GetRadius()); 
+                Renderer::DrawLine(position, endPoint, glm::vec4(light->GetColor(), 1.0f));
             }
         }
 

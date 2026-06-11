@@ -3,11 +3,12 @@
 uniform mat4 u_view;
 uniform mat4 u_projectionView;
 
-const vec3 ORIGIN = vec3(36.0, 32.5, 37.0);
-//const vec3 ORIGIN = vec3(26.0, 26.5, 37.0);
+const vec3 ORIGIN = vec3(36.5, 32.5, 35.0);
 const float SCALE = 0.1;
 
 out vec2 v_uv;
+
+layout(std430, binding = 5) readonly buffer BubblePositionsBuffer { vec4 bubblePositions[]; };
 
 void main() {
     // Vertex positions
@@ -29,7 +30,10 @@ void main() {
     // Make it face the camera
     vec3 cameraRight = vec3(u_view[0][0], u_view[1][0], u_view[2][0]);
     vec3 cameraUp = vec3(u_view[0][1], u_view[1][1], u_view[2][1]);
-    vec3 worldPos = ORIGIN + cameraRight * quadPos.x * SCALE + cameraUp * quadPos.y * SCALE;
+    //vec3 worldPos = ORIGIN + cameraRight * quadPos.x * SCALE + cameraUp * quadPos.y * SCALE;
+
+    vec3 origin = bubblePositions[gl_InstanceID].xyz;
+    vec3 worldPos = origin + cameraRight * quadPos.x * SCALE + cameraUp * quadPos.y * SCALE;
 
     gl_Position = u_projectionView * vec4(worldPos, 1.0);
 }

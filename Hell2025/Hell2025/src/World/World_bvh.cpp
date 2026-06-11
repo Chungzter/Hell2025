@@ -17,7 +17,6 @@ namespace World {
 	void UpdateDynamicBvhScene();
 	void UpdateStaticBvhScene();
 
-
 	void UpdateBvhs() {
 		if (g_staticBvhSceneDirty) {
 			g_staticBvhSceneDirty = false;

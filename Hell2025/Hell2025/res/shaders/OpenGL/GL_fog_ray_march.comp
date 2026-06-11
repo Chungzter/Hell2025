@@ -5,9 +5,8 @@
 
 layout(local_size_x = 16, local_size_y = 16) in;
 
-layout (binding = 1) uniform sampler2D uDepth;
+layout (binding = 1) uniform sampler2D u_depthTexture;
 layout (binding = 2) uniform sampler3D uNoiseVol;
-layout (binding = 3) uniform sampler2D ViewSpaceDepthTexture;
 layout (binding = 4, rgba16f) uniform image2D OutputFogImage;
 
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
@@ -145,26 +144,6 @@ float ComputeNoiseScaleMultiplier(float t) {
     return mix(u_noiseScaleNearMult, u_noiseScaleFarMult, k);
 }
 
-void main2() {
-    ivec2 px = ivec2(gl_GlobalInvocationID.xy);
-    ivec2 resolution = imageSize(OutputFogImage);
-    if (px.x >= resolution.x || px.y >= resolution.y) return;
-
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, resolution, rendererData.splitscreenMode);
-    mat4 inverseProjectionView = viewportData[viewportIndex].inverseProjectionView;
-
-    ivec2 depthSize = textureSize(uDepth, 0);
-    ivec2 depthPx = ivec2((vec2(px) + 0.5) * vec2(depthSize) / vec2(resolution));
-    float depth = texelFetch(uDepth, depthPx, 0).r;
-    vec2 screenUV = (vec2(depthPx) + 0.5) / vec2(depthSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData[viewportIndex]);
-    vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
-    vec4 worldH = inverseProjectionView * clip;
-    vec3 worldPosition = worldH.xyz / max(worldH.w, 1e-6);
-
-    imageStore(OutputFogImage, px, vec4(worldPosition, 1.0));
-}
-
 // Slab method for ray-AABB intersection
 bool RayAABBIntersection(vec3 ro, vec3 rd, vec3 aabbMin, vec3 aabbMax, out float tNear, out float tFar) {
     vec3 invDir = 1.0 / rd;
@@ -189,21 +168,23 @@ void main() {
     ivec2 resolution = imageSize(OutputFogImage);
     if (px.x >= resolution.x || px.y >= resolution.y) return;
 
+    
+    //imageStore(OutputFogImage, px, vec4(0));
+    //return;
+
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, resolution, rendererData.splitscreenMode);
 
     // Ray setup
     vec3 origin = viewportData[viewportIndex].viewPos.xyz;
     vec2 screenUV = (vec2(px) + 0.5) / vec2(resolution);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData[viewportIndex]);
-    vec3 dir = RayDirectionFromViewportUV(viewportUV, viewportData[viewportIndex].inverseProjection, viewportData[viewportIndex].inverseView);
+    vec3 dir = RayDirectionFromViewportUV(viewportUV, viewportData[viewportIndex].inverseProjectionReverseZ, viewportData[viewportIndex].inverseView);
 
     // Depth reconstruction
-    ivec2 depthSize = textureSize(uDepth, 0);
-    ivec2 depthPx = ivec2((vec2(px) + 0.5) * vec2(depthSize) / vec2(resolution));
-    float depth = texelFetch(uDepth, depthPx, 0).r;
-    vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
-    vec4 worldH = viewportData[viewportIndex].inverseProjectionView * clip;
-    vec3 worldPos = worldH.xyz / max(worldH.w, 1e-6);
+    mat4 inverseProjectionViewReverseZ = viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    ivec2 depthPx = ivec2((vec2(px) + 0.5) * vec2(textureSize(u_depthTexture, 0)) / vec2(resolution));
+    float depth = texelFetch(u_depthTexture, depthPx, 0).r;
+    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionViewReverseZ);
 
     // Calculate distances
     float totalDist = dot(worldPos - origin, dir);
@@ -311,6 +292,6 @@ void main() {
         accAlpha += (1.0 - accAlpha) * dFog;
     }
 
-    accCol *= u_finalDampingFactor * 0.5;
+    accCol *= u_finalDampingFactor * 0.2;
     imageStore(OutputFogImage, px, vec4(accCol, accAlpha));
 }

@@ -6,10 +6,17 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Hell/Constants.h"
+#include "Hell/Logging.h"
+#include "Hell/UniqueID.h"
+
+#include "Physics/Physics.h"
 #include "Util.h"
-#include <Hell/Constants.h>
 
 namespace Ocean {
+
+    uint64_t g_waterPlaneUpFacingPhysicsID = 0;
+    uint64_t g_waterPlaneDownFacingPhysicsID = 0;
 
     FFTBand g_fftBands[2];
     OceanReadbackData g_oceanReadbackData;
@@ -64,6 +71,33 @@ namespace Ocean {
         g_oceanReadbackData.heightPlayer1 = g_oceanOriginY;
         g_oceanReadbackData.heightPlayer2 = g_oceanOriginY;
         g_oceanReadbackData.heightPlayer3 = g_oceanOriginY;
+
+    }
+
+    void CreatePhysicsPlane() {
+        if (g_waterPlaneUpFacingPhysicsID != 0) DestroyPhysicsPlane();
+
+        PhysicsFilterData filterData;
+        filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
+        filterData.collisionGroup = CollisionGroup::NO_COLLISION;
+        filterData.collidesWith = CollisionGroup::NO_COLLISION;
+
+        glm::vec3 planePosition = glm::vec3(0.0f, g_oceanOriginY, 0.0f);
+        glm::vec3 planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+
+        g_waterPlaneUpFacingPhysicsID = Physics::CreateRigidStaticPlane(planePosition, planeNormal, filterData);
+        g_waterPlaneDownFacingPhysicsID = Physics::CreateRigidStaticPlane(planePosition, planeNormal * glm::vec3(-1.0f), filterData);
+
+        PhysicsUserData physicsUserData;
+        physicsUserData.objectId = UniqueID::GetNextObjectId(ObjectType::WATER_PLANE);
+
+        Physics::SetRigidStaticUserData(g_waterPlaneUpFacingPhysicsID, physicsUserData);
+        Physics::SetRigidStaticUserData(g_waterPlaneDownFacingPhysicsID, physicsUserData);
+    }
+    
+    void DestroyPhysicsPlane() {
+        Physics::RemoveRigidStatic(g_waterPlaneUpFacingPhysicsID);
+        Physics::RemoveRigidStatic(g_waterPlaneDownFacingPhysicsID);
     }
 
     void ReComputeH0() {

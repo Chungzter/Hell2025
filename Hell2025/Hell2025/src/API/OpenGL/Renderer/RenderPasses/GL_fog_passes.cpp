@@ -3,6 +3,7 @@
 #include "API/OpenGL/GL_backend.h"
 #include "Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
+#include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 #include "Core/Game.h"
 
@@ -38,64 +39,38 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        OpenGLShader* rayMarchShader = GetShaderOLD("FogRayMarch");
-        OpenGLShader* compositeShader = GetShaderOLD("FogComposite");
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLFrameBuffer* fogFbo = GetFrameBufferOLD("Fog");
         OpenGLTexture3D* perlinNoiseTexture = GetTexture3D("PerlinNoise");
-        OpenGLFrameBuffer* fullSizeFBO = GetFrameBufferOLD("MiscFullSize");
 
-        if (!fullSizeFBO) return;
-        if (!rayMarchShader) return;
-        if (!compositeShader) return;
-        if (!gBuffer) return;
+        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer(gBufferName);
+
         if (!fogFbo) return;
         if (!perlinNoiseTexture) return;
 
-        glm::mat4 projection = viewportData[0].projection;
-        glm::mat4 view = viewportData[0].view;
-        glm::mat4 invViewProj = glm::inverse(projection * view);
-        glm::vec3 viewPos = viewportData[0].viewPos;
-
         static float time = 0.0f;
-        time += 1.0f / 60.0f;
+        time += Game::GetDeltaTime();
 
         static int noiseSeed = 0;
         noiseSeed++;
 
-        rayMarchShader->Bind();
-        rayMarchShader->SetVec3("uCameraPos", viewPos);
-        rayMarchShader->SetMat4("uInvViewProj", invViewProj);
-        rayMarchShader->SetFloat("u_time", time);
-        rayMarchShader->SetInt("u_noiseSeed", noiseSeed);
-
-        SplitscreenMode splitscreenMode = Game::GetSplitscreenMode();
-        bool isSplitscreen = splitscreenMode == SplitscreenMode::TWO_PLAYER;
-        rayMarchShader->SetInt("u_isSplitscreen", isSplitscreen);
-
-
-        BindTextureUnit(3, fullSizeFBO->GetColorAttachmentHandleByName("ViewspaceDepth"));
-
-        glBindImageTexture(4, fogFbo->GetColorAttachmentHandleByName("Color"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->GetDepthAttachmentHandle());
-
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_3D, perlinNoiseTexture->GetHandle());
-
+        // Ray march the fog
+        BindShader("FogRayMarch");
+        SetUniformFloat("u_time", time);
+        SetUniformInt("u_noiseSeed", noiseSeed);
+        BindImageTexture(4, fogFbo->GetColorAttachmentHandleByName("Color"), GL_WRITE_ONLY, GL_RGBA16F);
+        BindTextureUnit(1, gBuffer.GetDepthAttachmentHandle());
+        BindTextureUnit(2, perlinNoiseTexture->GetHandle());
 
         glDispatchCompute((fogFbo->GetWidth() + 15) / 16, (fogFbo->GetHeight() + 15) / 16, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-
         // Composite
-        compositeShader->Bind();
-        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, fogFbo->GetColorAttachmentHandleByName("Color"));
-        glDispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);
-        
+        BindShader("FogComposite");
+        BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
+        BindTextureUnit(1, fogFbo->GetColorAttachmentHandleByName("Color"));
+
+        glDispatchCompute((gBuffer.GetWidth() + 7) / 8, (gBuffer.GetHeight() + 7) / 8, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
 

@@ -78,6 +78,9 @@ namespace World {
         //    }
         //}
 
+        //static glm::vec3 p = glm::vec3(0.0f);
+        //Renderer::DrawPoint(p, BLUE);
+
 
         g_fleshHitHitTimer -= Game::GetDeltaTime();
         g_fleshHitHitTimer = std::max(g_fleshHitHitTimer, 0.0f);
@@ -144,6 +147,10 @@ namespace World {
                    // World::GetPictureFrames()[0].SetScale(glm::vec3(0.0f));
                 }
             }
+
+            //if (hitFound && UniqueID::GetType(objectId) == ObjectType::WATER_PLANE) {
+            //    p = hitPosition;
+            //}
 
 
             // Hit found?

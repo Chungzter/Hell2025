@@ -247,7 +247,7 @@ namespace AssetManager {
             texture.SetMinFilter(TextureFilter::LINEAR);
             texture.SetMagFilter(TextureFilter::NEAREST);
         }
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/spritesheets", { "png", "jpg", "tga" })) {
+        for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/spritesheets", { "png", "jpg", "tga", "tif" })) {
             Texture& texture = g_textures.emplace_back();
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);

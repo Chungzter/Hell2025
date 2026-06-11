@@ -114,6 +114,7 @@ enum class ObjectType : uint16_t {
     TRIM_SET,
     WALL,
     WALL_SEGMENT,
+    WATER_PLANE,
     WINDOW,
 
     ANIMATED_GAME_OBJECT,

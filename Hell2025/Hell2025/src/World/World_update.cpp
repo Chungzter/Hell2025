@@ -33,6 +33,12 @@ namespace World {
 
     uint64_t g_trapKingID = 0;
     uint64_t g_ratKidAO = 0;
+    std::vector<SpriteSheetObject> g_bubbleSpriteSheetObjects;
+
+
+    std::vector<SpriteSheetObject>& GetBubbleSpriteSheetObjects() {
+        return g_bubbleSpriteSheetObjects;
+    }
 
     AnimatedGameObject* GetTrapKingAO() {
         return GetAnimatedGameObjectByObjectId(g_trapKingID);
@@ -54,13 +60,14 @@ namespace World {
         ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.23f));
         ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle3", 1.0f);
 		//ratKidAO->PrintMeshNames();
+
     }
     
     static float DegToRad(float degrees) { return degrees * (HELL_PI / 180.0f); }
 
     void Update(float deltaTime) {
 
-
+        HackTest();
         //static bool rotate = false;
         //
         //if (Input::KeyPressed(HELL_KEY_P)) {
@@ -335,37 +342,6 @@ namespace World {
         }
 
 
-        //auto pos = glm::vec3(31.0f, 30.4f, 38.25f);
-        //Renderer::DrawPoint(pos, RED);
-
-        /*
-        {
-        // Visualize dot product arc
-            glm::vec3 forward = Game::GetLocalPlayerByIndex(0)->GetCameraForward();
-            forward.y = 0.0f;
-            forward = glm::normalize(forward);
-            glm::vec3 origin = Game::GetLocalPlayerByIndex(0)->GetFootPosition();
-            float dotThreshold = 0.7f;
-            float angle = acos(dotThreshold);
-            glm::mat4 rotRight = glm::rotate(glm::mat4(1.0f), -angle, glm::vec3(0, 1, 0));
-            glm::mat4 rotLeft = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 1, 0));
-            glm::vec3 rightEdge = glm::vec3(rotRight * glm::vec4(forward, 0.0f));
-            glm::vec3 leftEdge = glm::vec3(rotLeft * glm::vec4(forward, 0.0f));
-            float length = 2.0f;
-            glm::vec4 color = RED;
-
-            AnimatedGameObject* roo = GetAnimatedGameObjectByObjectId(g_rooAnimatedGameObject);
-            glm::vec3 target = roo->_transform.position;
-            glm::vec3 toTarget = glm::normalize(target - origin);
-            float dotValue = glm::dot(forward, toTarget);
-            if (dotValue >= dotThreshold) {
-                color = GREEN;
-            }
-            Renderer::DrawLine(origin, origin + forward * length, color);     // center
-            Renderer::DrawLine(origin, origin + leftEdge * length, color);    // left limit
-            Renderer::DrawLine(origin, origin + rightEdge * length, color);   // right limit
-        }*/
-
         ProcessBullets();
         LazyDebugSpawns();
 
@@ -407,10 +383,6 @@ namespace World {
             player->UpdateWeaponAttachments();
 			player->UpdateSpriteSheets(deltaTime);
         }
-
-        //lights[2].SetColor(DEFAULT_LIGHT_COLOR);
-        //GetLights()[2].SetStrength(2.0f);
-        //GetLights()[2].SetRadius(3.5f);
 
         if (Input::KeyPressed(HELL_KEY_BACKSPACE)) {
             for (BulletCasing& bulletCasing : GetBulletCasings()) {

@@ -426,7 +426,7 @@ namespace Bvh::Cpu {
 	}
 
 	glm::vec3 BvhVec3ToGlmVec3(MadmannVec3 vec) {
-		return { vec.values[0], vec.values[2], vec.values[2] };
+		return { vec.values[0], vec.values[1], vec.values[2] };
 	}
 
 	MadmannVec3 GlmVec3ToBvhVec3(glm::vec3 vec) {

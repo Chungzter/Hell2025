@@ -271,6 +271,7 @@ namespace OpenGLRenderer {
     void ClearSSBORange(const std::string& name, size_t offset, size_t size);
     void ReserveSSBO(const std::string& name, size_t size);
     void BindDispatchBuffer(const std::string& name);
+    void BindDrawIndirectBuffer(const std::string& name);
     OpenGLSSBO* GetSSBO(const std::string& name);
 
     // Misc
@@ -308,6 +309,8 @@ namespace OpenGLRenderer {
     void BlitFrameBufferDepth(OpenGLFrameBuffer* srcFrameBuffer, OpenGLFrameBuffer* dstFrameBuffer, BlitRect srcRect, BlitRect dstRect);
     void BlitToDefaultFrameBuffer(OpenGLFrameBuffer* srcFrameBuffer, const char* srcName, GLbitfield mask, GLenum filter);
     void BlitToDefaultFrameBuffer(OpenGLFrameBuffer* srcFrameBuffer, const char* srcName, BlitRect srcRect, BlitRect dstRect, GLbitfield mask, GLenum filter);
+    void BlitShadowCubeMapArray(OpenGLShadowCubeMapArray& src, OpenGLShadowCubeMapArray& dst, int srcLayerIndex, int dstLayerIndex);
+    
     RenderItem2D CreateRenderItem2D(const std::string& textureName, glm::ivec2 location, glm::ivec2 viewportSize, Alignment alignment, glm::vec3 colorTint = WHITE, glm::ivec2 size = glm::ivec2(-1, -1));
     BlitRect BlitRectFromFrameBufferViewport(OpenGLFrameBuffer* framebuffer, Viewport* viewport);
     GLint CreateQuadVAO();

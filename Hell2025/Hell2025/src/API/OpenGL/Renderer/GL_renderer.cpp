@@ -99,7 +99,7 @@ namespace OpenGLRenderer {
 
         // Allocate shadow map array memory
 		g_shadowCubeMapArrays["HiRes"] = OpenGLShadowCubeMapArray();
-		g_shadowCubeMapArrays["HiRes"].Init(SHADOWMAP_HI_RES_COUNT, SHADOW_MAP_HI_RES_SIZE);
+		g_shadowCubeMapArrays["HiRes"].Init(SHADOWMAP_HI_RES_COUNT, 1024);
 
         // Moon light shadow maps
         float depthMapResolution = SHADOW_MAP_CSM_SIZE;
@@ -908,7 +908,7 @@ namespace OpenGLRenderer {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(&fbo, viewport);
-                    MultiDrawIndirect(drawCommands[i]);
+                MultiDrawIndirect(drawCommands[i]);
             }
         }
     }
@@ -1070,6 +1070,12 @@ namespace OpenGLRenderer {
     void BindDispatchBuffer(const std::string& name) {
         if (OpenGLSSBO* ssbo = GetSSBO(name)) {
             glBindBuffer(GL_DISPATCH_INDIRECT_BUFFER, ssbo->GetHandle());
+        }
+    }
+
+    void BindDrawIndirectBuffer(const std::string& name) {
+        if (OpenGLSSBO* ssbo = GetSSBO(name)) {
+            glBindBuffer(GL_DRAW_INDIRECT_BUFFER, ssbo->GetHandle());
         }
     }
 

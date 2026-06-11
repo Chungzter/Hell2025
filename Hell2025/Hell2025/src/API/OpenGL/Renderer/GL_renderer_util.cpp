@@ -240,4 +240,25 @@ namespace OpenGLRenderer {
 
         framebuffer->ClearAttachmenSubRegionUInt(attachmentName, xOffset, yOffset, width, height, r, g, b, a);
     }
+
+    void BlitShadowCubeMapArray(OpenGLShadowCubeMapArray& src, OpenGLShadowCubeMapArray& dst, int srcLayerIndex, int dstLayerIndex) {
+        if (srcLayerIndex < 0 || dstLayerIndex < 0) return;
+        if (srcLayerIndex == dstLayerIndex && src.GetDepthTexture() == dst.GetDepthTexture()) return;
+
+        if (src.GetSize() != dst.GetSize()) {
+            std::cout << "BlitShadowCubeMapArray(): source and destination sizes differ\n";
+            return;
+        }
+
+        if (srcLayerIndex >= src.GetLayerCount() || dstLayerIndex >= dst.GetLayerCount()) {
+            std::cout << "BlitShadowCubeMapArray(): cubemap index out of range\n";
+            return;
+        }
+
+        const GLint srcLayer = srcLayerIndex * 6;
+        const GLint dstLayer = dstLayerIndex * 6;
+        const GLsizei size = src.GetSize();
+
+        glCopyImageSubData(src.GetDepthTexture(), GL_TEXTURE_CUBE_MAP_ARRAY, 0, 0, 0, srcLayer, dst.GetDepthTexture(), GL_TEXTURE_CUBE_MAP_ARRAY, 0, 0, 0, dstLayer, size, size, 6);
+    }
 }

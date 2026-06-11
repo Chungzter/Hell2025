@@ -209,6 +209,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   <ItemGroup>
     <ClCompile Include="src\API\OpenGL\GL_backend.cpp" />
     <ClCompile Include="src\API\OpenGL\GL_util.cpp" />
+    <ClCompile Include="src\API\OpenGL\GL_memory_tracker..cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\ComputePasses\GL_blit_road.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\ComputePasses\GL_compute_ftt.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\ComputePasses\GL_compute_skinning.cpp" />
@@ -392,6 +393,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Types\Game\TypeWriter.cpp" />
     <ClCompile Include="src\Types\House\DeadLock.cpp" />
     <ClCompile Include="src\Types\House\Fireplace.cpp" />
+    <ClCompile Include="src\Types\House\HouseBvhRegion.cpp" />
     <ClCompile Include="src\Types\House\TrimSet.cpp" />
     <ClCompile Include="src\Types\Mirror.cpp" />
     <ClCompile Include="src\Types\Exterior\Fence.cpp" />
@@ -554,6 +556,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\World\World.cpp" />
     <ClCompile Include="src\World\World_bvh.cpp" />
     <ClCompile Include="src\World\World_create_info.cpp" />
+    <ClCompile Include="src\World\World_hack_test.cpp" />
     <ClCompile Include="src\World\World_house.cpp" />
     <ClCompile Include="src\World\World_process_bullets.cpp" />
     <ClCompile Include="src\World\World_render_submit.cpp" />
@@ -582,6 +585,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="vendor\VkBootstrap\VkBootstrap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\shaders\common\distance_fog.glsl" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.frag" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.geom" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.vert" />
@@ -594,6 +598,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\OpenGL\GL_shadow_map_flashlight.frag" />
     <None Include="res\shaders\OpenGL\GL_spirtesheet.frag" />
     <None Include="res\shaders\OpenGL\GL_spirtesheet.vert" />
+    <None Include="res\shaders\OpenGL\RE\GL_bubbles_new.frag" />
+    <None Include="res\shaders\OpenGL\RE\GL_bubbles_new.vert" />
     <None Include="res\shaders\OpenGL\Water\GL_ocean_compute_underwater_flags.comp" />
     <None Include="res\shaders\terrain.frag" />
     <None Include="res\shaders\terrain.vert" />
@@ -608,6 +614,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   <ItemGroup>
     <ClInclude Include="..\..\..\Work\GLRaytracing\BVH\src\OpenGL\Types\GL_timer.h" />
     <ClInclude Include="res\shaders\OpenGL\RE\test.h" />
+    <ClInclude Include="src\API\OpenGL\GL_memory_tracker.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_attachments.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_shadow_map_array.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_texture_3d.h" />
@@ -706,6 +713,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Types\Game\TypeWriter.h" />
     <ClInclude Include="src\Types\House\DeadLock.h" />
     <ClInclude Include="src\Types\House\Fireplace.h" />
+    <ClInclude Include="src\Types\House\HouseBvhRegion.h" />
     <ClInclude Include="src\Types\House\TrimSet.h" />
     <ClInclude Include="src\Types\Mirror.h" />
     <ClInclude Include="src\Types\Effects\ScreenSpaceBloodDecal.h" />

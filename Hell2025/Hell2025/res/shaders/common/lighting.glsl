@@ -197,7 +197,7 @@ vec3 gridSamplingDisk[20] = vec3[](
    vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
 );
 
-float ShadowCalculation(int lightIndex, vec3 lightPos, float lightRadius, vec3 fragPos, vec3 viewPos, vec3 Normal, samplerCubeArray shadowCubeMapArray) {
+float ShadowCalculationOLD(int lightIndex, vec3 lightPos, float lightRadius, vec3 fragPos, vec3 viewPos, vec3 Normal, samplerCubeArray shadowCubeMapArray) {
     vec3 lightToFrag = fragPos - lightPos;
     vec3 L = normalize(-lightToFrag);
     float currentDepth = length(lightToFrag);
@@ -226,8 +226,135 @@ float ShadowCalculation(int lightIndex, vec3 lightPos, float lightRadius, vec3 f
     return 1.0 - shadow;
 }
 
+float SamplePointShadowReceiverPlane(
+    int lightIndex,
+    vec3 lightToFrag,
+    vec3 receiverNormal,
+    float currentDepth,
+    float lightRadius,
+    float bias,
+    vec3 sampleDir,
+    float maxPlaneDepthDelta,
+    samplerCubeArrayShadow shadowCubeMapArray
+) {
+    vec3 sampleRay = normalize(sampleDir);
 
-float ShadowCalculationFast(int lightIndex, vec3 lightPos, float lightRadius, vec3 fragPos, vec3 viewPos, vec3 Normal, samplerCubeArray shadowCubeMapArray) {
+    float receiverDepth = currentDepth;
+    float denominator = dot(receiverNormal, sampleRay);
+
+    if (denominator < -0.03) {
+        receiverDepth = dot(receiverNormal, lightToFrag) / denominator;
+        receiverDepth = clamp(receiverDepth, currentDepth - maxPlaneDepthDelta, currentDepth + maxPlaneDepthDelta);
+    }
+
+    float compareDepth = clamp((receiverDepth - bias) / lightRadius, 0.0, 1.0);
+    return texture(shadowCubeMapArray, vec4(sampleDir, float(lightIndex)), compareDepth);
+}
+
+
+float ShadowCalculationSkin(int lightIndex, vec3 lightPos, float lightRadius, vec3 fragPos, vec3 viewPos, vec3 Normal, samplerCubeArrayShadow shadowCubeMapArray) {
+vec3 lightToFrag = fragPos - lightPos;
+    vec3 L = normalize(-lightToFrag);
+    float currentDepth = length(lightToFrag);
+    float far_plane = lightRadius;
+
+    float cosTheta = clamp(dot(Normal, L), 0.0, 1.0);
+    float bias = max(0.05 * (1.0 - cosTheta), 0.005);
+
+    int samples = 20;
+    float viewDistance = length(viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 200.0;
+    float compareDepth = clamp((currentDepth - bias) / far_plane, 0.0, 1.0);
+
+    float visibility = 0.0;
+
+    for (int i = 0; i < samples; ++i) {
+        vec3 sampleDir = lightToFrag + gridSamplingDisk[i] * diskRadius;
+        visibility += texture(shadowCubeMapArray, vec4(sampleDir, float(lightIndex)), compareDepth);
+    }
+
+    return visibility / float(samples);
+}
+
+float ShadowCalculationNEW(int lightIndex, vec3 lightPos, float lightRadius, vec3 fragPos, vec3 viewPos, vec3 Normal, samplerCubeArrayShadow shadowCubeMapArray) {
+
+    vec3 lightToFrag = fragPos - lightPos;
+   float currentDepth = length(lightToFrag);
+   vec3 rayDir = lightToFrag / currentDepth;
+   vec3 L = -rayDir;
+  
+   vec3 receiverNormal = normalize(Normal);
+   if (dot(receiverNormal, L) < 0.0) {
+       receiverNormal = -receiverNormal;
+   }
+  
+   float cosTheta = clamp(dot(receiverNormal, L), 0.0, 1.0);
+   float bias = max(0.05 * (1.0 - cosTheta), 0.005);
+  
+   float shadowMapSize = float(textureSize(shadowCubeMapArray, 0).x);
+   float texelWorldSize = currentDepth * 2.0 / shadowMapSize;
+  
+   float softness = 2.25;
+   float grazingScale = smoothstep(0.08, 0.45, cosTheta);
+   float diskRadius = texelWorldSize * mix(0.75, softness, grazingScale);
+   float maxPlaneDepthDelta = max(diskRadius * 8.0, 0.02);
+  
+   vec3 basisSeed = abs(rayDir.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+   vec3 right = normalize(cross(basisSeed, rayDir));
+   vec3 up = cross(rayDir, right);
+  
+   vec2 poissonDisk[8] = vec2[](
+       vec2( 0.527,  0.085),
+       vec2(-0.406,  0.331),
+       vec2( 0.226, -0.543),
+       vec2(-0.589, -0.205),
+       vec2( 0.703, -0.391),
+       vec2(-0.168,  0.743),
+       vec2(-0.812,  0.125),
+       vec2( 0.311,  0.379)
+   );
+  
+   float visibility = 0.0;
+  
+   visibility += SamplePointShadowReceiverPlane(lightIndex, lightToFrag, receiverNormal, currentDepth, lightRadius, bias, lightToFrag, maxPlaneDepthDelta, shadowCubeMapArray) * 2.0;
+  
+   for (int i = 0; i < 8; ++i) {
+       vec2 disk = poissonDisk[i] * diskRadius;
+       vec3 sampleDir = lightToFrag + right * disk.x + up * disk.y;
+       visibility += SamplePointShadowReceiverPlane(lightIndex, lightToFrag, receiverNormal, currentDepth, lightRadius, bias, sampleDir, maxPlaneDepthDelta, shadowCubeMapArray);
+   }
+  
+   return visibility * 0.1;
+
+  // vec3 lightToFrag = fragPos - lightPos;
+  // vec3 L = normalize(-lightToFrag);
+  // float currentDepth = length(lightToFrag);
+  // float far_plane = lightRadius;
+  // float shadow = 0.0;
+  // 
+  // // Bias
+  // float cosTheta = clamp(dot(Normal, L), 0.0, 1.0);
+  // float bias = max(0.05 * (1.0 - cosTheta), 0.005);
+  // 
+  // int samples = 20;
+  // float viewDistance = length(viewPos - fragPos);
+  // float diskRadius = (1.0 + (viewDistance / far_plane)) / 200.0;
+  // 
+  // for (int i = 0; i < samples; ++i) {
+  //     vec3 sampleDir = lightToFrag + gridSamplingDisk[i] * diskRadius;
+  //     float compareDepth = (currentDepth - bias) / far_plane;
+  // 
+  //     float visibility = texture(shadowCubeMapArray, vec4(sampleDir, float(lightIndex)), compareDepth);
+  // 
+  //     shadow += 1.0 - visibility;
+  // }
+  // 
+  // shadow /= float(samples);
+  // return 1.0 - shadow;
+}
+
+
+float ShadowCalculationFastOLD(int lightIndex, vec3 lightPos, float lightRadius, vec3 fragPos, vec3 viewPos, vec3 Normal, samplerCubeArray shadowCubeMapArray) {
     vec3 lightDir = fragPos - lightPos;
     float currentDepth = length(lightDir);
     float far_plane = lightRadius;
@@ -250,7 +377,7 @@ float ShadowCalculationFast(int lightIndex, vec3 lightPos, float lightRadius, ve
 }
 
 
-float ShadowCalculationMedium(int lightIndex, vec3 lightPos, float lightRadius, vec3 fragPos, vec3 viewPos, vec3 Normal, samplerCubeArray shadowCubeMapArray) {
+float ShadowCalculationMedium(int lightIndex, vec3 lightPos, float lightRadius, vec3 fragPos, vec3 viewPos, vec3 Normal, samplerCubeArrayShadow shadowCubeMapArray) {
     vec3 lightToFrag = fragPos - lightPos;
     vec3 L = normalize(-lightToFrag);
     float currentDepth = length(lightToFrag);
@@ -259,20 +386,19 @@ float ShadowCalculationMedium(int lightIndex, vec3 lightPos, float lightRadius, 
 
     // Bias
     float cosTheta = clamp(dot(Normal, L), 0.0, 1.0);
-    float bias = max(0.05 * (1.0 - cosTheta), 0.005); 
+    float bias = max(0.05 * (1.0 - cosTheta), 0.005);
 
     int samples = 8;
     float viewDistance = length(viewPos - fragPos);
     float diskRadius = (1.0 + (viewDistance / far_plane)) / 200.0;
 
     for (int i = 0; i < samples; ++i) {
-        // Sample with offset
-        float closestDepth = texture(shadowCubeMapArray, vec4(lightToFrag + gridSamplingDisk[i] * diskRadius, lightIndex)).r;
-        closestDepth *= far_plane;
+        vec3 sampleDir = lightToFrag + gridSamplingDisk[i] * diskRadius;
+        float compareDepth = (currentDepth - bias) / far_plane;
 
-        if (currentDepth - bias > closestDepth) {
-            shadow += 1.0;
-        }
+        float visibility = texture(shadowCubeMapArray, vec4(sampleDir, float(lightIndex)), compareDepth);
+
+        shadow += 1.0 - visibility;
     }
 
     shadow /= float(samples);

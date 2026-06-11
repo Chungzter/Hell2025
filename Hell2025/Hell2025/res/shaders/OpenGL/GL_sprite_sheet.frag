@@ -19,5 +19,8 @@ void main() {
     vec4 color = texture2D(Texture, TexCoord);
     vec4 colorNext = texture2D(Texture, TexCoordNext);
     FragOut = mix(color, colorNext, u_mixFactor);
+    
     //FragOut.rgb = pow(FragOut.rgb, vec3(2.2));
+    //FragOut.rgb = vec3(TexCoord, 0);
+    //FragOut.a = 1.0;
 }

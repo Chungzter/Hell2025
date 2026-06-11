@@ -1,16 +1,19 @@
 #version 460
 
+#include "../../common/lighting.glsl"
+#include "../../common/types.glsl"
+
 layout(location = 0) out vec4 ColorOut;
-
 in vec2 v_uv;
-
 uniform mat4 u_view;
 uniform float u_time;
 
-// bringing in the cubemap exactly like the ocean shader
 layout (binding = 0) uniform samplerCube cubeMap;
 
-// -90 degrees Y rotation
+readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+
+// -90 degrees y rotation
 const mat3 kRotateYMinus90 = mat3(
     0.0, 0.0, -1.0,
     0.0, 1.0,  0.0,
@@ -93,7 +96,6 @@ vec3 thinFilm(float d_nm, float cosTheta) {
     return col * 0.1;
 }
 
-// pulling directly from the cubemap and applying linear workflow
 vec3 sampleEnvironment(vec3 dir) {
     vec3 dir_rotated = kRotateYMinus90 * dir;
     vec3 env = texture(cubeMap, dir_rotated).rgb;
@@ -105,11 +107,11 @@ vec3 refractedEnv(vec3 rd, vec3 n, float ior) {
     vec3 rR = refract(rd, n, 1.0 / (ior - 0.018)); if (dot(rR, rR) < 0.01) rR = r;
     vec3 rB = refract(rd, n, 1.0 / (ior + 0.018)); if (dot(rB, rB) < 0.01) rB = r;
     
-    // splitting the rgb channels across different IORs for the chromatic aberration
     return vec3(sampleEnvironment(rR).r, sampleEnvironment(r).g, sampleEnvironment(rB).b);
 }
 
 float filmThickness(vec3 p, vec3 center, float radius) {
+    return 0;
     float localY = (p.y - center.y) / radius;
     float g      = clamp((-localY + 1.0) * 0.5, 0.0, 1.0);
     float base   = mix(150.0, 700.0, pow(g, 1.5)) * 1.0;
@@ -144,30 +146,63 @@ void main() {
     float cos0 = max(dot(n, vd), 0.0);
     float fresnel = pow(1.0 - cos0, 3.0);
 
-    float thick = 0;filmThickness(worldPos, center, radius);
+    float thick = filmThickness(worldPos, center, radius);
     vec3 irid = thinFilm(thick, cos0);
 
-    // grabbing reflections directly from the cubemap now
     vec3 reflCol = sampleEnvironment(reflect(-vd, n));
     vec3 refrCol = refractedEnv(-vd, n, 1.33);
 
-    vec3 lA = normalize(vec3(0.8, 1.2, 1.5));
-    vec3 lB = normalize(vec3(-0.7, 0.8, -0.5));
-    float specA = pow(max(dot(n, normalize(lA + vd)), 0.0), 512.0) * 5.0;
-    float specB = pow(max(dot(n, normalize(lB + vd)), 0.0), 256.0) * 1.8;
+    vec3 totalSpecular = vec3(0.0);
+    float totalOpacity = 0;
+
+    vec3 L_moon = normalize(rendererData.moonLightDir.xyz);
+    vec3 H_moon = normalize(L_moon + vd);
+    float moonSpec = pow(max(dot(n, H_moon), 0.0), 512.0) * 5.0;
+    
+    totalSpecular += MOON_LIGHT_COLOR * moonSpec;
+    totalOpacity += moonSpec * 0.4;
+    totalOpacity += fresnel * 0.75 + length(irid) * 0.12; // Frensel
+
+    //totalSpecular = vec3(0);
+    //totalOpacity = 0;
+
+    for (int i = 0; i < 2; i++) {
+        float modifier = viewportDataArr[i].flashlightModifer;
+
+        if (modifier > 0.05) {
+            vec3 flashColor = vec3(0.9, 0.95, 1.1);
+            
+            vec3 spotLightPos = viewportDataArr[i].viewPos.xyz;
+            vec3 spotLightDir = normalize(viewportDataArr[i].cameraForward.xyz);
+            vec3 L_flash = -spotLightDir; 
+
+            vec3 H_flash = normalize(L_flash + vd);
+            float flashSpec = pow(max(dot(n, H_flash), 0.0), 512.0) * 5.0;
+
+
+            // tweakable for inverse square distance attenuation
+            float flashFalloff = 0.005; 
+            float dist = length(spotLightPos - worldPos);
+            float attenuation = 1.0 / (1.0 + (flashFalloff * dist * dist));
+            attenuation = 1.0;
+
+            totalSpecular += flashColor * flashSpec * attenuation;
+            totalOpacity += flashSpec * 0.4 * attenuation;
+            totalOpacity += fresnel * 0.75 + length(irid) * 0.12; // Frensel
+        }
+    }
 
     vec3 surface = refrCol * (1.0 - fresnel)
                  + reflCol * fresnel
                  + irid * 0.55
-                 + vec3(1.0, 0.98, 0.95) * specA
-                 + vec3(0.85, 0.91, 1.0) * specB;
+                 + totalSpecular;
 
-    float opacity = clamp(fresnel * 0.75 + length(irid) * 0.12 + specA * 0.4 + specB * 0.2, 0.03, 0.90);
+    float opacity = clamp(totalOpacity, 0.03, 0.90);
 
     vec3 color = surface / (surface + 0.5) * 1.4;
     color = pow(max(color, 0.0), vec3(0.92));
 
     opacity *= 0.25;
-
+    
     ColorOut = vec4(color, opacity);
 }

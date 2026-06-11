@@ -6,7 +6,7 @@ readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uve
 
 layout(binding = 5) uniform sampler2D u_indirectDiffuseTexture;
 layout(binding = 7) uniform sampler2DArray woundMaskTextureArray;
-layout(binding = 9) uniform samplerCubeArray u_shadowMapArray;
+layout(binding = 9) uniform samplerCubeArrayShadow u_shadowMapArray;
 
 layout(early_fragment_tests) in;
 
@@ -633,7 +633,7 @@ void main() {
 
     float lightAttenuation = smoothstep(lightRadius, 0.0, lightDistance) * lightStrength;
 
-    float lightShadow = ShadowCalculation(i, lightPos, lightRadius, v_worldPos.xyz, viewPos, n, u_shadowMapArray);
+    float lightShadow = ShadowCalculationNEW(i, lightPos, lightRadius, v_worldPos.xyz, viewPos, n, u_shadowMapArray);
     vec3 lightColor = clamp(lightCol, 0.0, 1.0);
     float lightVisibility = lightAttenuation * lightShadow;
 

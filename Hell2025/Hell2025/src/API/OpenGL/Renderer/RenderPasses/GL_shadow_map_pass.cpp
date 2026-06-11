@@ -60,8 +60,6 @@ namespace OpenGLRenderer {
 
             MultiDrawIndirect(flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i]);
 
-
-
             // Heightfield chunks
             std::vector<HeightMapChunk>& chunks = World::GetHeightMapChunks();
             OpenGLHeightMapMesh& heightMapMesh = OpenGLBackEnd::GetHeightMapMesh();
@@ -188,10 +186,6 @@ namespace OpenGLRenderer {
 
 
 
-
-
-
-
         // HAIR
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
@@ -222,7 +216,6 @@ namespace OpenGLRenderer {
 
                 glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, hiResShadowMaps->GetDepthTexture(), 0, layer);
 
-               
 
 
 

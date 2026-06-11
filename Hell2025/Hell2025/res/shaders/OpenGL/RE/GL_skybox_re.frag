@@ -48,6 +48,8 @@ void main() {
     vec3 rayFogColor = mix(horizonColor, downColor, colorT) * amount;
     vec3 outColor = mix(skyLinear, rayFogColor, fogT);
 
+    // outColor *= 0.75;
+
     // Write output
     FinalLightingOut = vec4(outColor, 1.0);
 }

@@ -20,6 +20,8 @@ namespace Ocean {
     void SetAmplitude(float amplitude);
     void SetCrossWindDampingCoefficient(float crossWindDampingCoefficient);
     void SetSmallWavesDampingCoefficient(float smallWavesDampingCoefficient);
+    void CreatePhysicsPlane();
+    void DestroyPhysicsPlane();
 
     std::string FFTBandToString(int bandIndex);
 

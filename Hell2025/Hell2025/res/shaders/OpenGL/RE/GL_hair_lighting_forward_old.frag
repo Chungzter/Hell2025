@@ -5,7 +5,7 @@ readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uve
 
 layout(binding = 5) uniform sampler2D u_indirectDiffuseTexture;
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
-layout (binding = 9) uniform samplerCubeArray shadowMapArray;
+layout (binding = 9) uniform samplerCubeArrayShadow shadowMapArray;
 layout (binding = 11) uniform sampler2D hairFlowMap;
 layout (binding = 12) uniform sampler2D hairIdMap;
 layout (binding = 13) uniform sampler2D hairRootMap;

@@ -158,7 +158,7 @@ void main() {
     }
 
     float roughness = 0.03;
-    const vec3 F0 = vec3(0.02); // should be 0.02 really
+    vec3 F0 = vec3(0.02); // should be 0.02 really
 
     // Precompute SSS height terms once (used by moon + flashlight)
     float h = WorldPos.y - u_oceanOriginY;
@@ -166,55 +166,42 @@ void main() {
     float u_maxHeight = u_oceanOriginY + 0.5;
     float hNorm = clamp((h - u_minHeight) / (u_maxHeight - u_minHeight), 0.0, 1.0);
 
-
-    
     vec3 surfaceLighting = vec3(0.0);
 
-    // Moon light (direct spec + IBL + SSS)
-    //{
-        //vec3 moonColor = vec3(1.0, 0.9, 0.9);
-        vec3 moonColor = GetMoonLightColor();
-        vec3 moonLightDir = rendererData.moonLightDir.xyz;
-        vec3 L = moonLightDir;
+    // Moonlight
+    vec3 moonColor = GetMoonLightColor();
+    vec3 moonLightDir = rendererData.moonLightDir.xyz;
+    vec3 L = moonLightDir;
+    if (!gl_FrontFacing) L.x *= -1;
+    float NoL = clamp(dot(N, L), 0.0, 1.0);
+    vec3 spec_direct = microfacetSpecular(L, V_view, N, F0, roughness);
+    vec3 Lo_direct = spec_direct * moonColor * NoL;
+    vec3 R = reflect(-V_view, N);
+    vec3 R_rotated = kRotateYMinus90 * R;
+    vec3 kS_IBL = fresnelSchlick(clamp(dot(N, V_view), 0.0, 1.0), F0);
+    vec3 reflection_IBL = texture(cubeMap, R_rotated).rgb ;//* 0.75;
+    reflection_IBL = pow(reflection_IBL, vec3(2.2));
+    vec3 specular_IBL = reflection_IBL * kS_IBL;
+    vec3 diffuse_IBL = moonColor * WATER_ALBEDO * 0.0125;
 
-        if (!gl_FrontFacing) {
-            L.x *= -1;
-        }
+    surfaceLighting += Lo_direct;
+    surfaceLighting += diffuse_IBL;
+    surfaceLighting += specular_IBL;
 
-        float NoL = clamp(dot(N, L), 0.0, 1.0);
+    // SSS
+    float sssStrength = 0.5;
+    if (!gl_FrontFacing) sssStrength = 3; // Boost SSS strength when viewed underwater
+    float minR = 0.45;
+    float maxR = 0.60;
+    float sssRadius = mix(0.45, 0.50, hNorm);
+    float NdotL = max(dot(N, L), 0.0);
+    float sssScalar = 0.2 * exp(-3.0 * abs(NdotL) / (sssRadius + 0.001));
+    vec3 sss_albedo = WATER_ALBEDO;
+    vec3 subColor = Saturate(sss_albedo, 2.0);
+    vec3 sssColor = subColor * sssRadius * sssScalar * sssStrength;
 
-        vec3 spec_direct = microfacetSpecular(L, V_view, N, F0, roughness);
-        vec3 Lo_direct = spec_direct * moonColor * NoL;
+    surfaceLighting += sssColor;
 
-        vec3 R = reflect(-V_view, N);
-        vec3 R_rotated = kRotateYMinus90 * R;
-
-        vec3 kS_IBL = fresnelSchlick(clamp(dot(N, V_view), 0.0, 1.0), F0);
-        
-        vec3 reflection_IBL = texture(cubeMap, R_rotated).rgb;
-        reflection_IBL = pow(reflection_IBL, vec3(2.2));
-
-        vec3 specular_IBL = reflection_IBL * kS_IBL;
-
-        vec3 diffuse_IBL = moonColor * WATER_ALBEDO * 0.0125;
-        
-        surfaceLighting += Lo_direct;
-        surfaceLighting += diffuse_IBL;
-        surfaceLighting += specular_IBL;
-
-        // SSS
-        float sssStrength = 0.5;
-        float minR = 0.45;
-        float maxR = 0.60;
-        float sssRadius = mix(0.45, 0.50, hNorm);
-        float NdotL = max(dot(N, L), 0.0);
-        float sssScalar = 0.2 * exp(-3.0 * abs(NdotL) / (sssRadius + 0.001));
-        vec3 sss_albedo = WATER_ALBEDO;
-        vec3 subColor = Saturate(sss_albedo, 2.0);
-        vec3 sssColor = subColor * sssRadius * sssScalar * sssStrength;
-
-        surfaceLighting += sssColor;
-    //}
 
     // Flashlight
     //for (int i = 0; i < 2; i++ ) {

@@ -4,6 +4,7 @@
 
 #include "../../common/constants.glsl"
 #include "../../common/lighting.glsl"
+#include "../../common/distance_fog.glsl"
 #include "../../common/normal_encoding.glsl"
 #include "../../common/post_processing.glsl"
 #include "../../common/types.glsl"
@@ -19,7 +20,7 @@ layout (binding = 5) uniform sampler2D u_indirectDiffuseTexture;
 
 layout (binding = 7) uniform sampler2D u_flashlightCookieTexture;
 layout (binding = 8) uniform sampler2DArray u_flashlighShadowMapArrayTexture;
-layout (binding = 9) uniform samplerCubeArray u_shadowMapArray;
+layout (binding = 9) uniform samplerCubeArrayShadow u_shadowMapArray;
 layout (binding = 10) uniform sampler2DArray u_shadowMapCascadeArray;
 
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
@@ -94,7 +95,7 @@ void main() {
         float lightStrength = light.strength;
         float lightRadius = light.radius;
 
-        float shadow = ShadowCalculation(lightIndex, lightPosition, lightRadius, worldPos.xyz, viewPos, normal.xyz, u_shadowMapArray);
+        float shadow = ShadowCalculationSkin(lightIndex, lightPosition, lightRadius, worldPos.xyz, viewPos, normal.xyz, u_shadowMapArray);
         vec3 directLight = GetDirectLighting(lightPosition, lightColor, lightRadius, lightStrength, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, viewPos) * shadow;
 
         if (light.iesTextureIndex != 0) {
@@ -235,6 +236,9 @@ void main() {
     }
 
     vec3 finalColor = (directLighting + indirectDiffuse + moonLighting) * ao;
+
+    // Distance Fog
+    finalColor = DistanceFog(finalColor, fragDistance);
     
     LightingOut = vec4(finalColor, 1);
 }

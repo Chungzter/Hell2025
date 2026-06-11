@@ -24,7 +24,7 @@ layout (binding = 5) uniform sampler2D plasticRmaTexture;
 layout (binding = 6) uniform sampler2D u_SceneColorTexture;
 layout (binding = 7) uniform sampler2D u_SceneDepthTexture;
 
-layout (binding = 8) uniform samplerCubeArray shadowMapArray;
+layout (binding = 8) uniform samplerCubeArrayShadow shadowMapArray;
 
 in vec2 TexCoord;
 in vec3 Normal;
@@ -304,7 +304,7 @@ void main() {
 
         float att = smoothstep(light.radius, 0.0, dist) * light.strength;
 
-        float shadow = ShadowCalculation(lightIndex, lightPos, light.radius, v_worldPos.xyz, u_viewPos, normal.xyz, shadowMapArray);
+        float shadow = ShadowCalculationNEW(lightIndex, lightPos, light.radius, v_worldPos.xyz, u_viewPos, normal.xyz, shadowMapArray);
 
         float candas = 1.0;
         if (light.iesTextureIndex != 0) {

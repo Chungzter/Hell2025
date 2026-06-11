@@ -27,7 +27,7 @@
 layout (location = 0) out vec4 FragOut;
 layout (location = 1) out vec4 ViewSpaceDepthPreviousOut;
 layout (binding = 4) uniform sampler2D FlashlightCookieTexture;
-layout (binding = 9) uniform samplerCubeArray shadowMapArray;
+layout (binding = 9) uniform samplerCubeArrayShadow shadowMapArray;
 
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData  rendererData;   };
 readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData  viewportData[]; };
@@ -91,7 +91,7 @@ void main() {
       Light light = lights[lightIndex];
       vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
       vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
-      float shadow = ShadowCalculation(int(lightIndex), lightPosition, light.radius, WorldPos.xyz, ViewPos, normal, shadowMapArray);
+      float shadow = ShadowCalculationNEW(int(lightIndex), lightPosition, light.radius, WorldPos.xyz, ViewPos, normal, shadowMapArray);
       vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal, WorldPos.xyz, baseColor.rgb, roughness, metallic, ViewPos) * shadow;
       //vec3 directLight = GetDirectLightingHair(lightPosition, lightColor, light.radius, light.strength, normal, Tangent, WorldPos.xyz, baseColor.rgb, roughness, metallic, ViewPos) * shadow;
       

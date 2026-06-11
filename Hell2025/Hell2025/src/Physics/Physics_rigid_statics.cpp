@@ -52,6 +52,42 @@ namespace Physics {
         return physicsID;
     }
 
+    uint64_t CreateRigidStaticPlane(glm::vec3 planeOrigin, glm::vec3 planeNormal, PhysicsFilterData filterData) {
+        PxPhysics* pxPhysics = Physics::GetPxPhysics();
+        PxScene* pxScene = Physics::GetPxScene();
+        PxMaterial* material = Physics::GetDefaultMaterial();
+
+        planeNormal = glm::normalize(planeNormal);
+
+        PxFilterData pxFilterData;
+        pxFilterData.word0 = (PxU32)filterData.raycastGroup;
+        pxFilterData.word1 = (PxU32)filterData.collisionGroup;
+        pxFilterData.word2 = (PxU32)filterData.collidesWith;
+
+        PxShape* pxShape = pxPhysics->createShape(PxPlaneGeometry(), *material, true);
+        pxShape->setQueryFilterData(pxFilterData);
+        pxShape->setSimulationFilterData(pxFilterData);
+        pxShape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+        pxShape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+
+        PxVec3 pxPlaneOrigin = PxVec3(planeOrigin.x, planeOrigin.y, planeOrigin.z);
+        PxVec3 pxPlaneNormal = PxVec3(planeNormal.x, planeNormal.y, planeNormal.z);
+
+        PxPlane pxPlane = PxPlane(pxPlaneOrigin, pxPlaneNormal);
+        PxTransform pxTransform = PxTransformFromPlaneEquation(pxPlane);
+
+        PxRigidStatic* pxRigidStatic = pxPhysics->createRigidStatic(pxTransform);
+        pxRigidStatic->attachShape(*pxShape);
+        pxScene->addActor(*pxRigidStatic);
+
+        uint64_t physicsID = UniqueID::GetNextPhysicsId();
+        RigidStatic& rigidStatic = g_rigidStatics[physicsID];
+
+        rigidStatic.SetPxRigidStatic(pxRigidStatic);
+        rigidStatic.AddPxShape(pxShape);
+
+        return physicsID;
+    }
 
     uint64_t CreateRigidStaticFromCapsule(Transform transform, float radius, float halfHeight, PhysicsFilterData filterData, Transform localOffset) {
         PxPhysics* pxPhysics = Physics::GetPxPhysics();

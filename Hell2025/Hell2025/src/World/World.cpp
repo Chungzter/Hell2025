@@ -16,6 +16,7 @@
 #include "Managers/MapManager.h"
 #include "Managers/MirrorManager.h"
 #include "GlobalIllumination/GlobalIllumination.h"
+#include "Ocean/Ocean.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Physics/Physics.h"
@@ -128,7 +129,6 @@ namespace World {
 
     void LoadMapInstances(std::vector<MapInstanceCreateInfo> mapInstanceCreateInfoSet) {
         LoadMapInstancesHeightMapData(mapInstanceCreateInfoSet);
-
 
         int i = 0;
         for (MapInstanceCreateInfo& mapInstanceCreateInfo : mapInstanceCreateInfoSet) {
@@ -265,6 +265,10 @@ namespace World {
     }
 
     void LoadHouseInstance(const std::string& houseName, SpawnOffset spawnOffset) {
+
+        // TODO: Probably handle me better!
+        Ocean::CreatePhysicsPlane();
+
         House* house = HouseManager::GetHouseByName(houseName);
         if (!house) {
             Logging::Error() << "World::LoadHouseInstance() failed because " << houseName << " was not found";
@@ -807,6 +811,7 @@ namespace World {
     void ResetWorld() {
         std::cout << "Reset world()\n";
 
+
         // Clear height map data
         g_heightMapChunks.clear();
         g_validChunks.clear();
@@ -860,6 +865,7 @@ namespace World {
     void ClearAllObjects() {
         ResetWeatherboardMeshBuffer();
         MirrorManager::CleanUp();
+        Ocean::DestroyPhysicsPlane();
 
         for (BulletCasing& bulletCasing : g_bulletCasings)              bulletCasing.CleanUp();
         for (ChristmasLightSet& christmasLights : g_christmasLightSets) christmasLights.CleanUp();

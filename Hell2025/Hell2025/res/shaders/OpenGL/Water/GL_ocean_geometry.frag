@@ -137,8 +137,8 @@ void main() {
     }
 
     const float metallic = 0.0;
-    const float roughness = 0.1;
-    const vec3 F0 = vec3(0.02);
+    float roughness = 0.1;
+    vec3 F0 = vec3(0.02);
 
     // Precompute SSS height terms once (used by moon + flashlight)
     float h = WorldPos.y - u_oceanOriginY;
@@ -150,7 +150,6 @@ void main() {
     float maxR = 0.50;
     vec3 radius = vec3(mix(minR, maxR, hNorm));
 
-    
     vec3 surfaceLighting = vec3(0.0);
 
     // Moon light (direct spec + IBL + SSS)
@@ -185,7 +184,7 @@ void main() {
         
         if (!gl_FrontFacing) {
             diffuse_IBL *= 1;
-            specular_IBL *= 2;
+            //specular_IBL *= 2;
         }
             
         surfaceLighting += Lo_direct;

@@ -19,7 +19,7 @@
 
 layout (binding = 5) uniform sampler2D u_indirectDiffuseTexture;
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
-layout (binding = 9) uniform samplerCubeArray shadowMapArray;
+layout (binding = 9) uniform samplerCubeArrayShadow shadowMapArray;
 layout (binding = 11) uniform sampler2D hairFlowMap;
 layout (binding = 12) uniform sampler2D hairIDMap;
 layout (binding = 13) uniform sampler2D hairRootMap;
@@ -130,7 +130,7 @@ void main() {
         float lightStrength = light.strength;
         float lightRadius = light.radius;
 
-        float shadow = ShadowCalculation(lightIndex, lightPosition, lightRadius, WorldPos.xyz, viewPos, normal.xyz, shadowMapArray);
+        float shadow = ShadowCalculationNEW(lightIndex, lightPosition, lightRadius, WorldPos.xyz, viewPos, normal.xyz, shadowMapArray);
         vec3 directLight = GetDirectLighting(lightPosition, lightColor, lightRadius, lightStrength, normal.xyz, WorldPos.xyz, gammaBaseColor.rgb, roughness, metallic, viewPos) * shadow;
 
         #if ENABLE_BINDLESS == 1

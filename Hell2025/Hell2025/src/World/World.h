@@ -54,6 +54,8 @@ struct MapInstanceCreateInfo {
 };
 
 namespace World {
+    std::vector<SpriteSheetObject>& GetBubbleSpriteSheetObjects();
+
     void Init();
     void BeginFrame();
     void EndFrame();
@@ -125,6 +127,7 @@ namespace World {
     
     // Logic
     void ProcessBullets();
+    void HackTest();
 
     // Creation
     void CreateGameObject();

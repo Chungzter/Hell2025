@@ -102,6 +102,34 @@ namespace OpenGLRenderer {
                 glBindTexture(GL_TEXTURE_2D, texture->GetGLTexture().GetHandle());
                 glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), 1, mesh->baseVertex, i);
             }
+
+
+            for (SpriteSheetObject& bubbleSpriteSheetObject : World::GetBubbleSpriteSheetObjects()) {
+                if (bubbleSpriteSheetObject.GetTime() > 0) {
+                    const SpriteSheetRenderItem& renderItem = bubbleSpriteSheetObject.GetRenderItem();
+                    Texture* texture = AssetManager::GetTextureByIndex(renderItem.textureIndex);
+                    shader->SetInt("u_rowCount", renderItem.rowCount);
+                    shader->SetInt("u_columnCount", renderItem.columnCount);
+                    shader->SetInt("u_frameIndex", renderItem.frameIndex);
+                    shader->SetInt("u_frameNextIndex", renderItem.frameIndexNext);
+                    shader->SetFloat("u_mixFactor", renderItem.mixFactor);
+                    shader->SetVec4("u_position", renderItem.position);
+                    shader->SetVec4("u_rotation", renderItem.rotation);
+                    shader->SetVec4("u_scale", renderItem.scale);
+                    shader->SetInt("u_billboard", renderItem.isBillboard);
+                    shader->SetFloat("u_uOffset", renderItem.uOffset);
+                    shader->SetFloat("u_vOffset", renderItem.vOffset);
+                    shader->SetVec4("u_worldBoundsMin", renderItem.aabbMin);
+                    shader->SetVec4("u_worldBoundsMax", renderItem.aabbMax);
+                    shader->SetBool("u_useFireClipHeight", false);
+
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, texture->GetGLTexture().GetHandle());
+                    glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), 1, mesh->baseVertex, i);
+
+                    DrawPoint(renderItem.position, RED);
+                }
+            }
         }
     }
 }

@@ -27,6 +27,9 @@ namespace OpenGLRenderer {
     void OceanRE();
     void EmissiveForwardPass();
     void BubblesPass();
+    void BubblesPass2();
+    void BubblesPass3();
+    void DispatchTestPass();
 
     void RenderFullscreenTriangle();
 
@@ -86,19 +89,23 @@ namespace OpenGLRenderer {
         HairPassRE();
         OceanRE();
 
-        BubblesPass();
         
         OceanUnderWaterFlags();
         OceanSurfaceCompositePass();
 
         GlassPassRE();
         EmissivePass();
+        RayMarchFog();
         GaussianBlur();
 
         OceanUnderwaterCompositePass();
 
         StainedGlassPass();
+        BubblesPass2();
+        BubblesPass3();
 
+        DispatchTestPass();
+        BubblesPass();
 
         // DDGI Debug
         DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
@@ -136,6 +143,13 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer& hairFboRE = CreateMultisampledFrameBuffer("HairRE", g_settings.gBufferResolution, 4);
         hairFboRE.CreateAttachment("Lighting", GL_RGBA16F);
         hairFboRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
+
+        CreateSSBO("BubblePositions", sizeof(glm::vec4) * 100, GL_DYNAMIC_STORAGE_BIT);
+        CreateSSBO("BubblePositionCount", sizeof(uint64_t), GL_DYNAMIC_STORAGE_BIT);
+        CreateSSBO("BubbleDrawCommand", sizeof(DrawArraysIndirectCommand), GL_DYNAMIC_STORAGE_BIT);
+
+        ClearSSBO("BubblePositions");
+        ClearSSBO("BubblePositionCount");
     }
 
     void LoadShadersRE() {
@@ -163,6 +177,9 @@ namespace OpenGLRenderer {
 
         LoadShader("RE", "OceanLighting", { "GL_ocean_lighting.vert", "GL_ocean_lighting.frag" });
         LoadShader("RE", "Bubbles", { "GL_bubbles.vert", "GL_bubbles.frag" });
+        LoadShader("RE", "Bubbles2", { "GL_bubbles_2.vert", "GL_bubbles_2.frag" });
+        LoadShader("RE", "Bubbles3", { "GL_bubbles_3.vert", "GL_bubbles_3.frag" });
+        LoadShader("RE", "BubbleDrawCommandArgs", { "GL_bubble_draw_command_args.comp" });
     }
 
 	void ClearRenderTargetsRE() {
@@ -198,8 +215,37 @@ namespace OpenGLRenderer {
 		BindTextureUnit(10, moonShadowCascades.GetDepthTexture());
 	}
 
+
+    void DispatchTestPass() {
+        static std::vector<glm::vec4> positions;
+
+        if (Input::KeyPressed(HELL_KEY_U)) {
+            glm::vec3 origin = glm::vec3(36.0f, 32.5f, 37.0f);
+            positions.clear();
+
+            for (int i = 0; i < 20; i++) {
+                glm::vec3 pos = origin;
+                pos.x -= Util::RandomFloat(-2.0f, 2.0f);
+                pos.y -= Util::RandomFloat(-2.0f, 2.0f);
+                pos.z -= Util::RandomFloat(-2.0f, 2.0f);
+                positions.push_back(glm::vec4(pos, 1.0f));
+            }
+            UploadSSBOStatic("BubblePositions", positions.size() * sizeof(glm::vec4), positions.data());
+
+            uint64_t count = positions.size();
+            UpdateSSBO("BubblePositionCount", sizeof(uint64_t), &count);
+
+            BindShader("BubbleDrawCommandArgs");
+            BindSSBO(5, "BubblePositions");
+            BindSSBO(6, "BubblePositionCount");
+            BindSSBO(7, "BubbleDrawCommand");
+            glDispatchCompute(1, 1, 1);
+        }
+    }
+
+
     void BubblesPass() {
-        ProfilerOpenGLZoneFunction();
+        //ProfilerOpenGLZoneFunction();
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
@@ -227,6 +273,60 @@ namespace OpenGLRenderer {
         SetUniformFloat("u_time", Game::GetTotalTime());
         BindTextureUnit(0, skyboxCubemapView.GetHandle());
 
+        glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+        
+        BindSSBO(5, "BubblePositions");
+        
+        BindEmptyVAO();
+        BindDrawIndirectBuffer("BubbleDrawCommand");
+        
+        for (int i = 0; i < 4; i++) {
+            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            OpenGLRenderer::SetViewport(&fbo, viewport);
+            SetUniformInt("u_viewportIndex", i);
+            SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+            SetUniformMat4("u_view", viewportData[i].view);
+            SetUniformVec3("u_viewPos", viewportData[i].viewPos);
+
+            glDrawArraysIndirect(GL_TRIANGLES, 0);
+        }
+
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+    }
+
+    void BubblesPass2() {
+        //ProfilerOpenGLZoneFunction();
+
+        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+
+        OpenGLCubemapView& skyboxCubemapView = GetCubemapView("SkyboxNightSky");
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
+
+        fbo.Bind();
+        fbo.SetViewport();
+        fbo.DrawBuffers({ "Lighting" });
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
+        state.depthFunc = GL_GREATER;
+
+        state.blendEnable = true;
+        state.blendFuncSrcfactor = GL_SRC_ALPHA;
+        state.blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
+
+        SetRasterizerState(state);
+
+        BindShader("Bubbles");
+        BindShader("Bubbles2");
+        SetUniformFloat("u_time", Game::GetTotalTime());
+        BindTextureUnit(0, skyboxCubemapView.GetHandle());
+        BindTextureUnit(1, GetTextureHandleByName("Bubbles_10x10"));
+
         BindEmptyVAO();
 
         for (int i = 0; i < 4; i++) {
@@ -241,7 +341,51 @@ namespace OpenGLRenderer {
 
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
+    }
 
+    void BubblesPass3() {
+        //ProfilerOpenGLZoneFunction();
+
+        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+
+        OpenGLCubemapView& skyboxCubemapView = GetCubemapView("SkyboxNightSky");
+        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
+
+        fbo.Bind();
+        fbo.SetViewport();
+        fbo.DrawBuffers({ "Lighting" });
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
+        state.depthFunc = GL_GREATER;
+
+        state.blendEnable = true;
+        state.blendFuncSrcfactor = GL_SRC_ALPHA;
+        state.blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
+
+        SetRasterizerState(state);
+
+        BindShader("Bubbles3");
+        SetUniformFloat("u_time", Game::GetTotalTime());
+        BindTextureUnit(0, GetTextureHandleByName("UnderwaterBulletBubble"));
+
+        BindEmptyVAO();
+
+        for (int i = 0; i < 4; i++) {
+            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            OpenGLRenderer::SetViewport(&fbo, viewport);
+            SetUniformInt("u_viewportIndex", i);
+            SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+            SetUniformMat4("u_view", viewportData[i].view);
+            SetUniformVec3("u_viewPos", viewportData[i].viewPos);
+
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
 
         //glm::vec3 pos = glm::vec3(36.0, 32.5, 37.0);
         //DrawPoint(pos, RED);
