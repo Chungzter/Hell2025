@@ -1,6 +1,7 @@
 #include "GL_renderer.h"
 #include "API/OpenGL/GL_backEnd.h"
 #include "AssetManagement/AssetManager.h"
+#include "Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"
@@ -119,6 +120,9 @@ namespace OpenGLRenderer {
         DebugViewPass();
         DebugPass();
 
+        EditorPass();
+        OutlinePass();
+
         // Downscale and blit to swapchain
         OpenGLFrameBuffer& finalImageFbo = GetFrameBuffer("FinalImage");
         OpenGLFrameBuffer& gBufferRE = GetFrameBuffer("GBufferRE");
@@ -126,6 +130,7 @@ namespace OpenGLRenderer {
         OpenGLRenderer::BlitToDefaultFrameBuffer(&finalImageFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         UIPass();
+        ImGuiPass();
     }
 
     void CreateFramebuffersRE() {
@@ -471,6 +476,8 @@ namespace OpenGLRenderer {
 	}
 
     void SkyboxPassRE() {
+        if (Editor::IsOpen()) return;
+
         ProfilerOpenGLZoneFunction();
 
         OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");

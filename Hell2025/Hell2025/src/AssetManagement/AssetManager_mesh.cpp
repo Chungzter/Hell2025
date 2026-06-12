@@ -1,5 +1,6 @@
 #include "AssetManager.h"
 #include "Bvh/Cpu/CpuBvh.h"
+#include "Hell/Logging.h"
 #include "Timer.hpp"
 #include <mutex>
 
@@ -143,6 +144,20 @@ namespace AssetManager {
         }
         std::cout << "AssetManager::GetMeshByName() failed because '" << name << "' does not exist\n";
         return nullptr;
+    }
+
+    uint32_t GetBaseVertexByMeshIndex(int meshIndex) {
+        if (Mesh* mesh = GetMeshByIndex(meshIndex)) {
+            return mesh->baseVertex;
+        }
+        Logging::Error() << "AssetManager::GetBaseVertexByMeshIndex(..) failed because meshIndex '" << meshIndex << "' is out of range of " << GetMeshes().size() << "\n";
+    }
+
+    uint32_t GetBaseIndexByMeshIndex(int meshIndex) {
+        if (Mesh* mesh = GetMeshByIndex(meshIndex)) {
+            return mesh->baseIndex;
+        }
+        Logging::Error() << "AssetManager::GetBaseIndexByMeshIndex(..) failed because meshIndex '" << meshIndex << "' is out of range of " << GetMeshes().size() << "\n";
     }
 
     Mesh* GetMeshByIndex(int index) {

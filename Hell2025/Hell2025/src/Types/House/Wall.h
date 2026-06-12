@@ -6,12 +6,6 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-
-struct BoardVertexData {
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-};
-
 struct Wall {
     Wall() = default;
     Wall(uint64_t id, const WallCreateInfo& createInfo, const SpawnOffset& spawnOffset);
@@ -40,6 +34,9 @@ struct Wall {
     void SetTextureOffsetV(float value);
     void SetMaterial(const std::string& materialName);
 
+    void RecreateWeatherBoardMesh();
+    void CleanUpWeatherBoardMesh();
+
     const glm::vec3& GetPointByIndex(int pointIndex); 
 
     bool IsWeatherBoards()                                                  { return m_createInfo.wallType == WallType::WEATHER_BOARDS; }
@@ -53,10 +50,6 @@ struct Wall {
     const WallCreateInfo& GetCreateInfo() const                             { return m_createInfo; }
     const std::string& GetEditorName() const                                { return m_createInfo.editorName; }
 
-
-    std::vector<BoardVertexData> m_boardVertexDataSet;
-
-
 private:
     uint64_t m_objectId = 0;
     Material* m_material = nullptr;
@@ -68,9 +61,7 @@ private:
     std::vector<Trim> m_trims;
     WallCreateInfo m_createInfo;
     SpawnOffset m_spawnOffset;
+    std::vector<uint64_t> m_weatherBoardSegmentMeshIds;
 
     void CreateCSGVertexData();
-    void CreateWeatherBoards();
-    BoardVertexData CreateBoardVertexData(glm::vec3 begin, glm::vec3 end, glm::vec3 boardDirection, int yUVOffsetIndex, float xUVOffset);
-
 };

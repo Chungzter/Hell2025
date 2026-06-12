@@ -514,7 +514,7 @@ namespace Editor {
         }
 
         if (houseMeshUpdateRequired) {
-            World::UpdateHouseMeshBuffer();
+            World::RecreateAllHouseGeometry();
         }
     }
 

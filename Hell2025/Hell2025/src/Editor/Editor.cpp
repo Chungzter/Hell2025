@@ -15,6 +15,7 @@
 #include "Managers/MapManager.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
+#include "Ocean/Ocean.h"
 #include "World/World.h"
 
 #include <Hell/Logging.h>
@@ -103,7 +104,7 @@ namespace Editor {
             World::ClearAllObjects();
             World::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
             World::LoadMapInstanceHouses(Editor::GetEditorMapName(), SpawnOffset());
-            World::RecreateHouseGeometryOLD();
+            World::RecreateAllHouseGeometry();
         }
         if (GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
             // Update the map file with everything in the world
@@ -113,7 +114,7 @@ namespace Editor {
             World::ClearAllObjects();
             World::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
             World::LoadMapInstanceHouses(Editor::GetEditorMapName(), SpawnOffset());
-            World::RecreateHouseGeometryOLD();
+            World::RecreateAllHouseGeometry();
         }
 
         g_isOpen = false;
@@ -167,6 +168,9 @@ namespace Editor {
     }
 
     void Update(float deltaTime) {
+        // TODO: Handle me better!!!
+        Ocean::DestroyPhysicsPlane();
+
         // Close editor
         if (Input::KeyPressed(HELL_KEY_TAB)) {
             InputMulti::ClearKeyStates();
@@ -421,6 +425,8 @@ namespace Editor {
 
     void SetHoveredObjectId(uint64_t objectId) {
         g_hoveredObjectId = objectId;
+
+        //if (objectId != 0) std::cout << "hovered: " << objectId << "\n";
     }
 
     void SetSelectedObjectType(ObjectType objectType) {
@@ -431,6 +437,8 @@ namespace Editor {
     // Maybe remove me?
     void SetSelectedObjectId(uint64_t objectId) {
         g_selectedObjectId = objectId;
+
+        //if (objectId != 0) std::cout << "selected: " << objectId << "\n";
     }
 
     void SelectObject(uint64_t objectId) {

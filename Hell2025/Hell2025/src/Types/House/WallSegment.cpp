@@ -31,10 +31,6 @@ void WallSegment::Init(glm::vec3 start, glm::vec3 end, float height, uint64_t pa
     m_parentObjectId = parentObjectId;
 }
 
-void WallSegment::SetMeshIndex(uint32_t index) {
-    m_meshIndex = index;
-}
-
 void WallSegment::SetMeshId(uint64_t meshId) {
     m_meshId = meshId;
 }

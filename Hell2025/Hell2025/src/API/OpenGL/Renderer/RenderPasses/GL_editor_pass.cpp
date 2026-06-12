@@ -2,6 +2,7 @@
 #include "Editor/Editor.h"
 #include "Viewport/ViewportManager.h"
 #include "Renderer/RenderDataManager.h"
+#include "Renderer/Renderer.h"
 
 #include "Editor/Gizmo.h"
 
@@ -9,7 +10,10 @@ namespace OpenGLRenderer {
 
     void EditorPass() {
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+
+        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer(gBufferName);
+
         OpenGLShader* shader = GetShaderOLD("SolidColor");
 
         if (!shader) return;
@@ -22,16 +26,16 @@ namespace OpenGLRenderer {
         state.depthFunc = GL_GREATER;
         ForceRasterizerState(state);
 
-        gBuffer->Bind();
-        gBuffer->DrawBuffers({ "Lighting" });
-        gBuffer->SetViewport();
-        gBuffer->ClearDepthAttachment(0.0f);
+        gBuffer.Bind();
+        gBuffer.DrawBuffers({ "Lighting" });
+        gBuffer.SetViewport();
+        gBuffer.ClearDepthAttachment(0.0f);
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
 
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
+                OpenGLRenderer::SetViewport(&gBuffer, viewport);
 
                 shader->Bind();
                 shader->SetMat4("projection", viewportData[i].projectionReverseZ);

@@ -32,10 +32,17 @@ namespace Editor {
         glm::vec3 rayDir = GetMouseRayDirectionByViewportIndex(GetHoveredViewportIndex());
         bool backfaceCulling = BackfaceCullingEnabled();
 
+        //std::cout << "ray origin: " << rayOrigin << "  ray dir: " << rayDir << "\n";
+
         PhysXRayResult physxRayResult = Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, backfaceCulling);
         if (physxRayResult.hitFound) {
             SetHoveredObjectType(physxRayResult.userData.objectType);
             SetHoveredObjectId(physxRayResult.userData.objectId);
+            //std::cout << "phyx hit: " << physxRayResult.userData.objectId << "\n";
+
+            //std::cout << "physx hit: " << physxRayResult.userData.objectId << " ";
+            //std::cout << Util::EnumToString(UniqueID::GetType(GetSelectedObjectId())) << " ";
+            //std::cout << physxRayResult.hitPosition << " " << glm::distance(physxRayResult.hitPosition, rayOrigin) << "\n";
         }
 
         // BVH ray
@@ -47,6 +54,9 @@ namespace Editor {
                 SetHoveredObjectType(UniqueID::GetType(bvhRayResult.objectId));
                 SetHoveredObjectId(bvhRayResult.objectId);
             }
+            //std::cout << "bvhRayResult hit: " << bvhRayResult.objectId << " ";
+            //std::cout << Util::EnumToString(UniqueID::GetType(GetSelectedObjectId())) << " ";
+            //std::cout << bvhRayResult.hitPosition << " " << bvhDistance << "\n";
         }
 
         if (GetHoveredObjectType() == ObjectType::WALL_SEGMENT) {
@@ -66,7 +76,7 @@ namespace Editor {
 
     void UpdateObjectSelection() {
 
-
+        //std::cout << "Selected object: " << GetSelectedObjectId() << " " << Util::EnumToString(UniqueID::GetType(GetSelectedObjectId())) << "\n";
 
         //switch (UniqueID::GetType(objectId)) {
         //case ObjectType::DDGI_VOLUME: SetEditorSelectionMode(EditorSelectionMode::OBJECT); break;
@@ -297,7 +307,7 @@ namespace Editor {
                 if (GetSelectedObjectType() == ObjectType::WALL) {
                     if (Wall* wall = World::GetWallByObjectId(GetSelectedObjectId())) {
                         if (wall->UpdatePointPosition(g_selectedVertexIndex, Gizmo::GetPosition())) {
-                            World::UpdateHouseMeshBuffer();
+                            World::RecreateAllHouseGeometry(); // this could be slow???????????????????????????????
                         }
                     }
                 }
@@ -327,7 +337,7 @@ namespace Editor {
                             createInfo.p3 = Gizmo::GetPosition();
                         }
                         plane->UpdateVertexDataFromCreateInfo();
-                            World::UpdateHouseMeshBuffer();
+                        World::RecreateAllHouseGeometry(); // this could be slow???????????????????????????????
                     }
                 }
             }

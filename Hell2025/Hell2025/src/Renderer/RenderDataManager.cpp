@@ -32,10 +32,6 @@ namespace RenderDataManager {
     std::vector<GPULight> g_gpuLightsHighRes;
 
 	std::vector<RenderItem> g_renderItemsProcedural;
-	//std::vector<HouseRenderItem> g_houseRenderItemsOLD;
-    //std::vector<HouseRenderItem> g_houseOutlineRenderItems;
-
-
     std::vector<RenderItem> g_renderItems;
     std::vector<RenderItem> g_renderItemsBlended;
     std::vector<RenderItem> g_renderItemsAlphaDiscarded;
@@ -128,8 +124,6 @@ namespace RenderDataManager {
 
 		g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent.clear();
 
-		//g_houseOutlineRenderItems.clear();
-		//g_houseRenderItemsOLD.clear();
 		g_renderItemsProcedural.clear();
 
         g_renderItems.clear();
@@ -574,9 +568,7 @@ namespace RenderDataManager {
         MeshBufferV2& meshBuffer = Renderer::GetProceduralMeshBuffer();
 
         for (const RenderItem& renderItem : renderItems) {
-            //int meshIndex = renderItem.meshIndex;
             uint64_t meshId = renderItem.meshId;
-            //Mesh* mesh = World::GetHouseMeshByIndex(meshIndex);
 
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
             if (!mesh) continue;

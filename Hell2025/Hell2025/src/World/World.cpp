@@ -165,7 +165,7 @@ namespace World {
             i++;
         }
 
-        RecreateHouseGeometryOLD();
+        RecreateAllHouseGeometry();
 
         //GlobalIllumination::SetGlobalIlluminationStructuresDirtyState(true);
 
@@ -261,7 +261,7 @@ namespace World {
     void LoadSingleHouse(const std::string& houseName) {
         ResetWorld();
         LoadHouseInstance(houseName, SpawnOffset());
-        RecreateHouseGeometryOLD();
+        RecreateAllHouseGeometry();
     }
 
     void LoadHouseInstance(const std::string& houseName, SpawnOffset spawnOffset) {
@@ -590,10 +590,7 @@ namespace World {
 
         if (Door* door = World::GetDoorByObjectId(objectId)) {
             door->SetPosition(position);
-            UpdateClippingCubes();
-            UpdateAllWallCSG();
-            UpdateHouseMeshBuffer();
-            UpdateWeatherBoardMeshBuffer();
+            RecreateAllHouseGeometry();
             Physics::ForceZeroStepUpdate();
         }
 
@@ -612,8 +609,7 @@ namespace World {
 
         if (HousePlane* plane = World::GetHousePlaneByObjectId(objectId)) {
             plane->UpdateWorldSpaceCenter(position);
-            UpdateHouseMeshBuffer();
-            UpdateWeatherBoardMeshBuffer();
+            RecreateAllHouseGeometry();
         }
 
         if (Ladder* ladder = World::GetLadderByObjectId(objectId)) {
@@ -643,16 +639,12 @@ namespace World {
         if (Wall* wall = World::GetWallByObjectId(objectId)) {
             wall->UpdateWorldSpaceCenter(position);
             Physics::ForceZeroStepUpdate();
-            UpdateHouseMeshBuffer();
-            UpdateWeatherBoardMeshBuffer();
+            RecreateAllHouseGeometry();
         }
 
         if (Window* window = World::GetWindowByObjectId(objectId)) {
             window->SetPosition(position);
-            UpdateClippingCubes();
-            UpdateAllWallCSG();
-            UpdateHouseMeshBuffer();
-            UpdateWeatherBoardMeshBuffer();
+            RecreateAllHouseGeometry();
             Physics::ForceZeroStepUpdate();
         }
     }
@@ -863,7 +855,7 @@ namespace World {
     }
 
     void ClearAllObjects() {
-        ResetWeatherboardMeshBuffer();
+        RemoveAllWeatherBoards();
         MirrorManager::CleanUp();
         Ocean::DestroyPhysicsPlane();
 
@@ -924,7 +916,7 @@ namespace World {
         g_staircases.clear();
     }
 
-    void UpdateClippingCubes() {
+    void RecreateClippingCubes() {
         g_clippingCubes.clear();
         float padding = 0.02f;
 
@@ -948,12 +940,6 @@ namespace World {
 
             ClippingCube& cube = g_clippingCubes.emplace_back();
             cube.Update(transform);
-        }
-    }
-
-    void UpdateAllWallCSG() {
-        for (Wall& wall : GetWalls()) {
-            wall.UpdateSegmentsTrimsAndVertexData();
         }
     }
 

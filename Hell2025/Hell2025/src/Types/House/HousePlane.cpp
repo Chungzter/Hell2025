@@ -102,10 +102,6 @@ void HousePlane::SetMaterial(const std::string& materialName) {
     m_material = AssetManager::GetMaterialByName(materialName);
 }
 
-void HousePlane::SetMeshIndex(uint32_t index) {
-    m_meshIndex = index;
-}
-
 void HousePlane::SetMeshId(uint64_t meshId) {
     m_meshId = meshId;
 }
@@ -152,7 +148,6 @@ void HousePlane::SubmitRenderItem() {
 	renderItem.baseColorTextureIndex = m_material->m_basecolor;
 	renderItem.normalMapTextureIndex = m_material->m_normal;
 	renderItem.rmaTextureIndex = m_material->m_rma;
-	renderItem.meshIndex = m_meshIndex;
 	renderItem.modelMatrix = glm::mat4(1.0f);
 	renderItem.inverseModelMatrix = glm::mat4(1.0f);
 	renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);

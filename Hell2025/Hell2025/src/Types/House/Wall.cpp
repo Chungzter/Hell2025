@@ -60,7 +60,7 @@ void Wall::UpdateSegmentsTrimsAndVertexData() {
 
     // Create weather boards
     if (m_createInfo.wallType == WallType::WEATHER_BOARDS) {
-        CreateWeatherBoards();
+        RecreateWeatherBoardMesh();
         CreateCSGVertexData();
     }
     // Create CSG geometry and trims
@@ -171,6 +171,8 @@ const glm::vec3& Wall::GetPointByIndex(int pointIndex) {
 }
 
 void Wall::CleanUp() {
+    CleanUpWeatherBoardMesh();
+
     for (WallSegment& wallSegment : m_wallSegments) {
         wallSegment.CleanUp();
     }
@@ -178,7 +180,7 @@ void Wall::CleanUp() {
 
 void Wall::CreateTrims() {
     m_trims.clear();
-	World::UpdateDoorAndWindowCubeTransforms();
+	World::RecreateAllDoorAndWindowCubeTransforms();
 	return;
 
     // Ceiling
@@ -252,6 +254,30 @@ void Wall::CreateCSGVertexData() {
 void Wall::SubmitRenderItems() {
     // If this wall is exterior, then dont render the CSG geometry, or any trims if you accidentally set it to have trims
     if (m_createInfo.wallType == WallType::WEATHER_BOARDS) {
+        MeshBufferV2& meshBuffer = Renderer::GetProceduralMeshBuffer();
+
+        for (uint64_t meshId : m_weatherBoardSegmentMeshIds) {
+            Mesh* mesh = meshBuffer.GetMeshById(meshId);
+            if (!mesh) continue;
+
+            Material* material = AssetManager::GetMaterialByName("WeatherBoards0");
+            if (!material) continue;
+
+            RenderItem renderItem;
+            renderItem.baseColorTextureIndex = material->m_basecolor;
+            renderItem.normalMapTextureIndex = material->m_normal;
+            renderItem.rmaTextureIndex = material->m_rma;
+            renderItem.modelMatrix = glm::mat4(1.0f);
+            renderItem.inverseModelMatrix = glm::mat4(1.0f);
+            renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
+            renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
+            renderItem.meshId = meshId;
+            renderItem.baseVertex = mesh->baseVertex;
+            renderItem.baseIndex = mesh->baseIndex;
+
+            RenderDataManager::SubmitRenderItemProcedural(renderItem);
+        }
+
         return;
     }
 
@@ -263,7 +289,6 @@ void Wall::SubmitRenderItems() {
 		renderItem.baseColorTextureIndex = m_material->m_basecolor;
 		renderItem.normalMapTextureIndex = m_material->m_normal;
 		renderItem.rmaTextureIndex = m_material->m_rma;
-		renderItem.meshIndex = wallSegment.GetMeshIndex();
 		renderItem.modelMatrix = glm::mat4(1.0f);
 		renderItem.inverseModelMatrix = glm::mat4(1.0f);
 		renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
@@ -311,50 +336,74 @@ void Wall::DrawSegmentLines(glm::vec4 color) {
     }
 }
 
-BoardVertexData Wall::CreateBoardVertexData(glm::vec3 begin, glm::vec3 end, glm::vec3 boardDirection, int yUVOffsetIndex, float xUVOffset) {
-    BoardVertexData weatherBoardVertexData;
+#define WEATHERBOARD_STOP_MESH_HEGIHT 2.6f
 
-    Model* model = AssetManager::GetModelByName("WeatherBoard");
-    uint32_t meshIndex = model->GetMeshIndices()[0];
-    Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex);
+
+void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, int boardY, float boardWidth, std::vector<Vertex>& verticesOut, std::vector<uint32_t>& indicesOut) {
+    Mesh* mesh = AssetManager::GetMeshByModelNameMeshIndex("WeatherBoard", 0);
+    if (!mesh) return;
 
     std::span<Vertex> verticesSpan = AssetManager::GetMeshVerticesSpan(mesh);
     std::span<uint32_t> indicesSpan = AssetManager::GetMeshIndicesSpan(mesh);
 
-    float boardWidth = glm::distance(begin, end);
-    const float meshBoardWidth = 4.0f;
+    uint32_t baseVertex = verticesOut.size();
 
-    glm::mat3 rot3 = glm::mat3(Util::GetRotationMat4FromForwardVector(glm::normalize(boardDirection)));
+    // Calculate rotation matrix
+    glm::vec3 zAxis = glm::normalize(boardDir);
+    glm::vec3 xAxis = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), zAxis));
+    glm::vec3 yAxis = glm::cross(zAxis, xAxis);
+    glm::mat3 rotationMatrix = glm::mat3(xAxis, yAxis, zAxis);
+
+    // If the board is above 15 then make it use board 12 and have a random x uv
+    float randomOffsetX = 0.0f;
+    if (boardY > 15) {
+        boardY = 12 + Util::RandomInt(0, 3);
+        randomOffsetX = Util::RandomFloat(0.0f, 1.0f);
+    }
+
+    // This is the vertical uv distance between boards in the texture
+    float uvVerticalOffset = 1.0f / 16.0f;
 
     for (Vertex vertex : verticesSpan) {
+
+        // If this vertex is on the right of the board then shift it to the desired width and update uvs
         bool isRightEdge = vertex.uv.x > 0.5f;
         if (isRightEdge) {
-            vertex.position.x = boardWidth * boardDirection.x;
-            vertex.position.z = boardWidth * boardDirection.z;
-            vertex.uv.x = boardWidth / meshBoardWidth;
+            vertex.position.z *= boardWidth;
+            vertex.uv.x = boardWidth * 0.25f; // 0.25 because the texture is 4 meter wide in world space
         }
 
-        vertex.normal = glm::normalize(rot3 * vertex.normal);
-        vertex.position += begin;
+        vertex.position = rotationMatrix * vertex.position;
+        vertex.position += origin;
+        
+        vertex.normal = glm::normalize(rotationMatrix * vertex.normal);
 
-        float uvVerticalOffset = 1.0f / 16.0f;
-        vertex.uv.y -= uvVerticalOffset * yUVOffsetIndex;
-        vertex.uv.x += xUVOffset;
+        vertex.uv.x += randomOffsetX;
+        vertex.uv.y -= uvVerticalOffset * boardY;
 
-        weatherBoardVertexData.vertices.push_back(vertex);
+        verticesOut.push_back(vertex);
     }
 
-    for (uint32_t& index : indicesSpan) {
-        weatherBoardVertexData.indices.push_back(index);
+    for (uint32_t index : indicesSpan) {
+        indicesOut.push_back(index + baseVertex);
     }
-
-    return weatherBoardVertexData;
 }
 
+void Wall::CleanUpWeatherBoardMesh() {
+    // Clear any old mesh segments
+    for (uint64_t meshId : m_weatherBoardSegmentMeshIds) {
+        Renderer::RemoveProcedualMeshByMeshId(meshId);
+    }
+    m_weatherBoardSegmentMeshIds.clear();
 
-#define WEATHERBOARD_STOP_MESH_HEGIHT 2.6f
+}
 
-void Wall::CreateWeatherBoards() {
+void Wall::RecreateWeatherBoardMesh() {
+    CleanUpWeatherBoardMesh();
+    m_weatherBoardstopRenderItems.clear();
+
+    if (m_createInfo.wallType != WallType::WEATHER_BOARDS) return;
+
     Material* material = AssetManager::GetMaterialByName("WeatherBoards0");
     Model* model = AssetManager::GetModelByName("WeatherBoard_Stop");
 
@@ -368,7 +417,6 @@ void Wall::CreateWeatherBoards() {
     int weatherBoardCount = (int)(desiredTotalWallHeight / individialBoardHeight);
     float actualFinalWallHeight = weatherBoardCount * individialBoardHeight;
 
-    m_weatherBoardstopRenderItems.clear();
 
     for (WallSegment& wallSegemet : m_wallSegments) {
         glm::vec3 start = wallSegemet.GetStart();
@@ -386,29 +434,24 @@ void Wall::CreateWeatherBoards() {
         renderItem.baseColorTextureIndex = material->m_basecolor;
         renderItem.rmaTextureIndex = material->m_rma;
         renderItem.normalMapTextureIndex = material->m_normal;
+        renderItem.baseIndex = AssetManager::GetBaseIndexByMeshIndex(renderItem.meshIndex);
+        renderItem.baseVertex = AssetManager::GetBaseVertexByMeshIndex(renderItem.meshIndex);
         renderItem.shadowBit |= (SHADOW_BIT_CAST_SHADOW | SHADOW_BIT_CAST_CSM_SHADOW | SHADOW_BIT_STATIC);
 
         Util::UpdateRenderItemAABB(renderItem);
         Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }
 
-    World::UpdateDoorAndWindowCubeTransforms();
+    World::RecreateAllDoorAndWindowCubeTransforms();
 
-    m_boardVertexDataSet.clear();
+
+    // Create new mesh segments
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
 
     for (WallSegment& wallSegemet : m_wallSegments) {
-        int yUVOffsetIndex = -1;
 
         for (int i = 0; i < weatherBoardCount; i++) {
-            yUVOffsetIndex++;
-            float xUVOffset = 0.0f;
-
-            if (i > 15) {
-                yUVOffsetIndex = 12;
-            }
-            if (i > 12) {
-                xUVOffset = Util::RandomFloat(0.0f, 100.0f);
-            }
 
             glm::vec3 start = wallSegemet.GetStart();
             glm::vec3 end = wallSegemet.GetEnd();
@@ -423,24 +466,30 @@ void Wall::CreateWeatherBoards() {
             const float eps = 1e-3f;
 
             while (remaining > eps) {
-                CubeRayResult r = Util::CastCubeRay(rayOrigin, rayDir, World::GetDoorAndWindowCubeTransforms(), remaining);
-                if (!r.hitFound) break;
+                CubeRayResult rayResult = Util::CastCubeRay(rayOrigin, rayDir, World::GetDoorAndWindowCubeTransforms(), remaining);
+                if (!rayResult.hitFound) break;
 
-                if (glm::dot(r.hitNormal, rayDir) < 0.0f && r.distanceToHit > eps) {
+                if (glm::dot(rayResult.hitNormal, rayDir) < 0.0f && rayResult.distanceToHit > eps) {
                     glm::vec3 localStart = rayOrigin;
-                    glm::vec3 localEnd = rayOrigin + (rayDir * r.distanceToHit);
-                    m_boardVertexDataSet.emplace_back(CreateBoardVertexData(localStart, localEnd, rayDir, yUVOffsetIndex, xUVOffset));
+                    glm::vec3 localEnd = rayOrigin + (rayDir * rayResult.distanceToHit);
+                    float boardWidth = glm::distance(localStart, localEnd);
+
+                    AddBoard(rayOrigin, rayDir, i, boardWidth, vertices, indices);
                 }
 
-                float advance = r.distanceToHit + eps;
+                float advance = rayResult.distanceToHit + eps;
                 rayOrigin += rayDir * advance;
                 remaining -= advance;
             }
 
             if (remaining > eps) {
-                m_boardVertexDataSet.emplace_back(CreateBoardVertexData(rayOrigin, end, rayDir, yUVOffsetIndex, xUVOffset));
+                float boardWidth = glm::distance(rayOrigin, end);
+                AddBoard(rayOrigin, rayDir, i, boardWidth, vertices, indices);
             }
         }
+
+        uint64_t meshId = Renderer::AddProcedualMesh(vertices, indices, "Weatherboards");
+        m_weatherBoardSegmentMeshIds.emplace_back(meshId);
     }
 }
 

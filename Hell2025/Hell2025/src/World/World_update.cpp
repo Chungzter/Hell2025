@@ -117,16 +117,19 @@ namespace World {
                 light.ForceDirty();
             }
         }
-        if (Input::KeyPressed(HELL_KEY_NUMPAD_8)) {
+
+        static bool ogPos = true;
+
+        if (Input::MiddleMousePressed()) {
+            ogPos = !ogPos;
+
             AnimatedGameObject* ratKidAO = GetRadKidAO();
-            ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.73f));
-            for (Light& light : World::GetLights()) {
-                light.ForceDirty();
+            if (ogPos) {
+                ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.73f));
             }
-        }
-        if (Input::KeyPressed(HELL_KEY_NUMPAD_9)) {
-            AnimatedGameObject* ratKidAO = GetRadKidAO();
-            ratKidAO->SetPosition(glm::vec3(35.6f, 31.0f, 36.83f));
+            else {
+                ratKidAO->SetPosition(glm::vec3(35.6f, 31.0f, 36.83f));
+            }
             for (Light& light : World::GetLights()) {
                 light.ForceDirty();
             }
@@ -440,7 +443,7 @@ namespace World {
         //}
     }
 
-    void UpdateDoorAndWindowCubeTransforms() {
+    void RecreateAllDoorAndWindowCubeTransforms() {
         std::vector<Transform>& transforms = GetDoorAndWindowCubeTransforms();
 
         transforms.clear();

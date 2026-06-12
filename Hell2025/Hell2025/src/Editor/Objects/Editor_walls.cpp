@@ -59,7 +59,7 @@ namespace Editor {
             glm::vec3 endPoint = wall->GetPointByIndex(wall->GetPointCount() -1);
             glm::vec3 newPoint = endPoint + glm::vec3(0.5f, 0.0, 0.5f);
             if (wall->AddPointToEnd(newPoint)) {
-                World::UpdateHouseMeshBuffer();
+                World::RecreateAllHouseGeometry();
                 Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                 return;
             }
@@ -69,14 +69,14 @@ namespace Editor {
         if (Input::KeyPressed(HELL_KEY_F)) {
             Audio::PlayAudio(AUDIO_SELECT, 1.0f);
             wall->FlipFaces();
-            World::UpdateHouseMeshBuffer();
+            World::RecreateAllHouseGeometry();
         }
 
         if (wall->GetPointCount() > 1) {
             // Move last point to mouse cursor
             int pointIndex = wall->GetPointCount() - 1;
             if (wall->UpdatePointPosition(pointIndex, rayHitPosition)) {
-                World::UpdateHouseMeshBuffer();
+                World::RecreateAllHouseGeometry();
             }
 
             // Draw lines and points
@@ -109,7 +109,7 @@ namespace Editor {
         createInfo.floorTrimType = TrimType::TIMBER;
         createInfo.useReversePointOrder = false;
         SetPlacementObjectId(World::AddWall(createInfo));
-        World::UpdateHouseMeshBuffer();
+        World::RecreateAllHouseGeometry();
         Audio::PlayAudio(AUDIO_SELECT, 1.0f);
         std::cout << "Beginning wall!\n";
     }

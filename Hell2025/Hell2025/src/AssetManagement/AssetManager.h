@@ -55,6 +55,8 @@ namespace AssetManager {
     std::span<uint32_t> GetMeshIndicesSpan(Mesh* mesh);
     void CreateMeshBvhs();
     const std::string& GetMeshNameByMeshIndex(int index);
+    uint32_t GetBaseVertexByMeshIndex(int meshIndex);
+    uint32_t GetBaseIndexByMeshIndex(int meshIndex);
 
     // IES Profiles
     std::vector<IESProfile>& GetIESProfiles();

@@ -65,7 +65,6 @@ namespace World {
 
     void SubmitRenderItems();
 
-    void RecreateHouseGeometryOLD();
 
     void ResetWorld();
     void ClearAllObjects();
@@ -115,7 +114,6 @@ namespace World {
     void AddMermaid(MermaidCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddScreenSpaceBloodDecal(ScreenSpaceBloodDecalCreateInfo createInfo);
     void AddPiano(PianoCreateInfo createInfo, SpawnOffset spawnOffset);
-    //void AddTree(TreeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddVATBlood(glm::vec3 position, glm::vec3 front);
     void AddWindow(WindowCreateInfo createInfo, SpawnOffset spawnOffset);
 
@@ -147,11 +145,6 @@ namespace World {
     const float GetWorldSpaceWidth();
     const float GetWorldSpaceDepth();
 
-    void UpdateDoorAndWindowCubeTransforms();
-    void ResetWeatherboardMeshBuffer();
-    void UpdateAllHangingLightCords();
-    void UpdateTrims();
-
     // Util
     bool ObjectTypeIsInteractable(ObjectType objectType, uint64_t objectId, glm::vec3 playerCameraPosition, glm::vec3 rayHitPosition);
 
@@ -159,19 +152,21 @@ namespace World {
     const std::string& GetCurrentMapName();
 
     // House
-    void UpdateClippingCubes();
-    void UpdateAllWallCSG();
-    void UpdateHouseMeshBuffer();
-    void UpdateWeatherBoardMeshBuffer();
+    void RecreateClippingCubes();                     // you have this and the other one, they achieve the same thing, merge this logic
+    void RecreateAllDoorAndWindowCubeTransforms();    // you have this and the other one, they achieve the same thing, merge this logic
+
+    void RecreateAllHouseGeometry();
+    void RecreateAllProceduralWallMesh();
+    void RecreateAllProcedularHousePlaneMesh();
+    void RecreateAllWeatherBoards();
+    void RecreateAllWallTrims();
+    void RecreateAllHangingLightCords();
+    void RemoveAllWeatherBoards();
 
     // Spawns
     SpawnPoint GetRandomCampaignSpawnPoint();
     SpawnPoint GetRandomDeathmanSpawnPoint();
     void UpdateWorldSpawnPointsFromMap(Map* map);
-
-    MeshBuffer& GetHouseMeshBuffer();
-    MeshBuffer& GetWeatherBoardMeshBuffer();
-    Mesh* GetHouseMeshByIndex(uint32_t meshIndex);
 
     const glm::vec3& GetObjectPosition(uint64_t objectId);
     const glm::vec3& GetObjectRotation(uint64_t objectId);
@@ -198,7 +193,6 @@ namespace World {
     PianoKey* GetPianoKeyByObjectId(uint64_t objectId);
     PickUp* GetPickUpByObjectId(uint64_t objectID);
     PictureFrame* GetPictureFrameByObjectId(uint64_t objectId);
-    //Tree* GetTreeByObjectId(uint64_t objectId);
     Wall* GetWallByObjectId(uint64_t objectId);
     Wall* GetWallByWallSegmentObjectId(uint64_t objectId);
     Shark* GetSharkByObjectId(uint64_t objectId);
@@ -206,7 +200,6 @@ namespace World {
     GameObject* GetGameObjectByIndex(int32_t index);
     GameObject* GetGameObjectByName(const std::string& name);
     Light* GetLightByIndex(int32_t index);
-    //Tree* GetTreeByIndex(int32_t index);
 
     uint32_t GetLightCount();
 
@@ -246,7 +239,6 @@ namespace World {
     std::vector<Transform>& GetDoorAndWindowCubeTransforms();
     std::vector<Road>& GetRoads();
     std::vector<Shark>& GetSharks();
-    //std::vector<Tree>& GetTrees();
     std::vector<VolumetricBloodSplatter>& GetVolumetricBloodSplatters();
 
     std::vector<uint64_t> GetLightIds();

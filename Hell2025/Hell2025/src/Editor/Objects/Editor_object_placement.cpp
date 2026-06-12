@@ -313,7 +313,7 @@ namespace Editor {
         createInfo.type = housePlaneType;
 
         World::AddHousePlane(createInfo, SpawnOffset());
-        World::UpdateHouseMeshBuffer();
+        World::RecreateAllHouseGeometry();
         ExitObjectPlacement();
     }
 

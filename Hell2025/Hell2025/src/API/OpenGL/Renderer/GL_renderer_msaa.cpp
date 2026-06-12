@@ -291,8 +291,8 @@ namespace OpenGLRenderer {
 		OpenGLShader* opaqueShader = GetShaderOLD("DepthPrePass");
 		opaqueShader->Bind();
 
-        glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
-        MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.procedural, opaqueDepthState);
+        //glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
+        //MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.procedural, opaqueDepthState);
 
 		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 		MultiDrawPerViewport(msaaFbo, opaqueShader, drawInfoSet.standard, opaqueDepthState);
@@ -385,8 +385,8 @@ namespace OpenGLRenderer {
 		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedStandard, opaqueState);
         MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.skinnedAlphaDiscard, maskedState);
 
-		glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
-		MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.procedural, opaqueState);
+		//glBindVertexArray(World::GetHouseMeshBuffer().GetGLMeshBuffer().GetVAO());
+		//MultiDrawPerViewport(&msaaFbo, &shader, drawInfoSet.procedural, opaqueState);
 
 		glBindVertexArray(0);
     }

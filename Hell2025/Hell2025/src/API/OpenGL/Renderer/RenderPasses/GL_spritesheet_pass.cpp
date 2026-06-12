@@ -18,22 +18,11 @@ namespace OpenGLRenderer {
         OpenGLShader* shader = GetShaderOLD("SpriteSheet");
         Mesh* mesh = AssetManager::GetMeshByModelNameMeshName("Primitives", "Quad");
 
-        OpenGLFrameBuffer* gBuffer = nullptr;
-        std::string drawBufferName = UNDEFINED_STRING;
+        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer(gBufferName);
 
-        if (Renderer::GetRendererMode() == RendererMode::OLD_DEFERRED) {
-            gBuffer = &GetFrameBuffer("GBuffer");
-            drawBufferName = "Lighting";
-        }
-        if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
-            gBuffer = &GetFrameBuffer("GBufferRE");
-            drawBufferName = "Lighting";
-        }
-
-        if (!gBuffer) return;
-
-        gBuffer->Bind();
-        gBuffer->DrawBuffer(drawBufferName);
+        gBuffer.Bind();
+        gBuffer.DrawBuffer("Lighting");
         shader->Bind();
         ForceRasterizerState("SpriteSheetPass");
 
@@ -43,7 +32,7 @@ namespace OpenGLRenderer {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGLRenderer::SetViewport(&gBuffer, viewport);
 
             Player* player = Game::GetLocalPlayerByIndex(i);
             if (!player) continue;

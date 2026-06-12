@@ -12,7 +12,7 @@ readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
 
 void main() {
 
-	mat4 projectionView = viewportData[u_viewportIndex].projectionView;            
+	mat4 projectionView = viewportData[u_viewportIndex].projectionViewReverseZ;            
     vec4 WorldPos = u_modelMatrix * vec4(vPosition, 1.0);   
 	gl_Position = projectionView * WorldPos;    
 }

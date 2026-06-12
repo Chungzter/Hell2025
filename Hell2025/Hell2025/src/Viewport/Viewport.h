@@ -81,6 +81,7 @@ private:
     glm::mat4 m_perspectiveMatrix;
     glm::mat4 m_perspectiveMatrixReverseZ;
     glm::mat4 m_orthographicMatrix;
+    glm::mat4 m_orthographicMatrixReverseZ;
     glm::vec3 m_mouseRayDirPerspective;
     glm::vec3 m_mouseRayDirOrthographic;
     Frustum m_frustum;

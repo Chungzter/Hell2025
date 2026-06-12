@@ -2,6 +2,7 @@
 #include "API/OpenGL/GL_BackEnd.h"
 #include "AssetManagement/AssetManager.h"
 #include "Renderer/RenderDataManager.h"
+#include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
 
@@ -81,7 +82,9 @@ namespace OpenGLRenderer {
     
 
     void OutlinePass() {
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer(gBufferName);
+
         OpenGLFrameBuffer* outlineFBO = GetFrameBufferOLD("Outline");
         OpenGLShader* maskShader = GetShaderOLD("OutlineMask");
         OpenGLShader* outlineShader = GetShaderOLD("Outline");
@@ -104,7 +107,7 @@ namespace OpenGLRenderer {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGLRenderer::SetViewport(&gBuffer, viewport);
 
             // Render the mask (by drawing all the mesh into it)
             glDrawBuffer(outlineFBO->GetColorAttachmentSlotByName("Mask"));
@@ -129,11 +132,11 @@ namespace OpenGLRenderer {
         }
 
         // Composite the outline
-        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+        glBindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
         glBindImageTexture(1, outlineFBO->GetColorAttachmentHandleByName("Mask"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R8);
         glBindImageTexture(2, outlineFBO->GetColorAttachmentHandleByName("Result"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R8);
         compositeShader->Bind();
-        glDispatchCompute(gBuffer->GetWidth() / 16, gBuffer->GetHeight() / 16, 1);
+        glDispatchCompute(gBuffer.GetWidth() / 16, gBuffer.GetHeight() / 16, 1);
 
         // Clean Up
         glBlendEquation(GL_FUNC_ADD);

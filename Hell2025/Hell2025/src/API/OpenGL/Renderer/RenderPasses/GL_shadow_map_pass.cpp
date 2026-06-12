@@ -391,14 +391,14 @@ namespace OpenGLRenderer {
                 }
 
                 // Weather boards
-                MeshBuffer weatherboardMeshBuffer = World::GetWeatherBoardMeshBuffer();
-                glBindVertexArray(weatherboardMeshBuffer.GetGLMeshBuffer().GetVAO());
-                int indexCount = weatherboardMeshBuffer.GetGLMeshBuffer().GetIndexCount();
-                if (indexCount > 0) {
-                    int baseIndex = 0;
-                    int baseVertex = 0;
-                    glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
-                }
+                //MeshBuffer weatherboardMeshBuffer = World::GetWeatherBoardMeshBuffer();
+                //glBindVertexArray(weatherboardMeshBuffer.GetGLMeshBuffer().GetVAO());
+                //int indexCount = weatherboardMeshBuffer.GetGLMeshBuffer().GetIndexCount();
+                //if (indexCount > 0) {
+                //    int baseIndex = 0;
+                //    int baseVertex = 0;
+                //    glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
+                //}
             }
         }
         glCullFace(GL_BACK);

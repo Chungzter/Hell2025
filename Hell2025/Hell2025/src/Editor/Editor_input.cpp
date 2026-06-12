@@ -63,7 +63,7 @@ namespace Editor {
             if (Input::KeyPressed(HELL_KEY_BACKSPACE)) {
                 if (GetSelectedObjectType() != ObjectType::NO_TYPE) {
                     World::RemoveObject(GetSelectedObjectId());
-                    World::RecreateHouseGeometryOLD();
+                    World::RecreateAllHouseGeometry();
                     Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                     UnselectAnyObject();
                 }
