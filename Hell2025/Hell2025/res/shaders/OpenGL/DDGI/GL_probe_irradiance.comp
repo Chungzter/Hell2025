@@ -3,10 +3,10 @@
 #include "../../common/raytracing.glsl"
 #include "../../common/ddgi.glsl"
 
-// 1 warp per workgroup 
+// 1 warp per workgroup
 layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 
-layout(rgba16f, binding = 0) uniform image2DArray u_irradianceAtlas; 
+layout(rgba16f, binding = 0) uniform image2DArray u_irradianceAtlas;
 
 restrict layout(std430, binding = 4)  readonly buffer PointCloudBuffer         { CloudPoint points[]; };
 restrict layout(std430, binding = 5)  buffer ProbeColorBuffer                  { ProbeColor probeColors[]; };
@@ -22,7 +22,7 @@ uniform int u_frameIndex;
 uniform float u_pointCloudSpacing;
 uniform bool u_useSH;
 
-const float maxDist = 3.0;   
+const float maxDist = 3.0;
 
 shared vec3 shared_texelDirs[36];
 
@@ -46,11 +46,11 @@ void sh(uint pIdx, vec3 probePos, uint threadIdx) {
 
     for (uint i = threadIdx; i < poolCount; i += 32) {
         uint ptIdx = bakedIndices[poolStart + i];
-        
+
         vec3 ptPos = points[ptIdx].position.xyz;
         vec3 diff = ptPos - probePos;
         float distSq = dot(diff, diff);
-        
+
         // Early out on range
         if (distSq > maxDist * maxDist) continue;
 
@@ -91,7 +91,7 @@ void sh(uint pIdx, vec3 probePos, uint threadIdx) {
         vec3 sum = subgroupAdd(local_sh[j]);
         if (subgroupElect()) {
             vec3 old_sh = probeColors[pIdx].sh[j].rgb;
-            
+
             // Blend back in
             probeColors[pIdx].sh[j] = vec4(mix(old_sh, sum, 0.1), 1.0);
         }
@@ -99,8 +99,8 @@ void sh(uint pIdx, vec3 probePos, uint threadIdx) {
 }
 
 void octral(uint pIdx, vec3 probePos, uint threadIdx) {
-    const float encodingGamma = 5.0; 
-    const int INTERIOR = 6; 
+    const float encodingGamma = 5.0;
+    const int INTERIOR = 6;
 
     for (int i = int(threadIdx); i < 36; i += 32) {
         vec2 uv = DDGIGetNormalizedOctahedralCoordinates(ivec2(i % 6, i / 6), INTERIOR);
@@ -117,11 +117,11 @@ void octral(uint pIdx, vec3 probePos, uint threadIdx) {
 
     for (uint i = threadIdx; i < poolCount; i += 32) {
         uint ptIdx = bakedIndices[poolStart + i];
-        
+
         vec3 ptPos = points[ptIdx].position.xyz;
         vec3 diff = ptPos - probePos;
         float distSq = dot(diff, diff);
-        
+
         if (distSq > maxDist * maxDist) continue;
 
         vec3 ptNormal = points[ptIdx].normal.xyz;
@@ -148,21 +148,21 @@ void octral(uint pIdx, vec3 probePos, uint threadIdx) {
 
     for (int j = 0; j < 36; j++) {
         vec3 sum = subgroupAdd(localAccum[j]);
-        
+
         if (subgroupElect()) {
             int tx = j % INTERIOR;
             int ty = j / INTERIOR;
             ivec3 writeCoord = ivec3(int(probeTexelCoords.x) * 8 + tx + 1, int(probeTexelCoords.y) * 8 + ty + 1, int(probeTexelCoords.z));
-            
+
             // Integrated sum is the final linear color
             vec3 finalLinear = sum;
 
             vec3 encodedSample = pow(max(vec3(0.0), finalLinear), vec3(1.0 / encodingGamma));
             vec3 oldEncoded = imageLoad(u_irradianceAtlas, writeCoord).rgb;
-            
+
             float hysteresis = (dot(oldEncoded, oldEncoded) == 0.0) ? 0.0 : 0.05;
             vec3 blendedEncoded = mix(encodedSample, oldEncoded, hysteresis);
-            
+
             if (any(isnan(blendedEncoded))) blendedEncoded = vec3(0.0);
             imageStore(u_irradianceAtlas, writeCoord, vec4(blendedEncoded, 1.0));
         }

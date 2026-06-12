@@ -17,10 +17,10 @@ void main() {
     if (probeIdx >= uint(volume.totalProbes)) return;
 
     // Exit early if irrelevant and reset cooldown (THIS PROBABLY ISN'T SAFE. KEEPING IT HERE FOR FUTURE REFERENCE)
-    // if (!probeStates[probeIdx].isRelevant) {
-    //     probeStates[probeIdx].irradianceCooldown = 0u;
-    //     return;
-    // }
+    //if (!probeStates[probeIdx].isRelevant) {
+    //    probeStates[probeIdx].irradianceCooldown = 0u;
+    //    return;
+    //}
 
     // Load into local register to prevent multiple global memory accesses
     uint currentCooldown = probeStates[probeIdx].irradianceCooldown;
@@ -42,9 +42,9 @@ void main() {
         uint p3 = probePointIndices[offset + i + 3u];
 
         // sum flags to skip branching
-        uint sum = pointCloudDirtyFlags[p0] + 
-                   pointCloudDirtyFlags[p1] + 
-                   pointCloudDirtyFlags[p2] + 
+        uint sum = pointCloudDirtyFlags[p0] +
+                   pointCloudDirtyFlags[p1] +
+                   pointCloudDirtyFlags[p2] +
                    pointCloudDirtyFlags[p3];
 
         if (sum > 0u) {

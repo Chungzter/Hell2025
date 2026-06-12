@@ -12,7 +12,7 @@ void OpenGLTextureArray::AllocateMemory(uint32_t width, uint32_t height, uint32_
     glTextureParameteri(m_handle, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTextureParameteri(m_handle, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTextureParameteri(m_handle, GL_TEXTURE_WRAP_R, GL_REPEAT);
-   
+
     m_width = width;
     m_height = height;
     m_internalFormat = internalFormat;
@@ -73,4 +73,20 @@ void OpenGLTextureArray::ClearLayer(float r, float g, float b, float a, int laye
     int w = std::max(1, baseWidth >> mipmapLevel);
     int h = std::max(1, baseHeight >> mipmapLevel);
     glClearTexSubImage(m_handle, mipmapLevel, 0, 0, layerIndex, w, h, 1, m_format, m_type, clearColor);
+}
+
+void OpenGLTextureArray::ClearAllMipLevels(float r, float g, float b, float a) {
+    if (!m_memoryAllocated) return;
+
+    const float clearColor[4] = { r, g, b, a };
+
+    for (uint32_t mip = 0; mip < m_mipmapLevelCount; mip++) {
+        glClearTexImage(
+            m_handle,
+            mip,
+            m_format,
+            m_type,
+            clearColor
+        );
+    }
 }

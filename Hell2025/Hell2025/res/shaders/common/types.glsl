@@ -69,12 +69,12 @@ struct RendererData {
     float hairBufferHeight;
     float time;
     int splitscreenMode;
-    
+
     int rendererOverrideState;
     float normalizedMouseX;
     float normalizedMouseY;
     int tileCountX;
-    
+
     int tileCountY;
 };
 
@@ -258,7 +258,7 @@ const int PROBE_NUM_DISTANCE_INTERIOR_TEXELS = 14;
 //#define RAYS_PER_PROBE 256
 
 const int PROBE_MAX_DISTANCE_COOLDOWN = 20;
-const int PROBE_MAX_IRRADIANCE_COOLDOWN = 25;
+const int PROBE_MAX_IRRADIANCE_COOLDOWN = 35;
 const float PROBE_MAX_RAY_DISTANCE = 1.5;
 const float PROBE_NORMAL_BIAS = 0.075;
 const float PROBE_VIEW_BIAS = 0.1;

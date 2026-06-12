@@ -150,7 +150,8 @@ namespace OpenGLRenderer {
 
         OpenGLFrameBuffer& gBuffer = CreateFrameBuffer("GBuffer", resolutions.gBuffer);
         gBuffer.CreateAttachment("BaseColor", GL_RGBA8);
-        gBuffer.CreateAttachment("Normal", GL_RGBA16F);
+        //gBuffer.CreateAttachment("Normal", GL_RGBA16F);
+        gBuffer.CreateAttachment("NormalXYRoughnessMisc", GL_RGB10_A2);
         gBuffer.CreateAttachment("RMA", GL_RGBA8); // In alpha is screenspace blood decal mask
         gBuffer.CreateAttachment("Lighting", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
         gBuffer.CreateAttachment("Emissive", GL_RGBA8, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
@@ -269,9 +270,7 @@ namespace OpenGLRenderer {
         LoadShader("BlurVertical", { "GL_blur_vertical.vert", "GL_blur.frag" });
         LoadShader("ComputeSkinning", { "GL_compute_skinning.comp" });
         LoadShader("TileWorldBounds", { "GL_tile_world_bounds.comp" });
-        LoadShader("DecalPaintUVs", { "gl_decal_paint_uvs.vert", "gl_decal_paint_uvs.frag" });
-        LoadShader("DecalPaintMask", { "gl_decal_paint_mask.comp" });
-        LoadShader("Decals", { "GL_decals.vert", "GL_decals.frag" });
+
         LoadShader("DownSample2xBox", { "GL_down_sample_2x_box.comp" });
         LoadShader("EditorMesh", { "GL_editor_mesh.vert", "GL_editor_mesh.frag" });
         LoadShader("EmissiveComposite", { "GL_emissive_composite.comp" });
@@ -317,20 +316,26 @@ namespace OpenGLRenderer {
         LoadShader("Winston", { "GL_winston.vert", "GL_winston.frag" });
         LoadShader("CSMDepth", { "GL_csm_depth.vert", "GL_csm_depth.frag", "GL_csm_depth.geom" });
         LoadShader("ZeroOut", { "GL_zero_out.comp" });
-        LoadShader("VatBlood", { "GL_vat_blood.vert", "GL_vat_blood.frag" });
-        LoadShader("BloodDecalsCulling", { "GL_blood_decals_culling.comp" });
-        LoadShader("BloodDecalsDraw", { "GL_blood_decals_draw.vert", "GL_blood_decals_draw.frag" });
-        LoadShader("BloodDecalsComposite", { "GL_blood_decals_composite.comp" });
-        LoadShader("BloodFluidDepth", { "GL_blood_fluid.vert", "GL_blood_fluid_depth.frag" });
-        LoadShader("BloodFluidThickness", { "GL_blood_fluid.vert", "GL_blood_fluid_thickness.frag" });
-        LoadShader("BloodFluidBlur", { "GL_blood_fluid_blur.comp" });
+
         LoadShader("MetaBalls", { "GL_meta_balls.vert", "GL_meta_balls.frag" });
-		LoadShader("ViewspaceDepth", { "GL_viewspace_depth.comp" });
-		LoadShader("DepthPeeledTransparencyColor", { "GL_depth_peeled_transparency_color.vert", "GL_depth_peeled_transparency_color.frag" });
-		LoadShader("DepthPeeledTransparencyDepth", { "GL_depth_peeled_transparency_depth.vert", "GL_depth_peeled_transparency_depth.frag" });
+        LoadShader("ViewspaceDepth", { "GL_viewspace_depth.comp" });
+        LoadShader("DepthPeeledTransparencyColor", { "GL_depth_peeled_transparency_color.vert", "GL_depth_peeled_transparency_color.frag" });
+        LoadShader("DepthPeeledTransparencyDepth", { "GL_depth_peeled_transparency_depth.vert", "GL_depth_peeled_transparency_depth.frag" });
         LoadShader("DepthPeeledTransparencyComposite", { "GL_depth_peeled_transparency_composite.comp" });
         LoadShader("RaytraceScene", { "GL_raytrace_scene.comp" });
-		LoadShader("Plastic", { "GL_plastic.vert", "GL_plastic.frag" });
+        LoadShader("Plastic", { "GL_plastic.vert", "GL_plastic.frag" });
+
+        LoadShader("LightAABBPosition", { "GL_light_aabb_position.vert", "GL_light_aabb_position.frag" });
+        LoadShader("LightAABBMinMax", { "GL_light_aabb_min_max.comp" });
+
+        // Blood
+        LoadShader("Blood", "BloodDecalsCulling", { "GL_blood_decals_culling.comp" });
+        LoadShader("Blood", "BloodDecalsDraw", { "GL_blood_decals_draw.vert", "GL_blood_decals_draw.frag" });
+        LoadShader("Blood", "BloodDecalsComposite", { "GL_blood_decals_composite.comp" });
+        LoadShader("Blood", "BloodFluidDepth", { "GL_blood_fluid.vert", "GL_blood_fluid_depth.frag" });
+        LoadShader("Blood", "BloodFluidThickness", { "GL_blood_fluid.vert", "GL_blood_fluid_thickness.frag" });
+        LoadShader("Blood", "BloodFluidBlur", { "GL_blood_fluid_blur.comp" });
+        LoadShader("Blood", "VatBlood", { "GL_vat_blood.vert", "GL_vat_blood.frag" });
 
         // Debug
         LoadShader("Debug", "DebugHackAABB", { "GL_debug_hack_aabb.vert", "GL_debug_hack_aabb.frag" });
@@ -366,6 +371,11 @@ namespace OpenGLRenderer {
         LoadShader("DDGI", "ProbeRelocation", { "GL_probe_state_update.comp" });
         LoadShader("DDGI", "ProbeStateUpdate", { "GL_probe_state_update.comp" });
 
+        // Decals
+        LoadShader("Decals", "DecalPaintUVs", { "gl_decal_paint_uvs.vert", "gl_decal_paint_uvs.frag" });
+        LoadShader("Decals", "DecalPaintMask", { "gl_decal_paint_mask.comp" });
+        LoadShader("Decals", "Decals", { "GL_decals.vert", "GL_decals.frag" });
+
         // Ocean
         LoadShader("Water", "FttRadix64Vertical", { "GL_ftt_radix_64_vertical.comp" });
         LoadShader("Water", "FttRadix8Vertical", { "GL_ftt_radix_8_vertical.comp" });
@@ -380,15 +390,10 @@ namespace OpenGLRenderer {
         LoadShader("Water", "OceanTesseleationEdgeTransitionCleanUp", { "GL_ocean_tessellation_edge_transition_cleanup.comp" });
         LoadShader("Water", "OceanPositionReadback", { "GL_ocean_position_readback.comp" });
 
-        LoadShader("LightAABBPosition", { "GL_light_aabb_position.vert", "GL_light_aabb_position.frag" });
-        LoadShader("LightAABBMinMax", { "GL_light_aabb_min_max.comp" });
-
-
+        // Post processing
         LoadShader("PostProcessing", "FXAA", { "GL_fxaa.comp" });
         LoadShader("PostProcessing", "TAA", { "GL_taa.comp" });
 		LoadShader("PostProcessing", "PostProcessing", { "GL_post_processing.comp" });
-
-		//LoadShader("TightLightAABBTest", { "GL_light_aabb_test.comp" }); // TODO: delete this shader from res/shaders/
     }
 
     void CreateSSBOs() {
@@ -851,7 +856,7 @@ namespace OpenGLRenderer {
     }
 
     void DebugHack(const std::string& message) {
-  
+
     }
 
     void CreateBlurBuffers() {

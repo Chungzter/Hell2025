@@ -1,4 +1,5 @@
 #pragma once
+#include "glad/gl.h"
 
 struct OpenGLShadowCubeMapArray {
     void Init(unsigned int numberOfCubemaps, int size);
@@ -17,4 +18,7 @@ private:
     unsigned int m_depthTexture = 0;
     unsigned int m_numberOfCubemaps = 0;
     unsigned int m_textureView = 0;
+
+    GLsizei m_mipLevels = 1;
+    GLenum m_internalFormat = GL_DEPTH_COMPONENT16;
 };

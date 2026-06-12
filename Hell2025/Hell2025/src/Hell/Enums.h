@@ -524,6 +524,7 @@ enum class DebugTextMode{
     PER_PLAYER,
     GLOBAL,
     PROFILING,
+    MEMORY_TRACKER,
     DEBUG_TEXT_MODE_COUNT
 };
 

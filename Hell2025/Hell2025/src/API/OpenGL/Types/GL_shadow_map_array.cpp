@@ -1,10 +1,13 @@
 #include "GL_shadow_map_array.h"
-#include <glad/gl.h>
+
+#include "API/OpenGL/GL_memory_tracker.h"
 #include <iostream>
 
 void OpenGLShadowMapArray::Init(unsigned int layerCount, int size, int internalFormat) {
     m_layerCount = layerCount;
     m_size = size;
+    m_internalFormat = internalFormat;
+    m_mipLevels = 1;
 
     glCreateFramebuffers(1, &m_handle);
     glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &m_depthTexture);
@@ -20,6 +23,8 @@ void OpenGLShadowMapArray::Init(unsigned int layerCount, int size, int internalF
     if (glCheckNamedFramebufferStatus(m_handle, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         std::cout << "OpenGLShadowMapArray::Init() failed: Framebuffer not complete!\n";
     }
+
+    OpenGLMemoryTracker::AddCubemapBytes(m_size, m_internalFormat, m_mipLevels);
 }
 
 void OpenGLShadowMapArray::Bind() {
@@ -41,6 +46,7 @@ void OpenGLShadowMapArray::CleanUp() {
     m_depthTexture = 0;
     m_handle = 0;
     m_layerCount = 0;
+    OpenGLMemoryTracker::RemoveCubemapBytes(m_size, m_internalFormat, m_mipLevels);
 }
 
 void OpenGLShadowMapArray::ClearDepth() {

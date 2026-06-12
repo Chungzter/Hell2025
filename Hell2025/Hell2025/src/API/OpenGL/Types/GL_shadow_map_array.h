@@ -1,4 +1,5 @@
 #pragma once
+#include "glad/gl.h"
 
 struct OpenGLShadowMapArray {
     void Init(unsigned int layerCount, int size, int internalFormat);
@@ -17,4 +18,6 @@ private:
     unsigned int m_handle = 0;
     unsigned int m_depthTexture = 0;
     unsigned int m_layerCount = 0;
+    GLsizei m_mipLevels = 1;
+    GLenum m_internalFormat = GL_DEPTH_COMPONENT16;
 };

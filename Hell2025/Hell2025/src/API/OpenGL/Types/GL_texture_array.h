@@ -10,6 +10,7 @@ struct OpenGLTextureArray {
     void SetMagFilter(TextureFilter filter);
     void Clear(float r, float g, float b, float a);
     void ClearLayer(float r, float g, float b, float a, int layerIndex);
+    void ClearAllMipLevels(float r, float g, float b, float a);
 
     uint32_t GetHandle()           { return m_handle; }
     uint32_t GetWidth()            { return m_width; }

@@ -9,6 +9,8 @@
 #include "Renderer/Renderer.h"
 #include <Hell/Logging.h>
 
+#include "API/OpenGL/GL_memory_tracker.h"
+
 namespace UIBackEnd {
 
     Mesh2D g_uiMesh;
@@ -124,6 +126,13 @@ hits the floor.
             //std::string text = "Global debug text\n... apparently it's broken right now.";
             std::string text = Debug::GetText();
             BlitText(text, "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
+        }
+
+        else if (Debug::GetDebugTextMode() == DebugTextMode::MEMORY_TRACKER) {
+            std::string names = OpenGLMemoryTracker::GetReportNames();
+            std::string bytes = OpenGLMemoryTracker::GetReportBytes();
+            BlitText(names, "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
+            BlitText(bytes, "StandardFont", 250, 0, Alignment::TOP_LEFT, 2.0f);
         }
 
         else if (Debug::GetDebugTextMode() == DebugTextMode::PROFILING) {

@@ -12,7 +12,11 @@
 #include <Hell/Constants.h>
 #include <Hell/Logging.h>
 
+#include "Core/Game.h" // For Game::GetTotalTime(). It's a hack to prevent colorful probe glitch at start
+
 namespace OpenGLRenderer {
+
+    float g_time = 0.0f; // Hack to prevent colorful probe glitch at start
 
     GLuint g_pointCloudVao = 0;
     GLuint g_pointCloudVbo = 0;
@@ -100,6 +104,8 @@ namespace OpenGLRenderer {
             ResetProbeStates(ddgiVolume);
 
             ddgiVolume.MarkPointCloudAsUploaded();
+
+            ClearSSBO("ProbeSHColor"); // You never used to have to do this. Find out why!
         }
 
         ddgiVolume.UpdateSceneBvh();
@@ -174,10 +180,14 @@ namespace OpenGLRenderer {
         }
 
         UpdateSSBO("ProbeStates", probeStates.size() * sizeof(ProbeState), probeStates.data());
+
+        g_time = 0.0f; // Hack to prevent colorful probe glitch at start
     }
 
     void UpdateProbeStates(DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
+
+        g_time += Game::GetDeltaTime(); // Hack to prevent colorful probe glitch at start
 
         BindSSBO(4, "DDGIVolume");
         BindSSBO(5, "ProbeStates");
@@ -185,8 +195,8 @@ namespace OpenGLRenderer {
 
         BindShader("ProbeStateUpdate");
 
-        OpenGLShader* shader = GetShaderOLD("ProbeStateUpdate");
-        shader->SetInt("u_dirtyDoorAABBCount", (int)World::GetDirtyDoorAABBS().size());
+        SetUniformInt("u_dirtyDoorAABBCount", (int)World::GetDirtyDoorAABBS().size());
+        SetUniformFloat("u_time", g_time); // Hack to prevent colorful probe glitch at start
 
         DispatchCompute((ddgiVolume.GetTotalProbeCount() + 63) / 64, 1, 1);
     }

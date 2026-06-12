@@ -569,7 +569,7 @@ struct RendererSettings {
     bool debugDrawIrradianceProbes = false;
     bool enableIrradianceProbeSampling = true;
     bool enableLighting = true;
-    bool irradianceUsesSH = true;
+    bool irradianceUsesSH = false;
     RendererOverrideState rendererOverrideState = RendererOverrideState::NONE;
     ProbeDebugState probeDebugState = ProbeDebugState::HIDDEN;
 };

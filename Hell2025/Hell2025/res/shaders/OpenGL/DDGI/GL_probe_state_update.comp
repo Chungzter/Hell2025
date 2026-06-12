@@ -8,6 +8,7 @@ restrict layout(std430, binding = 5) buffer ProbeStateBuffer          { ProbeSta
 restrict layout(std430, binding = 6) buffer DirtyDoorAABBBuffer       { AABB dirtyDoorAABBs[]; };
 
 uniform int u_dirtyDoorAABBCount;
+uniform float u_time;
 
 void UpdateDistanceCooldown(uint probeIdx) {
     ivec3 probeCoords = DDGIGetProbeCoords(int(probeIdx), volume);
@@ -53,12 +54,17 @@ void main() {
         probeStates[probeIdx].distanceCooldown--;
     }
 
-    // ATTENTION 
+    // ATTENTION
     // Irradiance cool down decrement is now in the probe dirty point check shader, coz it deppends on relevance which is calculated later!
 
     UpdateDistanceCooldown(probeIdx);
 
     bool init = false;
+
+    if (u_time < 2.5) { // HACK TO PREVENT COLORFUL PROBE GLITCH
+        init = true;    // HACK TO PREVENT COLORFUL PROBE GLITCH
+    }                   // HACK TO PREVENT COLORFUL PROBE GLITCH
+
     if (init) {
         probeStates[probeIdx].distanceCooldown = PROBE_MAX_DISTANCE_COOLDOWN;
         probeStates[probeIdx].irradianceCooldown = PROBE_MAX_IRRADIANCE_COOLDOWN;
@@ -66,6 +72,6 @@ void main() {
         probeStates[probeIdx].isActive = true;
         probeStates[probeIdx].isRelevant = true;
     }
-    
+
     //probeStates[probeIdx].irradianceCooldown = PROBE_MAX_IRRADIANCE_COOLDOWN;
 }

@@ -1,4 +1,6 @@
 #include "GL_frameBuffer.h"
+
+#include "API/OpenGL/GL_memory_tracker.h"
 #include "Hell/Logging.h"
 
 OpenGLFrameBuffer::OpenGLFrameBuffer(const std::string& name, int width, int height, uint32_t sampleCount) {
@@ -35,13 +37,18 @@ void OpenGLFrameBuffer::CleanUp() {
     for (ColorAttachment& colorAttachment : m_colorAttachments) {
         if (colorAttachment.handle != 0) {
             glDeleteTextures(1, &colorAttachment.handle);
+            OpenGLMemoryTracker::RemoveFramebufferAttachmentBytes(m_width, m_height, colorAttachment.internalFormat);
         }
     }
     m_colorAttachments.clear();
 
-    if (m_depthAttachment.handle != 0) glDeleteTextures(1, &m_depthAttachment.handle);
+    if (m_depthAttachment.handle != 0) {
+        glDeleteTextures(1, &m_depthAttachment.handle);
+        OpenGLMemoryTracker::RemoveFramebufferAttachmentBytes(m_width, m_height, m_depthAttachment.internalFormat);
+    }
+
     if (m_handle != 0) glDeleteFramebuffers(1, &m_handle);
-    
+
     m_width = 0;
     m_height = 0;
     m_sampleCount = 0;
@@ -91,6 +98,8 @@ void OpenGLFrameBuffer::CreateAttachment(const std::string& name, GLenum interna
 
     std::string debugLabel = "Texture (FBO: " + m_name + " Tex: " + name + ")";
     glObjectLabel(GL_TEXTURE, colorAttachment.handle, static_cast<GLsizei>(debugLabel.length()), debugLabel.c_str());
+
+    OpenGLMemoryTracker::AddFramebufferAttachmentBytes(m_width, m_height, colorAttachment.internalFormat);
 }
 
 void OpenGLFrameBuffer::CreateDepthAttachment(GLenum internalFormat, GLenum minFilter, GLenum magFilter, GLint wrap, glm::vec4 borderColor) {
@@ -123,6 +132,8 @@ void OpenGLFrameBuffer::CreateDepthAttachment(GLenum internalFormat, GLenum minF
 
     std::string debugLabel = "Texture (FBO: " + m_name + " Tex: Depth)";
     glObjectLabel(GL_TEXTURE, m_depthAttachment.handle, static_cast<GLsizei>(debugLabel.length()), debugLabel.c_str());
+
+    OpenGLMemoryTracker::AddFramebufferAttachmentBytes(m_width, m_height, m_depthAttachment.internalFormat);
 }
 
 void OpenGLFrameBuffer::BindDepthAttachmentFrom(const OpenGLFrameBuffer& srcFrameBuffer) {
