@@ -56,7 +56,7 @@ namespace Editor {
     // Door stuff
     EditorUI::DropDown g_doorType;
     EditorUI::DropDown g_doorFrontMaterial;
-    EditorUI::DropDown g_doorBackMaterial;    
+    EditorUI::DropDown g_doorBackMaterial;
     EditorUI::DropDown g_doorFrameFrontMaterial;
     EditorUI::DropDown g_doorFrameBackMaterial;
     EditorUI::CheckBox g_doorHasDeadLock;
@@ -237,7 +237,7 @@ namespace Editor {
 
                 // Lights
                 if (Light* light = World::GetLightByObjectId(GetSelectedObjectId())) {
-                    AABB aabb(light->GetWorldCullBoundsMin(), light->GetWorldCullBoundsMax());
+                    AABB aabb(light->GetWorldBoundsMin(), light->GetWorldBoundsMax());
                     Renderer::DrawAABB(aabb, YELLOW);
 
                     EditorUI::DropDown type;
@@ -257,7 +257,7 @@ namespace Editor {
                         IESProfileType newType = Util::StringToEnum(iesType.GetSelectedOptionText(), IESProfileType::NONE);
                         light->SetIESProfileType(newType);
                     }
-                    
+
                     EditorUI::FloatInput("Position X",   light->GetPosition().x,  light, &Light::SetPositionX);
                     EditorUI::FloatInput("Position Y",   light->GetPosition().y,  light, &Light::SetPositionY);
                     EditorUI::FloatInput("Position Z",   light->GetPosition().z,  light, &Light::SetPositionZ);
@@ -274,14 +274,6 @@ namespace Editor {
                     EditorUI::FloatInput("Forward Y",    light->GetForward().y,   light, &Light::SetForwardY);
                     EditorUI::FloatInput("Forward Z",    light->GetForward().z,   light, &Light::SetForwardZ);
                     EditorUI::FloatInput("Twist",        light->GetTwist(),       light, &Light::SetTwist);
-
-                    // Remove me
-                    EditorUI::FloatInput("Cull bounds min X", light->GetCullBoundsMin().x, light, &Light::SetCullBoundsMinX);
-                    EditorUI::FloatInput("Cull bounds min Y", light->GetCullBoundsMin().y, light, &Light::SetCullBoundsMinY);
-                    EditorUI::FloatInput("Cull bounds min Z", light->GetCullBoundsMin().z, light, &Light::SetCullBoundsMinZ);
-                    EditorUI::FloatInput("Cull bounds max X", light->GetCullBoundsMax().x, light, &Light::SetCullBoundsMaxX);
-                    EditorUI::FloatInput("Cull bounds max Y", light->GetCullBoundsMax().y, light, &Light::SetCullBoundsMaxY);
-                    EditorUI::FloatInput("Cull bounds max Z", light->GetCullBoundsMax().z, light, &Light::SetCullBoundsMaxZ);
                 }
 
 
@@ -324,7 +316,7 @@ namespace Editor {
                     types.push_back(Util::DoorTypeToString(DoorType::STANDARD_B));
                     types.push_back(Util::DoorTypeToString(DoorType::STAINED_GLASS));
                     types.push_back(Util::DoorTypeToString(DoorType::STAINED_GLASS2));
-                                          
+
                     std::vector<std::string> materialTypes;
                     materialTypes.push_back(Util::DoorMaterialTypeToString(DoorMaterialType::RESIDENT_EVIL));
                     materialTypes.push_back(Util::DoorMaterialTypeToString(DoorMaterialType::WHITE_PAINT));

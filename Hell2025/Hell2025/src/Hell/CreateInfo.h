@@ -237,8 +237,6 @@ struct LightCreateInfo {
     float twist = 0.0f;
     IESProfileType iesProfileType = IESProfileType::NONE;
     LightType type = LightType::HANGING_LIGHT;
-    glm::vec3 cullBoundsMin = glm::vec3(0.0f);
-    glm::vec3 cullBoundsMax = glm::vec3(0.0f);
 };
 
 struct BulletCreateInfo {

@@ -19,16 +19,6 @@ Light::Light(uint64_t id, LightCreateInfo& createInfo, SpawnOffset& spawnOffset)
 
 	m_objectId = id;
     ConfigureMeshNodes();
-
-    // Remove me
-    if (m_createInfo.cullBoundsMin == glm::vec3(0.0f)) {
-        m_createInfo.cullBoundsMin = GetPosition() - glm::vec3(GetRadius());
-        m_createInfo.cullBoundsMax = GetPosition() + glm::vec3(GetRadius());
-    }
-    else {
-        m_createInfo.cullBoundsMin += spawnOffset.translation;
-        m_createInfo.cullBoundsMax += spawnOffset.translation;
-    }
 }
 
 void Light::Update(float deltaTime) {
@@ -47,7 +37,7 @@ void Light::Update(float deltaTime) {
 
     for (GPUAABB& gpuAabb : World::GetDirtyDoorAABBS()) {
         AABB doorAABB(gpuAabb.boundsMin, gpuAabb.boundsMax);
-        AABB lightCullingAABB(m_createInfo.cullBoundsMin, m_createInfo.cullBoundsMax);
+        AABB lightCullingAABB(m_worldBoundsMin, m_worldBoundsMax);
 
         if (doorAABB.IntersectsAABB(lightCullingAABB)) {
             m_dirtyForRaytracing = true;
@@ -75,6 +65,56 @@ void Light::Update(float deltaTime) {
    //SetColor(m_lightFlicker.m_currentColor);
 
 }
+
+void Light::RaycastWorldBounds() {
+    HouseBvhRegion& houseBvh = World::GetHouseBvh();
+
+    glm::vec3 rayOrigin = GetPosition();
+    float rayLength = GetRadius() * 2.0f;
+    int numRays =  500;
+
+    std::vector<glm::vec3> rayDirs = Util::GenerateRayDirections(numRays);
+
+    glm::vec3 minFound = rayOrigin;
+    glm::vec3 maxFound = rayOrigin;
+
+    for (const glm::vec3& rayDir : rayDirs) {
+        glm::vec3 p1 = rayOrigin;
+        glm::vec3 p2 = p1 + (rayDir * rayLength);
+
+        BvhRayResult rayResult = houseBvh.CastRay(rayOrigin, rayDir, rayLength);
+
+        if (rayResult.hitFound) {
+            //Renderer::DrawLine(p1, rayResult.hitPosition, GREEN);
+
+            minFound = glm::min(minFound, rayResult.hitPosition);
+            maxFound = glm::max(maxFound, rayResult.hitPosition);
+        }
+        else {
+            //Renderer::DrawLine(p1, p2, RED);
+        }
+    }
+
+    // Clamp to actual light radius
+    minFound = glm::max(minFound, rayOrigin - glm::vec3(GetRadius()));
+    maxFound = glm::min(maxFound, rayOrigin + glm::vec3(GetRadius()));
+
+    // Store it
+    m_worldBoundsMin = minFound;
+    m_worldBoundsMax = maxFound;
+
+    // Debug draw
+    //AABB worldBounds = AABB(GetWorldBoundsMin(), GetWorldBoundsMax());
+    //Renderer::DrawPoint(rayOrigin, RED);
+    //Renderer::DrawAABB(worldBounds, glm::vec4(GetColor(), 1.0f));
+}
+
+
+
+
+
+
+
 
 void Light::ConfigureMeshNodes() {
     // Mount position
@@ -232,21 +272,25 @@ void Light::UpdateDirtyState() {
 void Light::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
     ConfigureMeshNodes();
+    RaycastWorldBounds();
 }
 
 void Light::SetPositionX(float x) {
     m_createInfo.position.x = x;
     ConfigureMeshNodes();
+    RaycastWorldBounds();
 }
 
 void Light::SetPositionY(float y) {
     m_createInfo.position.y = y;
     ConfigureMeshNodes();
+    RaycastWorldBounds();
 }
 
 void Light::SetPositionZ(float z) {
     m_createInfo.position.z = z;
     ConfigureMeshNodes();
+    RaycastWorldBounds();
 }
 
 void Light::SetRotation(const glm::vec3& rotation) {
@@ -317,6 +361,7 @@ void Light::SetColorB(float b) {
 void Light::SetRadius(float radius) {
     m_createInfo.radius = radius;
     ConfigureMeshNodes();
+    RaycastWorldBounds();
 }
 
 void Light::SetStrength(float strength) {
@@ -403,30 +448,3 @@ void LightFlicker::Update(float deltaTime, float timeSeconds) {
 
     m_currentColor = glm::mix(m_lowColor, m_highColor, m_currentFlicker);
 }
-
-
-
-// Remove me
-void Light::SetCullBoundsMinX(float x) {
-    m_createInfo.cullBoundsMin.x = x;
-}
-
-void Light::SetCullBoundsMinY(float y) {
-    m_createInfo.cullBoundsMin.y = y;
-}
-void Light::SetCullBoundsMinZ(float z) {
-    m_createInfo.cullBoundsMin.z = z;
-}
-
-void Light::SetCullBoundsMaxX(float x) {
-    m_createInfo.cullBoundsMax.x = x;
-}
-
-void Light::SetCullBoundsMaxY(float y) {
-    m_createInfo.cullBoundsMax.y = y;
-}
-
-void Light::SetCullBoundsMaxZ(float z) {
-    m_createInfo.cullBoundsMax.z = z;
-}
-// Remove me

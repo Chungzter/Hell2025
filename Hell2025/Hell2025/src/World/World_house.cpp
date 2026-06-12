@@ -8,12 +8,22 @@
 
 namespace World {
 
+    HouseBvhRegion g_houseBvhRegion;
+
     void RecreateAllHouseGeometry() {
         RecreateAllProceduralWallMesh();
         RecreateAllProcedularHousePlaneMesh();
         RecreateAllWeatherBoards();
         RecreateAllHangingLightCords();
         RecreateAllWallTrims();
+
+        glm::vec3 aabbMin = glm::vec3(-999.0f);
+        glm::vec3 aabbMax = glm::vec3(999.0f);
+        g_houseBvhRegion.Update(aabbMin, aabbMax);
+
+        for (Light& light : GetLights()) {
+            light.RaycastWorldBounds();
+        }
     }
 
     void RecreateAllWallTrims() {
@@ -44,7 +54,7 @@ namespace World {
         RecreateClippingCubes();
 
         for (Wall& wall : GetWalls()) {
-            
+
             // Update CSG and trims
             wall.UpdateSegmentsTrimsAndVertexData();
 
@@ -90,5 +100,9 @@ namespace World {
         for (Light& light : GetLights()) {
             light.ConfigureMeshNodes();
         }
+    }
+
+    HouseBvhRegion& GetHouseBvh() {
+        return g_houseBvhRegion;
     }
 }

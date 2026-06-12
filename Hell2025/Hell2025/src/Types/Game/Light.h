@@ -34,6 +34,7 @@ struct Light {
     Light& operator=(Light&&) noexcept = default;
     ~Light() = default;
 
+    void RaycastWorldBounds();
     void Update(float deltaTime);
     void SetPosition(const glm::vec3& position);
     void SetPositionX(float x);
@@ -62,18 +63,15 @@ struct Light {
     void ConfigureMeshNodes();
 
     // Remove me (NO KEEP ME)
-    void SetCullBoundsMinX(float x);
-    void SetCullBoundsMinY(float y);
-    void SetCullBoundsMinZ(float z);
-    void SetCullBoundsMaxX(float x);
-    void SetCullBoundsMaxY(float y);
-    void SetCullBoundsMaxZ(float z);
+    //void SetCullBoundsMinX(float x);
+    //void SetCullBoundsMinY(float y);
+    //void SetCullBoundsMinZ(float z);
+    //void SetCullBoundsMaxX(float x);
+    //void SetCullBoundsMaxY(float y);
+    //void SetCullBoundsMaxZ(float z);
     // Remove me
 
     Frustum* GetFrustumByFaceIndex(uint32_t faceIndex);
-
-    glm::vec3 GetWorldCullBoundsMin() const                    { return GetPosition() + GetCullBoundsMin(); }
-    glm::vec3 GetWorldCullBoundsMax() const                    { return GetPosition() + GetCullBoundsMax(); }
 
     MeshNodes& GetMeshNodes()                                  { return m_meshNodes; }
     LightType GetType() const                                  { return m_createInfo.type; }
@@ -95,8 +93,8 @@ struct Light {
     const float GetIESExposure() const                         { return m_createInfo.iesExposure; }
 
     // Remove me
-    const glm::vec3& GetCullBoundsMin() const { return m_createInfo.cullBoundsMin; }
-    const glm::vec3& GetCullBoundsMax() const { return m_createInfo.cullBoundsMax; }
+    const glm::vec3& GetWorldBoundsMin() const { return m_worldBoundsMin; }
+    const glm::vec3& GetWorldBoundsMax() const { return m_worldBoundsMax; }
     // Remove me
 
     bool m_doFlicker = false;
@@ -116,6 +114,9 @@ private:
 	glm::mat4 m_projectionTransforms[6];
 	glm::mat4 m_projectionTransformsReverseZ[6];
     glm::mat4 m_viewMatrix[6];
+
+    glm::vec3 m_worldBoundsMin = glm::vec3(0.0f);
+    glm::vec3 m_worldBoundsMax = glm::vec3(0.0f);
 
     // Your light is basically made of 3 things. A main model/transform which for most lights is the main model.
     // Hanging lights have 2 other models, the cord, and the cord mount.

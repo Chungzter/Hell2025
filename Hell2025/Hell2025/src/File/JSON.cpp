@@ -125,8 +125,6 @@ namespace nlohmann {
             {"IESExposure", createInfo.iesExposure},
             {"Strength", createInfo.strength},
             {"Type", Util::LightTypeToString(createInfo.type)},
-            {"CullBoundsMin", createInfo.cullBoundsMin},
-            {"CullBoundsMax", createInfo.cullBoundsMax},
         };
     }
 
@@ -149,7 +147,7 @@ namespace nlohmann {
             {"EditorName", createInfo.editorName}
         };
     }
-        
+
     void to_json(nlohmann::json& j, const PictureFrameCreateInfo& createInfo) {
         j = nlohmann::json{
             {"Position", createInfo.position},
@@ -337,8 +335,6 @@ namespace nlohmann {
         info.type = Util::StringToLightType(j.value("Type", "HANGING_LIGHT"));
         info.iesProfileType = Util::StringToIESProfileType(j.value("IESProfileType", "NONE"));
         info.iesExposure = j.value("IESExposure", 1.0f);
-        info.cullBoundsMin = j.value("CullBoundsMin", glm::vec3(0.0f, 0.0f, 0.0f));
-        info.cullBoundsMax = j.value("CullBoundsMax", glm::vec3(0.0f, 0.0f, 0.0f));
     }
 
     void from_json(const nlohmann::json& j, PianoCreateInfo& info) {

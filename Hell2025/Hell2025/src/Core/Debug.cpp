@@ -22,8 +22,6 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "Types/House/HouseBvhRegion.h"
-
 namespace Debug {
     std::string g_text = "";
     bool g_showDebugText = false;
@@ -169,48 +167,16 @@ namespace Debug {
 
         if (g_debugRenderMode == DebugRenderMode::LIGHTS) {
             static uint32_t lightIndex = 2;
-            static bool even = true;
 
-            //static HouseBvhRegion houseBvhRegion;
-
-            if (Input::KeyPressed(HELL_KEY_UP)) even =! even;
             if (Input::KeyPressed(HELL_KEY_LEFT)) lightIndex--;
             if (Input::KeyPressed(HELL_KEY_RIGHT)) lightIndex++;
 
             if (lightIndex < 0) lightIndex = World::GetLightCount() - 1;
             if (lightIndex == World::GetLightCount()) lightIndex = 0;
 
-            Light* light = World::GetLightByIndex(lightIndex);
-
-            //if (Input::KeyPressed(HELL_KEY_DOWN)) {
-            //    glm::vec3 aabbMin = glm::vec3(-999.0f);
-            //    glm::vec3 aabbMax = glm::vec3(999.0f);
-            //    houseBvhRegion.Update(aabbMin, aabbMax);
-            //}
-            //
-            //if (houseBvhRegion.CpuBvhExists()) {
-            //    Bvh::Cpu::RenderMeshBvh(houseBvhRegion.GetCpuMeshBvhId(), YELLOW, glm::mat4(1.0f));
-            //}
-
-            AABB cullBounds = AABB(light->GetCullBoundsMin(), light->GetCullBoundsMax());
-            glm::vec4 color = glm::vec4(light->GetColor(), 1.0f);
-            glm::vec3 position = light->GetPosition();
-            
-            Renderer::DrawAABB(cullBounds, color);
-            Renderer::DrawPoint(position, color);
-
-            int numRays = 100;
-            float spreadAngleRadians = 1;
-            glm::vec3 targetDir = glm::vec3(0, -1, 0);
-
-            std::vector<glm::vec3> dirs;
-            
-            if (even) dirs = Util::GenerateRayDirections(numRays);
-            else dirs = Util::GenerateFibonacciCone(numRays, spreadAngleRadians, targetDir);
-
-            for (const glm::vec3& dir : dirs) {
-                glm::vec3 endPoint = position + (dir * light->GetRadius()); 
-                Renderer::DrawLine(position, endPoint, glm::vec4(light->GetColor(), 1.0f));
+            if (Light* light = World::GetLightByIndex(lightIndex)) {
+                AABB worldBounds = AABB(light->GetWorldBoundsMin(), light->GetWorldBoundsMax());
+                Renderer::DrawAABB(worldBounds, glm::vec4(light->GetColor(), 1.0f));
             }
         }
 

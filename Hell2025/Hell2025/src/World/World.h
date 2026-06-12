@@ -48,6 +48,9 @@
 
 #include "GlobalIllumination/DDGIVolume.h" // move me to Types dir
 
+
+#include "Types/House/HouseBvhRegion.h" // REMOVE AND REWRITE THIS WHOLE THING
+
 struct MapInstanceCreateInfo {
     std::string mapName;
     uint32_t spawnOffsetChunkX;
@@ -157,6 +160,7 @@ namespace World {
     void RecreateClippingCubes();                     // you have this and the other one, they achieve the same thing, merge this logic
     void RecreateAllDoorAndWindowCubeTransforms();    // you have this and the other one, they achieve the same thing, merge this logic
 
+    HouseBvhRegion& GetHouseBvh();
     void RecreateAllHouseGeometry();
     void RecreateAllProceduralWallMesh();
     void RecreateAllProcedularHousePlaneMesh();
