@@ -25,7 +25,7 @@ namespace Ocean {
     const float g_cellSize = 0.3f;
 
     const float g_oceanMeshToGridRatio = 8.0f;       // Ratio of original ocean mesh size to the FFT grid size; used to scale the model matrix
-    const float g_meshSubdivisionFactor = 32.0f;     // Number of mesh subdivisions per FFT grid cell; controls mesh density 
+    const float g_meshSubdivisionFactor = 32.0f;     // Number of mesh subdivisions per FFT grid cell; controls mesh density
     const float g_modelMatrixScale = g_oceanMeshToGridRatio / g_baseFftResolution; // was g_fftResolution.x;
     const float g_oceanOriginY = 29.5f;
 
@@ -89,12 +89,13 @@ namespace Ocean {
         g_waterPlaneDownFacingPhysicsID = Physics::CreateRigidStaticPlane(planePosition, planeNormal * glm::vec3(-1.0f), filterData);
 
         PhysicsUserData physicsUserData;
-        physicsUserData.objectId = UniqueID::GetNextObjectId(ObjectType::WATER_PLANE);
-
+        physicsUserData.objectId = UniqueID::GetNextObjectId(ObjectType::WATER_PLANE_TOP);
         Physics::SetRigidStaticUserData(g_waterPlaneUpFacingPhysicsID, physicsUserData);
+
+        physicsUserData.objectId = UniqueID::GetNextObjectId(ObjectType::WATER_PLANE_BOTTOM);
         Physics::SetRigidStaticUserData(g_waterPlaneDownFacingPhysicsID, physicsUserData);
     }
-    
+
     void DestroyPhysicsPlane() {
         Physics::RemoveRigidStatic(g_waterPlaneUpFacingPhysicsID);
         Physics::RemoveRigidStatic(g_waterPlaneDownFacingPhysicsID);

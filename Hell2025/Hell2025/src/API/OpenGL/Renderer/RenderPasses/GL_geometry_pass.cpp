@@ -37,7 +37,8 @@ namespace OpenGLRenderer {
         if (!shader) return;
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityOcclusionSubSurface" });
+        //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityXYOcclusionSubSurface" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
         ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
 
@@ -80,7 +81,8 @@ namespace OpenGLRenderer {
         if (!shader) return;
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityOcclusionSubSurface" });
+        //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityXYOcclusionSubSurface" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         shader->Bind();
 
@@ -141,7 +143,8 @@ namespace OpenGLRenderer {
 
         // Blended
         shader->SetBool("u_alphaDiscard", false);
-        gBuffer->DrawBuffers({ "BaseColor" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic" });
+        //gBuffer->DrawBuffers({ "BaseColor" });
         ForceRasterizerState("GeometryPass_Blended");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
@@ -188,7 +191,8 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* decalMasksFBO = GetFrameBufferOLD("DecalMasks");
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityOcclusionSubSurface" });
+        //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityXYOcclusionSubSurface" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         // Default (Non blended)
         shader->SetBool("u_alphaDiscard", false);
@@ -237,7 +241,8 @@ namespace OpenGLRenderer {
 
         // Blended
         shader->SetBool("u_alphaDiscard", false);
-        gBuffer->DrawBuffers({ "BaseColor" });
+        //gBuffer->DrawBuffers({ "BaseColor" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic" });
         ForceRasterizerState("GeometryPass_Blended");
         EditorRasterizerStateOverride();
 
@@ -267,7 +272,8 @@ namespace OpenGLRenderer {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
 
         shader->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityOcclusionSubSurface" });
+        //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityXYOcclusionSubSurface" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         // Skinned mesh (non blended)
         shader->SetBool("u_alphaDiscard", false);
@@ -316,7 +322,8 @@ namespace OpenGLRenderer {
 
         // Skinned mesh (alpha blended)
         shader->SetBool("u_alphaDiscard", false);
-        gBuffer->DrawBuffers({ "BaseColor" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic" });
+        //gBuffer->DrawBuffers({ "BaseColor" });
         ForceRasterizerState("GeometryPass_Blended");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
@@ -341,7 +348,8 @@ namespace OpenGLRenderer {
 
 
 
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityOcclusionSubSurface" });
+        //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityXYOcclusionSubSurface" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         OpenGLShader* christmasLightWireShader = GetShaderOLD("ChristmasLightsWire");
         christmasLightWireShader->Bind();
@@ -539,7 +547,8 @@ namespace OpenGLRenderer {
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
+        //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         // Clear the depth buffer so that the mirror world has a clean depth state to test against
         gBuffer->ClearDepthAttachment(0.0);

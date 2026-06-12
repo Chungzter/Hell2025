@@ -254,6 +254,7 @@ struct BulletCreateInfo {
     bool createsDecalTexturePaintedWounds = true;
 };
 
+
 struct BasicDoorCreateInfo {
     glm::mat4 parentMatrix = glm::mat4(1.0f);
     Axis rotationAxis = Axis::NONE;

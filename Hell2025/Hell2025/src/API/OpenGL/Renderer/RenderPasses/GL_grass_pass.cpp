@@ -304,7 +304,8 @@ namespace OpenGLRenderer {
         OpenGLRenderer::SetViewport(gBuffer, viewport);
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
+        //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         glm::mat4 projectionView = viewportData[viewportIndex].projectionViewReverseZ;
 

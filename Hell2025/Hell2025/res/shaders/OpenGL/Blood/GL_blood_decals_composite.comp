@@ -10,11 +10,11 @@ float saturate(float value) {
 }
 
 void main() {
-	ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);   
+	ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
     ivec2 outputImageSize = imageSize(GBufferBaseColorImage);
     vec2 uv_screenspace = vec2(pixelCoords + 0.5) / vec2(outputImageSize);
-        
-    vec3 baseColor = imageLoad(GBufferBaseColorImage, pixelCoords).rgb;
+
+    vec4 originalBaseColor = imageLoad(GBufferBaseColorImage, pixelCoords);
     vec4 rma = imageLoad(GBufferRMAImage, pixelCoords);
 
     float decalMask = texture(DecalMaskTexture, uv_screenspace).r;
@@ -22,9 +22,9 @@ void main() {
     vec3 bloodBaseColor = vec3(0.2, 0.00, 0);
     vec3 bloodRMA = vec3(0.125, 0.25, 1.0);
 
-    vec3 outputBaseColor = mix(baseColor, bloodBaseColor, decalMask);
+    vec3 outputBaseColor = mix(originalBaseColor.rgb, bloodBaseColor, decalMask);
     vec3 outputRMA = mix(rma.rgb, bloodRMA, decalMask);
 
-   imageStore(GBufferBaseColorImage, pixelCoords, vec4(outputBaseColor, 1.0));
+   imageStore(GBufferBaseColorImage, pixelCoords, vec4(outputBaseColor, originalBaseColor.a));
    imageStore(GBufferRMAImage, pixelCoords, vec4(outputRMA, 1.0));
 }

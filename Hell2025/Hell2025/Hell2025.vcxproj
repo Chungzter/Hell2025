@@ -243,6 +243,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\API\OpenGL\Renderer\RenderPasses\GL_winston_pass.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_hair_passes.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_material_resolve_passes.cpp" />
+    <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_particle_passes.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_post_processing_re.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\Requiem\GL_visilibty_passes.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\Utility\GL_height_map_utility.cpp" />
@@ -343,6 +344,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\AssetManagement\BakeQueue.cpp" />
     <ClCompile Include="src\Callbacks\Callbacks.cpp" />
     <ClCompile Include="src\Core\P90MagManager.cpp" />
+    <ClCompile Include="src\Core\ParticleManager.cpp" />
     <ClCompile Include="src\Hell\UniqueID.cpp" />
     <ClCompile Include="src\Bible\Bible.cpp" />
     <ClCompile Include="src\GlobalIllumination\DDGIVolume.cpp" />
@@ -387,6 +389,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Ragdoll\RagdollManager.cpp" />
     <ClCompile Include="src\Ragdoll\RagdollV2.cpp" />
     <ClCompile Include="src\Types\Core\Openable.cpp" />
+    <ClCompile Include="src\Types\Game\BulletTrail.cpp" />
     <ClCompile Include="src\Types\Game\Decal.cpp" />
     <ClCompile Include="src\Types\Game\Ladder.cpp" />
     <ClCompile Include="src\Types\Game\Staircase.cpp" />
@@ -556,7 +559,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\World\World.cpp" />
     <ClCompile Include="src\World\World_bvh.cpp" />
     <ClCompile Include="src\World\World_create_info.cpp" />
-    <ClCompile Include="src\World\World_hack_test.cpp" />
+    <ClCompile Include="src\World\World_bullet_trails.cpp" />
     <ClCompile Include="src\World\World_house.cpp" />
     <ClCompile Include="src\World\World_process_bullets.cpp" />
     <ClCompile Include="src\World\World_render_submit.cpp" />
@@ -621,8 +624,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\API\OpenGL\Types\GL_timer.h" />
     <ClInclude Include="src\BackEnd\Integration\SDL.h" />
     <ClInclude Include="src\Core\P90MagManager.h" />
+    <ClInclude Include="src\Core\ParticleManager.h" />
     <ClInclude Include="src\GlobalIllumination\DDGIVolume.h" />
     <ClInclude Include="src\GlobalIllumination\PointCloud.h" />
+    <ClInclude Include="src\Hell\GPUTypes.h" />
     <ClInclude Include="src\Hell\RendereringConstants.h" />
     <ClInclude Include="src\Types\Core\ItemInfo.h" />
     <ClInclude Include="src\Bvh\Gpu\Bvh.h" />
@@ -706,6 +711,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Types\Christmas\ChristmasLights.h" />
     <ClInclude Include="src\Types\Christmas\ChristmasTree.h" />
     <ClInclude Include="src\Hell\SlotMap.h" />
+    <ClInclude Include="src\Types\Game\BulletTrail.h" />
     <ClInclude Include="src\Types\Game\Decal.h" />
     <ClInclude Include="src\Types\Game\Ladder.h" />
     <ClInclude Include="src\Types\Game\Staircase.h" />

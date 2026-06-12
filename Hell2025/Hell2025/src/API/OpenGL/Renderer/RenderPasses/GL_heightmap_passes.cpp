@@ -52,7 +52,7 @@ namespace OpenGLRenderer {
 
         if (Editor::IsOpen() && Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) {
 
-            //if (Input::KeyPressed(HELL_KEY_L)) {                
+            //if (Input::KeyPressed(HELL_KEY_L)) {
             //    HeightMapData heightMapData = File::LoadHeightMap("TEST.heightmap");
             //    OpenGLFrameBuffer* heightmapFBO = GetFrameBuffer("HeightMap");
             //    GLuint textureHandle = heightmapFBO->GetColorAttachmentHandleByName("Color");
@@ -72,7 +72,7 @@ namespace OpenGLRenderer {
     void BlitWorldMap() {
         Map* map = MapManager::GetMapByName("Shit");
         OpenGLFrameBuffer* worldFramebuffer = GetFrameBufferOLD("World");
-        OpenGLFrameBuffer* roadFramebuffer = GetFrameBufferOLD("Road"); 
+        OpenGLFrameBuffer* roadFramebuffer = GetFrameBufferOLD("Road");
         OpenGLShader* shader = GetShaderOLD("HeightMapToWorldBlit");
 
         if (!map) return;
@@ -150,10 +150,10 @@ namespace OpenGLRenderer {
         std::vector<HeightMapChunk>& chunks = World::GetHeightMapChunks();
 
         heightMapMesh.AllocateMemory(chunks.size());
-        
+
         shader->Bind();
         glBindImageTexture(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16F);
-        
+
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, heightMapMesh.GetVBO());
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, heightMapMesh.GetEBO());
 
@@ -265,7 +265,7 @@ namespace OpenGLRenderer {
         glm::mat4 inverseModelMatrix = glm::inverse(modelMatrix);
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         shader->Bind();
         shader->SetMat4("modelMatrix", modelMatrix);
@@ -320,7 +320,7 @@ namespace OpenGLRenderer {
                 std::vector<HeightMapChunk>& chunks = World::GetHeightMapChunks();
 
                 //std::cout << "chunks.size(): " << chunks.size() << "\n";
-                
+
                 for (HeightMapChunk& chunk : chunks) {
 
                     if (Editor::IsClosed()) {

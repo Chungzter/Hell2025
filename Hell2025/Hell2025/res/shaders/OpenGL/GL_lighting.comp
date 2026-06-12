@@ -8,6 +8,7 @@ readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uve
 
 #include "../common/lighting.glsl"
 #include "../common/distance_fog.glsl"
+#include "../common/normal_encoding.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
@@ -15,9 +16,14 @@ readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uve
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
-layout (binding = 0) uniform sampler2D BaseColorTexture;
-layout (binding = 1) uniform sampler2D NormalTexture;
-layout (binding = 2) uniform sampler2D RMATexture;
+layout (binding = 0) uniform sampler2D u_baseColorMetallicTexture;
+layout (binding = 1) uniform sampler2D u_normalXYRoughnessMiscTexture;
+layout (binding = 2) uniform sampler2D u_velocityXYOcclusionSubSurfaceTexture;
+
+//layout (binding = 0) uniform sampler2D BaseColorTexture;
+//layout (binding = 1) uniform sampler2D NormalTexture;
+//layout (binding = 2) uniform sampler2D RMATexture;
+
 layout (binding = 3) uniform sampler2D u_depthTexture;
 layout (binding = 6) uniform sampler2D EmissiveTexture;
 layout (binding = 7) uniform sampler2D FlashlightCookieTexture;
@@ -95,9 +101,23 @@ void main() {
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
 
     // Inputs
-    vec4 baseColor = texture(BaseColorTexture, screenUV);
-    vec4 normal = texture(NormalTexture, screenUV);
-    vec4 rma = texture(RMATexture, screenUV);
+    //vec4 baseColor = texture(BaseColorTexture, screenUV);
+    //vec4 normal = texture(NormalTexture, screenUV);
+    //vec4 rma = texture(RMATexture, screenUV);
+
+    vec4 normalXYRoughnessMisc = texelFetch(u_normalXYRoughnessMiscTexture, px, 0);
+    vec3 normal = DecodeNormal(normalXYRoughnessMisc.rg);
+    float roughness = normalXYRoughnessMisc.b;
+    float misc = normalXYRoughnessMisc.a;
+
+    vec4 baseColorMetallic = texelFetch(u_baseColorMetallicTexture, px, 0);
+    vec3 baseColor = baseColorMetallic.rgb;
+    float metallic = baseColorMetallic.a;
+    //vec3 linearBaseColor = pow(baseColor.rgb, vec3(2.2)); // baseColor.rgb * baseColor.rgb;
+
+    vec4 velocityXYOcclusionSubSurface = texelFetch(u_velocityXYOcclusionSubSurfaceTexture, px, 0).rgba;
+    float ao =velocityXYOcclusionSubSurface.b;
+
 
     float sssRadius = texture(EmissiveTexture, screenUV).a;
 
@@ -115,9 +135,9 @@ void main() {
     // Gamma-correct the base color
     vec3 gammaBaseColor = pow(baseColor.rgb, vec3(2.2));
 
-    float roughness = rma.r;
-    float metallic = rma.g;
-    float ao = rma.b;
+    //float roughness = rma.r;
+    //float metallic = rma.g;
+    //float ao = rma.b;
 
     vec2 renderTargetSize = vec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
     int splitScreenMode = rendererData.splitscreenMode;
@@ -350,7 +370,7 @@ void main() {
             // moonLighting += sssColor * shadow * 0.5; // OG
         }
     }
-    
+
 
 
 
@@ -382,7 +402,7 @@ void main() {
     }
 
     // Alpha
-    float finalAlpha = baseColor.a;
+    //float finalAlpha = baseColor.a;
 
 
 
@@ -407,16 +427,21 @@ void main() {
     }
 
     // Premultiply alpha
-    finalColor.rgb = finalColor.rgb * finalAlpha;
-    vec4 outputColor = vec4(finalColor, finalAlpha);
+    //finalColor.rgb = finalColor.rgb * finalAlpha;
+    //vec4 outputColor = vec4(finalColor, finalAlpha);
+    //
+    // Yo! you removed this premultiplied alpha shit when you merged gbuffers
+
+    finalColor.rgb = finalColor.rgb;
+    vec4 outputColor = vec4(finalColor, 1.0);
 
    // outputColor.rgb = vec3(sssRadius);
 
    // outputColor.rgb = directLighting;
 
     imageStore(outputImage, px, outputColor);
-    
-    
+
+
     //float thickness = texture(EmissiveTexture, screenUV).a;
     //imageStore(outputImage, px, vec4(vec3(thickness), 1));
     //imageStore(outputImage, px, vec4(vec3(sssDebug), 1));

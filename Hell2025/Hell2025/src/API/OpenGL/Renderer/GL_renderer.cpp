@@ -149,14 +149,15 @@ namespace OpenGLRenderer {
         lightAABBfbo.CreateDepthAttachment(GL_DEPTH_COMPONENT32F);
 
         OpenGLFrameBuffer& gBuffer = CreateFrameBuffer("GBuffer", resolutions.gBuffer);
-        gBuffer.CreateAttachment("BaseColor", GL_RGBA8);
-        //gBuffer.CreateAttachment("Normal", GL_RGBA16F);
+        gBuffer.CreateAttachment("BaseColorMetallic", GL_RGBA8);
         gBuffer.CreateAttachment("NormalXYRoughnessMisc", GL_RGB10_A2);
+        //gBuffer.CreateAttachment("Normal", GL_RGBA16F);
+        //gBuffer.CreateAttachment("BaseColor", GL_RGBA8);
         gBuffer.CreateAttachment("RMA", GL_RGBA8); // In alpha is screenspace blood decal mask
         gBuffer.CreateAttachment("Lighting", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
         gBuffer.CreateAttachment("Emissive", GL_RGBA8, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
         gBuffer.CreateAttachment("Glass", GL_RGBA16F);
-        gBuffer.CreateAttachment("VelocityOcclusionSubSurface", GL_RGBA16F);
+        gBuffer.CreateAttachment("VelocityXYOcclusionSubSurface", GL_RGBA16F);
         gBuffer.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
         OpenGLFrameBuffer& scratchFbo = CreateFrameBuffer("Scratch", resolutions.gBuffer);
@@ -753,7 +754,7 @@ namespace OpenGLRenderer {
         gBuffer.ClearAttachment("RMA", 0, 0, 0, 0);
         gBuffer.ClearAttachment("Emissive", 0, 0, 0, 0);
         gBuffer.ClearAttachment("Glass", 0, 0, 0, 0);
-        gBuffer.ClearAttachment("VelocityOcclusionSubSurface", 0, 0, 0, 1);
+        gBuffer.ClearAttachment("VelocityXYOcclusionSubSurface", 0, 0, 0, 1);
         gBuffer.ClearDepthAttachment(0.0f);
 
         // Decal mask

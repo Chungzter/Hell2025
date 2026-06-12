@@ -93,7 +93,8 @@ namespace OpenGLRenderer {
         if (!mesh) return;
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
+        //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
 
         std::vector<GPUMetaBall> gpuMetaBalls;

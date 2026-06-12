@@ -1,11 +1,12 @@
 #version 460 core
 #include "../common/constants.glsl"
+#include "../common/normal_encoding.glsl"
 #include "../common/post_processing.glsl"
 
-layout (location = 0) out vec4 BaseColorOut;
-layout (location = 1) out vec4 NormalOut;
-layout (location = 2) out vec4 RMAOut;
-layout (location = 3) out vec4 EmissiveOut;
+layout (location = 0) out vec4 BaseColorMetallicOut;
+layout (location = 1) out vec4 NormalXYRoughnessMiscOut;
+layout (location = 2) out vec4 EmissiveOut;
+layout (location = 3) out vec4 VelocityXYOcclusionSubSurfaceOut;
 
 layout (binding = 0) uniform sampler2D baseColorTexture;
 layout (binding = 1) uniform sampler2D normalTexture;
@@ -38,7 +39,7 @@ void main() {
     vec4 dirtRoadBaseColor = texture2D(DirtRoadBaseColorTexture, dirtRoadUV) + 0.1;
     vec3 dirtRoadNormalMap = texture2D(DirtRoadNormalTexture, dirtRoadUV).rgb;
     vec3 dirtRoadRma = texture2D(DirtRoadRmaTexture, dirtRoadUV).rgb;
-    
+
     vec2 roadMaskWorldSize = textureSize(RoadMaskTexture, 0) * HEIGHTMAP_SCALE_XZ / 4;
     vec2 roadMaskUV = vec2(WorldPos.x / roadMaskWorldSize.x, WorldPos.z / roadMaskWorldSize.y);
     float roadMask = texture(RoadMaskTexture, roadMaskUV).r;
@@ -53,8 +54,26 @@ void main() {
     normalMap = normalize(normalMap);
     vec3 normal = normalize(tbn * (normalMap));
 
-    BaseColorOut = vec4(baseColor, 1);
-    RMAOut = vec4(rma, 1.0);
-    NormalOut = vec4(normalize(normal), 0);
+    float roughness = rma.r;
+    float metallic = rma.g;
+    float ao = rma.b;
+
+
+    vec2 velocity = vec2(0.0);
+
+    // Basecolor / Metallic out
+    BaseColorMetallicOut.rgb = baseColor.rgb;
+    BaseColorMetallicOut.a = metallic;
+
+    // NormalXY / Roughness out
+    NormalXYRoughnessMiscOut.rg = EncodeNormal(normal);
+    NormalXYRoughnessMiscOut.b = roughness;
+    NormalXYRoughnessMiscOut.a = 0.0; // Misc 4 bit value
+
+    // Velocity / Occlusion / Subsurface out
+    VelocityXYOcclusionSubSurfaceOut.rg = velocity;
+    VelocityXYOcclusionSubSurfaceOut.b = ao;
+    VelocityXYOcclusionSubSurfaceOut.a = 0.0; // Subsurface. Not quite sure what this is yet
+
     EmissiveOut = vec4(0.0, 0.0, 0.0, 0.45);
 }

@@ -6,11 +6,9 @@ layout (location = 0) out vec4 ColorOut;
 
 in vec3 v_worldPos;
 in vec2 v_uv;
+in float v_lifetime;
 
-uniform float u_particleAlphaFade;
-
-layout (binding = 0) uniform samplerCube cubeMap;
-layout (binding = 1) uniform sampler2D u_texture;
+layout (binding = 0) uniform sampler2D u_texture;
 
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
@@ -26,7 +24,6 @@ void main() {
 
     // Base moonlight contribution
     float finalStrength = 0.2;
-    //finalStrength = 1.0;
 
     // Flashlights
     for (int i = 0; i < 2; i++) {
@@ -67,7 +64,13 @@ void main() {
     const vec3 UNDER_WATER_TINT = mix(vec3(0.4, 0.8, 0.6) * 1.75, vec3(0.01, 0.03, 0.04), 0.25);
     finalColor *= UNDER_WATER_TINT;
 
-    a *= u_particleAlphaFade;
+    // Dampen
+    finalColor *= 0.5;
+    a *= 0.5;
+
+
+    a -= v_lifetime;
+    a = clamp(a, 0, 1);
 
     ColorOut = vec4(finalColor, a);
 }

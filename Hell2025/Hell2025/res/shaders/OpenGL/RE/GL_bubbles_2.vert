@@ -3,12 +3,15 @@
 uniform mat4 u_projectionView;
 uniform mat4 u_view;
 uniform float u_time;
+uniform vec3 u_particlePosition;
+uniform float u_particleRotation;
+uniform float u_particleScale;
 
 //const vec3 ORIGIN = vec3(36.25, 32.5, 37.0);
 //const float SCALE = 0.1;
 
-const vec3 ORIGIN = vec3(26.0, 28.5, 37.0);
-const float SCALE = 0.025;
+//const vec3 ORIGIN = vec3(26.0, 28.5, 37.0);
+//const float SCALE = 0.025;
 
 out vec2 v_uv;
 out vec2 v_uvQuad;
@@ -51,18 +54,18 @@ void main() {
     v_uv = frameOffset + quadUV * vec2(frameWidth, frameHeight);
 
     // 2D rotation matrix
-    float angle = 0; // range 0 to 2 PI
+    float angle = u_particleRotation;
     float c = cos(angle);
     float s = sin(angle);
     mat2 rotation = mat2(c, s, -s, c);
-    
+
     // Apply rotation to local quad coords
     vec2 rotatedPos = rotation * quadPos;
 
     // Make quad face the camera in 3D space
     vec3 cameraRight = vec3(u_view[0][0], u_view[1][0], u_view[2][0]);
     vec3 cameraUp = vec3(u_view[0][1], u_view[1][1], u_view[2][1]);
-    v_worldPos = ORIGIN + cameraRight * rotatedPos.x * SCALE + cameraUp * rotatedPos.y * SCALE;
+    v_worldPos = u_particlePosition + cameraRight * rotatedPos.x * u_particleScale + cameraUp * rotatedPos.y * u_particleScale;
 
     gl_Position = u_projectionView * vec4(v_worldPos, 1.0);
 }

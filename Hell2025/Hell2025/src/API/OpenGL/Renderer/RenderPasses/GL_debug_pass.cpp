@@ -406,10 +406,9 @@ namespace OpenGLRenderer {
 				shader->SetBool("u_heightMapEditor", (Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Editor::IsOpen());
 
                 BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
-                BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
-                BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
-                BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
-                BindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("VelocityOcclusionSubSurface"));
+                BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColorMetallic"));
+                BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
+                BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
                 // 7 may be free???
                 BindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
                 // 9 is visibility

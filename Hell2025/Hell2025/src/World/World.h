@@ -19,6 +19,7 @@
 #include "Types/Game/AnimatedGameObject.h"
 #include "Types/Game/Bullet.h"
 #include "Types/Game/BulletCasing.h"
+#include "Types/Game/BulletTrail.h"
 #include "Types/Game/Decal.h"
 #include "Types/Game/GameObject.h"
 #include "Types/Game/Ladder.h"
@@ -76,14 +77,14 @@ namespace World {
     void LoadMapInstancesHeightMapData(std::vector<MapInstanceCreateInfo> mapInstanceCreateInfoSet);
     void LoadMapInstanceObjects(const std::string& mapName, SpawnOffset spawnOffset);
     void LoadMapInstanceHouses(const std::string& mapName, SpawnOffset spawnOffset);
-    
+
     void LoadSingleHouse(const std::string& houseName);
     void LoadHouseInstance(const std::string& houseName, SpawnOffset spawnOffset);
 
     bool ChunkExists(int x, int z);
     const uint32_t GetChunkCountX();
     const uint32_t GetChunkCountZ();
-    const uint32_t GetChunkCount(); 
+    const uint32_t GetChunkCount();
     const HeightMapChunk* GetChunk(int x, int z);
 
     void AddDecal2(DecalCreateInfo createInfo);
@@ -98,7 +99,8 @@ namespace World {
     uint64_t AddTrimSet(TrimSetCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddWall(WallCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
 
-    void AddBullet(BulletCreateInfo createInfo);
+    void AddBullet(BulletCreateInfo createInfo, uint64_t parentBulletTrailId = 0);
+    void AddBulletTrail(BulletCreateInfo createInfo);
     void AddDDGIVolume(DDGIVolumeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddDoor(DoorCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddBulletCasing(BulletCasingCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
@@ -122,7 +124,7 @@ namespace World {
     void EnableOcean();
     void DisableOcean();
     bool HasOcean();
-    
+
     // Logic
     void ProcessBullets();
     void HackTest();
@@ -136,7 +138,7 @@ namespace World {
     void SetObjectRotation(uint64_t objectId, const glm::vec3& rotation);
     bool RemoveObject(uint64_t objectId);
     glm::vec3 GetGizmoOffest(uint64_t objectId);
-    
+
     // BVH
 	void UpdateBvhs();
     void MarkStaticSceneBvhDirty();
@@ -204,6 +206,7 @@ namespace World {
     uint32_t GetLightCount();
 
     Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects();
+    Hell::SlotMap<BulletTrail>& GetBulletTrails();
     Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets();
     Hell::SlotMap<DDGIVolume>& GetDDGIVolumes();
     Hell::SlotMap<Door>& GetDoors();
@@ -222,6 +225,7 @@ namespace World {
 
     std::vector<ScreenSpaceBloodDecal>& GetScreenSpaceBloodDecals();
     std::vector<Bullet>& GetBullets();
+    std::vector<BulletTrailParticle>& GetBulletTrailParticles();
     std::vector<BulletCasing>& GetBulletCasings();
     std::vector<ChristmasTree>& GetChristmasTrees();
     std::vector<ClippingCube>& GetClippingCubes();

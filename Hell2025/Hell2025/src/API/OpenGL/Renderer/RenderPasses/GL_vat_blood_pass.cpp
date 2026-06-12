@@ -24,7 +24,8 @@ namespace OpenGLRenderer {
         shader->Bind();
 
         gBuffer->Bind();
-        gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
+        //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         static int textureIndexBloodPos4 = AssetManager::GetTextureIndexByName("blood_pos4");
         static int textureIndexBloodPos6 = AssetManager::GetTextureIndexByName("blood_pos6");

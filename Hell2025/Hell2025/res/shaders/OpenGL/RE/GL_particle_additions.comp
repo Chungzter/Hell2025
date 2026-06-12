@@ -1,0 +1,46 @@
+#version 460
+#include "../../common/types.glsl"
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+restrict layout(std430, binding = 5) readonly  buffer ParticleAdditionsBuffer { Particle particleAdditions[]; };
+restrict layout(std430, binding = 6) buffer ParticlePoolBuffer                { Particle particlePool[]; };
+
+uniform int u_newParticleCount;
+
+#define MAX_GPU_PARTICLES 12000
+
+void main() {
+
+    int insertIndex = 0;
+
+    // Iterate the pool, and insert new particles in free slots
+    for (int i = 0; i < MAX_GPU_PARTICLES; i++) {
+
+        // Found a free slot?
+        if (particlePool[i].exists == 0u) {
+            particlePool[i].position = particleAdditions[insertIndex].position;
+            particlePool[i].velocity = particleAdditions[insertIndex].velocity;
+            particlePool[i].lifeTime = particleAdditions[insertIndex].lifeTime;
+            particlePool[i].rotation = particleAdditions[insertIndex].rotation;
+            particlePool[i].rotationalVelocity = particleAdditions[insertIndex].rotationalVelocity;
+            particlePool[i].exists = 1u;
+
+            insertIndex++;
+        }
+
+        // Exit this shader if you have inserted all particles
+        if (insertIndex >= u_newParticleCount) {
+            return;     // TODO: find out if this is safe and performant
+        }
+    }
+}
+
+//struct Particle {
+//    vec4 position;
+//    vec4 velocity;
+//    float rotation;
+//    float rotationalVelocity;
+//    float lifeTime;
+//    uint exists;
+//};

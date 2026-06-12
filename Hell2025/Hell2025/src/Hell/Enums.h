@@ -83,6 +83,7 @@ enum class TextureFilter {
 
 enum class ObjectType : uint16_t {
     NO_TYPE = 0,
+    BULLET_TRAIL,
     CHARACTER_CONTROLLER,
     CHRISTMAS_LIGHTS,
     DECAL,
@@ -114,7 +115,8 @@ enum class ObjectType : uint16_t {
     TRIM_SET,
     WALL,
     WALL_SEGMENT,
-    WATER_PLANE,
+    WATER_PLANE_TOP,
+    WATER_PLANE_BOTTOM,
     WINDOW,
 
     ANIMATED_GAME_OBJECT,

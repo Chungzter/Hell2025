@@ -29,13 +29,13 @@
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
 
 #include "../common/lighting.glsl"
+#include "../common/normal_encoding.glsl"
 #include "../common/post_processing.glsl"
 
-layout (location = 0) out vec4 BaseColorOut;
-layout (location = 1) out vec4 NormalOut;
-layout (location = 2) out vec4 RMAOut;
-layout (location = 3) out vec4 EmissiveOut;
-layout (location = 4) out vec4 VelocityOcclusionSubSurfaceOut;
+layout (location = 0) out vec4 BaseColorMetallicOut;
+layout (location = 1) out vec4 NormalXYRoughnessMiscOut;
+layout (location = 2) out vec4 EmissiveOut;
+layout (location = 3) out vec4 VelocityXYOcclusionSubSurfaceOut;
 
 in vec2 TexCoord;
 in vec3 Normal;
@@ -133,11 +133,22 @@ void main() {
         normal = -normal;
     }
 
-    BaseColorOut = vec4(baseColor);
-    NormalOut = vec4(normal, 1.0);
+    float roughness = rmat.r;
+    float metallic = rmat.g;
+    float ao = rmat.b;
 
-    RMAOut.rgb = rmat.rgb;
-    RMAOut.a = BlockScreenSpaceBloodDecalsFlag;
+
+    // Basecolor / Metallic out
+    BaseColorMetallicOut.rgb = baseColor.rgb;
+    BaseColorMetallicOut.a = metallic;
+
+    // NormalXY / Roughness out
+    NormalXYRoughnessMiscOut.rg = EncodeNormal(normal);
+    NormalXYRoughnessMiscOut.b = roughness;
+    NormalXYRoughnessMiscOut.a = 0.0; // Misc 4 bit value
+
+    //RMAOut.rgb = rmat.rgb;
+    //RMAOut.a = BlockScreenSpaceBloodDecalsFlag;
 
     // Thickness
     float thickness = rmat.a;
@@ -150,7 +161,7 @@ void main() {
     vec2 prevNDC = v_prevPos.xy / v_prevPos.w;
     vec2 velocity = currNDC - prevNDC;
     velocity *= 0.5;
-    VelocityOcclusionSubSurfaceOut = vec4(velocity, rmat.a, 1.0);
+    VelocityXYOcclusionSubSurfaceOut = vec4(velocity, ao, 1.0);
 
 
     //BaseColorOut.rgb = vec3(TexCoord, 0);

@@ -78,9 +78,9 @@ namespace OpenGLRenderer {
 
         shader->SetVec2("u_viewportSize", glm::vec2(viewportWidth, viewportHeight));
 
-        glBindTextureUnit(0, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
-        glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("Normal"));
-        glBindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("RMA"));
+        glBindTextureUnit(0, gBuffer->GetColorAttachmentHandleByName("BaseColorMetallic"));
+        glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
+        glBindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
         glBindTextureUnit(3, gBuffer->GetDepthAttachmentHandle());
         glBindTextureUnit(6, gBuffer->GetColorAttachmentHandleByName("Emissive"));
         glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));

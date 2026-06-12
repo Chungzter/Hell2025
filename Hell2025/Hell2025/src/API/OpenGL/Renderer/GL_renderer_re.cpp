@@ -10,6 +10,9 @@
 #include "Hell/RendereringConstants.h"
 #include "Ocean/Ocean.h"
 #include "Core/Game.h"
+#include "Core/ParticleManager.h"
+
+#include "Hell/GPUTypes.h"
 
 namespace OpenGLRenderer {
     struct RESettings {
@@ -27,10 +30,8 @@ namespace OpenGLRenderer {
     void GlassPassRE();
     void OceanRE();
     void EmissiveForwardPass();
-    void BubblesPass();
     void BubblesPass2();
     void BubblesPass3();
-    void DispatchTestPass();
 
     void RenderFullscreenTriangle();
 
@@ -90,7 +91,7 @@ namespace OpenGLRenderer {
         HairPassRE();
         OceanRE();
 
-        
+
         OceanUnderWaterFlags();
         OceanSurfaceCompositePass();
 
@@ -105,8 +106,7 @@ namespace OpenGLRenderer {
         BubblesPass2();
         BubblesPass3();
 
-        DispatchTestPass();
-        BubblesPass();
+        ParticlePass();
 
         // DDGI Debug
         DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
@@ -155,6 +155,15 @@ namespace OpenGLRenderer {
 
         ClearSSBO("BubblePositions");
         ClearSSBO("BubblePositionCount");
+
+        // Particles
+        CreateSSBO("ParticlePool", sizeof(GpuParticle)* MAX_GPU_PARTICLES, GL_DYNAMIC_STORAGE_BIT);
+        CreateSSBO("ParticleAdditions", sizeof(GpuParticle) * MAX_GPU_PARTICLES, GL_DYNAMIC_STORAGE_BIT);
+        CreateSSBO("ParticleActiveIndices", sizeof(uint32_t) * MAX_GPU_PARTICLES, GL_DYNAMIC_STORAGE_BIT);
+        CreateSSBO("ParticleDrawCommand", sizeof(DrawArraysIndirectCommand), GL_DYNAMIC_STORAGE_BIT);
+
+        ClearSSBO("ParticlePool");
+        ClearSSBO("ParticleAdditions");
     }
 
     void LoadShadersRE() {
@@ -185,6 +194,10 @@ namespace OpenGLRenderer {
         LoadShader("RE", "Bubbles2", { "GL_bubbles_2.vert", "GL_bubbles_2.frag" });
         LoadShader("RE", "Bubbles3", { "GL_bubbles_3.vert", "GL_bubbles_3.frag" });
         LoadShader("RE", "BubbleDrawCommandArgs", { "GL_bubble_draw_command_args.comp" });
+
+        LoadShader("RE", "ParticleAdditions", { "GL_particle_additions.comp" });
+        LoadShader("RE", "ParticleColor", { "GL_particle_color.vert", "GL_particle_color.frag" });
+        LoadShader("RE", "ParticleUpdate", { "GL_particle_update.comp" });
     }
 
 	void ClearRenderTargetsRE() {
@@ -220,87 +233,6 @@ namespace OpenGLRenderer {
 		BindTextureUnit(10, moonShadowCascades.GetDepthTexture());
 	}
 
-
-    void DispatchTestPass() {
-        static std::vector<glm::vec4> positions;
-
-        if (Input::KeyPressed(HELL_KEY_U)) {
-            glm::vec3 origin = glm::vec3(36.0f, 32.5f, 37.0f);
-            positions.clear();
-
-            for (int i = 0; i < 20; i++) {
-                glm::vec3 pos = origin;
-                pos.x -= Util::RandomFloat(-2.0f, 2.0f);
-                pos.y -= Util::RandomFloat(-2.0f, 2.0f);
-                pos.z -= Util::RandomFloat(-2.0f, 2.0f);
-                positions.push_back(glm::vec4(pos, 1.0f));
-            }
-            UploadSSBOStatic("BubblePositions", positions.size() * sizeof(glm::vec4), positions.data());
-
-            uint64_t count = positions.size();
-            UpdateSSBO("BubblePositionCount", sizeof(uint64_t), &count);
-
-            BindShader("BubbleDrawCommandArgs");
-            BindSSBO(5, "BubblePositions");
-            BindSSBO(6, "BubblePositionCount");
-            BindSSBO(7, "BubbleDrawCommand");
-            glDispatchCompute(1, 1, 1);
-        }
-    }
-
-
-    void BubblesPass() {
-        //ProfilerOpenGLZoneFunction();
-
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-
-        OpenGLCubemapView& skyboxCubemapView = GetCubemapView("SkyboxNightSky");
-        OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
-
-        fbo.Bind();
-        fbo.SetViewport();
-        fbo.DrawBuffers({ "Lighting" });
-
-        OpenGLRasterizerState state;
-        state.depthTestEnabled = true;
-        state.cullfaceEnable = false;
-        state.depthMask = false;
-        state.colorMask = true;
-        state.depthFunc = GL_GREATER;
-
-        state.blendEnable = true;
-        state.blendFuncSrcfactor = GL_SRC_ALPHA;
-        state.blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
-
-        SetRasterizerState(state);
-
-        BindShader("Bubbles");
-        SetUniformFloat("u_time", Game::GetTotalTime());
-        BindTextureUnit(0, skyboxCubemapView.GetHandle());
-
-        glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
-        
-        BindSSBO(5, "BubblePositions");
-        
-        BindEmptyVAO();
-        BindDrawIndirectBuffer("BubbleDrawCommand");
-        
-        for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            if (!viewport->IsVisible()) continue;
-
-            OpenGLRenderer::SetViewport(&fbo, viewport);
-            SetUniformInt("u_viewportIndex", i);
-            SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
-            SetUniformMat4("u_view", viewportData[i].view);
-            SetUniformVec3("u_viewPos", viewportData[i].viewPos);
-
-            glDrawArraysIndirect(GL_TRIANGLES, 0);
-        }
-
-        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-    }
-
     void BubblesPass2() {
         //ProfilerOpenGLZoneFunction();
 
@@ -326,13 +258,14 @@ namespace OpenGLRenderer {
 
         SetRasterizerState(state);
 
-        BindShader("Bubbles");
         BindShader("Bubbles2");
         SetUniformFloat("u_time", Game::GetTotalTime());
         BindTextureUnit(0, skyboxCubemapView.GetHandle());
         BindTextureUnit(1, GetTextureHandleByName("Bubbles_10x10"));
 
         BindEmptyVAO();
+
+        ParticleManager::Update(Game::GetDeltaTime());
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -344,7 +277,13 @@ namespace OpenGLRenderer {
             SetUniformMat4("u_view", viewportData[i].view);
             SetUniformVec3("u_viewPos", viewportData[i].viewPos);
 
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            for (Particle& particle : ParticleManager::GetParticles()) {
+                SetUniformVec3("u_particlePosition", particle.position);
+                SetUniformFloat("u_particleRotation", particle.rotation);
+                SetUniformFloat("u_particleScale", particle.scale);
+                SetUniformFloat("u_particleAlphaFade", particle.alphaFade);
+                glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
         }
     }
 
@@ -495,7 +434,7 @@ namespace OpenGLRenderer {
         state.cullfaceEnable = false;
         state.depthMask = false;
         state.depthFunc = GL_GREATER;
-        
+
         state.stencilTestEnabled = true;
         state.stencilFunc = GL_EQUAL;
         state.stencilRef = 0; // This is any non-rendered pixel
@@ -510,14 +449,14 @@ namespace OpenGLRenderer {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemapView->GetHandle());
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-        
+
         RenderFullscreenTriangle();
     }
 
     void OceanRE() {
         ProfilerOpenGLZoneFunction();
         if (!World::HasOcean()) return;
-        
+
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = GetCubemapView("SkyboxNightSky");

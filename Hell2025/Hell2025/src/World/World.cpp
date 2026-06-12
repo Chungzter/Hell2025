@@ -47,6 +47,8 @@ namespace World {
 
     std::vector<ScreenSpaceBloodDecal> g_screenSpaceBloodDecals;
     std::vector<Bullet> g_bullets;
+    Hell::SlotMap<BulletTrail> g_bulletTrails;
+    std::vector<BulletTrailParticle> g_bulletTrailParticles;
     std::vector<BulletCasing> g_bulletCasings;
     std::vector<ChristmasTree> g_christmasTrees;
     std::vector<ClippingCube> g_clippingCubes;
@@ -686,6 +688,12 @@ namespace World {
             return true;
         }
 
+        if (g_bulletTrails.contains(objectId)) {
+            g_bulletTrails.get(objectId)->CleanUp();
+            g_bulletTrails.erase(objectId);
+            return true;
+        }
+
         if (g_christmasLightSets.contains(objectId)) {
             g_christmasLightSets.get(objectId)->CleanUp();
             g_christmasLightSets.erase(objectId);
@@ -754,7 +762,7 @@ namespace World {
             g_pickUps.erase(objectId);
             return true;
         }
-        
+
         if (g_pictureFrames.contains(objectId)) {
             g_pictureFrames.get(objectId)->CleanUp();
             g_pictureFrames.erase(objectId);
@@ -1067,8 +1075,13 @@ namespace World {
         g_fireplaces.emplace_with_id(id, id, createInfo, spawnOffset);
     }
 
-    void AddBullet(BulletCreateInfo createInfo) {
-        g_bullets.push_back(Bullet(createInfo));
+    void AddBullet(BulletCreateInfo createInfo, uint64_t parentBulletTrailId) {
+        g_bullets.push_back(Bullet(createInfo, parentBulletTrailId));
+    }
+
+    void AddBulletTrail(BulletCreateInfo createInfo) {
+        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::BULLET_TRAIL);
+        g_bulletTrails.emplace_with_id(id, id, createInfo);
     }
 
     void AddBulletCasing(BulletCasingCreateInfo createInfo, SpawnOffset spawnOffset) {
@@ -1407,6 +1420,8 @@ namespace World {
 
     std::vector<ScreenSpaceBloodDecal>& GetScreenSpaceBloodDecals()     { return g_screenSpaceBloodDecals; }
     std::vector<Bullet>& GetBullets()                                   { return g_bullets; }
+    Hell::SlotMap<BulletTrail>& GetBulletTrails()                       { return g_bulletTrails; }
+    std::vector<BulletTrailParticle>& GetBulletTrailParticles()         { return g_bulletTrailParticles; }
     std::vector<BulletCasing>& GetBulletCasings()                       { return g_bulletCasings; }
     std::vector<ChristmasTree>& GetChristmasTrees()                     { return g_christmasTrees; }
     std::vector<ClippingCube>& GetClippingCubes()                       { return g_clippingCubes; }

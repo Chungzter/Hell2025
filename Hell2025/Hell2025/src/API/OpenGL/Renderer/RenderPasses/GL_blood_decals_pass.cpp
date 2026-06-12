@@ -35,13 +35,13 @@ namespace OpenGLRenderer {
         shader->Bind();
         shader->SetInt("u_tileXCount", GetTileCountX());
         shader->SetInt("u_tileYCount", GetTileCountY());
-        
+
         BindSSBO(7, "TileBloodDecals");
         BindSSBO(8, "BloodDecalInstances");
         BindSSBO(9, "BloodDecalIndices");
 
         glBindTextureUnit(0, gBuffer->GetColorAttachmentHandleByName("RMA"));
-        glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("Normal"));
+        glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
         glBindTextureUnit(2, gBuffer->GetDepthAttachmentHandle());
 
         if (BackEnd::RenderDocFound()) {
@@ -70,7 +70,7 @@ namespace OpenGLRenderer {
 
         shader->Bind();
 
-        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("BaseColor"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
+        glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("BaseColorMetallic"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
         glBindImageTexture(1, gBuffer->GetColorAttachmentHandleByName("RMA"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
         glBindTextureUnit(2, miscFullSizeFBO->GetColorAttachmentHandleByName("ScreenSpaceBloodDecalMask"));
         glDispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);

@@ -293,3 +293,12 @@ struct AABB {
     vec4 boundsMin;
     vec4 boundsMax;
 };
+
+struct Particle {
+    vec4 position;
+    vec4 velocity;
+    float rotation;
+    float rotationalVelocity;
+    float lifeTime;
+    uint exists;
+};

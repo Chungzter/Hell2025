@@ -16,13 +16,13 @@ void main() {
     // Sample the flip book texture
     vec4 spriteSheetColor = texture(u_texture, v_uv);
     if (spriteSheetColor.a < 0.01) discard;
-    
+
     spriteSheetColor.rgb = pow(spriteSheetColor.rgb, vec3(2.2));
     spriteSheetColor.rgb = pow(spriteSheetColor.rgb, vec3(2.2)); // Stack another POW for good measure
     float a = spriteSheetColor.a;
 
     // Base moonlight contribution
-    float finalStrength = 0.2; 
+    float finalStrength = 0.2;
 
     // Flashlights
     for (int i = 0; i < 2; i++) {
@@ -31,13 +31,13 @@ void main() {
         if (modifier > 0.05) {
             vec4 flashlightDir = viewportDataArr[i].flashlightDir;
             vec4 flashlightPosition = viewportDataArr[i].flashlightPosition;
-            
+
             vec3 spotLightPos = flashlightPosition.xyz;
             vec3 spotLightDir = normalize(flashlightDir.xyz);
-            
+
             float spotLightRadius = 25.0;
             float spotLightStrength = 4.5;
-            
+
             float innerAngle = cos(radians(5.0 * modifier));
             float outerAngle = cos(radians(20.5));
 

@@ -249,7 +249,7 @@ namespace OpenGLRenderer {
 			int32_t quarterWidth = (gBuffer.GetWidth() + 3) / 4;
 			int32_t quarterHeight = (gBuffer.GetHeight() + 3) / 4;
 
-			BindTextureUnit(2, gBuffer.GetColorAttachmentHandleByName("Normal"));
+			BindTextureUnit(2, gBuffer.GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
 			BindTextureUnit(3, gBuffer.GetDepthAttachmentHandle());
 			glDispatchCompute((quarterWidth + 7) / 8, (quarterHeight + 7) / 8, 1);
 		}
@@ -671,7 +671,7 @@ namespace OpenGLRenderer {
             OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
             if (!gBuffer) return;
 
-            BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
+            BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
             BindTextureUnit(3, gBuffer->GetDepthAttachmentHandle());
 
             shader->SetBool("u_octalNormals", false);

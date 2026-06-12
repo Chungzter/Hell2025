@@ -406,22 +406,61 @@ void Player::SpawnCasing() {
 }
 
 void Player::SpawnBullet(float variance) {
+    // Spawn an underwater bullet if camera is underwater
+    if (CameraIsUnderwater()) {
+        SpawnUnderWaterBullet(variance);
+        return;
+    }
+
+    // Otherwise spawn a regular bullet
+    else {
+        WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+
+        glm::vec3 bulletDirection = GetCameraForward();
+        bulletDirection.x += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
+        bulletDirection.y += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
+        bulletDirection.z += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
+        bulletDirection = glm::normalize(bulletDirection);
+
+        BulletCreateInfo createInfo;
+        createInfo.origin = GetCameraPosition();
+        createInfo.direction = bulletDirection;
+        createInfo.damage = weaponInfo->damage;
+        createInfo.weaponIndex = Bible::GetWeaponIndexFromWeaponName(weaponInfo->itemInfoName);
+        createInfo.ownerObjectId = m_playerId;
+
+        World::AddBullet(createInfo);
+    }
+}
+
+void Player::SpawnUnderWaterBullet(float variance) {
     WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
 
-    glm::vec3 bulletDirection = GetCameraForward();
+    glm::vec3 vanishingPoint = GetCameraPosition() + (GetCameraForward() * 1000.0f);
+    glm::vec3 origin = GetMuzzleFlashSpawnPosition();
+    glm::vec3 bulletDirection = glm::normalize(vanishingPoint - GetCameraPosition());
+
     bulletDirection.x += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
     bulletDirection.y += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
     bulletDirection.z += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
     bulletDirection = glm::normalize(bulletDirection);
 
     BulletCreateInfo createInfo;
-    createInfo.origin = GetCameraPosition();
+    createInfo.origin = origin;
     createInfo.direction = bulletDirection;
     createInfo.damage = weaponInfo->damage;
     createInfo.weaponIndex = Bible::GetWeaponIndexFromWeaponName(weaponInfo->itemInfoName);
     createInfo.ownerObjectId = m_playerId;
 
-    World::AddBullet(createInfo);
+    World::AddBulletTrail(createInfo);
+
+
+    const std::vector<const char*> filenames = {
+            "UnderwaterTrail0.wav",
+            "UnderwaterTrail1.wav"
+    };
+    int random = rand() % filenames.size();
+    Audio::PlayAudio(filenames[random], 5.0f);
 }
 
 void Player::UpdateWeaponSlide() {

@@ -49,7 +49,7 @@ namespace World {
         //
         //    }
         //}
-        
+
 
        // Physics::GetPxScene()->fetchResults(true);
        // Physics::GetPxScene()->fetchQueries(true);
@@ -72,7 +72,7 @@ namespace World {
         //
         //    if (result.hitFound) {
         //        std::cout << "hit found\n";
-        //    } 
+        //    }
         //    else {
         //        std::cout << "hit not found\n";
         //    }
@@ -148,13 +148,40 @@ namespace World {
                 }
             }
 
-            //if (hitFound && UniqueID::GetType(objectId) == ObjectType::WATER_PLANE) {
-            //    p = hitPosition;
-            //}
-
-
             // Hit found?
             if (hitFound) {
+
+                ObjectType hitObjectType = UniqueID::GetType(objectId);
+
+                // Bullet enters water
+                if (hitObjectType == ObjectType::WATER_PLANE_TOP) {
+                    BulletCreateInfo createInfo = bullet.GetCreateInfo();
+                    createInfo.origin = hitPosition + (bullet.GetDirection() * 0.1f);
+
+                    AddBulletTrail(createInfo);
+                    std::cout << "Spawning a new bullet trail beneath the ocean\n";
+                }
+
+                // Bullet leaves water
+                if (hitObjectType == ObjectType::WATER_PLANE_BOTTOM) {
+                    BulletCreateInfo bulletCreateInfo;
+                    bulletCreateInfo.origin = hitPosition + (bullet.GetDirection() * 0.1f);
+                    bulletCreateInfo.direction = bullet.GetDirection();
+                    bulletCreateInfo.damage = bullet.GetDamage();
+                    bulletCreateInfo.weaponIndex = bullet.GetWeaponIndex();
+                    bulletCreateInfo.ownerObjectId = bullet.GetOwnerObjectId();
+                    bulletCreateInfo.rayLength = 1000.0f;
+                    newBullets.emplace_back(Bullet(bulletCreateInfo));
+
+                    std::cout << "Spawning a new bullet exiting the ocean\n";
+                }
+
+
+
+                // If this bullet belongs to a bullet trail, then destroy the trail
+                if (bullet.GetParentBulletTrailId() != 0) {
+                    World::RemoveObject(bullet.GetParentBulletTrailId());
+                }
 
                 // Retrieve the hit MeshNode, this could be nullptr if the hit was a physics object
                 MeshNode* meshNode = World::GetMeshNodeByObjectIdAndLocalNodeIndex(objectId, localMeshNodeIndex);
@@ -328,7 +355,7 @@ namespace World {
                 ObjectType& objectType = rayResult.userData.objectType;
                 uint64_t physicsId = rayResult.userData.physicsId;
                 uint64_t objectId = rayResult.userData.objectId;
-            
+
                 // Blood
                 //if (objectType == ObjectType::RAGDOLL_PLAYER ||
                 //    objectType == ObjectType::RAGDOLL_ENEMY ||
@@ -336,7 +363,7 @@ namespace World {
                 //    objectType == ObjectType::SHARK) {
                 //    SpawnBlood(rayResult.hitPosition, -bullet.GetDirection());
                 //}
-            
+
                 // Apply force if object is dynamic
                 if (physicsType == PhysicsType::RIGID_DYNAMIC) {
                     //float strength = 200.0f;

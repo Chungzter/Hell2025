@@ -440,6 +440,7 @@ private:
         bool CanEnterADS();
         bool CanLeaveADS();
         void SpawnBullet(float variance);
+        void SpawnUnderWaterBullet(float variance);
         bool IsInADS();
 
         // Shotgun

@@ -30,8 +30,8 @@ namespace OpenGLRenderer {
 
         shader->Bind();
         BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
-        BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColor"));
-        BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("Normal"));
+        BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColorMetallic"));
+        BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
         BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
         BindTextureUnit(4, gBuffer->GetDepthAttachmentHandle());
         BindTextureUnit(5, halfSizeFbo->GetColorAttachmentHandleByName("DownsampledFinalLighting"));
