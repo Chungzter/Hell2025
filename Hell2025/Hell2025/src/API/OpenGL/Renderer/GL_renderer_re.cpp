@@ -521,6 +521,7 @@ namespace OpenGLRenderer {
 
         ForceRasterizerState("GlassPass");
 
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
         OpenGLShader* shader = GetShaderOLD("Glass");
@@ -532,6 +533,9 @@ namespace OpenGLRenderer {
         if (!compositeShader) return;
         if (!gBuffer) return;
         if (!flashLightShadowMapsFBO) return;
+
+        // TODO: explicitly bind all other ssbos used by this render pass
+        BindSSBO(6, "Materials");
 
         shader->Bind();
         shader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
@@ -563,7 +567,7 @@ namespace OpenGLRenderer {
             OpenGLRenderer::SetViewport(gBuffer, viewport);
             shader->SetInt("u_viewportIndex", i);
 
-            for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsGlass()) {
+            for (const RenderItem& renderItem : drawInfoSet.glass[i]) {
                 shader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
 
                 Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);

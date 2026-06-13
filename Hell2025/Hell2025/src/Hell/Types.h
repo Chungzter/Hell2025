@@ -286,10 +286,10 @@ struct Material {
 	int m_normal = 0;
 	int m_rma = 0;
 	int m_emissive = 0;
-	int m_hairFlowMap = 0;
-    int m_hairIdMap = 0;
-    int m_hairRootMap = 0;
-    int m_hairBlendMap = 0;
+	//int m_hairFlowMap = 0;
+    //int m_hairIdMap = 0;
+    //int m_hairRootMap = 0;
+    //int m_hairBlendMap = 0;
     int m_opacity = 0;
     int m_hairMaps = 0;
 };
@@ -406,14 +406,17 @@ struct DrawArraysIndirectCommand {
 };
 
 struct DrawCommandsSet {
+    std::vector<RenderItem> glass[4];
+
 	std::vector<DrawIndexedIndirectCommand> alphaDiscard[4];
 	std::vector<DrawIndexedIndirectCommand> blended[4];
 	std::vector<DrawIndexedIndirectCommand> hair[4];
-	std::vector<DrawIndexedIndirectCommand> standard[4];
+    std::vector<DrawIndexedIndirectCommand> standard[4];
 
 	std::vector<DrawIndexedIndirectCommand> procedural[4];
 	std::vector<DrawIndexedIndirectCommand> mirrorRenderItems[4];
 	std::vector<DrawIndexedIndirectCommand> plastic[4];
+
 
     std::vector<DrawIndexedIndirectCommand> emissive[4];
     //std::vector<DrawIndexedIndirectCommand> skinnedEmissive[4];

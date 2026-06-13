@@ -75,10 +75,10 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
 
         // Additional textures (hair)
 		if (m_nodes[i].blendingMode == BlendingMode::HAIR) {
-			renderItem.additionalTextureIndex0 = material->m_hairFlowMap;
-            renderItem.additionalTextureIndex1 = material->m_hairIdMap;
-            renderItem.additionalTextureIndex2 = material->m_hairRootMap;
-            renderItem.additionalTextureIndex3 = material->m_hairBlendMap;
+			//renderItem.additionalTextureIndex0 = material->m_hairFlowMap;
+            //renderItem.additionalTextureIndex1 = material->m_hairIdMap;
+            //renderItem.additionalTextureIndex2 = material->m_hairRootMap;
+            //renderItem.additionalTextureIndex3 = material->m_hairBlendMap;
 		}
 		// Additional textures (wound mask)
         else if (m_woundMaskTextureIndices[i] != -1) {
@@ -144,7 +144,7 @@ void AnimatedMeshNodes::SetMeshMaterialByMeshName(const std::string& meshName, c
         Logging::Error() << "AnimatedMeshNodes::SetMeshMaterialByMeshName(..) failed because '" << materialName << "' was not found\n";
         return;
     }
-    
+
     for (AnimatedMeshNode& node : m_nodes) {
         if (node.meshName == meshName) {
             node.materialIndex = materialIndex;

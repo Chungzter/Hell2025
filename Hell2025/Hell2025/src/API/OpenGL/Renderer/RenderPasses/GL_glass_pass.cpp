@@ -13,6 +13,7 @@ namespace OpenGLRenderer {
 
         ForceRasterizerState("GlassPass");
 
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
         OpenGLShader* shader = GetShaderOLD("Glass");
@@ -25,18 +26,20 @@ namespace OpenGLRenderer {
         if (!gBuffer) return;
         if (!flashLightShadowMapsFBO) return;
 
+        // TODO: explicitly bind all other ssbos used by this render pass
+        BindSSBO(6, "Materials");
+
         shader->Bind();
         shader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
         gBuffer->Bind();
         gBuffer->DrawBuffer("Glass");
 
-
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
         glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
         glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
-        
+
         // Forward render each glass render item into each viewport
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -47,7 +50,7 @@ namespace OpenGLRenderer {
 
             Player* player = Game::GetLocalPlayerByIndex(i);
 
-            for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsGlass()) {
+            for (const RenderItem& renderItem : drawInfoSet.glass[i]) {
                 shader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
 
                 Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);

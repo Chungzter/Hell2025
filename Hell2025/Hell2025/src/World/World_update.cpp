@@ -62,10 +62,17 @@ namespace World {
 		//ratKidAO->PrintMeshNames();
 
     }
-    
+
     static float DegToRad(float degrees) { return degrees * (HELL_PI / 180.0f); }
 
     void Update(float deltaTime) {
+
+        if (Input::KeyPressed(HELL_KEY_4)) {
+            Player* player = Game::GetLocalPlayerByIndex(0);
+            player->SetFootPosition(glm::vec3(34.49f, 31.0f, 37.48f));
+            player->GetCamera().SetEulerRotation(glm::vec3(-0.15f, 1.58f, 0.0f));
+        }
+
 
         HackTest();
         //static bool rotate = false;
@@ -214,7 +221,7 @@ namespace World {
         if (g_trapKingID == 666) {
             g_trapKingID = CreateAnimatedGameObject();
             AnimatedGameObject* trapKingAO = GetTrapKingAO();
-            
+
             trapKingAO->SetSkinnedModel("TrapKing");
             trapKingAO->SetMeshMaterialByMeshName("Body", "TrapKingBodyHead");
             trapKingAO->SetMeshMaterialByMeshName("Body2", "TrapKingBodyTorso");
@@ -309,7 +316,7 @@ namespace World {
       //    ratKidAO->PlayAndLoopAnimation("Main", "RatKingSamTest", 1.0f);
       //    Audio::PlayAudio(AUDIO_SELECT, 1.0f);
       //}
-     
+
 
 
 

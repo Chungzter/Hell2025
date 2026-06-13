@@ -302,3 +302,15 @@ struct Particle {
     float lifeTime;
     uint exists;
 };
+
+struct Material {
+    int basecolor;
+    int normal;
+    int rma;
+    int emissive;
+
+    int opacity;
+    int hairMaps;
+    int padding;
+    int padding2;
+};

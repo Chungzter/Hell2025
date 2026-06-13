@@ -29,6 +29,7 @@
 #include "Tools/ImageTools.h"
 
 #include <Hell/Logging.h>
+#include <Hell/GPUTypes.h>
 #include "World/World.h"
 #include "Renderer/Renderer.h"
 #include <unordered_map>
@@ -139,6 +140,21 @@ namespace OpenGLRenderer {
         }
 
         CreateBlurBuffers();
+
+        // Upload materials
+        std::vector<Material>& materials = AssetManager::GetMaterials();
+        std::vector<GPUMaterial> gpuMaterials(materials.size());
+
+        for (int i = 0; i < materials.size(); i++) {
+            gpuMaterials[i].basecolor = materials[i].m_basecolor;
+            gpuMaterials[i].normal = materials[i].m_normal;
+            gpuMaterials[i].rma = materials[i].m_rma;
+            gpuMaterials[i].emissive = materials[i].m_emissive;
+            gpuMaterials[i].opacity = materials[i].m_opacity;
+            gpuMaterials[i].hairMaps = materials[i].m_hairMaps;
+        }
+
+        UploadSSBOStatic("Materials", gpuMaterials.size() * sizeof(GPUMaterial), gpuMaterials.data());
     }
 
     void CreateFrameBuffers() {
@@ -427,6 +443,8 @@ namespace OpenGLRenderer {
         g_ssbos["InstanceData"] = OpenGLSSBO(sizeof(RenderItem) * MAX_INSTANCE_DATA_COUNT, GL_DYNAMIC_STORAGE_BIT);
         g_ssbos["SkinningTransforms"] = OpenGLSSBO(sizeof(glm::mat4) * MAX_ANIMATED_TRANSFORMS, GL_DYNAMIC_STORAGE_BIT);
         g_ssbos["Lights"] = OpenGLSSBO(sizeof(GPULight) * MAX_GPU_LIGHTS, GL_DYNAMIC_STORAGE_BIT);
+
+        CreateSSBOStatic("Materials");
 
         // Vertices
         CreateSSBOStatic("Indices2");

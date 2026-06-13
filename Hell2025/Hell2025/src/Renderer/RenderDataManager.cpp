@@ -323,7 +323,7 @@ namespace RenderDataManager {
 
             if (isEmissive) {
                 g_renderItemsEmissive.push_back(renderItem);
-            
+
                 //if (Input::KeyPressed(HELL_KEY_U)) {
                 //    Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
                 //    std::string textureName = UNDEFINED_STRING;
@@ -410,6 +410,38 @@ namespace RenderDataManager {
 	}
 
 
+    void FrustumCullGlassRenderItemsPerViewport() {
+        auto& set = g_drawCommandsSet;
+
+        for (int i = 0; i < 4; i++) {
+            std::vector<RenderItem>& renderItems = set.glass[i];
+            renderItems.clear();
+
+            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            Player* player = Game::GetLocalPlayerByIndex(i);
+            if (!player) continue;
+
+
+            Frustum& frustum = viewport->GetFrustum();
+
+            // First frustum cull
+            for (RenderItem& renderItem : g_renderItemsGlass) {
+                if (frustum.IntersectsAABB(AABB(renderItem.aabbMin, renderItem.aabbMax))) {
+                    renderItems.push_back(renderItem);
+                }
+            }
+
+            // Now sort by distance to camera
+            std::sort(renderItems.begin(), renderItems.end(), [player](RenderItem& a, RenderItem& b) {
+                float distA = glm::distance(player->GetCameraPosition(), glm::vec3(a.modelMatrix[3]));
+                float distB = glm::distance(player->GetCameraPosition(), glm::vec3(b.modelMatrix[3]));
+                return distA > distB;
+            });
+        }
+    }
+
     void UpdateDrawCommandsSet() {
         g_instanceData.clear();
         auto& set = g_drawCommandsSet;
@@ -419,6 +451,7 @@ namespace RenderDataManager {
             set.standard[i].clear();
             set.blended[i].clear();
             set.alphaDiscard[i].clear();
+            set.glass[i].clear();
             set.hair[i].clear();
 			set.mirrorRenderItems[i].clear();
             set.plastic[i].clear();
@@ -430,11 +463,13 @@ namespace RenderDataManager {
             //g_flashLightShadowMapDrawInfo.houseMeshRenderItems[i].clear();
         }
 
+        FrustumCullGlassRenderItemsPerViewport();
+
         SortRenderItems(g_renderItems);
         SortRenderItems(g_renderItemsBlended);
         SortRenderItems(g_renderItemsAlphaDiscarded);
-		SortRenderItems(g_renderItemsHair);
-		SortRenderItems(g_renderItemsPlastic);
+        SortRenderItems(g_renderItemsHair);
+        SortRenderItems(g_renderItemsPlastic);
         SortRenderItemsByMeshId(g_renderItemsProcedural);
 
         SortRenderItems(g_renderItemsPointLightShadows);
