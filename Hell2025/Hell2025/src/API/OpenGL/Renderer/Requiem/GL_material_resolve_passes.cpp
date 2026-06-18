@@ -1,6 +1,7 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
 #include "Hell/RendereringConstants.h"
+#include "Managers/ResourceManager.h"
 #include "Renderer/Renderer.h"
 
 namespace OpenGLRenderer {
@@ -92,6 +93,8 @@ namespace OpenGLRenderer {
     void MaterialResolveProceduralPass() {
         ProfilerOpenGLZoneFunction();
 
+        MeshBuffer& proceduralMeshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+
         OpenGLFrameBuffer& gbufferFbo = GetFrameBuffer("GBufferRE");
         gbufferFbo.Bind();
         gbufferFbo.SetViewport();
@@ -102,8 +105,8 @@ namespace OpenGLRenderer {
         BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
 
-        BindSSBO(0, Renderer::GetProceduralMeshBuffer().GetVBO());
-        BindSSBO(1, Renderer::GetProceduralMeshBuffer().GetEBO());
+        BindSSBO(0, proceduralMeshBuffer.GetVBO());
+        BindSSBO(1, proceduralMeshBuffer.GetEBO());
         BindSSBO(2, "ViewportData");
         BindSSBO(3, "InstanceData");
         BindSSBO(4, "Samplers");

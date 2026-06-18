@@ -2,9 +2,12 @@
 #include "Mesh.h"
 #include <Hell/Types.h>
 
+#include <cstdint>
 #include <span>
 #include <vector>
 #include <unordered_map>
+
+#include "GL_mesh_buffer.h" // TODO: move me to OpenGLResourceManager
 
 struct MemoryBlock {
     size_t begin = 0;
@@ -14,11 +17,12 @@ struct MemoryBlock {
 
 struct MeshBuffer {
     MeshBuffer() = default;
-    ~MeshBuffer() = default;
+    MeshBuffer(const std::string& name);
     MeshBuffer(const MeshBuffer&) = delete;
     MeshBuffer& operator=(const MeshBuffer&) = delete;
-    MeshBuffer(MeshBuffer&&) = delete;
-    MeshBuffer& operator=(MeshBuffer&&) = delete;
+    MeshBuffer(MeshBuffer&&) noexcept = default;
+    MeshBuffer& operator=(MeshBuffer&&) noexcept = default;
+    ~MeshBuffer() = default;
 
     void PreAllocate(size_t maxVertices, size_t maxIndices);
     void RemoveMesh(uint64_t meshIndex);
@@ -38,9 +42,9 @@ struct MeshBuffer {
     std::vector<uint32_t>& GetIndices() { return m_indices; }
 
     // OpenGL
-    const uint32_t GetVAO() const { return m_vao; }
-    const uint32_t GetVBO() const { return m_vbo; }
-    const uint32_t GetEBO() const { return m_ebo; }
+    const uint32_t GetVAO() const { return meshBufferGL.GetVAO(); }
+    const uint32_t GetVBO() const { return meshBufferGL.GetVBO(); }
+    const uint32_t GetEBO() const { return meshBufferGL.GetEBO(); }
 
 private:
     void Initilize();
@@ -48,7 +52,8 @@ private:
     int32_t AllocateExtraIndexSpace(size_t indexCount);
     int32_t AddVertices(const std::vector<Vertex>& newVertices);
     int32_t AddIndices(const std::vector<uint32_t>& newIndices);
-
+    
+    std::string m_name = UNDEFINED_STRING;
     std::vector<Vertex> m_vertices;
     std::vector<uint32_t> m_indices;
     std::unordered_map<uint64_t, Mesh> m_meshes;
@@ -58,17 +63,8 @@ private:
     bool m_initilized = false;
 
     // OpenGL
-    void InitOpenGL();
-    void ResetOpenGL();
-    void InsertVerticesToOpenGLVertexBuffer(const std::vector<Vertex>& vertices, uint32_t insertOffset);
-    void InsertIndicesToOpenGLIndexBuffer(const std::vector<uint32_t>& indices, uint32_t insertOffset);
-    void PreAllocateOpenGL(size_t maxVertices, size_t maxIndices);
-    void ResizeOpenGLVertexBuffer(size_t totalCount);
-    void ResizeOpenGLIndexBuffer(size_t totalCount);
+    OpenGLMeshBuffer meshBufferGL;
 
-    uint32_t m_vao = 0;
-    uint32_t m_vbo = 0;
-    uint32_t m_ebo = 0;
-    size_t m_vertexGpuCapacity = 0;
-    size_t m_indexGpuCapacity = 0;
+    size_t m_vertexCapacity = 0;
+    size_t m_indexCapacity = 0;
 };

@@ -1,6 +1,6 @@
-#include "GL_mesh_buffer.h"
+#include "GL_mesh_buffer_old.h"
 
-void OpenGLMeshBuffer::UpdateBuffers(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) {
+void OpenGLMeshBufferOLD::UpdateBuffers(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) {
     GLsizei newVertexCount = static_cast<GLsizei>(vertices.size());
     GLsizei newIndexCount = static_cast<GLsizei>(indices.size());
 
@@ -70,7 +70,7 @@ void OpenGLMeshBuffer::UpdateBuffers(std::vector<Vertex>& vertices, std::vector<
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void OpenGLMeshBuffer::AllocateBuffers(size_t vertexCount, size_t indexCount) {
+void OpenGLMeshBufferOLD::AllocateBuffers(size_t vertexCount, size_t indexCount) {
     GLsizei requestedVertexCount = static_cast<GLsizei>(vertexCount);
     GLsizei requestedIndexCount = static_cast<GLsizei>(indexCount);
 
@@ -136,7 +136,7 @@ void OpenGLMeshBuffer::AllocateBuffers(size_t vertexCount, size_t indexCount) {
     m_indexCount = 0;
 }
 
-void OpenGLMeshBuffer::ReleaseBuffers() {
+void OpenGLMeshBufferOLD::ReleaseBuffers() {
     if (m_VAO != 0) {
         glDeleteVertexArrays(1, &m_VAO);
         if (m_VBO != 0) {

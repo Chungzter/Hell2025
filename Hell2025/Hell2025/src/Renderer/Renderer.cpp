@@ -8,7 +8,7 @@
 #include "Config/Config.h"
 #include "Core/Debug.h"
 #include "Editor/Editor.h"
-#include "Editor/Editor.h"
+#include "Managers/ResourceManager.h"
 #include "Timer.hpp"
 
 #include <Hell/Logging.h>
@@ -16,7 +16,6 @@
 namespace Renderer {
 
     std::vector<bool> g_freeWoundMaskIndices;
-    MeshBuffer g_proceduralMeshBuffer;
 
     bool g_gameIsRendering = false;
 
@@ -308,25 +307,5 @@ namespace Renderer {
 
     bool GameIsRendering() {
         return g_gameIsRendering;
-    }
-
-    MeshBuffer& GetProceduralMeshBuffer() {
-        return g_proceduralMeshBuffer;
-    }
-
-    Mesh* GetProcedualMeshByMeshId(uint64_t meshId) {
-        return g_proceduralMeshBuffer.GetMeshById(meshId);
-    }
-
-    uint64_t AddProcedualMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name) {
-        return g_proceduralMeshBuffer.AddMesh(vertices, indices, name);
-    }
-
-    void RemoveProcedualMeshByMeshId(uint64_t meshId) {
-        g_proceduralMeshBuffer.RemoveMesh(meshId);
-    }
-
-    void ResetProcedualMeshBuffer() {
-        g_proceduralMeshBuffer.Reset();
     }
 }

@@ -271,7 +271,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\API\OpenGL\Types\GL_framebuffer.cpp" />
     <ClCompile Include="src\API\OpenGL\Types\GL_heightmap_mesh.cpp" />
     <ClCompile Include="src\API\OpenGL\Types\GL_mesh.cpp" />
-    <ClCompile Include="src\API\OpenGL\Types\GL_mesh_buffer.cpp" />
+    <ClCompile Include="src\API\OpenGL\Types\GL_mesh_buffer_old.cpp" />
     <ClCompile Include="src\API\OpenGL\Types\GL_mesh_patch.cpp" />
     <ClCompile Include="src\API\OpenGL\Types\GL_shader.cpp" />
     <ClCompile Include="src\API\OpenGL\Types\GL_shadow_cube_map_array.cpp" />
@@ -351,6 +351,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\GlobalIllumination\PointCloud.cpp" />
     <ClCompile Include="src\Hell\Logging.cpp" />
     <ClCompile Include="src\Editor\Editor_settings.cpp" />
+    <ClCompile Include="src\Managers\ResourceManager.cpp" />
     <ClCompile Include="src\Managers\MirrorManager.cpp" />
     <ClCompile Include="src\Managers\OpenableManager.cpp" />
     <ClCompile Include="src\Editor\Editors\Editor_left_panel.cpp" />
@@ -463,6 +464,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Types\Interior\PictureFrame.cpp" />
     <ClCompile Include="src\Types\Misc\DoorChain.cpp" />
     <ClCompile Include="src\Types\Renderer\AnimatedMeshNodes.cpp" />
+    <ClCompile Include="src\Types\Renderer\GL_mesh_buffer.cpp" />
     <ClCompile Include="src\Types\Renderer\IESProfile.cpp" />
     <ClCompile Include="src\Types\Renderer\Mesh.cpp" />
     <ClCompile Include="src\Types\Renderer\MeshBufferOLD.cpp" />
@@ -630,6 +632,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\GlobalIllumination\PointCloud.h" />
     <ClInclude Include="src\Hell\GPUTypes.h" />
     <ClInclude Include="src\Hell\RendereringConstants.h" />
+    <ClInclude Include="src\Managers\ResourceManager.h" />
     <ClInclude Include="src\Types\Core\ItemInfo.h" />
     <ClInclude Include="src\Bvh\Gpu\Bvh.h" />
     <ClInclude Include="src\Common\CopyableAtomic.h" />
@@ -639,7 +642,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\API\OpenGL\GL_util.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_cubemapView.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_mesh.h" />
-    <ClInclude Include="src\API\OpenGL\Types\GL_mesh_buffer.h" />
+    <ClInclude Include="src\API\OpenGL\Types\GL_mesh_buffer_old.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_heightmap_mesh.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_indirectBuffer.hpp" />
     <ClInclude Include="src\API\OpenGL\Types\GL_mesh2D.hpp" />
@@ -758,6 +761,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Types\Interior\PictureFrame.h" />
     <ClInclude Include="src\Types\Misc\DoorChain.h" />
     <ClInclude Include="src\Types\Renderer\AnimatedMeshNodes.h" />
+    <ClInclude Include="src\Types\Renderer\GL_mesh_buffer.h" />
     <ClInclude Include="src\Types\Renderer\IESProfile.h" />
     <ClInclude Include="src\Types\Renderer\Mesh.h" />
     <ClInclude Include="src\Types\Renderer\MeshBuffer.h" />

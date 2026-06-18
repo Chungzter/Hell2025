@@ -17,6 +17,7 @@
 
 #include "Types/Mirror.h"
 #include "Managers/MirrorManager.h"
+#include "Managers/ResourceManager.h"
 
 #include "Core/Game.h"
 
@@ -51,7 +52,7 @@ namespace OpenGLRenderer {
         //OpenGLMeshBuffer& glHouseMeshBuffer = houseMeshBuffer.GetGLMeshBuffer();
         //glBindVertexArray(glHouseMeshBuffer.GetVAO());
 
-        MeshBuffer& meshBuffer = Renderer::GetProceduralMeshBuffer();
+        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
         glBindVertexArray(meshBuffer.GetVAO());
 
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
@@ -369,7 +370,7 @@ namespace OpenGLRenderer {
                     std::vector<Wire>& wires = lights.GetWires();
                     for (Wire& wire : wires) {
                         MeshBufferOLD& meshBuffer = wire.GetMeshBuffer();
-                        OpenGLMeshBuffer& glMeshBuffer = meshBuffer.GetGLMeshBuffer();
+                        OpenGLMeshBufferOLD& glMeshBuffer = meshBuffer.GetGLMeshBuffer();
                         glBindVertexArray(glMeshBuffer.GetVAO());
                         glDrawElements(GL_TRIANGLES, glMeshBuffer.GetIndexCount(), GL_UNSIGNED_INT, 0);
                     }
@@ -380,7 +381,7 @@ namespace OpenGLRenderer {
                     std::vector<Wire>& wires = powerPoleSet.GetWires();
                     for (Wire& wire : wires) {
                         MeshBufferOLD& meshBuffer = wire.GetMeshBuffer();
-                        OpenGLMeshBuffer& glMeshBuffer = meshBuffer.GetGLMeshBuffer();
+                        OpenGLMeshBufferOLD& glMeshBuffer = meshBuffer.GetGLMeshBuffer();
                         glBindVertexArray(glMeshBuffer.GetVAO());
                         glDrawElements(GL_TRIANGLES, glMeshBuffer.GetIndexCount(), GL_UNSIGNED_INT, 0);
                     }
@@ -596,8 +597,8 @@ namespace OpenGLRenderer {
         houseGeometryShader->SetMat4("u_model", glm::mat4(1));
         houseGeometryShader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
-        MeshBuffer& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
-        glBindVertexArray(proceduralMeshBuffer.GetVAO());
+        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+        glBindVertexArray(meshBuffer.GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -613,26 +614,10 @@ namespace OpenGLRenderer {
             houseGeometryShader->SetMat4("u_mirrorViewMatrix", mirror->GetViewMatrix(i));
             houseGeometryShader->SetVec4("u_mirrorClipPlane", mirror->GetClipPlane(i));
 
-            //const std::vector<HouseRenderItem>& renderItems = RenderDataManager::GetHouseRenderItems();
-            //
-            //for (const HouseRenderItem& renderItem : renderItems) {
-            //    int indexCount = renderItem.indexCount;
-            //    int baseVertex = renderItem.baseVertex;
-            //    int baseIndex = renderItem.baseIndex;
-            //
-            //    glActiveTexture(GL_TEXTURE0);
-            //    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
-            //    glActiveTexture(GL_TEXTURE1);
-            //    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
-            //    glActiveTexture(GL_TEXTURE2);
-            //    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
-            //    glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
-            //}
-
             const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
             for (const RenderItem& renderItem : renderItems) {
 
-                Mesh* mesh = proceduralMeshBuffer.GetMeshById(renderItem.meshId);
+                Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
                 if (!mesh) continue;
 
                 glActiveTexture(GL_TEXTURE0);

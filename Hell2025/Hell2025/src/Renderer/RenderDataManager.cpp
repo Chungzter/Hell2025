@@ -7,6 +7,7 @@
 #include "Editor/Editor.h"
 #include "Input/Input.h"
 #include "Managers/MirrorManager.h"
+#include "Managers/ResourceManager.h"
 #include "Ocean/Ocean.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
@@ -600,7 +601,7 @@ namespace RenderDataManager {
         std::unordered_map<uint64_t, std::size_t> commandMap;
         commands.reserve(renderItems.size());
 
-        MeshBuffer& meshBuffer = Renderer::GetProceduralMeshBuffer();
+        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
 
         for (const RenderItem& renderItem : renderItems) {
             uint64_t meshId = renderItem.meshId;

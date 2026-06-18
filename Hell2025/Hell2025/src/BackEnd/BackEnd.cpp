@@ -26,6 +26,7 @@
 #include "Managers/OpenableManager.h"
 #include "Managers/HouseManager.h"
 #include "Managers/MirrorManager.h"
+#include "Managers/ResourceManager.h"
 #include "Modelling/Unused/Modelling.h"
 #include "Physics/Physics.h"
 #include "Ragdoll/RagdollManager.h"
@@ -92,6 +93,7 @@ namespace BackEnd {
         Editor::Init();
         Synth::Init();
         MidiFileManager::Init();
+        ResourceManager::Init();
         Physics::Init();
         RagdollManager::Init();
         ImGuiBackEnd::Init();

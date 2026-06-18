@@ -46,7 +46,7 @@ namespace OpenGLRenderer {
                     for (GizmoRenderItem& renderItem : Gizmo::GetRenderItemsByViewportIndex(i)) {
                         MeshBufferOLD* mesh = Gizmo::GetMeshBufferByIndex(renderItem.meshIndex);
                         if (mesh) {
-                            OpenGLMeshBuffer glMesh = mesh->GetGLMeshBuffer();
+                            OpenGLMeshBufferOLD glMesh = mesh->GetGLMeshBuffer();
                             shader->SetMat4("model", renderItem.modelMatrix);
                             shader->SetVec4("uniformColor", renderItem.color);
                             glBindVertexArray(glMesh.GetVAO());

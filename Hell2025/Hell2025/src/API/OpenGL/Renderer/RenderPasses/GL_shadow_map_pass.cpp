@@ -5,6 +5,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
+#include "Managers/ResourceManager.h"
 #include "World/World.h"
 
 #include "Ragdoll/RagdollManager.h"
@@ -30,7 +31,7 @@ namespace OpenGLRenderer {
         //const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const FlashLightShadowMapDrawInfo& flashLightShadowMapDrawInfo = RenderDataManager::GetFlashLightShadowMapDrawInfo();
         
-        glm::mat4 heightMapModelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(HEIGHTMAP_SCALE_XZ, HEIGHTMAP_SCALE_Y, HEIGHTMAP_SCALE_XZ)); // move to heightmap manager
+        glm::mat4 heightMapModelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(HEIGHTMAP_SCALE_XZ, HEIGHTMAP_SCALE_Y, HEIGHTMAP_SCALE_XZ)); // move to height map manager
 
         glEnable(GL_DEPTH_TEST);
         glDrawBuffer(GL_NONE);
@@ -80,24 +81,10 @@ namespace OpenGLRenderer {
                 }
             }
 
-            // House render items
-           // OpenGLMeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer().GetGLMeshBuffer();
-           // glBindVertexArray(houseMeshBuffer.GetVAO());
-            
-
-            //const std::vector<HouseRenderItem>& renderItems = flashLightShadowMapDrawInfo.houseMeshRenderItems[i];
-            //for (const HouseRenderItem& renderItem : renderItems) {
-            //    int indexCount = renderItem.indexCount;
-            //    int baseVertex = renderItem.baseVertex;
-            //    int baseIndex = renderItem.baseIndex;
-            //    glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
-            //}
-
-
             // Procedural
             shader->SetMat4("u_modelMatrix", glm::mat4(1.0f));
 
-            MeshBuffer& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
+            MeshBuffer& proceduralMeshBuffer = ResourceManager::GetMeshBuffer("Procedural");
             glBindVertexArray(proceduralMeshBuffer.GetVAO());
 
             const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
@@ -276,7 +263,7 @@ namespace OpenGLRenderer {
         // Make lights store a list of their HouseRenderItems per frustum face that is only updated when the map changes
         // That will be when a HousePlane or Wall is added/modified
 
-        MeshBuffer& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
+        MeshBuffer& proceduralMeshBuffer = ResourceManager::GetMeshBuffer("Procedural");
         glBindVertexArray(proceduralMeshBuffer.GetVAO());
         
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
@@ -375,7 +362,7 @@ namespace OpenGLRenderer {
                 shader->SetMat4("u_modelMatrix", glm::mat4(1.0f));
 
                 // Procedural
-                MeshBuffer& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
+                MeshBuffer& proceduralMeshBuffer = ResourceManager::GetMeshBuffer("Procedural");
                 glBindVertexArray(proceduralMeshBuffer.GetVAO());
 
                 //glDisable(GL_CULL_FACE);

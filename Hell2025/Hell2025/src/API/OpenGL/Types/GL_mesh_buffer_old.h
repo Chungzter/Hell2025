@@ -4,7 +4,7 @@
 #include <vector>
 #include <glad/gl.h>
 
-struct OpenGLMeshBuffer {
+struct OpenGLMeshBufferOLD {
     void ReleaseBuffers();
     void UpdateBuffers(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
     void AllocateBuffers(size_t vertexCount, size_t indexCount);

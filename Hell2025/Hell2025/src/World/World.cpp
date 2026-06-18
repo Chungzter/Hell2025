@@ -15,6 +15,7 @@
 #include "Managers/HouseManager.h"
 #include "Managers/MapManager.h"
 #include "Managers/MirrorManager.h"
+#include "Managers/ResourceManager.h"
 #include "GlobalIllumination/GlobalIllumination.h"
 #include "Ocean/Ocean.h"
 #include "Renderer/Renderer.h"
@@ -817,7 +818,8 @@ namespace World {
         g_validChunks.clear();
         g_mapInstances.clear();
 
-        Renderer::ResetProcedualMeshBuffer();
+        MeshBuffer& proceduralMeshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+        proceduralMeshBuffer.Reset();
 
         //RemoveAllHouseBvhs();
 

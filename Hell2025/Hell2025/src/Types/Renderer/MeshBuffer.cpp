@@ -1,11 +1,22 @@
 #include "MeshBuffer.h"
-#include <algorithm>
+
+#include "Backend/BackEnd.h"
 #include <Hell/Logging.h>
 #include <Util/Util.h>
 
+#include <algorithm>
+
+MeshBuffer::MeshBuffer(const std::string& name) {
+    m_name = name;
+}
+
 void MeshBuffer::Initilize() {
     Reset();
-    InitOpenGL();
+
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        meshBufferGL.Init(m_vertexCapacity, m_indexCapacity);
+    }
+
     m_initilized = true;
 }
 
@@ -19,7 +30,9 @@ void MeshBuffer::Reset() {
 
     m_nextMeshId = 0;
 
-    ResetOpenGL();
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        meshBufferGL.Reset(m_vertexCapacity, m_indexCapacity);
+    }
 
     m_initilized = false;
 }
@@ -76,12 +89,16 @@ int32_t MeshBuffer::AddVertices(const std::vector<Vertex>& newVertices) {
         // Grow capacity by 1.5x
         size_t newCount = std::max(requiredCount, static_cast<size_t>(m_vertices.size() * 1.5));
 
-        ResizeOpenGLVertexBuffer(newCount);
+        if (BackEnd::GetAPI() == API::OPENGL) {
+            meshBufferGL.ResizeVertexBuffer(newCount, m_vertices, m_vertexCapacity);
+        }
 
         m_vertices.resize(newCount);
         std::copy(newVertices.begin(), newVertices.end(), m_vertices.begin() + insertOffset);
 
-        InsertVerticesToOpenGLVertexBuffer(newVertices, insertOffset);
+        if (BackEnd::GetAPI() == API::OPENGL) {
+            meshBufferGL.InsertVertices(newVertices, insertOffset);
+        }
 
         // Register newly allocated excess space as a free block
         if (newCount > requiredCount) {
@@ -98,8 +115,11 @@ int32_t MeshBuffer::AddVertices(const std::vector<Vertex>& newVertices) {
         insertOffset = memoryBlock.begin;
 
         std::copy(newVertices.begin(), newVertices.end(), m_vertices.begin() + insertOffset);
-        InsertVerticesToOpenGLVertexBuffer(newVertices, insertOffset);
 
+        if (BackEnd::GetAPI() == API::OPENGL) {
+            meshBufferGL.InsertVertices(newVertices, insertOffset);
+        }
+        
         // Handle block resizing
         if (memoryBlock.GetSize() == newVertices.size()) {
             m_freeVertexMemoryBlocks.erase(m_freeVertexMemoryBlocks.begin() + freeMemoryBlockIndex);
@@ -134,12 +154,16 @@ int32_t MeshBuffer::AddIndices(const std::vector<uint32_t>& newIndices) {
         // Grow capacity by 1.5x
         size_t newCount = std::max(requiredCount, static_cast<size_t>(m_indices.size() * 1.5));
 
-        ResizeOpenGLIndexBuffer(newCount);
+        if (BackEnd::GetAPI() == API::OPENGL) {
+            meshBufferGL.ResizeIndexBuffer(newCount, m_indices, m_indexCapacity);
+        }
 
         m_indices.resize(newCount);
         std::copy(newIndices.begin(), newIndices.end(), m_indices.begin() + insertOffset);
 
-        InsertIndicesToOpenGLIndexBuffer(newIndices, insertOffset);
+        if (BackEnd::GetAPI() == API::OPENGL) {
+            meshBufferGL.InsertIndices(newIndices, insertOffset);
+        }
 
         // Register newly allocated excess space as a free block
         if (newCount > requiredCount) {
@@ -156,7 +180,10 @@ int32_t MeshBuffer::AddIndices(const std::vector<uint32_t>& newIndices) {
         insertOffset = memoryBlock.begin;
 
         std::copy(newIndices.begin(), newIndices.end(), m_indices.begin() + insertOffset);
-        InsertIndicesToOpenGLIndexBuffer(newIndices, insertOffset);
+
+        if (BackEnd::GetAPI() == API::OPENGL) {
+            meshBufferGL.InsertIndices(newIndices, insertOffset);
+        }
 
         // Handle block resizing
         if (memoryBlock.GetSize() == newIndices.size()) {
@@ -174,8 +201,10 @@ int32_t MeshBuffer::AllocateExtraVertexSpace(size_t vertexCount) {
     size_t blockBegin = m_vertices.size();
     size_t blockEnd = m_vertices.size() + vertexCount;
 
-    ResizeOpenGLVertexBuffer(blockEnd);
-
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        meshBufferGL.ResizeVertexBuffer(blockEnd, m_vertices, m_vertexCapacity);
+    }
+    
     MemoryBlock& block = m_freeVertexMemoryBlocks.emplace_back();
     block.begin = blockBegin;
     block.end = blockEnd;
@@ -189,7 +218,9 @@ int32_t MeshBuffer::AllocateExtraIndexSpace(size_t indexCount) {
     size_t blockBegin = m_indices.size();
     size_t blockEnd = m_indices.size() + indexCount;
 
-    ResizeOpenGLIndexBuffer(blockEnd);
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        meshBufferGL.ResizeIndexBuffer(blockEnd, m_indices, m_indexCapacity);
+    }
 
     MemoryBlock& block = m_freeIndexMemoryBlocks.emplace_back();
     block.begin = blockBegin;
@@ -277,14 +308,19 @@ void MeshBuffer::PreAllocate(size_t maxVertices, size_t maxIndices) {
     }
 
     Reset();
-    InitOpenGL();
 
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        meshBufferGL.Init(m_vertexCapacity, m_indexCapacity);
+    }
+    
     m_vertices.resize(maxVertices);
     m_indices.resize(maxIndices);
 
     // Allocate new GPU memory
-    PreAllocateOpenGL(maxVertices, maxIndices);
-
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        meshBufferGL.PreAllocate(maxVertices, maxIndices, m_vertexCapacity, m_indexCapacity);
+    }
+    
     // Add one continuous free vertex memory block
     MemoryBlock initialVertexBlock;
     initialVertexBlock.begin = 0;
@@ -368,8 +404,8 @@ void MeshBuffer::PrintDebugInfo() {
     message += "\n";
 
     message += "GPU storage\n";
-    message += "  GPU vertex capacity: " + std::to_string(m_vertexGpuCapacity) + "\n";
-    message += "  GPU index capacity: " + std::to_string(m_indexGpuCapacity) + "\n";
+    message += "  GPU vertex capacity: " + std::to_string(m_vertexCapacity) + "\n";
+    message += "  GPU index capacity: " + std::to_string(m_indexCapacity) + "\n";
     message += "\n";
 
     message += "Fragmentation\n";
@@ -408,135 +444,4 @@ void MeshBuffer::PrintDebugInfo() {
     }
 
     Logging::Debug() << message << "\n";
-}
-
-// OpenGL
-#include <glad/gl.h>
-
-void MeshBuffer::InitOpenGL() {
-    if (m_vao != 0) {
-        ResetOpenGL();
-    }
-
-    glCreateVertexArrays(1, &m_vao);
-
-    glEnableVertexArrayAttrib(m_vao, 0);
-    glVertexArrayAttribFormat(m_vao, 0, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, position));
-    glVertexArrayAttribBinding(m_vao, 0, 0);
-
-    glEnableVertexArrayAttrib(m_vao, 1);
-    glVertexArrayAttribFormat(m_vao, 1, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, normal));
-    glVertexArrayAttribBinding(m_vao, 1, 0);
-
-    glEnableVertexArrayAttrib(m_vao, 2);
-    glVertexArrayAttribFormat(m_vao, 2, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex, uv));
-    glVertexArrayAttribBinding(m_vao, 2, 0);
-
-    glEnableVertexArrayAttrib(m_vao, 3);
-    glVertexArrayAttribFormat(m_vao, 3, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, tangent));
-    glVertexArrayAttribBinding(m_vao, 3, 0);
-}
-
-void MeshBuffer::ResetOpenGL() {
-    if (m_vao != 0) glDeleteVertexArrays(1, &m_vao);
-    if (m_vbo != 0) glDeleteBuffers(1, &m_vbo);
-    if (m_ebo != 0) glDeleteBuffers(1, &m_ebo);
-
-    m_vao = 0;
-    m_vbo = 0;
-    m_ebo = 0;
-
-    m_vertexGpuCapacity = 0;
-    m_indexGpuCapacity = 0;
-}
-
-void MeshBuffer::InsertVerticesToOpenGLVertexBuffer(const std::vector<Vertex>& vertices, uint32_t insertOffset) {
-    if (vertices.empty()) return;
-
-    size_t byteOffset = insertOffset * sizeof(Vertex);
-    size_t byteSize = vertices.size() * sizeof(Vertex);
-
-    glNamedBufferSubData(m_vbo, byteOffset, byteSize, vertices.data());
-}
-
-void MeshBuffer::InsertIndicesToOpenGLIndexBuffer(const std::vector<uint32_t>& indices, uint32_t insertOffset) {
-    if (indices.empty()) return;
-
-    size_t byteOffset = insertOffset * sizeof(uint32_t);
-    size_t byteSize = indices.size() * sizeof(uint32_t);
-
-    glNamedBufferSubData(m_ebo, byteOffset, byteSize, indices.data());
-}
-
-void MeshBuffer::ResizeOpenGLVertexBuffer(size_t totalCount) {
-    if (totalCount <= m_vertexGpuCapacity) return;
-
-    size_t newGpuCapacity = 0;
-
-    if (m_vertexGpuCapacity == 0) {
-        newGpuCapacity = std::max(totalCount, (size_t)1024);
-    }
-    else {
-        newGpuCapacity = std::max(totalCount, m_vertexGpuCapacity + (m_vertexGpuCapacity / 2));
-    }
-
-    GLuint newVbo = 0;
-    glCreateBuffers(1, &newVbo);
-    glNamedBufferStorage(newVbo, newGpuCapacity * sizeof(Vertex), nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-    if (!m_vertices.empty()) {
-        glNamedBufferSubData(newVbo, 0, m_vertices.size() * sizeof(Vertex), m_vertices.data());
-    }
-
-    if (m_vbo != 0) glDeleteBuffers(1, &m_vbo);
-
-    m_vbo = newVbo;
-    m_vertexGpuCapacity = newGpuCapacity;
-
-    glVertexArrayVertexBuffer(m_vao, 0, m_vbo, 0, sizeof(Vertex));
-}
-
-void MeshBuffer::ResizeOpenGLIndexBuffer(size_t totalCount) {
-    if (totalCount <= m_indexGpuCapacity) return;
-
-    size_t newGpuCapacity = 0;
-
-    if (m_indexGpuCapacity == 0) {
-        newGpuCapacity = std::max(totalCount, (size_t)1024);
-    }
-    else {
-        newGpuCapacity = std::max(totalCount, m_indexGpuCapacity + (m_indexGpuCapacity / 2));
-    }
-
-    GLuint newEbo = 0;
-    glCreateBuffers(1, &newEbo);
-    glNamedBufferStorage(newEbo, newGpuCapacity * sizeof(uint32_t), nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-    if (!m_indices.empty()) {
-        glNamedBufferSubData(newEbo, 0, m_indices.size() * sizeof(uint32_t), m_indices.data());
-    }
-
-    if (m_ebo != 0) glDeleteBuffers(1, &m_ebo);
-
-    m_ebo = newEbo;
-    m_indexGpuCapacity = newGpuCapacity;
-
-    glVertexArrayElementBuffer(m_vao, m_ebo);
-}
-
-void MeshBuffer::PreAllocateOpenGL(size_t maxVertices, size_t maxIndices) {
-    if (m_vbo != 0) glDeleteBuffers(1, &m_vbo);
-    if (m_ebo != 0) glDeleteBuffers(1, &m_ebo);
-
-    glCreateBuffers(1, &m_vbo);
-    glCreateBuffers(1, &m_ebo);
-
-    m_vertexGpuCapacity = maxVertices;
-    m_indexGpuCapacity = maxIndices;
-
-    glNamedBufferStorage(m_vbo, maxVertices * sizeof(Vertex), nullptr, GL_DYNAMIC_STORAGE_BIT);
-    glNamedBufferStorage(m_ebo, maxIndices * sizeof(uint32_t), nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-    glVertexArrayElementBuffer(m_vao, m_ebo);
-    glVertexArrayVertexBuffer(m_vao, 0, m_vbo, 0, sizeof(Vertex));
 }

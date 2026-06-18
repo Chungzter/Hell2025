@@ -108,6 +108,7 @@ enum class ObjectType : uint16_t {
     RAGDOLL_ENEMY,
     RAGDOLL_V2,
     RAGDOLL_PLAYER,
+    RESOURCE_MESH_BUFFER,
     SHARK,
     SPAWN_POINT,
     STAIRCASE,

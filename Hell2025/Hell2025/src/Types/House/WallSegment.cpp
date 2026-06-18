@@ -1,4 +1,5 @@
 #include "WallSegment.h"
+#include "Managers/ResourceManager.h"
 #include "Modelling/Clipping.h"
 #include "Physics/Physics.h"
 #include "Renderer/Renderer.h"
@@ -37,7 +38,9 @@ void WallSegment::SetMeshId(uint64_t meshId) {
 
 void WallSegment::CleanUp() {
     Physics::MarkRigidStaticForRemoval(m_physicsId);
-    Renderer::RemoveProcedualMeshByMeshId(m_meshId);
+
+    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+    meshBuffer.RemoveMesh(m_meshId);
 }
 
 void WallSegment::CreateVertexData(std::vector<ClippingCube>& clippingCubes, float texOffsetX, float texOffsetY, float texScale) {

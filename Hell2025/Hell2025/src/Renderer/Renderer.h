@@ -59,14 +59,6 @@ namespace Renderer {
 
     RendererSettings& GetCurrentRendererSettings();
 
-    // Procedural mesh
-    MeshBuffer& GetProceduralMeshBuffer();
-    Mesh* GetProcedualMeshByMeshId(uint64_t meshId);
-    uint64_t AddProcedualMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name = UNDEFINED_STRING);
-    void RemoveProcedualMeshByMeshId(uint64_t meshId);
-    void ResetProcedualMeshBuffer();
-
-
     const std::string& GetZoneNames();
     const std::string& GetZoneGPUTimings();
     const std::string& GetZoneCPUTimings();

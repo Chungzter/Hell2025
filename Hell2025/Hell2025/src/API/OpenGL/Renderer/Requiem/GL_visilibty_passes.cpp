@@ -1,6 +1,7 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
 #include "Hell/RendereringConstants.h"
+#include "Managers/ResourceManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 
@@ -37,7 +38,7 @@ namespace OpenGLRenderer {
 
         state.stencilRef = STENCIL_BIT_PROCEDUAL;
 
-        glBindVertexArray(Renderer::GetProceduralMeshBuffer().GetVAO());
+        glBindVertexArray(ResourceManager::GetMeshBuffer("Procedural").GetVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.procedural, state);
 
         state.stencilRef = STENCIL_BIT_STATIC;

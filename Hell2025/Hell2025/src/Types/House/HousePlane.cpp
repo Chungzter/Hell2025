@@ -1,5 +1,6 @@
 #include "HousePlane.h"
 #include "AssetManagement/AssetManager.h"
+#include "Managers/ResourceManager.h"
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
@@ -85,7 +86,8 @@ void HousePlane::CleanUp() {
     m_p3 = glm::vec3(0.0f);
     Material* m_material = nullptr;
 
-    Renderer::RemoveProcedualMeshByMeshId(m_meshId);
+    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+    meshBuffer.RemoveMesh(m_meshId);
 }
 
 void HousePlane::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {
@@ -141,7 +143,9 @@ void HousePlane::CreatePhysicsObject() {
 }
 
 void HousePlane::SubmitRenderItem() {
-    Mesh* mesh = Renderer::GetProcedualMeshByMeshId(m_meshId);
+    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+
+    Mesh* mesh = meshBuffer.GetMeshById(m_meshId);
     if (!mesh) return;
 
 	RenderItem renderItem;

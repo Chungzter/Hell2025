@@ -2,6 +2,7 @@
 #include "AssetManagement/AssetManager.h"
 #include "File/JSON.h"
 #include "Managers/HouseManager.h"
+#include "Managers/ResourceManager.h"
 #include "GlobalIllumination/GlobalIllumination.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
@@ -50,6 +51,8 @@ namespace World {
     }
 
     void RecreateAllProceduralWallMesh() {
+        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+
         // Update clipping cubes first, so that CSG is correct
         RecreateClippingCubes();
 
@@ -60,10 +63,10 @@ namespace World {
 
             for (WallSegment& wallSegment : wall.GetWallSegments()) {
                 // Remove old mesh
-                Renderer::RemoveProcedualMeshByMeshId(wallSegment.GetMeshId());
+                meshBuffer.RemoveMesh(wallSegment.GetMeshId());
 
                 // Create new mesh
-                uint64_t meshId = Renderer::AddProcedualMesh(wallSegment.GetVertices(), wallSegment.GetIndices(), "WallSegment");
+                uint64_t meshId = meshBuffer.AddMesh(wallSegment.GetVertices(), wallSegment.GetIndices(), "WallSegment");
 
                 // Update mesh Id
                 wallSegment.SetMeshId(meshId);
@@ -72,12 +75,14 @@ namespace World {
     }
 
     void RecreateAllProcedularHousePlaneMesh() {
+        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+
         for (HousePlane& housePlane : GetHousePlanes()) {
             // Remove old mesh
-            Renderer::RemoveProcedualMeshByMeshId(housePlane.GetMeshId());
+            meshBuffer.RemoveMesh(housePlane.GetMeshId());
 
             // Create new mesh
-            uint64_t meshId = Renderer::AddProcedualMesh(housePlane.GetVertices(), housePlane.GetIndices(), "HousePlane");
+            uint64_t meshId = meshBuffer.AddMesh(housePlane.GetVertices(), housePlane.GetIndices(), "HousePlane");
 
             // Update mesh Id
             housePlane.SetMeshId(meshId);

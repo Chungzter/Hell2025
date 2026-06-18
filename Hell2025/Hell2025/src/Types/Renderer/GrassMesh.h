@@ -1,5 +1,5 @@
 #pragma once
-#include "API/OpenGL/Types/GL_mesh_buffer.h"
+#include "API/OpenGL/Types/GL_mesh_buffer_old.h"
 
 #define GRASS_SIZE 40
 
@@ -9,5 +9,5 @@ struct GrassMesh {
 
     glm::vec3 m_bladePoints[GRASS_SIZE][GRASS_SIZE];
 
-    OpenGLMeshBuffer glMesh;
+    OpenGLMeshBufferOLD glMesh;
 };

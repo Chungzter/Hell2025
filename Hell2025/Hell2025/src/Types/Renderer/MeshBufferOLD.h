@@ -1,5 +1,5 @@
 #pragma once
-#include "../API/OpenGL/Types/GL_mesh_buffer.h"
+#include "../API/OpenGL/Types/GL_mesh_buffer_old.h"
 #include "../API/Vulkan/Types/vk_detachedMesh.h"
 #include "../BackEnd/BackEnd.h"
 #include "Mesh.h"
@@ -12,7 +12,7 @@ struct MeshBufferOLD {
     void Reset();
 
     std::string& GetName()                  { return m_name; }
-    OpenGLMeshBuffer& GetGLMeshBuffer()     { return m_opengMeshBuffer; }
+    OpenGLMeshBufferOLD& GetGLMeshBuffer()     { return m_opengMeshBuffer; }
     VulkanDetachedMesh& GetVKMesh()         { return m_vulkanDetachedMesh; }
     std::vector<Vertex>& GetVertices()      { return m_vertices; }
     std::vector<uint32_t>& GetIndices()     { return m_indices; }
@@ -27,6 +27,6 @@ struct MeshBufferOLD {
 
 private:
     std::vector<Mesh> m_meshes;
-    OpenGLMeshBuffer m_opengMeshBuffer;
+    OpenGLMeshBufferOLD m_opengMeshBuffer;
     VulkanDetachedMesh m_vulkanDetachedMesh;
 };

@@ -1,6 +1,7 @@
 #include "Wall.h"
 #include "AssetManagement/AssetManager.h"
 #include "Editor/Editor.h"
+#include "Managers/ResourceManager.h"
 #include "Modelling/Clipping.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
@@ -252,9 +253,11 @@ void Wall::CreateCSGVertexData() {
 }
 
 void Wall::SubmitRenderItems() {
-    // If this wall is exterior, then dont render the CSG geometry, or any trims if you accidentally set it to have trims
+    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+
+    // If this wall is exterior, then don't render the CSG geometry, or any trims if you accidentally set it to have trims
     if (m_createInfo.wallType == WallType::WEATHER_BOARDS) {
-        MeshBuffer& meshBuffer = Renderer::GetProceduralMeshBuffer();
+
 
         for (uint64_t meshId : m_weatherBoardSegmentMeshIds) {
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
@@ -282,7 +285,7 @@ void Wall::SubmitRenderItems() {
     }
 
     for (WallSegment& wallSegment : m_wallSegments) {
-        Mesh* mesh = Renderer::GetProcedualMeshByMeshId(wallSegment.GetMeshId());
+        Mesh* mesh = meshBuffer.GetMeshById(wallSegment.GetMeshId());
         if (!mesh) return;
 
 		RenderItem renderItem;
@@ -390,15 +393,19 @@ void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, int boardY, fl
 }
 
 void Wall::CleanUpWeatherBoardMesh() {
+    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+
     // Clear any old mesh segments
     for (uint64_t meshId : m_weatherBoardSegmentMeshIds) {
-        Renderer::RemoveProcedualMeshByMeshId(meshId);
+        meshBuffer.RemoveMesh(meshId);
     }
-    m_weatherBoardSegmentMeshIds.clear();
 
+    m_weatherBoardSegmentMeshIds.clear();
 }
 
 void Wall::RecreateWeatherBoardMesh() {
+    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+
     CleanUpWeatherBoardMesh();
     m_weatherBoardstopRenderItems.clear();
 
@@ -488,7 +495,7 @@ void Wall::RecreateWeatherBoardMesh() {
             }
         }
 
-        uint64_t meshId = Renderer::AddProcedualMesh(vertices, indices, "Weatherboards");
+        uint64_t meshId = meshBuffer.AddMesh(vertices, indices, "Weatherboards");
         m_weatherBoardSegmentMeshIds.emplace_back(meshId);
     }
 }
