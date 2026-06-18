@@ -244,7 +244,7 @@ namespace Util {
     std::string TimestampToString(uint64_t timestamp);
 
     // Debug Info
-    void PrintDebugInfo(TextureData& textureData);
+    void PrintDebugInfo(const ImageData& imageData);
     std::string BytesToMBString(size_t bytes);
 
     // Templates

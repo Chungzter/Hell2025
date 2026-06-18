@@ -26,7 +26,7 @@
                 readback.Update();
             }
             if (readback.IsResultReady() && !savedFile) {
-                ImageTools::SaveFloatArrayTextureAsBitmap(readback.GetData(), readback.GetWidth(), readback.GetHeight(), GL_RGBA32F, "testcunt.bmp");
+                ImageTools::SaveFloatArrayTextureAsBitmap(readback.GetData(), readback.GetWidth(), readback.GetHeight(), ImageFormat::RGBA32_SFLOAT, "testcunt.bmp");
                 std::cout << "saved rgba32f file\n";
                 savedFile = true;
             }
@@ -48,7 +48,7 @@
                 readback.Update();
             }
             if (readback.IsResultReady() && !savedFile) {
-                ImageTools::SaveFloatArrayTextureAsBitmap(readback.GetData(), readback.GetWidth(), readback.GetHeight(), GL_R8, "testcunt.bmp");
+                ImageTools::SaveFloatArrayTextureAsBitmap(readback.GetData(), readback.GetWidth(), readback.GetHeight(), ImageFormat::R8_UNORM, "testcunt.bmp");
                 std::cout << "saved r8 file\n";
             }
         }

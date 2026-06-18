@@ -33,11 +33,11 @@ public:
     const int GetHeight();
     const int GetMipMapWidth(int mipmapLevel);
     const int GetMipMapHeight(int mipmapLevel);
-    const int GetFormat();
-    const int GetInternalFormat();
     const int GetDataSize(int mipmapLevel);
     const int GetChannelCount();
     const void* GetData(int mipmapLevel);
+    const ImageData& GetImageData() const { return m_imageData; }
+    const ImageFormat GetImageFormat() const { return m_imageData.format; }
     const BakeState GetTextureDataLevelBakeState(int index);
 
     OpenGLTexture& GetGLTexture() { return m_glTexture; }
@@ -63,7 +63,7 @@ private:
     TextureFilter m_minFilter = TextureFilter::NEAREST;
     TextureFilter m_magFilter = TextureFilter::NEAREST;
     FileInfo m_fileInfo;
-    std::vector<TextureData> m_textureDataLevels;
+    ImageData m_imageData;
     std::vector<BakeState> m_textureDataLevelBakeStates;
     int m_mipmapLevelCount = 0;
     bool m_mipmapsRequested = false;

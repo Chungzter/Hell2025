@@ -5,7 +5,7 @@
 #include "Core/Game.h"
 #include "Editor/Editor.h"
 #include "Input/Input.h"
-#include "Tools/ImageTools.h"
+#include "ImageTools/ImageTools.h"
 #include "Util/Util.h"
 
 namespace OpenGLRenderer {
@@ -69,7 +69,7 @@ namespace OpenGLRenderer {
     //        readback.Update();
     //    }
     //    if (readback.IsResultReady() && !savedFile) {
-    //        ImageTools::SaveFloatArrayTextureAsBitmap(readback.GetFloatData(), readback.GetWidth(), readback.GetHeight(), GL_R16F, "heightmap_export.bmp");
+    //        ImageTools::SaveFloatArrayTextureAsBitmap(readback.GetFloatData(), readback.GetWidth(), readback.GetHeight(), ImageFormat::R16_SFLOAT, "heightmap_export.bmp");
     //        std::cout << "saved r8 file\n";
     //        readback.Reset();
     //    }

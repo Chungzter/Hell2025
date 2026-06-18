@@ -3,29 +3,13 @@
 
 #include "API/OpenGL/GL_util.h"
 #include "BackEnd/BackEnd.h"
-#include "Tools/ImageTools.h"
+#include "ImageTools/ImageTools.h"
 #include "Util/Util.h"
 
 #include <iostream>
-#include <stb_image.h>
-#include "tinyexr.h"
 
 GLuint64 OpenGLTexture::GetBindlessID() {
     return m_bindlessID;
-}
-
-TextureData LoadEXRData(std::string filepath) {
-    TextureData textureData;
-    const char* err = nullptr;
-    const char** layer_names = nullptr;
-    int num_layers = 0;
-    bool status = EXRLayers(filepath.c_str(), &layer_names, &num_layers, &err);
-    free(layer_names);
-    const char* layername = NULL;
-    float* floatPtr = nullptr;
-    status = LoadEXRWithLayer(&floatPtr, &textureData.m_width, &textureData.m_height, filepath.c_str(), layername, &err);
-    textureData.m_data = floatPtr;
-    return textureData;
 }
 
 void OpenGLTexture::Create(int width, int height, int internalFormat, int mipmapLevelCount) {

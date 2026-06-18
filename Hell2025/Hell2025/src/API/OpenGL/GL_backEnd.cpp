@@ -223,10 +223,7 @@ namespace OpenGLBackEnd {
         int levels = texture.MipmapsAreRequested() ? texture.GetMipmapLevelCount() : 1;
 
         // Allocate Immutable Storage
-        GLenum internalFormat = texture.GetInternalFormat();
-        if (texture.GetImageDataType() == ImageDataType::EXR) {
-            internalFormat = GL_RGB16F; // Ensure float format for EXR
-        }
+        GLenum internalFormat = OpenGLUtil::ImageFormatToGLInternalFormat(texture.GetImageFormat());
 
         glTextureStorage2D(handle, levels, internalFormat, width, height);
 
@@ -238,8 +235,9 @@ namespace OpenGLBackEnd {
         OpenGLTexture& glTexture = texture->GetGLTexture();
         int width = queuedTextureBake.width;
         int height = queuedTextureBake.height;
-        int format = queuedTextureBake.format;
-        int internalFormat = queuedTextureBake.internalFormat;
+        GLenum format = OpenGLUtil::ImageFormatToGLFormat(queuedTextureBake.imageFormat);
+        GLenum internalFormat = OpenGLUtil::ImageFormatToGLInternalFormat(queuedTextureBake.imageFormat);
+        GLenum dataType = OpenGLUtil::ImageFormatToGLDataType(queuedTextureBake.imageFormat);
         int level = queuedTextureBake.mipmapLevel;
         int dataSize = queuedTextureBake.dataSize;
         const void* data = queuedTextureBake.data;
@@ -247,14 +245,11 @@ namespace OpenGLBackEnd {
         GLuint textureHandle = glTexture.GetHandle();
 
         // Bake texture data
-        if (texture->GetImageDataType() == ImageDataType::UNCOMPRESSED) {
-            glTextureSubImage2D(textureHandle, level, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data);
-        }
-        else if (texture->GetImageDataType() == ImageDataType::EXR) {
-            //glTextureSubImage2D(textureHandle, 0, 0, 0, glTexture.GetWidth(), glTexture.GetHeight(), GL_RGBA, GL_FLOAT, glTexture.GetData());
-        }
-        else if (texture->GetImageDataType() == ImageDataType::COMPRESSED) {
+        if (IsCompressedImageFormat(queuedTextureBake.imageFormat)) {
             glCompressedTextureSubImage2D(textureHandle, level, 0, 0, width, height, internalFormat, dataSize, data);
+        }
+        else {
+            glTextureSubImage2D(textureHandle, level, 0, 0, width, height, format, dataType, data);
         }
 
         texture->SetTextureDataLevelBakeState(level, BakeState::BAKE_COMPLETE);
@@ -330,8 +325,9 @@ namespace OpenGLBackEnd {
         int jobID = queuedTextureBake.jobID;
         int width = queuedTextureBake.width;
         int height = queuedTextureBake.height;
-        int format = queuedTextureBake.format;
-        int internalFormat = queuedTextureBake.internalFormat;
+        GLenum format = OpenGLUtil::ImageFormatToGLFormat(queuedTextureBake.imageFormat);
+        GLenum internalFormat = OpenGLUtil::ImageFormatToGLInternalFormat(queuedTextureBake.imageFormat);
+        GLenum dataType = OpenGLUtil::ImageFormatToGLDataType(queuedTextureBake.imageFormat);
         int level = queuedTextureBake.mipmapLevel;
         int dataSize = queuedTextureBake.dataSize;
         const void* data = queuedTextureBake.data;
@@ -344,14 +340,11 @@ namespace OpenGLBackEnd {
 
         // Upload data to the texture using DSA
         GLuint textureHandle = texture->GetGLTexture().GetHandle();
-        if (texture->GetImageDataType() == ImageDataType::UNCOMPRESSED) {
-            glTextureSubImage2D(textureHandle, level, 0, 0, width, height, format, GL_UNSIGNED_BYTE, 0);
-        }
-        else if (texture->GetImageDataType() == ImageDataType::COMPRESSED) {
+        if (IsCompressedImageFormat(queuedTextureBake.imageFormat)) {
             glCompressedTextureSubImage2D(textureHandle, level, 0, 0, width, height, internalFormat, dataSize, 0);
         }
-        else if (texture->GetImageDataType() == ImageDataType::EXR) {
-            glTextureSubImage2D(textureHandle, level, 0, 0, width, height, GL_RGBA, GL_FLOAT, 0);
+        else {
+            glTextureSubImage2D(textureHandle, level, 0, 0, width, height, format, dataType, 0);
         }
 
         // Start PBO sync and assign job ID

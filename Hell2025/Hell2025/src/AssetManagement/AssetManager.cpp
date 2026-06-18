@@ -8,7 +8,7 @@
 #include "File/AssimpImporter.h"
 #include "Renderer/Renderer.h"
 #include "UI/UIBackEnd.h"
-#include "Tools/ImageTools.h"
+#include "ImageTools/ImageTools.h"
 #include "Util/Util.h"
 #include "World/World.h"
 

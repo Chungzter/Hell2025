@@ -1,34 +1,38 @@
 #include "Texture.h"
-#include "../API/OpenGL/GL_Util.h"
-#include "../AssetManagement/AssetManager.h"
-#include "../Tools/ImageTools.h"
-#include "../Util/Util.h"
-#include "stb_image.h"
+
+#include "AssetManagement/AssetManager.h"
+#include "ImageTools/ImageTools.h"
+#include "Util/Util.h"
 
 void Texture::Load() {
     // Load texture data from disk
     if (m_imageDataType == ImageDataType::UNCOMPRESSED) {
-        m_textureDataLevels = { ImageTools::LoadUncompressedTextureData(m_fileInfo.path) };
+        m_imageData = ImageTools::LoadUncompressedImage(m_fileInfo.path);
     }
     else if (m_imageDataType == ImageDataType::COMPRESSED) {
-        m_textureDataLevels = ImageTools::LoadTextureDataFromDDSThreadSafe(m_fileInfo.path);
+        m_imageData = ImageTools::LoadDDS(m_fileInfo.path);
     }
     else if (m_imageDataType == ImageDataType::EXR) {
-        m_textureDataLevels = { ImageTools::LoadEXRData(m_fileInfo.path) };
+        m_imageData = ImageTools::LoadEXRImage(m_fileInfo.path);
     }
     m_loadingState = LoadingState::Value::LOADING_COMPLETE;
 
     // Calculate mipmap level count
-    m_mipmapLevelCount = 1 + static_cast<int>(std::log2(std::max(GetWidth(), GetHeight())));
+    if (!m_imageData.mips.empty()) {
+        m_mipmapLevelCount = 1 + static_cast<int>(std::log2(std::max(GetWidth(), GetHeight())));
+    }
+    else {
+        m_mipmapLevelCount = 0;
+    }
 
     // Initiate bake states
-    m_textureDataLevelBakeStates.resize(m_textureDataLevels.size(), BakeState::AWAITING_BAKE);
+    m_textureDataLevelBakeStates.resize(m_imageData.mips.size(), BakeState::AWAITING_BAKE);
 }
 
 void Texture::FreeCPUMemory() {
-    for (TextureData& textureData : m_textureDataLevels) {
-        stbi_image_free(textureData.m_data);
-        textureData.m_data = nullptr;
+    for (TextureMip& mip : m_imageData.mips) {
+        mip.data.clear();
+        mip.data.shrink_to_fit();
     }
 }
 
@@ -41,72 +45,47 @@ const int Texture::GetHeight() {
 }
 
 const int Texture::GetMipMapWidth(int mipmapLevel) {
-    if (mipmapLevel >= 0 && mipmapLevel < m_textureDataLevels.size()) {
-        return m_textureDataLevels[mipmapLevel].m_width;
+    if (mipmapLevel >= 0 && mipmapLevel < m_imageData.mips.size()) {
+        return m_imageData.mips[mipmapLevel].width;
     }
     else {
-        std::cout << "Texture::GetMipMapWidth(int mipmapLevel) failed. mipmapLevel '" << mipmapLevel << "' out of range of size " << m_textureDataLevels.size() << "\n";
+        std::cout << "Texture::GetMipMapWidth(int mipmapLevel) failed. mipmapLevel '" << mipmapLevel << "' out of range of size " << m_imageData.mips.size() << "\n";
         return 0;
     }
 }
 
 const int Texture::GetMipMapHeight(int mipmapLevel) {
-    if (mipmapLevel >= 0 && mipmapLevel < m_textureDataLevels.size()) {
-        return m_textureDataLevels[mipmapLevel].m_height;
+    if (mipmapLevel >= 0 && mipmapLevel < m_imageData.mips.size()) {
+        return m_imageData.mips[mipmapLevel].height;
     }
     else {
-        std::cout << "Texture::GetMipMapHeight(int mipmapLevel) failed. mipmapLevel '" << mipmapLevel << "' out of range of size " << m_textureDataLevels.size() << "\n";
+        std::cout << "Texture::GetMipMapHeight(int mipmapLevel) failed. mipmapLevel '" << mipmapLevel << "' out of range of size " << m_imageData.mips.size() << "\n";
         return 0;
     }
 }
 
 const void* Texture::GetData(int mipmapLevel) {
-    if (mipmapLevel >= 0 && mipmapLevel < m_textureDataLevels.size()) {
-        return m_textureDataLevels[mipmapLevel].m_data;
+    if (mipmapLevel >= 0 && mipmapLevel < m_imageData.mips.size()) {
+        return m_imageData.mips[mipmapLevel].data.data();
     }
     else {
-        std::cout << "Texture::GetData(int mipmapLevel) failed. mipmapLevel '" << mipmapLevel << "' out of range of size " << m_textureDataLevels.size() << "\n";
+        std::cout << "Texture::GetData(int mipmapLevel) failed. mipmapLevel '" << mipmapLevel << "' out of range of size " << m_imageData.mips.size() << "\n";
         return nullptr;
     }
 }
 
 const int Texture::GetDataSize(int mipmapLevel) {
-    if (mipmapLevel >= 0 && mipmapLevel < m_textureDataLevels.size()) {
-        return m_textureDataLevels[mipmapLevel].m_dataSize;
+    if (mipmapLevel >= 0 && mipmapLevel < m_imageData.mips.size()) {
+        return static_cast<int>(m_imageData.mips[mipmapLevel].data.size());
     }
     else {
-        std::cout << "Texture::GetDataSize(int mipmapLevel) failed. mipmapLevel '" << mipmapLevel << "' out of range of size " << m_textureDataLevels.size() << "\n";
-        return 0;
-    }
-}
-
-const int Texture::GetFormat() {
-    if (!m_textureDataLevels.empty()) {
-        return m_textureDataLevels[0].m_format;
-    }
-    else {
-        std::cout << "Texture::GetFormat() failed. m_textureData is empty\n";
+        std::cout << "Texture::GetDataSize(int mipmapLevel) failed. mipmapLevel '" << mipmapLevel << "' out of range of size " << m_imageData.mips.size() << "\n";
         return 0;
     }
 }
 
 const int Texture::GetChannelCount() {
-    if (!m_textureDataLevels.empty()) {
-        return m_textureDataLevels[0].m_channelCount;
-    }
-    else {
-        std::cout << "Texture::GetChannelCount() failed. m_textureData is empty\n";
-        return 0;
-    }
-}
-const int Texture::GetInternalFormat() {
-    if (!m_textureDataLevels.empty()) {
-        return m_textureDataLevels[0].m_internalFormat;
-    }
-    else {
-        std::cout << "Texture::GetInternalFormat() failed. m_textureData is empty\n";
-        return 0;
-    }
+    return GetImageFormatChannelCount(m_imageData.format);
 }
 
 void Texture::SetTextureDataLevelBakeState(int index, BakeState state) {
@@ -178,7 +157,7 @@ const bool Texture::BakeComplete() {
 }
 
 const int Texture::GetTextureDataCount() {
-    return m_textureDataLevels.size();
+    return m_imageData.mips.size();
 }
 
 void Texture::RequestMipmaps() {
@@ -194,8 +173,7 @@ const void Texture::PrintDebugInfo() {
     std::cout << " - width: " << GetWidth() << "\n";
     std::cout << " - height: " << GetHeight() << "\n";
     std::cout << " - channel count: " << GetChannelCount() << "\n";
-    std::cout << " - internal format: " << OpenGLUtil::GLInternalFormatToString(GetInternalFormat()) << "\n";
-    std::cout << " - format: " << OpenGLUtil::GLFormatToString(GetFormat()) << "\n";
+    std::cout << " - format: " << ImageFormatToString(GetImageFormat()) << "\n";
     std::cout << " - mipmap level count: " << GetMipmapLevelCount() << "\n";
     std::cout << " - mipmaps requested: " << (MipmapsAreRequested() ? "TRUE" : "FALSE") << "\n";
     std::cout << " - data size:\n";

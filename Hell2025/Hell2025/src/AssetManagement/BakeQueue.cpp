@@ -19,8 +19,7 @@ namespace BakeQueue {
             queuedTextureBake.texture = texture;
             queuedTextureBake.width = texture->GetMipMapWidth(i);
             queuedTextureBake.height = texture->GetMipMapHeight(i);
-            queuedTextureBake.format = texture->GetFormat();
-            queuedTextureBake.internalFormat = texture->GetInternalFormat();
+            queuedTextureBake.imageFormat = texture->GetImageFormat();
             queuedTextureBake.data = texture->GetData(i);
             queuedTextureBake.dataSize = texture->GetDataSize(i);
             queuedTextureBake.mipmapLevel = i;

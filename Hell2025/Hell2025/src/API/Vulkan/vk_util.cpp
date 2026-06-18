@@ -5,6 +5,41 @@
 
 namespace VulkanUtil {
 
+    VkFormat ImageFormatToVkFormat(ImageFormat format) {
+        switch (format) {
+            case ImageFormat::R8_UNORM: return VK_FORMAT_R8_UNORM;
+            case ImageFormat::RG8_UNORM: return VK_FORMAT_R8G8_UNORM;
+            case ImageFormat::RGB8_UNORM: return VK_FORMAT_R8G8B8_UNORM;
+            case ImageFormat::RGBA8_UNORM: return VK_FORMAT_R8G8B8A8_UNORM;
+            case ImageFormat::RGB8_SRGB: return VK_FORMAT_R8G8B8_SRGB;
+            case ImageFormat::RGBA8_SRGB: return VK_FORMAT_R8G8B8A8_SRGB;
+            case ImageFormat::R16_UNORM: return VK_FORMAT_R16_UNORM;
+            case ImageFormat::R16_SFLOAT: return VK_FORMAT_R16_SFLOAT;
+            case ImageFormat::RG16_SFLOAT: return VK_FORMAT_R16G16_SFLOAT;
+            case ImageFormat::RGB16_SFLOAT: return VK_FORMAT_R16G16B16_SFLOAT;
+            case ImageFormat::RGBA16_SFLOAT: return VK_FORMAT_R16G16B16A16_SFLOAT;
+            case ImageFormat::R32_SFLOAT: return VK_FORMAT_R32_SFLOAT;
+            case ImageFormat::RG32_SFLOAT: return VK_FORMAT_R32G32_SFLOAT;
+            case ImageFormat::RGB32_SFLOAT: return VK_FORMAT_R32G32B32_SFLOAT;
+            case ImageFormat::RGBA32_SFLOAT: return VK_FORMAT_R32G32B32A32_SFLOAT;
+            case ImageFormat::BC1_RGB_UNORM: return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
+            case ImageFormat::BC1_RGBA_UNORM: return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+            case ImageFormat::BC1_RGB_SRGB: return VK_FORMAT_BC1_RGB_SRGB_BLOCK;
+            case ImageFormat::BC1_RGBA_SRGB: return VK_FORMAT_BC1_RGBA_SRGB_BLOCK;
+            case ImageFormat::BC2_RGBA_UNORM: return VK_FORMAT_BC2_UNORM_BLOCK;
+            case ImageFormat::BC2_RGBA_SRGB: return VK_FORMAT_BC2_SRGB_BLOCK;
+            case ImageFormat::BC3_RGBA_UNORM: return VK_FORMAT_BC3_UNORM_BLOCK;
+            case ImageFormat::BC3_RGBA_SRGB: return VK_FORMAT_BC3_SRGB_BLOCK;
+            case ImageFormat::BC4_R_UNORM: return VK_FORMAT_BC4_UNORM_BLOCK;
+            case ImageFormat::BC5_RG_UNORM: return VK_FORMAT_BC5_UNORM_BLOCK;
+            case ImageFormat::BC6H_RGB_UFLOAT: return VK_FORMAT_BC6H_UFLOAT_BLOCK;
+            case ImageFormat::BC6H_RGB_SFLOAT: return VK_FORMAT_BC6H_SFLOAT_BLOCK;
+            case ImageFormat::BC7_RGBA_UNORM: return VK_FORMAT_BC7_UNORM_BLOCK;
+            case ImageFormat::BC7_RGBA_SRGB: return VK_FORMAT_BC7_SRGB_BLOCK;
+            default: return VK_FORMAT_UNDEFINED;
+        }
+    }
+
     VkFormat GLFormatToVkFormat(unsigned int glFormat) {
         switch (glFormat) {
         case GL_RGB8:          return VK_FORMAT_R8G8B8_UNORM;

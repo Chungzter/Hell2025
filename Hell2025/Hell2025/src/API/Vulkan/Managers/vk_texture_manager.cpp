@@ -29,7 +29,7 @@ namespace VulkanTextureManager {
         imageCreateInfo.extent.depth = 1;
         imageCreateInfo.mipLevels = mipLevels;
         imageCreateInfo.arrayLayers = 1;
-        imageCreateInfo.format = VulkanUtil::GLInternalFormatToVkFormat(texture.GetInternalFormat());
+        imageCreateInfo.format = VulkanUtil::ImageFormatToVkFormat(texture.GetImageFormat());
         imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         imageCreateInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;

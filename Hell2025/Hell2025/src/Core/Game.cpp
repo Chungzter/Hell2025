@@ -15,7 +15,6 @@
 #include "Player/Player.h"
 #include "Physics/Physics.h"
 #include "GlobalIllumination/GlobalIllumination.h"
-#include "Tools/ImageTools.h"
 #include "UI/UIBackEnd.h"
 #include "Viewport/ViewportManager.h"
 

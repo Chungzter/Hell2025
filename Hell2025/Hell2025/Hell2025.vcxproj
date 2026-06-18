@@ -351,6 +351,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\GlobalIllumination\PointCloud.cpp" />
     <ClCompile Include="src\Hell\Logging.cpp" />
     <ClCompile Include="src\Editor\Editor_settings.cpp" />
+    <ClCompile Include="src\ImageTools\ImageCompressor.cpp" />
+    <ClCompile Include="src\ImageTools\ImageLoader.cpp" />
+    <ClCompile Include="src\ImageTools\ImageUtil.cpp" />
+    <ClCompile Include="src\ImageTools\ImageWriter.cpp" />
     <ClCompile Include="src\Managers\ResourceManager.cpp" />
     <ClCompile Include="src\Managers\MirrorManager.cpp" />
     <ClCompile Include="src\Managers\OpenableManager.cpp" />
@@ -552,7 +556,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\UI\Mesh2D.cpp" />
     <ClCompile Include="src\UI\TextBlitter.cpp" />
     <ClCompile Include="src\Types\Renderer\Texture.cpp" />
-    <ClCompile Include="src\Tools\ImageTools.cpp" />
     <ClCompile Include="src\UI\UIBackEnd.cpp" />
     <ClCompile Include="src\Util\Util_math.cpp" />
     <ClCompile Include="src\Util\Util_mesh.cpp" />
@@ -831,9 +834,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\UI\FontSpriteSheet.h" />
     <ClInclude Include="src\UI\Mesh2D.h" />
     <ClInclude Include="src\UI\TextBlitter.h" />
-    <ClInclude Include="src\Tools\DDS.h" />
+    <ClInclude Include="src\ImageTools\DDS.h" />
     <ClInclude Include="src\Types\Renderer\MeshBufferOLD.h" />
-    <ClInclude Include="src\Tools\ImageTools.h" />
+    <ClInclude Include="src\ImageTools\ImageTools.h" />
     <ClInclude Include="src\UI\UIBackEnd.h" />
     <ClInclude Include="src\Types\Renderer\Texture.h" />
     <ClInclude Include="src\Hell\Types.h" />

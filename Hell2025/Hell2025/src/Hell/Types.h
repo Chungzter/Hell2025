@@ -4,6 +4,7 @@
 #include <Hell/Constants.h>
 #include <Hell/Enums.h>
 #include <Hell/GLM.h>
+#include <Hell/TextureTypes.h>
 #include "Input/keycodes.h"
 #include <unordered_map>
 
@@ -201,8 +202,7 @@ struct QueuedTextureBake {
     int jobID = 0;
     int width = 0;
     int height = 0;
-    int format = 0;
-    int internalFormat = 0;
+    ImageFormat imageFormat = ImageFormat::UNDEFINED;
     int mipmapLevel = 0;
     int dataSize = 0;
     const void* data = nullptr;

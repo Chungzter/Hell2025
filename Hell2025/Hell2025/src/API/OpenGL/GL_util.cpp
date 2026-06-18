@@ -7,6 +7,107 @@
 #include <cmath>
 
 namespace OpenGLUtil {
+
+    // These EXT_texture_sRGB/S3TC enums are not exposed by this project's
+    // generated GLAD header, despite being valid OpenGL internal formats.
+    constexpr GLenum GL_COMPRESSED_SRGB_S3TC_DXT1 = 0x8C4C;
+    constexpr GLenum GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1 = 0x8C4D;
+    constexpr GLenum GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3 = 0x8C4E;
+    constexpr GLenum GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5 = 0x8C4F;
+
+    GLenum ImageFormatToGLFormat(ImageFormat format) {
+        switch (format) {
+            case ImageFormat::R8_UNORM:
+            case ImageFormat::R16_UNORM:
+            case ImageFormat::R16_SFLOAT:
+            case ImageFormat::R32_SFLOAT:
+            case ImageFormat::BC4_R_UNORM:
+                return GL_RED;
+            case ImageFormat::RG8_UNORM:
+            case ImageFormat::RG16_SFLOAT:
+            case ImageFormat::RG32_SFLOAT:
+            case ImageFormat::BC5_RG_UNORM:
+                return GL_RG;
+            case ImageFormat::RGB8_UNORM:
+            case ImageFormat::RGB8_SRGB:
+            case ImageFormat::RGB16_SFLOAT:
+            case ImageFormat::RGB32_SFLOAT:
+            case ImageFormat::BC1_RGB_UNORM:
+            case ImageFormat::BC1_RGB_SRGB:
+            case ImageFormat::BC6H_RGB_UFLOAT:
+            case ImageFormat::BC6H_RGB_SFLOAT:
+                return GL_RGB;
+            case ImageFormat::RGBA8_UNORM:
+            case ImageFormat::RGBA8_SRGB:
+            case ImageFormat::RGBA16_SFLOAT:
+            case ImageFormat::RGBA32_SFLOAT:
+            case ImageFormat::BC1_RGBA_UNORM:
+            case ImageFormat::BC1_RGBA_SRGB:
+            case ImageFormat::BC2_RGBA_UNORM:
+            case ImageFormat::BC2_RGBA_SRGB:
+            case ImageFormat::BC3_RGBA_UNORM:
+            case ImageFormat::BC3_RGBA_SRGB:
+            case ImageFormat::BC7_RGBA_UNORM:
+            case ImageFormat::BC7_RGBA_SRGB:
+                return GL_RGBA;
+            default:
+                return GL_NONE;
+        }
+    }
+
+    GLenum ImageFormatToGLInternalFormat(ImageFormat format) {
+        switch (format) {
+            case ImageFormat::R8_UNORM: return GL_R8;
+            case ImageFormat::RG8_UNORM: return GL_RG8;
+            case ImageFormat::RGB8_UNORM: return GL_RGB8;
+            case ImageFormat::RGBA8_UNORM: return GL_RGBA8;
+            case ImageFormat::RGB8_SRGB: return GL_SRGB8;
+            case ImageFormat::RGBA8_SRGB: return GL_SRGB8_ALPHA8;
+            case ImageFormat::R16_UNORM: return GL_R16;
+            case ImageFormat::R16_SFLOAT: return GL_R16F;
+            case ImageFormat::RG16_SFLOAT: return GL_RG16F;
+            case ImageFormat::RGB16_SFLOAT: return GL_RGB16F;
+            case ImageFormat::RGBA16_SFLOAT: return GL_RGBA16F;
+            case ImageFormat::R32_SFLOAT: return GL_R32F;
+            case ImageFormat::RG32_SFLOAT: return GL_RG32F;
+            case ImageFormat::RGB32_SFLOAT: return GL_RGB32F;
+            case ImageFormat::RGBA32_SFLOAT: return GL_RGBA32F;
+            case ImageFormat::BC1_RGB_UNORM: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+            case ImageFormat::BC1_RGBA_UNORM: return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+            case ImageFormat::BC1_RGB_SRGB: return GL_COMPRESSED_SRGB_S3TC_DXT1;
+            case ImageFormat::BC1_RGBA_SRGB: return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1;
+            case ImageFormat::BC2_RGBA_UNORM: return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+            case ImageFormat::BC2_RGBA_SRGB: return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3;
+            case ImageFormat::BC3_RGBA_UNORM: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+            case ImageFormat::BC3_RGBA_SRGB: return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5;
+            case ImageFormat::BC4_R_UNORM: return GL_COMPRESSED_RED_RGTC1;
+            case ImageFormat::BC5_RG_UNORM: return GL_COMPRESSED_RG_RGTC2;
+            case ImageFormat::BC6H_RGB_UFLOAT: return GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT;
+            case ImageFormat::BC6H_RGB_SFLOAT: return GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT;
+            case ImageFormat::BC7_RGBA_UNORM: return GL_COMPRESSED_RGBA_BPTC_UNORM;
+            case ImageFormat::BC7_RGBA_SRGB: return GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM;
+            default: return GL_NONE;
+        }
+    }
+
+    GLenum ImageFormatToGLDataType(ImageFormat format) {
+        switch (format) {
+            case ImageFormat::R16_UNORM:
+                return GL_UNSIGNED_SHORT;
+            case ImageFormat::R16_SFLOAT:
+            case ImageFormat::RG16_SFLOAT:
+            case ImageFormat::RGB16_SFLOAT:
+            case ImageFormat::RGBA16_SFLOAT:
+                return GL_HALF_FLOAT;
+            case ImageFormat::RGB32_SFLOAT:
+            case ImageFormat::R32_SFLOAT:
+            case ImageFormat::RG32_SFLOAT:
+            case ImageFormat::RGBA32_SFLOAT:
+                return GL_FLOAT;
+            default:
+                return GL_UNSIGNED_BYTE;
+        }
+    }
     bool ExtensionExists(const std::string& extensionName) {
         static std::vector<std::string> extensionsCache;
         if (extensionsCache.empty()) {

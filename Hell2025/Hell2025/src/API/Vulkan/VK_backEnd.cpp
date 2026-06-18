@@ -97,8 +97,6 @@ namespace VulkanBackEnd {
 
         int width = queuedTextureBake.width;
         int height = queuedTextureBake.height;
-        int format = queuedTextureBake.format;
-        int internalFormat = queuedTextureBake.internalFormat;
         int level = queuedTextureBake.mipmapLevel;
         int dataSize = queuedTextureBake.dataSize;
         const void* data = queuedTextureBake.data;

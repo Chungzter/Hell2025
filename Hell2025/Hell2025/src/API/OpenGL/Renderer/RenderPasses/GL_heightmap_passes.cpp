@@ -11,7 +11,7 @@
 #include "Editor/Gizmo.h"
 #include "Imgui/ImguiBackEnd.h"
 #include "Input/Input.h"
-#include "Tools/ImageTools.h"
+#include "ImageTools/ImageTools.h"
 #include "Util/Util.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"

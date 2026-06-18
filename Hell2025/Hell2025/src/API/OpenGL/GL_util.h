@@ -7,6 +7,9 @@
 
 namespace OpenGLUtil {
     bool ExtensionExists(const std::string& extensionName);
+    GLenum ImageFormatToGLFormat(ImageFormat format);
+    GLenum ImageFormatToGLInternalFormat(ImageFormat format);
+    GLenum ImageFormatToGLDataType(ImageFormat format);
     GLint GetFormatFromChannelCount(int channelCount);
     GLint GetInternalFormatFromChannelCount(int channelCount);
     uint32_t CMPFormatToGLFormat(CMP_FORMAT format);
