@@ -1,5 +1,8 @@
 #pragma once
-#include <Hell/Types.h>
+
+#include "Hell/TextureTypes.h"
+#include "Hell/Types.h"
+
 #include <string>
 #include <vector>
 

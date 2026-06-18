@@ -1,8 +1,11 @@
 #pragma once
+#include "Mesh2D.h"
+
+#include "Hell/Constants.h"
+#include "Hell/TextureTypes.h"
+
 #include <string>
 #include <vector>
-#include "Mesh2D.h"
-#include <Hell/Constants.h>
 
 struct UIRenderItem {
     int baseVertex = 0;

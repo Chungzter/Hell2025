@@ -59,27 +59,6 @@ enum class BlendingMode {
     UNDEFINED
 };
 
-enum class ImageDataType {
-    UNCOMPRESSED,
-    COMPRESSED,
-    EXR,
-    UNDEFINED
-};
-
-enum class TextureWrapMode {
-    REPEAT,
-    MIRRORED_REPEAT,
-    CLAMP_TO_EDGE,
-    CLAMP_TO_BORDER,
-    UNDEFINED
-};
-
-enum class TextureFilter {
-    NEAREST,
-    LINEAR,
-    LINEAR_MIPMAP,
-    UNDEFINED
-};
 
 enum class ObjectType : uint16_t {
     NO_TYPE = 0,

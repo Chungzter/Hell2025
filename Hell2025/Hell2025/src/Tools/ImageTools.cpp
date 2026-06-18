@@ -5,10 +5,12 @@
 #include <memory.h>
 #include <iostream>
 #include <filesystem>
+
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #include "stb_image_write.h"
 #pragma warning(pop)
+
 #include "tinyexr.h"
 #include "../API/OpenGL/GL_Util.h" // Remove me when you can
 #include "cmp_compressonatorlib/compressonator.h"
@@ -19,8 +21,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include <cmath>
-#include <iostream>
-#include <bitset>  // For binary debugging
+#include <bitset>
 #include <lodepng/lodepng.h>
 
 #include <Hell/Logging.h>

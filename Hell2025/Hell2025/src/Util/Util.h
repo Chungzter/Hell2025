@@ -2,20 +2,21 @@
 
 #include "Hell/CreateInfo.h"
 #include "Hell/Enums.h"
+#include "Hell/TextureTypes.h"
 #include "Hell/Types.h"
 #include "Hell/VertexAttributes.h"
 
 #include "Math/AABB.h"
 #include "Types/Animation/Animation.h"
-#include <vector>
-#include <filesystem>
+
 #include <assimp/matrix3x3.h>
 #include <assimp/matrix4x4.h>
-#include <span>
-#include <type_traits>
-
 #include <MagicEnum.hpp>
 #include <nlohmann/json.hpp>
+
+#include <filesystem>
+#include <span>
+#include <type_traits>
 #include <vector>
 
 namespace Util {

@@ -1,10 +1,14 @@
 #pragma once
-#include <Hell/Enums.h>
+
+#include "API/OpenGL/Types/gl_texture.h"
+#include "API/Vulkan/Types/vk_texture.h"
+
+#include "Hell/Enums.h"
+#include "Hell/TextureTypes.h"
+
 #include "LoadingState.h"
 #include <string>
 #include <memory>
-#include "../API/OpenGL/Types/gl_texture.h"
-#include "../API/Vulkan/Types/vk_texture.h"
 
 struct Texture {
 public:

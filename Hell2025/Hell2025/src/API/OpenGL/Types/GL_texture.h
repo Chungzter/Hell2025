@@ -1,7 +1,11 @@
 #pragma once
-#include <Hell/Types.h>
+
+#include "Hell/TextureTypes.h"
+#include "Hell/Types.h"
+
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+
 #include <string>
 #include <memory>
 
