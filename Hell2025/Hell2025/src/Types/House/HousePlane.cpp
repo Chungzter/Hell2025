@@ -1,6 +1,6 @@
 #include "HousePlane.h"
 #include "AssetManagement/AssetManager.h"
-#include "Managers/ResourceManager.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "GL_mesh_buffer.h" // TODO: move me to OpenGLResourceManager
-#include "Mesh.h"
+#include "API/OpenGL/Types/GL_mesh_buffer.h" // TODO: move me to OpenGLResourceManager
+#include "Types/Renderer/Mesh.h"
 
 #include "Hell/Types.h"
 #include "Hell/VertexAttributes.h"

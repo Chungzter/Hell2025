@@ -3,7 +3,6 @@
 
 #include "API/OpenGL/GL_util.h"
 #include "BackEnd/BackEnd.h"
-#include "ImageTools/ImageTools.h"
 #include "Util/Util.h"
 
 #include <iostream>

@@ -8,7 +8,7 @@
 #include "Config/Config.h"
 #include "Core/Debug.h"
 #include "Editor/Editor.h"
-#include "Managers/ResourceManager.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "Timer.hpp"
 
 #include <Hell/Logging.h>

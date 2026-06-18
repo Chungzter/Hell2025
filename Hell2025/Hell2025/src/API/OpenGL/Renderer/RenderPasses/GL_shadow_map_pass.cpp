@@ -5,7 +5,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
-#include "Managers/ResourceManager.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "World/World.h"
 
 #include "Ragdoll/RagdollManager.h"

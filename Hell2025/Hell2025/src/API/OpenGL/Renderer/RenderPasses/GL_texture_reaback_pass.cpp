@@ -5,7 +5,6 @@
 #include "Core/Game.h"
 #include "Editor/Editor.h"
 #include "Input/Input.h"
-#include "ImageTools/ImageTools.h"
 #include "Util/Util.h"
 
 namespace OpenGLRenderer {

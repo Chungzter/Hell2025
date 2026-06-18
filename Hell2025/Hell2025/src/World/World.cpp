@@ -15,7 +15,7 @@
 #include "Managers/HouseManager.h"
 #include "Managers/MapManager.h"
 #include "Managers/MirrorManager.h"
-#include "Managers/ResourceManager.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "GlobalIllumination/GlobalIllumination.h"
 #include "Ocean/Ocean.h"
 #include "Renderer/Renderer.h"

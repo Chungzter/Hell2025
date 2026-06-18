@@ -26,7 +26,7 @@
 #include "Managers/OpenableManager.h"
 #include "Managers/HouseManager.h"
 #include "Managers/MirrorManager.h"
-#include "Managers/ResourceManager.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "Modelling/Unused/Modelling.h"
 #include "Physics/Physics.h"
 #include "Ragdoll/RagdollManager.h"

@@ -1,9 +1,11 @@
 #pragma once
 #include <glad/gl.h>
-#include "cmp_compressonatorlib/compressonator.h"
 
 #include "Hell/TextureTypes.h"
-#include "Hell/Types.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <string>
 
 namespace OpenGLUtil {
     bool ExtensionExists(const std::string& extensionName);
@@ -12,8 +14,6 @@ namespace OpenGLUtil {
     GLenum ImageFormatToGLDataType(ImageFormat format);
     GLint GetFormatFromChannelCount(int channelCount);
     GLint GetInternalFormatFromChannelCount(int channelCount);
-    uint32_t CMPFormatToGLFormat(CMP_FORMAT format);
-    uint32_t CMPFormatToGLInternalFormat(CMP_FORMAT format);
     const char* GetGLSyncStatusString(GLenum result);
     const char* GLFormatToString(GLenum format);
     const char* GLInternalFormatToString(GLenum internalFormat); 

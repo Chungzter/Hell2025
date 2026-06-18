@@ -4,9 +4,17 @@
 #include <stb_image.h>
 #include <tinyexr.h>
 
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
+#include <iostream>
+#include <limits>
+#include <utility>
 
 namespace ImageTools {
+
+    namespace {
 
     ImageFormat GetUncompressedImageFormat(int channelCount) {
         switch (channelCount) {
@@ -16,6 +24,18 @@ namespace ImageTools {
         case 4: return ImageFormat::RGBA8_UNORM;
         default: return ImageFormat::UNDEFINED;
         }
+    }
+
+    uint32_t GetMaximumMipCount(uint32_t width, uint32_t height) {
+        uint32_t mipCount = 1;
+        uint32_t largestDimension = std::max(width, height);
+        while (largestDimension > 1) {
+            largestDimension /= 2;
+            ++mipCount;
+        }
+        return mipCount;
+    }
+
     }
 
     ImageData LoadDDS(const std::string& filepath) {
@@ -29,46 +49,87 @@ namespace ImageTools {
             return imageData;
         }
         // Read and validate the DDS header
-        DDSHeader header = {};
+        DDS::Header header = {};
         file.read(reinterpret_cast<char*>(&header), sizeof(header));
-        if (!file || header.dwMagic != 0x20534444) { // "DDS " magic number
+        if (!file ||
+            header.magic != DDS::Magic ||
+            header.size != DDS::HeaderSize ||
+            header.pixelFormatSize != DDS::PixelFormatSize ||
+            header.width == 0 ||
+            header.height == 0) {
             std::cout << "Not a valid DDS file: " << filepath << "\n";
             return imageData;
         }
+
+        if ((header.caps2 & DDS::Caps2Cubemap) != 0 || (header.caps2 & DDS::Caps2Volume) != 0) {
+            std::cout << "Unsupported DDS texture type (only 2D textures are supported): " << filepath << "\n";
+            return imageData;
+        }
+
         // Check for potential DX10 extended header
-        DDSHeaderDX10 dx10Header = {};
-        if (header.ddspf_dwFourCC == FOURCC_DX10) {
+        DDS::HeaderDX10 dx10Header = {};
+        if (header.fourCC == DDS::FourCCDx10) {
             file.read(reinterpret_cast<char*>(&dx10Header), sizeof(dx10Header));
             if (!file) {
                 std::cout << "Failed to read DDS DX10 header: " << filepath << "\n";
                 return imageData;
             }
+            if (dx10Header.resourceDimension != DDS::ResourceDimensionTexture2D ||
+                dx10Header.arraySize != 1 ||
+                (dx10Header.miscFlag & DDS::ResourceMiscTextureCube) != 0) {
+                std::cout << "Unsupported DDS DX10 texture type (only one 2D image is supported): " << filepath << "\n";
+                return imageData;
+            }
         }
+
         // Retrieve format information
-        DDSFormatInfo formatInfo = GetDDSFormatInfo(header, &dx10Header);
-        if (formatInfo.format == ImageFormat::UNDEFINED || formatInfo.blockSize == 0) {
+        const std::optional<DDS::FormatInfo> formatInfo = DDS::GetFormatInfo(header, &dx10Header);
+        if (!formatInfo) {
+            std::cout << "Unsupported DDS format: " << filepath << "\n";
             return imageData;
         }
-        imageData.format = formatInfo.format;
+        imageData.format = formatInfo->format;
 
         // Iterate the mipmap levels
-        uint32_t mipWidth = header.dwWidth;
-        uint32_t mipHeight = header.dwHeight;
-        const uint32_t mipCount = std::max(1u, header.dwMipMapCount);
+        uint32_t mipWidth = header.width;
+        uint32_t mipHeight = header.height;
+        const uint32_t mipCount = std::max(1u, header.mipMapCount);
+        if (mipCount > GetMaximumMipCount(mipWidth, mipHeight)) {
+            std::cout << "Invalid DDS mip count: " << filepath << "\n";
+            imageData.format = ImageFormat::UNDEFINED;
+            return imageData;
+        }
+
         imageData.mips.reserve(mipCount);
         for (uint32_t i = 0; i < mipCount; ++i) {
-            uint32_t blocksWide = (mipWidth + 3) / 4;
-            uint32_t blocksHigh = (mipHeight + 3) / 4;
-            uint32_t dataSize = blocksWide * blocksHigh * formatInfo.blockSize;
+            const uint64_t blocksWide = (static_cast<uint64_t>(mipWidth) + 3) / 4;
+            const uint64_t blocksHigh = (static_cast<uint64_t>(mipHeight) + 3) / 4;
+            if (blocksHigh != 0 && blocksWide > std::numeric_limits<uint64_t>::max() / blocksHigh) {
+                std::cout << "DDS mip payload size overflow: " << filepath << "\n";
+                return {};
+            }
+            const uint64_t blockCount = blocksWide * blocksHigh;
+            if (blockCount > std::numeric_limits<uint64_t>::max() / formatInfo->blockSize) {
+                std::cout << "DDS mip payload size overflow: " << filepath << "\n";
+                return {};
+            }
+            const uint64_t dataSize64 = blockCount * formatInfo->blockSize;
+            if (dataSize64 > std::numeric_limits<size_t>::max() ||
+                dataSize64 > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max())) {
+                std::cout << "DDS mip payload is too large: " << filepath << "\n";
+                return {};
+            }
+            const size_t dataSize = static_cast<size_t>(dataSize64);
 
             TextureMip mip;
             mip.width = mipWidth;
             mip.height = mipHeight;
             mip.data.resize(dataSize);
-            file.read(reinterpret_cast<char*>(mip.data.data()), dataSize);
+            file.read(reinterpret_cast<char*>(mip.data.data()), static_cast<std::streamsize>(dataSize));
             if (file.gcount() != static_cast<std::streamsize>(dataSize)) {
-                std::cerr << "Error reading mip level " << i << "\n";
-                break;
+                std::cout << "Error reading DDS mip level " << i << ": " << filepath << "\n";
+                imageData = {};
+                return imageData;
             }
             imageData.mips.push_back(std::move(mip));
             mipWidth = std::max(1u, mipWidth / 2);
@@ -79,7 +140,6 @@ namespace ImageTools {
     }
 
     ImageData LoadUncompressedImage(const std::string& filepath) {
-        stbi_set_flip_vertically_on_load(false);
         ImageData imageData;
         imageData.type = ImageDataType::UNCOMPRESSED;
 
@@ -142,22 +202,23 @@ namespace ImageTools {
         mip.height = height;
         mip.data.resize(static_cast<size_t>(width) * height * 4 * sizeof(float));
         std::memcpy(mip.data.data(), pixels, mip.data.size());
-        free(pixels);
+        std::free(pixels);
 
         imageData.format = ImageFormat::RGBA32_SFLOAT;
         return imageData;
     }
 
-    ImageData LoadR16F(const std::string& filepath) {
-        stbi_set_flip_vertically_on_load(false);
+    ImageData LoadR16UNormImage(const std::string& filepath) {
         ImageData imageData;
         imageData.type = ImageDataType::UNCOMPRESSED;
 
-        int width, height, channels;
+        int width = 0;
+        int height = 0;
+        int channels = 0;
         uint16_t* pixels = stbi_load_16(filepath.c_str(), &width, &height, &channels, 1); // Force single-channel
 
         if (!pixels) {
-            std::cout << "[LoadR16FTextureData] Failed to load 16-bit texture: " << filepath << "\n";
+            std::cout << "Failed to load R16_UNORM image: " << filepath << "\n";
             return imageData;
         }
 

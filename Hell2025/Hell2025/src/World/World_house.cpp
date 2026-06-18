@@ -2,7 +2,7 @@
 #include "AssetManagement/AssetManager.h"
 #include "File/JSON.h"
 #include "Managers/HouseManager.h"
-#include "Managers/ResourceManager.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "GlobalIllumination/GlobalIllumination.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"

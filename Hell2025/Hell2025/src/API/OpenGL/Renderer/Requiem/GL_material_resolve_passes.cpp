@@ -1,7 +1,7 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
 #include "Hell/RendereringConstants.h"
-#include "Managers/ResourceManager.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "Renderer/Renderer.h"
 
 namespace OpenGLRenderer {

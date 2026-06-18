@@ -7,7 +7,7 @@
 #include "Editor/Editor.h"
 #include "Input/Input.h"
 #include "Managers/MirrorManager.h"
-#include "Managers/ResourceManager.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "Ocean/Ocean.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"

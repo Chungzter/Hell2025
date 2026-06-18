@@ -17,7 +17,7 @@
 
 #include "Types/Mirror.h"
 #include "Managers/MirrorManager.h"
-#include "Managers/ResourceManager.h"
+#include "ResourceManagement/ResourceManager.h"
 
 #include "Core/Game.h"
 

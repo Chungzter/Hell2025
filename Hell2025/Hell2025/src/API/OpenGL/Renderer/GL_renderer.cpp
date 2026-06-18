@@ -26,7 +26,6 @@
 #include "Viewport/ViewportManager.h"
 
 #include "API/OpenGL/Types/GL_texture_readback.h"
-#include "ImageTools/ImageTools.h"
 
 #include <Hell/Logging.h>
 #include <Hell/GPUTypes.h>

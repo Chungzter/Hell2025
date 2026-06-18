@@ -1,15 +1,15 @@
 ﻿#include "UIBackEnd.h"
-#include "Mesh2D.h"
-#include "TextBlitter.h"
-#include "../AssetManagement/AssetManager.h"
-#include "../BackEnd/BackEnd.h"
-#include "../Core/Debug.h"
-#include "../Config/Config.h"
 
+#include "Hell/Logging.h"
+
+#include "API/OpenGL/GL_memory_tracker.h" // TODO: Clean me up and out of here
+
+#include "AssetManagement/AssetManager.h"
+#include "BackEnd/BackEnd.h"
+#include "Core/Debug.h"
+#include "Config/Config.h"
 #include "Renderer/Renderer.h"
-#include <Hell/Logging.h>
-
-#include "API/OpenGL/GL_memory_tracker.h"
+#include "UI/TextBlitter.h"
 
 namespace UIBackEnd {
 

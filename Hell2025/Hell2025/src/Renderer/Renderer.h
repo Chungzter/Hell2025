@@ -2,7 +2,6 @@
 #include "Math/AABB.h"
 #include "Math/OBB.h"
 #include "Types/Map/Map.h"
-#include "Types/Renderer/MeshBuffer.h"
 
 #include <Hell/Types.h>
 

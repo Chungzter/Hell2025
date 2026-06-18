@@ -1,5 +1,5 @@
 #include "WallSegment.h"
-#include "Managers/ResourceManager.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "Modelling/Clipping.h"
 #include "Physics/Physics.h"
 #include "Renderer/Renderer.h"

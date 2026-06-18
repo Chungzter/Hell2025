@@ -115,7 +115,25 @@ inline int GetImageFormatChannelCount(ImageFormat format) {
 }
 
 inline bool IsCompressedImageFormat(ImageFormat format) {
-    return format >= ImageFormat::BC1_RGB_UNORM && format <= ImageFormat::BC7_RGBA_SRGB;
+    switch (format) {
+        case ImageFormat::BC1_RGB_UNORM:
+        case ImageFormat::BC1_RGBA_UNORM:
+        case ImageFormat::BC1_RGB_SRGB:
+        case ImageFormat::BC1_RGBA_SRGB:
+        case ImageFormat::BC2_RGBA_UNORM:
+        case ImageFormat::BC2_RGBA_SRGB:
+        case ImageFormat::BC3_RGBA_UNORM:
+        case ImageFormat::BC3_RGBA_SRGB:
+        case ImageFormat::BC4_R_UNORM:
+        case ImageFormat::BC5_RG_UNORM:
+        case ImageFormat::BC6H_RGB_UFLOAT:
+        case ImageFormat::BC6H_RGB_SFLOAT:
+        case ImageFormat::BC7_RGBA_UNORM:
+        case ImageFormat::BC7_RGBA_SRGB:
+            return true;
+        default:
+            return false;
+    }
 }
 
 inline const char* ImageFormatToString(ImageFormat format) {

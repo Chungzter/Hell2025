@@ -1,5 +1,5 @@
 #pragma once
-#include "Mesh2D.h"
+#include "ResourceManagement/Types/Mesh2D.h"
 
 #include "Hell/Constants.h"
 #include "Hell/TextureTypes.h"
@@ -54,6 +54,7 @@ namespace UIBackEnd {
         int clipMaxX = -1,
         int clipMaxY = -1
     );
+
     void EndFrame();
     Mesh2D& GetUIMesh();
     std::vector<UIRenderItem>& GetRenderItems();

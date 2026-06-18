@@ -1,7 +1,8 @@
 #pragma once
+#include "API/OpenGL/Types/GL_mesh2D.h"
+#include "UI/FontSpriteSheet.h"
+
 #include <string>
-#include "../API/OpenGL/Types/GL_mesh2D.hpp"
-#include "FontSpriteSheet.h"
 
 struct MeshData2D {
     std::vector<Vertex2D> vertices;

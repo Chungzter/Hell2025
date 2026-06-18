@@ -1,7 +1,7 @@
 #include "Wall.h"
 #include "AssetManagement/AssetManager.h"
 #include "Editor/Editor.h"
-#include "Managers/ResourceManager.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "Modelling/Clipping.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"

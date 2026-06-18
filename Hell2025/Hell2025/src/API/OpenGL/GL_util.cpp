@@ -143,57 +143,6 @@ namespace OpenGLUtil {
         }
     }
 
-    uint32_t CMPFormatToGLFormat(CMP_FORMAT format) {
-        switch (format) {
-        case CMP_FORMAT_DXT1:
-        case CMP_FORMAT_BC1:
-        case CMP_FORMAT_ETC2_RGB:
-        case CMP_FORMAT_ETC2_SRGB:
-        case CMP_FORMAT_BC6H:
-            return GL_RGB;
-
-        case CMP_FORMAT_DXT3:
-        case CMP_FORMAT_DXT5:
-        case CMP_FORMAT_BC2:
-        case CMP_FORMAT_BC7:
-        case CMP_FORMAT_ETC2_RGBA:
-        case CMP_FORMAT_ETC2_SRGBA:
-        case CMP_FORMAT_ASTC:
-            return GL_RGBA;
-
-        case CMP_FORMAT_BC4:
-        case CMP_FORMAT_ATI2N_XY:
-            return GL_RED;
-
-        case CMP_FORMAT_BC5:
-            return GL_RG;
-
-        default:
-            return 0xFFFFFFFF;
-        }
-    }
-
-    uint32_t CMPFormatToGLInternalFormat(CMP_FORMAT format) {
-        switch (format) {
-        case CMP_FORMAT_DXT1: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
-        case CMP_FORMAT_DXT3: return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-        case CMP_FORMAT_DXT5: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-        case CMP_FORMAT_BC4: return GL_COMPRESSED_RED_RGTC1;
-        case CMP_FORMAT_BC5:
-        case CMP_FORMAT_ATI2N_XY: return GL_COMPRESSED_RG_RGTC2;
-        case CMP_FORMAT_BC6H: return GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT;
-        case CMP_FORMAT_BC7: return GL_COMPRESSED_RGBA_BPTC_UNORM;
-        case CMP_FORMAT_ETC2_RGB: return GL_COMPRESSED_RGB8_ETC2;
-        case CMP_FORMAT_ETC2_SRGB: return GL_COMPRESSED_SRGB8_ETC2;
-        case CMP_FORMAT_ETC2_RGBA: return GL_COMPRESSED_RGBA8_ETC2_EAC;
-        case CMP_FORMAT_ETC2_SRGBA: return GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
-        case CMP_FORMAT_ASTC: return GL_COMPRESSED_RGBA_ASTC_4x4_KHR;
-        case CMP_FORMAT_BC1: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
-        case CMP_FORMAT_BC2: return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-        default: return 0xFFFFFFFF;
-        }
-    }
-
     const char* GetGLSyncStatusString(GLenum result) {
         switch (result) {
         case GL_ALREADY_SIGNALED: return "GL_ALREADY_SIGNALED";
