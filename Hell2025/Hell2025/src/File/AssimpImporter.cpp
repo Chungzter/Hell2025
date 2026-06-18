@@ -248,14 +248,14 @@ namespace AssimpImporter {
             }
 
             meshData.localBaseVertex = localBaseVertex;
-            meshData.weightedVertices.reserve(meshData.vertexCount);
+            meshData.vertices.reserve(meshData.vertexCount);
+            meshData.vertexWeights.reserve(meshData.vertexCount);
             meshData.indices.reserve(meshData.indexCount);
 
             // Get vertices
             for (unsigned int j = 0; j < meshData.vertexCount; j++) {
-                WeightedVertex vertex;
+                Vertex& vertex = meshData.vertices.emplace_back();
                 vertex.position = { assimpMesh->mVertices[j].x, assimpMesh->mVertices[j].y, assimpMesh->mVertices[j].z };
-
                 vertex.normal = { assimpMesh->mNormals[j].x, assimpMesh->mNormals[j].y, assimpMesh->mNormals[j].z };
                 vertex.normal = glm::normalize(vertex.normal);
 
@@ -270,7 +270,6 @@ namespace AssimpImporter {
 
                 vertex.uv = { assimpMesh->HasTextureCoords(0) ? glm::vec2(assimpMesh->mTextureCoords[0][j].x, assimpMesh->mTextureCoords[0][j].y) : glm::vec2(0.0f, 0.0f) };
 
-                meshData.weightedVertices.push_back(vertex);
                 meshData.aabbMin.x = std::min(meshData.aabbMin.x, vertex.position.x);
                 meshData.aabbMin.y = std::min(meshData.aabbMin.y, vertex.position.y);
                 meshData.aabbMin.z = std::min(meshData.aabbMin.z, vertex.position.z);
@@ -287,7 +286,7 @@ namespace AssimpImporter {
             }
 
             // Get vertex weights and bone IDs
-            std::vector<unsigned int> influenceCount(meshData.weightedVertices.size(), 0);
+            std::vector<unsigned int> influenceCount(meshData.vertices.size(), 0);
 
             for (unsigned int i = 0; i < assimpMesh->mNumBones; i++) {
                 std::string boneName = assimpMesh->mBones[i]->mName.data;
@@ -296,25 +295,27 @@ namespace AssimpImporter {
                 for (unsigned int j = 0; j < assimpMesh->mBones[i]->mNumWeights; j++) {
                     unsigned int vertexIndex = assimpMesh->mBones[i]->mWeights[j].mVertexId;
                     float weight = assimpMesh->mBones[i]->mWeights[j].mWeight;
-                    WeightedVertex& vertex = meshData.weightedVertices[vertexIndex];
+
+
+                    VertexWeight& vertexWeight = meshData.vertexWeights[vertexIndex];
 
                     if (influenceCount[vertexIndex] < 4) {
                         switch (influenceCount[vertexIndex]) {
                         case 0:
-                            vertex.boneID.x = boneIndex;
-                            vertex.weight.x = weight;
+                            vertexWeight.boneID.x = boneIndex;
+                            vertexWeight.weight.x = weight;
                             break;
                         case 1:
-                            vertex.boneID.y = boneIndex;
-                            vertex.weight.y = weight;
+                            vertexWeight.boneID.y = boneIndex;
+                            vertexWeight.weight.y = weight;
                             break;
                         case 2:
-                            vertex.boneID.z = boneIndex;
-                            vertex.weight.z = weight;
+                            vertexWeight.boneID.z = boneIndex;
+                            vertexWeight.weight.z = weight;
                             break;
                         case 3:
-                            vertex.boneID.w = boneIndex;
-                            vertex.weight.w = weight;
+                            vertexWeight.boneID.w = boneIndex;
+                            vertexWeight.weight.w = weight;
                             break;
                         }
                         influenceCount[vertexIndex]++;
@@ -322,49 +323,48 @@ namespace AssimpImporter {
                 }
             }
 
-            // Ingore broken weights
+            // Ignore broken weights
             float threshold = 0.05f;
-            for (unsigned int j = 0; j < meshData.weightedVertices.size(); j++) {
-                WeightedVertex& vertex = meshData.weightedVertices[j];
+            for (unsigned int j = 0; j < meshData.vertexWeights.size(); j++) {
+                VertexWeight& vertexWeight = meshData.vertexWeights[j];
                 std::vector<float> validWeights;
                 for (int i = 0; i < 4; ++i) {
-                    if (vertex.weight[i] < threshold) {
-                        vertex.weight[i] = 0.0f;
+                    if (vertexWeight.weight[i] < threshold) {
+                        vertexWeight.weight[i] = 0.0f;
                     }
                     else {
-                        validWeights.push_back(vertex.weight[i]);
+                        validWeights.push_back(vertexWeight.weight[i]);
                     }
                 }
                 float sum = std::accumulate(validWeights.begin(), validWeights.end(), 0.0f);
                 int validIndex = 0;
                 for (int i = 0; i < 4; ++i) {
-                    if (vertex.weight[i] > 0.0f) {
-                        vertex.weight[i] = validWeights[validIndex] / sum;
+                    if (vertexWeight.weight[i] > 0.0f) {
+                        vertexWeight.weight[i] = validWeights[validIndex] / sum;
                         validIndex++;
                     }
                 }
             }
 
-
             // Check if all vertices have only one weight
             bool allVerticeHaveOnlyOneWeight = true;
 
-            for (WeightedVertex& vertex : meshData.weightedVertices) {
-                if (vertex.weight.y != 0 &&
-                    vertex.weight.z != 0 &&
-                    vertex.weight.w != 0) {
+            for (VertexWeight& vertexWeight : meshData.vertexWeights) {
+                if (vertexWeight.weight.y != 0 &&
+                    vertexWeight.weight.z != 0 &&
+                    vertexWeight.weight.w != 0) {
                     allVerticeHaveOnlyOneWeight = false;
                 }
             }
 
             // If they do, now check they all reference the same bone
-            int foundBoneIndex = meshData.weightedVertices[0].boneID[0];
+            int foundBoneIndex = meshData.vertexWeights[0].boneID[0];
             bool allVerticesAlsoOnlyReferenceTheSameBone = true;
 
             if (allVerticeHaveOnlyOneWeight) {
-                for (int i = 1; i < meshData.weightedVertices.size(); i++) {
-                    WeightedVertex& vertex = meshData.weightedVertices[i];
-                    if (vertex.boneID.x != foundBoneIndex) {
+                for (int i = 1; i < meshData.vertexWeights.size(); i++) {
+                    VertexWeight& vertexWeight = meshData.vertexWeights[i];
+                    if (vertexWeight.boneID.x != foundBoneIndex) {
                         allVerticesAlsoOnlyReferenceTheSameBone = false;
                         break;
                     }
@@ -383,11 +383,9 @@ namespace AssimpImporter {
 
             std::cout << modelData.name << " [" << meshData.name << "]: " << Util::BoolToString(meshData.requiresSkinning) << " " << foundBoneIndex << " nonDeformingBoneIndex " << meshData.vertexCount << " verts \n";
 
-            localBaseVertex += (uint32_t)meshData.weightedVertices.size();
-            modelData.vertexCount += (uint32_t)meshData.weightedVertices.size();
+            localBaseVertex += (uint32_t)meshData.vertices.size();
+            modelData.vertexCount += (uint32_t)meshData.vertices.size();
             modelData.indexCount += (uint32_t)meshData.indices.size();
-
-
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////
             //
@@ -395,23 +393,23 @@ namespace AssimpImporter {
             //
             ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            meshData.vertices.clear();
-            meshData.vertices.reserve(meshData.vertexCount);
-
-            meshData.vertexWeights.clear();
-            meshData.vertexWeights.reserve(meshData.vertexCount);
-
-            for (const WeightedVertex& weightedVertex : meshData.weightedVertices) {
-                Vertex& vertex = meshData.vertices.emplace_back();
-                vertex.position = weightedVertex.position;
-                vertex.uv = weightedVertex.uv;
-                vertex.normal = weightedVertex.normal;
-                vertex.tangent = weightedVertex.tangent;
-
-                VertexWeight& vertexWeight = meshData.vertexWeights.emplace_back();
-                vertexWeight.boneID = weightedVertex.boneID;
-                vertexWeight.weight = weightedVertex.weight;
-            }
+            //meshData.vertices.clear();
+            //meshData.vertices.reserve(meshData.vertexCount);
+            //
+            //meshData.vertexWeights.clear();
+            //meshData.vertexWeights.reserve(meshData.vertexCount);
+            //
+            //for (const WeightedVertex& weightedVertex : meshData.weightedVertices) {
+            //    Vertex& vertex = meshData.vertices.emplace_back();
+            //    vertex.position = weightedVertex.position;
+            //    vertex.uv = weightedVertex.uv;
+            //    vertex.normal = weightedVertex.normal;
+            //    vertex.tangent = weightedVertex.tangent;
+            //
+            //    VertexWeight& vertexWeight = meshData.vertexWeights.emplace_back();
+            //    vertexWeight.boneID = weightedVertex.boneID;
+            //    vertexWeight.weight = weightedVertex.weight;
+            //}
             ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

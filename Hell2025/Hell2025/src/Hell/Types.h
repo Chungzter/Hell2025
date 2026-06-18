@@ -130,86 +130,6 @@ struct SpriteSheetRenderItem {
     float padding2;
 };
 
-struct Vertex2D {
-    glm::vec2 position;
-    glm::vec2 uv;
-    glm::vec4 color;
-    int textureIndex;
-};
-
-struct MeshData2D {
-    std::vector<Vertex2D> vertices;
-    std::vector<uint32_t> indices;
-};
-
-struct VertexPN {
-    glm::vec3 position;
-    glm::vec3 normal;
-};
-
-struct Vertex {
-    Vertex() = default;
-    Vertex(float x, float y, float z) {
-        position = glm::vec3(x, y, z);
-    }
-    Vertex(glm::vec3 pos) {
-        position = pos;
-    }
-    Vertex(const glm::vec3& pos, const glm::vec3& norm) {
-        position = pos;
-        normal = norm;
-    }
-    Vertex(const glm::vec3& pos, const glm::vec3& norm, const glm::vec2& texCoord) {
-        position = pos;
-        normal = norm;
-        uv = texCoord;
-    }
-    Vertex(const glm::vec3& pos, const glm::vec3& norm, const glm::vec2& texCoord, const glm::vec3& tang) {
-        position = pos;
-        normal = norm;
-        uv = texCoord;
-        tangent = tang;
-    }
-    glm::vec3 position = glm::vec3(0);
-    glm::vec3 normal = glm::vec3(0);
-    glm::vec2 uv = glm::vec2(0);
-    glm::vec3 tangent = glm::vec3(0);
-};
-
-struct VertexWeight {
-    glm::ivec4 boneID = glm::ivec4(0);
-    glm::vec4 weight = glm::vec4(0);
-};
-
-struct WeightedVertex {
-    glm::vec3 position = glm::vec3(0);
-    glm::vec3 normal = glm::vec3(0);
-    glm::vec2 uv = glm::vec2(0);
-    glm::vec3 tangent = glm::vec3(0);
-    glm::ivec4 boneID = glm::ivec4(0);
-    glm::vec4 weight = glm::vec4(0);
-
-    bool operator==(const Vertex& other) const {
-        return position == other.position && normal == other.normal && uv == other.uv;
-    }
-};
-
-#pragma pack(push, 1)
-struct DebugVertex3D {
-    glm::vec3 position;
-    glm::vec3 color;
-    glm::ivec2 pixelOffset;
-    int depthEnabled = 0;
-    int exclusiveViewportIndex = -1;
-    int ignoredViewportIndex = -1;
-};
-
-struct DebugVertex2D {
-    glm::ivec2 position;
-    glm::vec3 color;
-};
-#pragma pack(pop)
-
 struct TextureData {
     int m_width = 0;
     int m_height = 0;
@@ -226,14 +146,6 @@ struct FileInfo {
     std::string name;
     std::string ext;
     std::string dir;
-    //std::string GetFileNameWithExtension() {
-    //    if (ext.length() > 0) {
-    //        return name + "." + ext;
-    //    }
-    //    else {
-    //        return name;
-    //    }
-    //}
 };
 
 struct Transform {

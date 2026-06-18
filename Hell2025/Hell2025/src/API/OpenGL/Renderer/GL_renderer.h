@@ -1,7 +1,5 @@
 #pragma once
-#include "Math/AABB.h"
-#include "Math/OBB.h"
-#include <string>
+
 #include "API/OpenGL/Types/GL_cubemapView.h"
 #include "API/OpenGL/Types/GL_cubemap_frame_buffer.h"
 #include "API/OpenGL/Types/GL_mesh_buffer_old.h"
@@ -15,9 +13,18 @@
 #include "API/OpenGL/Types/GL_texture_3d.h"
 #include "API/OpenGL/Types/GL_timer.h"
 #include "API/OpenGL/Types/GL_ssbo.h"
+
+#include "Hell/VertexAttributes.h"
+
+#include "Math/AABB.h"
+#include "Math/OBB.h"
+
 #include "GlobalIllumination/DDGIVolume.h"
+
 #include "Types/Map/Map.h"
 #include "Viewport/Viewport.h"
+
+#include <string>
 
 struct OpenGLRasterizerState {
     // Blending

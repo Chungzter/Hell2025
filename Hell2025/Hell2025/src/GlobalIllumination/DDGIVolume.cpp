@@ -240,8 +240,12 @@ void DDGIVolume::CreateHouseBvh() {
     }
 
     // Create house vertices
-    std::vector<Vertex> vertices;
-    for (Triangle& triangle : m_triangles) {
+    size_t vertexCount = m_triangles.size() * 3;
+    std::vector<Vertex> vertices(vertexCount);
+
+    for (int i = 0; i < m_triangles.size(); i++) {
+        Triangle& triangle = m_triangles[i];
+
         Vertex v0, v1, v2;
         v0.position = triangle.v0;
         v1.position = triangle.v1;
@@ -249,9 +253,12 @@ void DDGIVolume::CreateHouseBvh() {
         v0.normal = triangle.normal;
         v1.normal = triangle.normal;
         v2.normal = triangle.normal;
-        vertices.push_back(triangle.v0);
-        vertices.push_back(triangle.v1);
-        vertices.push_back(triangle.v2);
+
+        int baseIndex = i * 3;
+
+        vertices[baseIndex + 0] = v0;
+        vertices[baseIndex + 1] = v1;
+        vertices[baseIndex + 2] = v2;
     }
 
     // Create house indices

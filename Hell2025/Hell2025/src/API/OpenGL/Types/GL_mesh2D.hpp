@@ -1,5 +1,8 @@
 #pragma once
-#include <Hell/Types.h>
+
+#include "Hell/Types.h"
+#include "Hell/VertexAttributes.h"
+
 #include <vector>
 #include <glad/gl.h>
 

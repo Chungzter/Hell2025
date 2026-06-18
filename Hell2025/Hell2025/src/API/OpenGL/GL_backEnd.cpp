@@ -50,13 +50,16 @@ namespace OpenGLBackEnd {
         GLint major, minor;
         glGetIntegerv(GL_MAJOR_VERSION, &major);
         glGetIntegerv(GL_MINOR_VERSION, &minor);
-        const GLubyte* vendor = glGetString(GL_VENDOR);
+
         const GLubyte* renderer = glGetString(GL_RENDERER);
+
         std::cout << "\nGPU: " << renderer << "\n";
         std::cout << "GL version: " << major << "." << minor << "\n\n";
 
         int flags;
+
         glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+
         if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
             //std::cout << "Debug GL context enabled\n";
             glEnable(GL_DEBUG_OUTPUT);

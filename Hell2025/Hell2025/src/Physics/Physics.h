@@ -11,7 +11,10 @@
 #include "Physics/Types/RigidDynamic.h"
 #include "Physics/Types/RigidStatic.h"
 #include "CollisionReports.h"
-#include <Hell/Types.h>
+
+#include "Hell/Types.h"
+#include "Hell/VertexAttributes.h"
+
 #include "Math/AABB.h"
 #include <string>
 #include <span>

@@ -1,6 +1,8 @@
 #pragma once
-#include <Hell/Types.h>
-#include <Hell/CreateInfo.h>
+
+#include "Hell/CreateInfo.h"
+#include "Hell/Types.h"
+#include "Hell/VertexAttributes.h"
 
 struct HousePlane {
     HousePlane() = default;

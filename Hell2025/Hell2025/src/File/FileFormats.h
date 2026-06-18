@@ -1,9 +1,13 @@
 #pragma once
-#include <Hell/Types.h>
+
+#include "Hell/Types.h"
+#include "Hell/VertexAttributes.h"
+
 #include <vector>
 #include <map>
 
 inline const char HEIGHT_MAP_SIGNATURE[] = "HELL_HEIGHT_MAP";
+
 #define HELL_NAME_BUFFER_SIZE 256
 #define HELL_SIGNATURE_BUFFER_SIZE 32
 #define HELL_ARMATURE_SIGNATURE "HELL_ARMATURE"
@@ -121,7 +125,7 @@ struct MeshData {
 
 struct SkinnedMeshData {
     std::string name;
-    std::vector<WeightedVertex> weightedVertices;
+    //std::vector<WeightedVertex> weightedVertices;
     std::vector<Vertex> vertices;
     std::vector<VertexWeight> vertexWeights;
     std::vector<uint32_t> indices;

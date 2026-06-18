@@ -1,5 +1,8 @@
 #pragma once
-#include <Hell/Types.h>
+
+#include "Hell/Types.h"
+#include "Hell/VertexAttributes.h"
+
 #include "Math/AABB.h"
 
 struct ClippingCube {

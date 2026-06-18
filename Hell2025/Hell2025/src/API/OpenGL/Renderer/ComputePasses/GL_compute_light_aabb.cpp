@@ -7,6 +7,8 @@
 
 #include <Hell/Logging.h>
 
+// Pretty sure this whole file is unused
+
 namespace OpenGLRenderer {
 
     void ReserveLightAABBSSBOStorage() {
@@ -22,27 +24,6 @@ namespace OpenGLRenderer {
     void DebugDrawLightAABB(uint32_t lightIndex);
 
     void ComputeLightAABBs() {
-        return;
-        ReserveLightAABBSSBOStorage();
-
-        static uint32_t lightIndex = 4;
-
-        if (Input::KeyPressed(HELL_KEY_LEFT)) {
-            lightIndex--;
-        }
-        if (Input::KeyPressed(HELL_KEY_RIGHT)) {
-            lightIndex++;
-        }
-
-        if (lightIndex < 3) lightIndex = World::GetLightCount() - 1;
-        if (lightIndex == World::GetLightCount()) lightIndex = 3;
-
-        if (Input::KeyPressed(HELL_KEY_Y)) {
-            RenderWorldPosition(lightIndex);
-            ComputeMinMax(lightIndex);
-        }
-
-        DebugDrawLightAABB(lightIndex);
     }
 
     void RenderWorldPosition(uint32_t lightIndex) {

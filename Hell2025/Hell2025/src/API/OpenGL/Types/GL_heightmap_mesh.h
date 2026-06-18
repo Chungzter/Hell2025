@@ -1,5 +1,8 @@
 #pragma once
-#include <Hell/Types.h>
+
+#include "Hell/VertexAttributes.h"
+
+#include <cstdint>
 #include <vector>
 
 struct OpenGLHeightMapMesh {
@@ -8,7 +11,7 @@ private:
     unsigned int m_vbo = 0;
     unsigned int m_ebo = 0;
     std::vector<Vertex> m_vertices;
-    std::vector<unsigned int> m_indices;
+    std::vector<uint32_t> m_indices;
 
 public:
     void AllocateMemory(int heightMapCount);

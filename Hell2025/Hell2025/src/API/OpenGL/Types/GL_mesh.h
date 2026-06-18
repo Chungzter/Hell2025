@@ -2,7 +2,9 @@
 #include <glad/gl.h>
 #include <vector>
 #include <glm/glm.hpp>
-#include <Hell/Types.h>
+
+#include "Hell/Types.h"
+#include "Hell/VertexAttributes.h"
 
 struct OpenGLMesh {
     OpenGLMesh() = default;

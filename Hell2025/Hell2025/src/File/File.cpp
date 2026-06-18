@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <chrono>
 #include <cstring> // For std::memset, std::memcpy
-#include <string>
 #include <cstddef> // For size_t
 #include "Util.h"
 
@@ -81,7 +80,7 @@ void File::ExportSkinnedModel(const SkinnedModelData& skinnedModelData) {
     }
 
     // Populate header
-    SkinnedModelHeader modelHeader;
+    SkinnedModelHeader modelHeader = {};
     modelHeader.version = 1;
     modelHeader.meshCount = skinnedModelData.GetMeshCount();
     modelHeader.nodeCount = skinnedModelData.GetNodeCount();
@@ -133,20 +132,11 @@ void File::ExportSkinnedModel(const SkinnedModelData& skinnedModelData) {
     PrintSkinnedModelHeader(modelHeader, "Wrote skinned model header: " + skinnedModelData.name);
     #endif
 
-    std::string name;
-    std::vector<WeightedVertex> vertices;
-    std::vector<uint32_t> indices;
-    glm::vec3 aabbMin = glm::vec3(std::numeric_limits<float>::max());
-    glm::vec3 aabbMax = glm::vec3(-std::numeric_limits<float>::max());
-    uint32_t vertexCount;
-    uint32_t indexCount;
-    uint32_t localBaseVertex;
-
     // Write the mesh data
     for (const SkinnedMeshData& skinnedMeshData : skinnedModelData.meshes) {
         SkinnedMeshHeader skinnedMeshHeader;
         skinnedMeshHeader.nameLength = (uint32_t)skinnedMeshData.name.size();
-        skinnedMeshHeader.vertexCount = (uint32_t)skinnedMeshData.weightedVertices.size();
+        skinnedMeshHeader.vertexCount = (uint32_t)skinnedMeshData.vertices.size();
         skinnedMeshHeader.indexCount = (uint32_t)skinnedMeshData.indices.size();
         skinnedMeshHeader.localBaseVertex = skinnedMeshData.localBaseVertex;
         skinnedMeshHeader.aabbMin = skinnedMeshData.aabbMin;
@@ -443,13 +433,13 @@ void File::ExportSkinnedMeshDataToOBJ(const std::string& filepath, const Skinned
         std::cerr << "Failed to open file for writing: " << filepath << "\n";
         return;
     }
-    for (const auto& vertex : mesh.weightedVertices) {
+    for (const auto& vertex : mesh.vertices) {
         file << "v " << vertex.position.x << " " << vertex.position.y << " " << vertex.position.z << "\n";
     }
-    for (const auto& vertex : mesh.weightedVertices) {
+    for (const auto& vertex : mesh.vertices) {
         file << "vn " << vertex.normal.x << " " << vertex.normal.y << " " << vertex.normal.z << "\n";
     }
-    for (const auto& vertex : mesh.weightedVertices) {
+    for (const auto& vertex : mesh.vertices) {
         file << "vt " << vertex.uv.x << " " << vertex.uv.y << "\n";
     }
     for (size_t i = 0; i < mesh.indices.size(); i += 3) {

@@ -29,14 +29,12 @@ void HousePlane::UpdateVertexDataFromCreateInfo() {
     m_p2 = m_createInfo.p2;
     m_p3 = m_createInfo.p3;
 
-    m_vertices.clear();
-    m_indices.clear();
-
     // Vertices
-    m_vertices.push_back(m_p0);
-    m_vertices.push_back(m_p1);
-    m_vertices.push_back(m_p2);
-    m_vertices.push_back(m_p3);
+    m_vertices.resize(4);
+    m_vertices[0].position = m_p0;
+    m_vertices[1].position = m_p1;
+    m_vertices[2].position = m_p2;
+    m_vertices[3].position = m_p3;
 
     // Indices
     m_indices = { 0, 1, 2, 2, 3, 0 };

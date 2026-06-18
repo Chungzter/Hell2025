@@ -3,6 +3,11 @@
 #include "../API/OpenGL/Types/GL_mesh2D.hpp"
 #include "FontSpriteSheet.h"
 
+struct MeshData2D {
+    std::vector<Vertex2D> vertices;
+    std::vector<uint32_t> indices;
+};
+
 namespace TextBlitter {
     void AddFont(const FontSpriteSheet& font);
     MeshData2D BlitText(const std::string& text, const std::string& fontName, int originX, int originY, glm::ivec2 viewportSize, Alignment alignment, float scale, uint32_t baseVertex);

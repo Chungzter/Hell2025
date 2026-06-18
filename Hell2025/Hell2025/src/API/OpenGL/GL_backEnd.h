@@ -1,10 +1,15 @@
 #pragma once
-#include <Hell/Enums.h>
+
+
+#include "Hell/Enums.h"
+#include "Hell/VertexAttributes.h"
+
 #include "API/OpenGL/Types/GL_heightmap_mesh.h"
 #include "Types/GL_texture.h"
 #include "Types/Renderer/Texture.h"
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+
 #include <string>
 #include <iostream>
 

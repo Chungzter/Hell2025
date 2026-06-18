@@ -1,6 +1,10 @@
 #pragma once
+
 #include <Hell/Types.h>
+#include "Hell/VertexAttributes.h"
+
 #include "File/File.h"
+
 #include "Types/Animation/Animation.h"
 #include "Types/Renderer/IESProfile.h"
 #include "Types/Renderer/Mesh.h"
@@ -9,6 +13,7 @@
 #include "Types/Renderer/SkinnedModel.h"
 #include "Types/Renderer/SpriteSheetTexture.h"
 #include "Types/Renderer/Texture.h"
+
 #include <span>
 #include <string>
 #include <vector>
