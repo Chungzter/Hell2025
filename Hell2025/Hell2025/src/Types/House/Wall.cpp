@@ -254,7 +254,7 @@ void Wall::CreateCSGVertexData() {
 void Wall::SubmitRenderItems() {
     // If this wall is exterior, then dont render the CSG geometry, or any trims if you accidentally set it to have trims
     if (m_createInfo.wallType == WallType::WEATHER_BOARDS) {
-        MeshBufferV2& meshBuffer = Renderer::GetProceduralMeshBuffer();
+        MeshBuffer& meshBuffer = Renderer::GetProceduralMeshBuffer();
 
         for (uint64_t meshId : m_weatherBoardSegmentMeshIds) {
             Mesh* mesh = meshBuffer.GetMeshById(meshId);

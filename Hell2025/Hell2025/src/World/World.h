@@ -44,7 +44,7 @@
 #include <vector>
 #include "Modelling/Clipping.h"
 
-#include "Types/Renderer/MeshBuffer.h"
+#include "Types/Renderer/MeshBufferOLD.h"
 
 #include "GlobalIllumination/DDGIVolume.h" // move me to Types dir
 
@@ -127,6 +127,8 @@ namespace World {
     void EnableOcean();
     void DisableOcean();
     bool HasOcean();
+
+    void UpdateDirtyFlags();
 
     // Logic
     void ProcessBullets();

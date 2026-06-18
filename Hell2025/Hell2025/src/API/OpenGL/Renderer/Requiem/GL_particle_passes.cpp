@@ -29,13 +29,14 @@ namespace OpenGLRenderer {
     }
 
     void UploadAnyNewParticles() {
+        ProfilerOpenGLZoneFunction();
+
         std::vector<BulletTrailParticle>& particles = World::GetBulletTrailParticles();
         if (particles.empty()) return;
 
         std::vector<GpuParticle> gpuParticles;
         gpuParticles.reserve(particles.size());
 
-        // Make a gpu copy of every cpu particle
         for (BulletTrailParticle& particle : particles) {
             GpuParticle& gpuParticle = gpuParticles.emplace_back();
             gpuParticle.position = glm::vec4(particle.position, 1.0f);
@@ -45,29 +46,34 @@ namespace OpenGLRenderer {
             gpuParticle.lifeTime = particle.lifeTime;
         }
 
-        // Cap at max particle size
         if (gpuParticles.size() > MAX_GPU_PARTICLES) {
             gpuParticles.resize(MAX_GPU_PARTICLES);
         }
 
-        // Then clean the cpu particles, you don't need them any more, they're just for spawning
         particles.clear();
 
-        // Now upload these to the gpu
         UploadSSBOStatic("ParticleAdditions", gpuParticles.size() * sizeof(GpuParticle), gpuParticles.data());
-
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         BindSSBO(5, "ParticleAdditions");
         BindSSBO(6, "ParticlePool");
+        BindSSBO(9, "ParticleAdditionCounter");
+
+        ClearSSBORange("ParticleAdditionCounter", 0, sizeof(uint32_t));
 
         BindShader("ParticleAdditions");
-        SetUniformInt("u_newParticleCount", gpuParticles.size());
+        SetUniformInt("u_newParticleCount", static_cast<int>(gpuParticles.size()));
 
-        glDispatchCompute(1, 1, 1);
+        constexpr uint32_t localSize = 256;
+        constexpr uint32_t groupCount = (MAX_GPU_PARTICLES + localSize - 1) / localSize;
+
+        glDispatchCompute(groupCount, 1, 1);
+
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
 
     void UpdateParticles() {
+        ProfilerOpenGLZoneFunction();
+
         BindSSBO(6, "ParticlePool");
         BindSSBO(7, "ParticleActiveIndices");
         BindSSBO(8, "ParticleDrawCommand");
@@ -75,10 +81,21 @@ namespace OpenGLRenderer {
         BindShader("ParticleUpdate");
         SetUniformFloat("u_deltaTime", Game::GetDeltaTime());
 
-        glDispatchCompute(1, 1, 1);
+        //glDispatchCompute(1, 1, 1);
+
+        ClearSSBORange("ParticleDrawCommand", offsetof(DrawArraysIndirectCommand, instanceCount), sizeof(uint32_t));
+
+        constexpr uint32_t localSize = 256;
+        constexpr uint32_t groupCount = (MAX_GPU_PARTICLES + localSize - 1) / localSize;
+        
+        glDispatchCompute(groupCount, 1, 1);
+        
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
     }
 
     void DrawParticles() {
+        ProfilerOpenGLZoneFunction();
+
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = GetCubemapView("SkyboxNightSky");
@@ -123,12 +140,6 @@ namespace OpenGLRenderer {
             SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
             SetUniformMat4("u_view", viewportData[i].view);
             SetUniformVec3("u_viewPos", viewportData[i].viewPos);
-
-            //for (int j = 0; j < MAX_GPU_PARTICLES; j++) {
-            //    SetUniformInt("u_particleIndex", j);
-            //    glDrawArrays(GL_TRIANGLES, 0, 6);
-            //
-            //}
 
             glDrawArraysIndirect(GL_TRIANGLES, 0);
         }

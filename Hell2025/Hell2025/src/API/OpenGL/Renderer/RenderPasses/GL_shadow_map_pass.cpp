@@ -97,7 +97,7 @@ namespace OpenGLRenderer {
             // Procedural
             shader->SetMat4("u_modelMatrix", glm::mat4(1.0f));
 
-            MeshBufferV2& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
+            MeshBuffer& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
             glBindVertexArray(proceduralMeshBuffer.GetVAO());
 
             const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
@@ -276,7 +276,7 @@ namespace OpenGLRenderer {
         // Make lights store a list of their HouseRenderItems per frustum face that is only updated when the map changes
         // That will be when a HousePlane or Wall is added/modified
 
-        MeshBufferV2& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
+        MeshBuffer& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
         glBindVertexArray(proceduralMeshBuffer.GetVAO());
         
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
@@ -375,7 +375,7 @@ namespace OpenGLRenderer {
                 shader->SetMat4("u_modelMatrix", glm::mat4(1.0f));
 
                 // Procedural
-                MeshBufferV2& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
+                MeshBuffer& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
                 glBindVertexArray(proceduralMeshBuffer.GetVAO());
 
                 //glDisable(GL_CULL_FACE);

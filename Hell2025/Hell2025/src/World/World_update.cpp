@@ -407,6 +407,8 @@ namespace World {
         CalculateGPULights();
         CalculateDirtyAABBs();
 
+        UpdateDirtyFlags();
+
         P90MagManager::SubmitRenderItems();
 
         // Volumetric blood

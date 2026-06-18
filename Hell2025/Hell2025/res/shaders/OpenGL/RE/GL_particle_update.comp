@@ -1,7 +1,7 @@
 #version 460
 #include "../../common/types.glsl"
 
-layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
 struct DrawArraysCommand {
     uint count;
@@ -14,44 +14,35 @@ restrict layout(std430, binding = 6) buffer Buffer6 { Particle particlePool[]; }
 restrict layout(std430, binding = 7) buffer Buffer7 { uint particleActiveIndices[]; };
 restrict layout(std430, binding = 8) buffer Buffer8 { DrawArraysCommand command; };
 
-#define MAX_GPU_PARTICLES 12000
+const uint MAX_GPU_PARTICLES = 12000u;
 
 uniform float u_deltaTime;
 
 void main() {
+    uint particleIndex = gl_GlobalInvocationID.x;
 
-    uint activeParticleCount = 0;
-
-    // Iterate the pool, and insert new particles in free slots
-    for (int i = 0; i < MAX_GPU_PARTICLES; i++) {
-
-        // Found a free slot?
-        if (particlePool[i].exists == 1u) {
-
-            // Add this particles index to the active indices list
-            particleActiveIndices[activeParticleCount] = i;
-            activeParticleCount++;
-
-            particlePool[i].velocity *= 0.99;
-            particlePool[i].rotationalVelocity *= 0.999;
-            particlePool[i].lifeTime += u_deltaTime;
-
-            // Remove if lifetime exceeds some value
-            if (particlePool[i].lifeTime > 0.5) {
-                particlePool[i].exists = 0u;
-            }
-
-            // Step physics
-            particlePool[i].position += particlePool[i].velocity * u_deltaTime;
-            particlePool[i].rotation += particlePool[i].rotationalVelocity * u_deltaTime;
-        }
+    if (particleIndex >= MAX_GPU_PARTICLES) {
+        return;
     }
-
-
-    // Now create the draw call
-    command.count = 6;
-    command.instanceCount = activeParticleCount;
-    command.firstVertex = 0;
-    command.baseInstance = 0;
-
+    
+    if (particlePool[particleIndex].exists == 0u) {
+        return;
+    }
+    
+    // Remove if lifetime exceeds some value
+    if (particlePool[particleIndex].lifeTime > 0.5) {
+        particlePool[particleIndex].exists = 0u;
+        return;
+    }
+    
+    // Step physics
+    particlePool[particleIndex].lifeTime += u_deltaTime * 1.25;
+    particlePool[particleIndex].velocity *= 0.99;
+    particlePool[particleIndex].rotationalVelocity *= 0.999;
+    particlePool[particleIndex].position += particlePool[particleIndex].velocity * u_deltaTime;
+    particlePool[particleIndex].rotation += particlePool[particleIndex].rotationalVelocity * u_deltaTime;
+    
+    // Add this particles index to the active indices list
+    uint activeParticleIndex = atomicAdd(command.instanceCount, 1u);
+    particleActiveIndices[activeParticleIndex] = particleIndex;
 }

@@ -19,7 +19,7 @@ out vec3 v_worldPos;
 
 const int u_rowCount = 10;
 const int u_columnCount = 10;
-const float u_animSpeed = 50.0;
+const float u_animSpeed = 200.0;
 
 void main() {
     // Vertex positions
@@ -54,7 +54,7 @@ void main() {
     v_uv = frameOffset + quadUV * vec2(frameWidth, frameHeight);
 
     // 2D rotation matrix
-    float angle = u_particleRotation;
+    float angle = u_particleRotation * 0.01;
     float c = cos(angle);
     float s = sin(angle);
     mat2 rotation = mat2(c, s, -s, c);
@@ -62,10 +62,12 @@ void main() {
     // Apply rotation to local quad coords
     vec2 rotatedPos = rotation * quadPos;
 
+    float scale = u_particleScale * 1.75;
+
     // Make quad face the camera in 3D space
     vec3 cameraRight = vec3(u_view[0][0], u_view[1][0], u_view[2][0]);
     vec3 cameraUp = vec3(u_view[0][1], u_view[1][1], u_view[2][1]);
-    v_worldPos = u_particlePosition + cameraRight * rotatedPos.x * u_particleScale + cameraUp * rotatedPos.y * u_particleScale;
+    v_worldPos = u_particlePosition + cameraRight * rotatedPos.x * scale + cameraUp * rotatedPos.y * scale;
 
     gl_Position = u_projectionView * vec4(v_worldPos, 1.0);
 }

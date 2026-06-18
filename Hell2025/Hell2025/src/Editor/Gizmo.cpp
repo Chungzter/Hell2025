@@ -63,7 +63,7 @@ namespace Gizmo {
     glm::vec3 g_gizmoPosition = glm::vec3(0.0, 0.0f, 0.0f);
     glm::quat g_gizmoRotationQ = glm::quat(glm::vec3(0.0f));
     std::vector<GizmoRenderItem> g_renderItems[4];
-    std::vector<MeshBuffer> g_meshBuffers;
+    std::vector<MeshBufferOLD> g_meshBuffers;
     GizmoFlag g_hoverFlag = GizmoFlag::NONE;
     GizmoFlag g_actionFlag = GizmoFlag::NONE;
     GizmoAction g_action = GizmoAction::IDLE;
@@ -132,7 +132,7 @@ namespace Gizmo {
         g_meshBuffers[CUBE].UpdateBuffers();
     }
 
-    MeshBuffer* GetMeshBufferByIndex(int index) {
+    MeshBufferOLD* GetMeshBufferByIndex(int index) {
         if (index >= 0 && index < static_cast<int>(g_meshBuffers.size())) {
             return g_meshBuffers.data() + index;
         }
@@ -206,7 +206,7 @@ namespace Gizmo {
         g_gizmoHasHover = false;
         g_hoverFlag = GizmoFlag::NONE;
         for (GizmoRenderItem& renderItem : g_renderItems[viewportIndex]) {
-            MeshBuffer* mesh = Gizmo::GetMeshBufferByIndex(renderItem.meshIndex);
+            MeshBufferOLD* mesh = Gizmo::GetMeshBufferByIndex(renderItem.meshIndex);
             if (mesh) {
                 std::vector<Vertex>& vertices = mesh->GetVertices();
                 std::vector<uint32_t>& indices = mesh->GetIndices();

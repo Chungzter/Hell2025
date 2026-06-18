@@ -51,7 +51,7 @@ namespace OpenGLRenderer {
         //OpenGLMeshBuffer& glHouseMeshBuffer = houseMeshBuffer.GetGLMeshBuffer();
         //glBindVertexArray(glHouseMeshBuffer.GetVAO());
 
-        MeshBufferV2& meshBuffer = Renderer::GetProceduralMeshBuffer();
+        MeshBuffer& meshBuffer = Renderer::GetProceduralMeshBuffer();
         glBindVertexArray(meshBuffer.GetVAO());
 
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
@@ -368,7 +368,7 @@ namespace OpenGLRenderer {
                 for (ChristmasLightSet& lights : World::GetChristmasLightSets()) {
                     std::vector<Wire>& wires = lights.GetWires();
                     for (Wire& wire : wires) {
-                        MeshBuffer& meshBuffer = wire.GetMeshBuffer();
+                        MeshBufferOLD& meshBuffer = wire.GetMeshBuffer();
                         OpenGLMeshBuffer& glMeshBuffer = meshBuffer.GetGLMeshBuffer();
                         glBindVertexArray(glMeshBuffer.GetVAO());
                         glDrawElements(GL_TRIANGLES, glMeshBuffer.GetIndexCount(), GL_UNSIGNED_INT, 0);
@@ -379,7 +379,7 @@ namespace OpenGLRenderer {
                 for (PowerPoleSet& powerPoleSet : World::GetPowerPoleSets()) {
                     std::vector<Wire>& wires = powerPoleSet.GetWires();
                     for (Wire& wire : wires) {
-                        MeshBuffer& meshBuffer = wire.GetMeshBuffer();
+                        MeshBufferOLD& meshBuffer = wire.GetMeshBuffer();
                         OpenGLMeshBuffer& glMeshBuffer = meshBuffer.GetGLMeshBuffer();
                         glBindVertexArray(glMeshBuffer.GetVAO());
                         glDrawElements(GL_TRIANGLES, glMeshBuffer.GetIndexCount(), GL_UNSIGNED_INT, 0);
@@ -408,7 +408,7 @@ namespace OpenGLRenderer {
                     RagdollV2& ragdoll = it->second;
 
                     if (ragdoll.RenderingEnabled()) {
-                        MeshBuffer& meshBuffer = ragdoll.GetMeshBuffer();
+                        MeshBufferOLD& meshBuffer = ragdoll.GetMeshBuffer();
                         glBindVertexArray(meshBuffer.GetGLMeshBuffer().GetVAO());
 
                         for (int j = 0; j < meshBuffer.GetMeshCount(); j++) {
@@ -596,7 +596,7 @@ namespace OpenGLRenderer {
         houseGeometryShader->SetMat4("u_model", glm::mat4(1));
         houseGeometryShader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
-        MeshBufferV2& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
+        MeshBuffer& proceduralMeshBuffer = Renderer::GetProceduralMeshBuffer();
         glBindVertexArray(proceduralMeshBuffer.GetVAO());
 
         for (int i = 0; i < 4; i++) {

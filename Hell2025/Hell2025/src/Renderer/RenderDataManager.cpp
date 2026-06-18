@@ -600,7 +600,7 @@ namespace RenderDataManager {
         std::unordered_map<uint64_t, std::size_t> commandMap;
         commands.reserve(renderItems.size());
 
-        MeshBufferV2& meshBuffer = Renderer::GetProceduralMeshBuffer();
+        MeshBuffer& meshBuffer = Renderer::GetProceduralMeshBuffer();
 
         for (const RenderItem& renderItem : renderItems) {
             uint64_t meshId = renderItem.meshId;

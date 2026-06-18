@@ -8,18 +8,18 @@ BulletTrail::BulletTrail(uint64_t id, BulletCreateInfo& createInfo) {
 
     m_position = createInfo.origin;
     m_forward = createInfo.direction;
-    m_speed = 60.0f;
+    m_speed = 440.0f;
     m_distanceTraveled = 0.0f;
-    m_maxDistance = 10.0f;
+    m_maxDistance = 100.0f;
     m_phaseAccumulator = 0.0f;
     m_randomPhaseOffset = (static_cast<float>(rand()) / RAND_MAX) * 100.0f;
 }
 
 void BulletTrail::Update(float deltaTime) {
 
-    float spiralFrequency = 3.0f;
-    float spiralScale = 0.01f;
-    float particleSpacing = 0.005f;
+    float spiralFrequency = 1.0f;
+    float spiralScale = 0.005f;
+    float particleSpacing = 0.0025f;
 
     // TODO:
     // update bullet.maxDistance with any BVH of PhysX scene hit, plus some threshold so bullets still register
@@ -64,7 +64,7 @@ void BulletTrail::Update(float deltaTime) {
         float jitterX = Util::RandomFloat(-1.0f, 1.0f);
         float jitterY = Util::RandomFloat(-1.0f, 1.0f);
         float jitterZ = Util::RandomFloat(-1.0f, 1.0f);
-        particle.position += glm::vec3(jitterX, jitterY, jitterZ) * 0.015f;
+        particle.position += glm::vec3(jitterX, jitterY, jitterZ) * 0.0015f;
 
         // Particle velocity
         float driftSpeed = Util::RandomFloat(0.05f, 0.2f);

@@ -2,7 +2,7 @@
 #include <Hell/Types.h>
 #include <Hell/CreateInfo.h>
 #include "DeadLock.h"
-#include "Types/Renderer/MeshBuffer.h"
+#include "Types/Renderer/MeshBufferOLD.h"
 #include "Types/Renderer/MeshNodes.h"
 #include "Types/Renderer/Model.h"
 
@@ -55,8 +55,8 @@ struct Door {
     const bool GetDeadLockedAtInitState() const                         { return m_createInfo.deadLockedAtInit; }
     const AABB& GetPhsyicsAABB() const                                  { return m_physicsAABB; }
 
-    MeshBuffer m_raytracingDoorMesh;
-    MeshBuffer m_raytracingFrameMesh;
+    MeshBufferOLD m_raytracingDoorMesh;
+    MeshBufferOLD m_raytracingFrameMesh;
 
 private:
     void UpdateWorldForward();

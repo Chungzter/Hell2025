@@ -16,7 +16,7 @@
 #include "Input/Input.h"
 
 
-#include "Types/Renderer/MeshBufferV2.h"
+#include "Types/Renderer/MeshBuffer.h"
 
 namespace OpenGLRenderer {
     OpenGLMesh g_debugMeshPoints2D;
@@ -82,7 +82,7 @@ namespace OpenGLRenderer {
         //    meshBuffer.PrintDebugInfo();
         //}
 
-        MeshBufferV2& meshBuffer = Renderer::GetProceduralMeshBuffer();
+        MeshBuffer& meshBuffer = Renderer::GetProceduralMeshBuffer();
 
         // Draw
         glEnable(GL_DEPTH_TEST);

@@ -68,6 +68,7 @@ void main() {
     finalColor *= UNDER_WATER_TINT;
 
     a *= u_particleAlphaFade;
+    a *= 0.0325;
 
     ColorOut = vec4(finalColor, a);
 }

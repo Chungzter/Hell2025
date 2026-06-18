@@ -1,32 +1,74 @@
 #pragma once
-#include "../API/OpenGL/Types/GL_mesh_buffer.h"
-#include "../API/Vulkan/Types/vk_detachedMesh.h"
-#include "../BackEnd/BackEnd.h"
 #include "Mesh.h"
+#include <Hell/Types.h>
+
+#include <span>
+#include <vector>
+#include <unordered_map>
+
+struct MemoryBlock {
+    size_t begin = 0;
+    size_t end = 0;
+    size_t GetSize() const { return end - begin; }
+};
 
 struct MeshBuffer {
-    uint32_t AddMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name = "UNDEFINED");
-    Mesh* GetMeshByIndex(uint32_t meshIndex); 
-    void SetName(const std::string& name);
-    void UpdateBuffers();
+    MeshBuffer() = default;
+    ~MeshBuffer() = default;
+    MeshBuffer(const MeshBuffer&) = delete;
+    MeshBuffer& operator=(const MeshBuffer&) = delete;
+    MeshBuffer(MeshBuffer&&) = delete;
+    MeshBuffer& operator=(MeshBuffer&&) = delete;
+
+    void PreAllocate(size_t maxVertices, size_t maxIndices);
+    void RemoveMesh(uint64_t meshIndex);
     void Reset();
+    void PrintDebugInfo();
 
-    std::string& GetName()                  { return m_name; }
-    OpenGLMeshBuffer& GetGLMeshBuffer()     { return m_opengMeshBuffer; }
-    VulkanDetachedMesh& GetVKMesh()         { return m_vulkanDetachedMesh; }
-    std::vector<Vertex>& GetVertices()      { return m_vertices; }
-    std::vector<uint32_t>& GetIndices()     { return m_indices; }
-    int GetMeshCount()                      { return (int)m_meshes.size(); }
+    uint64_t AddMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name = UNDEFINED_STRING);
 
-    glm::vec3 m_aabbMin = glm::vec3(std::numeric_limits<float>::max());
-    glm::vec3 m_aabbMax = glm::vec3(-std::numeric_limits<float>::max());
+    Mesh* GetMeshById(uint64_t meshId);
+    std::span<Vertex> GetMeshVertexSpan(uint64_t meshId);
+    std::span<uint32_t> GetMeshIndexSpan(uint64_t meshId);
 
-    std::string m_name;
-    std::vector<Vertex> m_vertices;
-    std::vector<uint32_t> m_indices;
+    size_t GetMeshCount()               { return m_meshes.size(); }
+    size_t GetAllocatedVertexCount()    { return m_vertices.size(); }
+    size_t GetAllocatedIndexCount()     { return m_indices.size(); }
+    std::vector<Vertex>& GetVertices()  { return m_vertices; }
+    std::vector<uint32_t>& GetIndices() { return m_indices; }
+
+    // OpenGL
+    const uint32_t GetVAO() const { return m_vao; }
+    const uint32_t GetVBO() const { return m_vbo; }
+    const uint32_t GetEBO() const { return m_ebo; }
 
 private:
-    std::vector<Mesh> m_meshes;
-    OpenGLMeshBuffer m_opengMeshBuffer;
-    VulkanDetachedMesh m_vulkanDetachedMesh;
+    void Initilize();
+    int32_t AllocateExtraVertexSpace(size_t vertexCount);
+    int32_t AllocateExtraIndexSpace(size_t indexCount);
+    int32_t AddVertices(const std::vector<Vertex>& newVertices);
+    int32_t AddIndices(const std::vector<uint32_t>& newIndices);
+
+    std::vector<Vertex> m_vertices;
+    std::vector<uint32_t> m_indices;
+    std::unordered_map<uint64_t, Mesh> m_meshes;
+    std::vector<MemoryBlock> m_freeVertexMemoryBlocks;
+    std::vector<MemoryBlock> m_freeIndexMemoryBlocks;
+    uint64_t m_nextMeshId = 0;
+    bool m_initilized = false;
+
+    // OpenGL
+    void InitOpenGL();
+    void ResetOpenGL();
+    void InsertVerticesToOpenGLVertexBuffer(const std::vector<Vertex>& vertices, uint32_t insertOffset);
+    void InsertIndicesToOpenGLIndexBuffer(const std::vector<uint32_t>& indices, uint32_t insertOffset);
+    void PreAllocateOpenGL(size_t maxVertices, size_t maxIndices);
+    void ResizeOpenGLVertexBuffer(size_t totalCount);
+    void ResizeOpenGLIndexBuffer(size_t totalCount);
+
+    uint32_t m_vao = 0;
+    uint32_t m_vbo = 0;
+    uint32_t m_ebo = 0;
+    size_t m_vertexGpuCapacity = 0;
+    size_t m_indexGpuCapacity = 0;
 };

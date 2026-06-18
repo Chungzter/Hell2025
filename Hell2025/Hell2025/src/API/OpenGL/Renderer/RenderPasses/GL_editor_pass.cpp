@@ -44,7 +44,7 @@ namespace OpenGLRenderer {
 
                 if (Editor::GetSelectedObjectType() != ObjectType::NO_TYPE) {
                     for (GizmoRenderItem& renderItem : Gizmo::GetRenderItemsByViewportIndex(i)) {
-                        MeshBuffer* mesh = Gizmo::GetMeshBufferByIndex(renderItem.meshIndex);
+                        MeshBufferOLD* mesh = Gizmo::GetMeshBufferByIndex(renderItem.meshIndex);
                         if (mesh) {
                             OpenGLMeshBuffer glMesh = mesh->GetGLMeshBuffer();
                             shader->SetMat4("model", renderItem.modelMatrix);

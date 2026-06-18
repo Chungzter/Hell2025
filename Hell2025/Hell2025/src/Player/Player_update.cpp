@@ -91,9 +91,8 @@ void Player::Update(float deltaTime) {
 
     // Running
     m_running = PressingRun() && !m_crouching;
-    m_runningSpeed = 20;
 
-    m_running = false; // REMOVE ME TO ENABLE SPRINTING
+    //m_running = false; // REMOVE ME TO ENABLE SPRINTING
 
     // Respawn
     if (IsAwaitingSpawn()) Respawn();

@@ -1,5 +1,5 @@
 #pragma once
-#include "Types/Renderer/MeshBuffer.h"
+#include "Types/Renderer/MeshBufferOLD.h"
 #include "Physics/Physics.h"
 #include "RagdollInfo.h"
 #include "Types.h"
@@ -22,7 +22,7 @@ struct RagdollV2 {
 
     bool RenderingEnabled()                     { return m_renderingEnabled; }
     uint64_t GetRagdollId()                     { return m_ragdollId; }
-    MeshBuffer& GetMeshBuffer()                 { return m_meshBuffer; }
+    MeshBufferOLD& GetMeshBuffer()                 { return m_meshBuffer; }
     const std::string& GetRagdollName() const   { return m_ragdollName; }
     glm::vec3 GetMarkerColorByRigidIndex(uint32_t index) const;
     glm::mat4 GetModelMatrixByRigidIndex(uint32_t index) const;
@@ -36,7 +36,7 @@ private:
     std::vector<PxD6Joint*> m_pxD6Joints;
     std::vector<glm::vec3> m_markerColors;
     std::string m_ragdollName;
-    MeshBuffer m_meshBuffer;
+    MeshBufferOLD m_meshBuffer;
     Transform m_spawnTransform;
     uint64_t m_ragdollId;
     float m_scale = 1.0f;

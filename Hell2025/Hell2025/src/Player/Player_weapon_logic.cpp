@@ -437,7 +437,7 @@ void Player::SpawnUnderWaterBullet(float variance) {
     WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
 
     glm::vec3 vanishingPoint = GetCameraPosition() + (GetCameraForward() * 1000.0f);
-    glm::vec3 origin = GetMuzzleFlashSpawnPosition();
+    glm::vec3 origin = GetMuzzleFlashSpawnPosition() + GetCameraForward() * 0.05f;
     glm::vec3 bulletDirection = glm::normalize(vanishingPoint - GetCameraPosition());
 
     bulletDirection.x += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);

@@ -2,7 +2,7 @@
 #include "Math/AABB.h"
 #include "Math/OBB.h"
 #include "Types/Map/Map.h"
-#include <Types/Renderer/MeshBufferV2.h>
+#include "Types/Renderer/MeshBuffer.h"
 
 #include <Hell/Types.h>
 
@@ -60,7 +60,7 @@ namespace Renderer {
     RendererSettings& GetCurrentRendererSettings();
 
     // Procedural mesh
-    MeshBufferV2& GetProceduralMeshBuffer();
+    MeshBuffer& GetProceduralMeshBuffer();
     Mesh* GetProcedualMeshByMeshId(uint64_t meshId);
     uint64_t AddProcedualMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name = UNDEFINED_STRING);
     void RemoveProcedualMeshByMeshId(uint64_t meshId);

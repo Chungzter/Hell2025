@@ -9,8 +9,8 @@
 
 namespace AStarMap {
 
-    MeshBuffer g_debugGridMeshBuffer;
-    MeshBuffer g_debuGSolidMeshBuffer;
+    MeshBufferOLD g_debugGridMeshBuffer;
+    MeshBufferOLD g_debuGSolidMeshBuffer;
     glm::vec3 g_mapWorldSpaceOffset = glm::vec3(10.0f, 30.5f, 10.0f);
 
     std::vector<int> g_map;
@@ -264,6 +264,6 @@ namespace AStarMap {
     int GetCellCount()                      { return g_mapWidth * g_mapHeight; }
     int GetMapWidth()                       { return g_mapWidth; }
     int GetMapHeight()                      { return g_mapHeight; }
-    MeshBuffer& GetDebugGridMeshBuffer()    { return g_debugGridMeshBuffer; }
-    MeshBuffer& GetDebugSolidMeshBuffer()   { return g_debuGSolidMeshBuffer; }
+    MeshBufferOLD& GetDebugGridMeshBuffer()    { return g_debugGridMeshBuffer; }
+    MeshBufferOLD& GetDebugSolidMeshBuffer()   { return g_debuGSolidMeshBuffer; }
 }

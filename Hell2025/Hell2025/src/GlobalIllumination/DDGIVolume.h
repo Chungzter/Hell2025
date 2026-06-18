@@ -3,7 +3,7 @@
 #include <Hell/Types.h>
 
 #include "PointCloud.h"
-#include "Types/Renderer/MeshBuffer.h"
+#include "Types/Renderer/MeshBufferOLD.h"
 
 struct DDGIVolume {
     DDGIVolume() = default;
@@ -60,7 +60,7 @@ struct DDGIVolume {
     uint32_t GetPointCloudCount() const                                        { return m_pointCloud.GetPointCount(); }
     uint32_t GetProbePointIndexPoolSize() const                                { return m_probePointIndexPoolSize; }
 
-    MeshBuffer m_staticMeshBuffer;
+    MeshBufferOLD m_staticMeshBuffer;
 
 private:
     void UpdateMembers();

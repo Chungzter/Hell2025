@@ -4,7 +4,7 @@
 uniform mat4 u_view;
 uniform mat4 u_projectionView;
 
-const float SCALE = 0.0035;
+const float SCALE = 0.005;
 
 out vec2 v_uv;
 out vec3 v_worldPos;

@@ -1,7 +1,7 @@
 #pragma once
 #include <Hell/Types.h>
 #include <Hell/CreateInfo.h>
-#include "Types/Renderer/MeshBuffer.h"
+#include "Types/Renderer/MeshBufferOLD.h"
 #include "Types/Generics/Wire.h"
 
 struct GPUChristmasLight {
@@ -32,7 +32,7 @@ struct ChristmasLightSet {
     float spiralHeight;
     float m_time = 0;
 
-    MeshBuffer m_meshBuffer;
+    MeshBufferOLD m_meshBuffer;
     std::vector<glm::vec3> m_wireSegmentPoints;
     std::vector<glm::vec3> m_lightSpawnPoints;
 

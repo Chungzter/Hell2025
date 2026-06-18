@@ -9,7 +9,6 @@
 #include "Ragdoll/RagdollManager.h"
 #include "Core/Game.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
 #include "Editor/Editor.h"
 
 Light::Light(uint64_t id, LightCreateInfo& createInfo, SpawnOffset& spawnOffset) {
@@ -23,7 +22,6 @@ Light::Light(uint64_t id, LightCreateInfo& createInfo, SpawnOffset& spawnOffset)
 
 void Light::Update(float deltaTime) {
     UpdateMatricesAndFrustum();
-    UpdateDirtyState();
 
     if (m_doFlicker) {
         m_lightFlicker.Update(Game::GetDeltaTime() * 10, Game::GetTotalTime() * 10);
@@ -180,6 +178,7 @@ void Light::ConfigureMeshNodes() {
 
 }
 
+/*
 void Light::UpdateDirtyState() {
 
     //float deltaTime = Game::GetDeltaTime();
@@ -267,7 +266,7 @@ void Light::UpdateDirtyState() {
     //    }
     //    it++;
     //}
-}
+}*/
 
 void Light::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;

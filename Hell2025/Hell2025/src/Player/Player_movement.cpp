@@ -7,6 +7,8 @@
 #include "World/World.h"
 #include "Util.h"
 
+#include "Core/Game.h" // for total time
+
 void Player::UpdateMovement(float deltaTime) {
 
     // Hack to move camera height debug keys faster when pressing SHIFT and the logic to do so
@@ -56,6 +58,7 @@ void Player::UpdateWalkingMovement(float deltaTime) {
         float airbornDamping = 2.5f;
 
         m_walkingSpeed = 4.25f;
+        m_runningSpeed = 3.0f;
         m_crouchingSpeed = 2.325f;
 
         glm::vec3 inputDirection = glm::vec3(0.0f);
@@ -157,6 +160,11 @@ void Player::UpdateWalkingMovement(float deltaTime) {
             m_crouching = true;
             m_moving = false;
         }
+    }
+
+    if (PressingWalkForward()) {
+        std::cout << GetTargetWalkingSpeed() << " " << IsRunning() << "\n";
+        //std::cout << GetFootPosition() << " " << Game::GetTotalTime() << " " << m_acceleration << "\n";
     }
 }
 

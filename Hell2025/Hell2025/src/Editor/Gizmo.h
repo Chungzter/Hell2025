@@ -1,5 +1,5 @@
 #pragma once
-#include "Types/Renderer/MeshBuffer.h"
+#include "Types/Renderer/MeshBufferOLD.h"
 #include <vector>
 
 enum class GizmoMode {
@@ -43,7 +43,7 @@ namespace Gizmo {
     void UpdateRenderItems();
 
     std::vector<GizmoRenderItem>& GetRenderItemsByViewportIndex(int index);
-    MeshBuffer* GetMeshBufferByIndex(int index);
+    MeshBufferOLD* GetMeshBufferByIndex(int index);
     const std::string GizmoFlagToString(const GizmoFlag& flag);
     const glm::vec3 GetPosition();
     const glm::vec3 GetRotation();

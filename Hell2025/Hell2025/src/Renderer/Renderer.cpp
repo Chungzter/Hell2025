@@ -16,7 +16,7 @@
 namespace Renderer {
 
     std::vector<bool> g_freeWoundMaskIndices;
-    MeshBufferV2 g_proceduralMeshBuffer;
+    MeshBuffer g_proceduralMeshBuffer;
 
     bool g_gameIsRendering = false;
 
@@ -310,7 +310,7 @@ namespace Renderer {
         return g_gameIsRendering;
     }
 
-    MeshBufferV2& GetProceduralMeshBuffer() {
+    MeshBuffer& GetProceduralMeshBuffer() {
         return g_proceduralMeshBuffer;
     }
 

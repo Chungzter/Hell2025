@@ -53,7 +53,7 @@ inline std::string lastSegment(std::string s) {
 namespace RagdollManager {
     std::unordered_map<std::string, RagdollInfo> g_ragdollInfoSet; // Maps RagdollInfo to filename
     std::unordered_map<uint64_t, RagdollV2> g_ragdolls;
-    MeshBuffer g_meshBuffer;
+    MeshBufferOLD g_meshBuffer;
 
     void LoadFile(const FileInfo& fileInfo);
     void LoadMarkers(RagdollInfo& ragdoll, rapidjson::Document& doc);

@@ -1,5 +1,5 @@
 #pragma once
-#include "Types/Renderer/MeshBuffer.h"
+#include "Types/Renderer/MeshBufferOLD.h"
 #include <vector>
 
 namespace AStarMap {
@@ -19,6 +19,6 @@ namespace AStarMap {
     glm::ivec2 GetCellCoordsFromWorldSpacePosition(glm::vec3 position);
     glm::vec3 GetWorldSpacePositionFromCellCoords(glm::ivec2 cellCoords);
 
-    MeshBuffer& GetDebugGridMeshBuffer(); 
-    MeshBuffer& GetDebugSolidMeshBuffer();
+    MeshBufferOLD& GetDebugGridMeshBuffer(); 
+    MeshBufferOLD& GetDebugSolidMeshBuffer();
 }

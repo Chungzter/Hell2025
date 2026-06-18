@@ -159,11 +159,20 @@ namespace OpenGLRenderer {
         // Particles
         CreateSSBO("ParticlePool", sizeof(GpuParticle)* MAX_GPU_PARTICLES, GL_DYNAMIC_STORAGE_BIT);
         CreateSSBO("ParticleAdditions", sizeof(GpuParticle) * MAX_GPU_PARTICLES, GL_DYNAMIC_STORAGE_BIT);
+        CreateSSBO("ParticleAdditionCounter", sizeof(uint32_t), GL_DYNAMIC_STORAGE_BIT);
         CreateSSBO("ParticleActiveIndices", sizeof(uint32_t) * MAX_GPU_PARTICLES, GL_DYNAMIC_STORAGE_BIT);
         CreateSSBO("ParticleDrawCommand", sizeof(DrawArraysIndirectCommand), GL_DYNAMIC_STORAGE_BIT);
 
         ClearSSBO("ParticlePool");
         ClearSSBO("ParticleAdditions");
+
+        // Init draw command
+        DrawArraysIndirectCommand particleDrawCommand;
+        particleDrawCommand.vertexCount = 6;
+        particleDrawCommand.instanceCount = 0;
+        particleDrawCommand.firstVertex = 0;
+        particleDrawCommand.baseInstance = 0;
+        UploadSSBOStatic("ParticleDrawCommand", sizeof(DrawArraysIndirectCommand), &particleDrawCommand);
     }
 
     void LoadShadersRE() {

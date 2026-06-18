@@ -66,11 +66,13 @@ void main() {
 
     // Dampen
     finalColor *= 0.5;
-    a *= 0.5;
 
 
-    a -= v_lifetime;
+    a -= v_lifetime * 2;
+    //a += 0.5;
     a = clamp(a, 0, 1);
+
+    a *= 0.25;
 
     ColorOut = vec4(finalColor, a);
 }

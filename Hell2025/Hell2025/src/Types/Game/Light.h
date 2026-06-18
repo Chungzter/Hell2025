@@ -60,16 +60,13 @@ struct Light {
     void SetIESProfileType(IESProfileType type);
     void UpdateMatricesAndFrustum();
     void ForceDirty();
+
     void ConfigureMeshNodes();
 
-    // Remove me (NO KEEP ME)
-    //void SetCullBoundsMinX(float x);
-    //void SetCullBoundsMinY(float y);
-    //void SetCullBoundsMinZ(float z);
-    //void SetCullBoundsMaxX(float x);
-    //void SetCullBoundsMaxY(float y);
-    //void SetCullBoundsMaxZ(float z);
-    // Remove me
+    void SetShadowMapDirtyFlag(bool value) { m_dirtyForShadowMaps = value; }
+
+    bool IsDirtyForShadowMaps() const      { return m_dirtyForShadowMaps; }
+    bool IsForcedDirty() const             { return m_forcedDirty; }
 
     Frustum* GetFrustumByFaceIndex(uint32_t faceIndex);
 
@@ -77,7 +74,6 @@ struct Light {
     LightType GetType() const                                  { return m_createInfo.type; }
     const glm::mat4 GetProjectionView(int index) const         { return m_projectionTransforms[index]; }
 	const glm::mat4 GetProjectionViewReverseZ(int index) const { return m_projectionTransformsReverseZ[index]; }
-    const bool IsDirtyForShadowMaps() const                    { return m_dirtyForShadowMaps; }
     const bool IsDirtyForRaytracing() const                    { return m_dirtyForRaytracing; }
     const float GetRadius() const                              { return m_createInfo.radius; }
     const float GetStrength() const                            { return m_createInfo.strength; }
@@ -101,7 +97,7 @@ struct Light {
     LightFlicker m_lightFlicker;
 
 private:
-    void UpdateDirtyState();
+    //void UpdateDirtyState();
 
 	MeshNodes m_meshNodes;
     bool m_forcedDirty = false;

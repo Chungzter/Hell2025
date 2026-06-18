@@ -1,13 +1,13 @@
 #pragma once
 #include <Hell/Types.h>
-#include "Types/Renderer/MeshBuffer.h"
+#include "Types/Renderer/MeshBufferOLD.h"
 
 struct Wire {
     void Init(glm::vec3 begin, glm::vec3 end, float sag, float radius, float spacing);
     void Update();
     void CleanUp();
 
-    MeshBuffer& GetMeshBuffer()                             { return m_meshBuffer; }
+    MeshBufferOLD& GetMeshBuffer()                             { return m_meshBuffer; }
     const std::vector<glm::vec3>& GetSegmentPoints() const  { return m_segmentPoints; }
 
 private:
@@ -16,5 +16,5 @@ private:
     glm::vec3 m_begin = glm::vec3(0.0f);
     glm::vec3 m_end = glm::vec3(0.0f);
     std::vector<glm::vec3> m_segmentPoints;
-    MeshBuffer m_meshBuffer;
+    MeshBufferOLD m_meshBuffer;
 };
