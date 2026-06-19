@@ -9,7 +9,7 @@
 #include <iostream>
 #include <mutex>
 
-namespace ImageTools {
+namespace Hell::ImageTools {
 
     namespace {
 

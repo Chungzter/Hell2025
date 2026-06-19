@@ -1,6 +1,6 @@
 #pragma once
 #include <Hell/Types.h>
-#include <Hell/SlotMap.h>
+#include "Hell/Containers/SlotMap.h"
 
 #include "Debug/Debug.h"
 #include "Types/Characters/Allies/Mermaid/Mermaid.h"

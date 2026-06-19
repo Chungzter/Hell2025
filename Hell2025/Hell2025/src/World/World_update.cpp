@@ -17,7 +17,7 @@
 #include "Bible/Bible.h"
 #include "Types/Misc/DoorChain.h"
 
-#include <Hell/SlotMap.h>
+#include "Hell/Containers/SlotMap.h"
 
 namespace World {
 

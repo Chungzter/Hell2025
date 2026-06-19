@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <optional>
 
-namespace ImageTools::DDS {
+namespace Hell::ImageTools::DDS {
 
     inline constexpr uint32_t Magic = 0x20534444; // "DDS "
     inline constexpr uint32_t HeaderSize = 124;
@@ -68,35 +68,35 @@ namespace ImageTools::DDS {
     inline std::optional<FormatInfo> GetFormatInfo(const Header& header, const HeaderDX10* dx10Header) {
         if (header.fourCC == FourCCDxt1) {
             // Legacy DXT1 does not reliably advertise punch-through alpha in its pixel masks.
-            return FormatInfo { ImageFormat::BC1_RGBA_UNORM, 8 };
+            return FormatInfo{ ImageFormat::BC1_RGBA_UNORM, 8 };
         }
         if (header.fourCC == FourCCDxt3) {
-            return FormatInfo { ImageFormat::BC2_RGBA_UNORM, 16 };
+            return FormatInfo{ ImageFormat::BC2_RGBA_UNORM, 16 };
         }
         if (header.fourCC == FourCCDxt5) {
-            return FormatInfo { ImageFormat::BC3_RGBA_UNORM, 16 };
+            return FormatInfo{ ImageFormat::BC3_RGBA_UNORM, 16 };
         }
         if (header.fourCC == FourCCAti1 || header.fourCC == FourCCBc4U) {
-            return FormatInfo { ImageFormat::BC4_R_UNORM, 8 };
+            return FormatInfo{ ImageFormat::BC4_R_UNORM, 8 };
         }
         if (header.fourCC == FourCCAti2 || header.fourCC == FourCCBc5U) {
-            return FormatInfo { ImageFormat::BC5_RG_UNORM, 16 };
+            return FormatInfo{ ImageFormat::BC5_RG_UNORM, 16 };
         }
         if (header.fourCC == FourCCDx10 && dx10Header) {
             switch (dx10Header->dxgiFormat) {
-                case 71: return FormatInfo { ImageFormat::BC1_RGBA_UNORM, 8 };  // DXGI_FORMAT_BC1_UNORM
-                case 72: return FormatInfo { ImageFormat::BC1_RGBA_SRGB, 8 };   // DXGI_FORMAT_BC1_UNORM_SRGB
-                case 74: return FormatInfo { ImageFormat::BC2_RGBA_UNORM, 16 }; // DXGI_FORMAT_BC2_UNORM
-                case 75: return FormatInfo { ImageFormat::BC2_RGBA_SRGB, 16 };  // DXGI_FORMAT_BC2_UNORM_SRGB
-                case 77: return FormatInfo { ImageFormat::BC3_RGBA_UNORM, 16 }; // DXGI_FORMAT_BC3_UNORM
-                case 78: return FormatInfo { ImageFormat::BC3_RGBA_SRGB, 16 };  // DXGI_FORMAT_BC3_UNORM_SRGB
-                case 80: return FormatInfo { ImageFormat::BC4_R_UNORM, 8 };     // DXGI_FORMAT_BC4_UNORM
-                case 83: return FormatInfo { ImageFormat::BC5_RG_UNORM, 16 };   // DXGI_FORMAT_BC5_UNORM
-                case 95: return FormatInfo { ImageFormat::BC6H_RGB_UFLOAT, 16 };// DXGI_FORMAT_BC6H_UF16
-                case 96: return FormatInfo { ImageFormat::BC6H_RGB_SFLOAT, 16 };// DXGI_FORMAT_BC6H_SF16
-                case 98: return FormatInfo { ImageFormat::BC7_RGBA_UNORM, 16 }; // DXGI_FORMAT_BC7_UNORM
-                case 99: return FormatInfo { ImageFormat::BC7_RGBA_SRGB, 16 };  // DXGI_FORMAT_BC7_UNORM_SRGB
-                default: return std::nullopt;
+            case 71: return FormatInfo{ ImageFormat::BC1_RGBA_UNORM, 8 };  // DXGI_FORMAT_BC1_UNORM
+            case 72: return FormatInfo{ ImageFormat::BC1_RGBA_SRGB, 8 };   // DXGI_FORMAT_BC1_UNORM_SRGB
+            case 74: return FormatInfo{ ImageFormat::BC2_RGBA_UNORM, 16 }; // DXGI_FORMAT_BC2_UNORM
+            case 75: return FormatInfo{ ImageFormat::BC2_RGBA_SRGB, 16 };  // DXGI_FORMAT_BC2_UNORM_SRGB
+            case 77: return FormatInfo{ ImageFormat::BC3_RGBA_UNORM, 16 }; // DXGI_FORMAT_BC3_UNORM
+            case 78: return FormatInfo{ ImageFormat::BC3_RGBA_SRGB, 16 };  // DXGI_FORMAT_BC3_UNORM_SRGB
+            case 80: return FormatInfo{ ImageFormat::BC4_R_UNORM, 8 };     // DXGI_FORMAT_BC4_UNORM
+            case 83: return FormatInfo{ ImageFormat::BC5_RG_UNORM, 16 };   // DXGI_FORMAT_BC5_UNORM
+            case 95: return FormatInfo{ ImageFormat::BC6H_RGB_UFLOAT, 16 };// DXGI_FORMAT_BC6H_UF16
+            case 96: return FormatInfo{ ImageFormat::BC6H_RGB_SFLOAT, 16 };// DXGI_FORMAT_BC6H_SF16
+            case 98: return FormatInfo{ ImageFormat::BC7_RGBA_UNORM, 16 }; // DXGI_FORMAT_BC7_UNORM
+            case 99: return FormatInfo{ ImageFormat::BC7_RGBA_SRGB, 16 };  // DXGI_FORMAT_BC7_UNORM_SRGB
+            default: return std::nullopt;
             }
         }
         return std::nullopt;

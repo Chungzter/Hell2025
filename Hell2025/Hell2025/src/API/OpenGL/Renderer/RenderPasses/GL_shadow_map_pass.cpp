@@ -5,10 +5,12 @@
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "World/World.h"
 
 #include "Ragdoll/RagdollManager.h"
+
+using namespace Hell;
 
 namespace OpenGLRenderer {
 

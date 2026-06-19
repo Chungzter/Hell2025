@@ -32,14 +32,12 @@ struct Vertex2D {
     glm::vec2 position;
     glm::vec2 uv = glm::vec2(0);
     glm::vec4 color = glm::vec4(1);
-    int32_t textureIndex = 0;
 
     static VertexLayoutDescription GetLayout() {
-        static constexpr std::array<VertexAttribute, 4> attributes = {
+        static constexpr std::array<VertexAttribute, 3> attributes = {
             VertexAttribute { 0, 2, VertexAttributeType::Float, false, offsetof(Vertex2D, position) },
             VertexAttribute { 1, 2, VertexAttributeType::Float, false, offsetof(Vertex2D, uv) },
-            VertexAttribute { 2, 4, VertexAttributeType::Float, false, offsetof(Vertex2D, color) },
-            VertexAttribute { 3, 1, VertexAttributeType::Int, false, offsetof(Vertex2D, textureIndex) }
+            VertexAttribute { 2, 4, VertexAttributeType::Float, false, offsetof(Vertex2D, color) }
         };
 
         return { sizeof(Vertex2D), attributes };

@@ -15,7 +15,7 @@
 #include "Managers/HouseManager.h"
 #include "Managers/MapManager.h"
 #include "Managers/MirrorManager.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "GlobalIllumination/GlobalIllumination.h"
 #include "Ocean/Ocean.h"
 #include "Renderer/Renderer.h"
@@ -26,7 +26,9 @@
 
 #include "Physics/Types/Ragdoll.h"
 
-#include <Hell/SlotMap.h>
+#include "Hell/Containers/SlotMap.h"
+
+using namespace Hell;
 
 namespace World {
     Hell::SlotMap<AnimatedGameObject> g_animatedGameObjects;

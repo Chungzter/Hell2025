@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-namespace ImageTools {
+namespace Hell::ImageTools {
 
     void ConvertRGBA8ToR16SFloat(ImageData& imageData) {
         if (imageData.format != ImageFormat::RGBA8_UNORM) {

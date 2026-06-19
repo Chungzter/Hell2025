@@ -2,13 +2,15 @@
 #include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Modelling/Clipping.h"
 #include "Renderer/RenderDataManager.h"]
 #include "World/World.h"
 
 #include <Hell/Logging.h>
 #include <Hell/RendereringConstants.h>
+
+using namespace Hell;
 
 Wall::Wall(uint64_t id, const WallCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_objectId = id;

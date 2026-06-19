@@ -4,8 +4,10 @@
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
 #include "Hell/Logging.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "UI/TextBlitter.h"
+
+using namespace Hell;
 
 namespace UIBackEnd {
     std::vector<RenderItemUI> g_renderItems;
@@ -148,10 +150,10 @@ namespace UIBackEnd {
 
         size_t baseVertex = g_vertices.size();
         g_vertices.reserve(baseVertex + 4);
-        g_vertices.push_back({ { finalVertices[0].x, finalVertices[0].y }, uvs[0], colorTint, textureIndex });
-        g_vertices.push_back({ { finalVertices[1].x, finalVertices[1].y }, uvs[1], colorTint, textureIndex });
-        g_vertices.push_back({ { finalVertices[2].x, finalVertices[2].y }, uvs[2], colorTint, textureIndex });
-        g_vertices.push_back({ { finalVertices[3].x, finalVertices[3].y }, uvs[3], colorTint, textureIndex });
+        g_vertices.push_back({ { finalVertices[0].x, finalVertices[0].y }, uvs[0], colorTint });
+        g_vertices.push_back({ { finalVertices[1].x, finalVertices[1].y }, uvs[1], colorTint });
+        g_vertices.push_back({ { finalVertices[2].x, finalVertices[2].y }, uvs[2], colorTint });
+        g_vertices.push_back({ { finalVertices[3].x, finalVertices[3].y }, uvs[3], colorTint });
 
         size_t baseIndex = g_indices.size();
         g_indices.reserve(baseIndex + 6);

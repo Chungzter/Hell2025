@@ -4,6 +4,8 @@
 #include "Backend/BackEnd.h"
 #include "Hell/Logging.h"
 
+namespace Hell {
+
 GenericMesh::GenericMesh(const std::string& name) {
     m_name = name;
 }
@@ -52,3 +54,5 @@ uint32_t GenericMesh::GetVAO() const {
         return 0;
     }
 }
+
+} // namespace

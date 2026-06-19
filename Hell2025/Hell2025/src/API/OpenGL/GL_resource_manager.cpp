@@ -1,7 +1,7 @@
 #include "GL_resource_manager.h"
 
+#include "Hell/Containers/SlotMap.h"
 #include "Hell/Enums.h"
-#include "Hell/SlotMap.h"
 #include "Hell/UniqueId.h"
 
 namespace OpenGLResourceManager {

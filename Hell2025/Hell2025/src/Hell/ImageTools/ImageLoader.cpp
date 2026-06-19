@@ -12,7 +12,7 @@
 #include <limits>
 #include <utility>
 
-namespace ImageTools {
+namespace Hell::ImageTools {
 
     namespace {
 

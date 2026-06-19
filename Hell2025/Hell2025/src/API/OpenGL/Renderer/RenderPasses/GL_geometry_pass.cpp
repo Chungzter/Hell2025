@@ -17,13 +17,15 @@
 
 #include "Types/Mirror.h"
 #include "Managers/MirrorManager.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Core/Game.h"
 
 // get me out of here
 #include "AssetManagement/AssetManager.h"
 // get me out of here
+
+using namespace Hell;
 
 namespace OpenGLRenderer {
     void RenderNonDeformingAnimatedGameObjects();

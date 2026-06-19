@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+namespace Hell {
+
 struct GenericMesh {
     GenericMesh() = default;
     GenericMesh(const std::string& name);
@@ -30,11 +32,11 @@ struct GenericMesh {
     void UpdateIndexData(const std::vector<uint32_t>& indices);
     void CleanUp();
 
-    size_t GetVertexCount() const      { return m_vertexCount; }
-    size_t GetIndexCount() const       { return m_indexCount; }
+    size_t GetVertexCount() const { return m_vertexCount; }
+    size_t GetIndexCount() const { return m_indexCount; }
     const std::string& GetName() const { return m_name; }
-    uint64_t GetOpenGLId() const       { return m_openGLId; }
-    uint64_t GetVulkanId() const       { return m_vulkanId; }
+    uint64_t GetOpenGLId() const { return m_openGLId; }
+    uint64_t GetVulkanId() const { return m_vulkanId; }
 
     uint32_t GetVAO() const;
 
@@ -47,3 +49,5 @@ private:
     uint64_t m_openGLId = 0;
     uint64_t m_vulkanId = 0;
 };
+
+}

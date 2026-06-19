@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace ImageTools {
+namespace Hell::ImageTools {
     // Offline compression
     void CreateAndExportDDS(const std::string& inputFilepath, const std::string& outputFilepath, bool createMipMaps);
 

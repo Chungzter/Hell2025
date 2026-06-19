@@ -6,8 +6,10 @@
 #include "Config/Config.h"
 #include "Viewport/ViewportManager.h"
 #include "Renderer/RenderDataManager.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "UI/UIBackEnd.h"
+
+using namespace Hell;
 
 namespace OpenGLRenderer {
 

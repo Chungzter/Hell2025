@@ -1,12 +1,14 @@
 #include "HousePlane.h"
 #include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "World/World.h"
 #include "Hell/UniqueID.h"
 #include "Util.h"
+
+using namespace Hell;
 
 HousePlane::HousePlane(uint64_t id, const HousePlaneCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_objectId = id;

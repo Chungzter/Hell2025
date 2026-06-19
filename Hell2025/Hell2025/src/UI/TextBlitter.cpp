@@ -160,10 +160,10 @@ namespace TextBlitter {
                 float y1 = ((cursorY - charData.height * scale) / viewportSize.y) * 2.0f - 1.0f;
 
                 // Vertices
-                vertices.push_back({ {x0, y0}, {u0, v1}, color, textureIndex }); // Bottom left
-                vertices.push_back({ {x1, y0}, {u1, v1}, color, textureIndex }); // Bottom right
-                vertices.push_back({ {x1, y1}, {u1, v0}, color, textureIndex }); // Top right
-                vertices.push_back({ {x0, y1}, {u0, v0}, color, textureIndex }); // Top left
+                vertices.push_back({ {x0, y0}, {u0, v1}, color }); // Bottom left
+                vertices.push_back({ {x1, y0}, {u1, v1}, color }); // Bottom right
+                vertices.push_back({ {x1, y1}, {u1, v0}, color }); // Top right
+                vertices.push_back({ {x0, y1}, {u0, v0}, color }); // Top left
 
                 // Indices
                 uint32_t vertexOffset = static_cast<uint32_t>(vertices.size()) - 4;

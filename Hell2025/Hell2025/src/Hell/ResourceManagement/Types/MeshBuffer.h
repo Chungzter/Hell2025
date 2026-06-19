@@ -10,6 +10,8 @@
 #include <unordered_map>
 #include <vector>
 
+namespace Hell {
+
 struct MeshBuffer {
     MeshBuffer() = default;
     MeshBuffer(const std::string& name);
@@ -76,3 +78,5 @@ private:
     uint64_t m_openGLId = 0;
     uint64_t m_vulkanId = 0;
 };
+
+} // namespace

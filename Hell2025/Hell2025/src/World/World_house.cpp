@@ -2,10 +2,12 @@
 #include "AssetManagement/AssetManager.h"
 #include "File/JSON.h"
 #include "Managers/HouseManager.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "GlobalIllumination/GlobalIllumination.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
+
+using namespace Hell;
 
 namespace World {
 

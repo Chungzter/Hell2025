@@ -1,8 +1,10 @@
 #include "Texture.h"
 
 #include "AssetManagement/AssetManager.h"
-#include "ImageTools/ImageTools.h"
+#include "Hell/ImageTools/ImageTools.h"
 #include "Util/Util.h"
+
+using namespace Hell;
 
 void Texture::Load() {
     // Load texture data from disk

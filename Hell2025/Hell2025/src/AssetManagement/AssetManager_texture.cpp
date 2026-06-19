@@ -4,9 +4,11 @@
 #include "API/Vulkan/VK_backend.h"
 #include "BackEnd/BackEnd.h"
 #include "Hell/Logging.h"
-#include "ImageTools/ImageTools.h"
+#include "Hell/ImageTools/ImageTools.h"
 #include "Util/Util.h"
 #include <future>
+
+using namespace Hell;
 
 namespace AssetManager {
 

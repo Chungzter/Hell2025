@@ -9,6 +9,8 @@
 #include <limits>
 #include <utility>
 
+namespace Hell {
+
 MeshBuffer::MeshBuffer(const std::string& name) {
     m_name = name;
 }
@@ -529,3 +531,5 @@ void MeshBuffer::PrintDebugInfo() {
 
     Logging::Debug() << message << "\n";
 }
+
+} // namespace

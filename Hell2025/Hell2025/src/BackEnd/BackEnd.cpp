@@ -28,7 +28,7 @@
 #include "Managers/OpenableManager.h"
 #include "Managers/HouseManager.h"
 #include "Managers/MirrorManager.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Modelling/Unused/Modelling.h"
 #include "Physics/Physics.h"
 #include "Ragdoll/RagdollManager.h"
@@ -55,6 +55,8 @@ extern "C" {
     __declspec(dllexport) unsigned __int32 AmdPowerXpressRequestHighPerformance = 0x1;
     __declspec(dllexport) unsigned __int32 NvOptimusEnablement = 0x1;
 }
+
+using namespace Hell;
 
 namespace BackEnd {
     API g_api = API::UNDEFINED;

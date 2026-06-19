@@ -14,7 +14,7 @@
 #include <iostream>
 #include <vector>
 
-namespace ImageTools {
+namespace Hell::ImageTools{
 
     namespace {
 

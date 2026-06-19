@@ -1,5 +1,7 @@
 #include "DebugDraw.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+
+using namespace Hell;
 
 namespace DebugDraw {
     namespace {

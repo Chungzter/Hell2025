@@ -1,10 +1,12 @@
 #include "WallSegment.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Modelling/Clipping.h"
 #include "Physics/Physics.h"
 #include "Renderer/Renderer.h"
 #include "Util.h"
 #include "Hell/UniqueID.h"
+
+using namespace Hell;
 
 void WallSegment::Init(glm::vec3 start, glm::vec3 end, float height, uint64_t parentObjectId, const SpawnOffset& spawnOffset) {
     m_start = start;

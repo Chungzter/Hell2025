@@ -7,7 +7,7 @@
 #include "Editor/Editor.h"
 #include "Input/Input.h"
 #include "Managers/MirrorManager.h"
-#include "ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Ocean/Ocean.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
@@ -25,7 +25,8 @@
 #include "World/World.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include <vector>
-// Get me out of here
+
+using namespace Hell;
 
 namespace RenderDataManager {
     DrawCommandsSet g_drawCommandsSet;

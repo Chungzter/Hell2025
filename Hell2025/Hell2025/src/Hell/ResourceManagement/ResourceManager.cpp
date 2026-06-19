@@ -5,7 +5,8 @@
 #include <unordered_map>
 #include <string>
 
-namespace ResourceManager {
+namespace Hell::ResourceManager {
+
     namespace {
         std::unordered_map<std::string, GenericMesh> g_genericMeshes;
         std::unordered_map<std::string, MeshBuffer> g_meshBuffers;

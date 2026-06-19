@@ -12,7 +12,7 @@
 #include "Timer.hpp"
 #include "Util.h"
 #include <vector>
-#include <Hell/SlotMap.h>
+#include "Hell/Containers/SlotMap.h"
 #include <Hell/Logging.h>
 
 #define NAV_MESH_PROFILING 0

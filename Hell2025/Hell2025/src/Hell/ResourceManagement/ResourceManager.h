@@ -1,11 +1,12 @@
 #pragma once
-#include "ResourceManagement/Types/GenericMesh.h"
-#include "ResourceManagement/Types/MeshBuffer.h"
+#include "Hell/ResourceManagement/Types/GenericMesh.h"
+#include "Hell/ResourceManagement/Types/MeshBuffer.h"
 
 #include <cstdint>
 #include <string>
 
-namespace ResourceManager {
+namespace Hell::ResourceManager {
+
     void Init();
     void CleanUp();
 
