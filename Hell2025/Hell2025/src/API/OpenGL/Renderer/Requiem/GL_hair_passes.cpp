@@ -6,7 +6,7 @@
 
 #include "AssetManagement/AssetManager.h"
 #include "Audio/Audio.h"
-#include "Core/Debug.h"
+#include "Debug/Debug.h"
 #include "Input/Input.h"
 
 namespace OpenGLRenderer {

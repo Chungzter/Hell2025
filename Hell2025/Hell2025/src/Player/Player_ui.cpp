@@ -1,7 +1,7 @@
 #include "Player.h"
 #include "AssetManagement/AssetManager.h"
 #include "Config/Config.h"
-#include "Core/Debug.h"
+#include "Debug/Debug.h"
 #include "Editor/Editor.h"
 #include "Util/Util.h"
 #include "UI/TextBlitter.h"

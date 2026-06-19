@@ -1,10 +1,9 @@
 ﻿#include "UIBackEnd.h"
 
-#include "Hell/Logging.h"
-
 #include "AssetManagement/AssetManager.h"
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
+#include "Hell/Logging.h"
 #include "ResourceManagement/ResourceManager.h"
 #include "UI/TextBlitter.h"
 
@@ -82,7 +81,7 @@ namespace UIBackEnd {
         float w = (size.x != -1) ? size.x : texture->GetWidth();
         float h = (size.y != -1) ? size.y : texture->GetHeight();
 
-        glm::vec2 positions[4];
+        glm::vec2 positions[4] = {};
         glm::vec2 uvs[4] = {
             { 0.0f, 0.0f },
             { 1.0f, 0.0f },
@@ -127,6 +126,7 @@ namespace UIBackEnd {
         // Rotation
         float s = sin(rotation);
         float c = cos(rotation);
+
         for (int i = 0; i < 4; ++i) {
             float newX = positions[i].x * c - positions[i].y * s;
             float newY = positions[i].x * s + positions[i].y * c;
@@ -138,21 +138,22 @@ namespace UIBackEnd {
 
         // Convert the final screen position to NDC
         const Resolutions& resolutions = Config::GetResolutions();
-        glm::vec2 finalVertices[4];
+        glm::vec2 finalVertices[4] = {};
+
         for (int i = 0; i < 4; ++i) {
             glm::vec2 screenPos = glm::vec2(anchor) + positions[i];
             finalVertices[i].x = (screenPos.x / static_cast<float>(resolutions.ui.x)) * 2.0f - 1.0f;
             finalVertices[i].y = 1.0f - (screenPos.y / static_cast<float>(resolutions.ui.y)) * 2.0f;
         }
 
-        int baseVertex = g_vertices.size();
+        size_t baseVertex = g_vertices.size();
         g_vertices.reserve(baseVertex + 4);
         g_vertices.push_back({ { finalVertices[0].x, finalVertices[0].y }, uvs[0], colorTint, textureIndex });
         g_vertices.push_back({ { finalVertices[1].x, finalVertices[1].y }, uvs[1], colorTint, textureIndex });
         g_vertices.push_back({ { finalVertices[2].x, finalVertices[2].y }, uvs[2], colorTint, textureIndex });
         g_vertices.push_back({ { finalVertices[3].x, finalVertices[3].y }, uvs[3], colorTint, textureIndex });
 
-        int baseIndex = g_indices.size();
+        size_t baseIndex = g_indices.size();
         g_indices.reserve(baseIndex + 6);
         g_indices.push_back(baseVertex + 0);
         g_indices.push_back(baseVertex + 1);

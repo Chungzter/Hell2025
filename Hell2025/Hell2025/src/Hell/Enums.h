@@ -14,7 +14,6 @@ enum class WindowedMode {
 
 enum struct RendererMode {
     OLD_DEFERRED,
-    MSAA,
     RE_STYLE,
     RENDERER_MODE_COUNT
 };

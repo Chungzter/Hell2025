@@ -231,7 +231,7 @@ namespace OpenGLRenderer {
 
 		BindShader("ProbeRelevance");
 		SetUniformVec3("u_viewPos", RenderDataManager::GetViewportData()[0].viewPos);
-		SetUniformBool("u_msaaRenderer", Renderer::GetRendererMode() == RendererMode::MSAA);
+		SetUniformBool("u_msaaRenderer", false); // TODO: remove me from shader
 		SetUniformBool("u_octNormals", Renderer::GetRendererMode() == RendererMode::RE_STYLE);
 
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);

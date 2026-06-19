@@ -133,7 +133,6 @@ namespace OpenGLRenderer {
 
 			switch (Renderer::GetRendererMode()) {
 			    case RendererMode::OLD_DEFERRED: attachmentHandle = GetFrameBuffer("GBuffer").GetColorAttachmentHandleByName("Lighting"); break;
-			    case RendererMode::MSAA:         attachmentHandle = GetFrameBuffer("Resolve").GetColorAttachmentHandleByName("Lighting");      break;
 			    case RendererMode::RE_STYLE:     attachmentHandle = GetFrameBuffer("GBufferRE").GetColorAttachmentHandleByName("Lighting");    break;
 			}
 
@@ -160,29 +159,7 @@ namespace OpenGLRenderer {
 
             OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
 
-            if (Renderer::GetRendererMode() == RendererMode::MSAA) {
-				OpenGLShader* shader = GetShaderOLD("DebugViewMSAA");
-				if (!shader) return;
-
-				shader->Bind();
-				shader->SetFloat("u_brushSize", Editor::GetMapHeightBrushSize());
-				shader->SetBool("u_heightMapEditor", (Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Editor::IsOpen());
-
-				OpenGLFrameBuffer* msaaFbo = GetFrameBufferOLD("MSAA");
-				OpenGLFrameBuffer* resolveFbo = GetFrameBufferOLD("Resolve");
-                BindImageTexture(0, resolveFbo->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
-                BindTextureUnit(1, msaaFbo->GetColorAttachmentHandleByName("BaseColor"));
-                BindTextureUnit(2, msaaFbo->GetColorAttachmentHandleByName("Normal"));
-                BindTextureUnit(3, msaaFbo->GetColorAttachmentHandleByName("Material"));
-                BindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
-                // 9 is visibility
-                BindTextureUnit(10, waterFrameBuffer.GetColorAttachmentHandleByName("OceanFlags"));
-                // 11 is single sampled depth. NA here
-                // 12 is single sample emissive. NA here.
-
-				glDispatchCompute(resolveFbo->GetWidth() / TILE_SIZE, resolveFbo->GetHeight() / TILE_SIZE, 1);
-			}
-			else if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+            if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
 				OpenGLFrameBuffer& gBufferRE = GetFrameBuffer("GBufferRE");
 				OpenGLShader& shader = GetShader("DebugViewRE");
 

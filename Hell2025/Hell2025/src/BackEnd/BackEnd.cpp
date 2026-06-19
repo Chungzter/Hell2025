@@ -15,7 +15,7 @@
 #include "Audio/MidiFileManager.h"
 #include "Audio/Synth.h"
 #include "Bible/Bible.h"
-#include "Core/Debug.h"
+#include "Debug/Debug.h"
 #include "Core/Game.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"

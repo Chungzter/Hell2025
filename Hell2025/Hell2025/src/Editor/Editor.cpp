@@ -7,7 +7,7 @@
 #include "Config/Config.h"
 #include "Debug/DebugDraw.h"
 #include "Audio/Audio.h"
-#include "Core/Debug.h"
+#include "Debug/Debug.h"
 #include "Core/Game.h"
 #include "Imgui/ImguiBackEnd.h"
 #include "Input/Input.h"

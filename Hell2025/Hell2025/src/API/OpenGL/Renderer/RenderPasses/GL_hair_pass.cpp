@@ -10,7 +10,7 @@
 #include "Input/Input.h"
 #include "Renderer/Renderer.h"
 #include "Core/Game.h"
-#include "Core/Debug.h"
+#include "Debug/Debug.h"
 #include "Util/Util.h"
 
 namespace OpenGLRenderer {

@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "Core/Debug.h"
+#include "Debug/Debug.h"
 #include "Core/Game.h"
 #include "Editor/Editor.h"
 #include "Input/Input.h"

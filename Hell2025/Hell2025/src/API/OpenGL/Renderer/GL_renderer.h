@@ -66,9 +66,6 @@ namespace OpenGLRenderer {
     void PreGameLogicComputePasses();
     void RenderGame();
 
-    void InitMSAA();
-    void RenderGameMSAA();
-
 	void InitREStyle();
 	void RenderGameREStyle();
 

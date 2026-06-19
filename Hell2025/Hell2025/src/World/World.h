@@ -2,7 +2,7 @@
 #include <Hell/Types.h>
 #include <Hell/SlotMap.h>
 
-#include "Core/Debug.h"
+#include "Debug/Debug.h"
 #include "Types/Characters/Allies/Mermaid/Mermaid.h"
 #include "Types/Characters/Enemies/Dobermann/Dobermann.h"
 #include "Types/Characters/Enemies/Kangaroo/Kangaroo.h"

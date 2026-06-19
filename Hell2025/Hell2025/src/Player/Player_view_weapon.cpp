@@ -1,6 +1,6 @@
 #include "Player.h"
 #include "Input/InputMulti.h"
-#include "Core/Debug.h"
+#include "Debug/Debug.h"
 #include "Input/Input.h"
 #include "Util/Util.h"
 

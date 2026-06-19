@@ -6,7 +6,7 @@
 #include "AssetManagement/AssetManager.h"
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
-#include "Core/Debug.h"
+#include "Debug/Debug.h"
 #include "Editor/Editor.h"
 #include "ResourceManagement/ResourceManager.h"
 #include "Timer.hpp"

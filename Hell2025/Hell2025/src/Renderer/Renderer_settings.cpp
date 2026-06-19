@@ -1,6 +1,6 @@
 #include "Renderer.h"
 #include "Audio/Audio.h"
-#include "Core/Debug.h"
+#include "Debug/Debug.h"
 #include "Editor/Editor.h"
 #include "Util/Util.h"
 
@@ -129,10 +129,6 @@ namespace Renderer {
 	}
 
     void SetRendererMode(RendererMode rendererMode) {
-        if (rendererMode == RendererMode::MSAA) {
-            rendererMode = RendererMode::RE_STYLE;
-        }
-
         g_rendererMode = rendererMode;
 
 		Debug::BlitQuickDebugMessage("Renderer Mode: " + Util::EnumToString(rendererMode));

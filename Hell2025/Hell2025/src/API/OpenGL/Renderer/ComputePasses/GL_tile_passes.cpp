@@ -12,7 +12,6 @@ namespace OpenGLRenderer {
 
 		switch (Renderer::GetRendererMode()) {
 		    case RendererMode::OLD_DEFERRED: depthHandle = GetFrameBuffer("GBuffer").GetDepthAttachmentHandle();   break;
-		    case RendererMode::MSAA:         depthHandle = GetFrameBuffer("Resolve").GetDepthAttachmentHandle();   break;
             case RendererMode::RE_STYLE:     depthHandle = GetFrameBuffer("GBufferRE").GetDepthAttachmentHandle(); break;
 		}
 

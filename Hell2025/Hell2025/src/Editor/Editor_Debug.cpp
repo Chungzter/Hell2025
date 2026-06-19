@@ -1,7 +1,7 @@
 #include "Editor.h"
 #include "Gizmo.h"
 #include "Util.h"
-#include "../Core/Debug.h"
+#include "../Debug/Debug.h"
 #include "../Config/Config.h"
 #include "../Input/Input.h"
 #include "../Viewport/ViewportManager.h"

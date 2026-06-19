@@ -595,11 +595,7 @@ namespace OpenGLRenderer {
     void RenderGame() {
         ProfilerOpenGLFrame();
 
-		if (Renderer::GetRendererMode() == RendererMode::MSAA) {
-			RenderGameMSAA();
-			return;
-		}
-		else if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+		if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
 			RenderGameREStyle();
 			return;
 		}
