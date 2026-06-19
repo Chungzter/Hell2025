@@ -17,6 +17,7 @@
 #include "Bible/Bible.h"
 #include "Core/Debug.h"
 #include "Core/Game.h"
+#include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include "Editor/Gizmo.h"
 #include "Pathfinding/AStarMap.h"
@@ -108,7 +109,7 @@ namespace BackEnd {
 
     void BeginFrame() {
         GLFW::BeginFrame(g_api);
-        RenderDataManager::BeginFrame();
+
         if (GetAPI() == API::OPENGL) {
             OpenGLBackEnd::BeginFrame();
             OpenGLBackEnd::UpdateTextureBaking();
@@ -116,14 +117,17 @@ namespace BackEnd {
         else if (GetAPI() == API::VULKAN) {
             //VulkanBackEnd::BeginFrame();
         }
-        //Physics::ClearCollisionReports();
 
         if (!GLFW::WindowHasFocus()) {
             InputMulti::ResetState();
         }
+
+        DebugDraw::BeginFrame();
         Game::BeginFrame();
-        World::BeginFrame();
         Physics::BeginFrame();
+        RenderDataManager::BeginFrame();
+        UIBackEnd::BeginFrame();
+        World::BeginFrame();
     }
 
     void UpdateGame() {
@@ -151,22 +155,10 @@ namespace BackEnd {
         UIBackEnd::Update();
         RenderDataManager::Update();
         ImGuiBackEnd::Update();
-
-        //if (Input::KeyPressed(HELL_KEY_SPACE)) {
-        //    for (auto& model : AssetManager::GetModels()) {
-        //        std::cout << model.GetName() << "\n";
-        //        for (auto meshIndex : model.GetMeshIndices()) {
-        //            auto mesh = AssetManager::GetMeshByIndex(meshIndex);
-        //            std::cout << " - " << mesh->GetName() << "\n";
-        //        }
-        //        std::cout << "\n";
-        //    }
-        //}
     }
 
     void EndFrame() {
         GLFW::EndFrame(g_api);
-        UIBackEnd::EndFrame();
         Debug::EndFrame();
         World::EndFrame();
         InputMulti::ResetMouseOffsets();

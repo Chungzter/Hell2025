@@ -1,5 +1,6 @@
 #include "MeshNodes.h"
 #include "AssetManagement/AssetManager.h"
+#include "Debug/DebugDraw.h"
 #include <Hell/RendereringConstants.h>
 #include <Hell/Logging.h>
 #include "Editor/Editor.h"
@@ -7,7 +8,6 @@
 #include "Managers/MirrorManager.h"
 #include "Managers/OpenableManager.h"
 #include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
 #include "World/World.h"
 #include "Physics/Physics.h"
 #include "Hell/UniqueID.h"
@@ -366,12 +366,12 @@ void MeshNodes::SetOpenableByMeshName(const std::string& meshName, uint64_t open
 }
 
 void MeshNodes::DrawWorldspaceAABB(glm::vec4 color) {
-    Renderer::DrawAABB(m_worldspaceAABB, color);
+    DebugDraw::DrawAABB(m_worldspaceAABB, color);
 }
 
 void MeshNodes::DrawWorldspaceAABBs(glm::vec4 color) {
     for (MeshNode& meshNode : m_meshNodes) {
-        Renderer::DrawAABB(meshNode.worldspaceAabb, color);
+        DebugDraw::DrawAABB(meshNode.worldspaceAabb, color);
     }
 }
 

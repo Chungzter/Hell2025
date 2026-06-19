@@ -1,5 +1,5 @@
 #include "CpuBvh.h"
-#include "Renderer/Renderer.h"
+#include "Debug/DebugDraw.h"
 
 namespace Bvh::Cpu {
 
@@ -16,9 +16,9 @@ namespace Bvh::Cpu {
             p0 = worldTransform * glm::vec4(p0, 1.0f);
             p1 = worldTransform * glm::vec4(p1, 1.0f);
             p2 = worldTransform * glm::vec4(p2, 1.0f);
-            Renderer::DrawLine(p0, p1, color);
-            Renderer::DrawLine(p1, p2, color);
-            Renderer::DrawLine(p2, p0, color);
+            DebugDraw::DrawLine(p0, p1, color);
+            DebugDraw::DrawLine(p1, p2, color);
+            DebugDraw::DrawLine(p2, p0, color);
         }
     }
 
@@ -30,7 +30,7 @@ namespace Bvh::Cpu {
 
         for (BvhNode& node : sceneMeshBvh->m_nodes) {
             AABB aabb(node.boundsMin, node.boundsMax);
-            Renderer::DrawAABB(aabb, color, worldTransform);
+            DebugDraw::DrawAABB(aabb, color, worldTransform);
         }
     }
 
@@ -41,7 +41,7 @@ namespace Bvh::Cpu {
 
         for (BvhNode& node : meshBvh->m_nodes) {
             AABB aabb(node.boundsMin, node.boundsMax);
-            Renderer::DrawAABB(aabb, color, worldTransform);
+            DebugDraw::DrawAABB(aabb, color, worldTransform);
         }
     }
 }

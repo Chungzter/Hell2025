@@ -1,10 +1,10 @@
 #include "Wall.h"
 #include "AssetManagement/AssetManager.h"
+#include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include "ResourceManagement/ResourceManager.h"
 #include "Modelling/Clipping.h"
-#include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
+#include "Renderer/RenderDataManager.h"]
 #include "World/World.h"
 
 #include <Hell/Logging.h>
@@ -314,10 +314,10 @@ void Wall::DrawSegmentVertices(glm::vec4 color) {
         const glm::vec3& p2 = wallSegment.GetEnd();
         glm::vec3 p3 = wallSegment.GetStart() + glm::vec3(0.0f, wallSegment.GetHeight(), 0.0f);
         glm::vec3 p4 = wallSegment.GetEnd() + glm::vec3(0.0f, wallSegment.GetHeight(), 0.0f);
-        Renderer::DrawPoint(p1, color);
-        Renderer::DrawPoint(p2, color);
-        Renderer::DrawPoint(p3, color);
-        Renderer::DrawPoint(p4, color);
+        DebugDraw::DrawPoint(p1, color);
+        DebugDraw::DrawPoint(p2, color);
+        DebugDraw::DrawPoint(p3, color);
+        DebugDraw::DrawPoint(p4, color);
     }
 }
 
@@ -327,15 +327,15 @@ void Wall::DrawSegmentLines(glm::vec4 color) {
         const glm::vec3& p2 = wallSegment.GetEnd();
         glm::vec3 p3 = wallSegment.GetStart() + glm::vec3(0.0f, wallSegment.GetHeight(), 0.0f);
         glm::vec3 p4 = wallSegment.GetEnd() + glm::vec3(0.0f, wallSegment.GetHeight(), 0.0f);
-        Renderer::DrawLine(p1, p2, color);
-        Renderer::DrawLine(p3, p4, color);
-        Renderer::DrawLine(p1, p3, color);
-        Renderer::DrawLine(p2, p4, color);
+        DebugDraw::DrawLine(p1, p2, color);
+        DebugDraw::DrawLine(p3, p4, color);
+        DebugDraw::DrawLine(p1, p3, color);
+        DebugDraw::DrawLine(p2, p4, color);
 
         glm::vec3 midPoint = Util::GetMidPoint(wallSegment.GetStart(), wallSegment.GetEnd());
         glm::vec3 normal = wallSegment.GetNormal();
         glm::vec3 projectedMidPoint = midPoint + (normal * 0.2f);
-        Renderer::DrawLine(midPoint, projectedMidPoint, color);
+        DebugDraw::DrawLine(midPoint, projectedMidPoint, color);
     }
 }
 

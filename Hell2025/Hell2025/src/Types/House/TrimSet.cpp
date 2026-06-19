@@ -247,10 +247,10 @@ void TrimSet::RenderDebug(const glm::vec3& color) {
   //for (int i = 0; i < m_corners.size(); i++) {
   //    const glm::vec3& point = m_corners[i].m_position;
   //    if (m_corners[i].m_internal) {
-  //        Renderer::DrawPoint(point, GREEN);
+  //        DebugDraw::DrawPoint(point, GREEN);
   //    }
   //    else {
-  //        Renderer::DrawPoint(point, RED);
+  //        DebugDraw::DrawPoint(point, RED);
   //    }
   //}
 }

@@ -573,7 +573,7 @@ void Player::UpdateMelleBulletWave(float deltaTime) {
             createInfo.createsDecalTexturePaintedWounds = false;
 
             World::AddBullet(createInfo);
-            //Renderer::DrawLine(createInfo.origin, createInfo.origin + createInfo.direction * 0.5f, GREEN);
+            //DebugDraw::DrawLine(createInfo.origin, createInfo.origin + createInfo.direction * 0.5f, GREEN);
         }
     }
 }

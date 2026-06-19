@@ -1,6 +1,6 @@
 #include "SpawnPoint.h"
 #include "Physics/Physics.h"
-#include "Renderer/Renderer.h"
+#include "Debug/DebugDraw.h"
 #include <Hell/UniqueID.h>
 
 SpawnPoint::SpawnPoint(const glm::vec3& position, const glm::vec3& camEuler) {
@@ -47,5 +47,5 @@ void SpawnPoint::DrawDebugCube() {
 
     AABB aabb = AABB(aabbMin, aabbMax);
 
-    Renderer::DrawAABB(aabb, OUTLINE_COLOR, transform.to_mat4());
+    DebugDraw::DrawAABB(aabb, OUTLINE_COLOR, transform.to_mat4());
 }

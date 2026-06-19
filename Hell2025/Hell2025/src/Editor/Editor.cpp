@@ -5,6 +5,7 @@
 #include "BackEnd/BackEnd.h"
 #include "Camera/Camera.h"
 #include "Config/Config.h"
+#include "Debug/DebugDraw.h"
 #include "Audio/Audio.h"
 #include "Core/Debug.h"
 #include "Core/Game.h"
@@ -243,19 +244,19 @@ namespace Editor {
             glm::vec3 p1 = glm::vec3(w, h, 0.0f);
             glm::vec3 p2 = glm::vec3(0.0f, h, d);
             glm::vec3 p3 = glm::vec3(w, h, d);
-            Renderer::DrawLine(p0, p1, GRID_COLOR, true);
-            Renderer::DrawLine(p0, p2, GRID_COLOR, true);
-            Renderer::DrawLine(p2, p3, GRID_COLOR, true);
-            Renderer::DrawLine(p1, p3, GRID_COLOR, true);
+            DebugDraw::DrawLine(p0, p1, GRID_COLOR, true);
+            DebugDraw::DrawLine(p0, p2, GRID_COLOR, true);
+            DebugDraw::DrawLine(p2, p3, GRID_COLOR, true);
+            DebugDraw::DrawLine(p1, p3, GRID_COLOR, true);
 
             // Draw spawn points as little dots
             Map* map = MapManager::GetMapByName(GetEditorMapName());
             if (map) {
                 for (SpawnPoint& spawnPoints : map->GetAdditionalMapData().playerCampaignSpawns) {
-                    Renderer::DrawPoint(spawnPoints.GetPosition(), GREEN);
+                    DebugDraw::DrawPoint(spawnPoints.GetPosition(), GREEN);
                 }
                 for (SpawnPoint& spawnPoints : map->GetAdditionalMapData().playerDeathmatchSpawns) {
-                    Renderer::DrawPoint(spawnPoints.GetPosition(), YELLOW);
+                    DebugDraw::DrawPoint(spawnPoints.GetPosition(), YELLOW);
                 }
             }
 
@@ -280,8 +281,8 @@ namespace Editor {
                 glm::vec3 p2 = glm::vec3(x, yHeight, gridWorldSpaceSize);
                 glm::vec3 p3 = glm::vec3(-gridWorldSpaceSize, yHeight, z);
                 glm::vec3 p4 = glm::vec3(gridWorldSpaceSize, yHeight, z);
-                Renderer::DrawLine(p1, p2, GRID_COLOR, true);
-                Renderer::DrawLine(p3, p4, GRID_COLOR, true);
+                DebugDraw::DrawLine(p1, p2, GRID_COLOR, true);
+                DebugDraw::DrawLine(p3, p4, GRID_COLOR, true);
             }
         }
 
@@ -292,8 +293,8 @@ namespace Editor {
                 glm::vec3 e = glm::vec3(0.0f, yHeight, gridWorldSpaceSize);
                 glm::vec3 w = glm::vec3(0.0f, yHeight, -gridWorldSpaceSize);
 
-                Renderer::DrawLine(n, s, WHITE, true);
-                Renderer::DrawLine(e, w, WHITE, true);
+                DebugDraw::DrawLine(n, s, WHITE, true);
+                DebugDraw::DrawLine(e, w, WHITE, true);
             }
         }
     }

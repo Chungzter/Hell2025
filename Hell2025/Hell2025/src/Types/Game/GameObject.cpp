@@ -1,7 +1,8 @@
 #include "GameObject.h"
+
 #include "AssetManagement/AssetManager.h"
+#include "Debug/DebugDraw.h"
 #include "Physics/Physics.h"
-#include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util.h"
 #include <Hell/UniqueID.h>
@@ -40,7 +41,7 @@ void GameObject::Update(float deltaTime) {
             const glm::mat4 rest = GetModelMatrix() * bone.localRestPose;
             glm::vec3 p = rest[3];
 
-            Renderer::DrawPoint(p, RED);
+            DebugDraw::DrawPoint(p, RED);
         }
     }
 

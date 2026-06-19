@@ -1,7 +1,7 @@
 #include "Mermaid.h"
 #include "Audio/Audio.h"
+#include "Debug/DebugDraw.h"
 #include "Input/Input.h"
-#include "Renderer/Renderer.h"
 
 void Mermaid::Init(MermaidCreateInfo createInfo, SpawnOffset spawnOffset) {
     m_createInfo = createInfo;
@@ -74,9 +74,9 @@ void Mermaid::Update(float deltaTime) {
 void Mermaid::DebugDraw() {
     glm::vec3 p1 = m_transform.position;
     glm::vec3 p2 = m_transform.position + m_worldForward;
-    Renderer::DrawPoint(p1, YELLOW);
-    Renderer::DrawPoint(p2, YELLOW);
-    Renderer::DrawLine(p1, p2, YELLOW);
+    DebugDraw::DrawPoint(p1, YELLOW);
+    DebugDraw::DrawPoint(p2, YELLOW);
+    DebugDraw::DrawLine(p1, p2, YELLOW);
 }
 
 void Mermaid::UpdateRenderItems() {

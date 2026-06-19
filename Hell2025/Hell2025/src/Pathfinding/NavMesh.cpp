@@ -1,8 +1,8 @@
 #include "NavMesh.h"
 #include <Hell/GLM.h>
 #include "Core/Game.h"
+#include "Debug/DebugDraw.h"
 #include "Input/Input.h"
-#include "Renderer/Renderer.h"
 #include "Types/Renderer/MeshNodes.h"
 #include "World/World.h"
 #include "AssetManagement/AssetManager.h"
@@ -1108,10 +1108,10 @@ namespace NavMeshManager {
     void DrawPath(std::vector<glm::vec3>& path, const glm::vec4& color) {
 		if (path.size() >= 2) {
 			for (int i = 0; i < path.size() - 1; i++) {
-				Renderer::DrawLine(path[i], path[i + 1], color);
-                Renderer::DrawPoint(path[i], color);
+				DebugDraw::DrawLine(path[i], path[i + 1], color);
+                DebugDraw::DrawPoint(path[i], color);
             }
-            Renderer::DrawPoint(path[path.size()-1], color);
+            DebugDraw::DrawPoint(path[path.size()-1], color);
 		}
     }
 
@@ -1311,9 +1311,9 @@ namespace NavMeshManager {
 	}
 
     void DrawNavTri(const NavTri& navTri, const glm::vec4& color) {
-        Renderer::DrawLine(navTri.v[0], navTri.v[1], color);
-        Renderer::DrawLine(navTri.v[1], navTri.v[2], color);
-        Renderer::DrawLine(navTri.v[2], navTri.v[0], color);
+        DebugDraw::DrawLine(navTri.v[0], navTri.v[1], color);
+        DebugDraw::DrawLine(navTri.v[1], navTri.v[2], color);
+        DebugDraw::DrawLine(navTri.v[2], navTri.v[0], color);
     }
 
     bool PointInNavTriXZ(const NavTri& tri, const glm::vec3& position) {

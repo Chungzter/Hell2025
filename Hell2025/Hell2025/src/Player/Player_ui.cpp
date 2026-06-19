@@ -140,7 +140,7 @@ void Player::UpdateUI(float deltaTime) {
                 Texture* texture = AssetManager::GetTextureByName("Weapon_Auto");
                 if (GetCurrentWeaponType() == WeaponType::SHOTGUN && texture) {
                     int modifierPadding = 29;
-                    int modifierX = TextBlitter::GetBlitTextSize(totalText, "AmmoFont", smallScale).x + modifierPadding;
+                    int modifierX = TextBlitter::GetTextSize(totalText, "AmmoFont", smallScale).x + modifierPadding;
                     int gridSize = 10;
                     modifierX = (modifierX / 10) * 10;
                     int modifierScaleX = texture->GetWidth() * smallScale;

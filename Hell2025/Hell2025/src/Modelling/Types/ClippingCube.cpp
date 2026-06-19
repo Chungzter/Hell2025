@@ -1,5 +1,5 @@
-#include "ClippingCube.h" 
-#include "Renderer/Renderer.h"
+#include "ClippingCube.h"
+#include "Debug/DebugDraw.h"
 #include "Util/Util.h"
 
 void ClippingCube::Update(const Transform& transform) {
@@ -22,7 +22,7 @@ void ClippingCube::Update(const Transform& transform) {
 
 void ClippingCube::DrawDebugCorners(glm::vec4 color) {
     for (glm::vec3& corner : m_corners) {
-        Renderer::DrawPoint(corner, color);
+        DebugDraw::DrawPoint(corner, color);
     }
 }
 
@@ -37,6 +37,6 @@ void ClippingCube::DrawDebugEdges(glm::vec4 color) {
         {6, 7}
     };
     for (int i = 0; i < 12; i++) {
-        Renderer::DrawLine(m_corners[edges[i][0]], m_corners[edges[i][1]], color, true);
+        DebugDraw::DrawLine(m_corners[edges[i][0]], m_corners[edges[i][1]], color, true);
     }
 }

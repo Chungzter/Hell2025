@@ -1,6 +1,8 @@
 #include "Debug.h"
-#include "Util.h"
-#include "API/OpenGL/Renderer/GL_Renderer.h"
+#include "API/OpenGL/GL_memory_tracker.h" // TODO: Clean me up and out of here
+
+#include "Debug/DebugDraw.h"
+
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
 #include "Core/Game.h"
@@ -14,6 +16,8 @@
 #include "UI/UIBackEnd.h"
 #include "World/World.h"
 #include "Bvh/Cpu/CpuBvh.h"
+#include "UI/TextBlitter.h"
+#include "Util.h"
 
 #include "Audio/MidiFileManager.h"
 #include <vector>
@@ -52,6 +56,50 @@ namespace Debug {
     }
 
     void UpdateDebugText() {
+
+        // Global Debug
+        if (Debug::GetDebugTextMode() == DebugTextMode::GLOBAL) {
+            std::string text = Debug::GetText();
+            UIBackEnd::BlitText(text, "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
+        }
+
+        // Memory tracker
+        else if (Debug::GetDebugTextMode() == DebugTextMode::MEMORY_TRACKER) {
+            std::string names = OpenGLMemoryTracker::GetReportNames();
+            std::string bytes = OpenGLMemoryTracker::GetReportBytes();
+            UIBackEnd::BlitText(names, "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
+            UIBackEnd::BlitText(bytes, "StandardFont", 250, 0, Alignment::TOP_LEFT, 2.0f);
+        }
+        
+        // Profiling
+        else if (Debug::GetDebugTextMode() == DebugTextMode::PROFILING) {
+            float scale = 1.4f;
+            int margin = 35;
+            TextureFilter textureFilter = TextureFilter::LINEAR;
+
+            const std::string white = "[COL=1.0,1.0,1.0,1.0]";
+            const std::string orange = "[COL=1.0,0.65,0.0,1.0]";
+            const std::string yellow = "[COL=1.0,1.0,0.0,1.0]";
+            const std::string red = "[COL=1.0,0.0,0.0,1.0]";
+            const std::string lightBlue = "[COL=0.68,0.85,0.9,1.0]";
+            const std::string lightGreen = "[COL=0.56,0.93,0.56,1.0]";
+
+            const std::string headingColor = lightGreen;
+
+            std::string names = "\n" + Renderer::GetZoneNames();
+            std::string timingsGPU = headingColor + "GPU\n" + Renderer::GetZoneGPUTimings();
+            std::string timingsCPU = headingColor + "CPU\n" + Renderer::GetZoneCPUTimings();
+            glm::ivec2 namesSize = TextBlitter::GetTextSize(names, "StandardFont", scale);
+            glm::ivec2 timingsGPUSize = TextBlitter::GetTextSize(timingsGPU, "StandardFont", scale);
+            glm::ivec2 timingsCPUSize = TextBlitter::GetTextSize(timingsCPU, "StandardFont", scale);
+
+            if (names.length() != 0) {
+                timingsGPU += "\n" + headingColor + "Total GPU : " + Renderer::GetTotalGPUTime();
+                UIBackEnd::BlitText(timingsGPU, "StandardFont", 0, 0, Alignment::TOP_LEFT, scale, textureFilter);
+                UIBackEnd::BlitText(timingsCPU, "StandardFont", timingsGPUSize.x + margin, 0, Alignment::TOP_LEFT, scale, textureFilter);
+                UIBackEnd::BlitText(names, "StandardFont", timingsGPUSize.x + margin + timingsCPUSize.x + margin, 0, Alignment::TOP_LEFT, scale, textureFilter);
+            }
+        }
 
         // Midi notes override
         if (MidiFileManager::IsPlaying()) {
@@ -176,7 +224,7 @@ namespace Debug {
 
             if (Light* light = World::GetLightByIndex(lightIndex)) {
                 AABB worldBounds = AABB(light->GetWorldBoundsMin(), light->GetWorldBoundsMax());
-                Renderer::DrawAABB(worldBounds, glm::vec4(light->GetColor(), 1.0f));
+                DebugDraw::DrawAABB(worldBounds, glm::vec4(light->GetColor(), 1.0f));
             }
         }
 
@@ -210,8 +258,8 @@ namespace Debug {
         }
         if (g_debugRenderMode == DebugRenderMode::DECALS) {
             for (const Decal& decal : World::GetDecals()) {
-                Renderer::DrawPoint(decal.GetPosition(), OUTLINE_COLOR);
-                Renderer::DrawLine(decal.GetPosition(), decal.GetPosition() + decal.GetWorldNormal() * 0.05f, OUTLINE_COLOR);
+                DebugDraw::DrawPoint(decal.GetPosition(), OUTLINE_COLOR);
+                DebugDraw::DrawLine(decal.GetPosition(), decal.GetPosition() + decal.GetWorldNormal() * 0.05f, OUTLINE_COLOR);
             }
         }
         if (g_debugRenderMode == DebugRenderMode::PHYSX_ALL ||

@@ -95,7 +95,7 @@ void Player::UpdateInteract() {
         }
     }
 
-    //Renderer::DrawPoint(hitPosition, GREEN);
+    //DebugDraw::DrawPoint(hitPosition, GREEN);
 
     ObjectType interactObjectType = UniqueID::GetType(m_interactObjectId);
 

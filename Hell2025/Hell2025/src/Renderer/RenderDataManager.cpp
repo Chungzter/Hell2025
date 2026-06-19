@@ -391,7 +391,7 @@ namespace RenderDataManager {
                 for (const RenderItem& renderItem : g_renderItemsMoonLightShadows) {
                     if (frustum.IntersectsAABBFast(renderItem)) {
                         g_instanceData.push_back(renderItem);
-                        //Renderer::DrawAABB(AABB(renderItem.aabbMin, renderItem.aabbMax), YELLOW);
+                        //DebugDraw::DrawAABB(AABB(renderItem.aabbMin, renderItem.aabbMax), YELLOW);
                     }
                 }
 
@@ -1141,7 +1141,7 @@ namespace RenderDataManager {
         gpuLight.isDirtyForRaytracing = light->IsDirtyForRaytracing();
 
         //if (gpuLight.isDirtyForRaytracing) {
-        //    Renderer::DrawPoint(light->GetPosition(), BLUE);
+        //    DebugDraw::DrawPoint(light->GetPosition(), BLUE);
         //}
 
         IESProfile* iesProfile = AssetManager::GetIESProfileByIESProfileType(light->GetIESProfileType());

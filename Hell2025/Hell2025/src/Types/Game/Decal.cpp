@@ -68,12 +68,12 @@ Decal::Decal(const DecalCreateInfo& createInfo) {
 
 void Decal::Update() {
     glm::vec3 position = GetParentWorldMatrix() * glm::vec4(m_localPosition, 1.0f);
-   // Renderer::DrawPoint(position, OUTLINE_COLOR);
+   // DebugDraw::DrawPoint(position, OUTLINE_COLOR);
 
     m_worldNormal = GetParentWorldMatrix() * glm::vec4(m_localNormal, 0.0f);
     m_worldMatrix = GetParentWorldMatrix() * m_localMatrix;
 
-    //Renderer::DrawLine(position, position + (m_worldNormal * 0.05f), WHITE);
+    //DebugDraw::DrawLine(position, position + (m_worldNormal * 0.05f), WHITE);
 
     glm::vec3 boundsMin = glm::vec3(-0.5f);
     glm::vec3 boundsMax = glm::vec3(0.5f);

@@ -1,10 +1,10 @@
 #include "Editor/Editor.h"
 #include "AssetManagement/AssetManager.h"
+#include "Debug/DebugDraw.h"
 #include <Hell/Logging.h>
 #include "Imgui/ImguiBackEnd.h"
 #include <ImGui/imgui.h>
 #include "Imgui/Types/Types.h"
-#include "Renderer/Renderer.h"
 #include "Managers/MapManager.h"
 #include "World/World.h"
 
@@ -238,7 +238,7 @@ namespace Editor {
                 // Lights
                 if (Light* light = World::GetLightByObjectId(GetSelectedObjectId())) {
                     AABB aabb(light->GetWorldBoundsMin(), light->GetWorldBoundsMax());
-                    Renderer::DrawAABB(aabb, YELLOW);
+                    DebugDraw::DrawAABB(aabb, YELLOW);
 
                     EditorUI::DropDown type;
                     type.SetText("Type");

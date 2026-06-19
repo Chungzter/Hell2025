@@ -53,7 +53,7 @@ void Light::Update(float deltaTime) {
 
     //if (Editor::GetSelectedObjectId() == m_objectId) {
         //AABB aabb(m_createInfo.cullBoundsMin, m_createInfo.cullBoundsMax);
-        //Renderer::DrawAABB(aabb, color);
+        //DebugDraw::DrawAABB(aabb, color);
     //}
 
 
@@ -83,13 +83,13 @@ void Light::RaycastWorldBounds() {
         BvhRayResult rayResult = houseBvh.CastRay(rayOrigin, rayDir, rayLength);
 
         if (rayResult.hitFound) {
-            //Renderer::DrawLine(p1, rayResult.hitPosition, GREEN);
+            //DebugDraw::DrawLine(p1, rayResult.hitPosition, GREEN);
 
             minFound = glm::min(minFound, rayResult.hitPosition);
             maxFound = glm::max(maxFound, rayResult.hitPosition);
         }
         else {
-            //Renderer::DrawLine(p1, p2, RED);
+            //DebugDraw::DrawLine(p1, p2, RED);
         }
     }
 
@@ -103,8 +103,8 @@ void Light::RaycastWorldBounds() {
 
     // Debug draw
     //AABB worldBounds = AABB(GetWorldBoundsMin(), GetWorldBoundsMax());
-    //Renderer::DrawPoint(rayOrigin, RED);
-    //Renderer::DrawAABB(worldBounds, glm::vec4(GetColor(), 1.0f));
+    //DebugDraw::DrawPoint(rayOrigin, RED);
+    //DebugDraw::DrawAABB(worldBounds, glm::vec4(GetColor(), 1.0f));
 }
 
 

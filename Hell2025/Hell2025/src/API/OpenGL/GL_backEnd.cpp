@@ -446,7 +446,7 @@ namespace OpenGLBackEnd {
     //            const Vertex& v = mappedBuffer[i];
     //            glm::vec3 pos = v.position;
     //            pos.y *= 10;
-    //            //Renderer::DrawPoint(pos, GREEN);
+    //            //DebugDraw::DrawPoint(pos, GREEN);
     //        }
     //    }
     //

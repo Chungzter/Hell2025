@@ -30,7 +30,7 @@ namespace World {
         //Player* player1 = Game::GetLocalPlayerByIndex(0);
         //Player* player2 = Game::GetLocalPlayerByIndex(0);
         //
-        //Renderer::DrawPoint(World::GetPictureFrames()[0].GetPosition(), YELLOW);
+        //DebugDraw::DrawPoint(World::GetPictureFrames()[0].GetPosition(), YELLOW);
         //World::GetPictureFrames()[0].SetScale(glm::vec3(0, 0, 0));
         //
         //for (int i = 0; i < 2; i++) {
@@ -79,7 +79,7 @@ namespace World {
         //}
 
         //static glm::vec3 p = glm::vec3(0.0f);
-        //Renderer::DrawPoint(p, BLUE);
+        //DebugDraw::DrawPoint(p, BLUE);
 
 
         g_fleshHitHitTimer -= Game::GetDeltaTime();

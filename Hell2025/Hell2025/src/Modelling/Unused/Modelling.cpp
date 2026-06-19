@@ -94,10 +94,10 @@ namespace Modelling {
             glm::vec3 p3 = face->vertices[3]->position;
 
             // Draw the outline in yellow.
-            Renderer::DrawLine(p0, p1, YELLOW);
-            Renderer::DrawLine(p1, p2, YELLOW);
-            Renderer::DrawLine(p2, p3, YELLOW);
-            Renderer::DrawLine(p3, p0, YELLOW);
+            DebugDraw::DrawLine(p0, p1, YELLOW);
+            DebugDraw::DrawLine(p1, p2, YELLOW);
+            DebugDraw::DrawLine(p2, p3, YELLOW);
+            DebugDraw::DrawLine(p3, p0, YELLOW);
 
             // If the left mouse button is pressed, delete the face.
             if (Input::LeftMousePressed()) {
@@ -165,7 +165,7 @@ namespace Modelling {
             int next = (i + 1) % 4;
             glm::vec3 a = g_hoveredEdge.face->vertices[i]->position;
             glm::vec3 b = g_hoveredEdge.face->vertices[next]->position;
-            Renderer::DrawLine(a, b, RED);
+            DebugDraw::DrawLine(a, b, RED);
 
             // And if needed, trigger extrusion when clicking, etc.
             if (Input::RightMousePressed()) {
@@ -312,13 +312,13 @@ namespace Modelling {
             const glm::vec3& rayDir = refNormal;
             glm::vec3 intersection = Util::ClosestPointOnSegmentToRay(P0, P1, rayOrigin, rayDir);
             points.push_back(intersection);
-            Renderer::DrawPoint(intersection, GREEN);
+            DebugDraw::DrawPoint(intersection, GREEN);
         }
 
 
         // Draw connecting lines between consecutive edges
         for (size_t i = 0; i + 1 < points.size(); i++) {
-            Renderer::DrawLine(points[i], points[i + 1], GREEN);
+            DebugDraw::DrawLine(points[i], points[i + 1], GREEN);
         }
 
         if (Input::MiddleMousePressed()) {

@@ -40,7 +40,7 @@ namespace Physics {
                     const std::vector<AABB>& activeRigidAABBS = GetActiveRididDynamicAABBs();
                     for (const AABB& aabb : activeRigidAABBS) {
 
-                        //Renderer::DrawAABB(aabb, GREEN);
+                        //DebugDraw::DrawAABB(aabb, GREEN);
 
                         if (heightFieldAABB.IntersectsAABB(aabb, threshold)) {
                             intersectionFound = true;

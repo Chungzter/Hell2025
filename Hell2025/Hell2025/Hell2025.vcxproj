@@ -347,6 +347,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Callbacks\Callbacks.cpp" />
     <ClCompile Include="src\Core\P90MagManager.cpp" />
     <ClCompile Include="src\Core\ParticleManager.cpp" />
+    <ClCompile Include="src\Debug\DebugDraw.cpp" />
     <ClCompile Include="src\Hell\UniqueID.cpp" />
     <ClCompile Include="src\Bible\Bible.cpp" />
     <ClCompile Include="src\GlobalIllumination\DDGIVolume.cpp" />
@@ -379,6 +380,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Player\Player_update.cpp" />
     <ClCompile Include="src\Renderer\Renderer_settings.cpp" />
     <ClCompile Include="src\ResourceManagement\Types\MeshBuffer.cpp" />
+    <ClCompile Include="src\FeatureTest\FeatureTest.cpp" />
     <ClCompile Include="src\Types\Characters\Enemies\CharacterSpine.cpp" />
     <ClCompile Include="src\Types\Characters\Enemies\Dobermann\Dobermann.cpp" />
     <ClCompile Include="src\Types\Characters\Enemies\Kangaroo\Kanagaroo_attack_logic.cpp" />
@@ -634,6 +636,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\BackEnd\Integration\SDL.h" />
     <ClInclude Include="src\Core\P90MagManager.h" />
     <ClInclude Include="src\Core\ParticleManager.h" />
+    <ClInclude Include="src\Debug\DebugDraw.h" />
+    <ClInclude Include="src\FeatureTest\FeatureTest.h" />
     <ClInclude Include="src\GlobalIllumination\DDGIVolume.h" />
     <ClInclude Include="src\GlobalIllumination\PointCloud.h" />
     <ClInclude Include="src\Hell\GPUTypes.h" />

@@ -58,9 +58,9 @@ void Player::UpdateWeaponAttachments() {
         glm::mat4 finalMatrix = modelMatrix * globalBlendedNodeTransform * boneOffset * offsetMatrix;
         //glm::mat4 finalMatrix = modelMatrix * globalBlendedNodeTransform * boneOffset;
 
-        //Renderer::DrawPoint((modelMatrix * globalBlendedNodeTransform)[3], BLUE);
-        //Renderer::DrawPoint((modelMatrix * globalBlendedNodeTransform * boneOffset)[3], WHITE);
-        //Renderer::DrawPoint((modelMatrix * globalBlendedNodeTransform * boneOffset)[3] * offsetMatrix, ORANGE);
+        //DebugDraw::DrawPoint((modelMatrix * globalBlendedNodeTransform)[3], BLUE);
+        //DebugDraw::DrawPoint((modelMatrix * globalBlendedNodeTransform * boneOffset)[3], WHITE);
+        //DebugDraw::DrawPoint((modelMatrix * globalBlendedNodeTransform * boneOffset)[3] * offsetMatrix, ORANGE);
 
         m_p90MagMeshNodes.Update(finalMatrix);
         RenderDataManager::SubmitRenderItems(m_p90MagMeshNodes.GetRenderItems());

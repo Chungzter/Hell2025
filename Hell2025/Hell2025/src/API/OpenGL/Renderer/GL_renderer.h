@@ -187,16 +187,6 @@ namespace OpenGLRenderer {
     void RayMarchFog();
 
     // Debug
-    void UpdateDebugMesh();
-    void DrawLine(const glm::vec3& begin, const glm::vec3& end, const glm::vec4& color, bool depthEnabled = false, int exclusiveViewportIndex = -1, int ignoredViewportIndex = -1);
-    void DrawLine2D(const glm::ivec2& begin, const glm::ivec2& end, const glm::vec4& color);
-    void DrawPoint(const glm::vec3& position, const glm::vec4& color, bool depthEnabled = false, int exclusiveViewportIndex = -1);
-    void DrawPoint2D(const glm::ivec2& position, const glm::vec4& color);
-    void DrawAABB(const AABB& aabb, const glm::vec4& color);
-    void DrawAABB(const AABB& aabb, const glm::vec4& color, const glm::mat4& worldTransform);
-    void DrawOBB(const OBB& obb, const glm::vec4& color);
-    void DrawFrustum(const Frustum& frustum, const glm::vec4& color);
-    void DrawSphere(const glm::vec3& position, float radius, const glm::vec4& color);
     void DebugBlitFrameBufferTexture(const std::string& frameBufferName, const std::string& attachmentName, GLint dstX, GLint dstY, GLint width, GLint height);
     void DebugBlitOpenGLTexture(GLuint textureHandle, float scale);
     void BlitDebugTextures();
@@ -204,11 +194,7 @@ namespace OpenGLRenderer {
     void DrawItemExamineLine(const glm::vec3& begin, const glm::vec3& end, const glm::vec4& color);
     void DrawItemExamineAABB(const AABB& aabb, const glm::vec4& color);
 
-    inline std::vector<DebugVertex2D> g_points2D;
-    inline std::vector<DebugVertex3D> g_points3D;
-    inline std::vector<DebugVertex2D> g_lines2D;
-    inline std::vector<DebugVertex3D> g_lines3D;
-    inline std::vector<DebugVertex3D> g_itemExaminelines;
+
 
     void CreateBlurBuffers();
     void DrawQuad();

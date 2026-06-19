@@ -1,9 +1,9 @@
 #include "World.h"
 #include "AssetManagement/AssetManager.h"
 #include "Bvh/Cpu/CpuBvh.h";
+#include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include "Input/Input.h"
-#include "Renderer/Renderer.h"
 #include "Timer.hpp"
 
 namespace World {
@@ -69,10 +69,10 @@ namespace World {
 
 	void DebugDraw() {
 		for (PrimitiveInstance& primitiveInstance : g_dynamicSceneInstances) {
-			Renderer::DrawAABB(AABB(primitiveInstance.worldAabbBoundsMin, primitiveInstance.worldAabbBoundsMax), YELLOW);
+			DebugDraw::DrawAABB(AABB(primitiveInstance.worldAabbBoundsMin, primitiveInstance.worldAabbBoundsMax), YELLOW);
 		}
 		for (PrimitiveInstance& primitiveInstance : g_staticSceneInstances) {
-			Renderer::DrawAABB(AABB(primitiveInstance.worldAabbBoundsMin, primitiveInstance.worldAabbBoundsMax), GREEN);
+			DebugDraw::DrawAABB(AABB(primitiveInstance.worldAabbBoundsMin, primitiveInstance.worldAabbBoundsMax), GREEN);
 		}
 	}
 

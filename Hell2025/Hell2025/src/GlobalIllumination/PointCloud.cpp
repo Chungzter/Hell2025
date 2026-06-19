@@ -1,5 +1,6 @@
 #include "PointCloud.h"
-#include "Renderer/Renderer.h"
+
+#include "Debug/DebugDraw.h"
 #include "Util.h"
 
 #include "Input/Input.h"
@@ -184,7 +185,7 @@ void PointCloud::DebugDrawGrid() const {
                 uint32_t pointCount = m_gridCellCounts[cellIndex];
 
                 AABB cellAABB(cellMin, cellMax);
-                Renderer::DrawAABB(cellAABB, YELLOW);
+                DebugDraw::DrawAABB(cellAABB, YELLOW);
 
                 // Skip drawing points if this cell is empty
                 if (pointCount == 0) continue;
@@ -202,7 +203,7 @@ void PointCloud::DebugDrawGrid() const {
 
                 for (uint32_t i = 0; i < pointCount; ++i) {
                     uint32_t pointIndex = offset + i;
-                    Renderer::DrawPoint(m_points[pointIndex].position, cellColor);
+                    DebugDraw::DrawPoint(m_points[pointIndex].position, cellColor);
                 }
             }
         }

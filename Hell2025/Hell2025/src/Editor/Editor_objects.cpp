@@ -1,5 +1,6 @@
 #include "Editor.h"
 #include "Audio/Audio.h"
+#include "Debug/DebugDraw.h"
 #include "Editor/Gizmo.h"
 #include <Hell/Logging.h>
 #include "Input/Input.h"
@@ -113,7 +114,7 @@ namespace Editor {
                     bool rayHit = Util::RayIntersectsSphere(rayOrigin, rayDir, position, radius);
 
                     if (rayHit) {
-                        Renderer::DrawPoint(position, WHITE);
+                        DebugDraw::DrawPoint(position, WHITE);
                     }
 
                     if (rayHit && Input::LeftMousePressed()) {
@@ -128,7 +129,7 @@ namespace Editor {
                     // Draw selcted vertex
                     WallSegment& wallSegment = wall->GetWallSegments()[g_selectedVertexIndex];
                     glm::vec3 position = wallSegment.GetStart();
-                    Renderer::DrawPoint(position, YELLOW);
+                    DebugDraw::DrawPoint(position, YELLOW);
 
 
                     if (g_selectedVertexIndex != 0) {
@@ -157,7 +158,7 @@ namespace Editor {
                 bool rayHit = Util::RayIntersectsSphere(rayOrigin, rayDir, position, radius);
 
                 if (rayHit) {
-                    Renderer::DrawPoint(position, WHITE);
+                    DebugDraw::DrawPoint(position, WHITE);
                 }
 
                 if (rayHit && Input::LeftMousePressed()) {
@@ -171,7 +172,7 @@ namespace Editor {
             if (GetEditorSelectionMode() == EditorSelectionMode::VERTEX) {
                 // Draw selcted vertex
                 glm::vec3 position = plane->GetVertices()[g_selectedVertexIndex].position;
-                Renderer::DrawPoint(position, YELLOW);
+                DebugDraw::DrawPoint(position, YELLOW);
             }
 
             // is this IF neccesssary? write safer less confusing logic!!!

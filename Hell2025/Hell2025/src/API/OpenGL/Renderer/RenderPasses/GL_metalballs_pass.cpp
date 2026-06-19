@@ -1,6 +1,7 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
 #include "AssetManagement/AssetManager.h"
+#include "Debug/DebugDraw.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
@@ -48,7 +49,7 @@ namespace OpenGLRenderer {
         }
 
         void DebugDraw() {
-            DrawSphere(m_position, m_proxyRadius, YELLOW);
+            DebugDraw::DrawSphere(m_position, m_proxyRadius, YELLOW);
         }
 
         float GetStepSize() const                      { return m_stepSize; }
@@ -178,7 +179,7 @@ namespace OpenGLRenderer {
         //    origin = rayOrigin + rayDirection;
         //}
         //
-        //Renderer::DrawPoint(rayOrigin + rayDirection, GREEN);
+        //DebugDraw::DrawPoint(rayOrigin + rayDirection, GREEN);
 
         if (Input::KeyPressed(HELL_KEY_P)) {
 
@@ -226,7 +227,7 @@ namespace OpenGLRenderer {
             maxBounds = glm::max(maxBounds, particle.position);
         }
 
-        Renderer::DrawAABB(AABB(minBounds, maxBounds), YELLOW);
+        DebugDraw::DrawAABB(AABB(minBounds, maxBounds), YELLOW);
 
 
         // Calculate density
@@ -392,7 +393,7 @@ namespace OpenGLRenderer {
             //metaBalls.emplace_back(MetaBall(particle.position, 0.005));
             //metaBalls.emplace_back(MetaBall(particle.position + glm::vec3(Util::RandomFloat(-0.005, 0.005)), 0.01));
             //metaBalls.emplace_back(MetaBall(particle.position + glm::vec3(Util::RandomFloat(-0.005, 0.005)), 0.01));
-            Renderer::DrawPoint(particle.position, color);
+            DebugDraw::DrawPoint(particle.position, color);
 
             positions.push_back(particle.position);
         }

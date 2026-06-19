@@ -1,12 +1,12 @@
 
 #include "Audio/Audio.h"
 #include "Bible/Bible.h"
+#include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include <Hell/Logging.h>
 #include "Input/Input.h"
 #include "World/World.h"
 #include "Viewport/ViewportManager.h"
-#include "Renderer/Renderer.h"
 
 namespace Editor {
     uint64_t g_placementObjectId = 0;
@@ -236,7 +236,7 @@ namespace Editor {
                         for (int i = 0; i < sagPoints.size() - 1; i++) {
                             const glm::vec3 p1 = sagPoints[i];
                             const glm::vec3 p2 = sagPoints[i + 1];
-                            Renderer::DrawLine(p1, p2, BLACK);
+                            DebugDraw::DrawLine(p1, p2, BLACK);
                         }
                     }
                 }

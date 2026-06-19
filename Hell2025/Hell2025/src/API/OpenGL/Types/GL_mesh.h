@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #include <glad/gl.h>
 #include <vector>
 #include <glm/glm.hpp>
@@ -83,3 +83,4 @@ inline void OpenGLMesh::SetupVertexAttributes<DebugVertex2D>() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(DebugVertex2D), (void*)offsetof(DebugVertex2D, color));
 }
+*/

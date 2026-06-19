@@ -1,9 +1,9 @@
 #include "HousePlane.h"
 #include "AssetManagement/AssetManager.h"
+#include "Debug/DebugDraw.h"
 #include "ResourceManagement/ResourceManager.h"
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
 #include "World/World.h"
 #include "Hell/UniqueID.h"
 #include "Util.h"
@@ -162,17 +162,17 @@ void HousePlane::SubmitRenderItem() {
 }
 
 void HousePlane::DrawVertices(glm::vec4 color) {
-    Renderer::DrawPoint(m_p0, color);
-    Renderer::DrawPoint(m_p1, color);
-    Renderer::DrawPoint(m_p2, color);
-    Renderer::DrawPoint(m_p3, color);
+    DebugDraw::DrawPoint(m_p0, color);
+    DebugDraw::DrawPoint(m_p1, color);
+    DebugDraw::DrawPoint(m_p2, color);
+    DebugDraw::DrawPoint(m_p3, color);
 }
 
 void HousePlane::DrawEdges(glm::vec4 color) {
-    Renderer::DrawLine(m_p0, m_p1, color);
-    Renderer::DrawLine(m_p1, m_p2, color);
-    Renderer::DrawLine(m_p2, m_p3, color);
-    Renderer::DrawLine(m_p3, m_p0, color);
+    DebugDraw::DrawLine(m_p0, m_p1, color);
+    DebugDraw::DrawLine(m_p1, m_p2, color);
+    DebugDraw::DrawLine(m_p2, m_p3, color);
+    DebugDraw::DrawLine(m_p3, m_p0, color);
 }
 
 void HousePlane::HideInEditor() {

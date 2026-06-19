@@ -1,9 +1,9 @@
 #include "DoorChain.h"
 #include "AssetManagement/AssetManager.h"
+#include "Debug/DebugDraw.h"
 #include "Input/Input.h"
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
 #include "Util.h"
 
 DoorChain::DoorChain(uint64_t id, DoorChainCreateInfo& createInfo, SpawnOffset& spawnOffset) {
@@ -199,7 +199,7 @@ void DoorChain::SubmitRenderItems() {
 
             RenderDataManager::SubmitRenderItem(renderItem);
 
-            Renderer::DrawPoint(rigidDynamic->GetWorldTransform()[3], BLUE);
+            DebugDraw::DrawPoint(rigidDynamic->GetWorldTransform()[3], BLUE);
 
         }
     }

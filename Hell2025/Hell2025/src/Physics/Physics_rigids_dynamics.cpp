@@ -48,10 +48,10 @@ namespace Physics {
             //const glm::vec3 aabbMin = Physics::PxVec3toGlmVec3(bounds.minimum);
             //const glm::vec3 aabbMax = Physics::PxVec3toGlmVec3(bounds.maximum);
             //AABB aabb(aabbMin, aabbMax);
-            //Renderer::DrawAABB(aabb, color);
+            //DebugDraw::DrawAABB(aabb, color);
             //
             //if (Physics::RigidDynamicIsKinematic(it->first)) {
-            //    Renderer::DrawPoint(aabb.GetCenter(), YELLOW);
+            //    DebugDraw::DrawPoint(aabb.GetCenter(), YELLOW);
             //}
         }
     }

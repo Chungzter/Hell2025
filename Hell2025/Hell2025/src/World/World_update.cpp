@@ -92,7 +92,7 @@ namespace World {
         //    float speed = 1.0f;
         //
         //    glm::vec3 origin = ratKidAO->GetPosition() + glm::vec3(0, 0, 0.15f);
-        //    //Renderer::DrawPoint(origin + glm::vec3(0.0f, 1.6f, 0.0f), RED);
+        //    //DebugDraw::DrawPoint(origin + glm::vec3(0.0f, 1.6f, 0.0f), RED);
         //
         //    float angle = time * speed;
         //
@@ -213,8 +213,8 @@ namespace World {
         //    for (const MeshNode& meshNode : genericObject.GetMeshNodes().GetNodes()) {
         //        const AABB& aabb = meshNode.worldspaceAabb;
         //        glm::vec3 closestPoint = aabb.NearestPointTo(Game::GetLocalPlayerByIndex(0)->GetCameraPosition());
-        //        Renderer::DrawAABB(aabb, PINK);
-        //        Renderer::DrawPoint(closestPoint, YELLOW);
+        //        DebugDraw::DrawAABB(aabb, PINK);
+        //        DebugDraw::DrawPoint(closestPoint, YELLOW);
         //    }
         //}
 
@@ -498,7 +498,7 @@ namespace World {
                 aabb.boundsMax = glm::vec4(door.GetPhsyicsAABB().GetBoundsMax(), 0.0f);
                 aabbs.push_back(aabb);
 
-                //Renderer::DrawAABB(door.GetPhsyicsAABB(), YELLOW);
+                //DebugDraw::DrawAABB(door.GetPhsyicsAABB(), YELLOW);
             }
         }
     }

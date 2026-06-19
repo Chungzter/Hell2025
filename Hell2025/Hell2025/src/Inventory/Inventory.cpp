@@ -116,12 +116,12 @@ int Inventory::GetSelectedItemCost() {
 
 glm::ivec2 Inventory::GetSelectedItemHeadingSize() {
     if (!ItemSelected()) return glm::ivec2(0, 0);
-    return TextBlitter::GetBlitTextSize(GetSelectedItemHeading(), m_style.itemHeadingFont, 1.0f);
+    return TextBlitter::GetTextSize(GetSelectedItemHeading(), m_style.itemHeadingFont, 1.0f);
 }
 
 glm::ivec2 Inventory::GetSelectedItemDescriptionSize() {
     if (!ItemSelected()) return glm::ivec2(0, 0);
-    return TextBlitter::GetBlitTextSize(GetSelectedItemDescription(), m_style.itemDescriptionFont, 1.0f);
+    return TextBlitter::GetTextSize(GetSelectedItemDescription(), m_style.itemDescriptionFont, 1.0f);
 }
 
 int Inventory::GetCellSizeInPixels() {

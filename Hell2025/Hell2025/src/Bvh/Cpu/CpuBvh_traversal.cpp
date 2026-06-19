@@ -1,5 +1,5 @@
 #include "CpuBvh.h"
-#include "Renderer/Renderer.h"
+#include "Debug/DebugDraw.h"
 #include <Hell/Constants.h>
 #include <Hell/Types.h>
 #include <Hell/UniqueID.h>
@@ -391,18 +391,18 @@ namespace Bvh::Cpu {
         p1 = rayResult.primitiveTransform * glm::vec4(p1, 1.0f);
         p2 = rayResult.primitiveTransform * glm::vec4(p2, 1.0f);
 
-        Renderer::DrawPoint(p0, color);
-        Renderer::DrawPoint(p1, color);
-        Renderer::DrawPoint(p2, color);
-        Renderer::DrawLine(p0, p1, color);
-        Renderer::DrawLine(p2, p1, color);
-        Renderer::DrawLine(p0, p2, color);
+        DebugDraw::DrawPoint(p0, color);
+        DebugDraw::DrawPoint(p1, color);
+        DebugDraw::DrawPoint(p2, color);
+        DebugDraw::DrawLine(p0, p1, color);
+        DebugDraw::DrawLine(p2, p1, color);
+        DebugDraw::DrawLine(p0, p2, color);
     }
 
     void RenderRayResultNode(BvhRayResult& rayResult, glm::vec4 color) {
         if (!rayResult.hitFound) return;
 
         AABB aabb(rayResult.nodeBoundsMin, rayResult.nodeBoundsMax);
-        Renderer::DrawAABB(aabb, color, rayResult.primitiveTransform);
+        DebugDraw::DrawAABB(aabb, color, rayResult.primitiveTransform);
     }
 }

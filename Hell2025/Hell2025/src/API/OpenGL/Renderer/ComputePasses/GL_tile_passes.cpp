@@ -69,7 +69,7 @@ namespace OpenGLRenderer {
 
         // Debug draw the lights as points
         //for (const GPUChristmasLight& light : g_gpuLights) {
-        //    Renderer::DrawPoint(light.position, light.color);
+        //    DebugDraw::DrawPoint(light.position, light.color);
         //}
 
         OpenGLShader* shader = GetShaderOLD("ChristmasLightCulling");

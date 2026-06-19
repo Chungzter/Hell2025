@@ -1,5 +1,5 @@
 #include "Ladder.h"
-#include "Renderer/Renderer.h"
+#include "Debug/DebugDraw.h"
 
 Ladder::Ladder(uint64_t id, LadderCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_objectId = id;
@@ -64,10 +64,10 @@ void Ladder::Update(float deltaTime) {
 void Ladder::RenderDebug() {
     glm::vec3 p1 = GetPosition();
     glm::vec3 p2 = GetPosition() + (m_worldForward * 0.5f);
-    Renderer::DrawPoint(p1, YELLOW);
-    Renderer::DrawPoint(p2, YELLOW);
-    Renderer::DrawLine(p1, p2, YELLOW);
-    Renderer::DrawAABB(m_overlapHitAABB, YELLOW);
+    DebugDraw::DrawPoint(p1, YELLOW);
+    DebugDraw::DrawPoint(p2, YELLOW);
+    DebugDraw::DrawLine(p1, p2, YELLOW);
+    DebugDraw::DrawAABB(m_overlapHitAABB, YELLOW);
 }
 
 void Ladder::CleanUp() {

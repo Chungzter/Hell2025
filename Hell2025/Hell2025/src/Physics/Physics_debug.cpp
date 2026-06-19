@@ -1,6 +1,6 @@
 #include "Physics.h"
 #include "Core/Game.h"
-#include "Renderer/Renderer.h"
+#include "Debug/DebugDraw.h"
 #include "Viewport/ViewportManager.h"
 
 namespace Physics {
@@ -84,7 +84,7 @@ namespace Physics {
                 default: color = WHITE; break;
             }
 
-            Renderer::DrawLine(Physics::PxVec3toGlmVec3(pxLine.pos0), Physics::PxVec3toGlmVec3(pxLine.pos1), color);
+            DebugDraw::DrawLine(Physics::PxVec3toGlmVec3(pxLine.pos0), Physics::PxVec3toGlmVec3(pxLine.pos1), color);
         }
 
 
@@ -159,7 +159,7 @@ namespace Physics {
            //        default: color = WHITE; break;
            //    }
            //
-           //   // Renderer::DrawLine(Physics::PxVec3toGlmVec3(pxLine.pos0), Physics::PxVec3toGlmVec3(pxLine.pos1), color, false, -1, i);
+           //   // DebugDraw::DrawLine(Physics::PxVec3toGlmVec3(pxLine.pos0), Physics::PxVec3toGlmVec3(pxLine.pos1), color, false, -1, i);
            //}
         }
 

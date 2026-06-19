@@ -12,6 +12,11 @@ namespace ResourceManager {
     }
 
     void Init() {
+        CreateGenericMesh("DebugLines2D");
+        CreateGenericMesh("DebugLines3D");
+        CreateGenericMesh("DebugPoints2D");
+        CreateGenericMesh("DebugPoints3D");
+        CreateGenericMesh("DebugMeshItemExamineLines");
         CreateGenericMesh("UI");
         CreateMeshBuffer("Procedural");
     }

@@ -85,7 +85,7 @@ void BulletTrail::Update(float deltaTime) {
     // Segment this bullet trail traveled this frame
     glm::vec3 p1 = oldPos;
     glm::vec3 p2 = m_position;
-    //Renderer::DrawLine(p1, p2, YELLOW);
+    //DebugDraw::DrawLine(p1, p2, YELLOW);
 
     // Create a regular bullet
     BulletCreateInfo createInfo = m_createInfo;

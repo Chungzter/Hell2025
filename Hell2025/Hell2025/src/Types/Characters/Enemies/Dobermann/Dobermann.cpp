@@ -1,5 +1,6 @@
 #include "Dobermann.h"
 #include <Hell/Logging.h>
+#include "Debug/DebugDraw.h"
 #include "Input/Input.h"
 #include "Pathfinding/NavMesh.h"
 #include "Ragdoll/RagdollManager.h"
@@ -98,9 +99,9 @@ void Dobermann::DebugDraw() {
     // Forward
     glm::vec3 p1 = GetPosition();
     glm::vec3 p2 = GetPosition() + GetForward() * 0.25f;
-    Renderer::DrawPoint(p1, GREEN);
-    Renderer::DrawPoint(p2, GREEN);
-    Renderer::DrawLine(p1, p2, GREEN);
+    DebugDraw::DrawPoint(p1, GREEN);
+    DebugDraw::DrawPoint(p2, GREEN);
+    DebugDraw::DrawLine(p1, p2, GREEN);
 
     // Path
     NavMeshManager::DrawPath(m_path, WHITE);
@@ -234,7 +235,7 @@ void Dobermann::Update(float deltaTime) {
         ragdoll->DisableRendering();
 
     }
-    //Renderer::DrawPoint(GetPosition(), PINK);
+    //DebugDraw::DrawPoint(GetPosition(), PINK);
 
 }
 

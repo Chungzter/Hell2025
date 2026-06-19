@@ -1,5 +1,5 @@
 #include "Staircase.h"
-#include "Renderer/Renderer.h"
+#include "Debug/DebugDraw.h"
 #include <Hell/Logging.h>
 
 Staircase::Staircase(uint64_t id, StaircaseCreateInfo& createInfo, SpawnOffset& spawnOffset) {
@@ -65,9 +65,9 @@ void Staircase::Update(float deltaTime) {
 void Staircase::RenderDebug() {
     glm::vec3 p1 = GetPosition();
     glm::vec3 p2 = GetPosition() + (m_worldForward * 0.5f);
-    Renderer::DrawPoint(p1, YELLOW);
-    Renderer::DrawPoint(p2, YELLOW);
-    Renderer::DrawLine(p1, p2, YELLOW);
+    DebugDraw::DrawPoint(p1, YELLOW);
+    DebugDraw::DrawPoint(p2, YELLOW);
+    DebugDraw::DrawLine(p1, p2, YELLOW);
 }
 
 void Staircase::CleanUp() {

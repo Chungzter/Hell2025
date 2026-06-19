@@ -223,7 +223,7 @@ namespace Editor {
         //if (Util::IsWithinThreshold(mousePos, testPosScreenSpace, threshold)) {
         //    color = OUTLINE_COLOR;
         //}
-        //Renderer::DrawPoint(testPoint, color);
+        //DebugDraw::DrawPoint(testPoint, color);
 
         
 

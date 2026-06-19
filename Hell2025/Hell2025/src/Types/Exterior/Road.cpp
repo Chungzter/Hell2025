@@ -1,5 +1,5 @@
 #include "Road.h"
-#include "Renderer/Renderer.h"
+#include "Debug/DebugDraw.h"
 #include "Physics/Physics.h"
 #include "Util.h"
 
@@ -41,10 +41,10 @@ void Road::Update() {
 void Road::DrawPoints() {
     
     for (glm::vec3& point : m_worldPoints) {
-        Renderer::DrawPoint(point, GREEN);
+        DebugDraw::DrawPoint(point, GREEN);
     }
     for (glm::vec3& point : m_controlPoints3D) {
-        Renderer::DrawPoint(point, RED);
+        DebugDraw::DrawPoint(point, RED);
     }
 
     return;
@@ -53,7 +53,7 @@ void Road::DrawPoints() {
     if (viewportData.empty()) return;
 
 
-    Renderer::DrawPoint(m_worldPoints[0], BLUE);
+    DebugDraw::DrawPoint(m_worldPoints[0], BLUE);
 
     glm::vec3 worldPos = m_worldPoints[0];
     glm::mat4 projectionView = viewportData[0].projectionView;
@@ -73,7 +73,7 @@ void Road::DrawPoints() {
 
     bool hover = Util::IsWithinThreshold(mouseCoords2, pointCoords, 10);
     if (hover) {
-        Renderer::DrawPoint(m_worldPoints[0], YELLOW);
+        DebugDraw::DrawPoint(m_worldPoints[0], YELLOW);
     }
 
     std::cout << "Point:          " << pointCoords.x << ", " << pointCoords.y << "\n";

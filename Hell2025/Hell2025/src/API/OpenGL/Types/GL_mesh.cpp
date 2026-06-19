@@ -1,4 +1,4 @@
-#include "GL_mesh.h"
+/*#include "GL_mesh.h"
 
 void OpenGLMesh::CleanUp() {
     if (m_vbo) {
@@ -10,3 +10,4 @@ void OpenGLMesh::CleanUp() {
         m_vao = 0;
     }
 }
+*/

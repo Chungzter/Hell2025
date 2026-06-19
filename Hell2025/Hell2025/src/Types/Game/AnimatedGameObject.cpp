@@ -2,10 +2,10 @@
 #include "AssetManagement/AssetManager.h"
 #include "Bible/Bible.h"
 #include "Core/Game.h"
+#include "Debug/DebugDraw.h"
 #include <Hell/Logging.h>
 #include "Input/Input.h"
 #include "Physics/Physics.h"
-#include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Hell/UniqueID.h"
 #include "Util.h"
@@ -497,15 +497,15 @@ void AnimatedGameObject::DrawBones(int exclusiveViewportIndex) {
             const glm::mat4& parentBoneWorldMatrix = m_animator.m_globalBlendedNodeTransforms[parentIndex];
             glm::vec3 position = GetModelMatrix() * boneWorldMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             glm::vec3 parentPosition = GetModelMatrix() * parentBoneWorldMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-            Renderer::DrawPoint(position, OUTLINE_COLOR, false, exclusiveViewportIndex);
-            Renderer::DrawLine(position, parentPosition, WHITE, false, exclusiveViewportIndex);
+            DebugDraw::DrawPoint(position, OUTLINE_COLOR, false, exclusiveViewportIndex);
+            DebugDraw::DrawLine(position, parentPosition, WHITE, false, exclusiveViewportIndex);
         }
     }
 
     // // To draw all nodes
     // for (const glm::mat4& boneWorldMatrix : m_animationLayer.m_globalBlendedNodeTransforms) {
     //     glm::vec3 position = GetModelMatrix() * boneWorldMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-    //     Renderer::DrawPoint(position, color, false, exclusiveViewportIndex);
+    //     DebugDraw::DrawPoint(position, color, false, exclusiveViewportIndex);
     // }
 }
 
@@ -519,9 +519,9 @@ void AnimatedGameObject::DrawBoneTangentVectors(float size, int exclusiveViewpor
         glm::vec3 up = glm::normalize(glm::vec3(boneWorldMatrix[1]));
         glm::vec3 forward = glm::normalize(glm::vec3(boneWorldMatrix[2]));
 
-        Renderer::DrawLine(origin, origin + (forward * size), BLUE, false, exclusiveViewportIndex);
-        Renderer::DrawLine(origin, origin + (up * size), GREEN, false, exclusiveViewportIndex);
-        Renderer::DrawLine(origin, origin + (right * size), RED, false, exclusiveViewportIndex);
+        DebugDraw::DrawLine(origin, origin + (forward * size), BLUE, false, exclusiveViewportIndex);
+        DebugDraw::DrawLine(origin, origin + (up * size), GREEN, false, exclusiveViewportIndex);
+        DebugDraw::DrawLine(origin, origin + (right * size), RED, false, exclusiveViewportIndex);
     }
 }
 

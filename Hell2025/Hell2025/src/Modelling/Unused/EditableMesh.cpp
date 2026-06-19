@@ -153,7 +153,7 @@ std::vector<EdgeRef> EditableMesh::GetLoopEdges(EdgeRef* startingEdge) {
 
 void EditableMesh::SubmitVerticesForRendering() {
     for (EditableVertex* v : m_vertices) {
-        Renderer::DrawPoint(v->position, OUTLINE_COLOR);
+        DebugDraw::DrawPoint(v->position, OUTLINE_COLOR);
     }
 }
 
@@ -163,7 +163,7 @@ void EditableMesh::SubmitEdgesForRendering() {
         const auto& verts = face->vertices;
         for (size_t i = 0; i < verts.size(); ++i) {
             size_t next = (i + 1) % verts.size();
-            Renderer::DrawLine(verts[i]->position, verts[next]->position, WHITE);
+            DebugDraw::DrawLine(verts[i]->position, verts[next]->position, WHITE);
         }
     }
 }

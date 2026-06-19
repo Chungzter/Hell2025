@@ -18,7 +18,7 @@ void Player::UpdateSpriteSheets(float deltaTime) {
         m_muzzleFlash.SetPosition(m_muzzleFlashSpawnPosition);
         m_muzzleFlash.Update(deltaTime);
 
-        //Renderer::DrawPoint(boneWorldPosition, YELLOW);
+        //DebugDraw::DrawPoint(boneWorldPosition, YELLOW);
 
         if (m_muzzleFlash.IsRenderingEnabled() && m_muzzleFlash.GetTimeAsPercentage() < 0.1325f) {
             m_spriteSheetRenderItems.push_back(m_muzzleFlash.GetRenderItem());

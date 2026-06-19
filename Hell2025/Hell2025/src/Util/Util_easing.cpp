@@ -37,7 +37,7 @@ namespace Util {
         glm::vec3 pos = glm::mix(startPos, endPos, easedT);
         std::cout << easedT << " " << pos << "\n";
         
-        //Renderer::DrawPoint(pos, RED);
+        //DebugDraw::DrawPoint(pos, RED);
         //
         //if (Input::KeyPressed(HELL_KEY_SPACE)) {
         //    currentTime = 0;

@@ -3,7 +3,7 @@
 #include "AssetManagement/AssetManager.h"
 #include "Config/Config.h"
 #include "Core/Game.h"
-#include "Renderer/Renderer.h"
+#include "Debug/DebugDraw.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include <Hell/Logging.h>
@@ -172,20 +172,20 @@ void Mirror::DebugDraw() {
     }
 
     for (const glm::vec3& point : m_worldCorners) {
-        Renderer::DrawPoint(point, OUTLINE_COLOR);
+        DebugDraw::DrawPoint(point, OUTLINE_COLOR);
     }
 
     glm::vec4 color = IsFacingViewportCamera(0) ? WHITE : RED;
-    Renderer::DrawLine(m_worldCorners[0], m_worldCorners[1], color); // Left
-    Renderer::DrawLine(m_worldCorners[2], m_worldCorners[3], color); // Right
-    Renderer::DrawLine(m_worldCorners[1], m_worldCorners[3], color); // Top
-    Renderer::DrawLine(m_worldCorners[0], m_worldCorners[2], color); // Bottom
+    DebugDraw::DrawLine(m_worldCorners[0], m_worldCorners[1], color); // Left
+    DebugDraw::DrawLine(m_worldCorners[2], m_worldCorners[3], color); // Right
+    DebugDraw::DrawLine(m_worldCorners[1], m_worldCorners[3], color); // Top
+    DebugDraw::DrawLine(m_worldCorners[0], m_worldCorners[2], color); // Bottom
 
     // World normal
     glm::vec3 p1 = m_worldCenter + (m_worldNormal * 0.1f);
-    Renderer::DrawPoint(m_worldCenter, OUTLINE_COLOR);
-    Renderer::DrawPoint(p1, OUTLINE_COLOR);
-    Renderer::DrawLine(m_worldCenter, p1, WHITE);
+    DebugDraw::DrawPoint(m_worldCenter, OUTLINE_COLOR);
+    DebugDraw::DrawPoint(p1, OUTLINE_COLOR);
+    DebugDraw::DrawLine(m_worldCenter, p1, WHITE);
 }
 
 bool Mirror::IsFacingViewportCamera(int viewportIndex) const {

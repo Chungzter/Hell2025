@@ -181,7 +181,7 @@ void ChristmasLightSet::Update(float deltaTime) {
     const auto& currentPattern = patterns[currentPatternIndex];
 
     //for (auto& p : m_createInfo.points) {
-    //    Renderer::DrawPoint(p, RED);
+    //    DebugDraw::DrawPoint(p, RED);
     //}
 
     m_GPUChristmasLights.clear();
@@ -205,7 +205,7 @@ void ChristmasLightSet::Update(float deltaTime) {
             light.color.a = 1.0f;
         }
 
-        //Renderer::DrawPoint(m_renderItems[i].modelMatrix[3], glm::vec4(color, 1.0f));
+        //DebugDraw::DrawPoint(m_renderItems[i].modelMatrix[3], glm::vec4(color, 1.0f));
     }
 }
 

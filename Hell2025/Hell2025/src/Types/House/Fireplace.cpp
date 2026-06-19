@@ -199,25 +199,25 @@ void Fireplace::Update(float deltaTime) {
     m_meshNodes.Update(m_worldMatrix);
     m_fireSpriteSheetObject.Update(deltaTime);
 
-    //Renderer::DrawPoint(m_firePosition, RED);
+    //DebugDraw::DrawPoint(m_firePosition, RED);
 
     //if (const AABB* aabb = m_meshNodes.GetWorldSpaceAabbByMeshName("FireBounds")) {
     //    AABB aabbb(aabb->GetBoundsMin(), aabb->GetBoundsMax());
-    //    Renderer::DrawAABB(aabbb, YELLOW);
+    //    DebugDraw::DrawAABB(aabbb, YELLOW);
     //}
     //
     //if (const AABB* aabb = m_meshNodes.GetWorldSpaceAabbByMeshName("FireBounds")) {
     //    m_fireSpriteSheetObject.SetAABBBounds(*aabb);
     //}
 
-    //Renderer::DrawAABB(m_wallsAabb, WHITE, m_worldMatrix);
+    //DebugDraw::DrawAABB(m_wallsAabb, WHITE, m_worldMatrix);
 
     //glm::vec3 center = m_worldMatrix[3];
     //glm::vec3 forwardPoint = center + m_worldForward;
     //glm::vec3 rightPoint = center + m_worldRight;
     //
-    //Renderer::DrawLine(center, forwardPoint, BLUE);
-    //Renderer::DrawLine(center, rightPoint, YELLOW);
+    //DebugDraw::DrawLine(center, forwardPoint, BLUE);
+    //DebugDraw::DrawLine(center, rightPoint, YELLOW);
 
 }
 

@@ -2,6 +2,7 @@
 #include "API/OpenGL/GL_backend.h"
 #include "AssetManagement/AssetManager.h"
 #include "Bvh/Gpu/Bvh.h"
+#include "Debug/DebugDraw.h""
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "GlobalIllumination/GlobalIllumination.h"
@@ -745,7 +746,7 @@ namespace OpenGLRenderer {
 
         for (const BvhNode& node : sceneNodes) {
             AABB aabb(node.boundsMin, node.boundsMax);
-            Renderer::DrawAABB(aabb, color);
+            DebugDraw::DrawAABB(aabb, color);
         }
     }
 
@@ -755,7 +756,7 @@ namespace OpenGLRenderer {
         for (const BvhNode& node : sceneNodes) {
             if (node.primitiveCount > 0) {
                 AABB aabb(node.boundsMin, node.boundsMax);
-                Renderer::DrawAABB(aabb, color);
+                DebugDraw::DrawAABB(aabb, color);
             }
         }
     }
@@ -817,9 +818,9 @@ namespace OpenGLRenderer {
                                 glm::vec3 worldP1 = instance.worldTransform * glm::vec4(p1, 1.0f);
                                 glm::vec3 worldP2 = instance.worldTransform * glm::vec4(p2, 1.0f);
 
-                                Renderer::DrawLine(worldP0, worldP1, WHITE);
-                                Renderer::DrawLine(worldP1, worldP2, WHITE);
-                                Renderer::DrawLine(worldP2, worldP0, WHITE);
+                                DebugDraw::DrawLine(worldP0, worldP1, WHITE);
+                                DebugDraw::DrawLine(worldP1, worldP2, WHITE);
+                                DebugDraw::DrawLine(worldP2, worldP0, WHITE);
                             }
                         }
                         else {

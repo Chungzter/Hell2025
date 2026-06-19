@@ -1,6 +1,6 @@
 #include "Shark.h"
 #include "Core/Game.h"
-#include "Renderer/Renderer.h"
+#include "Debug/DebugDraw.h"
 #include "Input/Input.h"
 #include "Math/LineMath.hpp"
 #include "World/World.h"
@@ -265,29 +265,29 @@ std::vector<glm::vec3> SmoothPath(std::vector<glm::vec3>& path, float spacing) {
 
 void Shark::DrawDebug() {
     for (const glm::vec3& point : m_path) {
-        Renderer::DrawPoint(point, RED);
+        DebugDraw::DrawPoint(point, RED);
     }
 
     const glm::vec3& p1 = m_spinePositions[0];
-    Renderer::DrawPoint(p1, YELLOW);
+    DebugDraw::DrawPoint(p1, YELLOW);
 
     // Forward vector
     glm::vec3 p2 = p1 + m_forward;
-    Renderer::DrawLine(p1, p2, YELLOW);
-    Renderer::DrawPoint(p2, YELLOW);
+    DebugDraw::DrawLine(p1, p2, YELLOW);
+    DebugDraw::DrawPoint(p2, YELLOW);
 
     // Dir to target
     glm::vec3 a = p1 * glm::vec3(1.0f, 0.0f, 1.0f);
     glm::vec3 b = m_targetPosition * glm::vec3(1.0f, 0.0f, 1.0f);
     glm::vec3 dirToTarget = glm::normalize(b - a);
     glm::vec3 p3 = p1 + dirToTarget;;
-    Renderer::DrawLine(p1, p3, GREEN);
-    Renderer::DrawPoint(p3, GREEN);
+    DebugDraw::DrawLine(p1, p3, GREEN);
+    DebugDraw::DrawPoint(p3, GREEN);
 
     // Target XZ
     glm::vec3 p4 = m_targetPosition;
     p4.y = m_path[0].y;// p1.y;
-    Renderer::DrawPoint(p4, WHITE);
+    DebugDraw::DrawPoint(p4, WHITE);
 }
 
 void Shark::Update(float deltaTime) {
@@ -295,7 +295,7 @@ void Shark::Update(float deltaTime) {
     // Draw path
     //for (const glm::vec3& point : m_path) {
     //    glm::vec3 p = glm::vec3(point.x, Ocean::GetOceanOriginY(), point.z);
-    //    Renderer::DrawPoint(p, RED);
+    //    DebugDraw::DrawPoint(p, RED);
     //}
 
     //if (Input::KeyPressed(HELL_KEY_PERIOD)) {
@@ -919,10 +919,10 @@ AnimatedGameObject* Shark::GetAnimatedGameObject() {
 
 void Shark::DrawSpinePoints() {
     for (int i = 1; i < SHARK_SPINE_SEGMENT_COUNT; ++i) {
-        Renderer::DrawPoint(m_spinePositions[i], RED);
+        DebugDraw::DrawPoint(m_spinePositions[i], RED);
     }
     for (int i = 0; i < 1; ++i) {
-        Renderer::DrawPoint(m_spinePositions[i], WHITE);
+        DebugDraw::DrawPoint(m_spinePositions[i], WHITE);
     }
 }
 

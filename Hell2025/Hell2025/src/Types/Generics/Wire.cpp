@@ -1,5 +1,5 @@
 #include "Wire.h"
-#include "Renderer/Renderer.h"
+#include "Debug/DebugDraw.h"
 #include "Util.h"
 
 void Wire::Init(glm::vec3 begin, glm::vec3 end, float sag, float radius, float spacing) {
@@ -119,7 +119,7 @@ void Wire::CleanUp() {
 
 void Wire::Update() {
     for (glm::vec3& point : m_segmentPoints) {
-        Renderer::DrawPoint(point, OUTLINE_COLOR);
+        DebugDraw::DrawPoint(point, OUTLINE_COLOR);
     }
 }
 

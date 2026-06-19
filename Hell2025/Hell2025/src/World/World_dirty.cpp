@@ -1,6 +1,6 @@
 #include "World.h"
+#include "Debug/DebugDraw.h"
 #include "Hell/Logging.h"
-#include "Renderer/Renderer.h"
 
 namespace World {
     void DebugDrawLightShadowMapDirtyFlags();
@@ -97,10 +97,10 @@ namespace World {
             AABB aabb(light.GetWorldBoundsMin(), light.GetWorldBoundsMax());
 
             if (light.IsDirtyForShadowMaps()) {
-                Renderer::DrawAABB(aabb, RED);
+                DebugDraw::DrawAABB(aabb, RED);
             }
             else {
-                Renderer::DrawAABB(aabb, GREEN);
+                DebugDraw::DrawAABB(aabb, GREEN);
             }
         }
     }

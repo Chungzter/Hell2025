@@ -2,178 +2,32 @@
 
 #include "Hell/Logging.h"
 
-#include "API/OpenGL/GL_memory_tracker.h" // TODO: Clean me up and out of here
-
 #include "AssetManagement/AssetManager.h"
 #include "BackEnd/BackEnd.h"
-#include "Core/Debug.h"
 #include "Config/Config.h"
 #include "ResourceManagement/ResourceManager.h"
-#include "Renderer/Renderer.h"
 #include "UI/TextBlitter.h"
 
 namespace UIBackEnd {
-
+    std::vector<RenderItemUI> g_renderItems;
     std::vector<Vertex2D> g_vertices;
     std::vector<uint32_t> g_indices;
-    std::vector<UIRenderItem> g_renderItems;
 
     void Init() {
         Logging::Init() << "Initialized the UI Backend";
-
-        // Export fonts, aka create spritesheets from single char files, no need to do every init but YOLO ¯\_(ツ)_/¯
-        std::string name = "StandardFont";
-        std::string characters = R"(!"#$%&'*+,-./0123456789:;<=>?_ABCDEFGHIJKLMNOPQRSTUVWXYZ\^_`abcdefghijklmnopqrstuvwxyz [])";
-        std::string textureSourcePath = "res/fonts/raw_images/standard_font/";
-        std::string outputPath = "res/fonts/";
-        FontSpriteSheetPacker::Export(name, characters, 0, 1, textureSourcePath, outputPath);
-
-        name = "AmmoFont";
-        characters = "0123456789/";
-        textureSourcePath = "res/fonts/raw_images/ammo_font/";
-        FontSpriteSheetPacker::Export(name, characters, 0, 1, textureSourcePath, outputPath);
-
-        name = "BebasNeue";
-        characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789’,. ";
-        textureSourcePath = "res/fonts/raw_images/bebas_neue/";
-        FontSpriteSheetPacker::Export(name, characters, 2, 1, textureSourcePath, outputPath);
-
-        name = "RobotoCondensed";
-        characters = R"(!"#$%&'*+,-./0123456789:;<=>?_ABCDEFGHIJKLMNOPQRSTUVWXYZ\^_`abcdefghijklmnopqrstuvwxyz )";
-        textureSourcePath = "res/fonts/raw_images/roboto_condensed/";
-        FontSpriteSheetPacker::Export(name, characters, 1, 1, textureSourcePath, outputPath);
-
-        // Import fonts
-        FontSpriteSheet standardFont = FontSpriteSheetPacker::Import("res/fonts/StandardFont.json");
-        FontSpriteSheet ammoFont = FontSpriteSheetPacker::Import("res/fonts/AmmoFont.json");
-        FontSpriteSheet bebasNeue = FontSpriteSheetPacker::Import("res/fonts/BebasNeue.json");
-        FontSpriteSheet robotoCondensed = FontSpriteSheetPacker::Import("res/fonts/RobotoCondensed.json");
-        TextBlitter::AddFont(standardFont);
-        TextBlitter::AddFont(ammoFont);
-        TextBlitter::AddFont(bebasNeue);
-        TextBlitter::AddFont(robotoCondensed);
+        TextBlitter::Init();
     }
 
-    void InventoryTest() {
-
-        UIBackEnd::BlitTexture("inv2", { 745, 100 }, Alignment::TOP_LEFT, WHITE, { -1, -1 }, TextureFilter::LINEAR);
-
-        std::string name = "GLOCK 22";
-        std::string description= R"(Australian police issue. Matte and boxy, a cold
-little companion. It does the paperwork duty
-without drama. Dependable at short range,
-underwhelming at a distance. A proper piece
-of shit.)";
-
-
-
-        name = "9 X 19MM";
-        description = R"(Born for Lugers, adopted by everyone. NATO's
-common tongue, cheap to feed and easy to
-stack.
-)";
-
-        name = "7.62 X 25MM";
-        description = R"(Long, bottleneck case; hot, flat, and loud.
-Punches deep, too deep, through coats, doors,
-and sometimes sense.
-)";
-
-        name = "AKS74U";
-        description = R"(Krinkov to some, a headache to anyone nearby.
-Built for tank hatches, stairwells, and mowing
-yer enemy like meat.
-)";
-
-        name = "SHOTGUN SHELLS";
-        description = R"(12 gauge, plastic hulls with brass rims. They
-pattern wide and peel flesh. Heavy on the
-shoulder, honest in the work.
-)";
-
-        name = "RED DOT SIGHT";
-        description = R"(A little window with a floating promise. Turns
-aim into point, and point into a bloody mess.
-)";
-
-        name = "SUPPRESSOR";
-        /*description = R"(A metal hush that threads onto bad intentions.
-You'll hear the brass breathe before it even hits
-the floor.
-)";*/
-        description = R"(You'll hear the brass breathe before it even
-hits the floor.
-)";
-
-
-
-
-        BlitText("[COL=0.839,0.784,0.635]" + name, "BebasNeue", 800, 438, Alignment::TOP_LEFT, 1.0f, TextureFilter::LINEAR);
-        BlitText("[COL=0.839,0.784,0.635]" + description, "RobotoCondensed", 800, 486, Alignment::TOP_LEFT, 1.0f, TextureFilter::LINEAR);
-
-
-        UIBackEnd::BlitTexture("inventory_green_button", glm::ivec2(850, 630), Alignment::CENTERED, WHITE, glm::ivec2(-1, -1), TextureFilter::LINEAR);
-        BlitText("[COL=0.839,0.784,0.635]M", "RobotoCondensed", 850, 631, Alignment::CENTERED, 0.75f, TextureFilter::LINEAR);
-        BlitText("[COL=0.839,0.784,0.635]Move", "RobotoCondensed", 870, 631, Alignment::CENTERED_VERTICAL, 1.0f, TextureFilter::LINEAR);
-
-        UIBackEnd::BlitTexture("inventory_green_button", glm::ivec2(850, 660), Alignment::CENTERED, WHITE, glm::ivec2(-1, -1), TextureFilter::LINEAR);
-        BlitText("[COL=0.839,0.784,0.635]C", "RobotoCondensed", 850, 661, Alignment::CENTERED, 0.75f, TextureFilter::LINEAR);
-        BlitText("[COL=0.839,0.784,0.635]Combine", "RobotoCondensed", 870, 661, Alignment::CENTERED_VERTICAL, 1.0f, TextureFilter::LINEAR);
+    void BeginFrame() {
+        g_vertices.clear();
+        g_indices.clear();
+        g_renderItems.clear();
     }
 
     void Update() {
-        if (Debug::GetDebugTextMode() == DebugTextMode::GLOBAL) {
-            //std::string text = "Global debug text\n... apparently it's broken right now.";
-            std::string text = Debug::GetText();
-            BlitText(text, "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
-        }
-
-        else if (Debug::GetDebugTextMode() == DebugTextMode::MEMORY_TRACKER) {
-            std::string names = OpenGLMemoryTracker::GetReportNames();
-            std::string bytes = OpenGLMemoryTracker::GetReportBytes();
-            BlitText(names, "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
-            BlitText(bytes, "StandardFont", 250, 0, Alignment::TOP_LEFT, 2.0f);
-        }
-
-        else if (Debug::GetDebugTextMode() == DebugTextMode::PROFILING) {
-            float scale = 1.4f;
-            int margin = 35;
-            TextureFilter textureFilter = TextureFilter::LINEAR;
-
-			const std::string white = "[COL=1.0,1.0,1.0,1.0]";
-			const std::string orange = "[COL=1.0,0.65,0.0,1.0]";
-			const std::string yellow = "[COL=1.0,1.0,0.0,1.0]";
-			const std::string red = "[COL=1.0,0.0,0.0,1.0]";
-			const std::string lightBlue = "[COL=0.68,0.85,0.9,1.0]";
-			const std::string lightGreen = "[COL=0.56,0.93,0.56,1.0]";
-
-            const std::string headingColor = lightGreen;
-
-            std::string names = "\n" + Renderer::GetZoneNames();
-            std::string timingsGPU = headingColor + "GPU\n" + Renderer::GetZoneGPUTimings();
-            std::string timingsCPU = headingColor + "CPU\n" + Renderer::GetZoneCPUTimings();
-            glm::ivec2 namesSize = TextBlitter::GetBlitTextSize(names, "StandardFont", scale);
-            glm::ivec2 timingsGPUSize = TextBlitter::GetBlitTextSize(timingsGPU, "StandardFont", scale);
-            glm::ivec2 timingsCPUSize = TextBlitter::GetBlitTextSize(timingsCPU, "StandardFont", scale);
-
-            if (names.length() != 0) {
-                timingsGPU += "\n" + headingColor + "Total GPU : " + Renderer::GetTotalGPUTime();
-                BlitText(timingsGPU, "StandardFont", 0, 0, Alignment::TOP_LEFT, scale, textureFilter);
-                BlitText(timingsCPU, "StandardFont", timingsGPUSize.x + margin, 0, Alignment::TOP_LEFT, scale, textureFilter);
-                BlitText(names, "StandardFont", timingsGPUSize.x + margin + timingsCPUSize.x + margin, 0, Alignment::TOP_LEFT, scale, textureFilter);
-            }
-        }
-
         GenericMesh& genericMesh = ResourceManager::GetGenericMesh("UI");
         genericMesh.UpdateVertexData(g_vertices);
         genericMesh.UpdateIndexData(g_indices);
-
-        g_vertices.clear();
-        g_indices.clear();
-    }
-
-    void EndFrame() {
-        g_renderItems.clear();
     }
 
     void BlitText(const std::string& text, const std::string& fontName, glm::ivec2 location, Alignment alignment, float scale, TextureFilter textureFilter) {
@@ -181,24 +35,30 @@ hits the floor.
     }
 
     void BlitText(const std::string& text, const std::string& fontName, int originX, int originY, Alignment alignment, float scale, TextureFilter textureFilter) {
-        FontSpriteSheet* fontSpriteSheet = TextBlitter::GetFontSpriteSheet(fontName);
-        if (!fontSpriteSheet) {
-            std::cout << "UIBackEnd::BlitText() failed to find " << fontName << "\n";
+        int textureIndex = AssetManager::GetTextureIndexByName(fontName);
+        if (textureIndex == -1) {
+            std::cout << "UIBackEnd::BlitText() failed to find texture " << fontName << "\n";
             return;
         }
-        int baseVertex = g_vertices.size();
 
+        size_t baseIndex = g_indices.size();
         const Resolutions& resolutions = Config::GetResolutions();
 
-        MeshData2D meshData = TextBlitter::BlitText(text, fontName, originX, originY, resolutions.ui, alignment, scale, baseVertex);
-        g_vertices.insert(std::end(g_vertices), std::begin(meshData.vertices), std::end(meshData.vertices));
-        g_indices.insert(std::end(g_indices), std::begin(meshData.indices), std::end(meshData.indices));
+        if (!TextBlitter::FontExists(fontName)) {
+            Logging::Error() << "UIBackEnd::BlitText() failed to find " << fontName << "\n";
+            return;
+        }
 
-        UIRenderItem& renderItem = g_renderItems.emplace_back();
+        TextBlitter::BlitText(text, fontName, originX, originY, resolutions.ui, alignment, scale, textureIndex, g_vertices, g_indices);
+        
+        size_t indexCount = g_indices.size() - baseIndex;
+        if (indexCount == 0) return;
+
+        RenderItemUI& renderItem = g_renderItems.emplace_back();
         renderItem.baseVertex = 0;
-        renderItem.baseIndex = g_indices.size() - meshData.indices.size();
-        renderItem.indexCount = meshData.indices.size();
-        renderItem.textureIndex = AssetManager::GetTextureIndexByName(fontName);
+        renderItem.baseIndex = static_cast<int>(baseIndex);
+        renderItem.indexCount = static_cast<int>(indexCount);
+        renderItem.textureIndex = textureIndex;
         renderItem.filter = (textureFilter == TextureFilter::NEAREST) ? 1 : 0;
         renderItem.clipMinX = 0;
         renderItem.clipMinY = 0;
@@ -301,7 +161,7 @@ hits the floor.
         g_indices.push_back(baseVertex + 2);
         g_indices.push_back(baseVertex + 3);
 
-        UIRenderItem& renderItem = g_renderItems.emplace_back();
+        RenderItemUI& renderItem = g_renderItems.emplace_back();
         renderItem.baseVertex = 0;
         renderItem.baseIndex = baseIndex;
         renderItem.indexCount = 6;
@@ -322,7 +182,7 @@ hits the floor.
         renderItem.clipMaxY = (clipMaxY >= 0) ? clipMaxY : H;
     }
 
-    std::vector<UIRenderItem>& GetRenderItems() {
+    const std::vector<RenderItemUI>& GetRenderItems() {
         return g_renderItems;
     }
 }

@@ -113,8 +113,8 @@ void Player::UpdateViewWeapon(float deltaTime) {
     //
     //glm::vec3 pos = viewWeapon->GetBoneWorldMatrix("Magazine")[3];
     //glm::vec3 pos2 = viewWeapon->GetBoneWorldMatrix("Weapon")[3];
-    //Renderer::DrawPoint(pos, RED);
-    //Renderer::DrawPoint(pos2, GREEN);
+    //DebugDraw::DrawPoint(pos, RED);
+    //DebugDraw::DrawPoint(pos2, GREEN);
 
     // Final transform
     Transform transform;

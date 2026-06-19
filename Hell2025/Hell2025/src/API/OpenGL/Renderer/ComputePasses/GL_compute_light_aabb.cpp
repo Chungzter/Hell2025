@@ -1,12 +1,17 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
 #include "Backend/Backend.h"
+#include "Debug/DebugDraw.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
 
 #include <Hell/Logging.h>
 
+// Pretty sure this whole file is unused
+// Pretty sure this whole file is unused
+// Pretty sure this whole file is unused
+// Pretty sure this whole file is unused
 // Pretty sure this whole file is unused
 
 namespace OpenGLRenderer {
@@ -211,6 +216,6 @@ namespace OpenGLRenderer {
 			}
 		}
 
-        OpenGLRenderer::DrawPoint(World::GetLightByIndex(lightIndex)->GetPosition(), YELLOW);
+        DebugDraw::DrawPoint(World::GetLightByIndex(lightIndex)->GetPosition(), YELLOW);
 	}
 }

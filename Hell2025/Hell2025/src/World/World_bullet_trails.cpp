@@ -69,11 +69,11 @@ namespace World {
             particle.position += particle.velocity * deltaTime;
             particle.rotation += particle.rotationalVelocity * deltaTime;
 
-            //Renderer::DrawPoint(particle.position, RED);
+            //DebugDraw::DrawPoint(particle.position, RED);
 
             //float lineLength = 0.15f;
             //glm::vec3 spinOffset = glm::vec3(std::cos(particle.rotation), std::sin(particle.rotation), 0.0f) * lineLength;
-            //Renderer::DrawLine(particle.position, particle.position + spinOffset, GREEN);
+            //DebugDraw::DrawLine(particle.position, particle.position + spinOffset, GREEN);
         }
     }
 }

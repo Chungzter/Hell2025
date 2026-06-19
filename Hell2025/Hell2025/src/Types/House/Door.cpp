@@ -2,11 +2,10 @@
 #include "Audio/Audio.h"
 #include "AssetManagement/AssetManager.h"
 #include "Bible/Bible.h"
+#include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include "Physics/Physics.h"
-#include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
 #include "Managers/OpenableManager.h"
 #include "Hell/UniqueID.h"
 #include "Util.h"
@@ -133,9 +132,9 @@ void Door::Update(float deltaTime) {
 	//	glm::vec3 oppositePointClosed = transform.to_mat4() * mesh->localTransform * glm::vec4(mesh->aabbMax.x, mesh->aabbMin.y, mesh->aabbMin.z, 1.0f);
 	//	glm::vec3 oppositePointOpen = transform.to_mat4() * mesh->localTransform * openTransform.to_mat4() * glm::vec4(mesh->aabbMax.x, mesh->aabbMin.y, mesh->aabbMin.z, 1.0f);
     //
-	//	Renderer::DrawPoint(origin, YELLOW);
-	//	Renderer::DrawPoint(oppositePointClosed, RED);
-	//	Renderer::DrawPoint(oppositePointOpen, GREEN);
+	//	DebugDraw::DrawPoint(origin, YELLOW);
+	//	DebugDraw::DrawPoint(oppositePointClosed, RED);
+	//	DebugDraw::DrawPoint(oppositePointOpen, GREEN);
     //
     //    int segmentCount = 10;
     //    float openIncrement = m_createInfo.maxOpenValue / (float)segmentCount;
@@ -144,11 +143,11 @@ void Door::Update(float deltaTime) {
 	//		Transform openTransform;
 	//		openTransform.rotation.y = i * -openIncrement;
 	//		glm::vec3 oppositePoint = transform.to_mat4() * mesh->localTransform * openTransform.to_mat4() * glm::vec4(mesh->aabbMax.x, mesh->aabbMin.y, mesh->aabbMin.z, 1.0f);
-	//		Renderer::DrawPoint(oppositePoint, BLUE);
+	//		DebugDraw::DrawPoint(oppositePoint, BLUE);
     //    }
     //}
 
-    //Renderer::DrawLine()
+    //DebugDraw::DrawLine()
     //CreateRaytracingVertices();
 }
 
@@ -262,9 +261,9 @@ void Door::DebugDraw() {
 
     glm::vec3 p1 = GetPosition();
     glm::vec3 p2 = GetPosition() + m_worldForward;
-    Renderer::DrawLine(p1, p2, color);
-    Renderer::DrawPoint(p1, color);
-    Renderer::DrawPoint(p2, color);
+    DebugDraw::DrawLine(p1, p2, color);
+    DebugDraw::DrawPoint(p1, color);
+    DebugDraw::DrawPoint(p2, color);
 }
 
 

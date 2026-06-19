@@ -1,8 +1,8 @@
 #include "DDGIVolume.h"
 
 #include "Bvh/Gpu/Bvh.h"
+#include "Debug/DebugDraw.h"
 #include "AssetManagement/AssetManager.h" // remove me
-#include "Renderer/Renderer.h" // remove me
 #include "World/World.h"
 
 #include <Hell/Logging.h>
@@ -439,7 +439,7 @@ void DDGIVolume::DebugDraw() {
     // Draw volume bounds as AABB
     if (false) {
         AABB aabb = AABB(GetBoundsMin(), GetBoundsMax());
-        Renderer::DrawAABB(aabb, YELLOW);
+        DebugDraw::DrawAABB(aabb, YELLOW);
     }
 
     // Draw probe positions as points
@@ -448,7 +448,7 @@ void DDGIVolume::DebugDraw() {
             for (uint32_t y = 0; y < m_probeCountY; y++) {
                 for (uint32_t z = 0; z < m_probeCountZ; z++) {
                     glm::vec3 probePosition = GetProbeBaseWorldPosition(glm::ivec3(x, y, z));
-                    Renderer::DrawPoint(probePosition, RED);
+                    DebugDraw::DrawPoint(probePosition, RED);
                 }
             }
         }

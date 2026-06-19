@@ -66,7 +66,7 @@ namespace OpenGLRenderer {
 
         int lastFilter = -1; // -1 = unknown, 0 = linear, 1 = nearest
 
-        for (UIRenderItem& renderItem : UIBackEnd::GetRenderItems()) {
+        for (const RenderItemUI& renderItem : UIBackEnd::GetRenderItems()) {
 
             OpenGLTexture& glTexture = AssetManager::GetTextureByIndex(renderItem.textureIndex)->GetGLTexture();
             glBindTextureUnit(0, glTexture.GetHandle());

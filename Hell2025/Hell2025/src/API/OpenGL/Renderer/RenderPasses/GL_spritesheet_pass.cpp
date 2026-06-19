@@ -1,6 +1,7 @@
 #include "API/OpenGL/GL_backend.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "AssetManagement/AssetManager.h"
+#include "Debug/DebugDraw.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "Util/Util.h"
@@ -116,7 +117,7 @@ namespace OpenGLRenderer {
                     glBindTexture(GL_TEXTURE_2D, texture->GetGLTexture().GetHandle());
                     glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), 1, mesh->baseVertex, i);
 
-                    DrawPoint(renderItem.position, RED);
+                    DebugDraw::DrawPoint(renderItem.position, RED);
                 }
             }
         }
