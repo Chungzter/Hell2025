@@ -123,13 +123,21 @@ namespace OpenGLRenderer {
         EditorPass();
         OutlinePass();
 
-        // Downscale and blit to swapchain
         OpenGLFrameBuffer& finalImageFbo = GetFrameBuffer("FinalImage");
-        OpenGLFrameBuffer& gBufferRE = GetFrameBuffer("GBufferRE");
-        OpenGLRenderer::BlitFrameBuffer(&gBufferRE, &finalImageFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
-        OpenGLRenderer::BlitToDefaultFrameBuffer(&finalImageFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& presentFbo = GetFrameBuffer("Present");
+
+        // Downscale with linear filtering
+        OpenGLRenderer::BlitFrameBuffer(&gBuffer, &finalImageFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+        // Upscale with nearest filtering
+        OpenGLRenderer::BlitFrameBuffer(&finalImageFbo, &presentFbo, "Color", "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         UIPass();
+
+        // Blit to swap chain
+        OpenGLRenderer::BlitToDefaultFrameBuffer(&presentFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
         ImGuiPass();
     }
 

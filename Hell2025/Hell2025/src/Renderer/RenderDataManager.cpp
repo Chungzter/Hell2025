@@ -11,6 +11,7 @@
 #include "Ocean/Ocean.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
+#include "UI/UIBackend.h"
 #include <span>
 #include <unordered_map>
 
@@ -30,6 +31,7 @@ namespace RenderDataManager {
     DrawCommandsSet g_drawCommandsSet;
     FlashLightShadowMapDrawInfo g_flashLightShadowMapDrawInfo;
     RendererData g_rendererData;
+    std::vector<DrawIndexedIndirectCommand> g_drawCommandsUI;
     std::vector<GPULight> g_gpuLightsHighRes;
 
 	std::vector<RenderItem> g_renderItemsProcedural;
@@ -144,12 +146,34 @@ namespace RenderDataManager {
 		g_shadowCasterRenderItems.clear();
 		g_renderItemsStainedGlass.clear();
 		g_renderItemsGlass.clear();
+        
+        g_drawCommandsUI.clear();
     }
 
     void Update() {
         UpdateViewportData();
         UpdateRendererData();
         UpdateDrawCommandsSet();
+        UpdateDrawCommandsUI();
+    }
+
+    void UpdateDrawCommandsUI() {
+        const std::vector<RenderItemUI>& renderItems = UIBackEnd::GetRenderItems();
+        g_drawCommandsUI.resize(renderItems.size());
+
+        for (uint32_t i = 0; i < renderItems.size(); i++) {
+            const RenderItemUI& renderItem = renderItems[i];
+            DrawIndexedIndirectCommand& command = g_drawCommandsUI[i];
+            command.indexCount = renderItem.indexCount;
+            command.instanceCount = 1;
+            command.firstIndex = renderItem.baseIndex;
+            command.baseVertex = renderItem.baseVertex;
+            command.baseInstance = i;
+        }
+    }
+
+    const std::vector<DrawIndexedIndirectCommand>& GetDrawCommandsUI() {
+        return g_drawCommandsUI;
     }
 
     void UpdateViewportData() {

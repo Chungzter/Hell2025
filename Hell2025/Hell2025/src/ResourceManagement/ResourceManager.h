@@ -7,6 +7,7 @@
 
 namespace ResourceManager {
     void Init();
+    void CleanUp();
 
     GenericMesh& CreateGenericMesh(const std::string& name);
     GenericMesh& GetGenericMesh(const std::string& name);

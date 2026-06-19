@@ -58,7 +58,7 @@ namespace UIBackEnd {
         renderItem.baseIndex = static_cast<int>(baseIndex);
         renderItem.indexCount = static_cast<int>(indexCount);
         renderItem.textureIndex = textureIndex;
-        renderItem.filter = (textureFilter == TextureFilter::NEAREST) ? 1 : 0;
+        renderItem.filterMode = (textureFilter == TextureFilter::NEAREST) ? 1 : 0;
         renderItem.clipMinX = 0;
         renderItem.clipMinY = 0;
         renderItem.clipMaxX = resolutions.ui.x;
@@ -167,7 +167,7 @@ namespace UIBackEnd {
         renderItem.baseIndex = baseIndex;
         renderItem.indexCount = 6;
         renderItem.textureIndex = textureIndex;
-        renderItem.filter = (textureFilter == TextureFilter::NEAREST) ? 1 : 0;
+        renderItem.filterMode = (textureFilter == TextureFilter::NEAREST) ? 1 : 0;
         renderItem.clipMinX = clipMinX;
         renderItem.clipMinY = clipMinY;
         renderItem.clipMaxX = clipMaxX;

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include "API/OpenGL/GL_backEnd.h"
+#include "API/OpenGL/GL_resource_manager.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/Vulkan/VK_backEnd.h"
 #include "AssetManagement/AssetManager.h"
@@ -130,6 +131,11 @@ namespace BackEnd {
         World::BeginFrame();
     }
 
+    void UpdateLoadingScreen() {
+        UIBackEnd::Update();
+        RenderDataManager::UpdateDrawCommandsUI();
+    }
+
     void UpdateGame() {
         const Resolutions& resolutions = Config::GetResolutions();
 
@@ -178,6 +184,13 @@ namespace BackEnd {
     }
 
     void CleanUp() {
+        ResourceManager::CleanUp();
+
+        if (GetAPI() == API::OPENGL) {
+            OpenGLResourceManager::CleanUp();
+            OpenGLRenderer::CleanUp();
+        }
+
         GLFW::Destroy();
     }
 

@@ -10,15 +10,20 @@
 #include <vector>
 
 struct RenderItemUI {
-    int baseVertex = 0;
-    int baseIndex = 0;
-    int indexCount = 0;
-    int textureIndex = 0;
-    int filter = 0; // 0 for linear, 1 for nearest
-    int clipMinX = -1;
-    int clipMinY = -1;
-    int clipMaxX = -1;
-    int clipMaxY = -1;
+    uint32_t baseVertex = 0;
+    uint32_t baseIndex = 0;
+    uint32_t indexCount = 0;
+    uint32_t textureIndex = 0;
+
+    int32_t clipMinX = -1;
+    int32_t clipMinY = -1;
+    int32_t clipMaxX = -1;
+    int32_t clipMaxY = -1;
+
+    uint32_t filterMode = 0; // 0 for linear, 1 for nearest
+    int32_t padding0 = 0;
+    int32_t padding1 = 0;
+    int32_t padding2 = 0;
 };
 
 struct BlitTextureInfo {

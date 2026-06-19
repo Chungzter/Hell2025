@@ -15,6 +15,9 @@ struct DecalPaintingInfo {
 namespace RenderDataManager {
     void BeginFrame();
     void Update();
+    void UpdateDrawCommandsUI();
+
+    const std::vector<DrawIndexedIndirectCommand>& GetDrawCommandsUI();
 
     inline std::vector<glm::mat4> skinningTransforms;
 

@@ -21,6 +21,11 @@ namespace ResourceManager {
         CreateMeshBuffer("Procedural");
     }
 
+    void CleanUp() {
+        for (auto& object : g_genericMeshes) { object.second.CleanUp(); } g_genericMeshes.clear();
+        for (auto& object : g_meshBuffers)   { object.second.CleanUp(); } g_meshBuffers.clear();
+    }
+
     // Generic Mesh
 
     GenericMesh& CreateGenericMesh(const std::string& name) {

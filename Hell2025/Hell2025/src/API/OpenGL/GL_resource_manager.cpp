@@ -12,7 +12,16 @@ namespace OpenGLResourceManager {
     }
 
     void CleanUp() {
+        for (OpenGLGenericMesh& genericMesh : g_genericMeshes) {
+            genericMesh.CleanUp();
+        }
 
+        for (OpenGLMeshBuffer& meshBuffer : g_meshBuffers) {
+            meshBuffer.Reset();
+        }
+
+        g_genericMeshes.clear();
+        g_meshBuffers.clear();
     }
 
     // OpenGL Generic Mesh

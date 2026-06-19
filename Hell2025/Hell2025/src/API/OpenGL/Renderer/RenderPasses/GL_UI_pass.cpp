@@ -10,41 +10,25 @@
 #include "UI/UIBackEnd.h"
 
 namespace OpenGLRenderer {
-    GLint g_quadVAO = 0;
-    GLuint g_linearSampler = 0;
-    GLuint g_nearestSampler = 0;
 
     void UIPass() {
         ProfilerOpenGLZoneFunction();
 
-        // First blit the final image into the UI fbo, which is double the size. UI has double resolution as the main game
-        OpenGLFrameBuffer& finalImageFbo = GetFrameBuffer("FinalImage");
-        OpenGLFrameBuffer& uiFbo = GetFrameBuffer("UI");
-        OpenGLRenderer::BlitFrameBuffer(&finalImageFbo, &uiFbo, "Color", "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        OpenGLFrameBuffer& presentFbo = GetFrameBuffer("Present");
 
         const Resolutions& resolutions = Config::GetResolutions();
 
-        OpenGLShader* shader = GetShaderOLD("UI");
-        OpenGLFrameBuffer* uiFrameBuffer = GetFrameBufferOLD("UI");
+        presentFbo.Bind();
+        presentFbo.SetViewport();
+        presentFbo.DrawBuffer("Color");
 
-        if (!shader) return;
-        if (!uiFrameBuffer) return;
+        BindShader("UI");
 
-        if (g_linearSampler == 0) {
-            glGenSamplers(1, &g_linearSampler); 
-            glSamplerParameteri(g_linearSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glSamplerParameteri(g_linearSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glGenSamplers(1, &g_nearestSampler); 
-            glSamplerParameteri(g_nearestSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glSamplerParameteri(g_nearestSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        }
+        BindSSBO(0, "Samplers");
+        BindSSBO(5, "RenderItemsUI");
 
-
-        uiFrameBuffer->Bind();
-        uiFrameBuffer->SetViewport();
-        //uiFrameBuffer->PrintCacheDebugInfo();
-        uiFrameBuffer->DrawBuffer("Color");
-        shader->Bind();
+        SetUniformFloat("u_renderTargetWidth", resolutions.ui.x);
+        SetUniformFloat("u_renderTargetHeight", resolutions.ui.y);
 
         glEnable(GL_BLEND);
         glBlendEquation(GL_FUNC_ADD);
@@ -58,34 +42,11 @@ namespace OpenGLRenderer {
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
 
-        shader->SetFloat("u_renderTargetWidth", resolutions.ui.x);
-        shader->SetFloat("u_renderTargetHeight", resolutions.ui.y);
-
         GenericMesh& genericMesh = ResourceManager::GetGenericMesh("UI");
         glBindVertexArray(genericMesh.GetVAO());
 
-        int lastFilter = -1; // -1 = unknown, 0 = linear, 1 = nearest
-
-        for (const RenderItemUI& renderItem : UIBackEnd::GetRenderItems()) {
-
-            OpenGLTexture& glTexture = AssetManager::GetTextureByIndex(renderItem.textureIndex)->GetGLTexture();
-            glBindTextureUnit(0, glTexture.GetHandle());
-
-            if (renderItem.filter != lastFilter) {
-                switch (renderItem.filter) {
-                    case 0: glBindSampler(0, g_linearSampler);  break;
-                    case 1: glBindSampler(0, g_nearestSampler); break;
-                }
-                lastFilter = renderItem.filter;
-            }
-            
-            shader->SetFloat("u_clipMinX", renderItem.clipMinX);
-            shader->SetFloat("u_clipMinY", renderItem.clipMinY);
-            shader->SetFloat("u_clipMaxX", renderItem.clipMaxX);
-            shader->SetFloat("u_clipMaxY", renderItem.clipMaxY);
-
-            glDrawElementsInstancedBaseVertex(GL_TRIANGLES, renderItem.indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * renderItem.baseIndex), 1, renderItem.baseVertex);
-        }
+        const std::vector<DrawIndexedIndirectCommand>& drawCommands = RenderDataManager::GetDrawCommandsUI();
+        MultiDrawIndirect(drawCommands);
 
         glDisable(GL_CLIP_DISTANCE0);
         glDisable(GL_CLIP_DISTANCE1);
@@ -93,8 +54,5 @@ namespace OpenGLRenderer {
         glDisable(GL_CLIP_DISTANCE3);
 
         glBindVertexArray(0);
-
-        // Blit this image into the default framebuffer. It is the last point of call. Probably clean this up at some point because it is kinda hidden in here.
-        OpenGLRenderer::BlitToDefaultFrameBuffer(&uiFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
 }

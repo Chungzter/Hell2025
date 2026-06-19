@@ -263,8 +263,8 @@ namespace AssetManager {
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
-            texture.SetMinFilter(TextureFilter::NEAREST);
-            texture.SetMagFilter(TextureFilter::NEAREST);
+            texture.SetMinFilter(TextureFilter::LINEAR);
+            texture.SetMagFilter(TextureFilter::LINEAR);
         }
         LoadPendingTexturesAsync();
         BakeQueue::ImmediateBakeAllTextures();

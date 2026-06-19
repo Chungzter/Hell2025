@@ -255,8 +255,8 @@ namespace OpenGLRenderer {
         g_frameBuffers["FinalImage"] = OpenGLFrameBuffer("FinalImage", resolutions.finalImage);
         g_frameBuffers["FinalImage"].CreateAttachment("Color", GL_RGBA16F);
 
-        g_frameBuffers["UI"] = OpenGLFrameBuffer("UI", resolutions.ui);
-        g_frameBuffers["UI"].CreateAttachment("Color", GL_RGBA8, GL_NEAREST, GL_NEAREST);
+        g_frameBuffers["Present"] = OpenGLFrameBuffer("Present", resolutions.ui);
+        g_frameBuffers["Present"].CreateAttachment("Color", GL_RGBA8, GL_NEAREST, GL_NEAREST);
 
         g_frameBuffers["World"] = OpenGLFrameBuffer("World", 1, 1);
         g_frameBuffers["World"].CreateAttachment("HeightMap", GL_R16F);
@@ -445,6 +445,8 @@ namespace OpenGLRenderer {
 
         CreateSSBOStatic("Materials");
 
+        CreateSSBO("RenderItemsUI", dummySize, GL_DYNAMIC_STORAGE_BIT);
+
         // Vertices
         CreateSSBOStatic("Indices2");
         CreateSSBOStatic("Vertices2");
@@ -537,21 +539,8 @@ namespace OpenGLRenderer {
         UpdateSSBO("ViewportData", playerData.size() * sizeof(ViewportData), playerData.data());
         UpdateSSBO("OceanPatchTransforms", oceanPatchTransforms.size() * sizeof(glm::mat4), oceanPatchTransforms.data());
 
-
-
-        // Clean me up and out of here. Actually this will all just live on the gpu anyway when you figure out your LightAABB AUTOmated render thing
-        //std::vector<GPUAABB> lightAABBs;
-        //lightAABBs.reserve(World::GetLightCount());
-        //
-        //for (Light& light : World::GetLights()) {
-        //    GPUAABB& gpuAABB = lightAABBs.emplace_back();
-        //    gpuAABB.boundsMin = glm::vec4(light.GetCullBoundsMin(), 0.0f);
-        //    gpuAABB.boundsMax = glm::vec4(light.GetCullBoundsMax(), 0.0f);
-        //}
-        //
-        //UpdateSSBO("LightAABBs", lightAABBs.size() * sizeof(GPUAABB), lightAABBs.data());
-        // Clean me up and out of here. Actually this will all just live on the gpu anyway when you figure out your LightAABB AUTOmated render thing
-
+        const std::vector<RenderItemUI>& renderItemsUI = UIBackEnd::GetRenderItems();
+        UpdateSSBO("RenderItemsUI", renderItemsUI.size() * sizeof(RenderItemUI), renderItemsUI.data());
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -604,9 +593,7 @@ namespace OpenGLRenderer {
         ComputeOceanFFTPass();
         OceanHeightReadback();
 
-        OpenGLFrameBuffer& gBuffer = g_frameBuffers["GBuffer"];
         OpenGLFrameBuffer& hairFrameBuffer = g_frameBuffers["Hair"];
-        OpenGLFrameBuffer& finalImageBuffer = g_frameBuffers["FinalImage"];
         DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
 
         glDisable(GL_DITHER);
@@ -679,6 +666,7 @@ namespace OpenGLRenderer {
 
         // Disabling lighting actually just clears it, that way you don't have fog and shit everywhere
         if (!Renderer::GetCurrentRendererSettings().enableLighting) {
+            OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
             gBuffer.Bind();
             gBuffer.ClearAttachment("Lighting", 0, 0, 0, 0);
         }
@@ -692,19 +680,10 @@ namespace OpenGLRenderer {
         DebugViewPass();
         DebugPass();
 
-        //RenderDebugHackAABB();
-
-
-        ComputeLightAABBs();
-
-
-
         ExamineItemPass();
         EditorPass();
         OutlinePass();
 
-        // Downscale blit
-        OpenGLRenderer::BlitFrameBuffer(&gBuffer, &finalImageBuffer, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
         //DownSampleFinalImage();
 
         //if (Input::KeyDown(HELL_KEY_U)) {
@@ -720,19 +699,24 @@ namespace OpenGLRenderer {
         //    OpenGLRenderer::BlitFrameBuffer(bloodFluidFbo, &finalImageBuffer, "BlurIntermediate", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
         //}
 
-        // Blit to swapchain
-        OpenGLRenderer::BlitToDefaultFrameBuffer(&finalImageBuffer, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-        // Blit to swapchain
-        //OpenGLRenderer::BlitToDefaultFrameBuffer(&gBuffer, "Lighting", GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
         //BlitFog();
 
-        glDisable(GL_CULL_FACE); // Must be disabled before UI pass
+        OpenGLFrameBuffer& finalImageFbo = GetFrameBuffer("FinalImage");
+        OpenGLFrameBuffer& gBufferRE = GetFrameBuffer("GBuffer");
+        OpenGLFrameBuffer& presentFbo = GetFrameBuffer("Present");
+
+        // Downscale with linear filtering
+        OpenGLRenderer::BlitFrameBuffer(&gBufferRE, &finalImageFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+        // Upscale with nearest filtering
+        OpenGLRenderer::BlitFrameBuffer(&finalImageFbo, &presentFbo, "Color", "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         UIPass();
-        ImGuiPass();
 
+        // Blit to swap chain
+        OpenGLRenderer::BlitToDefaultFrameBuffer(&presentFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        ImGuiPass();
         BlitDebugTextures();
 
         // DEBUG RENDER FFT TEXTURES TO THE SCREEN

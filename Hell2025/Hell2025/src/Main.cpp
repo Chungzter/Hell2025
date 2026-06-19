@@ -60,6 +60,7 @@ int main() {
         // Render loading screen
         if (!AssetManager::LoadingComplete()) {
             AssetManager::UpdateLoading();
+            BackEnd::UpdateLoadingScreen();
             Renderer::RenderLoadingScreen();
 
             // Loading complete?
@@ -76,5 +77,7 @@ int main() {
         }
         BackEnd::EndFrame();
     }
+
+    BackEnd::CleanUp();
     return 0;
 }

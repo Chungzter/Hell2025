@@ -6,9 +6,13 @@ namespace BackEnd {
     bool Init(API api, WindowedMode windowMode);
     void BeginFrame();
     void EndFrame();
+
+    void UpdateLoadingScreen();
     void UpdateGame();
     void UpdateSubSystems();
+
     void CleanUp(); 
+
     void ToggleBindlessTextures();
     bool RenderDocFound();
 

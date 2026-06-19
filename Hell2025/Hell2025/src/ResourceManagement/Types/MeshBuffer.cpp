@@ -48,6 +48,15 @@ void MeshBuffer::Reset() {
     m_initialized = false;
 }
 
+void MeshBuffer::CleanUp() {
+    Reset();
+
+    if (m_openGLId != 0) {
+        OpenGLResourceManager::RemoveMeshBuffer(m_openGLId);
+        m_openGLId = 0;
+    }
+}
+
 uint64_t MeshBuffer::AddMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name) {
     if (!m_initialized) Initialize();
 
