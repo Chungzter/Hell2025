@@ -1,10 +1,12 @@
-#include "../GL_renderer.h" 
-#include "../../GL_backend.h"
+#include "API/OpenGL/Renderer/GL_renderer.h"
+#include "API/OpenGL/GL_backend.h"
+
 #include "AssetManagement/AssetManager.h"
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
 #include "Viewport/ViewportManager.h"
 #include "Renderer/RenderDataManager.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "UI/UIBackEnd.h"
 
 namespace OpenGLRenderer {
@@ -37,8 +39,6 @@ namespace OpenGLRenderer {
             glSamplerParameteri(g_nearestSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
 
-        Mesh2D& mesh = UIBackEnd::GetUIMesh();
-        OpenGLMesh2D& glMesh = mesh.GetGLMesh2D();
 
         uiFrameBuffer->Bind();
         uiFrameBuffer->SetViewport();
@@ -61,7 +61,8 @@ namespace OpenGLRenderer {
         shader->SetFloat("u_renderTargetWidth", resolutions.ui.x);
         shader->SetFloat("u_renderTargetHeight", resolutions.ui.y);
 
-        glBindVertexArray(glMesh.GetVAO());
+        GenericMesh& genericMesh = ResourceManager::GetGenericMesh("UI");
+        glBindVertexArray(genericMesh.GetVAO());
 
         int lastFilter = -1; // -1 = unknown, 0 = linear, 1 = nearest
 

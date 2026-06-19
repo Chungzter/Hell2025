@@ -1,8 +1,10 @@
 #pragma once
-#include "ResourceManagement/Types/Mesh2D.h"
-
 #include "Hell/Constants.h"
+#include "Hell/Enums.h"
 #include "Hell/TextureTypes.h"
+
+#include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
 
 #include <string>
 #include <vector>
@@ -56,7 +58,6 @@ namespace UIBackEnd {
     );
 
     void EndFrame();
-    Mesh2D& GetUIMesh();
     std::vector<UIRenderItem>& GetRenderItems();
 
 }

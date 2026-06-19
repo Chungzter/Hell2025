@@ -117,7 +117,7 @@ namespace TextBlitter {
                 float offsetX = (textWidth / viewportSize.x) * 2.0f;
                 float offsetY = (textHeight / viewportSize.y) * 2.0f;
 
-                for (auto& vertex : meshData.vertices) {
+                for (Vertex2D& vertex : meshData.vertices) {
                     switch (alignment) {
                     case Alignment::CENTERED:
                         vertex.position.x -= offsetX * 0.5f;

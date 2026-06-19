@@ -7,50 +7,54 @@
 
 namespace ResourceManager {
     namespace {
-        std::unordered_map<std::string, Mesh2D> g_mesh2Ds;
+        std::unordered_map<std::string, GenericMesh> g_genericMeshes;
         std::unordered_map<std::string, MeshBuffer> g_meshBuffers;
     }
 
     void Init() {
-        CreateMesh2D("UI");
+        CreateGenericMesh("UI");
         CreateMeshBuffer("Procedural");
     }
 
-    Mesh2D& CreateMesh2D(const std::string& name) {
-        auto it = g_mesh2Ds.find(name);
+    // Generic Mesh
 
-        if (it != g_mesh2Ds.end()) {
-            Logging::Fatal() << "ResourceManager::CreateMesh2D(..) failed: '" << name << "' already exists\n";
+    GenericMesh& CreateGenericMesh(const std::string& name) {
+        auto it = g_genericMeshes.find(name);
+
+        if (it != g_genericMeshes.end()) {
+            Logging::Fatal() << "ResourceManager::CreateGenericMesh(..) failed: '" << name << "' already exists\n";
             return it->second;
         }
 
-        auto result = g_mesh2Ds.emplace(name, Mesh2D(name));
+        auto result = g_genericMeshes.emplace(name, GenericMesh(name));
         return result.first->second;
     }
 
-    Mesh2D& GetMesh2D(const std::string& name) {
-        auto it = g_mesh2Ds.find(name);
+    GenericMesh& GetGenericMesh(const std::string& name) {
+        auto it = g_genericMeshes.find(name);
 
-        if (it == g_mesh2Ds.end()) {
-            Logging::Error() << "ResourceManager::GetMesh2D(..) failed: '" << name << "' does not exist\n";
+        if (it == g_genericMeshes.end()) {
+            Logging::Error() << "ResourceManager::GetGenericMesh(..) failed: '" << name << "' does not exist\n";
 
-            static Mesh2D invalid;
+            static GenericMesh invalid;
             return invalid;
         }
 
         return it->second;
     }
 
-    Mesh2D* GetMesh2DPtr(const std::string& name) {
-        auto it = g_mesh2Ds.find(name);
+    GenericMesh* GetGenericMeshPtr(const std::string& name) {
+        auto it = g_genericMeshes.find(name);
 
-        if (it == g_mesh2Ds.end()) {
-            Logging::Error() << "ResourceManager::GetMesh2DPtr(..) failed: '" << name << "' does not exist\n";
+        if (it == g_genericMeshes.end()) {
+            Logging::Error() << "ResourceManager::GetGenericMeshPtr(..) failed: '" << name << "' does not exist\n";
             return nullptr;
         }
 
         return &it->second;
     }
+
+    // Mesh Buffer
 
     MeshBuffer& CreateMeshBuffer(const std::string& name) {
         auto it = g_meshBuffers.find(name);

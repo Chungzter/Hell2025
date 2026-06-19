@@ -208,6 +208,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\API\OpenGL\GL_backend.cpp" />
+    <ClCompile Include="src\API\OpenGL\GL_resource_manager.cpp" />
     <ClCompile Include="src\API\OpenGL\GL_util.cpp" />
     <ClCompile Include="src\API\OpenGL\GL_memory_tracker.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\ComputePasses\GL_blit_road.cpp" />
@@ -271,7 +272,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\API\OpenGL\Types\GL_framebuffer.cpp" />
     <ClCompile Include="src\API\OpenGL\Types\GL_heightmap_mesh.cpp" />
     <ClCompile Include="src\API\OpenGL\Types\GL_mesh.cpp" />
-    <ClCompile Include="src\API\OpenGL\Types\GL_mesh2D.cpp" />
+    <ClCompile Include="src\API\OpenGL\Types\GL_generic_mesh.cpp" />
     <ClCompile Include="src\API\OpenGL\Types\GL_mesh_buffer_old.cpp" />
     <ClCompile Include="src\API\OpenGL\Types\GL_mesh_patch.cpp" />
     <ClCompile Include="src\API\OpenGL\Types\GL_shader.cpp" />
@@ -377,6 +378,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Player\Player_ladder.cpp" />
     <ClCompile Include="src\Player\Player_update.cpp" />
     <ClCompile Include="src\Renderer\Renderer_settings.cpp" />
+    <ClCompile Include="src\ResourceManagement\Types\MeshBuffer.cpp" />
     <ClCompile Include="src\Types\Characters\Enemies\CharacterSpine.cpp" />
     <ClCompile Include="src\Types\Characters\Enemies\Dobermann\Dobermann.cpp" />
     <ClCompile Include="src\Types\Characters\Enemies\Kangaroo\Kanagaroo_attack_logic.cpp" />
@@ -553,7 +555,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Util\Util_text.cpp" />
     <ClCompile Include="src\Viewport\Viewport.cpp" />
     <ClCompile Include="src\UI\FontSpriteSheet.cpp" />
-    <ClCompile Include="src\ResourceManagement\Types\Mesh2D.cpp" />
+    <ClCompile Include="src\ResourceManagement\Types\GenericMesh.cpp" />
     <ClCompile Include="src\UI\TextBlitter.cpp" />
     <ClCompile Include="src\Types\Renderer\Texture.cpp" />
     <ClCompile Include="src\UI\UIBackEnd.cpp" />
@@ -625,6 +627,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="res\shaders\OpenGL\RE\test.h" />
     <ClInclude Include="src\API\OpenGL\GL_memory_tracker.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_attachments.h" />
+    <ClInclude Include="src\API\OpenGL\GL_resource_manager.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_shadow_map_array.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_texture_3d.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_timer.h" />
@@ -649,7 +652,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\API\OpenGL\Types\GL_mesh_buffer_old.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_heightmap_mesh.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_indirectBuffer.hpp" />
-    <ClInclude Include="src\API\OpenGL\Types\GL_mesh2D.h" />
+    <ClInclude Include="src\API\OpenGL\Types\GL_generic_mesh.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_frameBuffer.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_mesh_patch.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_pbo.hpp" />
@@ -769,7 +772,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Types\Renderer\IESProfile.h" />
     <ClInclude Include="src\Types\Renderer\Mesh.h" />
     <ClInclude Include="src\ResourceManagement\Types\MeshBuffer.h" />
-    <ClInclude Include="src\ResourceManagement\Types\MeshBuffer.inl" />
     <ClInclude Include="src\Types\Renderer\MeshNodes.h" />
     <ClInclude Include="src\Types\Renderer\Model.h" />
     <ClInclude Include="src\Types\House\Trim.h" />
@@ -832,7 +834,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\learnopengl\model_animation.h" />
     <ClInclude Include="src\Viewport\Viewport.h" />
     <ClInclude Include="src\UI\FontSpriteSheet.h" />
-    <ClInclude Include="src\ResourceManagement\Types\Mesh2D.h" />
+    <ClInclude Include="src\ResourceManagement\Types\GenericMesh.h" />
     <ClInclude Include="src\UI\TextBlitter.h" />
     <ClInclude Include="src\ImageTools\DDS.h" />
     <ClInclude Include="src\Types\Renderer\MeshBufferOLD.h" />

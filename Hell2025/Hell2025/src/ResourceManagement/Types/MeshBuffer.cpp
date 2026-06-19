@@ -1,31 +1,34 @@
-#pragma once
+#include "MeshBuffer.h"
 
+#include "API/OpenGL/GL_resource_manager.h"
 #include "Backend/BackEnd.h"
-#include <Hell/Logging.h>
-#include <Util/Util.h>
+#include "Hell/Logging.h"
+#include "Util/Util.h"
 
 #include <algorithm>
 #include <limits>
 #include <utility>
 
-template<typename TVertex>
-MeshBufferT<TVertex>::MeshBufferT(const std::string& name) {
+MeshBuffer::MeshBuffer(const std::string& name) {
     m_name = name;
 }
 
-template<typename TVertex>
-void MeshBufferT<TVertex>::Initialize() {
+void MeshBuffer::Initialize() {
     Reset();
 
     if (BackEnd::GetAPI() == API::OPENGL) {
-        m_meshBufferGL.Init(TVertex::GetLayout(), m_vertexCapacity, m_indexCapacity);
+        if (m_openGLId == 0) {
+            m_openGLId = OpenGLResourceManager::CreateMeshBuffer();
+        }
+
+        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        meshBuffer.Init(Vertex::GetLayout());
     }
 
     m_initialized = true;
 }
 
-template<typename TVertex>
-void MeshBufferT<TVertex>::Reset() {
+void MeshBuffer::Reset() {
     m_meshes.clear();
     m_vertices.clear();
     m_indices.clear();
@@ -34,16 +37,18 @@ void MeshBufferT<TVertex>::Reset() {
     m_freeIndexMemoryBlocks.clear();
 
     m_nextMeshId = 0;
+    m_vertexCapacity = 0;
+    m_indexCapacity = 0;
 
-    if (BackEnd::GetAPI() == API::OPENGL) {
-        m_meshBufferGL.Reset(m_vertexCapacity, m_indexCapacity);
+    if (BackEnd::GetAPI() == API::OPENGL && m_openGLId != 0) {
+        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        meshBuffer.Reset();
     }
 
     m_initialized = false;
 }
 
-template<typename TVertex>
-uint64_t MeshBufferT<TVertex>::AddMesh(const std::vector<TVertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name) {
+uint64_t MeshBuffer::AddMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name) {
     if (!m_initialized) Initialize();
 
     if (vertices.empty() || indices.empty()) return 0;
@@ -61,7 +66,7 @@ uint64_t MeshBufferT<TVertex>::AddMesh(const std::vector<TVertex>& vertices, con
     glm::vec3 aabbMin(std::numeric_limits<float>::max());
     glm::vec3 aabbMax(std::numeric_limits<float>::lowest());
 
-    for (const TVertex& vertex : vertices) {
+    for (const Vertex& vertex : vertices) {
         aabbMin = glm::min(aabbMin, vertex.position);
         aabbMax = glm::max(aabbMax, vertex.position);
     }
@@ -73,8 +78,7 @@ uint64_t MeshBufferT<TVertex>::AddMesh(const std::vector<TVertex>& vertices, con
     return m_nextMeshId;
 }
 
-template<typename TVertex>
-int32_t MeshBufferT<TVertex>::AddVertices(const std::vector<TVertex>& newVertices) {
+int32_t MeshBuffer::AddVertices(const std::vector<Vertex>& newVertices) {
     int32_t freeMemoryBlockIndex = -1;
     int32_t insertOffset = 0;
 
@@ -93,18 +97,24 @@ int32_t MeshBufferT<TVertex>::AddVertices(const std::vector<TVertex>& newVertice
         insertOffset = static_cast<uint32_t>(m_vertices.size());
         size_t requiredCount = m_vertices.size() + newVertices.size();
 
-        // Grow capacity by 1.5x
-        size_t newCount = std::max(requiredCount, static_cast<size_t>(m_vertices.size() * 1.5));
+        // Grow capacity
+        size_t newCount = std::max(requiredCount, static_cast<size_t>(m_vertices.size() * m_growthMultiplier));
 
-        if (BackEnd::GetAPI() == API::OPENGL) {
-            m_meshBufferGL.ResizeVertexBuffer(newCount, m_vertices, m_vertexCapacity);
+        if (newCount > m_vertexCapacity) {
+            m_vertexCapacity = CalculateNewCapacity(newCount, m_vertexCapacity);
+
+            if (BackEnd::GetAPI() == API::OPENGL) {
+                OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+                meshBuffer.ResizeVertexBuffer(m_vertexCapacity, m_vertices);
+            }
         }
 
         m_vertices.resize(newCount);
         std::copy(newVertices.begin(), newVertices.end(), m_vertices.begin() + insertOffset);
 
         if (BackEnd::GetAPI() == API::OPENGL) {
-            m_meshBufferGL.InsertVertices(newVertices, insertOffset);
+            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            meshBuffer.InsertVertices(newVertices, insertOffset);
         }
 
         // Register newly allocated excess space as a free block
@@ -124,7 +134,8 @@ int32_t MeshBufferT<TVertex>::AddVertices(const std::vector<TVertex>& newVertice
         std::copy(newVertices.begin(), newVertices.end(), m_vertices.begin() + insertOffset);
 
         if (BackEnd::GetAPI() == API::OPENGL) {
-            m_meshBufferGL.InsertVertices(newVertices, insertOffset);
+            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            meshBuffer.InsertVertices(newVertices, insertOffset);
         }
 
         // Handle block resizing
@@ -139,8 +150,7 @@ int32_t MeshBufferT<TVertex>::AddVertices(const std::vector<TVertex>& newVertice
     return insertOffset;
 }
 
-template<typename TVertex>
-int32_t MeshBufferT<TVertex>::AddIndices(const std::vector<uint32_t>& newIndices) {
+int32_t MeshBuffer::AddIndices(const std::vector<uint32_t>& newIndices) {
     int32_t freeMemoryBlockIndex = -1;
     int32_t insertOffset = 0;
 
@@ -159,18 +169,24 @@ int32_t MeshBufferT<TVertex>::AddIndices(const std::vector<uint32_t>& newIndices
         insertOffset = static_cast<uint32_t>(m_indices.size());
         size_t requiredCount = m_indices.size() + newIndices.size();
 
-        // Grow capacity by 1.5x
-        size_t newCount = std::max(requiredCount, static_cast<size_t>(m_indices.size() * 1.5));
+        // Grow capacity
+        size_t newCount = std::max(requiredCount, static_cast<size_t>(m_indices.size() * m_growthMultiplier));
 
-        if (BackEnd::GetAPI() == API::OPENGL) {
-            m_meshBufferGL.ResizeIndexBuffer(newCount, m_indices, m_indexCapacity);
+        if (newCount > m_indexCapacity) {
+            m_indexCapacity = CalculateNewCapacity(newCount, m_indexCapacity);
+
+            if (BackEnd::GetAPI() == API::OPENGL) {
+                OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+                meshBuffer.ResizeIndexBuffer(m_indexCapacity, m_indices);
+            }
         }
 
         m_indices.resize(newCount);
         std::copy(newIndices.begin(), newIndices.end(), m_indices.begin() + insertOffset);
 
         if (BackEnd::GetAPI() == API::OPENGL) {
-            m_meshBufferGL.InsertIndices(newIndices, insertOffset);
+            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            meshBuffer.InsertIndices(newIndices, insertOffset);
         }
 
         // Register newly allocated excess space as a free block
@@ -190,7 +206,8 @@ int32_t MeshBufferT<TVertex>::AddIndices(const std::vector<uint32_t>& newIndices
         std::copy(newIndices.begin(), newIndices.end(), m_indices.begin() + insertOffset);
 
         if (BackEnd::GetAPI() == API::OPENGL) {
-            m_meshBufferGL.InsertIndices(newIndices, insertOffset);
+            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            meshBuffer.InsertIndices(newIndices, insertOffset);
         }
 
         // Handle block resizing
@@ -205,13 +222,17 @@ int32_t MeshBufferT<TVertex>::AddIndices(const std::vector<uint32_t>& newIndices
     return insertOffset;
 }
 
-template<typename TVertex>
-int32_t MeshBufferT<TVertex>::AllocateExtraVertexSpace(size_t vertexCount) {
+int32_t MeshBuffer::AllocateExtraVertexSpace(size_t vertexCount) {
     size_t blockBegin = m_vertices.size();
     size_t blockEnd = m_vertices.size() + vertexCount;
 
-    if (BackEnd::GetAPI() == API::OPENGL) {
-        m_meshBufferGL.ResizeVertexBuffer(blockEnd, m_vertices, m_vertexCapacity);
+    if (blockEnd > m_vertexCapacity) {
+        m_vertexCapacity = CalculateNewCapacity(blockEnd, m_vertexCapacity);
+
+        if (BackEnd::GetAPI() == API::OPENGL) {
+            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            meshBuffer.ResizeVertexBuffer(m_vertexCapacity, m_vertices);
+        }
     }
 
     MemoryBlock& block = m_freeVertexMemoryBlocks.emplace_back();
@@ -223,13 +244,17 @@ int32_t MeshBufferT<TVertex>::AllocateExtraVertexSpace(size_t vertexCount) {
     return static_cast<int32_t>(m_freeVertexMemoryBlocks.size() - 1);
 }
 
-template<typename TVertex>
-int32_t MeshBufferT<TVertex>::AllocateExtraIndexSpace(size_t indexCount) {
+int32_t MeshBuffer::AllocateExtraIndexSpace(size_t indexCount) {
     size_t blockBegin = m_indices.size();
     size_t blockEnd = m_indices.size() + indexCount;
 
-    if (BackEnd::GetAPI() == API::OPENGL) {
-        m_meshBufferGL.ResizeIndexBuffer(blockEnd, m_indices, m_indexCapacity);
+    if (blockEnd > m_indexCapacity) {
+        m_indexCapacity = CalculateNewCapacity(blockEnd, m_indexCapacity);
+
+        if (BackEnd::GetAPI() == API::OPENGL) {
+            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            meshBuffer.ResizeIndexBuffer(m_indexCapacity, m_indices);
+        }
     }
 
     MemoryBlock& block = m_freeIndexMemoryBlocks.emplace_back();
@@ -241,8 +266,40 @@ int32_t MeshBufferT<TVertex>::AllocateExtraIndexSpace(size_t indexCount) {
     return static_cast<int32_t>(m_freeIndexMemoryBlocks.size() - 1);
 }
 
-template<typename TVertex>
-void MeshBufferT<TVertex>::RemoveMesh(uint64_t meshIndex) {
+uint32_t MeshBuffer::GetVBO() const {
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        return meshBuffer.GetVBO();
+    }
+    else {
+        Logging::Error() << "MeshBuffer::GetVBO() was called by API is Vulkan\n";
+        return 0;
+    }
+}
+
+uint32_t MeshBuffer::GetEBO() const {
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        return meshBuffer.GetEBO();
+    }
+    else {
+        Logging::Error() << "MeshBuffer::GetEBO() was called by API is Vulkan\n";
+        return 0;
+    }
+}
+
+uint32_t MeshBuffer::GetVAO() const {
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        return meshBuffer.GetVAO();
+    }
+    else {
+        Logging::Error() << "MeshBuffer::GetVAO() was called by API is Vulkan\n";
+        return 0;
+    }
+}
+
+void MeshBuffer::RemoveMesh(uint64_t meshIndex) {
     auto it = m_meshes.find(meshIndex);
     if (it == m_meshes.end()) return;
 
@@ -312,25 +369,23 @@ void MeshBufferT<TVertex>::RemoveMesh(uint64_t meshIndex) {
     m_meshes.erase(it);
 }
 
-template<typename TVertex>
-void MeshBufferT<TVertex>::PreAllocate(size_t maxVertices, size_t maxIndices) {
+void MeshBuffer::PreAllocate(size_t maxVertices, size_t maxIndices) {
     if (maxVertices == 0 || maxIndices == 0) {
-        Logging::Warning() << "MeshBufferT::PreAllocate() called with zero " << maxVertices << " vertices and " << maxIndices << " indices\n";
+        Logging::Warning() << "MeshBuffer::PreAllocate() called with zero " << maxVertices << " vertices and " << maxIndices << " indices\n";
         return;
     }
 
-    Reset();
-
-    if (BackEnd::GetAPI() == API::OPENGL) {
-        m_meshBufferGL.Init(TVertex::GetLayout(), m_vertexCapacity, m_indexCapacity);
-    }
+    Initialize();
 
     m_vertices.resize(maxVertices);
     m_indices.resize(maxIndices);
+    m_vertexCapacity = maxVertices;
+    m_indexCapacity = maxIndices;
 
     // Allocate new GPU memory
     if (BackEnd::GetAPI() == API::OPENGL) {
-        m_meshBufferGL.PreAllocate(maxVertices, maxIndices, m_vertexCapacity, m_indexCapacity);
+        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        meshBuffer.PreAllocate(m_vertexCapacity, m_indexCapacity);
     }
 
     // Add one continuous free vertex memory block
@@ -348,8 +403,15 @@ void MeshBufferT<TVertex>::PreAllocate(size_t maxVertices, size_t maxIndices) {
     m_initialized = true;
 }
 
-template<typename TVertex>
-Mesh* MeshBufferT<TVertex>::GetMeshById(uint64_t meshId) {
+size_t MeshBuffer::CalculateNewCapacity(size_t requiredCount, size_t currentCapacity) {
+    if (currentCapacity == 0) {
+        return std::max(requiredCount, m_minCapacity);
+    }
+
+    return std::max(requiredCount, static_cast<size_t>(currentCapacity * m_growthMultiplier));
+}
+
+Mesh* MeshBuffer::GetMeshById(uint64_t meshId) {
     auto it = m_meshes.find(meshId);
     if (it != m_meshes.end()) {
         return &it->second;
@@ -358,24 +420,21 @@ Mesh* MeshBufferT<TVertex>::GetMeshById(uint64_t meshId) {
     return nullptr;
 }
 
-template<typename TVertex>
-std::span<TVertex> MeshBufferT<TVertex>::GetMeshVertexSpan(uint64_t meshId) {
+std::span<Vertex> MeshBuffer::GetMeshVertexSpan(uint64_t meshId) {
     Mesh* mesh = GetMeshById(meshId);
     if (!mesh) return {};
 
-    return std::span<TVertex>(m_vertices.data() + mesh->baseVertex, mesh->vertexCount);
+    return std::span<Vertex>(m_vertices.data() + mesh->baseVertex, mesh->vertexCount);
 }
 
-template<typename TVertex>
-std::span<uint32_t> MeshBufferT<TVertex>::GetMeshIndexSpan(uint64_t meshId) {
+std::span<uint32_t> MeshBuffer::GetMeshIndexSpan(uint64_t meshId) {
     Mesh* mesh = GetMeshById(meshId);
     if (!mesh) return {};
 
     return std::span<uint32_t>(m_indices.data() + mesh->baseIndex, mesh->indexCount);
 }
 
-template<typename TVertex>
-void MeshBufferT<TVertex>::PrintDebugInfo() {
+void MeshBuffer::PrintDebugInfo() {
     size_t usedVertexCount = 0;
     size_t usedIndexCount = 0;
 
@@ -403,7 +462,7 @@ void MeshBufferT<TVertex>::PrintDebugInfo() {
     }
 
     std::string message;
-    message += "MeshBufferT Debug Info\n";
+    message += "MeshBuffer Debug Info\n";
     message += "\n";
 
     message += "Meshes\n";

@@ -99,6 +99,12 @@ enum class ObjectType : uint16_t {
     WATER_PLANE_BOTTOM,
     WINDOW,
 
+    GL_GENERIC_MESH,
+    GL_MESH_BUFFER,
+
+    VK_GENERIC_MESH,
+    VK_MESH_BUFFER,
+
     ANIMATED_GAME_OBJECT,
     CHRISMAS_PRESENT,
     DOBERMANN,

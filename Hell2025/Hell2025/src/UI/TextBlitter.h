@@ -1,5 +1,6 @@
 #pragma once
-#include "API/OpenGL/Types/GL_mesh2D.h"
+#include "Hell/Enums.h"
+#include "Hell/VertexAttributes.h"
 #include "UI/FontSpriteSheet.h"
 
 #include <string>

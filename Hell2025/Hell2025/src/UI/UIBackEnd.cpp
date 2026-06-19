@@ -8,12 +8,12 @@
 #include "BackEnd/BackEnd.h"
 #include "Core/Debug.h"
 #include "Config/Config.h"
+#include "ResourceManagement/ResourceManager.h"
 #include "Renderer/Renderer.h"
 #include "UI/TextBlitter.h"
 
 namespace UIBackEnd {
 
-    Mesh2D g_uiMesh;
     std::vector<Vertex2D> g_vertices;
     std::vector<uint32_t> g_indices;
     std::vector<UIRenderItem> g_renderItems;
@@ -164,12 +164,10 @@ hits the floor.
             }
         }
 
-        if (BackEnd::GetAPI() == API::OPENGL) {
-            g_uiMesh.GetGLMesh2D().UpdateVertexBuffer(g_vertices, g_indices);
-        }
-        else if (BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "UIBackEnd: Update()";
-        }
+        GenericMesh& genericMesh = ResourceManager::GetGenericMesh("UI");
+        genericMesh.UpdateVertexData(g_vertices);
+        genericMesh.UpdateIndexData(g_indices);
+
         g_vertices.clear();
         g_indices.clear();
     }
@@ -207,7 +205,6 @@ hits the floor.
         renderItem.clipMaxX = resolutions.ui.x;
         renderItem.clipMaxY = resolutions.ui.y;
     }
-
 
     void BlitTexture(BlitTextureInfo info) {
         BlitTexture(info.textureName, info.location, info.alignment, info.colorTint, info.size, info.textureFilter, info.rotation, info.clipMinX, info.clipMinY, info.clipMaxX, info.clipMaxY);
@@ -323,10 +320,6 @@ hits the floor.
         renderItem.clipMinY = (clipMinY >= 0) ? clipMinY : 0;
         renderItem.clipMaxX = (clipMaxX >= 0) ? clipMaxX : W;
         renderItem.clipMaxY = (clipMaxY >= 0) ? clipMaxY : H;
-    }
-
-    Mesh2D& GetUIMesh() {
-        return g_uiMesh;
     }
 
     std::vector<UIRenderItem>& GetRenderItems() {
