@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 
 struct SpawnPoint {
     SpawnPoint() = default;

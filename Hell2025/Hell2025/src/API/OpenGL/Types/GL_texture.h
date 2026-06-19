@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Hell/TextureTypes.h"
-#include "Hell/Types.h"
+#include "Hell/Render/TextureTypes.h"
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>

@@ -5,7 +5,7 @@
 #include "World/World.h"
 #include "Core/Game.h"
 #include "Renderer/Renderer.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Timer.hpp"
 
 void Kangaroo::Init(KangarooCreateInfo createInfo) {

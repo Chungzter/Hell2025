@@ -1,5 +1,5 @@
 #include "Bible/Bible.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include <unordered_map>
 #include "Util.h">
 

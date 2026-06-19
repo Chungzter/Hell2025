@@ -1,13 +1,13 @@
 #pragma once
 
-#include <Hell/Types.h>
-#include "Hell/VertexAttributes.h"
+#include <Game/Types.h>
+#include "Hell/Render/VertexAttributes.h"
 
 #include "File/File.h"
 
 #include "Types/Animation/Animation.h"
 #include "Types/Renderer/IESProfile.h"
-#include "Types/Renderer/Mesh.h"
+#include "Hell/ResourceManagement/Types/Mesh.h"
 #include "Types/Renderer/Model.h"
 #include "Types/Renderer/SkinnedMesh.hpp"
 #include "Types/Renderer/SkinnedModel.h"

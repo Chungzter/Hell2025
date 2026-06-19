@@ -1,6 +1,6 @@
 ﻿#include "Gizmo.h"
-#include <Hell/Enums.h>
-#include <Hell/Constants.h>
+#include <Game/Enums.h>
+#include <Game/Constants.h>
 
 #include "Audio/Audio.h"
 #include "Config/Config.h"
@@ -12,7 +12,7 @@
 #include <glm/gtx/norm.hpp> 
 #include "glm/gtx/intersect.hpp"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 namespace Gizmo {
     enum MeshIndex {

@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "Types/Renderer/AnimatedMeshNodes.h"
 #include "Types/Renderer/MeshNodes.h"
 #include "Types/Game/AnimatedGameObject.h"

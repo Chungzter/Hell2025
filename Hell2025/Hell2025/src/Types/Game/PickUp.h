@@ -1,7 +1,7 @@
 #pragma once
-#include <Hell/Types.h>
-#include <Hell/Enums.h>
-#include <Hell/CreateInfo.h>
+#include <Game/Types.h>
+#include <Game/Enums.h>
+#include <Game/CreateInfo.h>
 #include "Types/Renderer/MeshNodes.h"
 
 struct PickUp {

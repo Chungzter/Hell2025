@@ -1,12 +1,12 @@
 #include "Dobermann.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Debug/DebugDraw.h"
 #include "Input/Input.h"
 #include "Pathfinding/NavMesh.h"
 #include "Ragdoll/RagdollManager.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 
 // GET ME OUT OF HERE
 #include "Core/Game.h"

@@ -1,6 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.h>
-#include "Hell/TextureTypes.h"
+#include "Hell/Render/TextureTypes.h"
 #include "Managers/vk_device_manager.h"
 #include "Types/vk_texture.h"
 #include <string>

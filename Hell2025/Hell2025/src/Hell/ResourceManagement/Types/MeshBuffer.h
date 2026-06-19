@@ -1,7 +1,7 @@
 #pragma once
-#include "Hell/Constants.h"
-#include "Hell/VertexAttributes.h"
-#include "Types/Renderer/Mesh.h"
+#include "Hell/Common.h"
+#include "Hell/Render/VertexAttributes.h"
+#include "Hell/ResourceManagement/Types/Mesh.h"
 
 #include <cstddef>
 #include <cstdint>

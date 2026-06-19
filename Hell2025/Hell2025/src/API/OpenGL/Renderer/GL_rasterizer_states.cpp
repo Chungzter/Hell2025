@@ -1,5 +1,5 @@
 #include "GL_renderer.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 namespace OpenGLRenderer {
 

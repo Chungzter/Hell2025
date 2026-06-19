@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "HellFunctionTypes.h"
 #include <functional>
 #include <map>

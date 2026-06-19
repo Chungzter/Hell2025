@@ -6,8 +6,8 @@
 #include "AssetManagement/AssetManager.h"
 #include "Renderer/RenderDataManager.h"
 
-#include <Hell/Logging.h>
-#include <Hell/RendereringConstants.h>
+#include "Hell/Logging.h"
+#include <Game/RendereringConstants.h>
 
 Decal::Decal(const DecalCreateInfo& createInfo) {
     m_createInfo = createInfo;

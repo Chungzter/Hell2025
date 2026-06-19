@@ -1,6 +1,6 @@
 #include "BackEnd.h"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
@@ -18,6 +18,7 @@
 #include "Bible/Bible.h"
 #include "Debug/Debug.h"
 #include "Core/Game.h"
+#include "Game/Resources.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include "Editor/Gizmo.h"
@@ -97,7 +98,7 @@ namespace BackEnd {
         Editor::Init();
         Synth::Init();
         MidiFileManager::Init();
-        ResourceManager::Init();
+        Game::InitResources();
         Physics::Init();
         RagdollManager::Init();
         ImGuiBackEnd::Init();

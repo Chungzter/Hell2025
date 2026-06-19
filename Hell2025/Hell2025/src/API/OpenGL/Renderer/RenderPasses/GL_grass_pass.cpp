@@ -1,6 +1,6 @@
 ﻿#include "API/OpenGL/Renderer/GL_renderer.h"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 #include "AssetManagement/AssetManager.h"
 #include "Types/Renderer/GrassMesh.h"

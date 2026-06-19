@@ -1,5 +1,5 @@
 #include "Editor.h"
-#include <Hell/Constants.h>
+#include <Game/Constants.h>
 #include "Callbacks/Callbacks.h"
 #include "Gizmo.h"
 #include "BackEnd/BackEnd.h"
@@ -19,7 +19,7 @@
 #include "Ocean/Ocean.h"
 #include "World/World.h"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 namespace Editor {
     EditorMode g_editorMode = EditorMode::UNDEFINED;

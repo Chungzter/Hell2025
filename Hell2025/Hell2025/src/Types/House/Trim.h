@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "Types/Renderer/Model.h"
 
 struct Trim {

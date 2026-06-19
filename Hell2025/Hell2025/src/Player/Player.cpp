@@ -1,5 +1,5 @@
 #include "Player.h"
-#include <Hell/Constants.h>
+#include <Game/Constants.h>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
@@ -8,11 +8,11 @@
 #include "Bible/Bible.h"
 #include "Core/Game.h"
 #include "Editor/Editor.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Input/Input.h"
 #include "Ocean/Ocean.h"
 #include "Viewport/ViewportManager.h"
-#include <Hell/UniqueID.h>
+#include <Game/UniqueID.h>
 #include "Input/InputMulti.h"
 
 // Get me out of here

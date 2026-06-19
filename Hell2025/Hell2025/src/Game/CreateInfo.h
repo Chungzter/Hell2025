@@ -1,7 +1,7 @@
 #pragma once
-#include <Hell/Enums.h>
-#include <Hell/Types.h>
-#include <Hell/Constants.h>
+#include <Game/Enums.h>
+#include <Game/Types.h>
+#include <Game/Constants.h>
 #include "Types/Game/SpawnPoint.h"
 #include <map>
 

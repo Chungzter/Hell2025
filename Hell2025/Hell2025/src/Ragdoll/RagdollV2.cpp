@@ -3,9 +3,9 @@
 #include "Input/Input.h"
 #include "RagdollManager.h"
 #include "Ragdoll_util.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Renderer/Renderer.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 
 inline PxTransform PxTransformFromRest(const RdMatrix& restM, float sceneScale) {
     PxMat44 M = RdMatrixToPxMat44(restM);

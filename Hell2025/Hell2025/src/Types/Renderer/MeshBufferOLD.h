@@ -2,7 +2,7 @@
 #include "../API/OpenGL/Types/GL_mesh_buffer_old.h"
 #include "../API/Vulkan/Types/vk_detachedMesh.h"
 #include "../BackEnd/BackEnd.h"
-#include "Mesh.h"
+#include "Hell/ResourceManagement/Types/Mesh.h"
 
 struct MeshBufferOLD {
     uint32_t AddMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name = "UNDEFINED");

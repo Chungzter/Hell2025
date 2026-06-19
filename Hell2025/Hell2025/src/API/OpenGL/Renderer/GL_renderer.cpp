@@ -27,8 +27,8 @@
 
 #include "API/OpenGL/Types/GL_texture_readback.h"
 
-#include <Hell/Logging.h>
-#include <Hell/GPUTypes.h>
+#include "Hell/Logging.h"
+#include <Game/GPUTypes.h>
 #include "World/World.h"
 #include "Renderer/Renderer.h"
 #include <unordered_map>

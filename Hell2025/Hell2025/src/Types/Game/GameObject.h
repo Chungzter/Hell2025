@@ -1,6 +1,6 @@
 #pragma once
-#include <Hell/Types.h>
-#include <Hell/CreateInfo.h>
+#include <Game/Types.h>
+#include <Game/CreateInfo.h>
 #include "Physics/Types/RigidDynamic.h"
 #include "Types/Renderer/MeshNodes.h"
 #include "Types/Renderer/Model.h"

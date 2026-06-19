@@ -1,5 +1,5 @@
 #pragma once
-#include "Hell/VertexAttributes.h"
+#include "Hell/Render/VertexAttributes.h"
 
 #include <cstddef>
 #include <cstdint>

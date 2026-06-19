@@ -1,8 +1,8 @@
 #include "CpuBvh.h"
 #include "Debug/DebugDraw.h"
-#include <Hell/Constants.h>
+#include <Game/Constants.h>
 #include <Hell/Types.h>
-#include <Hell/UniqueID.h>
+#include <Game/UniqueID.h>
 #include "Util.h"
 
 namespace Bvh::Cpu {

@@ -1,8 +1,7 @@
 #include "GL_resource_manager.h"
 
 #include "Hell/Containers/SlotMap.h"
-#include "Hell/Enums.h"
-#include "Hell/UniqueId.h"
+#include "Hell/ResourceManagement/ResourceID.h"
 
 namespace OpenGLResourceManager {
 
@@ -27,7 +26,7 @@ namespace OpenGLResourceManager {
     // OpenGL Generic Mesh
 
     uint64_t CreateGenericMesh() {
-        uint64_t id = UniqueID::GetNextObjectId(ObjectType::GL_GENERIC_MESH);
+        uint64_t id = Hell::ResourceManagement::GetNextID(Hell::ResourceManagement::ResourceType::GL_GENERIC_MESH);
         g_genericMeshes.emplace_with_id(id);
         return id;
     }
@@ -57,7 +56,7 @@ namespace OpenGLResourceManager {
     // OpenGL Mesh Buffer
 
     uint64_t CreateMeshBuffer() {
-        uint64_t id = UniqueID::GetNextObjectId(ObjectType::GL_MESH_BUFFER);
+        uint64_t id = Hell::ResourceManagement::GetNextID(Hell::ResourceManagement::ResourceType::GL_MESH_BUFFER);
         g_meshBuffers.emplace_with_id(id);
         return id;
     }

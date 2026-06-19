@@ -1,7 +1,7 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "Callbacks/Callbacks.h"
-#include <Hell/CreateInfo.h>
+#include <Game/CreateInfo.h>
 #include "Camera/Camera.h"
 #include "Viewport/Viewport.h"
 #include <string>

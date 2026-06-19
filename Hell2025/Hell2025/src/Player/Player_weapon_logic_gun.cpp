@@ -1,7 +1,7 @@
 #include "Player.h"
 #include "Audio/Audio.h"
 #include "Viewport/ViewportManager.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Config/Config.h"
 
 void Player::UpdateGunLogic(float deltaTime) {

@@ -1,6 +1,6 @@
 #pragma once
 #include "Physics/Physics.h"
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "Types.h"
 
 namespace RagdollUtil {

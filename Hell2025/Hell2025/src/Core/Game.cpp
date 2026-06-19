@@ -1,5 +1,5 @@
 #include "Game.h"
-#include <Hell/Types.h>
+#include <Game/Types.h>
 
 #include "../Renderer/Renderer.h"
 
@@ -18,8 +18,8 @@
 #include "UI/UIBackEnd.h"
 #include "Viewport/ViewportManager.h"
 
-#include <Hell/Logging.h>
-#include <Hell/UniqueID.h>
+#include "Hell/Logging.h"
+#include <Game/UniqueID.h>
 
 // Get me out of here
 #include "World/World.h"

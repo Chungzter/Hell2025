@@ -1,5 +1,5 @@
 #include "GL_cubemap_frame_buffer.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 OpenGLCubemapFrameBuffer::OpenGLCubemapFrameBuffer(const std::string& name, int size) {
     Create(name, size);

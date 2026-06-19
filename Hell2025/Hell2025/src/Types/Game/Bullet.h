@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/CreateInfo.h>
+#include <Game/CreateInfo.h>
 #include "glm/vec3.hpp"
 
 struct Bullet {

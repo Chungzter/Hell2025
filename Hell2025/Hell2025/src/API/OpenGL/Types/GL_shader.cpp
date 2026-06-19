@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include "BackEnd/BackEnd.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 struct ShaderParseContext {
     std::unordered_set<std::string> includedPaths;

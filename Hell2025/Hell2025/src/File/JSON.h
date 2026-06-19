@@ -1,7 +1,7 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "Types/Game/SpawnPoint.h"
-#include <Hell/CreateInfo.h>
+#include <Game/CreateInfo.h>
 #include <nlohmann/json.hpp>
 #include <glm/glm.hpp>
 

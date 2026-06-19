@@ -8,7 +8,7 @@
 
 #include "Config/Config.h"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 namespace OpenGLRenderer {
 

@@ -7,7 +7,7 @@
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
 
-#include "Hell/GPUTypes.h"
+#include "Game/GPUTypes.h"
 
 namespace OpenGLRenderer {
 

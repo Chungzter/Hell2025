@@ -1,6 +1,6 @@
 #pragma once
-#include <Hell/Types.h>
-#include <Hell/CreateInfo.h>
+#include <Game/Types.h>
+#include <Game/CreateInfo.h>
 #include "DeadLock.h"
 #include "Types/Renderer/MeshBufferOLD.h"
 #include "Types/Renderer/MeshNodes.h"

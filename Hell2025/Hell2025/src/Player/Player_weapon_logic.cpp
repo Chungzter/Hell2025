@@ -7,7 +7,7 @@
 #include "Input/InputMulti.h"
 #include "Util.h"
 #include "World/World.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 // remove me
 #include "Renderer/Renderer.h"

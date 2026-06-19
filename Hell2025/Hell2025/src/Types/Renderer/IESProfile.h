@@ -1,6 +1,6 @@
 #pragma once
-#include <Hell/Constants.h>
-#include <Hell/Types.h>
+#include <Game/Constants.h>
+#include <Game/Types.h>
 #include <vector>
 
 struct IESProfile {

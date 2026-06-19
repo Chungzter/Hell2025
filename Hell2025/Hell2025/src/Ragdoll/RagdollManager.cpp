@@ -8,14 +8,14 @@
 #include "rapidjson/prettywriter.h"
 
 #include <iostream>
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Api.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/schema.h"
 
 #include "RagdollV2.h"
 #include "Ragdoll_util.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 
 inline RdEnum toInputType(std::string type) {
     return type == "Inherit" ? static_cast<short>(RdBehaviour::kInherit) : type == "Kinematic" ? static_cast<short>(RdBehaviour::kKinematic) : static_cast<short>(RdBehaviour::kDynamic);

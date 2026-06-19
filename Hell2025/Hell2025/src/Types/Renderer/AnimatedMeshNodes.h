@@ -1,8 +1,8 @@
 #pragma once
-#include <Hell/Constants.h>
-#include <Hell/CreateInfo.h>
-#include <Hell/Enums.h>
-#include <Hell/Types.h>
+#include <Game/Constants.h>
+#include <Game/CreateInfo.h>
+#include <Game/Enums.h>
+#include <Game/Types.h>
 
 #include <cstdint>
 #include <string>

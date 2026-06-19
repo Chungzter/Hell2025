@@ -1,5 +1,6 @@
 #pragma once
-#include <Hell/Enums.h>
+#include "Hell/Common.h"
+#include <Hell/Types.h>
 #include "Types/Renderer/Texture.h"
 
 struct UploadContext {

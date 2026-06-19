@@ -1,6 +1,6 @@
 #include "Util.h"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 #include <fstream>
 #include <string>

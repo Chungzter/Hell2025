@@ -1,7 +1,7 @@
 #include "Physics.h"
 #include "Physics/Types/Ragdoll.h"
 #include "File/JSON.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 #include "Util.h"
 
 #include <unordered_map>

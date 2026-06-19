@@ -10,8 +10,8 @@
 #include "World/World.h"
 #include "Util/Util.h"
 
-#include <Hell/Constants.h>
-#include <Hell/Logging.h>
+#include <Game/Constants.h>
+#include "Hell/Logging.h"
 
 #include "Core/Game.h" // For Game::GetTotalTime(). It's a hack to prevent colorful probe glitch at start
 

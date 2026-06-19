@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Hell/VertexAttributes.h"
+#include "Hell/Render/VertexAttributes.h"
 
 #include <cstdint>
 #include <vector>

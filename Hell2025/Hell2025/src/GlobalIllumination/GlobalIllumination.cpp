@@ -9,7 +9,7 @@
 #include "Core/Game.h"
 #include "Renderer/Renderer.h"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 namespace GlobalIllumination {
 

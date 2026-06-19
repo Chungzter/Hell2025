@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Hell/TextureTypes.h"
+#include "Hell/Render/TextureTypes.h"
 
 #include <cstdint>
 #include <string>

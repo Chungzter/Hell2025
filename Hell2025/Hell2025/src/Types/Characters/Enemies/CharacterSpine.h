@@ -1,6 +1,6 @@
 #pragma once
-#include <Hell/Enums.h>
-#include <Hell/Types.h>
+#include <Game/Enums.h>
+#include <Game/Types.h>
 
 #define SHARK_SPINE_SEGMENT_COUNT 11
 

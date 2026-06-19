@@ -2,7 +2,7 @@
 #include "AssetManagement/AssetManager.h"
 #include "Util/Util.h"
 #include <mutex>
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 void SkinnedModel::BakeToAssetManager() {
     m_vertexCount = m_skinnedModelData.vertexCount;

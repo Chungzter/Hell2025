@@ -3,8 +3,9 @@
 #include "API/OpenGL/Types/gl_texture.h"
 #include "API/Vulkan/Types/vk_texture.h"
 
-#include "Hell/Enums.h"
-#include "Hell/TextureTypes.h"
+#include "Game/Enums.h"
+#include "Hell/Types.h"
+#include "Hell/Render/TextureTypes.h"
 
 #include "LoadingState.h"
 #include <string>

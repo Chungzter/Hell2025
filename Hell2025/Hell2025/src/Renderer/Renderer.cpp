@@ -11,7 +11,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Timer.hpp"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 namespace Renderer {
 

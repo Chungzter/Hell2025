@@ -5,7 +5,7 @@
 #include <assimp/postprocess.h>
 #include <future>
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 namespace AssetManager {
 

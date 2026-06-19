@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/Enums.h>
+#include <Game/Enums.h>
 #include <string>
 
 namespace Debug {

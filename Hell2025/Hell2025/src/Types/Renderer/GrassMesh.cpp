@@ -1,6 +1,7 @@
 #include "GrassMesh.h"
 #include <random>
 #include <glm/gtc/matrix_transform.hpp>
+#include "Hell/Logging.h"
 
 void GrassMesh::Create() {
 
@@ -159,5 +160,6 @@ void GrassMesh::Create() {
     }
 
     glMesh.UpdateBuffers(vertices, indices);
-    std::cout << indices.size() << "\n";
+
+    Logging::Error() << "Grass indices: " << indices.size() << "\n";
 }

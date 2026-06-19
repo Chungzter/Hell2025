@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 
 namespace Config {
     void Init();

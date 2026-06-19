@@ -1,21 +1,61 @@
 #pragma once
+#include "Hell/Common.h"
 #include <cstdint>
-
-enum class API {
-    OPENGL,
-    VULKAN,
-    UNDEFINED
-};
-
-enum class WindowedMode {
-    WINDOWED,
-    FULLSCREEN
-};
 
 enum struct RendererMode {
     OLD_DEFERRED,
     RE_STYLE,
     RENDERER_MODE_COUNT
+};
+
+enum class SplitscreenMode {
+    FULLSCREEN,
+    TWO_PLAYER,
+    FOUR_PLAYER,
+    SPLITSCREEN_MODE_COUNT
+};
+
+enum InputType {
+    KEYBOARD_AND_MOUSE,
+    CONTROLLER
+};
+
+enum struct IESProfileType {
+    NONE = 0,
+    LAMP_0,
+    LAMP_1,
+    LAMP_2,
+    LAMP_3,
+    LAMP_4,
+    LAMP_5,
+    LAMP_6,
+    LAMP_7,
+    LAMP_8,
+    LAMP_9,
+    LAMP_10,
+    LAMP_11,
+};
+
+enum struct CollisionShapeType {
+    BOX,
+    CAPSULE,
+    CONVEX_MESH,
+    UNDEFINED
+};
+
+enum struct PhysicsType {
+    NONE = 0,
+    RIGID_DYNAMIC,
+    RIGID_STATIC,
+    HEIGHT_FIELD,
+    GROUND_PLANE,
+    CHARACTER_CONTROLLER,
+    UNDEFINED
+};
+
+enum struct PhysicsShapeType {
+    BOX,
+    CONVEX_MESH
 };
 
 enum struct Shortcut {
@@ -24,23 +64,6 @@ enum struct Shortcut {
     CTRL_K, CTRL_L, CTRL_M, CTRL_N, CTRL_O, CTRL_P, CTRL_Q, CTRL_R, CTRL_S, CTRL_T,
     CTRL_U, CTRL_V, CTRL_W, CTRL_X, CTRL_Y, CTRL_Z,
     ESC, NONE
-};
-
-enum class Alignment {
-    CENTERED,
-    CENTERED_HORIZONTAL,
-    CENTERED_VERTICAL,
-    TOP_LEFT,
-    TOP_RIGHT,
-    BOTTOM_LEFT,
-    BOTTOM_RIGHT
-};
-
-enum class BakeState {
-    AWAITING_BAKE,
-    BAKING_IN_PROGRESS,
-    BAKE_COMPLETE,
-    UNDEFINED
 };
 
 enum class BlendingMode {
@@ -57,7 +80,6 @@ enum class BlendingMode {
     STAINED_GLASS,
     UNDEFINED
 };
-
 
 enum class ObjectType : uint16_t {
     NO_TYPE = 0,
@@ -86,8 +108,7 @@ enum class ObjectType : uint16_t {
     RAGDOLL_ENEMY,
     RAGDOLL_V2,
     RAGDOLL_PLAYER,
-    RESOURCE_MESH_BUFFER,
-    SHARK,
+    SHARK = 27,
     SPAWN_POINT,
     STAIRCASE,
     TREE,
@@ -98,13 +119,7 @@ enum class ObjectType : uint16_t {
     WATER_PLANE_BOTTOM,
     WINDOW,
 
-    GL_GENERIC_MESH,
-    GL_MESH_BUFFER,
-
-    VK_GENERIC_MESH,
-    VK_MESH_BUFFER,
-
-    ANIMATED_GAME_OBJECT,
+    ANIMATED_GAME_OBJECT = 41,
     CHRISMAS_PRESENT,
     DOBERMANN,
     GENERIC_OBJECT,
@@ -115,13 +130,6 @@ enum class ObjectType : uint16_t {
     TRIM,
 
     UNDEFINED
-};
-
-enum class Axis {
-    X,
-    Y,
-    Z,
-    NONE,
 };
 
 enum struct OpenAxis {
@@ -137,32 +145,6 @@ enum struct OpenAxis {
     ROTATE_X_NEG,
     ROTATE_Y_NEG,
     ROTATE_Z_NEG,
-};
-
-enum class SplitscreenMode {
-    FULLSCREEN,
-    TWO_PLAYER,
-    FOUR_PLAYER,
-    SPLITSCREEN_MODE_COUNT
-};
-
-enum class ShadingMode {
-    SHADED,
-    WIREFRAME,
-    WIREFRAME_OVERLAY,
-    SHADING_MODE_COUNT
-};
-
-enum class CameraView {
-    PERSPECTIVE,
-    ORTHO,
-    FRONT,
-    BACK,
-    RIGHT,
-    LEFT,
-    TOP,
-    BOTTOM,
-    UNDEFINED
 };
 
 enum struct EditorSelectionMode {
@@ -233,11 +215,6 @@ enum class ShellEjectionState {
     IDLE, AWAITING_SHELL_EJECTION
 };
 
-enum InputType {
-    KEYBOARD_AND_MOUSE,
-    CONTROLLER
-};
-
 enum CollisionGroup : uint64_t {
     NO_COLLISION = 0,
     BULLET_CASING = 1,
@@ -295,22 +272,6 @@ enum struct LightType {
     UNDEFINED
 };
 
-enum struct IESProfileType {
-    NONE = 0,
-    LAMP_0,
-    LAMP_1,
-    LAMP_2,
-    LAMP_3,
-    LAMP_4,
-    LAMP_5,
-    LAMP_6,
-    LAMP_7,
-    LAMP_8,
-    LAMP_9,
-    LAMP_10,
-    LAMP_11,
-};
-
 enum struct EditorViewportSplitMode {
     SINGLE,
     FOUR_WAY_SPLIT,
@@ -323,13 +284,6 @@ enum struct ItemType {
     KEY,
     AMMO,
     USELESS,
-    UNDEFINED
-};
-
-enum struct CollisionShapeType {
-    BOX,
-    CAPSULE,
-    CONVEX_MESH,
     UNDEFINED
 };
 
@@ -350,16 +304,6 @@ enum struct EditorMode {
     MAP_HEIGHT_EDITOR,
     MAP_OBJECT_EDITOR,
     UNDEFINED,
-};
-
-enum struct PhysicsType {
-    NONE = 0,
-    RIGID_DYNAMIC,
-    RIGID_STATIC,
-    HEIGHT_FIELD,
-    GROUND_PLANE,
-    CHARACTER_CONTROLLER,
-    UNDEFINED
 };
 
 enum struct OpeningState {
@@ -429,6 +373,17 @@ enum class RendererOverrideState {
     DEPTH,
     WORLD_POSITION,
     EMISSIVE,
+    STATE_COUNT,
+};
+
+enum struct ProbeDebugState {
+    HIDDEN,
+    COLOR,
+    DISTANCE,
+    DISTANCE_COOL_DOWN,
+    IRRADIENCE_COOL_DOWN,
+    REVLANCE,
+    ACTIVE,
     STATE_COUNT,
 };
 
@@ -575,22 +530,6 @@ enum struct DoorMaterialType {
 enum struct ChainLinkType {
     DOOR_CHAIN,
     UNDEFINED
-};
-
-enum struct PhysicsShapeType {
-    BOX,
-    CONVEX_MESH
-};
-
-enum struct ProbeDebugState{
-	HIDDEN,
-	COLOR,
-	DISTANCE,
-	DISTANCE_COOL_DOWN,
-	IRRADIENCE_COOL_DOWN,
-	REVLANCE,
-	ACTIVE,
-    STATE_COUNT,
 };
 
 //enum struct MeshNodeType {

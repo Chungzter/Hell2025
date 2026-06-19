@@ -1,6 +1,6 @@
 #pragma once
-#include <Hell/CreateInfo.h>
-#include "Hell/Types.h"
+#include <Game/CreateInfo.h>
+#include "Game/Types.h"
 
 struct BulletTrailParticle {
     glm::vec3 position;

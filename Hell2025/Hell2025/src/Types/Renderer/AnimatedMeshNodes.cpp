@@ -2,7 +2,7 @@
 #include "AssetManagement/AssetManager.h"
 #include "Util/Util.h"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 void AnimatedMeshNodes::Init(uint64_t parentId, const std::string& modelName, const std::vector<AnimatedMeshNodeCreateInfo>& createInfoSet) {
 

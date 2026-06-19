@@ -6,9 +6,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Hell/Constants.h"
+#include "Game/Constants.h"
 #include "Hell/Logging.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 
 #include "Physics/Physics.h"
 #include "Util.h"

@@ -13,7 +13,7 @@
 #include "Util.h"
 #include <vector>
 #include "Hell/Containers/SlotMap.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 #define NAV_MESH_PROFILING 0
 

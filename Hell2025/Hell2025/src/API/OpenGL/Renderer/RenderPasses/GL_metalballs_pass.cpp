@@ -6,7 +6,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 // remove me
 #include "Core/Game.h"

@@ -1,8 +1,8 @@
 #include "Bvh.h"
 #include "Input/Input.h"
 #include "Renderer/Renderer.h"
-#include <Hell/Constants.h>
-#include <Hell/UniqueID.h>
+#include <Game/Constants.h>
+#include <Game/UniqueID.h>
 #include "Util.h"
 #include "Timer.hpp"
 
@@ -18,7 +18,7 @@
 #include "bvh/v2/thread_pool.h"
 #include "bvh/v2/stack.h"
 
-#include <hell/Logging.h>
+#include "Hell/Logging.h"
 
 using MadmannVec3 = bvh::v2::Vec<float, 3>;
 using MadmannBBox = bvh::v2::BBox<float, 3>;

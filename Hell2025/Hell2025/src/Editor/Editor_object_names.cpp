@@ -1,5 +1,5 @@
 #include "Editor.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "World/World.h"
 
 namespace Editor {

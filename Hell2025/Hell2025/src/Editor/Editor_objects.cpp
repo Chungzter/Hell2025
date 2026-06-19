@@ -2,13 +2,13 @@
 #include "Audio/Audio.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Gizmo.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Input/Input.h"
 #include "Physics/Physics.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 
 #include "Core/Game.h"
 

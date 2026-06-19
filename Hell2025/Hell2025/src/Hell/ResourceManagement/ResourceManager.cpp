@@ -12,16 +12,6 @@ namespace Hell::ResourceManager {
         std::unordered_map<std::string, MeshBuffer> g_meshBuffers;
     }
 
-    void Init() {
-        CreateGenericMesh("DebugLines2D");
-        CreateGenericMesh("DebugLines3D");
-        CreateGenericMesh("DebugPoints2D");
-        CreateGenericMesh("DebugPoints3D");
-        CreateGenericMesh("DebugMeshItemExamineLines");
-        CreateGenericMesh("UI");
-        CreateMeshBuffer("Procedural");
-    }
-
     void CleanUp() {
         for (auto& object : g_genericMeshes) { object.second.CleanUp(); } g_genericMeshes.clear();
         for (auto& object : g_meshBuffers)   { object.second.CleanUp(); } g_meshBuffers.clear();

@@ -1,7 +1,7 @@
 #pragma once
-#include "Hell/Constants.h"
-#include "Hell/Enums.h"
-#include "Hell/TextureTypes.h"
+#include "Game/Constants.h"
+#include "Game/Enums.h"
+#include "Hell/Render/TextureTypes.h"
 
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>

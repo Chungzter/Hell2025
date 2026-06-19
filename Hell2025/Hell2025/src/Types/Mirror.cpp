@@ -6,7 +6,7 @@
 #include "Debug/DebugDraw.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Util.h"
 
 Mirror::Mirror(uint64_t id, uint64_t parentId, uint32_t meshNodeIndex, uint32_t globalMeshIndex) {

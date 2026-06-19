@@ -3,7 +3,7 @@
 #include "Config/Config.h"
 #include "Bible/Bible.h"
 #include "Core/Game.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Input/Input.h"
 #include "UI/TextBlitter.h"
 #include "UI/UiBackend.h"

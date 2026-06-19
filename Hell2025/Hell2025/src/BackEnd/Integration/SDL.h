@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/Enums.h>
+#include "Hell/Common.h"
 #include <vector>
 
 namespace Backend::SDL {

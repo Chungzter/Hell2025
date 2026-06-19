@@ -1,6 +1,6 @@
 #include "Bible/Bible.h"
 #include "AssetManagement/AssetManager.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Util.h"
 
 namespace Bible {

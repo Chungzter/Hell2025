@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Hell/Types.h"
-#include "Hell/VertexAttributes.h"
+#include "Hell/Render/VertexAttributes.h"
 
 #include "vk_buffer.h"
 #include <vector>

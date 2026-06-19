@@ -1,8 +1,8 @@
 #include "MeshNodes.h"
 #include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h"
-#include <Hell/RendereringConstants.h>
-#include <Hell/Logging.h>
+#include <Game/RendereringConstants.h>
+#include "Hell/Logging.h"
 #include "Editor/Editor.h"
 #include "Input/Input.h"
 #include "Managers/MirrorManager.h"
@@ -10,7 +10,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "World/World.h"
 #include "Physics/Physics.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 #include "Util.h"
 
 void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std::vector<MeshNodeCreateInfo>& meshNodeCreateInfoSet) {

@@ -15,9 +15,9 @@
 #include <span>
 #include <unordered_map>
 
-#include <Hell/Constants.h>
-#include <Hell/Logging.h>
-#include <Hell/RendereringConstants.h>
+#include <Game/Constants.h>
+#include "Hell/Logging.h"
+#include <Game/RendereringConstants.h>
 
 #include "Timer.hpp"
 

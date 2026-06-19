@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Hell/CreateInfo.h"
-#include "Hell/Enums.h"
-#include "Hell/TextureTypes.h"
-#include "Hell/Types.h"
-#include "Hell/VertexAttributes.h"
+#include "Game/CreateInfo.h"
+#include "Game/Enums.h"
+#include "Hell/Render/TextureTypes.h"
+#include "Game/Types.h"
+#include "Hell/Render/VertexAttributes.h"
 
 #include "Math/AABB.h"
 #include "Types/Animation/Animation.h"

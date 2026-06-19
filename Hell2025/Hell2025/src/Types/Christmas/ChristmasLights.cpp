@@ -4,8 +4,8 @@
 #include "Renderer/Renderer.h"
 #include <array>
 
-#include <Hell/Logging.h>
-#include <Hell/RendereringConstants.h>
+#include "Hell/Logging.h"
+#include <Game/RendereringConstants.h>
 
 ChristmasLightSet::ChristmasLightSet(uint64_t id, ChristmasLightsCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_objectId = id;

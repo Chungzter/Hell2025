@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "Camera/Camera.h"
 #include "Camera/Frustum.h"
 #include "Inventory/Inventory.h"

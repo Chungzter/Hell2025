@@ -1,6 +1,6 @@
 #include "Bible/Bible.h"
 #include "AssetManagement/AssetManager.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 namespace Bible {
     void ConfigureMeshNodesPlantBlackBerries(uint64_t id, MeshNodes* meshNodes) {

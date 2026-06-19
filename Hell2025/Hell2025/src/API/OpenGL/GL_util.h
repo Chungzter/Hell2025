@@ -1,7 +1,7 @@
 #pragma once
 #include <glad/gl.h>
 
-#include "Hell/TextureTypes.h"
+#include "Hell/Render/TextureTypes.h"
 
 #include <cstddef>
 #include <cstdint>

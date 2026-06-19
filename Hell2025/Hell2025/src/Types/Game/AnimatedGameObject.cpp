@@ -3,11 +3,11 @@
 #include "Bible/Bible.h"
 #include "Core/Game.h"
 #include "Debug/DebugDraw.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Input/Input.h"
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 #include "Util.h"
 
 #include <unordered_set>

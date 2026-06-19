@@ -6,7 +6,7 @@
 #include "Renderer/RenderDataManager.h"
 
 #include "Ragdoll/RagdollManager.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 
 #include "BVH/Cpu/CpuBvh.h"
 

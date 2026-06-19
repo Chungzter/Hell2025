@@ -1,7 +1,7 @@
 #include "Audio.h"
 
-#include <Hell/Logging.h>
-#include <Hell/UniqueID.h>
+#include "Hell/Logging.h"
+#include <Game/UniqueID.h>
 
 #include <algorithm>
 

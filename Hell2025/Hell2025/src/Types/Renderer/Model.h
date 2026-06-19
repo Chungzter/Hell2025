@@ -1,9 +1,9 @@
 #pragma once
 #include "File/FileFormats.h"
-#include <Hell/Enums.h>
-#include <Hell/Types.h>
+#include <Game/Enums.h>
+#include <Game/Types.h>
 #include "LoadingState.h"
-#include "Mesh.h"
+#include "Hell/ResourceManagement/Types/Mesh.h"
 
 #include <limits>
 #include <string>

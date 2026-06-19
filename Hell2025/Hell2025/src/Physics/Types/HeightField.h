@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "Math/AABB.h"
 #include <vector>
 #include <glm/vec3.hpp>

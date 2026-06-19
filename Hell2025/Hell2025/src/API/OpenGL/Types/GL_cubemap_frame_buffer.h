@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 #include "GL_attachments.h"
-#include <Hell/Types.h>
+#include <Hell/Glm.h>
 
 struct OpenGLCubemapFrameBuffer {
     OpenGLCubemapFrameBuffer() = default;

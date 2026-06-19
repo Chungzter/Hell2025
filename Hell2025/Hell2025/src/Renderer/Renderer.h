@@ -3,7 +3,7 @@
 #include "Math/OBB.h"
 #include "Types/Map/Map.h"
 
-#include <Hell/Types.h>
+#include <Game/Types.h>
 
 namespace Renderer {
     void InitMain();

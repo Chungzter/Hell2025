@@ -7,13 +7,13 @@
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "Managers/OpenableManager.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 #include "Util.h"
 #include "World/World.h"
 
 #include "Core/Game.h"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 Door::Door(uint64_t id, DoorCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_objectId = id;

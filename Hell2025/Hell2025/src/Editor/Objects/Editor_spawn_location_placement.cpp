@@ -1,7 +1,7 @@
 #include "Editor/Editor.h"
 #include "Audio/Audio.h"
 #include "Input/Input.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Managers/MapManager.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"

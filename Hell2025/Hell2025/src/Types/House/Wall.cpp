@@ -7,8 +7,8 @@
 #include "Renderer/RenderDataManager.h"]
 #include "World/World.h"
 
-#include <Hell/Logging.h>
-#include <Hell/RendereringConstants.h>
+#include "Hell/Logging.h"
+#include <Game/RendereringConstants.h>
 
 using namespace Hell;
 

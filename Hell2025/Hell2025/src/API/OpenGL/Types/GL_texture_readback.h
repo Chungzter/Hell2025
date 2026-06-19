@@ -1,6 +1,9 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Hell/Glm.h>
 #include "GL_pbo.hpp"
+
+#include <cstdint>
+#include <vector>
 
 struct OpenGLTextureReadBack {
     void IssueDataRequest(unsigned int framebufferHandle, unsigned int attachmentSlot, int offsetX, int offsetY, int width, int height, int internalFormat);

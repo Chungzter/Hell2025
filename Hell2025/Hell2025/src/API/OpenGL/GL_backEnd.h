@@ -1,8 +1,9 @@
 #pragma once
 
 
-#include "Hell/Enums.h"
-#include "Hell/VertexAttributes.h"
+#include "Hell/Common.h"
+#include "Hell/Types.h"
+#include "Hell/Render/VertexAttributes.h"
 
 #include "API/OpenGL/Types/GL_heightmap_mesh.h"
 #include "Types/GL_texture.h"

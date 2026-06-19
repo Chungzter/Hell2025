@@ -4,7 +4,7 @@
 #include "Physics/Physics.h"
 #include "Renderer/Renderer.h"
 #include "Util.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 
 using namespace Hell;
 

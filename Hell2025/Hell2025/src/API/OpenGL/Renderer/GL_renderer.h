@@ -14,7 +14,7 @@
 #include "API/OpenGL/Types/GL_timer.h"
 #include "API/OpenGL/Types/GL_ssbo.h"
 
-#include "Hell/VertexAttributes.h"
+#include "Hell/Render/VertexAttributes.h"
 
 #include "Math/AABB.h"
 #include "Math/OBB.h"

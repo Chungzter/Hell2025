@@ -7,7 +7,6 @@
 
 namespace Hell::ResourceManager {
 
-    void Init();
     void CleanUp();
 
     GenericMesh& CreateGenericMesh(const std::string& name);

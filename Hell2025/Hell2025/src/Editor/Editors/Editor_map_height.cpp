@@ -13,7 +13,7 @@
 #include "Imgui/ImguiBackEnd.h"
 #include <ImGui/imgui.h>
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 namespace Editor {
     namespace {

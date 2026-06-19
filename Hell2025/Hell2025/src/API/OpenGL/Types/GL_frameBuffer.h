@@ -1,7 +1,7 @@
 #pragma once
 #include "GL_attachments.h"
 #include "../GL_Util.h"
-#include <Hell/Types.h>
+#include <Hell/Glm.h>
 #include <glad/gl.h>
 #include <iostream>
 #include <string>

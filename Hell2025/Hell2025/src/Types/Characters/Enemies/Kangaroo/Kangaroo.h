@@ -1,8 +1,8 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "Types/Game/AnimatedGameObject.h"
-#include <Hell/CreateInfo.h>
-#include <Hell/Constants.h>
+#include <Game/CreateInfo.h>
+#include <Game/Constants.h>
 #include "Pathfinding/AStar.h"
 #include "Physics/Types/CharacterController.h"
 

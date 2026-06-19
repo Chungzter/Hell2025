@@ -1,11 +1,11 @@
 // Openable.h
 #pragma once
 #include "Audio/Audio.h"
-#include <Hell/CreateInfo.h>
-#include <Hell/Constants.h>
-#include <Hell/Enums.h>
+#include <Game/CreateInfo.h>
+#include <Game/Constants.h>
+#include <Game/Enums.h>
 #include "Util.h"
-#include <Hell/UniqueID.h>
+#include <Game/UniqueID.h>
 #include "Input/Input.h"
 
 struct Openable {

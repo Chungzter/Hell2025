@@ -1,5 +1,5 @@
 #include "GL_texture_3d.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 void OpenGLTexture3D::Create(int size, GLenum internalFormat, bool allocateMips) {
     if (m_handle != 0) {

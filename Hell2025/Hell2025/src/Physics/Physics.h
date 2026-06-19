@@ -12,8 +12,8 @@
 #include "Physics/Types/RigidStatic.h"
 #include "CollisionReports.h"
 
-#include "Hell/Types.h"
-#include "Hell/VertexAttributes.h"
+#include "Game/Types.h"
+#include "Hell/Render/VertexAttributes.h"
 
 #include "Math/AABB.h"
 #include <string>

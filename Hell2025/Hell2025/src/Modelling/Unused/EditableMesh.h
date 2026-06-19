@@ -1,7 +1,7 @@
 ﻿/*#pragma once
 #include <array>
 #include <vector>
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "API/OpenGL/Types/GL_mesh_buffer.h"
 
 //struct Edge;

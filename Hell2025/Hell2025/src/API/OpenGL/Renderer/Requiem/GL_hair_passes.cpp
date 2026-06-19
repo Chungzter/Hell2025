@@ -1,6 +1,6 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
-#include "Hell/RendereringConstants.h"
+#include "Game/RendereringConstants.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 

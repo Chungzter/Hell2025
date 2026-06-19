@@ -1,6 +1,6 @@
 #pragma once
-#include <Hell/Types.h>
-#include <Hell/CreateInfo.h>
+#include <Game/Types.h>
+#include <Game/CreateInfo.h>
 #include "Trim.h"
 #include "WallSegment.h"
 #include <glm/glm.hpp>

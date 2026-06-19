@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "Types/Mirror.h"
 #include "Hell/Containers/SlotMap.h"
 

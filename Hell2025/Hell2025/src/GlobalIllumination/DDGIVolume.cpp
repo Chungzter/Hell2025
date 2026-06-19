@@ -5,7 +5,7 @@
 #include "AssetManagement/AssetManager.h" // remove me
 #include "World/World.h"
 
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 DDGIVolume::DDGIVolume(uint64_t id, DDGIVolumeCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_id = id;

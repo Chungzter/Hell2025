@@ -1,6 +1,6 @@
 #pragma once
-#include <Hell/Enums.h>
-#include <Hell/Types.h>
+#include <Game/Enums.h>
+#include <Game/Types.h>
 #include <vector>
 #include "Camera/Camera.h"
 #include "Player/Player.h"

@@ -1,6 +1,6 @@
 #pragma once
-#include "Hell/Enums.h"
-#include "Hell/VertexAttributes.h"
+#include "Game/Enums.h"
+#include "Hell/Render/VertexAttributes.h"
 #include "UI/FontSpriteSheet.h"
 
 #include <cstdint>

@@ -1,6 +1,7 @@
 #include "GL_texture_array.h"
 #include "API/OpenGL/GL_util.h"
 #include <glad/gl.h>
+#include "Hell/Logging.h"
 
 void OpenGLTextureArray::AllocateMemory(uint32_t width, uint32_t height, uint32_t internalFormat, uint32_t mipmapLevelCount, uint32_t count) {
     if (m_memoryAllocated) return;
@@ -25,11 +26,11 @@ void OpenGLTextureArray::AllocateMemory(uint32_t width, uint32_t height, uint32_
 
 void OpenGLTextureArray::SetLayerDataR16(uint32_t layerIndex, const std::vector<float>& data) {
     if (layerIndex >= m_count) {
-        std::cout << "OpenGLTextureArray::SetLayerDataR16(() failed: layerIndex out of range!\n";
+        Logging::Error() << "OpenGLTextureArray::SetLayerDataR16(() failed: layerIndex out of range!\n";
         return;
     }
     if (data.size() != static_cast<size_t>(m_width * m_height)) {
-        std::cout << "OpenGLTextureArray::SetLayerDataR16() failed because data.size() was " << data.size() << " but texture array width(" << m_width << ") * height(" << m_height << ") equals " << (m_width * m_height) << "\n";
+        Logging::Error() << "OpenGLTextureArray::SetLayerDataR16() failed because data.size() was " << data.size() << " but texture array width(" << m_width << ") * height(" << m_height << ") equals " << (m_width * m_height) << "\n";
         return;
     }
     glTextureSubImage3D(m_handle, 0, 0, 0, layerIndex, m_width, m_height, 1, GL_RED, GL_FLOAT, data.data());

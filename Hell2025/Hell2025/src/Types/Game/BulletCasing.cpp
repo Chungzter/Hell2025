@@ -3,7 +3,7 @@
 #include "AssetManagement/AssetManager.h"
 #include "Audio/Audio.h"
 #include "Physics/Physics.h"
-#include "Hell/RendereringConstants.h"
+#include "Game/RendereringConstants.h"
 #include "Renderer/RenderDataManager.h"
 
 BulletCasing::BulletCasing(BulletCasingCreateInfo createInfo) {

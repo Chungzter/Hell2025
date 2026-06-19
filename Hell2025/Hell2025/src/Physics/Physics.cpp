@@ -1,7 +1,7 @@
 #include "Physics.h"
-#include <Hell/Constants.h>
-#include <Hell/Enums.h>
-#include <Hell/Logging.h>
+#include <Game/Constants.h>
+#include <Game/Enums.h>
+#include "Hell/Logging.h"
 #include <iostream>
 
 PxFilterFlags contactReportFilterShader(PxFilterObjectAttributes attributes0, PxFilterData filterData0, PxFilterObjectAttributes attributes1, PxFilterData filterData1, PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize) {

@@ -9,12 +9,12 @@
 #include <algorithm>
 #include "Input/Input.h"
 #include "Viewport/ViewportManager.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 #pragma warning(disable : 26498)
 
 #include "Renderer/Renderer.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 
 void Player::UpdateCursorRays() {
     m_physXRayResult.hitFound = false;

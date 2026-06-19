@@ -1,6 +1,6 @@
 #include "Editor.h"
 #include "Config/Config.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Physics/Physics.h"
 #include "Viewport/ViewportManager.h"
 

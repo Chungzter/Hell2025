@@ -1,7 +1,7 @@
 #include "Editor/Editor.h"
 #include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Imgui/ImguiBackEnd.h"
 #include <ImGui/imgui.h>
 #include "Imgui/Types/Types.h"

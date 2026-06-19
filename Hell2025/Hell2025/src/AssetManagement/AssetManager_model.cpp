@@ -1,7 +1,7 @@
 #include "AssetManager.h"
 #include "Bvh/Cpu/CpuBvh.h"
 #include "File/AssimpImporter.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Util/Util.h"
 #include <future>
 

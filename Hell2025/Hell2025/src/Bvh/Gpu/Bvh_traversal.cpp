@@ -1,6 +1,6 @@
 #include "Bvh.h"
 #include "Debug/DebugDraw.h"
-#include <Hell/Constants.h>
+#include <Game/Constants.h>
 #include <Hell/Types.h>
 #include "Util.h"
 

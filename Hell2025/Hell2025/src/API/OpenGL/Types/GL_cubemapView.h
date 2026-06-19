@@ -1,7 +1,7 @@
 #pragma once
-#include <Hell/Types.h>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include <vector>
 
 struct OpenGLCubemapView {
     OpenGLCubemapView() = default;

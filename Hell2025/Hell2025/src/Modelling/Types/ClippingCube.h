@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Hell/Types.h"
-#include "Hell/VertexAttributes.h"
+#include "Game/Types.h"
+#include "Hell/Render/VertexAttributes.h"
 
 #include "Math/AABB.h"
 

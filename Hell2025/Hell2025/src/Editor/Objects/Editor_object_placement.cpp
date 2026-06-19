@@ -3,7 +3,7 @@
 #include "Bible/Bible.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Input/Input.h"
 #include "World/World.h"
 #include "Viewport/ViewportManager.h"

@@ -4,13 +4,13 @@
 #include "Audio/Synth.h"
 #include "Editor/Editor.h"
 #include "Input/Input.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Physics/Physics.h"
 #include "World/World.h"
 #include "Util.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 
 void Piano::Init(PianoCreateInfo& createInfo) {
     m_createInfo = createInfo;

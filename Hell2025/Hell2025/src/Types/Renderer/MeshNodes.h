@@ -1,13 +1,13 @@
 #pragma once
-#include <Hell/Enums.h>
-#include <Hell/Types.h>
+#include <Game/Enums.h>
+#include <Game/Types.h>
 #include "Math/AABB.h"
 #include "Math/OBB.h"
 #include "Model.h"
 #include <vector>
 #include <unordered_map>
 
-#include <Hell/CreateInfo.h>
+#include <Game/CreateInfo.h>
 
 struct MeshNode {
     uint64_t id; // unused. you need to think if it would be worthwhile storing all mesh nodes elsewhere

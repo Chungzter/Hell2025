@@ -5,7 +5,7 @@
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util.h"
-#include <Hell/UniqueID.h>
+#include <Game/UniqueID.h>
 
 #include "Bvh/Cpu/CpuBvh.h"
 

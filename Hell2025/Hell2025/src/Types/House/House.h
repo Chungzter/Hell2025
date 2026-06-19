@@ -1,6 +1,6 @@
 #pragma once
-#include <Hell/Types.h>
-#include <Hell/CreateInfo.h>
+#include <Game/Types.h>
+#include <Game/CreateInfo.h>
 
 struct House {
     void SetFilename(const std::string& filename);

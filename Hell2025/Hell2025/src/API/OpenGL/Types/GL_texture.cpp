@@ -1,5 +1,5 @@
 ﻿#include "GL_texture.h"
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 #include "API/OpenGL/GL_util.h"
 #include "BackEnd/BackEnd.h"

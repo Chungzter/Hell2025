@@ -8,7 +8,7 @@
 #include <assimp/matrix4x4.h>
 #include <future>
 #include <numeric>
-#include <Hell/Types.h>
+#include <Game/Types.h>
 
 namespace AssetManager {
     static std::vector<std::future<void>> g_skinnedModelFutures;

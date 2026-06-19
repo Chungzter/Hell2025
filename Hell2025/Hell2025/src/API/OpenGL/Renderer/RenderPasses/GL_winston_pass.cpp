@@ -5,7 +5,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
-#include "Hell/UniqueID.h"
+#include "Game/UniqueID.h"
 #include "Config/Config.h"
 
 namespace OpenGLRenderer {

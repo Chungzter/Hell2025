@@ -7,12 +7,12 @@
 #include "World/World.h"
 #include "Viewport/ViewportManager.h"
 
-#include "Hell/RendereringConstants.h"
+#include "Game/RendereringConstants.h"
 #include "Ocean/Ocean.h"
 #include "Core/Game.h"
 #include "Core/ParticleManager.h"
 
-#include "Hell/GPUTypes.h"
+#include "Game/GPUTypes.h"
 
 namespace OpenGLRenderer {
     struct RESettings {

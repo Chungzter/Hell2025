@@ -18,7 +18,7 @@
 #include "Renderer/Renderer.h"
 #include "UI/UIBackEnd.h"
 #include <iostream>
-#include <Hell/Logging.h>
+#include "Hell/Logging.h"
 
 #include "API/Vulkan/vk_backend.h"
 

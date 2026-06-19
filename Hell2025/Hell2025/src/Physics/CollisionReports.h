@@ -4,7 +4,7 @@
 #include "geometry/PxGeometryHelpers.h"
 #include "Physics/Types/RigidDynamic.h"
 #pragma warning(pop)
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "Math/AABB.h"
 #include <span>
 #include <vector>

@@ -1,7 +1,7 @@
 #pragma once
-#include <Hell/Constants.h>
-#include <Hell/Enums.h>
-#include <Hell/Types.h>
+#include <Game/Constants.h>
+#include <Game/Enums.h>
+#include <Game/Types.h>
 #include "Types/Core/ItemInfo.h"
 #include "Types/Renderer/MeshNodes.h"
 #include "Weapon/WeaponCommon.h"
