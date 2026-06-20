@@ -25,9 +25,9 @@ namespace AssetManager {
             std::vector<Material>& materials = GetMaterials();
             Material& goldenVariant = materials.emplace_back(Material());
             goldenVariant.m_name = dstName;
-            goldenVariant.m_basecolor = GetTextureIndexByName("Gold_ALB", true);
+            goldenVariant.m_basecolor = GetTextureBindlessIndexByName("Gold_ALB", true);
             goldenVariant.m_normal = material->m_normal;
-            goldenVariant.m_rma = GetTextureIndexByName("Gold_RMA", true);
+            goldenVariant.m_rma = GetTextureBindlessIndexByName("Gold_RMA", true);
         }
     }
 
@@ -63,7 +63,7 @@ namespace AssetManager {
 
     void SetFallbackIfMissing(int& textureIndex, const std::string& textureName) {
         if (textureIndex == -1) {
-            textureIndex = GetTextureIndexByName(textureName);
+            textureIndex = GetTextureBindlessIndexByName(textureName);
         }
     }
 
@@ -85,12 +85,12 @@ namespace AssetManager {
 
                 Material& material = materials.emplace_back();
                 material.m_name = materialName;
-                material.m_basecolor = GetTextureIndexByName(materialName + "_ALB");
-                material.m_normal = GetTextureIndexByName(materialName + "_NRM");
-                material.m_rma = GetTextureIndexByName(materialName + "_RMA");
-                material.m_emissive = GetTextureIndexByName(materialName + "_EMI");
-                material.m_opacity = GetTextureIndexByName(materialName + "_OPA");
-                material.m_hairMaps = GetTextureIndexByName(materialName + "_HAR");
+                material.m_basecolor = GetTextureBindlessIndexByName(materialName + "_ALB");
+                material.m_normal = GetTextureBindlessIndexByName(materialName + "_NRM");
+                material.m_rma = GetTextureBindlessIndexByName(materialName + "_RMA");
+                material.m_emissive = GetTextureBindlessIndexByName(materialName + "_EMI");
+                material.m_opacity = GetTextureBindlessIndexByName(materialName + "_OPA");
+                material.m_hairMaps = GetTextureBindlessIndexByName(materialName + "_HAR");
 
                 SetFallbackIfMissing(material.m_normal, "DefaultNRM");
                 SetFallbackIfMissing(material.m_rma, "DefaultRMA");
@@ -115,9 +115,9 @@ namespace AssetManager {
         std::vector<Material>& materials = GetMaterials();
         if (index >= 0 && index < materials.size()) {
             Material* material = &materials[index];
-            Texture* baseColor = AssetManager::GetTextureByIndex(material->m_basecolor);
-            Texture* normal = AssetManager::GetTextureByIndex(material->m_normal);
-            Texture* rma = AssetManager::GetTextureByIndex(material->m_rma);
+            Texture* baseColor = AssetManager::GetTextureByBindlessIndex(material->m_basecolor);
+            Texture* normal = AssetManager::GetTextureByBindlessIndex(material->m_normal);
+            Texture* rma = AssetManager::GetTextureByBindlessIndex(material->m_rma);
             if (baseColor && baseColor->BakeComplete() &&
                 normal && normal->BakeComplete() &&
                 rma && rma->BakeComplete()) {

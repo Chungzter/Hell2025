@@ -14,6 +14,7 @@
 #include "Types/Renderer/SpriteSheetTexture.h"
 #include "Types/Renderer/Texture.h"
 
+#include <cstdint>
 #include <span>
 #include <string>
 #include <vector>
@@ -86,10 +87,11 @@ namespace AssetManager {
     std::vector<Texture>& GetTextures();
     Texture& CreateNewTexture();
     Texture* GetTextureByName(const std::string& name);
-    Texture* GetTextureByIndex(int index);
-    int GetTextureIndexByName(const std::string& name, bool ignoreWarning = true);
+    Texture* GetTextureById(uint64_t id);
+    Texture* GetTextureByBindlessIndex(int32_t bindlessIndex);
+    uint64_t GetTextureIdByName(const std::string& name, bool ignoreWarning = false);
+    int32_t GetTextureBindlessIndexByName(const std::string& name, bool ignoreWarning = true);
     size_t GetTextureCount();
-    void ClearCachedTextureMaps();
     void ReserveTextureStorage(size_t textureCount);
 
     // Spritesheet Textures

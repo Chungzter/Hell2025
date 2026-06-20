@@ -24,7 +24,7 @@ void SpriteSheetTexture::Init() {
     m_frameWidth = m_fullWidth / m_columns;
     m_frameHeight = m_fullHeight / m_rows;
     m_frameCount = m_rows * m_columns; 
-    m_textureIndex = AssetManager::GetTextureIndexByName(m_textureName);
+    m_textureIndex = AssetManager::GetTextureBindlessIndexByName(m_textureName);
 }
 
 void SpriteSheetTexture::SetFileInfo(FileInfo fileInfo) {

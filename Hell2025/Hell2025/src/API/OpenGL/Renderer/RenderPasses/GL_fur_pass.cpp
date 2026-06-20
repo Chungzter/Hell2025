@@ -86,11 +86,11 @@ namespace OpenGLRenderer {
                     shader->SetInt("u_hairLayerCount", hairLayerCount);
 
                     glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE1);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE2);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE7);
                     glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("Kangaroo_FurMask")->GetGLTexture().GetHandle());
 
@@ -142,11 +142,11 @@ namespace OpenGLRenderer {
         //                shader->SetInt("u_hairLayerCount", hairLayerCount);
         //
         //                glActiveTexture(GL_TEXTURE0);
-        //                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+        //                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
         //                glActiveTexture(GL_TEXTURE1);
-        //                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+        //                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
         //                glActiveTexture(GL_TEXTURE2);
-        //                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+        //                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
         //
         //                glDrawElementsInstancedBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), hairLayerCount, renderItem.baseSkinnedVertex);
         //            }
@@ -224,11 +224,11 @@ namespace OpenGLRenderer {
                     shader->SetInt("u_hairLayerCount", hairLayerCount);
 
                     glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE1);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE2);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE3);
                     glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("BlueNoise")->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE4);
@@ -276,11 +276,11 @@ namespace OpenGLRenderer {
                         shader->SetInt("u_hairLayerCount", hairLayerCount);
 
                         glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+                        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
                         glActiveTexture(GL_TEXTURE1);
-                        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+                        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
                         glActiveTexture(GL_TEXTURE2);
-                        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+                        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
                         glActiveTexture(GL_TEXTURE3);
                         glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByName("BlueNoise")->GetGLTexture().GetHandle());
                         glActiveTexture(GL_TEXTURE4);

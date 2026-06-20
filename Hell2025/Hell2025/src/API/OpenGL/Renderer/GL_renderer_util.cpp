@@ -151,7 +151,7 @@ namespace OpenGLRenderer {
 
         RenderItem2D renderItem;
         renderItem.modelMatrix = transform.to_mat4();
-        renderItem.textureIndex = AssetManager::GetTextureIndexByName(textureName);
+        renderItem.textureIndex = AssetManager::GetTextureBindlessIndexByName(textureName);
         renderItem.colorTintR = colorTint.r;
         renderItem.colorTintG = colorTint.g;
         renderItem.colorTintB = colorTint.b;

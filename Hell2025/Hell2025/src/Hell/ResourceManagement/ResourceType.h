@@ -9,6 +9,7 @@ enum class ResourceType : uint16_t {
     GL_MESH_BUFFER,
     VK_GENERIC_MESH,
     VK_MESH_BUFFER,
+    TEXTURE,
     UNDEFINED
 };
 

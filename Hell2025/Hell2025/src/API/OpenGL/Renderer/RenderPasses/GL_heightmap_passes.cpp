@@ -287,17 +287,17 @@ namespace OpenGLRenderer {
         }
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(material->m_basecolor)->GetGLTexture().GetHandle());
+        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(material->m_normal)->GetGLTexture().GetHandle());
+        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(material->m_rma)->GetGLTexture().GetHandle());
+        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(dirtRoadMaterial->m_basecolor)->GetGLTexture().GetHandle());
+        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_basecolor)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(dirtRoadMaterial->m_normal)->GetGLTexture().GetHandle());
+        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_normal)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(dirtRoadMaterial->m_rma)->GetGLTexture().GetHandle());;
+        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_rma)->GetGLTexture().GetHandle());;
         glBindTextureUnit(6, roadFramebuffer->GetColorAttachmentHandleByName("RoadMask"));
 
         glBindVertexArray(heightMapMesh.GetVAO());

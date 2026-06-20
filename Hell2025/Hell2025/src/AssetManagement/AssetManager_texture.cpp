@@ -12,13 +12,8 @@ using namespace Hell;
 
 namespace AssetManager {
 
-    std::unordered_map<std::string, Texture*> g_cachedTexturePointers;
-    std::unordered_map<std::string, int> g_cachedTextureIndices;
-
-    void ClearCachedTextureMaps() {
-        g_cachedTexturePointers.clear();
-        g_cachedTextureIndices.clear();
-    }
+    std::unordered_map<std::string, uint64_t> g_cachedTextureIds;
+    std::unordered_map<uint64_t, size_t> g_cachedTextureStorageIndices;
 
     void CompressMissingDDSTexutres() {
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/compress_me", { "png", "jpg", "tga" })) {
@@ -63,48 +58,79 @@ namespace AssetManager {
     }
 
     Texture* GetTextureByName(const std::string& name) {
-        auto it = g_cachedTexturePointers.find(name);
-        if (it != g_cachedTexturePointers.end()) {
-            return it->second;
-        }
+        const uint64_t id = GetTextureIdByName(name);
+        return id == 0 ? nullptr : GetTextureById(id);
+    }
 
-        for (Texture& texture : GetTextures()) {
-            if (texture.GetFileInfo().name == name) {
-                g_cachedTexturePointers[name] = &texture;
-                return &texture;
+    Texture* GetTextureById(uint64_t id) {
+        auto cachedIt = g_cachedTextureStorageIndices.find(id);
+        if (cachedIt != g_cachedTextureStorageIndices.end()) {
+            const size_t storageIndex = cachedIt->second;
+            std::vector<Texture>& textures = GetTextures();
+
+            if (storageIndex < textures.size() && textures[storageIndex].GetId() == id) {
+                return &textures[storageIndex];
             }
-        }
 
-        Logging::Fatal() << "AssetManager::GetTextureByName(const std::string& name) failed because '" << name << "' does not exist\n";
-        return nullptr;
-    }
-
-    Texture* GetTextureByIndex(int index) {
-        if (index < 0 || index >= GetTextureCount()) {
-            std::cout << "AssetManager::GetTextureByIndex() failed because index '" << index << "' was out of range of size " << GetTextureCount() << "\n";
-            return nullptr;
-        }
-
-        return &GetTextures()[index];
-    }
-
-    int GetTextureIndexByName(const std::string& name, bool ignoreWarning) {
-        auto it = g_cachedTextureIndices.find(name);
-        if (it != g_cachedTextureIndices.end()) {
-            return it->second;
+            g_cachedTextureStorageIndices.erase(cachedIt);
         }
 
         std::vector<Texture>& textures = GetTextures();
 
-        for (int i = 0; i < textures.size(); i++) {
-            if (textures[i].GetFileInfo().name == name) {
-                g_cachedTextureIndices[name] = i;
-                return i;
+        for (size_t i = 0; i < textures.size(); i++) {
+            if (textures[i].GetId() == id) {
+                g_cachedTextureStorageIndices[id] = i;
+                return &textures[i];
             }
         }
-        
+
+        Logging::Error() << "AssetManager::GetTextureById() failed because texture id '" << id << "' does not exist\n";
+        return nullptr;
+    }
+
+    Texture* GetTextureByBindlessIndex(int32_t bindlessIndex) {
+        for (Texture& texture : GetTextures()) {
+            if (texture.GetBindlessIndex() == bindlessIndex) {
+                return &texture;
+            }
+        }
+
+        Logging::Error() << "AssetManager::GetTextureByBindlessIndex() failed because bindless index '" << bindlessIndex << "' does not exist\n";
+        return nullptr;
+    }
+
+    uint64_t GetTextureIdByName(const std::string& name, bool ignoreWarning) {
+        auto cachedIt = g_cachedTextureIds.find(name);
+        if (cachedIt != g_cachedTextureIds.end()) {
+            return cachedIt->second;
+        }
+
+        for (Texture& texture : GetTextures()) {
+            if (texture.GetFileInfo().name == name) {
+                const uint64_t id = texture.GetId();
+                g_cachedTextureIds[name] = id;
+                return id;
+            }
+        }
+
         if (!ignoreWarning) {
-            Logging::Fatal() << "AssetManager::GetTextureIndexByName(const std::string& name) failed because '" << name << "' does not exist\n";
+            Logging::Error() << "AssetManager::GetTextureIdByName() failed because texture '" << name << "' does not exist\n";
+        }
+
+        return 0;
+    }
+
+    int32_t GetTextureBindlessIndexByName(const std::string& name, bool ignoreWarning) {
+        const uint64_t id = GetTextureIdByName(name, true);
+
+        if (id != 0) {
+            if (Texture* texture = GetTextureById(id)) {
+                return texture->GetBindlessIndex();
+            }
+        }
+
+        if (!ignoreWarning) {
+            Logging::Fatal() << "AssetManager::GetTextureBindlessIndexByName() failed because texture '" << name << "' does not exist\n";
         }
 
         return -1;

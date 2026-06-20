@@ -791,16 +791,16 @@ namespace OpenGLRenderer {
 
                 if (bindMaterial) {
                     glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE1);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE2);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE3);
 
                     // Try bind emissive texture
                     if (renderItem.emissiveTextureIndex != -1) {
-                        if (Texture* texture = AssetManager::GetTextureByIndex(renderItem.emissiveTextureIndex)) {
+                        if (Texture* texture = AssetManager::GetTextureByBindlessIndex(renderItem.emissiveTextureIndex)) {
                             glBindTexture(GL_TEXTURE_2D, texture->GetGLTexture().GetHandle());
                         }
                     }
@@ -811,11 +811,11 @@ namespace OpenGLRenderer {
                 }
                 if (bindWoundMaterial) {
                     glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.additionalTextureIndex0)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex0)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE5);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.additionalTextureIndex1)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex1)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE6);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.additionalTextureIndex2)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex2)->GetGLTexture().GetHandle());
                 }
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, command.indexCount, GL_UNSIGNED_INT, (GLvoid*)(command.firstIndex * sizeof(GLuint)), command.baseVertex);

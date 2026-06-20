@@ -86,11 +86,11 @@ namespace OpenGLRenderer {
 		// and could derive the result you want directly from the source material
 		Material* material = AssetManager::GetMaterialByName("Plastic");
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(material->m_basecolor)->GetGLTexture().GetHandle());
+		glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
 		glActiveTexture(GL_TEXTURE4);
-		glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(material->m_normal)->GetGLTexture().GetHandle());
+		glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
 		glActiveTexture(GL_TEXTURE5);
-		glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(material->m_rma)->GetGLTexture().GetHandle());
+		glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
 
 		glActiveTexture(GL_TEXTURE6);
 		glBindTexture(GL_TEXTURE_2D, miscFullSizeFbo->GetColorAttachmentHandleByName("FinalLightingCopy"));
@@ -122,11 +122,11 @@ namespace OpenGLRenderer {
 				if (!mesh) continue;
 
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+				glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
 				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+				glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
 				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+				glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
 
 				shader->SetMat4("u_model", renderItem.modelMatrix);
 				shader->SetMat4("u_inverseModel", renderItem.inverseModelMatrix);

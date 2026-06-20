@@ -87,7 +87,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
 
         // Base color texture override
         if (createInfo.baseColorOverrideTextureName != UNDEFINED_STRING) {
-            meshNode->baseColorOverrideTextureIndex = AssetManager::GetTextureIndexByName(createInfo.baseColorOverrideTextureName);
+            meshNode->baseColorOverrideTextureIndex = AssetManager::GetTextureBindlessIndexByName(createInfo.baseColorOverrideTextureName);
         }
 
         meshNode->materialIndex = AssetManager::GetMaterialIndexByName(createInfo.materialName);

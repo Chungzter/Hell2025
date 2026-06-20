@@ -198,7 +198,7 @@ void AnimatedMeshNodes::SetMeshToRenderAsGlassByMeshIndex(const std::string& mes
 void AnimatedMeshNodes::SetMeshEmissiveColorTextureByMeshName(const std::string& meshName, const std::string& textureName) {
     for (AnimatedMeshNode& node : m_nodes) {
         if (node.meshName == meshName) {
-            node.emissiveColorTexutreIndex = AssetManager::GetTextureIndexByName(textureName);
+            node.emissiveColorTexutreIndex = AssetManager::GetTextureBindlessIndexByName(textureName);
         }
     }
 }

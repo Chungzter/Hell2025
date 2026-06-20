@@ -15,6 +15,7 @@
 #include "Managers/MapManager.h"
 
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceID.h"
 
 #include <unordered_map>
 #include <future>
@@ -204,7 +205,7 @@ namespace AssetManager {
         }
         // Find all textures
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/uncompressed", { "png", "jpg", "tga" })) {
-            Texture& texture = g_textures.emplace_back();
+            Texture& texture = CreateNewTexture();
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
@@ -213,7 +214,7 @@ namespace AssetManager {
             texture.RequestMipmaps();
         }
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/decals", { "png", "jpg", "tga" })) {
-            Texture& texture = g_textures.emplace_back();
+            Texture& texture = CreateNewTexture();
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_BORDER); // Clamp to border!
@@ -222,7 +223,7 @@ namespace AssetManager {
             texture.RequestMipmaps();
         }
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/compressed", { "dds" })) {
-            Texture& texture = g_textures.emplace_back();
+            Texture& texture = CreateNewTexture();
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::COMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
@@ -231,7 +232,7 @@ namespace AssetManager {
             texture.RequestMipmaps();
         }
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/ui", { "png", "jpg", })) {
-            Texture& texture = g_textures.emplace_back();
+            Texture& texture = CreateNewTexture();
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
@@ -239,7 +240,7 @@ namespace AssetManager {
             texture.SetMagFilter(TextureFilter::LINEAR);
         }
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/exr", { "exr" })) {
-            Texture& texture = g_textures.emplace_back();
+            Texture& texture = CreateNewTexture();
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::EXR);
             texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
@@ -247,7 +248,7 @@ namespace AssetManager {
             texture.SetMagFilter(TextureFilter::NEAREST);
         }
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/spritesheets", { "png", "jpg", "tga", "tif" })) {
-            Texture& texture = g_textures.emplace_back();
+            Texture& texture = CreateNewTexture();
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
@@ -259,7 +260,7 @@ namespace AssetManager {
     void LoadMinimumTextures() {
         // Find files
         for (FileInfo& fileInfo : Util::IterateDirectory("res/fonts", { "png" })) {
-            Texture& texture = g_textures.emplace_back();
+            Texture& texture = CreateNewTexture();
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
@@ -317,8 +318,10 @@ namespace AssetManager {
     }
 
     Texture& CreateNewTexture() {
-        ClearCachedTextureMaps();
-        return g_textures.emplace_back();
+        Texture& texture = g_textures.emplace_back();
+        texture.SetId(Hell::ResourceManagement::GetNextID(Hell::ResourceManagement::ResourceType::TEXTURE));
+        texture.SetBindlessIndex(static_cast<int32_t>(g_textures.size() - 1));
+        return texture;
     }
 
     void ReserveTextureStorage(size_t textureCount) {

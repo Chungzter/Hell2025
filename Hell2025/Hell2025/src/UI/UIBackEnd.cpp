@@ -38,7 +38,7 @@ namespace UIBackEnd {
     }
 
     void BlitText(const std::string& text, const std::string& fontName, int originX, int originY, Alignment alignment, float scale, TextureFilter textureFilter) {
-        int textureIndex = AssetManager::GetTextureIndexByName(fontName);
+        int textureIndex = AssetManager::GetTextureBindlessIndexByName(fontName);
         if (textureIndex == -1) {
             std::cout << "UIBackEnd::BlitText() failed to find texture " << fontName << "\n";
             return;
@@ -75,13 +75,13 @@ namespace UIBackEnd {
 
     void BlitTexture(const std::string& textureName, glm::ivec2 location, Alignment alignment, glm::vec4 colorTint, glm::ivec2 size, TextureFilter textureFilter, float rotation, int clipMinX, int clipMinY, int clipMaxX, int clipMaxY) {
         // Bail if texture not found
-        int textureIndex = AssetManager::GetTextureIndexByName(textureName);
+        int textureIndex = AssetManager::GetTextureBindlessIndexByName(textureName);
         if (textureIndex == -1) {
             std::cout << "BlitTexture() failed. Could not find texture '" << textureName << "'\n";
             return;
         }
         // Get texture dimensions
-        Texture* texture = AssetManager::GetTextureByIndex(textureIndex);
+        Texture* texture = AssetManager::GetTextureByBindlessIndex(textureIndex);
         float w = (size.x != -1) ? size.x : texture->GetWidth();
         float h = (size.y != -1) ? size.y : texture->GetHeight();
 

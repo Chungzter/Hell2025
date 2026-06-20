@@ -148,11 +148,11 @@ namespace OpenGLRenderer {
 
 					Material* material = AssetManager::GetMaterialByName("Plastic");
 					glActiveTexture(GL_TEXTURE3);
-					glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(material->m_basecolor)->GetGLTexture().GetHandle());
+					glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
 					glActiveTexture(GL_TEXTURE4);
-					glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(material->m_normal)->GetGLTexture().GetHandle());
+					glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
 					glActiveTexture(GL_TEXTURE5);
-					glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(material->m_rma)->GetGLTexture().GetHandle());
+					glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
 
 
 					OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
@@ -166,11 +166,11 @@ namespace OpenGLRenderer {
 						if (!mesh) continue;
 
 						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+						glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
 						glActiveTexture(GL_TEXTURE1);
-						glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+						glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
 						glActiveTexture(GL_TEXTURE2);
-						glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+						glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
 
 						depthPeelColorShader->SetMat4("u_model", renderItem.modelMatrix);
 						depthPeelColorShader->SetMat4("u_inverseModel", renderItem.inverseModelMatrix);

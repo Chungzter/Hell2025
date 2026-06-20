@@ -41,7 +41,7 @@ namespace OpenGLRenderer {
             const std::vector<SpriteSheetRenderItem>& renderItems = player->GetSpriteSheetRenderItems();
             for (const SpriteSheetRenderItem& renderItem : renderItems) {
 
-                Texture* texture = AssetManager::GetTextureByIndex(renderItem.textureIndex);
+                Texture* texture = AssetManager::GetTextureByBindlessIndex(renderItem.textureIndex);
                 if (!texture) {
                     std::cout << "Spritesheet pass had a null ptr texture from index " << renderItem.textureIndex << "\n";
                     continue;
@@ -71,7 +71,7 @@ namespace OpenGLRenderer {
             //glDisable(GL_DEPTH_TEST);
             for (Fireplace& fireplace : World::GetFireplaces()) {
                 const SpriteSheetRenderItem& renderItem = fireplace.GetFireSpriteSheetRenderItem();
-                Texture* texture = AssetManager::GetTextureByIndex(renderItem.textureIndex);
+                Texture* texture = AssetManager::GetTextureByBindlessIndex(renderItem.textureIndex);
                 shader->SetInt("u_rowCount", renderItem.rowCount);
                 shader->SetInt("u_columnCount", renderItem.columnCount);
                 shader->SetInt("u_frameIndex", renderItem.frameIndex);
@@ -97,7 +97,7 @@ namespace OpenGLRenderer {
             for (SpriteSheetObject& bubbleSpriteSheetObject : World::GetBubbleSpriteSheetObjects()) {
                 if (bubbleSpriteSheetObject.GetTime() > 0) {
                     const SpriteSheetRenderItem& renderItem = bubbleSpriteSheetObject.GetRenderItem();
-                    Texture* texture = AssetManager::GetTextureByIndex(renderItem.textureIndex);
+                    Texture* texture = AssetManager::GetTextureByBindlessIndex(renderItem.textureIndex);
                     shader->SetInt("u_rowCount", renderItem.rowCount);
                     shader->SetInt("u_columnCount", renderItem.columnCount);
                     shader->SetInt("u_frameIndex", renderItem.frameIndex);

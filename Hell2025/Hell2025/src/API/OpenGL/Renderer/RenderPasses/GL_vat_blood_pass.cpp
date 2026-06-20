@@ -27,14 +27,14 @@ namespace OpenGLRenderer {
         //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
-        static int textureIndexBloodPos4 = AssetManager::GetTextureIndexByName("blood_pos4");
-        static int textureIndexBloodPos6 = AssetManager::GetTextureIndexByName("blood_pos6");
-        static int textureIndexBloodPos7 = AssetManager::GetTextureIndexByName("blood_pos7");
-        static int textureIndexBloodPos9 = AssetManager::GetTextureIndexByName("blood_pos9");
-        static int textureIndexBloodNorm4 = AssetManager::GetTextureIndexByName("blood_norm4");
-        static int textureIndexBloodNorm6 = AssetManager::GetTextureIndexByName("blood_norm6");
-        static int textureIndexBloodNorm7 = AssetManager::GetTextureIndexByName("blood_norm7");
-        static int textureIndexBloodNorm9 = AssetManager::GetTextureIndexByName("blood_norm9");
+        static int textureIndexBloodPos4 = AssetManager::GetTextureBindlessIndexByName("blood_pos4");
+        static int textureIndexBloodPos6 = AssetManager::GetTextureBindlessIndexByName("blood_pos6");
+        static int textureIndexBloodPos7 = AssetManager::GetTextureBindlessIndexByName("blood_pos7");
+        static int textureIndexBloodPos9 = AssetManager::GetTextureBindlessIndexByName("blood_pos9");
+        static int textureIndexBloodNorm4 = AssetManager::GetTextureBindlessIndexByName("blood_norm4");
+        static int textureIndexBloodNorm6 = AssetManager::GetTextureBindlessIndexByName("blood_norm6");
+        static int textureIndexBloodNorm7 = AssetManager::GetTextureBindlessIndexByName("blood_norm7");
+        static int textureIndexBloodNorm9 = AssetManager::GetTextureBindlessIndexByName("blood_norm9");
         static int meshIndex4 = AssetManager::GetModelByIndex(AssetManager::GetModelIndexByName("blood_mesh4"))->GetMeshIndices()[0];
         static int meshIndex6 = AssetManager::GetModelByIndex(AssetManager::GetModelIndexByName("blood_mesh6"))->GetMeshIndices()[0];
         static int meshIndex7 = AssetManager::GetModelByIndex(AssetManager::GetModelIndexByName("blood_mesh7"))->GetMeshIndices()[0];
@@ -92,9 +92,9 @@ namespace OpenGLRenderer {
                 shader->SetFloat("u_time", renderItem.emissiveR);
 
                 glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
                 glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+                glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
             }

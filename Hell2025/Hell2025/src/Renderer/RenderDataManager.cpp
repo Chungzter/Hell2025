@@ -331,7 +331,7 @@ namespace RenderDataManager {
     void GatherEmissiveRenderItems() {
         g_renderItemsEmissive.clear();
 
-        int32_t blackTextureIndex = AssetManager::GetTextureIndexByName("Black");
+        int32_t blackTextureIndex = AssetManager::GetTextureBindlessIndexByName("Black");
 
         for (RenderItem& renderItem : g_renderItems) {
 
@@ -355,7 +355,7 @@ namespace RenderDataManager {
                 //    std::string textureName = UNDEFINED_STRING;
                 //
                 //    if (renderItem.emissiveTextureIndex != -1) {
-                //        textureName = AssetManager::GetTextureByIndex(renderItem.emissiveTextureIndex)->GetFileName();
+                //        textureName = AssetManager::GetTextureByBindlessIndex(renderItem.emissiveTextureIndex)->GetFileName();
                 //    }
                 //
                 //    if (mesh) {
@@ -587,10 +587,10 @@ namespace RenderDataManager {
             g_screenSpaceBloodDecalInstances[i].type = decal.GetType();
 
             switch (decal.GetType()) {
-                case 0: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureIndexByName("BloodDecal4"); break;
-                case 1: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureIndexByName("BloodDecal6"); break;
-                case 2: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureIndexByName("BloodDecal7"); break;
-                case 3: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureIndexByName("BloodDecal9"); break;
+                case 0: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureBindlessIndexByName("BloodDecal4"); break;
+                case 1: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureBindlessIndexByName("BloodDecal6"); break;
+                case 2: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureBindlessIndexByName("BloodDecal7"); break;
+                case 3: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureBindlessIndexByName("BloodDecal9"); break;
                 default: continue;
             }
         }

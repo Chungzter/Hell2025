@@ -8,6 +8,7 @@
 #include "Hell/Render/TextureTypes.h"
 
 #include "LoadingState.h"
+#include <cstdint>
 #include <string>
 #include <memory>
 
@@ -22,6 +23,8 @@ public:
     void SetBorderColor(float r, float g, float b, float a);
     void SetMinFilter(TextureFilter filter);
     void SetMagFilter(TextureFilter filter);
+    void SetId(uint64_t id) { m_id = id; }
+    void SetBindlessIndex(int32_t index) { m_bindlessIndex = index; }
     void SetTextureDataLevelBakeState(int index, BakeState state);
     void RequestMipmaps();
     void FreeCPUMemory();
@@ -53,6 +56,8 @@ public:
     const TextureFilter GetMinFilter() const         { return m_minFilter; }
     const TextureFilter GetMagFilter() const         { return m_magFilter; }
     const glm::vec4& GetBorderColor() const          { return m_borderColor; }
+    uint64_t GetId() const                           { return m_id; }
+    int32_t GetBindlessIndex() const                 { return m_bindlessIndex; }
     LoadingState GetLoadingState() const             { return m_loadingState; }
 
 private:
@@ -66,6 +71,8 @@ private:
     FileInfo m_fileInfo;
     ImageData m_imageData;
     std::vector<BakeState> m_textureDataLevelBakeStates;
+    uint64_t m_id = 0;
+    int32_t m_bindlessIndex = -1;
     int m_mipmapLevelCount = 0;
     bool m_mipmapsRequested = false;
     bool m_bakeComplete = false;

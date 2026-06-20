@@ -4,8 +4,11 @@
 #include "AssetManagement/BakeQueue.h"
 #include "AssetManagement/AssetManager.h"
 #include "BackEnd/Integration/GLFW.h"
+#include "Hell/Logging.h"
+#include <algorithm>
 #include <string>
 #include <iostream>
+#include <utility>
 #include <vector>
 #include "GL_Util.h"
 #include "Types/GL_pbo.hpp"
@@ -363,11 +366,45 @@ namespace OpenGLBackEnd {
     }
 
     void UpdateBindlessTextures() {
-        g_bindlessTextureIDs.clear();
-        g_bindlessTextureIDs.reserve(AssetManager::GetTextureCount());
-        for (int i = 0; i < AssetManager::GetTextureCount(); i++) {
-            g_bindlessTextureIDs.push_back(AssetManager::GetTextureByIndex(i)->GetGLTexture().GetBindlessID());
+        int32_t highestBindlessIndex = -1;
+
+        for (Texture& texture : AssetManager::GetTextures()) {
+            if (texture.GetBindlessIndex() < 0) {
+                Logging::Error() << "OpenGLBackEnd::UpdateBindlessTextures() failed: texture '" << texture.GetFileName() << "' has invalid bindless index " << texture.GetBindlessIndex() << "\n";
+                return;
+            }
+
+            highestBindlessIndex = std::max(highestBindlessIndex, texture.GetBindlessIndex());
         }
+
+        std::vector<GLuint64> bindlessTextureIDs(static_cast<size_t>(highestBindlessIndex + 1), 0);
+        std::vector<bool> assignedSlots(bindlessTextureIDs.size(), false);
+
+        for (Texture& texture : AssetManager::GetTextures()) {
+            const int32_t bindlessIndex = texture.GetBindlessIndex();
+
+            if (static_cast<size_t>(bindlessIndex) >= bindlessTextureIDs.size()) {
+                Logging::Error() << "OpenGLBackEnd::UpdateBindlessTextures() failed: texture '" << texture.GetFileName() << "' has out-of-range bindless index " << bindlessIndex << "\n";
+                return;
+            }
+
+            if (assignedSlots[bindlessIndex]) {
+                Logging::Error() << "OpenGLBackEnd::UpdateBindlessTextures() failed: duplicate bindless index " << bindlessIndex << " for texture '" << texture.GetFileName() << "'\n";
+                return;
+            }
+
+            bindlessTextureIDs[bindlessIndex] = texture.GetGLTexture().GetBindlessID();
+            assignedSlots[bindlessIndex] = true;
+        }
+
+        for (size_t i = 0; i < assignedSlots.size(); i++) {
+            if (!assignedSlots[i]) {
+                Logging::Error() << "OpenGLBackEnd::UpdateBindlessTextures() failed: bindless index " << i << " is unassigned\n";
+                return;
+            }
+        }
+
+        g_bindlessTextureIDs = std::move(bindlessTextureIDs);
     }
 
     void SetDepthClearValue(float value) {
