@@ -8,10 +8,11 @@
 #include "../Util/Util.h"
 #include <numeric>
 
-
 #include <map>
 #include <unordered_map>
 #include <string>
+
+#include <iostream> // TODO: cleanup logging
 
 namespace AssimpImporter {
 

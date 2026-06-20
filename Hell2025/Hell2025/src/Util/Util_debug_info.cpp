@@ -1,5 +1,7 @@
 #include "Util.h"
 
+#include <iostream> // TODO clean up logging
+
 namespace Util {
 
     void PrintDebugInfo(const ImageData& imageData) {

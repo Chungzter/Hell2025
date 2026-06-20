@@ -1,6 +1,8 @@
 #include "HeightField.h"
 #include "Physics/Physics.h"
 
+#include <iostream> // TODO: cleanup logging
+
 void HeightField::Create(vecXZ& worldSpaceOffset, const float* heightValues) {
     PxPhysics* pxPhysics = Physics::GetPxPhysics();
     PxScene* pxScene = Physics::GetPxScene();

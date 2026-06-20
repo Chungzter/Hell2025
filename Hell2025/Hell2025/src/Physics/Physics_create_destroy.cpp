@@ -3,6 +3,8 @@
 #include <vector>
 #include "Util.h"
 
+#include <iostream> // TODO: cleanup logging
+
 namespace Physics {
 
     PxShape* CreateConvexShapeFromVertexList(std::span<Vertex>& vertices) {

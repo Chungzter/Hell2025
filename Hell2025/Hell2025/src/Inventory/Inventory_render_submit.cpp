@@ -9,6 +9,8 @@
 #include "UI/UiBackend.h"
 #include "Viewport/ViewportManager.h"
 
+#include <iostream> // TODO: cleanup logging
+
 void Inventory::SubmitRenderItems() {
     if (m_state == InventoryState::MAIN_SCREEN) {
         m_locations.background = glm::ivec2(m_style.invOriginX, m_style.invOriginY);

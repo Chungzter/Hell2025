@@ -2,6 +2,8 @@
 #include "Core/Game.h"
 #include "Util.h"
 
+#include <iostream> // TODO clean up logging
+
 void Kangaroo::UpdateAnimationStateMachine() {
 
     if (m_animationState == KanagarooAnimationState::IDLE_TO_HOP) {

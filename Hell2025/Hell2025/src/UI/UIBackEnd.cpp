@@ -7,6 +7,8 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "UI/TextBlitter.h"
 
+#include <iostream> // TODO clean up logging
+
 using namespace Hell;
 
 namespace UIBackEnd {

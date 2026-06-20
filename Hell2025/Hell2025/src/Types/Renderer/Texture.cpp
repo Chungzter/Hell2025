@@ -4,6 +4,8 @@
 #include "Hell/ImageTools/ImageTools.h"
 #include "Util/Util.h"
 
+#include <iostream> // TODO clean up logging
+
 using namespace Hell;
 
 void Texture::Load() {

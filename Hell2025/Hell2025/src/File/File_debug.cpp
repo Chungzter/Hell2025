@@ -1,6 +1,8 @@
 #include "File.h"
 #include "Util.h"
 
+#include <iostream> // TODO: cleanup logging
+
 namespace File {
     //void File::PrintModelHeader(ModelHeader header, const std::string& identifier) {
     //    std::cout << identifier << "\n";

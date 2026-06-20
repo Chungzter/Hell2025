@@ -33,9 +33,11 @@ struct MeshBuffer {
     std::span<Vertex> GetMeshVertexSpan(uint64_t meshId);
     std::span<uint32_t> GetMeshIndexSpan(uint64_t meshId);
 
-    size_t GetMeshCount()                { return m_meshes.size(); }
-    size_t GetAllocatedVertexCount()     { return m_vertices.size(); }
-    size_t GetAllocatedIndexCount()      { return m_indices.size(); }
+    size_t GetMeshCount() const               { return m_meshes.size(); }
+    size_t GetAllocatedVertexCount() const    { return m_vertices.size(); }
+    size_t GetAllocatedIndexCount() const     { return m_indices.size(); }
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
     std::vector<Vertex>& GetVertices()   { return m_vertices; }
     std::vector<uint32_t>& GetIndices()  { return m_indices; }
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "Hell/Common.h"
-#include <Hell/Types.h>
+
+#include "Game/Types.h"
 #include "Types/Renderer/Texture.h"
 
 struct UploadContext {

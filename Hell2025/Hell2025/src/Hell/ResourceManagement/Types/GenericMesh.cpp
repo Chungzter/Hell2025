@@ -4,6 +4,8 @@
 #include "Backend/BackEnd.h"
 #include "Hell/Logging.h"
 
+#include <algorithm>
+
 namespace Hell {
 
 GenericMesh::GenericMesh(const std::string& name) {
@@ -11,7 +13,12 @@ GenericMesh::GenericMesh(const std::string& name) {
 }
 
 void GenericMesh::UpdateVertexData(const void* vertices, size_t vertexCount, const VertexLayoutDescription& layout) {
+    if (m_vertexStride == 0) {
+        m_vertexStride = layout.stride;
+    }
+
     m_vertexCount = vertexCount;
+    m_vertexCapacity = std::max(m_vertexCapacity, vertexCount);
 
     if (BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId == 0) {
@@ -24,6 +31,7 @@ void GenericMesh::UpdateVertexData(const void* vertices, size_t vertexCount, con
 
 void GenericMesh::UpdateIndexData(const std::vector<uint32_t>& indices) {
     m_indexCount = indices.size();
+    m_indexCapacity = std::max(m_indexCapacity, indices.size());
 
     if (BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId == 0) {
@@ -40,8 +48,20 @@ void GenericMesh::CleanUp() {
         m_openGLId = 0;
     }
 
+    m_vertexStride = 0;
     m_vertexCount = 0;
     m_indexCount = 0;
+    m_vertexCapacity = 0;
+    m_indexCapacity = 0;
+}
+
+size_t GenericMesh::GetCPUAllocatedByteCount() const {
+    return 0;
+}
+
+size_t GenericMesh::GetGPUAllocatedByteCount() const {
+    return (m_vertexCapacity * m_vertexStride) +
+           (m_indexCapacity * sizeof(uint32_t));
 }
 
 uint32_t GenericMesh::GetVAO() const {

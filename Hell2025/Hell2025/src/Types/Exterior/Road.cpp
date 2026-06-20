@@ -7,6 +7,8 @@
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 
+#include <iostream> // TODO clean up logging
+
 void Road::Init() {
     m_controlPoints2D.push_back(glm::vec2(26.4136, 11.1253));
     m_controlPoints2D.push_back(glm::vec2(31.6507, 7.2496));

@@ -1,5 +1,10 @@
 #include "NavMesh.h"
-#include <Hell/GLM.h>
+
+#include "Hell/Containers/SlotMap.h"
+#include "Hell/Math/GLM.h"
+#include "Hell/Math/Math.h"
+#include "Hell/Logging.h"
+
 #include "Core/Game.h"
 #include "Debug/DebugDraw.h"
 #include "Input/Input.h"
@@ -8,12 +13,10 @@
 #include "AssetManagement/AssetManager.h"
 #include "clipper2/clipper.h"
 #include "earcut/earcut.hpp"
-#include <Hell/Math.h>
 #include "Timer.hpp"
 #include "Util.h"
+
 #include <vector>
-#include "Hell/Containers/SlotMap.h"
-#include "Hell/Logging.h"
 
 #define NAV_MESH_PROFILING 0
 
@@ -22,6 +25,8 @@
 #else
 #define NAV_MESH_TIMER(name) ((void)0)
 #endif
+
+using namespace Hell;
 
 namespace mapbox {
     namespace util {

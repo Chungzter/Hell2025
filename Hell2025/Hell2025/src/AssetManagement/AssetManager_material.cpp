@@ -1,5 +1,7 @@
 #include "AssetManager.h"
 
+#include "Hell/Logging.h"
+
 namespace AssetManager {
 
     bool FileInfoIsAlbedoTexture(const FileInfo& fileInfo) {
@@ -136,12 +138,14 @@ namespace AssetManager {
         if (index >= 0 && index < materials.size()) {
             return materials[index].m_name;
         }
-        std::cout << "AssetManager::GetMaterialNameByIndex(int index) failed because index " << index << " was out of range of size << " << materials.size() << "\n";
+
+        Logging::Error() << "AssetManager::GetMaterialNameByIndex(..) failed because index " << index << " was out of range of size << " << materials.size() << "\n";
         return "UNDEFINED_MATERIAL_NAME";
     }
 
     int GetMaterialIndexByName(const std::string& name) {
         std::unordered_map<std::string, int>& indexMap = GetMaterialIndexMap();
+
         auto it = indexMap.find(name);
         if (it != indexMap.end()) {
             return it->second;

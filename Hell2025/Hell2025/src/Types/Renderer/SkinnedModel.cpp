@@ -4,6 +4,8 @@
 #include <mutex>
 #include "Hell/Logging.h"
 
+#include <iostream> // TODO clean up logging
+
 void SkinnedModel::BakeToAssetManager() {
     m_vertexCount = m_skinnedModelData.vertexCount;
     m_indexCount = m_skinnedModelData.indexCount;

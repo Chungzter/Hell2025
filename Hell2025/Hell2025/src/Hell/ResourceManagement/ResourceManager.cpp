@@ -1,9 +1,11 @@
 #include "ResourceManager.h"
 
 #include "Hell/Logging.h"
+#include "Hell/MemoryTracker/MemoryTracker.h"
 
-#include <unordered_map>
+#include <algorithm>
 #include <string>
+#include <unordered_map>
 
 namespace Hell::ResourceManager {
 
@@ -15,6 +17,42 @@ namespace Hell::ResourceManager {
     void CleanUp() {
         for (auto& object : g_genericMeshes) { object.second.CleanUp(); } g_genericMeshes.clear();
         for (auto& object : g_meshBuffers)   { object.second.CleanUp(); } g_meshBuffers.clear();
+    }
+
+    void AppendMemoryReport(MemoryTracker::MemoryReport& report) {
+        if (!g_genericMeshes.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "Generic Meshes";
+            category.entries.reserve(g_genericMeshes.size());
+
+            for (const auto& [name, genericMesh] : g_genericMeshes) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = genericMesh.GetCPUAllocatedByteCount();
+                entry.gpuBytes = genericMesh.GetGPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+            });
+        }
+
+        if (!g_meshBuffers.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "Mesh Buffers";
+            category.entries.reserve(g_meshBuffers.size());
+
+            for (const auto& [name, meshBuffer] : g_meshBuffers) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = meshBuffer.GetCPUAllocatedByteCount();
+                entry.gpuBytes = meshBuffer.GetGPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+            });
+        }
     }
 
     // Generic Mesh

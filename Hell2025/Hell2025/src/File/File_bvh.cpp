@@ -8,6 +8,8 @@
 #define PRINT_MESH_BVH_HEADERS_ON_READ 0
 #define PRINT_MESH_BVH_HEADERS_ON_WRITE 0
 
+#include <iostream> // TODO: cleanup logging
+
 namespace File {
 
     void ExportModelBvh(const ModelData& modelData) {

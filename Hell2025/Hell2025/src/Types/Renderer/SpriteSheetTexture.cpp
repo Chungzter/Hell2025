@@ -2,6 +2,8 @@
 #include "AssetManagement/AssetManager.h"
 #include "Util/Util.h"
 
+#include <iostream> // TODO clean up logging
+
 void SpriteSheetTexture::Init() {
     size_t lastUnderscore = m_fileInfo.name.find_last_of('_');
     m_textureName = m_fileInfo.name;

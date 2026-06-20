@@ -1,11 +1,15 @@
 #pragma once
+
 #include <glad/gl.h>
-#include "../GL_Util.h"
+
+#include "API/OpenGL/Types/GL_attachments.h"
+#include "API/OpenGL/GL_Util.h"
+
+#include "Hell/Math/GLM.h"
+
 #include <vector>
 #include <iostream>
 #include <string>
-#include "GL_attachments.h"
-#include <Hell/Glm.h>
 
 struct OpenGLCubemapFrameBuffer {
     OpenGLCubemapFrameBuffer() = default;

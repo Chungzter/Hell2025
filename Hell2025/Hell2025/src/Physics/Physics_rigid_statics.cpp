@@ -6,6 +6,8 @@
 #include <vector>
 #include "Util.h"
 
+#include <iostream> // TODO: cleanup logging
+
 namespace Physics {
 
     std::unordered_map<uint64_t, RigidStatic> g_rigidStatics;

@@ -1,5 +1,5 @@
 #pragma once
-#include <Game/Types.h>
+#include <Hell/Types.h>
 #include "Types/Renderer/MeshBufferOLD.h"
 
 struct Wire {

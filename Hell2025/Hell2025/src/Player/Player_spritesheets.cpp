@@ -2,6 +2,8 @@
 #include "Util.h"
 #include "Renderer/Renderer.h"
 
+#include <iostream> // TODO: cleanup logging
+
 void Player::UpdateSpriteSheets(float deltaTime) {
     // Clear any render items from previous frame
     m_spriteSheetRenderItems.clear();

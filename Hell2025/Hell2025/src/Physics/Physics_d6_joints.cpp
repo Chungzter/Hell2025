@@ -6,6 +6,8 @@
 #include <Game/UniqueID.h>
 #include "Input/Input.h"
 
+#include <iostream> // TODO: cleanup logging
+
 namespace Physics {
     std::unordered_map<uint64_t, D6Joint> g_d6Joints;
 

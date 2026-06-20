@@ -5,6 +5,8 @@
 #include <fstream>
 #include <string>
 
+#include <iostream> // TODO clean up logging
+
 namespace Util {  
     int GetFileSize(const std::string& filepath) {
         std::ifstream file(filepath, std::ios::binary | std::ios::ate);

@@ -1,6 +1,8 @@
 #include "Physics.h""
 #include "Util.h"
 
+#include <iostream> // TODO: cleanup logging
+
 namespace Physics {
 
     #include <physx/PxPhysicsAPI.h>

@@ -32,7 +32,7 @@ namespace AssetManager {
 
         // Failed
         if (!tempAnimScene) {
-            std::cout << "Could not load: " << fileInfo.path << "\n";
+            Logging::Error() << "AssetManager::LoadAnimation(..) could not load: " << fileInfo.path << "\n";
             return;
         }
 
@@ -50,7 +50,7 @@ namespace AssetManager {
         }
         // Some other error possibility
         else {
-            std::cout << "Error parsing " << fileInfo.path << ": " << m_AnimationImporter.GetErrorString();
+            Logging::Error() << "AssetManager::LoadAnimation(..) error parsing " << fileInfo.path << ": " << m_AnimationImporter.GetErrorString() << "\n";
         }
 
         // need to create an animation clip.
@@ -110,7 +110,8 @@ namespace AssetManager {
                 return &animation;
             }
         }
-        std::cout << "AssetManager::GetAnimationByName(const std::string& name) failed because '" << name << "' does not exist!\n";
+
+        Logging::Error() << "AssetManager::LoadAnimation(..) failed because '" << name << "' does not exist!\n";
         return nullptr;
     }
 
@@ -121,7 +122,7 @@ namespace AssetManager {
         }
         else {
             if (printError) {
-                std::cout << "AssetManager::GetAnimationByIndex(int index) failed because index '" << index << "' is out of range. Size is " << animations.size() << "!\n";
+                Logging::Error() << "AssetManager::LoadAnimation(..) failed because index '" << index << "' is out of range. Size is " << animations.size() << "!\n";
             }
             return nullptr;
         }
@@ -134,7 +135,7 @@ namespace AssetManager {
                 return i;
             }
         }
-        std::cout << "AssetManager::GetAnimationIndexByName(const std::string& name) failed because '" << name << "' does not exist!\n";
+        Logging::Error() << "AssetManager::LoadAnimation(..) failed because '" << name << "' does not exist!\n";
         return -1;
     }
 }

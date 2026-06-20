@@ -1,6 +1,6 @@
 #pragma once
 #include <Game/Enums.h>
-#include <Game/Types.h>
+#include <Hell/Types.h>
 
 struct ItemInfo {
     std::string m_name = UNDEFINED_STRING;

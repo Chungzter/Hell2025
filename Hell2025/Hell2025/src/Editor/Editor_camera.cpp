@@ -9,6 +9,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/constants.hpp>
 
+#include <iostream> // TODO: cleanup logging
+
 struct EditorOrthographicCamera {
     CameraView m_cameraView = CameraView::FRONT;
     CameraView m_cameraViewPrevious = CameraView::FRONT;

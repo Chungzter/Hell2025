@@ -1,5 +1,5 @@
 #pragma once
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "GL_backend.h"
 #include "AssetManagement/BakeQueue.h"
 #include "AssetManagement/AssetManager.h"

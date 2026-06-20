@@ -34,6 +34,8 @@ struct GenericMesh {
 
     size_t GetVertexCount() const { return m_vertexCount; }
     size_t GetIndexCount() const { return m_indexCount; }
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
     const std::string& GetName() const { return m_name; }
     uint64_t GetOpenGLId() const { return m_openGLId; }
     uint64_t GetVulkanId() const { return m_vulkanId; }
@@ -44,8 +46,11 @@ private:
     void UpdateVertexData(const void* vertices, size_t vertexCount, const VertexLayoutDescription& layout);
 
     std::string m_name = UNDEFINED_STRING;
+    size_t m_vertexStride = 0;
     size_t m_vertexCount = 0;
     size_t m_indexCount = 0;
+    size_t m_vertexCapacity = 0;
+    size_t m_indexCapacity = 0;
     uint64_t m_openGLId = 0;
     uint64_t m_vulkanId = 0;
 };

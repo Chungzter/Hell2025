@@ -1,5 +1,5 @@
 #pragma once
-#include <Game/Types.h>
+#include <cstdint>
 
 struct MapInstance {
     uint32_t m_mapIndex = 0;

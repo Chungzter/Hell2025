@@ -2,6 +2,8 @@
 #include "Hell/Logging.h"
 #include <tinyies/tiny_ies.hpp>
 
+#include <iostream> // TODO clean up logging
+
 void IESProfile::Load(const FileInfo& fileInfo, int32_t textureIndex) {
     m_name = fileInfo.name;
     m_textureIndex = textureIndex;

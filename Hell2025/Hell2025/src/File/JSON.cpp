@@ -4,6 +4,8 @@
 #include "Util.h"
 #include <fstream>
 
+#include <iostream> // TODO: cleanup logging
+
 namespace nlohmann {
     void to_json(nlohmann::json& j, const glm::vec3& v) {
         j = json::array({ v.x, v.y, v.z });

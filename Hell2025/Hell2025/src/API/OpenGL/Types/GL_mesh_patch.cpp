@@ -5,7 +5,7 @@
 #include <cstring>
 #include <vector>
 #include <glad/gl.h>
-#include <Hell/GLM.h>
+#include "Hell/Math/GLM.h"
 
 void OpenGLMeshPatch::CleanUp() {
     glDeleteBuffers(1, &m_VBO);

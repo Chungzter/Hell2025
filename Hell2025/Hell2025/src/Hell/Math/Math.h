@@ -1,25 +1,23 @@
 #pragma once
-#include <glm/glm.hpp>
 
-namespace Math {
-    inline float DistSquared(const glm::vec3& a, const glm::vec3& b);
-    inline float DistSquared2D(const glm::vec2& a, const glm::vec2& b);
-    inline bool IsDegenerateXZ(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c);
-    inline bool PointsEqual(const glm::vec3& a, const glm::vec3& b, float epsilon = 0.0001f);
-    inline glm::vec3 SnapVec3(const glm::vec3& v, int decimalPlaces);
-    inline float TriArea2D(const glm::vec2& a, const glm::vec2& b, const glm::vec2& c);
+#include "GLM.h"
+
+namespace Hell::Math {
 
     inline float DistSquared(const glm::vec3& a, const glm::vec3& b) {
         glm::vec3 d = a - b;
         return glm::dot(d, d);
     }
 
-
     inline float DistSquared2D(const glm::vec2& a, const glm::vec2& b) {
         glm::vec2 d = a - b;
         return glm::dot(d, d);
     }
 
+    inline bool PointsEqual(const glm::vec3& a, const glm::vec3& b, float epsilon) {
+        glm::vec3 d = a - b;
+        return d.x * d.x + d.y * d.y + d.z * d.z <= epsilon * epsilon;
+    }
 
     inline bool IsDegenerateXZ(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c) {
         // Check if any two points are the same
@@ -37,13 +35,6 @@ namespace Math {
         return std::fabs(area2) < 0.00001f;
     }
 
-
-    inline bool PointsEqual(const glm::vec3& a, const glm::vec3& b, float epsilon) {
-        glm::vec3 d = a - b;
-        return d.x * d.x + d.y * d.y + d.z * d.z <= epsilon * epsilon;
-    }
-
-
     inline glm::vec3 SnapVec3(const glm::vec3& v, int decimalPlaces) {
         static const float pow10[] = {
             1.0f,
@@ -60,7 +51,6 @@ namespace Math {
         float scale = pow10[decimalPlaces];
         return glm::round(v * scale) / scale;
     }
-
 
     inline float TriArea2D(const glm::vec2& a, const glm::vec2& b, const glm::vec2& c) {
         return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);

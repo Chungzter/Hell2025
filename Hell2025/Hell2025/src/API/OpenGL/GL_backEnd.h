@@ -2,10 +2,10 @@
 
 
 #include "Hell/Common.h"
-#include "Hell/Types.h"
 #include "Hell/Render/VertexAttributes.h"
 
 #include "API/OpenGL/Types/GL_heightmap_mesh.h"
+#include "Game/Types.h"
 #include "Types/GL_texture.h"
 #include "Types/Renderer/Texture.h"
 #include <glad/gl.h>

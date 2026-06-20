@@ -4,6 +4,8 @@
 #include "Util.h"
 #include <Game/UniqueID.h>
 
+#include <iostream> // TODO clean up logging
+
 void Trim::Init(Transform transform, const std::string& modelName, const std::string& materialName) {
     m_transform = transform;
     m_objectId = UniqueID::GetNextObjectId(ObjectType::TRIM);

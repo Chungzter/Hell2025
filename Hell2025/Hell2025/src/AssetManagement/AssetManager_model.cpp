@@ -5,12 +5,14 @@
 #include "Util/Util.h"
 #include <future>
 
+#include <iostream> // TODO: clean up logging
+
 namespace AssetManager {
     static std::vector<std::future<void>> g_modelFutures;
 
     void PrintModelMeshNames(Model* model) {
         if (!model) {
-            std::cout << "AssetManager::PrintModelMeshNames() failed coz model param was nullptr\n";
+            Logging::Error() << "AssetManager::PrintModelMeshNames(..) failed coz model param was nullptr\n";
             return;
         }
 

@@ -1,6 +1,8 @@
 #include "Animation.h"
 #include "Util/Util.h"
 
+#include <iostream> // TODO: cleanup logging
+
 float Animation::GetTicksPerSecond() {
     return m_ticksPerSecond != 0 ? m_ticksPerSecond : 25.0f;;
 }

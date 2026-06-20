@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include "Util.h">
 
+#include <iostream> // TODO: cleanup logging
+
 namespace Bible {
     std::unordered_map<std::string, AmmoInfo> g_ammoInfos;
     std::unordered_map<std::string, ItemInfo> g_inventoryItemInfos;

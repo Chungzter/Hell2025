@@ -7,6 +7,8 @@
 
 #include "Hell/Logging.h"
 
+#include <iostream> // TODO: cleanup logging
+
 void Inventory::Init() {
     CloseInventory();
     ClearInventory();

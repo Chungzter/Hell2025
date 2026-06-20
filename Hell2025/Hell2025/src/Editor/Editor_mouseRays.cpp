@@ -3,6 +3,8 @@
 #include "Util.h"
 #include "Viewport/ViewportManager.h"
 
+#include <iostream> // TODO: cleanup logging
+
 namespace Editor {
     glm::vec3 g_mouseRayOrigins[4];
     glm::vec3 g_mouseRayDirections[4];

@@ -1,8 +1,10 @@
 #include "Bvh.h"
 #include "Debug/DebugDraw.h"
 #include <Game/Constants.h>
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include "Util.h"
+
+#include <iostream> // TODO: cleanup logging
 
 namespace Bvh::Gpu {
 

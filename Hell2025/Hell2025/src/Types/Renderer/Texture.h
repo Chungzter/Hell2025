@@ -4,7 +4,7 @@
 #include "API/Vulkan/Types/vk_texture.h"
 
 #include "Game/Enums.h"
-#include "Hell/Types.h"
+#include "Game/Types.h"
 #include "Hell/Render/TextureTypes.h"
 
 #include "LoadingState.h"

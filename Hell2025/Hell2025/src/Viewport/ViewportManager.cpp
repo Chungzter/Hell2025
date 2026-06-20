@@ -11,6 +11,8 @@
 #include "Managers/MirrorManager.h"
 #include "Renderer/Renderer.h"
 
+#include <iostream> // TODO clean up logging
+
 namespace ViewportManager {
     std::vector<Viewport> g_viewports;
 

@@ -4,6 +4,8 @@
 
 #include "Hell/Logging.h"
 
+#include <iostream> // TODO clean up logging
+
 void AnimatedMeshNodes::Init(uint64_t parentId, const std::string& modelName, const std::vector<AnimatedMeshNodeCreateInfo>& createInfoSet) {
 
 }

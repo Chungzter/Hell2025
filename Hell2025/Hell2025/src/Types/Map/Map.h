@@ -1,6 +1,6 @@
 #pragma once
 #include <Game/CreateInfo.h>
-#include <Game/Types.h>
+#include <Hell/Types.h>
 #include "Types/Renderer/Texture.h"
 
 struct Map {

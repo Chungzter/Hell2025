@@ -1,7 +1,7 @@
 #include "CpuBvh.h"
 #include "Debug/DebugDraw.h"
 #include <Game/Constants.h>
-#include <Hell/Types.h>
+#include <Game/Types.h>
 #include <Game/UniqueID.h>
 #include "Util.h"
 

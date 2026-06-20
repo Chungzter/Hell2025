@@ -10,6 +10,8 @@
 #include <numeric>
 #include <Game/Types.h>
 
+#include <iostream> // TODO: cleanup logging
+
 namespace AssetManager {
     static std::vector<std::future<void>> g_skinnedModelFutures;
 

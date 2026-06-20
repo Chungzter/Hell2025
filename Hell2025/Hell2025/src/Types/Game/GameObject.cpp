@@ -9,6 +9,8 @@
 
 #include "Bvh/Cpu/CpuBvh.h"
 
+#include <iostream> // TODO clean up logging
+
 GameObject::GameObject(GameObjectCreateInfo createInfo) {
     m_createInfo = createInfo;
     m_transform.position = createInfo.position;

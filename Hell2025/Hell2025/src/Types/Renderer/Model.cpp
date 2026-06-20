@@ -3,6 +3,8 @@
 #include "Hell/Logging.h"
 #include <stack>
 
+#include <iostream> // TODO clean up logging
+
 void Model::SetFileInfo(FileInfo fileInfo) {
     m_fileInfo = fileInfo;
 }

@@ -1,11 +1,11 @@
 #include "Debug.h"
-#include "API/OpenGL/GL_memory_tracker.h" // TODO: Clean me up and out of here
 
-#include "Debug/DebugDraw.h"
+#include "Hell/MemoryTracker/MemoryTracker.h"
 
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
 #include "Core/Game.h"
+#include "Debug/DebugDraw.h"
 #include "Input/Input.h"
 #include "Editor/Editor.h"
 #include "Managers/MirrorManager.h"
@@ -20,6 +20,7 @@
 #include "Util.h"
 
 #include "Audio/MidiFileManager.h"
+#include <cstdint>
 #include <vector>
 #include <cmath>
 #include <glm/glm.hpp>
@@ -55,6 +56,35 @@ namespace Debug {
         g_quickMessage = message;
     }
 
+    void DisplayMemoryTrackerInfo() {
+        using namespace Hell::MemoryTracker;
+
+        constexpr char fontName[] = "StandardFont";
+        constexpr float scale = 2.0f;
+        constexpr uint32_t spacing = 50;
+
+        std::string names = "\n";
+        std::string cpuBytes = "CPU\n";
+        std::string gpuBytes = "GPU\n";
+
+        MemoryReport memoryReport = GetMemoryReport();
+
+        for (const MemoryReportCategory& category : memoryReport.categories) {
+            names += category.name + "\n";
+            gpuBytes += FormatMemorySize(category.GetTotalGPUBytes()) + "\n";
+            cpuBytes += FormatMemorySize(category.GetTotalCPUBytes()) + "\n";
+        }
+
+        const int namesWidth = TextBlitter::GetTextSize(names, fontName, scale).x;
+        const int gpuWidth = TextBlitter::GetTextSize(gpuBytes, fontName, scale).x;
+        const int gpuX = namesWidth + static_cast<int>(spacing);
+        const int cpuX = gpuX + gpuWidth + static_cast<int>(spacing);
+
+        UIBackEnd::BlitText(names, fontName, 0, 0, Alignment::TOP_LEFT, scale);
+        UIBackEnd::BlitText(gpuBytes, fontName, gpuX, 0, Alignment::TOP_LEFT, scale);
+        UIBackEnd::BlitText(cpuBytes, fontName, cpuX, 0, Alignment::TOP_LEFT, scale);
+    }
+
     void UpdateDebugText() {
 
         // Global Debug
@@ -65,10 +95,7 @@ namespace Debug {
 
         // Memory tracker
         else if (Debug::GetDebugTextMode() == DebugTextMode::MEMORY_TRACKER) {
-            std::string names = OpenGLMemoryTracker::GetReportNames();
-            std::string bytes = OpenGLMemoryTracker::GetReportBytes();
-            UIBackEnd::BlitText(names, "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
-            UIBackEnd::BlitText(bytes, "StandardFont", 250, 0, Alignment::TOP_LEFT, 2.0f);
+            DisplayMemoryTrackerInfo();
         }
         
         // Profiling

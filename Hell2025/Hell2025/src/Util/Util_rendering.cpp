@@ -4,6 +4,8 @@
 #include "Input/Input.h"
 #include <array>
 
+#include <iostream> // TODO clean up logging
+
 namespace Util {
 
     void UpdateRenderItemAABBFastA(RenderItem& renderItem) {

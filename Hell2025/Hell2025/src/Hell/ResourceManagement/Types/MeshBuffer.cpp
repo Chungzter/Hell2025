@@ -21,6 +21,16 @@ MeshBuffer::MeshBuffer(const std::string& name) {
     m_name = name;
 }
 
+size_t MeshBuffer::GetCPUAllocatedByteCount() const {
+    return (m_vertices.capacity() * sizeof(Vertex)) +
+           (m_indices.capacity() * sizeof(uint32_t));
+}
+
+size_t MeshBuffer::GetGPUAllocatedByteCount() const {
+    return (m_vertexCapacity * Vertex::GetLayout().stride) +
+           (m_indexCapacity * sizeof(uint32_t));
+}
+
 void MeshBuffer::Initialize() {
     Reset();
 

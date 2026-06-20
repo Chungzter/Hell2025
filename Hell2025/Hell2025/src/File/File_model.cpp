@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <chrono>
 #include <cstring> // For std::memset, std::memcpy
-#include <string>
 #include <cstddef> // For size_t
 
 #define PRINT_MODEL_HEADERS_ON_READ 0
@@ -14,6 +13,8 @@
 #define PRINT_MESH_HEADERS_ON_READ 0
 #define PRINT_MESH_HEADERS_ON_WRITE 0
 #define PRINT_ARMATURE_HEADERS_ON_READ 0
+
+#include <iostream> // TODO: cleanup logging
 
 namespace File {
 

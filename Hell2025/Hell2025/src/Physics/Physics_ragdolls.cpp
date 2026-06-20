@@ -8,6 +8,8 @@
 
 #include "Input/Input.h"
 
+#include <iostream> // TODO: cleanup logging
+
 namespace Physics {
     std::unordered_map<std::string, RagdollComponents> g_ragdollComponents;
     std::unordered_map<uint64_t, Ragdoll> g_ragdolls;
