@@ -1,6 +1,6 @@
 #pragma once
 #include <Game/Types.h>
-#include "Types/Renderer/Texture.h"
+#include "Hell/ResourceManagement/Types/Texture.h"
 
 namespace BakeQueue {
     // Textures

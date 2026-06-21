@@ -2,7 +2,7 @@
 #include "Hell/Common.h"
 
 #include "Game/Types.h"
-#include "Types/Renderer/Texture.h"
+#include "Hell/ResourceManagement/Types/Texture.h"
 
 struct UploadContext {
     VkFence uploadFence;

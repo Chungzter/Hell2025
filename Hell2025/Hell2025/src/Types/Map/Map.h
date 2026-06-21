@@ -1,7 +1,6 @@
 #pragma once
 #include <Game/CreateInfo.h>
-#include <Hell/Types.h>
-#include "Types/Renderer/Texture.h"
+#include "Hell/ResourceManagement/Types/Texture.h"
 
 struct Map {
     void CreateNew(const std::string& filename, int chunkCountX, int chunkCountZ, float initialHeight);

@@ -347,6 +347,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Core\P90MagManager.cpp" />
     <ClCompile Include="src\Core\ParticleManager.cpp" />
     <ClCompile Include="src\Debug\DebugDraw.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\AssetLoader.cpp" />
+    <ClCompile Include="src\Hell\File\File.cpp" />
+    <ClCompile Include="src\Hell\File\IES.cpp" />
     <ClCompile Include="src\Hell\MemoryTracker\MemoryTracker.cpp" />
     <ClCompile Include="src\Game\UniqueID.cpp" />
     <ClCompile Include="src\Game\Resources.cpp" />
@@ -476,7 +479,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Types\Misc\DoorChain.cpp" />
     <ClCompile Include="src\Types\Renderer\AnimatedMeshNodes.cpp" />
     <ClCompile Include="src\API\OpenGL\Types\GL_mesh_buffer.cpp" />
-    <ClCompile Include="src\Types\Renderer\IESProfile.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\IESProfile.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\Mesh.cpp" />
     <ClCompile Include="src\Types\Renderer\MeshBufferOLD.cpp" />
     <ClCompile Include="src\Types\Renderer\MeshNodes.cpp" />
@@ -534,7 +537,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Editor\Editor.cpp" />
     <ClCompile Include="src\Editor\Gizmo.cpp" />
     <ClCompile Include="src\File\AssimpImporter.cpp" />
-    <ClCompile Include="src\File\File.cpp" />
+    <ClCompile Include="src\File\FileOLD.cpp" />
     <ClCompile Include="src\Player\Player_camera.cpp" />
     <ClCompile Include="src\Player\Player_Input.cpp" />
     <ClCompile Include="src\Player\Player_movement.cpp" />
@@ -560,7 +563,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\UI\FontSpriteSheet.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\GenericMesh.cpp" />
     <ClCompile Include="src\UI\TextBlitter.cpp" />
-    <ClCompile Include="src\Types\Renderer\Texture.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\Texture.cpp" />
     <ClCompile Include="src\UI\UIBackEnd.cpp" />
     <ClCompile Include="src\Util\Util_math.cpp" />
     <ClCompile Include="src\Util\Util_mesh.cpp" />
@@ -643,6 +646,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\GlobalIllumination\DDGIVolume.h" />
     <ClInclude Include="src\GlobalIllumination\PointCloud.h" />
     <ClInclude Include="src\Game\GPUTypes.h" />
+    <ClInclude Include="src\Hell\AssetLoader\AssetLoader.h" />
+    <ClInclude Include="src\Hell\File.h" />
+    <ClInclude Include="src\Hell\File\File.h" />
+    <ClInclude Include="src\Hell\File\FileInfo.h" />
     <ClInclude Include="src\Hell\MemoryTracker\MemoryTracker.h" />
     <ClInclude Include="src\Game\RendereringConstants.h" />
     <ClInclude Include="src\Hell\Render\TextureTypes.h" />
@@ -783,7 +790,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Types\Misc\DoorChain.h" />
     <ClInclude Include="src\Types\Renderer\AnimatedMeshNodes.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_mesh_buffer.h" />
-    <ClInclude Include="src\Types\Renderer\IESProfile.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\IESProfile.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\Mesh.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\MeshBuffer.h" />
     <ClInclude Include="src\Types\Renderer\MeshNodes.h" />
@@ -853,8 +860,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Types\Renderer\MeshBufferOLD.h" />
     <ClInclude Include="src\Hell\ImageTools\ImageTools.h" />
     <ClInclude Include="src\UI\UIBackEnd.h" />
-    <ClInclude Include="src\Types\Renderer\Texture.h" />
-    <ClInclude Include="src\Hell\Types.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\Texture.h" />
     <ClInclude Include="src\Util\Util.h" />
     <ClInclude Include="src\Viewport\ViewportManager.h" />
     <ClInclude Include="src\Managers\HouseManager.h" />

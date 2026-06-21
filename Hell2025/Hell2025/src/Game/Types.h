@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "Hell/Common.h"
+#include "Hell/File.h"
 #include "Hell/Math/GLM.h"
 #include <Hell/Render/TextureTypes.h>
 #include <unordered_map>
@@ -49,13 +50,6 @@ struct AABBRayResult {
     glm::vec3 hitPositionLocal = glm::vec3(0.0f);
     glm::vec3 hitNormalWorld = glm::vec3(0.0f);
     glm::vec3 hitNormalLocal = glm::vec3(0.0f);
-};
-
-struct FileInfo {
-    std::string path;
-    std::string name;
-    std::string ext;
-    std::string dir;
 };
 
 struct Transform {

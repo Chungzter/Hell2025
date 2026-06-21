@@ -204,32 +204,24 @@ namespace OpenGLBackEnd {
 
     void AllocateTextureMemory(Texture& texture) {
         OpenGLTexture& glTexture = texture.GetGLTexture();
-        GLuint& handle = glTexture.GetHandle();
-
-        if (handle != 0) return;
-
-        float borderColor[] = {
-            texture.GetBorderColor().r,
-            texture.GetBorderColor().g,
-            texture.GetBorderColor().b,
-            texture.GetBorderColor().a };
-
-        glCreateTextures(GL_TEXTURE_2D, 1, &handle);
-        glTextureParameteri(handle, GL_TEXTURE_WRAP_S, OpenGLUtil::TextureWrapModeToGLEnum(texture.GetTextureWrapMode()));
-        glTextureParameteri(handle, GL_TEXTURE_WRAP_T, OpenGLUtil::TextureWrapModeToGLEnum(texture.GetTextureWrapMode()));
-        glTextureParameteri(handle, GL_TEXTURE_MIN_FILTER, OpenGLUtil::TextureFilterToGLEnum(texture.GetMinFilter()));
-        glTextureParameteri(handle, GL_TEXTURE_MAG_FILTER, OpenGLUtil::TextureFilterToGLEnum(texture.GetMagFilter()));
-        glTextureParameterfv(handle, GL_TEXTURE_BORDER_COLOR, borderColor);
+        if (glTexture.GetHandle() != 0) return;
 
         int width = texture.GetWidth();
         int height = texture.GetHeight();
         int levels = texture.MipmapsAreRequested() ? texture.GetMipmapLevelCount() : 1;
-
-        // Allocate Immutable Storage
         GLenum internalFormat = OpenGLUtil::ImageFormatToGLInternalFormat(texture.GetImageFormat());
 
-        glTextureStorage2D(handle, levels, internalFormat, width, height);
-
+        glTexture.Create(width, height, internalFormat, levels);
+        glTexture.SetWrapModeS(texture.GetTextureWrapModeS());
+        glTexture.SetWrapModeT(texture.GetTextureWrapModeT());
+        glTexture.SetMinFilter(texture.GetMinFilter());
+        glTexture.SetMagFilter(texture.GetMagFilter());
+        glTexture.SetBorderColor(
+            texture.GetBorderColor().r,
+            texture.GetBorderColor().g,
+            texture.GetBorderColor().b,
+            texture.GetBorderColor().a
+        );
         glTexture.MakeBindlessTextureResident();
     }
 
@@ -368,7 +360,7 @@ namespace OpenGLBackEnd {
     void UpdateBindlessTextures() {
         int32_t highestBindlessIndex = -1;
 
-        for (Texture& texture : AssetManager::GetTextures()) {
+        for (auto& [name, texture] : AssetManager::GetTextures()) {
             if (texture.GetBindlessIndex() < 0) {
                 Logging::Error() << "OpenGLBackEnd::UpdateBindlessTextures() failed: texture '" << texture.GetFileName() << "' has invalid bindless index " << texture.GetBindlessIndex() << "\n";
                 return;
@@ -380,7 +372,7 @@ namespace OpenGLBackEnd {
         std::vector<GLuint64> bindlessTextureIDs(static_cast<size_t>(highestBindlessIndex + 1), 0);
         std::vector<bool> assignedSlots(bindlessTextureIDs.size(), false);
 
-        for (Texture& texture : AssetManager::GetTextures()) {
+        for (auto& [name, texture] : AssetManager::GetTextures()) {
             const int32_t bindlessIndex = texture.GetBindlessIndex();
 
             if (static_cast<size_t>(bindlessIndex) >= bindlessTextureIDs.size()) {

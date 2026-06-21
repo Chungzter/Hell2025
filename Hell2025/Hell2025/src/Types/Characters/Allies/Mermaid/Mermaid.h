@@ -1,5 +1,4 @@
 #pragma once
-#include <Hell/Types.h>
 #include <Game/CreateInfo.h>
 #include "Types/Renderer/MeshNodes.h"
 

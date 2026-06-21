@@ -6,13 +6,13 @@
 #include "File/File.h"
 
 #include "Types/Animation/Animation.h"
-#include "Types/Renderer/IESProfile.h"
+#include "Hell/ResourceManagement/Types/IESProfile.h"
 #include "Hell/ResourceManagement/Types/Mesh.h"
 #include "Types/Renderer/Model.h"
 #include "Types/Renderer/SkinnedMesh.hpp"
 #include "Types/Renderer/SkinnedModel.h"
 #include "Types/Renderer/SpriteSheetTexture.h"
-#include "Types/Renderer/Texture.h"
+#include "Hell/ResourceManagement/Types/Texture.h"
 
 #include <cstdint>
 #include <span>
@@ -65,7 +65,6 @@ namespace AssetManager {
     uint32_t GetBaseIndexByMeshIndex(int meshIndex);
 
     // IES Profiles
-    std::vector<IESProfile>& GetIESProfiles();
     IESProfile* GetIESProfileByName(const std::string& name);
     IESProfile* GetIESProfileByIESProfileType(IESProfileType type);
 
@@ -84,14 +83,11 @@ namespace AssetManager {
     int GetSkinnedMeshIndexByName(const std::string& name);
 
     // Textures
-    std::vector<Texture>& GetTextures();
-    Texture& CreateNewTexture();
+    std::unordered_map<std::string, Texture>& GetTextures();
+    Texture& CreateNewTexture(const std::string& name);
     Texture* GetTextureByName(const std::string& name);
-    Texture* GetTextureById(uint64_t id);
     Texture* GetTextureByBindlessIndex(int32_t bindlessIndex);
-    uint64_t GetTextureIdByName(const std::string& name, bool ignoreWarning = false);
     int32_t GetTextureBindlessIndexByName(const std::string& name, bool ignoreWarning = true);
-    size_t GetTextureCount();
     void ReserveTextureStorage(size_t textureCount);
 
     // Spritesheet Textures
@@ -126,7 +122,6 @@ namespace AssetManager {
     void LoadModel(Model* model);
     void LoadSkinnedModel(SkinnedModel* skinnedModel);
     void LoadTexture(Texture* texture);
-    void LoadIESProfiles();
 
     // Baking
     void BakeModels();

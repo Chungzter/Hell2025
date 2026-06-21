@@ -14,8 +14,9 @@
 #include "Managers/HouseManager.h"
 #include "Managers/MapManager.h"
 
+#include "Hell/AssetLoader/AssetLoader.h"
 #include "Hell/Logging.h"
-#include "Hell/ResourceManagement/ResourceID.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 #include <unordered_map>
 #include <future>
@@ -39,12 +40,10 @@ namespace AssetManager {
     } g_loadingComplete;
 
     std::vector<Animation> g_animations;
-    std::vector<IESProfile> g_iesProfiles;
     std::vector<Material> g_materials;
     std::vector<Mesh> g_meshes;
     std::vector<Model> g_models;
     std::vector<SpriteSheetTexture> g_spriteSheetTextures;
-    std::vector<Texture> g_textures;
     std::vector<SkinnedMesh> g_skinnedMeshes;
     std::vector<SkinnedModel> g_skinnedModels;
     std::unordered_map<std::string, int> g_materialIndexMap;
@@ -79,6 +78,8 @@ namespace AssetManager {
         ExportMissingSkinnedModels();
         LoadMinimumTextures();
         FindAssetPaths();
+        Hell::AssetLoader::DiscoverAssets();
+        Hell::AssetLoader::LoadIESFiles();
 
         // Fire off all async loading calls
         LoadPendingTexturesAsync();
@@ -107,9 +108,16 @@ namespace AssetManager {
                 return;
             }
         }
-        for (Texture& texture : g_textures) {
+        for (auto& [name, texture] : GetTextures()) {
+            const bool wasBakeComplete = texture.BakeComplete();
             texture.CheckForBakeCompletion();
-            if (!texture.BakeComplete()) {
+            const bool isBakeComplete = texture.BakeComplete();
+
+            if (!wasBakeComplete && isBakeComplete) {
+                AddItemToLoadLog(texture.GetFilePath());
+            }
+
+            if (!isBakeComplete) {
                 g_loadingComplete.textures = false;
                 return;
             }
@@ -164,8 +172,6 @@ namespace AssetManager {
             return;
         }
 
-        LoadIESProfiles();
-
         Renderer::UploadVertexData();
         HouseManager::Init();
         MapManager::Init();
@@ -173,7 +179,7 @@ namespace AssetManager {
         World::Init();
 
         // Free all cpu texture data
-        for (Texture& texture : g_textures) {
+        for (auto& [name, texture] : GetTextures()) {
             texture.FreeCPUMemory();
         }
 
@@ -205,7 +211,7 @@ namespace AssetManager {
         }
         // Find all textures
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/uncompressed", { "png", "jpg", "tga" })) {
-            Texture& texture = CreateNewTexture();
+            Texture& texture = CreateNewTexture(fileInfo.name);
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
@@ -214,7 +220,7 @@ namespace AssetManager {
             texture.RequestMipmaps();
         }
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/decals", { "png", "jpg", "tga" })) {
-            Texture& texture = CreateNewTexture();
+            Texture& texture = CreateNewTexture(fileInfo.name);
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_BORDER); // Clamp to border!
@@ -223,7 +229,7 @@ namespace AssetManager {
             texture.RequestMipmaps();
         }
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/compressed", { "dds" })) {
-            Texture& texture = CreateNewTexture();
+            Texture& texture = CreateNewTexture(fileInfo.name);
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::COMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
@@ -232,7 +238,7 @@ namespace AssetManager {
             texture.RequestMipmaps();
         }
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/ui", { "png", "jpg", })) {
-            Texture& texture = CreateNewTexture();
+            Texture& texture = CreateNewTexture(fileInfo.name);
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
@@ -240,7 +246,7 @@ namespace AssetManager {
             texture.SetMagFilter(TextureFilter::LINEAR);
         }
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/exr", { "exr" })) {
-            Texture& texture = CreateNewTexture();
+            Texture& texture = CreateNewTexture(fileInfo.name);
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::EXR);
             texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
@@ -248,7 +254,7 @@ namespace AssetManager {
             texture.SetMagFilter(TextureFilter::NEAREST);
         }
         for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/spritesheets", { "png", "jpg", "tga", "tif" })) {
-            Texture& texture = CreateNewTexture();
+            Texture& texture = CreateNewTexture(fileInfo.name);
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
@@ -260,7 +266,7 @@ namespace AssetManager {
     void LoadMinimumTextures() {
         // Find files
         for (FileInfo& fileInfo : Util::IterateDirectory("res/fonts", { "png" })) {
-            Texture& texture = CreateNewTexture();
+            Texture& texture = CreateNewTexture(fileInfo.name);
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
             texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
@@ -317,15 +323,12 @@ namespace AssetManager {
         }
     }
 
-    Texture& CreateNewTexture() {
-        Texture& texture = g_textures.emplace_back();
-        texture.SetId(Hell::ResourceManagement::GetNextID(Hell::ResourceManagement::ResourceType::TEXTURE));
-        texture.SetBindlessIndex(static_cast<int32_t>(g_textures.size() - 1));
-        return texture;
+    Texture& CreateNewTexture(const std::string& name) {
+        return Hell::ResourceManager::CreateTexture(name);
     }
 
     void ReserveTextureStorage(size_t textureCount) {
-        g_textures.reserve(textureCount);
+        Hell::ResourceManager::ReserveTextureStorage(textureCount);
     }
 
     bool LoadingComplete() {
@@ -359,10 +362,6 @@ namespace AssetManager {
         return result;
     }
 
-    std::vector<IESProfile>& GetIESProfiles() {
-        return g_iesProfiles;
-    }
-
     std::vector<Model>& GetModels() {
         return g_models;
     }
@@ -379,8 +378,8 @@ namespace AssetManager {
         return g_spriteSheetTextures;
     }
 
-    std::vector<Texture>& GetTextures() {
-        return g_textures;
+    std::unordered_map<std::string, Texture>& GetTextures() {
+        return Hell::ResourceManager::GetTextures();
     }
 
     std::vector<Vertex>& GetVertices() {

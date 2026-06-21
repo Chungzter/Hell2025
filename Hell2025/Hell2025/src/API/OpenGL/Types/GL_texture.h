@@ -7,6 +7,7 @@
 
 #include <string>
 #include <memory>
+#include <cstddef>
 
 struct OpenGLTexture {
 public:
@@ -20,6 +21,8 @@ public:
     void Reset();
     void SetBorderColor(float r, float g, float b, float a);
     void SetWrapMode(TextureWrapMode wrapMode);
+    void SetWrapModeS(TextureWrapMode wrapMode);
+    void SetWrapModeT(TextureWrapMode wrapMode);
     void SetMinFilter(TextureFilter filter);
     void SetMagFilter(TextureFilter filter);
     void MakeBindlessTextureResident();
@@ -28,6 +31,7 @@ public:
     int GetHeight();
     int GetChannelCount();
     int GetDataSize();
+    size_t GetAllocatedByteCount() const;
     void* GetData();
     GLint GetFormat();
     GLint GetInternalFormat();

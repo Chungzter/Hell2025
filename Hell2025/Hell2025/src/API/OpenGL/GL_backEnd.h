@@ -7,7 +7,7 @@
 #include "API/OpenGL/Types/GL_heightmap_mesh.h"
 #include "Game/Types.h"
 #include "Types/GL_texture.h"
-#include "Types/Renderer/Texture.h"
+#include "Hell/ResourceManagement/Types/Texture.h"
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 

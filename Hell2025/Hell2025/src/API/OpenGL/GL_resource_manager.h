@@ -1,6 +1,7 @@
 #pragma once
 #include "API/OpenGL/Types/GL_generic_mesh.h"
 #include "API/OpenGL/Types/GL_mesh_buffer.h"
+#include "API/OpenGL/Types/GL_texture.h"
 
 namespace OpenGLResourceManager {
     void CleanUp();
@@ -14,4 +15,9 @@ namespace OpenGLResourceManager {
     OpenGLMeshBuffer& GetMeshBuffer(uint64_t id);
     OpenGLMeshBuffer* GetMeshBufferPtr(uint64_t id);
     void RemoveMeshBuffer(uint64_t id);
+
+    uint64_t CreateTexture();
+    OpenGLTexture& GetTexture(uint64_t id);
+    OpenGLTexture* GetTexturePtr(uint64_t id);
+    void RemoveTexture(uint64_t id);
 }

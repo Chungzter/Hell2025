@@ -1,24 +1,73 @@
 #include "Texture.h"
 
-#include "AssetManagement/AssetManager.h"
+#include "API/OpenGL/GL_resource_manager.h"
+#include "API/Vulkan/Types/VK_texture.h"
+#include "BackEnd/BackEnd.h"
 #include "Hell/ImageTools/ImageTools.h"
-#include "Util/Util.h"
+#include "Hell/Logging.h"
 
+#include <algorithm>
+#include <cmath>
 #include <iostream> // TODO clean up logging
+#include <utility>
 
 using namespace Hell;
 
+void Texture::CleanUp() {
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        if (m_openGLId != 0) {
+            OpenGLResourceManager::RemoveTexture(m_openGLId);
+            m_openGLId = 0;
+        }
+    }
+    else if (BackEnd::GetAPI() == API::VULKAN) {
+        // TODO
+    }
+}
+
+OpenGLTexture& Texture::GetGLTexture() {
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        if (m_openGLId == 0) {
+            m_openGLId = OpenGLResourceManager::CreateTexture();
+        }
+
+        return OpenGLResourceManager::GetTexture(m_openGLId);
+    }
+    else if (BackEnd::GetAPI() == API::VULKAN) {
+        // TODO
+    }
+
+    Logging::Error() << "Texture::GetGLTexture() was called but API is not OpenGL\n";
+    static OpenGLTexture invalid;
+    return invalid;
+}
+
+VulkanTexture& Texture::GetVKTexture() {
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        Logging::Error() << "Texture::GetVKTexture() was called but API is OpenGL\n";
+    }
+    else if (BackEnd::GetAPI() == API::VULKAN) {
+        // TODO
+    }
+
+    static VulkanTexture invalid;
+    return invalid;
+}
+
 void Texture::Load() {
     // Load texture data from disk
-    if (m_imageDataType == ImageDataType::UNCOMPRESSED) {
-        m_imageData = ImageTools::LoadUncompressedImage(m_fileInfo.path);
+    if (m_imageData.mips.empty()) {
+        if (m_imageDataType == ImageDataType::UNCOMPRESSED) {
+            m_imageData = ImageTools::LoadUncompressedImage(m_fileInfo.path);
+        }
+        else if (m_imageDataType == ImageDataType::COMPRESSED) {
+            m_imageData = ImageTools::LoadDDS(m_fileInfo.path);
+        }
+        else if (m_imageDataType == ImageDataType::EXR) {
+            m_imageData = ImageTools::LoadEXRImage(m_fileInfo.path);
+        }
     }
-    else if (m_imageDataType == ImageDataType::COMPRESSED) {
-        m_imageData = ImageTools::LoadDDS(m_fileInfo.path);
-    }
-    else if (m_imageDataType == ImageDataType::EXR) {
-        m_imageData = ImageTools::LoadEXRImage(m_fileInfo.path);
-    }
+
     m_loadingState = LoadingState::Value::LOADING_COMPLETE;
 
     // Calculate mipmap level count
@@ -92,6 +141,29 @@ const int Texture::GetChannelCount() {
     return GetImageFormatChannelCount(m_imageData.format);
 }
 
+size_t Texture::GetCPUAllocatedByteCount() const {
+    size_t byteCount = 0;
+
+    for (const TextureMip& mip : m_imageData.mips) {
+        byteCount += mip.data.capacity() * sizeof(std::byte);
+    }
+
+    return byteCount;
+}
+
+size_t Texture::GetGPUAllocatedByteCount() const {
+    if (BackEnd::GetAPI() == API::OPENGL) {
+        if (OpenGLTexture* texture = OpenGLResourceManager::GetTexturePtr(m_openGLId)) {
+            return texture->GetAllocatedByteCount();
+        }
+    }
+    else if (BackEnd::GetAPI() == API::VULKAN) {
+        // TODO
+    }
+
+    return 0;
+}
+
 void Texture::SetTextureDataLevelBakeState(int index, BakeState state) {
     if (index >= 0 && m_textureDataLevelBakeStates.size() && index < m_textureDataLevelBakeStates.size()) {
         m_textureDataLevelBakeStates[index] = state;
@@ -105,6 +177,11 @@ void Texture::SetFileInfo(FileInfo fileInfo) {
     m_fileInfo = fileInfo;
 }
 
+void Texture::SetImageData(ImageData imageData) {
+    m_imageData = std::move(imageData);
+    m_imageDataType = m_imageData.type;
+}
+
 void Texture::SetImageDataType(ImageDataType imageDataType) {
     m_imageDataType = imageDataType;
 }
@@ -114,7 +191,16 @@ void Texture::SetLoadingState(LoadingState loadingState) {
 }
 
 void Texture::SetTextureWrapMode(TextureWrapMode wrapMode) {
-    m_wrapMode = wrapMode;
+    m_wrapModeS = wrapMode;
+    m_wrapModeT = wrapMode;
+}
+
+void Texture::SetTextureWrapModeS(TextureWrapMode wrapMode) {
+    m_wrapModeS = wrapMode;
+}
+
+void Texture::SetTextureWrapModeT(TextureWrapMode wrapMode) {
+    m_wrapModeT = wrapMode;
 }
 
 void Texture::SetBorderColor(float r, float g, float b, float a) {
@@ -151,8 +237,6 @@ void Texture::CheckForBakeCompletion() {
                 return;
             }
         }
-        // Bake is complete!
-        AssetManager::AddItemToLoadLog(GetFilePath());
     }
 }
 

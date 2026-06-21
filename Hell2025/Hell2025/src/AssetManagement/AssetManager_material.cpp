@@ -69,13 +69,13 @@ namespace AssetManager {
 
     void BuildMaterials() {
         std::vector<Material>& materials = GetMaterials();
-        std::vector<Texture>& textures = GetTextures();
+        std::unordered_map<std::string, Texture>& textures = GetTextures();
 
         // Start fresh
         materials.clear();
 
         // For any texture with an ALB suffix, create a material, and store indices for accompanying material textures
-        for (Texture& texture : textures) {
+        for (auto& [name, texture] : textures) {
             MaterialType materialType= GetMaterialType(texture.GetFileName());
 
             // If we found an Albedo texture then create a material

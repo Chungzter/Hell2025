@@ -1,6 +1,5 @@
 #pragma once
 #include <Game/CreateInfo.h>
-#include <Hell/Types.h>
 #include "Types/Generics/Wire.h"
 #include "Types/Renderer/MeshNodes.h"
 

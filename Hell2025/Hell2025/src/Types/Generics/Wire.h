@@ -1,5 +1,4 @@
 #pragma once
-#include <Hell/Types.h>
 #include "Types/Renderer/MeshBufferOLD.h"
 
 struct Wire {

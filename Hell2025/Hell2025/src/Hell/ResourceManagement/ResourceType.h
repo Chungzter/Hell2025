@@ -5,11 +5,12 @@
 namespace Hell::ResourceManagement {
 
 enum class ResourceType : uint16_t {
-    GL_GENERIC_MESH,
-    GL_MESH_BUFFER,
-    VK_GENERIC_MESH,
-    VK_MESH_BUFFER,
-    TEXTURE,
+    OPENGL_GENERIC_MESH,
+    OPENGL_MESH_BUFFER,
+    OPENGL_TEXTURE,
+    VULKAN_GENERIC_MESH,
+    VULKAN_MESH_BUFFER,
+    VULKAN_TEXTURE,
     UNDEFINED
 };
 

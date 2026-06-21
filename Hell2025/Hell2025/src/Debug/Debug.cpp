@@ -36,6 +36,11 @@ namespace Debug {
     std::string g_quickMessage = UNDEFINED_STRING;
     float g_quickMessageTimer = 0;
 
+    void DisplayGlobalDebugText();
+    void DisplayMemoryTrackerInfo();
+    void DisplayProfilingInfo();
+    void DisplayQuickMessage();
+
     void UpdateDebugPointsAndLines();
     void UpdateDebugText();
 
@@ -43,90 +48,14 @@ namespace Debug {
         UpdateDebugPointsAndLines();
         UpdateDebugText();
 
-        // Quick message update
-        if (g_quickMessageTimer > 0) {
-            g_quickMessageTimer -= Game::GetDeltaTime();
-            //UIBackEnd::BlitText(g_quickMessage, "StandardFont", Config::GetResolutions().gBuffer.x, 0, Alignment::TOP_RIGHT, 2.0f);
-            UIBackEnd::BlitText(g_quickMessage, "StandardFont", 0, Config::GetResolutions().gBuffer.y, Alignment::BOTTOM_LEFT, 2.0f);
-        }
-    }
+        if (Debug::GetDebugTextMode() == DebugTextMode::GLOBAL)         DisplayGlobalDebugText();
+        if (Debug::GetDebugTextMode() == DebugTextMode::MEMORY_TRACKER) DisplayMemoryTrackerInfo();
+        if (Debug::GetDebugTextMode() == DebugTextMode::PROFILING)      DisplayProfilingInfo();
 
-    void BlitQuickDebugMessage(const std::string& message) {
-        g_quickMessageTimer = 2.0f;
-        g_quickMessage = message;
-    }
-
-    void DisplayMemoryTrackerInfo() {
-        using namespace Hell::MemoryTracker;
-
-        constexpr char fontName[] = "StandardFont";
-        constexpr float scale = 2.0f;
-        constexpr uint32_t spacing = 50;
-
-        std::string names = "\n";
-        std::string cpuBytes = "CPU\n";
-        std::string gpuBytes = "GPU\n";
-
-        MemoryReport memoryReport = GetMemoryReport();
-
-        for (const MemoryReportCategory& category : memoryReport.categories) {
-            names += category.name + "\n";
-            gpuBytes += FormatMemorySize(category.GetTotalGPUBytes()) + "\n";
-            cpuBytes += FormatMemorySize(category.GetTotalCPUBytes()) + "\n";
-        }
-
-        const int namesWidth = TextBlitter::GetTextSize(names, fontName, scale).x;
-        const int gpuWidth = TextBlitter::GetTextSize(gpuBytes, fontName, scale).x;
-        const int gpuX = namesWidth + static_cast<int>(spacing);
-        const int cpuX = gpuX + gpuWidth + static_cast<int>(spacing);
-
-        UIBackEnd::BlitText(names, fontName, 0, 0, Alignment::TOP_LEFT, scale);
-        UIBackEnd::BlitText(gpuBytes, fontName, gpuX, 0, Alignment::TOP_LEFT, scale);
-        UIBackEnd::BlitText(cpuBytes, fontName, cpuX, 0, Alignment::TOP_LEFT, scale);
+        DisplayQuickMessage();
     }
 
     void UpdateDebugText() {
-
-        // Global Debug
-        if (Debug::GetDebugTextMode() == DebugTextMode::GLOBAL) {
-            std::string text = Debug::GetText();
-            UIBackEnd::BlitText(text, "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
-        }
-
-        // Memory tracker
-        else if (Debug::GetDebugTextMode() == DebugTextMode::MEMORY_TRACKER) {
-            DisplayMemoryTrackerInfo();
-        }
-        
-        // Profiling
-        else if (Debug::GetDebugTextMode() == DebugTextMode::PROFILING) {
-            float scale = 1.4f;
-            int margin = 35;
-            TextureFilter textureFilter = TextureFilter::LINEAR;
-
-            const std::string white = "[COL=1.0,1.0,1.0,1.0]";
-            const std::string orange = "[COL=1.0,0.65,0.0,1.0]";
-            const std::string yellow = "[COL=1.0,1.0,0.0,1.0]";
-            const std::string red = "[COL=1.0,0.0,0.0,1.0]";
-            const std::string lightBlue = "[COL=0.68,0.85,0.9,1.0]";
-            const std::string lightGreen = "[COL=0.56,0.93,0.56,1.0]";
-
-            const std::string headingColor = lightGreen;
-
-            std::string names = "\n" + Renderer::GetZoneNames();
-            std::string timingsGPU = headingColor + "GPU\n" + Renderer::GetZoneGPUTimings();
-            std::string timingsCPU = headingColor + "CPU\n" + Renderer::GetZoneCPUTimings();
-            glm::ivec2 namesSize = TextBlitter::GetTextSize(names, "StandardFont", scale);
-            glm::ivec2 timingsGPUSize = TextBlitter::GetTextSize(timingsGPU, "StandardFont", scale);
-            glm::ivec2 timingsCPUSize = TextBlitter::GetTextSize(timingsCPU, "StandardFont", scale);
-
-            if (names.length() != 0) {
-                timingsGPU += "\n" + headingColor + "Total GPU : " + Renderer::GetTotalGPUTime();
-                UIBackEnd::BlitText(timingsGPU, "StandardFont", 0, 0, Alignment::TOP_LEFT, scale, textureFilter);
-                UIBackEnd::BlitText(timingsCPU, "StandardFont", timingsGPUSize.x + margin, 0, Alignment::TOP_LEFT, scale, textureFilter);
-                UIBackEnd::BlitText(names, "StandardFont", timingsGPUSize.x + margin + timingsCPUSize.x + margin, 0, Alignment::TOP_LEFT, scale, textureFilter);
-            }
-        }
 
         // Midi notes override
         if (MidiFileManager::IsPlaying()) {
@@ -236,6 +165,81 @@ namespace Debug {
         AddText("Hovered Viewport Index: " + std::to_string(hoveredViewportIndex));
         AddText("Mouse ray origin: " + Util::Vec3ToString(Editor::GetMouseRayOriginByViewportIndex(hoveredViewportIndex)));
         AddText("Mouse ray direction: " + Util::Vec3ToString(Editor::GetMouseRayDirectionByViewportIndex(hoveredViewportIndex)));
+    }
+
+    void BlitQuickDebugMessage(const std::string& message) {
+        g_quickMessageTimer = 2.0f;
+        g_quickMessage = message;
+    }
+
+    void DisplayGlobalDebugText() {
+        std::string text = Debug::GetText();
+        UIBackEnd::BlitText(text, "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
+    }
+
+    void DisplayMemoryTrackerInfo() {
+        using namespace Hell::MemoryTracker;
+
+        constexpr char fontName[] = "StandardFont";
+        constexpr float scale = 2.0f;
+        constexpr uint32_t spacing = 50;
+
+        std::string names = "\n";
+        std::string cpuBytes = "CPU\n";
+        std::string gpuBytes = "GPU\n";
+
+        MemoryReport memoryReport = GetMemoryReport();
+
+        for (const MemoryReportCategory& category : memoryReport.categories) {
+            names += category.name + "\n";
+            gpuBytes += FormatMemorySize(category.GetTotalGPUBytes()) + "\n";
+            cpuBytes += FormatMemorySize(category.GetTotalCPUBytes()) + "\n";
+        }
+
+        const int namesWidth = TextBlitter::GetTextSize(names, fontName, scale).x;
+        const int gpuWidth = TextBlitter::GetTextSize(gpuBytes, fontName, scale).x;
+        const int gpuX = namesWidth + static_cast<int>(spacing);
+        const int cpuX = gpuX + gpuWidth + static_cast<int>(spacing);
+
+        UIBackEnd::BlitText(names, fontName, 0, 0, Alignment::TOP_LEFT, scale);
+        UIBackEnd::BlitText(gpuBytes, fontName, gpuX, 0, Alignment::TOP_LEFT, scale);
+        UIBackEnd::BlitText(cpuBytes, fontName, cpuX, 0, Alignment::TOP_LEFT, scale);
+    }
+
+    void DisplayProfilingInfo() {
+        float scale = 1.4f;
+        int margin = 35;
+        TextureFilter textureFilter = TextureFilter::LINEAR;
+
+        const std::string white = "[COL=1.0,1.0,1.0,1.0]";
+        const std::string orange = "[COL=1.0,0.65,0.0,1.0]";
+        const std::string yellow = "[COL=1.0,1.0,0.0,1.0]";
+        const std::string red = "[COL=1.0,0.0,0.0,1.0]";
+        const std::string lightBlue = "[COL=0.68,0.85,0.9,1.0]";
+        const std::string lightGreen = "[COL=0.56,0.93,0.56,1.0]";
+
+        const std::string headingColor = lightGreen;
+
+        std::string names = "\n" + Renderer::GetZoneNames();
+        std::string timingsGPU = headingColor + "GPU\n" + Renderer::GetZoneGPUTimings();
+        std::string timingsCPU = headingColor + "CPU\n" + Renderer::GetZoneCPUTimings();
+        glm::ivec2 namesSize = TextBlitter::GetTextSize(names, "StandardFont", scale);
+        glm::ivec2 timingsGPUSize = TextBlitter::GetTextSize(timingsGPU, "StandardFont", scale);
+        glm::ivec2 timingsCPUSize = TextBlitter::GetTextSize(timingsCPU, "StandardFont", scale);
+
+        if (names.length() != 0) {
+            timingsGPU += "\n" + headingColor + "Total GPU : " + Renderer::GetTotalGPUTime();
+            UIBackEnd::BlitText(timingsGPU, "StandardFont", 0, 0, Alignment::TOP_LEFT, scale, textureFilter);
+            UIBackEnd::BlitText(timingsCPU, "StandardFont", timingsGPUSize.x + margin, 0, Alignment::TOP_LEFT, scale, textureFilter);
+            UIBackEnd::BlitText(names, "StandardFont", timingsGPUSize.x + margin + timingsCPUSize.x + margin, 0, Alignment::TOP_LEFT, scale, textureFilter);
+        }
+    }
+
+    void DisplayQuickMessage() {
+        if (g_quickMessageTimer > 0) {
+            g_quickMessageTimer -= Game::GetDeltaTime();
+            UIBackEnd::BlitText(g_quickMessage, "StandardFont", 0, Config::GetResolutions().gBuffer.y, Alignment::BOTTOM_LEFT, 2.0f);
+        }
     }
 
     void UpdateDebugPointsAndLines() {

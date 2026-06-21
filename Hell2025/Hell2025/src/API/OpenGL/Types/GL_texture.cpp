@@ -5,7 +5,59 @@
 #include "BackEnd/BackEnd.h"
 #include "Util/Util.h"
 
+#include <algorithm>
 #include <iostream>
+
+namespace {
+    constexpr GLenum GL_COMPRESSED_SRGB_S3TC_DXT1 = 0x8C4C;
+    constexpr GLenum GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1 = 0x8C4D;
+    constexpr GLenum GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3 = 0x8C4E;
+    constexpr GLenum GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5 = 0x8C4F;
+
+    size_t GetBytesPerPixel(GLint internalFormat) {
+        switch (internalFormat) {
+            case GL_R8: return 1;
+            case GL_RG8: return 2;
+            case GL_RGB8:
+            case GL_SRGB8: return 3;
+            case GL_RGBA8:
+            case GL_SRGB8_ALPHA8: return 4;
+            case GL_R16:
+            case GL_R16F: return 2;
+            case GL_RG16F: return 4;
+            case GL_RGB16F: return 6;
+            case GL_RGBA16F: return 8;
+            case GL_R32F: return 4;
+            case GL_RG32F: return 8;
+            case GL_RGB32F: return 12;
+            case GL_RGBA32F: return 16;
+            default: return 0;
+        }
+    }
+
+    size_t GetCompressedBlockSize(GLint internalFormat) {
+        switch (internalFormat) {
+            case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+            case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+            case GL_COMPRESSED_SRGB_S3TC_DXT1:
+            case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1:
+            case GL_COMPRESSED_RED_RGTC1:
+                return 8;
+            case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+            case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3:
+            case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5:
+            case GL_COMPRESSED_RG_RGTC2:
+            case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT:
+            case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT:
+            case GL_COMPRESSED_RGBA_BPTC_UNORM:
+            case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
+                return 16;
+            default:
+                return 0;
+        }
+    }
+}
 
 GLuint64 OpenGLTexture::GetBindlessID() {
     return m_bindlessID;
@@ -115,6 +167,28 @@ int OpenGLTexture::GetDataSize() {
     return m_dataSize;
 }
 
+size_t OpenGLTexture::GetAllocatedByteCount() const {
+    size_t byteCount = 0;
+    const size_t bytesPerPixel = GetBytesPerPixel(m_internalFormat);
+    const size_t compressedBlockSize = GetCompressedBlockSize(m_internalFormat);
+
+    for (int mipLevel = 0; mipLevel < m_mipmapLevelCount; mipLevel++) {
+        const size_t width = static_cast<size_t>(std::max(1, m_width >> mipLevel));
+        const size_t height = static_cast<size_t>(std::max(1, m_height >> mipLevel));
+
+        if (compressedBlockSize > 0) {
+            const size_t blockCountX = (width + 3) / 4;
+            const size_t blockCountY = (height + 3) / 4;
+            byteCount += blockCountX * blockCountY * compressedBlockSize;
+        }
+        else {
+            byteCount += width * height * bytesPerPixel;
+        }
+    }
+
+    return byteCount;
+}
+
 void* OpenGLTexture::GetData() {
     return m_data;
 }
@@ -136,7 +210,15 @@ void OpenGLTexture::SetBorderColor(float r, float g, float b, float a) {
 }
 
 void OpenGLTexture::SetWrapMode(TextureWrapMode wrapMode) {
+    SetWrapModeS(wrapMode);
+    SetWrapModeT(wrapMode);
+}
+
+void OpenGLTexture::SetWrapModeS(TextureWrapMode wrapMode) {
     glTextureParameteri(m_handle, GL_TEXTURE_WRAP_S, OpenGLUtil::TextureWrapModeToGLEnum(wrapMode));
+}
+
+void OpenGLTexture::SetWrapModeT(TextureWrapMode wrapMode) {
     glTextureParameteri(m_handle, GL_TEXTURE_WRAP_T, OpenGLUtil::TextureWrapModeToGLEnum(wrapMode));
 }
 
