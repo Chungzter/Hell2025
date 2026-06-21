@@ -2,7 +2,8 @@
 #include <Game/Enums.h>
 #include <Game/Types.h>
 #include "LoadingState.h"
-#include "File/FileFormats.h"
+#include "Hell/AssetFormats/AssetData.h"
+#include "Hell/File/FileInfo.h"
 
 #include <map>
 #include <vector>

@@ -1,6 +1,7 @@
 #include "AssetLoader.h"
 
 #include "Hell/File.h"
+#include "Hell/ImageTools/ImageTools.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
@@ -8,6 +9,19 @@
 #include <utility>
 
 namespace Hell::AssetLoader {
+
+    bool g_loadingComplete = false;
+
+    ImageData LoadImageData(const std::string& path, ImageDataType type) {
+        switch (type) {
+            case ImageDataType::UNCOMPRESSED: return ImageTools::LoadUncompressedImage(path);
+            case ImageDataType::COMPRESSED:   return ImageTools::LoadDDS(path);
+            case ImageDataType::EXR:          return ImageTools::LoadEXRImage(path);
+            default:
+                Logging::Error() << "AssetLoader::LoadImageData() failed because image type was undefined for '" << path << "'\n";
+                return {};
+        }
+    }
 
     void DiscoverAssets() {
         // IES Profiles
@@ -17,11 +31,22 @@ namespace Hell::AssetLoader {
         }
     }
 
+    void Update() {
+        g_loadingComplete = false;
+
+        //if (!AllTexturesReadFromDisk()) {
+        //    ReadNextTextureFromDisk();
+        //    return;
+        //}
+
+        g_loadingComplete = true;
+    }
+
     void LoadIESFiles() {
         for (FileInfo& fileInfo : File::IterateDirectory("res/ies_profiles", { "ies" })) {
             IESProfile& iesProfile = ResourceManager::GetIESProfile(fileInfo.name);
 
-            if (!File::LoadIESProfile(fileInfo.path, iesProfile)) {
+            if (!LoadIES(fileInfo.path, iesProfile)) {
                 continue;
             }
 
@@ -54,5 +79,9 @@ namespace Hell::AssetLoader {
 
             iesProfile.SetTextureIndex(texture.GetBindlessIndex());
         }
+    }
+
+    bool LoadingComplete() {
+        return g_loadingComplete;
     }
 }

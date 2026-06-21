@@ -1,11 +1,17 @@
 #pragma once
 #include "Hell/Common.h"
-#include "Hell/File.h"
+#include "Hell/File/FileInfo.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
+
+struct IESProfile;
+
+namespace Hell::AssetLoader {
+    bool LoadIES(const std::string& path, IESProfile& outProfile);
+}
 
 struct IESProfile {
     IESProfile() = default;
@@ -36,7 +42,7 @@ struct IESProfile {
     size_t GetCPUAllocatedByteCount() const;
 
 private:
-    friend bool Hell::File::LoadIESProfile(const std::string& filepath, IESProfile& outData);
+    friend bool Hell::AssetLoader::LoadIES(const std::string& path, IESProfile& outProfile);
 
     void RecalculateDerivedValues();
 

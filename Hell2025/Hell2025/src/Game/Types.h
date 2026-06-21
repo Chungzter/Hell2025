@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "Hell/Common.h"
+#include "Hell/BVH/Types.h"
 #include "Hell/File.h"
 #include "Hell/Math/GLM.h"
 #include <Hell/Render/TextureTypes.h>
@@ -195,12 +196,6 @@ struct TileInstanceData {
     unsigned int offset;
 };
 
-struct Node {
-    std::string name;
-    int parentIndex;
-    glm::mat4 inverseBindTransform;
-};
-
 struct vecXZ {
     float x = 0.0f;
     float z = 0.0f;
@@ -273,88 +268,9 @@ struct CubeRayResult {
     bool hitFound = false;
 };
 
-#pragma pack(push, 1)
-struct BvhNode {
-    glm::vec3 boundsMin;
-    uint32_t firstChildOrPrimitive;
-    glm::vec3 boundsMax;
-    uint32_t primitiveCount;
-};
-#pragma pack(pop)
 
-struct RayData {
-    float origin[3];
-    float dir[3];
-    float invDir[3];
-    float paddedInvDir[3];
-    float minDistance = 0;
-    float maxDistance = 0;
-    int octant[3];
-};
 
-struct PrimitiveInstance {
-    uint64_t objectId;
-    uint64_t meshBvhId;
-    glm::vec3 worldAabbBoundsMin;
-    glm::vec3 worldAabbBoundsMax;
-    glm::vec3 worldAabbCenter;
-    glm::mat4 worldTransform;
-    glm::mat4 inverseWorldTransform;
-    uint32_t openableId;
-    uint32_t customId;
-    uint32_t globalMeshIndex;
-    uint32_t localMeshNodeIndex;
-};
 
-struct GpuPrimitiveInstance {
-    glm::mat4 worldTransform;
-    glm::mat4 inverseWorldTransform;
-
-    int32_t rootNodeIndex;
-    uint32_t objectIdLowerBit;
-    uint32_t objectIdUpperBit;
-    uint32_t openableId;
-
-    uint32_t globalMeshIndex;
-    uint32_t customId;
-    uint32_t localMeshNodeIndex;
-    uint32_t padding2;
-};
-
-struct SceneBvh {
-    std::vector<BvhNode> m_nodes;
-    std::vector<PrimitiveInstance> m_instances;
-    std::vector<GpuPrimitiveInstance> m_gpuInstances;
-};
-
-struct MeshBvh {
-    std::vector<BvhNode> m_nodes;
-    std::vector<float> m_triangleData;
-};
-
-struct BvhRayResult {
-    bool hitFound = false;
-    size_t primtiviveId = 0;
-    uint64_t objectId = 0;
-    uint32_t openableId = 0;
-    uint32_t customId = 0;
-    uint32_t globalMeshIndex = 0;
-    uint32_t localMeshNodeIndex = 0;
-    float distanceToHit = std::numeric_limits<float>::max();
-    glm::vec3 hitPosition = glm::vec3(0);
-    glm::vec3 hitNormal = glm::vec3(0.0f);
-    glm::mat4 primitiveTransform = glm::mat4(1.0f);
-    glm::vec3 nodeBoundsMin = glm::vec3(0.0f);
-    glm::vec3 nodeBoundsMax = glm::vec3(0.0f);
-};
-
-struct Bone {
-    char name[64];
-    glm::mat4 localRestPose = glm::mat4(1.0f);
-    glm::mat4 inverseBindPose = glm::mat4(1.0f);
-    int32_t parentIndex = -1;
-    int32_t deformFlag = 0; // 0: non-deforming 1: deforming
-};
 
 struct DispatchIndirectCommand {
     uint32_t num_groups_x;

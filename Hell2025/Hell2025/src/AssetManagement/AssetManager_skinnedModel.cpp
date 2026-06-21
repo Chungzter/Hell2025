@@ -1,14 +1,7 @@
 #include "AssetManager.h"
-#include "Util/Util.h"
-#include "File/AssimpImporter.h"
-#include <assimp/Importer.hpp> 
-#include <assimp/scene.h> 
-#include <assimp/postprocess.h> 
-#include <assimp/matrix3x3.h>
-#include <assimp/matrix4x4.h>
+#include "Hell/AssetFormats/AssetFormats.h"
+
 #include <future>
-#include <numeric>
-#include <Game/Types.h>
 
 #include <iostream> // TODO: cleanup logging
 
@@ -42,27 +35,10 @@ namespace AssetManager {
         }
     }
     
-    void GrabSkeleton(std::vector<Node>& nodes, const aiNode* pNode, int parentIndex) {
-        // Create the joint node
-        Node node;
-        node.name = Util::CopyConstChar(pNode->mName.C_Str());
-        node.inverseBindTransform = Util::aiMatrix4x4ToGlm(pNode->mTransformation);
-        node.parentIndex = parentIndex;
-
-        // Determine the current node's index and push it
-        int currentIndex = static_cast<int>(nodes.size());
-        nodes.push_back(node);
-
-        // Recursively process children using the current node's index as parentIndex
-        for (unsigned int i = 0; i < pNode->mNumChildren; i++) {
-            GrabSkeleton(nodes, pNode->mChildren[i], currentIndex);
-        }
-    }
-
     void AssetManager::LoadSkinnedModel(SkinnedModel* skinnedModel) {
         const FileInfo& fileInfo = skinnedModel->GetFileInfo();
         std::string assetPath = "res/skinned_models/" + fileInfo.name + ".skinnedmodel";
-        skinnedModel->m_skinnedModelData = File::ImportSkinnedModel(assetPath);
+        Hell::AssetFormats::LoadSkinnedModel(assetPath, skinnedModel->m_skinnedModelData);
         skinnedModel->SetLoadingState(LoadingState::Value::LOADING_COMPLETE);
     }
 
@@ -86,30 +62,6 @@ namespace AssetManager {
         // Copy vertices/indices to asset manager
         for (SkinnedModel& skinnedModel : GetSkinnedModels()) {
             skinnedModel.BakeToAssetManager();
-        }
-    }
-
-    void ExportMissingSkinnedModels() {
-        // Scan for new obj and fbx and export custom model format
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/skinned_models_raw", { "obj", "fbx" })) {
-            std::string assetPath = "res/skinned_models/" + fileInfo.name + ".skinnedmodel";
-
-            // If the file exists but timestamps don't match, re-export
-            if (Util::FileExists(assetPath)) {
-                uint64_t lastModified = File::GetLastModifiedTime(fileInfo.path);
-                SkinnedModelHeader modelHeader = File::ReadSkinnedModelHeader(assetPath);
-                //if (modelHeader.timestamp != lastModified || fileInfo.name == "Knife") {
-                if (modelHeader.timestamp != lastModified) {
-                    File::DeleteFile(assetPath);
-                    SkinnedModelData modelData = AssimpImporter::ImportSkinnedFbx(fileInfo.path);
-                    File::ExportSkinnedModel(modelData);
-                }
-            }
-            // File doesn't even exist yet, so export it
-            else {
-                SkinnedModelData modelData = AssimpImporter::ImportSkinnedFbx(fileInfo.path);
-                File::ExportSkinnedModel(modelData);
-            }
         }
     }
 

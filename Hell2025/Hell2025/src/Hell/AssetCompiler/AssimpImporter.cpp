@@ -1,11 +1,13 @@
 #include "AssimpImporter.h"
-#include "File.h"
+
+#include "Hell/File.h"
+
 #include <assimp/matrix3x3.h>
 #include <assimp/matrix4x4.h>
 #include <assimp/Importer.hpp>
 #include <assimp/Scene.h>
 #include <assimp/PostProcess.h>
-#include "../Util/Util.h"
+#include "Util/Util.h"
 #include <numeric>
 
 #include <map>
@@ -14,9 +16,9 @@
 
 #include <iostream> // TODO: cleanup logging
 
-namespace AssimpImporter {
+namespace Hell::AssetCompiler {
 
-    ModelData ImportFbx(const std::string& filepath) {
+    ModelData ImportModel(const std::string& filepath) {
         ModelData modelData;
         Assimp::Importer importer;
         importer.SetPropertyBool(AI_CONFIG_PP_FD_REMOVE, true);
@@ -32,7 +34,7 @@ namespace AssimpImporter {
             std::cerr << "Assimp Error: " << importer.GetErrorString() << "\n";
             return modelData;
         }
-        modelData.name = Util::GetFileName(filepath);
+        modelData.name = File::GetName(filepath);
         modelData.meshCount = scene->mNumMeshes;
         modelData.meshes.resize(modelData.meshCount);
         modelData.timestamp = File::GetLastModifiedTime(filepath);
@@ -75,8 +77,8 @@ namespace AssimpImporter {
                     assimpMesh->HasTangentsAndBitangents() ? glm::vec3(assimpMesh->mTangents[j].x, assimpMesh->mTangents[j].y, assimpMesh->mTangents[j].z) : glm::vec3(0.0f)
                     });
                 // Compute AABB
-                meshData.aabbMin = Util::Vec3Min(meshData.vertices[j].position, meshData.aabbMin);
-                meshData.aabbMax = Util::Vec3Max(meshData.vertices[j].position, meshData.aabbMax);
+                meshData.aabbMin = glm::min(meshData.vertices[j].position, meshData.aabbMin);
+                meshData.aabbMax = glm::max(meshData.vertices[j].position, meshData.aabbMax);
             }
             // Get indices
             for (unsigned int j = 0; j < assimpMesh->mNumFaces; j++) {
@@ -106,8 +108,8 @@ namespace AssimpImporter {
                 vert1->tangent = tangent;
                 vert2->tangent = tangent;
             }
-            modelData.aabbMin = Util::Vec3Min(modelData.aabbMin, meshData.aabbMin);
-            modelData.aabbMax = Util::Vec3Max(modelData.aabbMax, meshData.aabbMax);
+            modelData.aabbMin = glm::min(modelData.aabbMin, meshData.aabbMin);
+            modelData.aabbMax = glm::max(modelData.aabbMax, meshData.aabbMax);
         }
         importer.FreeScene();
         return modelData;
@@ -156,7 +158,7 @@ namespace AssimpImporter {
         }
     }
 
-    SkinnedModelData ImportSkinnedFbx(const std::string& filepath) {
+    SkinnedModelData ImportSkinnedModel(const std::string& filepath) {
         SkinnedModelData modelData;
 
         unsigned int flags =
@@ -167,11 +169,12 @@ namespace AssimpImporter {
             aiProcess_CalcTangentSpace;
 
         // NEW_RIG_FILE
-        if (Util::GetFileInfoFromPath(filepath).name == "Knife" ||
-            Util::GetFileInfoFromPath(filepath).name == "Tokarev" ||
-            Util::GetFileInfoFromPath(filepath).name == "GoldenGlock" ||
-            Util::GetFileInfoFromPath(filepath).name == "SPAS" ||
-            Util::GetFileInfoFromPath(filepath).name == "P90") {
+        const std::string modelName = File::GetName(filepath);
+        if (modelName == "Knife" ||
+            modelName == "Tokarev" ||
+            modelName == "GoldenGlock" ||
+            modelName == "SPAS" ||
+            modelName == "P90") {
             flags =
                 aiProcess_LimitBoneWeights |
                 aiProcess_Triangulate |
@@ -190,7 +193,7 @@ namespace AssimpImporter {
             return modelData;
         }
 
-        modelData.name = Util::GetFileName(filepath);
+        modelData.name = File::GetName(filepath);
         modelData.meshes.resize(scene->mNumMeshes);
         modelData.timestamp = File::GetLastModifiedTime(filepath);
         modelData.vertexCount = 0;
@@ -387,35 +390,6 @@ namespace AssimpImporter {
             localBaseVertex += (uint32_t)meshData.vertices.size();
             modelData.vertexCount += (uint32_t)meshData.vertices.size();
             modelData.indexCount += (uint32_t)meshData.indices.size();
-
-            ///////////////////////////////////////////////////////////////////////////////////////////////////////
-            //
-            // TODO: don't hack tack me onto the end here. Perform this as you actually process the vertices above.
-            //
-            ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            //meshData.vertices.clear();
-            //meshData.vertices.reserve(meshData.vertexCount);
-            //
-            //meshData.vertexWeights.clear();
-            //meshData.vertexWeights.reserve(meshData.vertexCount);
-            //
-            //for (const WeightedVertex& weightedVertex : meshData.weightedVertices) {
-            //    Vertex& vertex = meshData.vertices.emplace_back();
-            //    vertex.position = weightedVertex.position;
-            //    vertex.uv = weightedVertex.uv;
-            //    vertex.normal = weightedVertex.normal;
-            //    vertex.tangent = weightedVertex.tangent;
-            //
-            //    VertexWeight& vertexWeight = meshData.vertexWeights.emplace_back();
-            //    vertexWeight.boneID = weightedVertex.boneID;
-            //    vertexWeight.weight = weightedVertex.weight;
-            //}
-            ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
         }
 
         // Cleanup

@@ -1,5 +1,6 @@
 #pragma once
 #include "Game/Types.h"
+#include "Hell/BVH/Types.h"
 #include "GlobalIllumination/PointCloud.h" // For Triangle
 #include <vector>
 

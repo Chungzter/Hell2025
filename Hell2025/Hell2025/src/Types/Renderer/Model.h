@@ -1,5 +1,6 @@
 #pragma once
-#include "File/FileFormats.h"
+#include "Hell/AssetFormats/AssetData.h"
+#include "Hell/File/FileInfo.h"
 #include <Game/Enums.h>
 #include <Game/Types.h>
 #include "LoadingState.h"

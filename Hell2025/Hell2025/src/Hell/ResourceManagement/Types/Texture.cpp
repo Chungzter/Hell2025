@@ -3,7 +3,6 @@
 #include "API/OpenGL/GL_resource_manager.h"
 #include "API/Vulkan/Types/VK_texture.h"
 #include "BackEnd/BackEnd.h"
-#include "Hell/ImageTools/ImageTools.h"
 #include "Hell/Logging.h"
 
 #include <algorithm>
@@ -52,34 +51,6 @@ VulkanTexture& Texture::GetVKTexture() {
 
     static VulkanTexture invalid;
     return invalid;
-}
-
-void Texture::Load() {
-    // Load texture data from disk
-    if (m_imageData.mips.empty()) {
-        if (m_imageDataType == ImageDataType::UNCOMPRESSED) {
-            m_imageData = ImageTools::LoadUncompressedImage(m_fileInfo.path);
-        }
-        else if (m_imageDataType == ImageDataType::COMPRESSED) {
-            m_imageData = ImageTools::LoadDDS(m_fileInfo.path);
-        }
-        else if (m_imageDataType == ImageDataType::EXR) {
-            m_imageData = ImageTools::LoadEXRImage(m_fileInfo.path);
-        }
-    }
-
-    m_loadingState = LoadingState::Value::LOADING_COMPLETE;
-
-    // Calculate mipmap level count
-    if (!m_imageData.mips.empty()) {
-        m_mipmapLevelCount = 1 + static_cast<int>(std::log2(std::max(GetWidth(), GetHeight())));
-    }
-    else {
-        m_mipmapLevelCount = 0;
-    }
-
-    // Initiate bake states
-    m_textureDataLevelBakeStates.resize(m_imageData.mips.size(), BakeState::AWAITING_BAKE);
 }
 
 void Texture::FreeCPUMemory() {
@@ -180,6 +151,18 @@ void Texture::SetFileInfo(FileInfo fileInfo) {
 void Texture::SetImageData(ImageData imageData) {
     m_imageData = std::move(imageData);
     m_imageDataType = m_imageData.type;
+    m_bakeComplete = false;
+
+    // Calculate mipmap level count
+    if (!m_imageData.mips.empty()) {
+        m_mipmapLevelCount = 1 + static_cast<int>(std::log2(std::max(GetWidth(), GetHeight())));
+    }
+    else {
+        m_mipmapLevelCount = 0;
+    }
+
+    // Initiate bake states
+    m_textureDataLevelBakeStates.assign(m_imageData.mips.size(), BakeState::AWAITING_BAKE);
 }
 
 void Texture::SetImageDataType(ImageDataType imageDataType) {
@@ -227,6 +210,9 @@ const BakeState Texture::GetTextureDataLevelBakeState(int index) {
 
 void Texture::CheckForBakeCompletion() {
     if (m_bakeComplete) {
+        return;
+    }
+    else if (m_textureDataLevelBakeStates.empty()) {
         return;
     }
     else {

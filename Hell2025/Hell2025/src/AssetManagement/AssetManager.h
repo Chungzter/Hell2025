@@ -3,8 +3,6 @@
 #include <Game/Types.h>
 #include "Hell/Render/VertexAttributes.h"
 
-#include "File/File.h"
-
 #include "Types/Animation/Animation.h"
 #include "Hell/ResourceManagement/Types/IESProfile.h"
 #include "Hell/ResourceManagement/Types/Mesh.h"
@@ -115,6 +113,7 @@ namespace AssetManager {
 
     // Loading 
     void LoadPendingTexturesAsync();
+    void UpdateTextureLoading();
     void LoadPendingModelsAsync();
     void LoadPendingSkinnedModelsAsync();
     void LoadPendingAnimationsAsync();
@@ -126,11 +125,6 @@ namespace AssetManager {
     // Baking
     void BakeModels();
     void BakeSkinnedModels();
-
-    // Import/Export
-    void ExportMissingModels();
-    void ExportMissingSkinnedModels();
-    void ExportMissingModelBvhs();
 
     // BVH
     void CopyInAllLoadedModelBvhData();

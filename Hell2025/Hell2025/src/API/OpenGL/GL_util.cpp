@@ -368,7 +368,7 @@ namespace OpenGLUtil {
             return GL_DEPTH_STENCIL;
 
         default:
-            std::cout << "GLInternalFormatToGLFormat: Unsupported internal format\n";
+            std::cout << "GLInternalFormatToGLFormat: Unsupported internal format " << internalFormat << "\n";
             return 0;
         }
     }

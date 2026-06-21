@@ -2,6 +2,8 @@
 #include <Game/CreateInfo.h>
 #include <Game/Types.h>
 
+#include "Hell/BVH/Types.h"
+
 #include "PointCloud.h"
 #include "Types/Renderer/MeshBufferOLD.h"
 

@@ -1,8 +1,7 @@
 #include "AssetManager.h"
 #include "Bvh/Cpu/CpuBvh.h"
-#include "File/AssimpImporter.h"
+#include "Hell/AssetFormats/AssetFormats.h"
 #include "Hell/Logging.h"
-#include "Util/Util.h"
 #include <future>
 
 #include <iostream> // TODO: clean up logging
@@ -84,78 +83,9 @@ namespace AssetManager {
         const FileInfo& fileInfo = model->GetFileInfo();
         std::string modelPath = "res/models/" + fileInfo.name + "." + fileInfo.ext;
         std::string bvhPath = "res/models/bvh/" + fileInfo.name + ".bvh";
-        model->m_modelData = File::ImportModel(modelPath);
-        model->m_modelBvhData = File::ImportModelBvh(bvhPath);
+        Hell::AssetFormats::LoadModel(modelPath, model->m_modelData);
+        Hell::AssetFormats::LoadModelBvh(bvhPath, model->m_modelBvhData);
         model->SetLoadingState(LoadingState::Value::LOADING_COMPLETE);
-    }
-
-    void ExportMissingModels() {
-        // Scan for new obj and fbx and export custom model format
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/models_raw", { "obj", "fbx" })) {
-            std::string assetPath = "res/models/" + fileInfo.name + ".model";
-
-            // If the file exists but timestamps don't match, re-export
-            if (Util::FileExists(assetPath)) {
-                uint64_t lastModified = File::GetLastModifiedTime(fileInfo.path);
-                ModelHeaderV2 modelHeader = File::ReadModelHeaderV2(assetPath);
-                if (modelHeader.timestamp != lastModified) {
-                    File::DeleteFile(assetPath);
-                    ModelData modelData = AssimpImporter::ImportFbx(fileInfo.path);
-                    File::ExportModelV2(modelData);
-                }
-            }
-            // File doesn't even exist yet, so export it
-            else {
-                ModelData modelData = AssimpImporter::ImportFbx(fileInfo.path);
-                File::ExportModelV2(modelData);
-            }
-        }
-    }
-
-    void ExportMissingModelBvhs() {
-        // Iterate over all .model files
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/models", { "model" })) {
-            std::string modelPath = "res/models/" + fileInfo.name + ".model";
-            std::string bvhPath = "res/models/bvh/" + fileInfo.name + ".bvh";
-
-            bool exportRequired = false;
-
-            // If the file exists..
-            if (Util::FileExists(bvhPath)) {
-                uint64_t timestamp = 0;
-                uint32_t version = File::ReadFileHeaderVersion(modelPath);
-
-                if (version == 2) {
-                    ModelHeaderV2 modelHeader = File::ReadModelHeaderV2(modelPath);
-                    timestamp = modelHeader.timestamp;
-                }
-                else if (version == 3) {
-                    ModelHeaderV3 modelHeader = File::ReadModelHeaderV3(modelPath);
-                    timestamp = modelHeader.timestamp;
-                }
-                else {
-                    std::cout << "ExportMissingModelBvhs() failed to export bvh for '" << fileInfo.name << ".model' because invalid version '" << version << "'\n";
-                    continue;
-                }
-
-                // ... but timestamps don't match, then delete the old bvh file and trigger a re-export
-                ModelBvhHeader modelBvhHeader = File::ReadModelBvhHeader(bvhPath);
-                if (timestamp != modelBvhHeader.timestamp) {
-                    File::DeleteFile(bvhPath);
-                    exportRequired = true;
-                }
-            }
-            // Bvh file doesn't even exist yet, so trigger an export
-            else {
-                exportRequired = true;
-            }
-
-            // Export the bvh from re-imported model data, not the most optimal, but this only happens once when there is no .bvh file
-            if (exportRequired) {
-                ModelData modelData = File::ImportModel(modelPath);
-                File::ExportModelBvh(modelData);
-            }
-        }
     }
 
     void CopyInAllLoadedModelBvhData() {

@@ -16,7 +16,6 @@
 struct Texture {
 public:
     Texture() = default;
-    void Load();
     void CleanUp();
     void SetLoadingState(LoadingState value);
     void SetFileInfo(FileInfo fileInfo);

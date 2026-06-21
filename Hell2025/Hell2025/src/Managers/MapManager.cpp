@@ -2,7 +2,7 @@
 
 #include "BackEnd/BackEnd.h"
 #include "File/JSON.h"
-#include "File/File.h"
+#include "File/MapFile.h"
 #include "Hell/Logging.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"
@@ -72,7 +72,7 @@ namespace MapManager {
         header.chunkCountZ = map->GetChunkCountZ();
         header.createInfoJsonLength = createInfoJson.size();
         header.additionalJsonLength = additionalJson.size();
-        File::MemCopyFileSignature(header.signature, HELL_MAP_SIGNATURE);
+        MapFile::CopySignature(header.signature, HELL_MAP_SIGNATURE);
         file.write(reinterpret_cast<const char*>(&header), sizeof(MapHeader));
 
         // Write the height map pixel data

@@ -1,6 +1,14 @@
 #pragma once
-#include <Game/Types.h>
-#include "File/FileFormats.h"
+
+#include "Hell/BVH/Types.h"
+#include "Hell/Render/VertexAttributes.h"
+
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+
+#include <cstdint>
+#include <vector>
 
 #define MAX_BVH_STACK_SIZE 32
 

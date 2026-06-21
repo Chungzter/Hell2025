@@ -5,7 +5,6 @@
 #include "API/OpenGL/GL_backend.h"
 #include "API/Vulkan/VK_backend.h"
 #include "BackEnd/Backend.h"
-#include "File/AssimpImporter.h"
 #include "Renderer/Renderer.h"
 #include "UI/UIBackEnd.h"
 #include "Util/Util.h"
@@ -14,6 +13,7 @@
 #include "Managers/HouseManager.h"
 #include "Managers/MapManager.h"
 
+#include "Hell/AssetCompiler/AssetCompiler.h"
 #include "Hell/AssetLoader/AssetLoader.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -61,7 +61,6 @@ namespace AssetManager {
 
     void AddItemToLoadLog(std::string text);
     void BlitLoadLog();
-    void CompressMissingDDSTexutres();
     void FindAssetPaths();
     void LoadMinimumTextures();
     void LoadTexture(Texture* texture);
@@ -72,10 +71,8 @@ namespace AssetManager {
     void Init() {
         Logging::Init() << "Initialized the AssetManager";
 
-        CompressMissingDDSTexutres();
-        ExportMissingModels();
-        ExportMissingModelBvhs();
-        ExportMissingSkinnedModels();
+        Hell::AssetCompiler::CompileOutOfDateAssets();
+
         LoadMinimumTextures();
         FindAssetPaths();
         Hell::AssetLoader::DiscoverAssets();
@@ -88,6 +85,7 @@ namespace AssetManager {
 
     void UpdateLoading() {
         BlitLoadLog();
+        UpdateTextureLoading();
         LoadPendingModelsAsync();
         LoadPendingSkinnedModelsAsync();
 
@@ -109,6 +107,11 @@ namespace AssetManager {
             }
         }
         for (auto& [name, texture] : GetTextures()) {
+            if (texture.GetLoadingState() != LoadingState::Value::LOADING_COMPLETE) {
+                g_loadingComplete.textures = false;
+                return;
+            }
+
             const bool wasBakeComplete = texture.BakeComplete();
             texture.CheckForBakeCompletion();
             const bool isBakeComplete = texture.BakeComplete();
@@ -272,8 +275,11 @@ namespace AssetManager {
             texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
             texture.SetMinFilter(TextureFilter::LINEAR);
             texture.SetMagFilter(TextureFilter::LINEAR);
+
+            // Immediately load of disk
+            LoadTexture(&texture);
         }
-        LoadPendingTexturesAsync();
+
         BakeQueue::ImmediateBakeAllTextures();
         BuildIndexMaps();
     }

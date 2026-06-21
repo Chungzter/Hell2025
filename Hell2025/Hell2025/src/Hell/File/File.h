@@ -1,14 +1,22 @@
 #pragma once
 #include "FileInfo.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
-
-struct IESProfile;
 
 namespace Hell::File {
 
-std::vector<FileInfo> IterateDirectory(const std::string& directory, std::vector<std::string> extensions = {});
-bool LoadIESProfile(const std::string& filepath, IESProfile& outData);
+    bool Delete(const std::string& path);
+    bool Exists(std::string_view path);
+    bool GetSize(const std::string& path, size_t& outSize);
+    bool Rename(const std::string& oldPath, const std::string& newPath);
+    uint64_t GetLastModifiedTime(const std::string& path);
 
+    std::string GetName(const std::string& path);
+    std::string GetExtension(const std::string& path);
+    FileInfo GetInfo(const std::string& path);
+    std::vector<FileInfo> IterateDirectory(const std::string& directory, std::vector<std::string> extensions = {});
 }

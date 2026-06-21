@@ -85,6 +85,7 @@ namespace Util {
         return std::format("({:.2f}, {:.2f}, {:.2f})", v.x, v.y, v.z);
     }
 
+    // TODO: remove this shit
     glm::vec3 Vec3Min(const glm::vec3& a, const glm::vec3& b) {
         return glm::vec3(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));
     }
@@ -92,6 +93,7 @@ namespace Util {
     glm::vec3 Vec3Max(const glm::vec3& a, const glm::vec3& b) {
         return glm::vec3(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));
     }
+    // TODO: remove this shit
 
     std::string Mat4ToString(glm::mat4 m) {
         return std::format("{:.2f} {:.2f} {:.2f} {:.2f}\n{:.2f} {:.2f} {:.2f} {:.2f}\n{:.2f} {:.2f} {:.2f} {:.2f}\n{:.2f} {:.2f} {:.2f} {:.2f}",
