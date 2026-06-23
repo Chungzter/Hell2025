@@ -62,7 +62,6 @@ namespace AssetManager {
     void AddItemToLoadLog(std::string text);
     void BlitLoadLog();
     void FindAssetPaths();
-    void LoadMinimumTextures();
     void LoadTexture(Texture* texture);
 
     bool FileInfoIsAlbedoTexture(const FileInfo& fileInfo);
@@ -72,8 +71,8 @@ namespace AssetManager {
         Logging::Init() << "Initialized the AssetManager";
 
         Hell::AssetCompiler::CompileOutOfDateAssets();
+        Hell::AssetLoader::LoadFonts();
 
-        LoadMinimumTextures();
         FindAssetPaths();
         Hell::AssetLoader::DiscoverAssets();
         Hell::AssetLoader::LoadIESFiles();
@@ -256,7 +255,7 @@ namespace AssetManager {
             texture.SetMinFilter(TextureFilter::LINEAR);
             texture.SetMagFilter(TextureFilter::NEAREST);
         }
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/spritesheets", { "png", "jpg", "tga", "tif" })) {
+        for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/spritesheets", { "png", "jpg", "tga" })) {
             Texture& texture = CreateNewTexture(fileInfo.name);
             texture.SetFileInfo(fileInfo);
             texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
@@ -264,24 +263,6 @@ namespace AssetManager {
             texture.SetMinFilter(TextureFilter::LINEAR);
             texture.SetMagFilter(TextureFilter::LINEAR);
         }
-    }
-
-    void LoadMinimumTextures() {
-        // Find files
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/fonts", { "png" })) {
-            Texture& texture = CreateNewTexture(fileInfo.name);
-            texture.SetFileInfo(fileInfo);
-            texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
-            texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
-            texture.SetMinFilter(TextureFilter::LINEAR);
-            texture.SetMagFilter(TextureFilter::LINEAR);
-
-            // Immediately load of disk
-            LoadTexture(&texture);
-        }
-
-        BakeQueue::ImmediateBakeAllTextures();
-        BuildIndexMaps();
     }
 
     void AddItemToLoadLog(std::string text) {

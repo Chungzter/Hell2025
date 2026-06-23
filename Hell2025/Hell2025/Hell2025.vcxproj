@@ -209,6 +209,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   <ItemGroup>
     <ClCompile Include="src\API\OpenGL\GL_backend.cpp" />
     <ClCompile Include="src\API\OpenGL\GL_resource_manager.cpp" />
+    <ClCompile Include="src\API\OpenGL\GL_texture_uploader.cpp" />
     <ClCompile Include="src\API\OpenGL\GL_util.cpp" />
     <ClCompile Include="src\API\OpenGL\GL_memory_tracker.cpp" />
     <ClCompile Include="src\API\OpenGL\Renderer\ComputePasses\GL_blit_road.cpp" />
@@ -371,6 +372,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\ImageTools\ImageUtil.cpp" />
     <ClCompile Include="src\Hell\ImageTools\ImageWriter.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\ResourceManager.cpp" />
+    <ClCompile Include="src\Hell\TextureUploader\TextureUploader.cpp" />
     <ClCompile Include="src\Managers\MirrorManager.cpp" />
     <ClCompile Include="src\Managers\OpenableManager.cpp" />
     <ClCompile Include="src\Editor\Editors\Editor_left_panel.cpp" />
@@ -638,6 +640,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\API\OpenGL\GL_resource_manager.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_shadow_map_array.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_texture_3d.h" />
+    <ClInclude Include="src\API\OpenGL\GL_texture_uploader.h" />
     <ClInclude Include="src\API\OpenGL\Types\GL_timer.h" />
     <ClInclude Include="src\BackEnd\Integration\SDL.h" />
     <ClInclude Include="src\Core\Game.h" />
@@ -663,6 +666,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Game\RendereringConstants.h" />
     <ClInclude Include="src\Hell\Render\TextureTypes.h" />
     <ClInclude Include="src\Hell\ResourceManagement\ResourceManager.h" />
+    <ClInclude Include="src\Hell\TextureUploader\TextureUploader.h" />
     <ClInclude Include="src\Types\Core\ItemInfo.h" />
     <ClInclude Include="src\Bvh\Gpu\Bvh.h" />
     <ClInclude Include="src\Common\CopyableAtomic.h" />

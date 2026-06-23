@@ -209,6 +209,10 @@ void OpenGLTexture::SetBorderColor(float r, float g, float b, float a) {
     glTextureParameterfv(m_handle, GL_TEXTURE_BORDER_COLOR, borderColor);
 }
 
+void OpenGLTexture::SetBorderColor(const glm::vec4& color) {
+    SetBorderColor(color.r, color.g, color.b, color.a);
+}
+
 void OpenGLTexture::SetWrapMode(TextureWrapMode wrapMode) {
     SetWrapModeS(wrapMode);
     SetWrapModeT(wrapMode);

@@ -4,6 +4,7 @@
 #include "Hell/ImageTools/ImageTools.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/TextureUploader/TextureUploader.h"
 
 #include <cstring>
 #include <utility>
@@ -12,6 +13,7 @@ namespace Hell::AssetLoader {
 
     bool g_loadingComplete = false;
 
+    // TODO: Move to Image tools eventually
     ImageData LoadImageData(const std::string& path, ImageDataType type) {
         switch (type) {
             case ImageDataType::UNCOMPRESSED: return ImageTools::LoadUncompressedImage(path);
@@ -20,6 +22,26 @@ namespace Hell::AssetLoader {
             default:
                 Logging::Error() << "AssetLoader::LoadImageData() failed because image type was undefined for '" << path << "'\n";
                 return {};
+        }
+    }
+
+    void LoadFonts() {
+        for (FileInfo& fileInfo : File::IterateDirectory("res/fonts", { "png" })) {
+            Texture& texture = ResourceManager::CreateTexture(fileInfo.name);
+            texture.SetFileInfo(fileInfo);
+            texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
+            texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
+            texture.SetMinFilter(TextureFilter::LINEAR);
+            texture.SetMagFilter(TextureFilter::LINEAR);
+            texture.SetLoadingState(LoadingState::Value::LOADING_FROM_DISK);
+            texture.SetImageData(Hell::AssetLoader::LoadImageData(fileInfo.path, ImageDataType::UNCOMPRESSED));
+
+            if (!TextureUploader::ImmediateUpload(texture)) {
+                Logging::Error() << "AssetLoader::LoadFonts() failed to upload '" << fileInfo.path << "'\n";
+                continue;
+            }
+
+            texture.SetLoadingState(LoadingState::Value::LOADING_COMPLETE);
         }
     }
 

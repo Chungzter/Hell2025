@@ -10,6 +10,7 @@ namespace Hell::AssetLoader {
 
     void DiscoverAssets();
     void Update();
+    void LoadFonts();
     void LoadIESFiles();
     bool LoadingComplete();
 

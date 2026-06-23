@@ -3,7 +3,7 @@
 #include "Hell/Render/TextureTypes.h"
 
 #include <glad/gl.h>
-#include <GLFW/glfw3.h>
+#include <glm/vec4.hpp>
 
 #include <string>
 #include <memory>
@@ -20,6 +20,7 @@ public:
     void UploadR16FData(const float* data, int width, int height, int xOffset, int yOffset, int mipLevel);
     void Reset();
     void SetBorderColor(float r, float g, float b, float a);
+    void SetBorderColor(const glm::vec4& color);
     void SetWrapMode(TextureWrapMode wrapMode);
     void SetWrapModeS(TextureWrapMode wrapMode);
     void SetWrapModeT(TextureWrapMode wrapMode);

@@ -1,3 +1,6 @@
+#include <glad/gl.h>
+#include <glfw/glfw3.h>
+
 #include "VK_backend.h"
 #include "Managers/vK_device_manager.h"
 #include "Managers/vK_command_manager.h"
