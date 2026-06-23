@@ -11,8 +11,6 @@ using namespace Hell;
 
 namespace World {
 
-    HouseBvhRegion g_houseBvhRegion;
-
     void RecreateAllHouseGeometry() {
         RecreateAllProceduralWallMesh();
         RecreateAllProcedularHousePlaneMesh();
@@ -20,9 +18,7 @@ namespace World {
         RecreateAllHangingLightCords();
         RecreateAllWallTrims();
 
-        glm::vec3 aabbMin = glm::vec3(-999.0f);
-        glm::vec3 aabbMax = glm::vec3(999.0f);
-        g_houseBvhRegion.Update(aabbMin, aabbMax);
+        UpdateHouseLightOccluderBvh();
 
         for (Light& light : GetLights()) {
             light.RaycastWorldBounds();
@@ -109,7 +105,4 @@ namespace World {
         }
     }
 
-    HouseBvhRegion& GetHouseBvh() {
-        return g_houseBvhRegion;
-    }
 }

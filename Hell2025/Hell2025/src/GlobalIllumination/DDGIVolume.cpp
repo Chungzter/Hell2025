@@ -1,12 +1,11 @@
 #include "DDGIVolume.h"
 
-#include "Bvh/Gpu/BvhOLD.h"
 #include "Debug/DebugDraw.h"
 #include "AssetManagement/AssetManager.h" // remove me
 #include "World/World.h"
 
+#include "Hell/BVH/BVH.h"
 #include "Hell/Logging.h"
-#include "Hell/ResourceManagement/ResourceManager.h"
 
 DDGIVolume::DDGIVolume(uint64_t id, DDGIVolumeCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_id = id;
@@ -26,8 +25,6 @@ void DDGIVolume::Update() {
     }
 
     //CreateDoorBvh();
-    //Bvh::Gpu::FlatternMeshBvhNodes();
-
     // Also in here, find a way to do an Immediate style upload of the point cloud data + compute point light base color
     // This will be handy for Vulkan also.
 
@@ -39,9 +36,9 @@ void DDGIVolume::CleanUp() {
 }
 
 void DDGIVolume::CleanUpRaytracingData() {
-    Bvh::Gpu::DestroyMeshBvh(m_doorBvhId);
-    Bvh::Gpu::DestroyMeshBvh(m_houseBvhId);
-    Bvh::Gpu::DestroySceneBvh(m_sceneBvhId);
+    Hell::Bvh::DestroyMeshBvh(m_doorBvhId);
+    Hell::Bvh::DestroyMeshBvh(m_houseBvhId);
+    Hell::Bvh::DestroySceneBvh(m_sceneBvhId);
 
     m_doorBvhId = 0;
     m_houseBvhId = 0;
@@ -56,156 +53,43 @@ void DDGIVolume::CleanUpRaytracingData() {
 void DDGIVolume::CreateRaytracingData() {
     CleanUpRaytracingData();
 
-    m_sceneBvhId = Bvh::Gpu::CreateNewSceneBvh();
-
     CreateTriangleData();
     CreateHouseBvh();
     CreateDoorBvh(); // Probably rewrite this so doors internally manager their own BVH, that way stained glass ones can have holes
+
+    m_sceneBvhId = Hell::Bvh::CreateSceneBvh();
+    if (SceneBvh* sceneBvh = Hell::Bvh::GetSceneBvhById(m_sceneBvhId)) {
+        std::vector<SceneBvhMeshInput> meshBvhs;
+        if (MeshBvh* houseMeshBvh = Hell::Bvh::GetMeshBvhById(m_houseBvhId)) {
+            meshBvhs.push_back({ m_houseBvhId, houseMeshBvh });
+        }
+        if (MeshBvh* doorMeshBvh = Hell::Bvh::GetMeshBvhById(m_doorBvhId)) {
+            meshBvhs.push_back({ m_doorBvhId, doorMeshBvh });
+        }
+        sceneBvh->AddMeshBvhs(meshBvhs);
+    }
+
     CreatePointCloud();
     CalculateProbePointIndexPoolSize();
-
-    Bvh::Gpu::FlatternMeshBvhNodes();
 }
 
 void DDGIVolume::CreateTriangleData() {
     m_triangles.clear();
+    std::vector<HouseOccluderTriangle> houseOccluderTriangles;
+    World::CreateHouseOccluderTriangles(m_boundsMin, m_boundsMax, houseOccluderTriangles);
+    m_triangles.reserve(houseOccluderTriangles.size());
 
-    // Gather floor and ceilings triangles
-    for (HousePlane& plane : World::GetHousePlanes()) {
-
-        // Skip door floors, they're recreate in the wall gap filler below
-        if (plane.GetParentDoorId() != 0) continue; 
-
-        for (uint32_t i = 0; i < plane.GetIndices().size(); i += 3) {
-            int idx0 = plane.GetIndices()[i + 0];
-            int idx1 = plane.GetIndices()[i + 1];
-            int idx2 = plane.GetIndices()[i + 2];
-
-            glm::vec3 v0 = plane.GetVertices()[idx0].position;
-            glm::vec3 v1 = plane.GetVertices()[idx1].position;
-            glm::vec3 v2 = plane.GetVertices()[idx2].position;
-
-            // Get triangle bounds
-            glm::vec3 triMin = glm::min(glm::min(v0, v1), v2);
-            glm::vec3 triMax = glm::max(glm::max(v0, v1), v2);
-
-            // Cull if triangle is completely outside the exact volume bounds
-            if (triMax.x < m_boundsMin.x || triMin.x > m_boundsMax.x ||
-                triMax.y < m_boundsMin.y || triMin.y > m_boundsMax.y ||
-                triMax.z < m_boundsMin.z || triMin.z > m_boundsMax.z) {
-                continue;
-            }
-
-            Triangle& triangle = m_triangles.emplace_back();
-            triangle.v0 = v0;
-            triangle.v1 = v1;
-            triangle.v2 = v2;
-            triangle.uv0 = plane.GetVertices()[idx0].uv;
-            triangle.uv1 = plane.GetVertices()[idx1].uv;
-            triangle.uv2 = plane.GetVertices()[idx2].uv;
-            triangle.baseColorTextureIndex = plane.GetMaterial()->m_basecolor;
-            triangle.rmaTextureIndex = plane.GetMaterial()->m_rma;
-        }
-    }
-
-    // Gather wall triangles
-    for (Wall& wall : World::GetWalls()) {
-
-        // Skip exterior walls
-        //if (wall.IsWeatherBoards()) continue;
-
-        for (WallSegment& wallSegment : wall.GetWallSegments()) {
-            for (uint32_t i = 0; i < wallSegment.GetIndices().size(); i += 3) {
-                int idx0 = wallSegment.GetIndices()[i + 0];
-                int idx1 = wallSegment.GetIndices()[i + 1];
-                int idx2 = wallSegment.GetIndices()[i + 2];
-
-                glm::vec3 v0 = wallSegment.GetVertices()[idx0].position;
-                glm::vec3 v1 = wallSegment.GetVertices()[idx1].position;
-                glm::vec3 v2 = wallSegment.GetVertices()[idx2].position;
-
-                // Get triangle bounds
-                glm::vec3 triMin = glm::min(glm::min(v0, v1), v2);
-                glm::vec3 triMax = glm::max(glm::max(v0, v1), v2);
-
-                // Cull if triangle is completely outside the exact volume bounds
-                if (triMax.x < m_boundsMin.x || triMin.x > m_boundsMax.x ||
-                    triMax.y < m_boundsMin.y || triMin.y > m_boundsMax.y ||
-                    triMax.z < m_boundsMin.z || triMin.z > m_boundsMax.z) {
-                    continue;
-                }
-
-                Triangle& triangle = m_triangles.emplace_back();
-                triangle.v0 = v0;
-                triangle.v1 = v1;
-                triangle.v2 = v2;
-                triangle.uv0 = wallSegment.GetVertices()[idx0].uv;
-                triangle.uv1 = wallSegment.GetVertices()[idx1].uv;
-                triangle.uv2 = wallSegment.GetVertices()[idx2].uv;
-                triangle.baseColorTextureIndex = wall.GetMaterial()->m_basecolor;
-                triangle.rmaTextureIndex = wall.GetMaterial()->m_rma;
-            }
-        }
-    }
-
-    // Seal the door gaps in the walls
-    for (Door& door : World::GetDoors()) {
-        Material* material = Hell::ResourceManager::GetMaterialByName("Ceiling2");
-        const glm::mat4& modelMatrix = door.GetDoorModelMatrix();
-        
-        float padding = 0.02f; // matches clipping cube padding
-        float halfP = padding * 0.5f;
-        float halfD = DOOR_WIDTH * 0.5f + halfP;
-        float h = DOOR_HEIGHT + halfP;
-        float halfW = 0.05f; // half of 0.1f wall thickness
-
-        // define 8 corners in local space (origin bottom center)
-        glm::vec3 p[8];
-        p[0] = glm::vec3(halfW, 0, halfD); // front bottom right
-        p[1] = glm::vec3(-halfW, 0, halfD); // front bottom left
-        p[2] = glm::vec3(-halfW, h, halfD); // front top left
-        p[3] = glm::vec3(halfW, h, halfD); // front top right
-        p[4] = glm::vec3(halfW, 0, -halfD); // back bottom right
-        p[5] = glm::vec3(-halfW, 0, -halfD); // back bottom left
-        p[6] = glm::vec3(-halfW, h, -halfD); // back top left
-        p[7] = glm::vec3(halfW, h, -halfD); // back top right
-
-        // transform corners to world space
-        for (int i = 0; i < 8; ++i) {
-            p[i] = glm::vec3(modelMatrix * glm::vec4(p[i], 1.0f));
-        }
-
-        // define helper to add triangles with inverted (CW) winding
-        auto addFace = [&](int i0, int i1, int i2, int i3) {
-            // triangle 1
-            Triangle& t1 = m_triangles.emplace_back();
-            t1.v0 = p[i0]; t1.v1 = p[i1]; t1.v2 = p[i2];
-            t1.baseColorTextureIndex = material->m_basecolor;
-            t1.rmaTextureIndex = material->m_rma;
-
-            // triangle 2
-            Triangle& t2 = m_triangles.emplace_back();
-            t2.v0 = p[i2]; t2.v1 = p[i3]; t2.v2 = p[i0];
-            t2.baseColorTextureIndex = material->m_basecolor;
-            t2.rmaTextureIndex = material->m_rma;
-        };
-
-        // build faces with CW winding (points normals inward)
-        addFace(0, 1, 2, 3); // front
-        addFace(5, 4, 7, 6); // back
-        //addFace(1, 5, 6, 2); // left
-        //addFace(4, 0, 3, 7); // right
-        addFace(3, 2, 6, 7); // top
-        addFace(1, 0, 4, 5); // bottom
-
-    }
-
-    // Recompute normals
-    for (Triangle& triangle : m_triangles) {
-        glm::vec3 edge1 = triangle.v1 - triangle.v0;
-        glm::vec3 edge2 = triangle.v2 - triangle.v0;
-        glm::vec3 normal = glm::normalize(glm::cross(edge1, edge2));
-        triangle.normal = normal;
+    for (const HouseOccluderTriangle& sourceTriangle : houseOccluderTriangles) {
+        Triangle& triangle = m_triangles.emplace_back();
+        triangle.v0 = sourceTriangle.v0;
+        triangle.v1 = sourceTriangle.v1;
+        triangle.v2 = sourceTriangle.v2;
+        triangle.uv0 = sourceTriangle.uv0;
+        triangle.uv1 = sourceTriangle.uv1;
+        triangle.uv2 = sourceTriangle.uv2;
+        triangle.normal = sourceTriangle.normal;
+        triangle.baseColorTextureIndex = sourceTriangle.baseColorTextureIndex;
+        triangle.rmaTextureIndex = sourceTriangle.rmaTextureIndex;
     }
 
     // Debug
@@ -235,40 +119,20 @@ void DDGIVolume::CreateTriangleData() {
 }
 
 void DDGIVolume::CreateHouseBvh() {
-    // Destroy any previous house bvh
     if (m_houseBvhId != 0) {
-        Bvh::Gpu::DestroyMeshBvh(m_houseBvhId);
+        Hell::Bvh::DestroyMeshBvh(m_houseBvhId);
+        m_houseBvhId = 0;
     }
 
-    // Create house vertices
-    size_t vertexCount = m_triangles.size() * 3;
-    std::vector<Vertex> vertices(vertexCount);
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+    World::CreateHouseOccluderGeometry(m_boundsMin, m_boundsMax, vertices, indices);
 
-    for (int i = 0; i < m_triangles.size(); i++) {
-        Triangle& triangle = m_triangles[i];
-
-        Vertex v0, v1, v2;
-        v0.position = triangle.v0;
-        v1.position = triangle.v1;
-        v2.position = triangle.v2;
-        v0.normal = triangle.normal;
-        v1.normal = triangle.normal;
-        v2.normal = triangle.normal;
-
-        int baseIndex = i * 3;
-
-        vertices[baseIndex + 0] = v0;
-        vertices[baseIndex + 1] = v1;
-        vertices[baseIndex + 2] = v2;
+    if (vertices.empty() || indices.empty()) {
+        return;
     }
 
-    // Create house indices
-    std::vector<uint32_t> indices(vertices.size());
-    for (int i = 0; i < vertices.size(); i++) {
-        indices[i] = i;
-    }
-
-    m_houseBvhId = Bvh::Gpu::CreateMeshBvhFromVertexData(vertices, indices);
+    m_houseBvhId = Hell::Bvh::CreateMeshBvhFromVertexData(vertices, indices);
 }
 
 void DDGIVolume::CreateDoorBvh() { 
@@ -346,7 +210,7 @@ void DDGIVolume::CreateDoorBvh() {
         20, 21, 22, 22, 23, 20  // bottom
     };
 
-    m_doorBvhId = Bvh::Gpu::CreateMeshBvhFromVertexData(vertices, indices);
+    m_doorBvhId = Hell::Bvh::CreateMeshBvhFromVertexData(vertices, indices);
 }
 
 void DDGIVolume::CreatePointCloud() {
@@ -403,10 +267,15 @@ void DDGIVolume::CalculateProbePointIndexPoolSize() {
 void DDGIVolume::UpdateSceneBvh() {
     std::vector<PrimitiveInstance> instances;
 
+    MeshBvh* houseMeshBvh = Hell::Bvh::GetMeshBvhById(m_houseBvhId);
+    if (!houseMeshBvh || houseMeshBvh->m_nodes.empty()) {
+        return;
+    }
+
     // Add the house
     PrimitiveInstance& instance = instances.emplace_back();
-    instance.worldAabbBoundsMin = Bvh::Gpu::GetMeshBvhRootNodeBoundsMin(m_houseBvhId); // This works because the house mesh never rotates
-    instance.worldAabbBoundsMax = Bvh::Gpu::GetMeshBvhRootNodeBoundsMax(m_houseBvhId); // This works because the house mesh never rotates
+    instance.worldAabbBoundsMin = houseMeshBvh->m_nodes[0].boundsMin; // This works because the house mesh never rotates
+    instance.worldAabbBoundsMax = houseMeshBvh->m_nodes[0].boundsMax; // This works because the house mesh never rotates
     instance.objectId = 0;
     instance.worldTransform = glm::mat4(1.0f);
     instance.inverseWorldTransform = glm::inverse(instance.worldTransform);
@@ -433,7 +302,11 @@ void DDGIVolume::UpdateSceneBvh() {
         instance.worldAabbCenter = (instance.worldAabbBoundsMin + instance.worldAabbBoundsMax) * 0.5f;
     }
 
-    Bvh::Gpu::UpdateSceneBvh(m_sceneBvhId, instances);
+    SceneBvh* sceneBvh = Hell::Bvh::GetSceneBvhById(m_sceneBvhId);
+    if (!sceneBvh) return;
+
+    if (!Hell::Bvh::AddInstanceMeshBvhsToSceneBvh(m_sceneBvhId, instances)) return;
+    sceneBvh->UpdateInstances(instances);
 }
 
 void DDGIVolume::DebugDraw() {
@@ -545,7 +418,7 @@ const std::vector<BvhNode>& DDGIVolume::GetSceneNodes() {
         return empty;
     }
 
-    SceneBvh* sceneBvh = Bvh::Gpu::GetSceneBvhById(m_sceneBvhId);
+    SceneBvh* sceneBvh = Hell::Bvh::GetSceneBvhById(m_sceneBvhId);
     if (!sceneBvh) return empty;
 
     return sceneBvh->m_nodes;

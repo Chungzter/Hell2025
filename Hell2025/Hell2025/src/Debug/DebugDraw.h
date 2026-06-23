@@ -4,6 +4,13 @@
 #include "Hell/Math/AABB.h"
 #include "Hell/Math/OBB.h"
 
+#include <vector>
+
+struct BvhRayResult;
+struct BVHTriangle;
+struct MeshBvh;
+struct SceneBvh;
+
 namespace DebugDraw {
     void BeginFrame();
     void UploadVertexData();
@@ -17,4 +24,10 @@ namespace DebugDraw {
     void DrawOBB(const OBB& obb, const glm::vec4& color);
     void DrawFrustum(const Frustum& frustum, const glm::vec4& color);
     void DrawSphere(const glm::vec3& position, float radius, const glm::vec4& color);
+    void DrawMeshBvhTriangles(const MeshBvh& meshBvh, const glm::vec4& color, const glm::mat4& worldTransform);
+    void DrawMeshBvhNodes(const MeshBvh& meshBvh, const glm::vec4& color, const glm::mat4& worldTransform);
+    void DrawSceneBvhNodes(const SceneBvh& sceneBvh, const glm::vec4& color);
+    void DrawBvhRayResultTriangle(const BvhRayResult& rayResult, const SceneBvh& sceneBvh, const glm::vec4& color);
+    void DrawBvhRayResultTriangle(const BvhRayResult& rayResult, const std::vector<BVHTriangle>& triangles, const glm::vec4& color);
+    void DrawBvhRayResultNode(const BvhRayResult& rayResult, const glm::vec4& color);
 }

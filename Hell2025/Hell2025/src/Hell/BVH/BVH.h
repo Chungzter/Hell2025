@@ -1,14 +1,27 @@
 #pragma once
+
 #include "Hell/BVH/Types.h"
-#include "Hell/Render/VertexAttributes.h"
+#include "Hell/BVH/Types/MeshBvh.h"
+#include "Hell/BVH/Types/SceneBvh.h"
 
 #include <cstdint>
+#include <unordered_map>
 #include <vector>
 
-// TODO: merge all cpu/gpu bvh stuff
-// For cpu bvh instance meta data, write it with templates so different games using hell engine can supply their own custom meta data struct
-// But also rethink this, that might be insanely overkill. If possible to just use an uint64_t objectId without bundling in the openableId then that would be ideal to avoid templates
+struct Vertex;
 
 namespace Hell::Bvh {
-    MeshBvh BuildMeshBvh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+    uint64_t CreateMeshBvhFromVertexData(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+    uint64_t CreateMeshBvhFromMeshBvh(MeshBvh& sourceMeshBvh);
+    void DestroyMeshBvh(uint64_t meshBvhId);
+    bool MeshBvhExists(uint64_t meshBvhId);
+    MeshBvh* GetMeshBvhById(uint64_t meshBvhId);
+    const std::unordered_map<uint64_t, MeshBvh>& GetMeshBvhs();
+
+    uint64_t CreateSceneBvh();
+    void DestroySceneBvh(uint64_t sceneBvhId);
+    bool SceneBvhExists(uint64_t sceneBvhId);
+    SceneBvh* GetSceneBvhById(uint64_t sceneBvhId);
+    bool AddMeshBvhToSceneBvh(uint64_t sceneBvhId, uint64_t meshBvhId);
+    bool AddInstanceMeshBvhsToSceneBvh(uint64_t sceneBvhId, const std::vector<PrimitiveInstance>& instances);
 }

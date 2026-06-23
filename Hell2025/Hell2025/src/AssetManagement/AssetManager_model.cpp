@@ -1,6 +1,6 @@
 #include "AssetManager.h"
-#include "Bvh/Cpu/CpuBvh.h"
 #include "Hell/AssetFormats/AssetFormats.h"
+#include "Hell/BVH/BVH.h"
 #include "Hell/Logging.h"
 #include <future>
 
@@ -113,14 +113,13 @@ namespace AssetManager {
                 }
 
                 // Swap data out of source MeshBvh and into the unordered map within BVH namespace, returning a new id
-                mesh->meshBvhId = Bvh::Cpu::CreateMeshBvhFromMeshBvh(sourceMeshBvh);
+                mesh->meshBvhId = Hell::Bvh::CreateMeshBvhFromMeshBvh(sourceMeshBvh);
             }
 
             // Clean up
             model.m_modelBvhData.bvhs.clear();
         }
 
-        Bvh::Cpu::FlatternMeshBvhNodes();
     }
 
     Model* CreateModel(const std::string& name) {

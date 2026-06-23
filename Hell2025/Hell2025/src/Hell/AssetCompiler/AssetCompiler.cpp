@@ -1,8 +1,8 @@
 #include "AssetCompiler.h"
 #include "AssimpImporter.h"
 
-#include "Bvh/Cpu/CpuBvh.h"
 #include "Hell/AssetFormats/AssetFormats.h"
+#include "Hell/BVH/BVH.h"
 #include "Hell/File.h"
 #include "Hell/ImageTools/ImageTools.h"
 #include "Hell/Logging.h"
@@ -16,17 +16,7 @@ namespace Hell::AssetCompiler {
             result.bvhs.reserve(model.meshes.size());
 
             for (const MeshData& mesh : model.meshes) {
-                const uint64_t bvhId = Bvh::Cpu::CreateMeshBvhFromVertexData(mesh.vertices, mesh.indices);
-                MeshBvh* meshBvh = Bvh::Cpu::GetMeshBvhById(bvhId);
-
-                if (!meshBvh) {
-                    Logging::Error() << "AssetCompiler failed to build BVH for mesh '" << mesh.name << "'\n";
-                    Bvh::Cpu::DestroyMeshBvh(bvhId);
-                    return {};
-                }
-
-                result.bvhs.push_back(*meshBvh);
-                Bvh::Cpu::DestroyMeshBvh(bvhId);
+                result.bvhs.push_back(Hell::Bvh::BuildMeshBvh(mesh.vertices, mesh.indices));
             }
 
             return result;

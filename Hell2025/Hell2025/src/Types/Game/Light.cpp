@@ -65,8 +65,6 @@ void Light::Update(float deltaTime) {
 }
 
 void Light::RaycastWorldBounds() {
-    HouseBvhRegion& houseBvh = World::GetHouseBvh();
-
     glm::vec3 rayOrigin = GetPosition();
     float rayLength = GetRadius() * 2.0f;
     int numRays =  500;
@@ -80,7 +78,7 @@ void Light::RaycastWorldBounds() {
         glm::vec3 p1 = rayOrigin;
         glm::vec3 p2 = p1 + (rayDir * rayLength);
 
-        BvhRayResult rayResult = houseBvh.CastRay(rayOrigin, rayDir, rayLength);
+        BvhRayResult rayResult = World::ClosestHouseLightOccluderHit(rayOrigin, rayDir, rayLength);
 
         if (rayResult.hitFound) {
             //DebugDraw::DrawLine(p1, rayResult.hitPosition, GREEN);

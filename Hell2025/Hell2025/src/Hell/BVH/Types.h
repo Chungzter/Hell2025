@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <vector>
 
 #pragma pack(push, 1)
 struct BvhNode {
@@ -84,13 +83,5 @@ struct BvhRayResult {
     glm::vec3 nodeBoundsMax = glm::vec3(0.0f);
 };
 
-struct SceneBvh {
-    std::vector<BvhNode> m_nodes;
-    std::vector<PrimitiveInstance> m_instances;
-    std::vector<GpuPrimitiveInstance> m_gpuInstances;
-};
-
-struct MeshBvh {
-    std::vector<BvhNode> m_nodes;
-    std::vector<BVHTriangle> m_triangles;
-};
+#include "Hell/BVH/Types/MeshBvh.h"
+#include "Hell/BVH/Types/SceneBvh.h"

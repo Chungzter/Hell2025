@@ -7,8 +7,6 @@
 #include "Util.h"
 #include <Game/UniqueID.h>
 
-#include "Bvh/Cpu/CpuBvh.h"
-
 #include <iostream> // TODO clean up logging
 
 GameObject::GameObject(GameObjectCreateInfo createInfo) {

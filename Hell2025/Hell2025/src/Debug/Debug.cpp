@@ -15,7 +15,6 @@
 #include "Viewport/ViewportManager.h"
 #include "UI/UIBackEnd.h"
 #include "World/World.h"
-#include "Bvh/Cpu/CpuBvh.h"
 #include "UI/TextBlitter.h"
 #include "Util.h"
 

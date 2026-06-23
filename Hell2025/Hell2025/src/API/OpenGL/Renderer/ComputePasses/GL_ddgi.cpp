@@ -1,7 +1,6 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
 #include "AssetManagement/AssetManager.h"
-#include "Bvh/Gpu/BvhOLD.h"
 #include "Debug/DebugDraw.h""
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
@@ -11,6 +10,7 @@
 #include "Util/Util.h"
 
 #include <Game/Constants.h>
+#include "Hell/BVH/BVH.h"
 #include "Hell/Logging.h"
 
 #include "Core/Game.h" // For Game::GetTotalTime(). It's a hack to prevent colorful probe glitch at start
@@ -112,16 +112,16 @@ namespace OpenGLRenderer {
         ddgiVolume.UpdateSceneBvh();
 
         uint64_t sceneBvhId = ddgiVolume.GetSceneBvhId();
-        const std::vector<BvhNode>& sceneNodes = ddgiVolume.GetSceneNodes();
-        const std::vector<BvhNode>& meshBvhNodes = Bvh::Gpu::GetMeshGpuBvhNodes();
-        const std::vector<GpuPrimitiveInstance>& entityInstances = Bvh::Gpu::GetGpuEntityInstances(sceneBvhId);
-        const std::vector<BVHTriangle>& triangles = Bvh::Gpu::GetTriangles();
+        SceneBvh* sceneBvh = Hell::Bvh::GetSceneBvhById(sceneBvhId);
+        if (!sceneBvh) return;
+
+        const std::vector<BvhNode>& sceneNodes = sceneBvh->m_nodes;
+        const std::vector<BvhNode>& meshBvhNodes = sceneBvh->m_meshNodes;
+        const std::vector<GpuPrimitiveInstance>& entityInstances = sceneBvh->m_gpuInstances;
+        const std::vector<BVHTriangle>& triangles = sceneBvh->m_triangles;
 
         const DDGIVolumeGPU ddgiVolumeGPU = ddgiVolume.GetGPUData();
         const std::vector<GPUAABB>& dirtyDoorABBBs = World::GetDirtyDoorAABBS();
-
-        // Bvh::Gpu::RenderSceneBvh(sceneBvhId, GREEN);
-        //Bvh::Gpu::RenderSceneTris(sceneBvhId, GREEN);
 
         // BVH data
         UpdateSSBO("SceneBvh", sceneNodes.size() * sizeof(BvhNode), sceneNodes.data());
@@ -762,12 +762,14 @@ namespace OpenGLRenderer {
     }
 
     void DrawRaytracingBvh(DDGIVolume& volume) {
-        const std::vector<BvhNode>& sceneNodes = volume.GetSceneNodes();
-        const std::vector<BvhNode>& meshBvhNodes = Bvh::Gpu::GetMeshGpuBvhNodes();
-        const std::vector<BVHTriangle>& triangles = Bvh::Gpu::GetTriangles();
-
         uint64_t sceneBvhId = volume.GetSceneBvhId();
-        const std::vector<GpuPrimitiveInstance>& instances = Bvh::Gpu::GetGpuEntityInstances(sceneBvhId);
+        SceneBvh* sceneBvh = Hell::Bvh::GetSceneBvhById(sceneBvhId);
+        if (!sceneBvh) return;
+
+        const std::vector<BvhNode>& sceneNodes = sceneBvh->m_nodes;
+        const std::vector<BvhNode>& meshBvhNodes = sceneBvh->m_meshNodes;
+        const std::vector<BVHTriangle>& triangles = sceneBvh->m_triangles;
+        const std::vector<GpuPrimitiveInstance>& instances = sceneBvh->m_gpuInstances;
 
         if (sceneNodes.empty()) return;
 

@@ -8,8 +8,6 @@
 #include "Ragdoll/RagdollManager.h"
 #include "Game/UniqueID.h"
 
-#include "BVH/Cpu/CpuBvh.h"
-
 namespace World {
     float g_fleshHitHitTimer = 0.0f; // sound can only play if this is less or equal to 0.0f
     constexpr float g_flashHitAudioDelay = 0.2f; // sound can only play if this is less or equal to 0.0f

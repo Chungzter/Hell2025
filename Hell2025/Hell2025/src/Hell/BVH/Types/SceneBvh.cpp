@@ -1,0 +1,549 @@
+#include "SceneBvh.h"
+
+#include "Hell/BVH/Types/MeshBvh.h"
+#include "Hell/Logging.h"
+
+#include "bvh/v2/bbox.h"
+#include "bvh/v2/bvh.h"
+#include "bvh/v2/default_builder.h"
+#include "bvh/v2/node.h"
+#include "bvh/v2/thread_pool.h"
+#include "bvh/v2/vec.h"
+
+#include <algorithm>
+#include <cmath>
+
+#include <glm/common.hpp>
+#include <glm/geometric.hpp>
+
+namespace {
+    using MadmannVec3 = bvh::v2::Vec<float, 3>;
+    using MadmannBBox = bvh::v2::BBox<float, 3>;
+    using MadmannBvhNode = bvh::v2::Node<float, 3>;
+    using MadmannBvh = bvh::v2::Bvh<MadmannBvhNode>;
+    using MadmannBvhBuilder = bvh::v2::DefaultBuilder<MadmannBvhNode>;
+
+    constexpr size_t GPU_TARGET_MAX_STACK_SIZE = 32;
+    bvh::v2::ThreadPool g_threadPool;
+
+    MadmannVec3 GlmVec3ToMadmannVec3(const glm::vec3& vec) {
+        return MadmannVec3(vec.x, vec.y, vec.z);
+    }
+
+    void PackUint64(uint64_t value, uint32_t& xOut, uint32_t& yOut) {
+        xOut = static_cast<uint32_t>((value & 0xffffffff00000000ull) >> 32);
+        yOut = static_cast<uint32_t>(value & 0xffffffffull);
+    }
+
+    void UnpackUint64(uint32_t xValue, uint32_t yValue, uint64_t& out) {
+        out = (static_cast<uint64_t>(xValue) << 32) | yValue;
+    }
+
+    bool IsNan(const glm::vec3& value) {
+        return std::isnan(value.x) || std::isnan(value.y) || std::isnan(value.z);
+    }
+
+    RayData ComputeRayData(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float minDistance, float maxDistance) {
+        RayData rayData;
+        rayData.origin[0] = rayOrigin.x;
+        rayData.origin[1] = rayOrigin.y;
+        rayData.origin[2] = rayOrigin.z;
+        rayData.dir[0] = rayDir.x;
+        rayData.dir[1] = rayDir.y;
+        rayData.dir[2] = rayDir.z;
+        rayData.invDir[0] = 1.0f / rayDir.x;
+        rayData.invDir[1] = 1.0f / rayDir.y;
+        rayData.invDir[2] = 1.0f / rayDir.z;
+        rayData.minDistance = minDistance;
+        rayData.maxDistance = maxDistance;
+        return rayData;
+    }
+
+    bool IntersectNode(const RayData& rayData, const glm::vec3& aabbBoundsMin, const glm::vec3& aabbBoundsMax, float& t) {
+        const glm::vec3 t1(
+            (aabbBoundsMin[0] - rayData.origin[0]) * rayData.invDir[0],
+            (aabbBoundsMin[1] - rayData.origin[1]) * rayData.invDir[1],
+            (aabbBoundsMin[2] - rayData.origin[2]) * rayData.invDir[2]);
+
+        const glm::vec3 t2(
+            (aabbBoundsMax[0] - rayData.origin[0]) * rayData.invDir[0],
+            (aabbBoundsMax[1] - rayData.origin[1]) * rayData.invDir[1],
+            (aabbBoundsMax[2] - rayData.origin[2]) * rayData.invDir[2]);
+
+        const glm::vec3 tminVec = glm::min(t1, t2);
+        const glm::vec3 tmaxVec = glm::max(t1, t2);
+
+        const float tmin = std::max({ tminVec.x, tminVec.y, tminVec.z, rayData.minDistance });
+        const float tmax = std::min({ tmaxVec.x, tmaxVec.y, tmaxVec.z, rayData.maxDistance });
+
+        t = tmin;
+        return tmin <= tmax;
+    }
+
+    bool IntersectTri(glm::vec3 rayOrigin, glm::vec3 rayDir, float minDistance, float maxDistance, glm::vec3 p0, glm::vec3 e1, glm::vec3 e2, glm::vec3 normal, float& t) {
+        const glm::vec3 c = p0 - rayOrigin;
+        const glm::vec3 r = glm::cross(rayDir, c);
+        const float det = glm::dot(normal, rayDir);
+
+        if (det == 0.0f) {
+            return false;
+        }
+
+        const float invDet = 1.0f / det;
+        const float u = glm::dot(r, e2) * invDet;
+        const float v = glm::dot(r, e1) * invDet;
+        const float w = 1.0f - u - v;
+
+        if (u >= 0.0f && v >= 0.0f && w >= 0.0f) {
+            t = glm::dot(normal, c) * invDet;
+            return t >= minDistance && t < maxDistance;
+        }
+
+        return false;
+    }
+
+    void UnpackTriangle(const BVHTriangle& triangle, glm::vec3& p0, glm::vec3& e1, glm::vec3& e2, glm::vec3& normal) {
+        p0 = glm::vec3(triangle.v0_and_e1x);
+        e1 = glm::vec3(triangle.v0_and_e1x.w, triangle.e1yz_and_e2xy.x, triangle.e1yz_and_e2xy.y);
+        e2 = glm::vec3(triangle.e1yz_and_e2xy.z, triangle.e1yz_and_e2xy.w, triangle.e2z_and_normal.x);
+        normal = glm::vec3(triangle.e2z_and_normal.y, triangle.e2z_and_normal.z, triangle.e2z_and_normal.w);
+    }
+
+    BvhRayResult CreateMissResult(float maxDistance) {
+        BvhRayResult rayResult;
+        rayResult.hitFound = false;
+        rayResult.distanceToHit = maxDistance;
+        return rayResult;
+    }
+
+    BvhRayResult MeshAnyHit(const SceneBvh& sceneBvh, const GpuPrimitiveInstance& instance, glm::vec3 rayOrigin, glm::vec3 rayDir, float maxDistance) {
+        BvhRayResult rayResult = CreateMissResult(maxDistance);
+
+        if (sceneBvh.m_meshNodes.empty() || sceneBvh.m_triangles.empty() || instance.rootNodeIndex < 0) {
+            return rayResult;
+        }
+
+        const float globalMinDistance = 0.001f;
+        const glm::vec3 localOrigin = glm::vec3(instance.inverseWorldTransform * glm::vec4(rayOrigin, 1.0f));
+        const glm::vec3 localEnd = glm::vec3(instance.inverseWorldTransform * glm::vec4(rayOrigin + rayDir * maxDistance, 1.0f));
+        const glm::vec3 localDir = glm::normalize(localEnd - localOrigin);
+        const float localMaxDistance = glm::length(localEnd - localOrigin);
+        const float localMinDistance = globalMinDistance * localMaxDistance / maxDistance;
+
+        RayData rayData = ComputeRayData(localOrigin, localDir, localMinDistance, localMaxDistance);
+
+        uint32_t stack[GPU_TARGET_MAX_STACK_SIZE];
+        size_t currentStackSize = 0;
+        stack[currentStackSize++] = static_cast<uint32_t>(instance.rootNodeIndex);
+
+        while (currentStackSize != 0) {
+            const uint32_t nodeIndex = stack[--currentStackSize];
+            if (nodeIndex >= sceneBvh.m_meshNodes.size()) {
+                return rayResult;
+            }
+
+            const BvhNode& node = sceneBvh.m_meshNodes[nodeIndex];
+
+            float t = 0.0f;
+            if (!IntersectNode(rayData, node.boundsMin, node.boundsMax, t)) {
+                continue;
+            }
+
+            if (node.primitiveCount > 0) {
+                for (uint32_t i = 0; i < node.primitiveCount; ++i) {
+                    const uint32_t floatOffset = node.firstChildOrPrimitive + i * 12;
+                    const size_t triangleIndex = floatOffset / 12;
+                    if (triangleIndex >= sceneBvh.m_triangles.size()) {
+                        continue;
+                    }
+
+                    glm::vec3 p0, e1, e2, normal;
+                    UnpackTriangle(sceneBvh.m_triangles[triangleIndex], p0, e1, e2, normal);
+
+                    float localT = 0.0f;
+                    if (!IntersectTri(localOrigin, localDir, localMinDistance, localMaxDistance, p0, e1, e2, normal, localT)) {
+                        continue;
+                    }
+
+                    const glm::vec3 hitPositionLocal = localOrigin + (localDir * localT);
+                    const glm::vec3 hitPositionWorld = instance.worldTransform * glm::vec4(hitPositionLocal, 1.0f);
+
+                    rayResult.hitFound = true;
+                    rayResult.hitPosition = hitPositionWorld;
+                    rayResult.distanceToHit = glm::length(hitPositionWorld - rayOrigin);
+                    rayResult.primtiviveId = floatOffset;
+                    rayResult.primitiveTransform = instance.worldTransform;
+                    rayResult.nodeBoundsMin = node.boundsMin;
+                    rayResult.nodeBoundsMax = node.boundsMax;
+                    rayResult.openableId = instance.openableId;
+                    rayResult.customId = instance.customId;
+                    rayResult.globalMeshIndex = instance.globalMeshIndex;
+                    rayResult.localMeshNodeIndex = instance.localMeshNodeIndex;
+                    rayResult.hitNormal = -glm::vec3(instance.worldTransform * glm::vec4(normal, 0.0f));
+                    UnpackUint64(instance.objectIdLowerBit, instance.objectIdUpperBit, rayResult.objectId);
+                    return rayResult;
+                }
+            }
+            else {
+                stack[currentStackSize++] = node.firstChildOrPrimitive + 0;
+                stack[currentStackSize++] = node.firstChildOrPrimitive + 1;
+            }
+        }
+
+        return rayResult;
+    }
+
+    BvhRayResult MeshClosestHit(const SceneBvh& sceneBvh, const GpuPrimitiveInstance& instance, glm::vec3 rayOrigin, glm::vec3 rayDir, float maxDistance) {
+        BvhRayResult closestRayResult = CreateMissResult(maxDistance);
+
+        if (sceneBvh.m_meshNodes.empty() || sceneBvh.m_triangles.empty() || instance.rootNodeIndex < 0) {
+            return closestRayResult;
+        }
+
+        const float globalMinDistance = 0.001f;
+        const glm::vec3 localOrigin = glm::vec3(instance.inverseWorldTransform * glm::vec4(rayOrigin, 1.0f));
+        const glm::vec3 localEnd = glm::vec3(instance.inverseWorldTransform * glm::vec4(rayOrigin + rayDir * maxDistance, 1.0f));
+        const glm::vec3 localDir = glm::normalize(localEnd - localOrigin);
+        const float localMaxDistance = glm::length(localEnd - localOrigin);
+        const float localMinDistance = globalMinDistance * localMaxDistance / maxDistance;
+
+        RayData rayData = ComputeRayData(localOrigin, localDir, localMinDistance, localMaxDistance);
+
+        uint32_t stack[GPU_TARGET_MAX_STACK_SIZE];
+        size_t currentStackSize = 0;
+        stack[currentStackSize++] = static_cast<uint32_t>(instance.rootNodeIndex);
+
+        while (currentStackSize != 0) {
+            const uint32_t nodeIndex = stack[--currentStackSize];
+            if (nodeIndex >= sceneBvh.m_meshNodes.size()) {
+                return closestRayResult;
+            }
+
+            const BvhNode& node = sceneBvh.m_meshNodes[nodeIndex];
+
+            float t = 0.0f;
+            if (!IntersectNode(rayData, node.boundsMin, node.boundsMax, t)) {
+                continue;
+            }
+
+            if (node.primitiveCount > 0) {
+                for (uint32_t i = 0; i < node.primitiveCount; ++i) {
+                    const uint32_t floatOffset = node.firstChildOrPrimitive + i * 12;
+                    const size_t triangleIndex = floatOffset / 12;
+                    if (triangleIndex >= sceneBvh.m_triangles.size()) {
+                        continue;
+                    }
+
+                    glm::vec3 p0, e1, e2, normal;
+                    UnpackTriangle(sceneBvh.m_triangles[triangleIndex], p0, e1, e2, normal);
+
+                    float localT = 0.0f;
+                    if (!IntersectTri(localOrigin, localDir, rayData.minDistance, rayData.maxDistance, p0, e1, e2, normal, localT)) {
+                        continue;
+                    }
+
+                    const glm::vec3 hitPositionLocal = localOrigin + (localDir * localT);
+                    const glm::vec3 hitPositionWorld = instance.worldTransform * glm::vec4(hitPositionLocal, 1.0f);
+                    const float distanceToHit = glm::length(hitPositionWorld - rayOrigin);
+
+                    if (distanceToHit < closestRayResult.distanceToHit) {
+                        closestRayResult.hitFound = true;
+                        closestRayResult.hitPosition = hitPositionWorld;
+                        closestRayResult.distanceToHit = distanceToHit;
+                        closestRayResult.primtiviveId = floatOffset;
+                        closestRayResult.primitiveTransform = instance.worldTransform;
+                        closestRayResult.nodeBoundsMin = node.boundsMin;
+                        closestRayResult.nodeBoundsMax = node.boundsMax;
+                        closestRayResult.openableId = instance.openableId;
+                        closestRayResult.customId = instance.customId;
+                        closestRayResult.globalMeshIndex = instance.globalMeshIndex;
+                        closestRayResult.localMeshNodeIndex = instance.localMeshNodeIndex;
+                        closestRayResult.hitNormal = -glm::vec3(instance.worldTransform * glm::vec4(normal, 0.0f));
+                        UnpackUint64(instance.objectIdLowerBit, instance.objectIdUpperBit, closestRayResult.objectId);
+
+                        rayData.maxDistance = localT;
+                    }
+                }
+            }
+            else {
+                stack[currentStackSize++] = node.firstChildOrPrimitive + 0;
+                stack[currentStackSize++] = node.firstChildOrPrimitive + 1;
+            }
+        }
+
+        return closestRayResult;
+    }
+}
+
+bool SceneBvh::SetMeshBvhs(const std::vector<SceneBvhMeshInput>& meshBvhs) {
+    m_nodes.clear();
+    m_instances.clear();
+    m_gpuInstances.clear();
+    m_leafInstanceIndices.clear();
+
+    m_meshBvhIds.clear();
+    m_meshRootNodeOffsets.clear();
+    m_meshNodes.clear();
+    m_triangles.clear();
+
+    return AddMeshBvhs(meshBvhs);
+}
+
+bool SceneBvh::AddMeshBvh(uint64_t meshBvhId, const MeshBvh* meshBvh) {
+    if (HasMeshBvh(meshBvhId)) {
+        return true;
+    }
+
+    if (!meshBvh || meshBvh->m_nodes.empty()) {
+        Logging::Error() << "SceneBvh::AddMeshBvh(..) failed: invalid mesh BVH id " << meshBvhId << "\n";
+        return false;
+    }
+
+    const uint32_t rootNodeOffset = static_cast<uint32_t>(m_meshNodes.size());
+    const uint32_t baseTriangleFloatOffset = static_cast<uint32_t>(m_triangles.size() * 12);
+
+    m_meshRootNodeOffsets[meshBvhId] = rootNodeOffset;
+    m_meshBvhIds.push_back(meshBvhId);
+    m_meshNodes.reserve(m_meshNodes.size() + meshBvh->m_nodes.size());
+    m_triangles.reserve(m_triangles.size() + meshBvh->m_triangles.size());
+
+    for (const BvhNode& sourceNode : meshBvh->m_nodes) {
+        BvhNode& appendedNode = m_meshNodes.emplace_back(sourceNode);
+
+        if (appendedNode.primitiveCount > 0) {
+            appendedNode.firstChildOrPrimitive += baseTriangleFloatOffset;
+        }
+        else {
+            appendedNode.firstChildOrPrimitive += rootNodeOffset;
+        }
+    }
+
+    m_triangles.insert(m_triangles.end(), meshBvh->m_triangles.begin(), meshBvh->m_triangles.end());
+
+    return true;
+}
+
+bool SceneBvh::AddMeshBvhs(const std::vector<SceneBvhMeshInput>& meshBvhs) {
+    for (const SceneBvhMeshInput& input : meshBvhs) {
+        if (!AddMeshBvh(input.meshBvhId, input.meshBvh)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool SceneBvh::UpdateInstances(const std::vector<PrimitiveInstance>& instances) {
+    for (const PrimitiveInstance& instance : instances) {
+        if (!HasMeshBvh(instance.meshBvhId)) {
+            Logging::Error() << "SceneBvh::UpdateInstances(..) failed: mesh BVH id " << instance.meshBvhId << " was not included in the scene\n";
+            return false;
+        }
+    }
+
+    m_instances = instances;
+    m_gpuInstances.clear();
+    m_leafInstanceIndices.clear();
+    m_nodes.clear();
+
+    if (instances.empty()) {
+        return true;
+    }
+
+    std::vector<MadmannBBox> bboxes(instances.size());
+    std::vector<MadmannVec3> centers(instances.size());
+
+    for (size_t i = 0; i < instances.size(); ++i) {
+        const PrimitiveInstance& instance = instances[i];
+        bboxes[i] = MadmannBBox(
+            GlmVec3ToMadmannVec3(instance.worldAabbBoundsMin),
+            GlmVec3ToMadmannVec3(instance.worldAabbBoundsMax));
+        centers[i] = GlmVec3ToMadmannVec3(instance.worldAabbCenter);
+    }
+
+    MadmannBvhBuilder::Config config;
+    config.quality = MadmannBvhBuilder::Quality::High;
+    MadmannBvh bvh = MadmannBvhBuilder::build(g_threadPool, bboxes, centers, config);
+
+    m_nodes.resize(bvh.nodes.size());
+
+    for (size_t i = 0; i < bvh.nodes.size(); ++i) {
+        const MadmannBvhNode& sourceNode = bvh.nodes[i];
+        BvhNode& targetNode = m_nodes[i];
+
+        targetNode.boundsMin = glm::vec3(sourceNode.bounds[0], sourceNode.bounds[2], sourceNode.bounds[4]);
+        targetNode.boundsMax = glm::vec3(sourceNode.bounds[1], sourceNode.bounds[3], sourceNode.bounds[5]);
+        targetNode.primitiveCount = sourceNode.index.value & ((1u << MadmannBvhNode::prim_count_bits) - 1);
+        targetNode.firstChildOrPrimitive = sourceNode.index.value >> MadmannBvhNode::prim_count_bits;
+    }
+
+    std::vector<uint32_t> stack;
+    stack.reserve(GPU_TARGET_MAX_STACK_SIZE);
+
+    if (!m_nodes.empty()) {
+        stack.push_back(0);
+    }
+
+    m_gpuInstances.reserve(instances.size());
+    m_leafInstanceIndices.reserve(instances.size());
+
+    while (!stack.empty()) {
+        const uint32_t currentNodeIndex = stack.back();
+        stack.pop_back();
+
+        if (currentNodeIndex >= m_nodes.size()) {
+            Logging::Error() << "SceneBvh::UpdateInstances(..) failed: invalid scene node index " << currentNodeIndex << "\n";
+            return false;
+        }
+
+        BvhNode& node = m_nodes[currentNodeIndex];
+
+        if (node.primitiveCount > 0) {
+            const uint32_t newPrimitiveIndex = static_cast<uint32_t>(m_gpuInstances.size());
+
+            for (uint32_t i = 0; i < node.primitiveCount; ++i) {
+                const uint32_t primitiveId = node.firstChildOrPrimitive + i;
+                const uint32_t instanceIndex = static_cast<uint32_t>(bvh.prim_ids[primitiveId]);
+
+                if (instanceIndex >= instances.size()) {
+                    Logging::Error() << "SceneBvh::UpdateInstances(..) failed: invalid instance index " << instanceIndex << "\n";
+                    return false;
+                }
+
+                const PrimitiveInstance& instance = instances[instanceIndex];
+                auto rootNodeOffsetIt = m_meshRootNodeOffsets.find(instance.meshBvhId);
+
+                if (rootNodeOffsetIt == m_meshRootNodeOffsets.end()) {
+                    Logging::Error() << "SceneBvh::UpdateInstances(..) failed: missing root node offset for mesh BVH id " << instance.meshBvhId << "\n";
+                    return false;
+                }
+
+                GpuPrimitiveInstance& gpuInstance = m_gpuInstances.emplace_back();
+                gpuInstance.worldTransform = instance.worldTransform;
+                gpuInstance.inverseWorldTransform = instance.inverseWorldTransform;
+                gpuInstance.rootNodeIndex = static_cast<int32_t>(rootNodeOffsetIt->second);
+                gpuInstance.openableId = instance.openableId;
+                gpuInstance.customId = instance.customId;
+                gpuInstance.globalMeshIndex = instance.globalMeshIndex;
+                gpuInstance.localMeshNodeIndex = instance.localMeshNodeIndex;
+                gpuInstance.padding2 = 0;
+                PackUint64(instance.objectId, gpuInstance.objectIdLowerBit, gpuInstance.objectIdUpperBit);
+
+                m_leafInstanceIndices.push_back(instanceIndex);
+            }
+
+            node.firstChildOrPrimitive = newPrimitiveIndex;
+        }
+        else {
+            stack.push_back(node.firstChildOrPrimitive + 0);
+            stack.push_back(node.firstChildOrPrimitive + 1);
+        }
+    }
+
+    return true;
+}
+
+bool SceneBvh::HasMeshBvh(uint64_t meshBvhId) const {
+    return m_meshRootNodeOffsets.find(meshBvhId) != m_meshRootNodeOffsets.end();
+}
+
+BvhRayResult SceneBvh::AnyHit(glm::vec3 rayOrigin, glm::vec3 rayDir, float maxDistance) const {
+    BvhRayResult rayResult = CreateMissResult(maxDistance);
+
+    if (IsNan(rayOrigin) || IsNan(rayDir) || m_nodes.empty() || m_gpuInstances.empty()) {
+        return rayResult;
+    }
+
+    RayData rayData = ComputeRayData(rayOrigin, rayDir, 0.0001f, maxDistance);
+
+    uint32_t stack[GPU_TARGET_MAX_STACK_SIZE];
+    size_t currentStackSize = 0;
+    stack[currentStackSize++] = 0;
+
+    while (currentStackSize != 0) {
+        const uint32_t nodeIndex = stack[--currentStackSize];
+        if (nodeIndex >= m_nodes.size()) {
+            return rayResult;
+        }
+
+        const BvhNode& node = m_nodes[nodeIndex];
+
+        float t = 0.0f;
+        if (!IntersectNode(rayData, node.boundsMin, node.boundsMax, t)) {
+            continue;
+        }
+
+        if (node.primitiveCount > 0) {
+            for (uint32_t i = 0; i < node.primitiveCount; ++i) {
+                const uint32_t instanceIndex = node.firstChildOrPrimitive + i;
+                if (instanceIndex >= m_gpuInstances.size()) {
+                    continue;
+                }
+
+                BvhRayResult localRayResult = MeshAnyHit(*this, m_gpuInstances[instanceIndex], rayOrigin, rayDir, maxDistance);
+                if (localRayResult.hitFound) {
+                    return localRayResult;
+                }
+            }
+        }
+        else {
+            stack[currentStackSize++] = node.firstChildOrPrimitive + 0;
+            stack[currentStackSize++] = node.firstChildOrPrimitive + 1;
+        }
+    }
+
+    return rayResult;
+}
+
+BvhRayResult SceneBvh::ClosestHit(glm::vec3 rayOrigin, glm::vec3 rayDir, float maxDistance) const {
+    BvhRayResult rayResult = CreateMissResult(maxDistance);
+
+    if (IsNan(rayOrigin) || IsNan(rayDir) || m_nodes.empty() || m_gpuInstances.empty()) {
+        return rayResult;
+    }
+
+    RayData rayData = ComputeRayData(rayOrigin, rayDir, 0.0001f, maxDistance);
+
+    uint32_t stack[GPU_TARGET_MAX_STACK_SIZE];
+    size_t currentStackSize = 0;
+    stack[currentStackSize++] = 0;
+
+    while (currentStackSize != 0) {
+        const uint32_t nodeIndex = stack[--currentStackSize];
+        if (nodeIndex >= m_nodes.size()) {
+            return rayResult;
+        }
+
+        const BvhNode& node = m_nodes[nodeIndex];
+
+        float t = 0.0f;
+        if (!IntersectNode(rayData, node.boundsMin, node.boundsMax, t)) {
+            continue;
+        }
+
+        if (t >= rayData.maxDistance) {
+            continue;
+        }
+
+        if (node.primitiveCount > 0) {
+            for (uint32_t i = 0; i < node.primitiveCount; ++i) {
+                const uint32_t instanceIndex = node.firstChildOrPrimitive + i;
+                if (instanceIndex >= m_gpuInstances.size()) {
+                    continue;
+                }
+
+                BvhRayResult localRayResult = MeshClosestHit(*this, m_gpuInstances[instanceIndex], rayOrigin, rayDir, rayResult.distanceToHit);
+                if (localRayResult.hitFound && localRayResult.distanceToHit < rayResult.distanceToHit) {
+                    rayResult = localRayResult;
+                    rayData.maxDistance = rayResult.distanceToHit;
+                }
+            }
+        }
+        else {
+            stack[currentStackSize++] = node.firstChildOrPrimitive + 0;
+            stack[currentStackSize++] = node.firstChildOrPrimitive + 1;
+        }
+    }
+
+    return rayResult;
+}

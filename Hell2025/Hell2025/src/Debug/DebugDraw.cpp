@@ -1,4 +1,6 @@
 #include "DebugDraw.h"
+
+#include "Hell/BVH/Types.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 using namespace Hell;
@@ -10,6 +12,12 @@ namespace DebugDraw {
         std::vector<DebugVertex2D> g_lines2D;
         std::vector<DebugVertex3D> g_lines3D;
         std::vector<DebugVertex3D> g_itemExaminelines;
+
+        void UnpackTriangle(const BVHTriangle& triangle, glm::vec3& p0, glm::vec3& e1, glm::vec3& e2) {
+            p0 = glm::vec3(triangle.v0_and_e1x);
+            e1 = glm::vec3(triangle.v0_and_e1x.w, triangle.e1yz_and_e2xy.x, triangle.e1yz_and_e2xy.y);
+            e2 = glm::vec3(triangle.e1yz_and_e2xy.z, triangle.e1yz_and_e2xy.w, triangle.e2z_and_normal.x);
+        }
     }
 
     void BeginFrame() {
@@ -224,5 +232,74 @@ namespace DebugDraw {
             float r = radius * cos(phi);
             DrawCircle(position + up * z, r, axisA, axisB, segsPerCircle, color);
         }
+    }
+
+    void DrawMeshBvhTriangles(const MeshBvh& meshBvh, const glm::vec4& color, const glm::mat4& worldTransform) {
+        for (const BVHTriangle& triangle : meshBvh.m_triangles) {
+            glm::vec3 p0, e1, e2;
+            UnpackTriangle(triangle, p0, e1, e2);
+
+            glm::vec3 p1 = p0 - e1;
+            glm::vec3 p2 = p0 + e2;
+
+            p0 = worldTransform * glm::vec4(p0, 1.0f);
+            p1 = worldTransform * glm::vec4(p1, 1.0f);
+            p2 = worldTransform * glm::vec4(p2, 1.0f);
+
+            DrawLine(p0, p1, color);
+            DrawLine(p1, p2, color);
+            DrawLine(p2, p0, color);
+        }
+    }
+
+    void DrawMeshBvhNodes(const MeshBvh& meshBvh, const glm::vec4& color, const glm::mat4& worldTransform) {
+        for (const BvhNode& node : meshBvh.m_nodes) {
+            AABB aabb(node.boundsMin, node.boundsMax);
+            DrawAABB(aabb, color, worldTransform);
+        }
+    }
+
+    void DrawSceneBvhNodes(const SceneBvh& sceneBvh, const glm::vec4& color) {
+        const glm::mat4 worldTransform = glm::mat4(1.0f);
+
+        for (const BvhNode& node : sceneBvh.m_nodes) {
+            AABB aabb(node.boundsMin, node.boundsMax);
+            DrawAABB(aabb, color, worldTransform);
+        }
+    }
+
+    void DrawBvhRayResultTriangle(const BvhRayResult& rayResult, const SceneBvh& sceneBvh, const glm::vec4& color) {
+        DrawBvhRayResultTriangle(rayResult, sceneBvh.m_triangles, color);
+    }
+
+    void DrawBvhRayResultTriangle(const BvhRayResult& rayResult, const std::vector<BVHTriangle>& triangles, const glm::vec4& color) {
+        if (!rayResult.hitFound) return;
+
+        const size_t triangleIndex = rayResult.primtiviveId / 12;
+        if (triangleIndex >= triangles.size()) return;
+
+        glm::vec3 p0, e1, e2;
+        UnpackTriangle(triangles[triangleIndex], p0, e1, e2);
+
+        glm::vec3 p1 = p0 - e1;
+        glm::vec3 p2 = p0 + e2;
+
+        p0 = rayResult.primitiveTransform * glm::vec4(p0, 1.0f);
+        p1 = rayResult.primitiveTransform * glm::vec4(p1, 1.0f);
+        p2 = rayResult.primitiveTransform * glm::vec4(p2, 1.0f);
+
+        DrawPoint(p0, color);
+        DrawPoint(p1, color);
+        DrawPoint(p2, color);
+        DrawLine(p0, p1, color);
+        DrawLine(p2, p1, color);
+        DrawLine(p0, p2, color);
+    }
+
+    void DrawBvhRayResultNode(const BvhRayResult& rayResult, const glm::vec4& color) {
+        if (!rayResult.hitFound) return;
+
+        AABB aabb(rayResult.nodeBoundsMin, rayResult.nodeBoundsMax);
+        DrawAABB(aabb, color, rayResult.primitiveTransform);
     }
 }
