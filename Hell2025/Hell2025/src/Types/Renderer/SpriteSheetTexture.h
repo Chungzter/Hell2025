@@ -2,9 +2,11 @@
 #include <Game/Types.h>
 #include <string>
 
+struct Texture;
+
 struct SpriteSheetTexture {
     SpriteSheetTexture() = default;
-    void Init();
+    void Init(Texture& texture);
     void SetFileInfo(FileInfo fileInfo);
 
     std::string GetDebugInfo();

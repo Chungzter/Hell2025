@@ -1,10 +1,7 @@
 #include "SpriteSheetTexture.h"
-#include "AssetManagement/AssetManager.h"
-#include "Util/Util.h"
+#include "Hell/ResourceManagement/Types/Texture.h"
 
-#include <iostream> // TODO clean up logging
-
-void SpriteSheetTexture::Init() {
+void SpriteSheetTexture::Init(Texture& texture) {
     size_t lastUnderscore = m_fileInfo.name.find_last_of('_');
     m_textureName = m_fileInfo.name;
     size_t dot = m_fileInfo.name.find_last_of('.');
@@ -13,18 +10,12 @@ void SpriteSheetTexture::Init() {
     m_columns = std::stoi(dims.substr(0, x));
     m_rows = std::stoi(dims.substr(x + 1));
 
-    Texture* texture = AssetManager::GetTextureByName(m_textureName);
-    if (!texture) {
-        std::cout << "SpriteSheetTexture::Init(const std::string& filepath) failed because texture name " << m_textureName << " was not found!\n";
-        return;
-    }
-
-    m_fullWidth = texture->GetWidth();
-    m_fullHeight = texture->GetHeight();
+    m_fullWidth = texture.GetWidth();
+    m_fullHeight = texture.GetHeight();
     m_frameWidth = m_fullWidth / m_columns;
     m_frameHeight = m_fullHeight / m_rows;
-    m_frameCount = m_rows * m_columns; 
-    m_textureIndex = AssetManager::GetTextureBindlessIndexByName(m_textureName);
+    m_frameCount = m_rows * m_columns;
+    m_textureIndex = texture.GetBindlessIndex();
 }
 
 void SpriteSheetTexture::SetFileInfo(FileInfo fileInfo) {

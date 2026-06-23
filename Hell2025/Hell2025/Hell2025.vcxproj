@@ -305,7 +305,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\AssetManagement\AssetManager_model.cpp" />
     <ClCompile Include="src\AssetManagement\AssetManager_skinnedMesh.cpp" />
     <ClCompile Include="src\AssetManagement\AssetManager_skinnedModel.cpp" />
-    <ClCompile Include="src\AssetManagement\AssetManager_spriteSheetTexture.cpp" />
     <ClCompile Include="src\AssetManagement\AssetManager_texture.cpp" />
     <ClCompile Include="src\AssetManagement\AssetManager_vertex_data.cpp" />
     <ClCompile Include="src\Audio\MidiFile.cpp" />

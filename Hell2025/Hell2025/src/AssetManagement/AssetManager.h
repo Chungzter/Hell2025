@@ -9,7 +9,6 @@
 #include "Types/Renderer/Model.h"
 #include "Types/Renderer/SkinnedMesh.hpp"
 #include "Types/Renderer/SkinnedModel.h"
-#include "Types/Renderer/SpriteSheetTexture.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
 
 #include <cstdint>
@@ -87,11 +86,6 @@ namespace AssetManager {
     Texture* GetTextureByBindlessIndex(int32_t bindlessIndex);
     int32_t GetTextureBindlessIndexByName(const std::string& name, bool ignoreWarning = true);
     void ReserveTextureStorage(size_t textureCount);
-
-    // Spritesheet Textures
-    std::vector<SpriteSheetTexture>& GetSpriteSheetTextures();
-    SpriteSheetTexture* GetSpriteSheetTextureByName(const std::string& textureName);
-    void BuildSpriteSheetTextures();
 
     // Skinned Model
     std::vector<SkinnedModel>& GetSkinnedModels();

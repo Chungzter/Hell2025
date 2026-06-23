@@ -15,4 +15,14 @@ namespace Hell::TextureUploader {
         if (BackEnd::GetAPI() == API::OPENGL) { OpenGLTextureUploader::QueueUpload(texture); }
         if (BackEnd::GetAPI() == API::VULKAN) { /*VulkanTextureUploader::QueueUpload(texture); */ }
     }
+
+    void Update() {
+        if (BackEnd::GetAPI() == API::OPENGL) { OpenGLTextureUploader::Update(); }
+        if (BackEnd::GetAPI() == API::VULKAN) { /*VulkanTextureUploader::Update(); */ }
+    }
+
+    void CleanUp() {
+        if (BackEnd::GetAPI() == API::OPENGL) { OpenGLTextureUploader::CleanUp(); }
+        if (BackEnd::GetAPI() == API::VULKAN) { /*VulkanTextureUploader::CleanUp(); */ }
+    }
 }

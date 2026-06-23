@@ -113,7 +113,6 @@ namespace Renderer {
 
     void UploadVertexData() {
         if (BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLBackEnd::CleanUpBakingPBOs();
             OpenGLBackEnd::UploadVertexData(AssetManager::GetVertices(), AssetManager::GetIndices());
             OpenGLRenderer::UploadVertexWeights();
         }

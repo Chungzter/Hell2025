@@ -14,6 +14,7 @@ namespace Hell::ResourceManager {
         std::unordered_map<std::string, GenericMesh> g_genericMeshes;
         std::unordered_map<std::string, IESProfile> g_iesProfiles;
         std::unordered_map<std::string, MeshBuffer> g_meshBuffers;
+        std::unordered_map<std::string, SpriteSheetTexture> g_spriteSheetTextures;
         std::unordered_map<std::string, Texture> g_textures;
 
         std::vector<std::string> g_textureNamesByBindlessIndex;
@@ -21,10 +22,11 @@ namespace Hell::ResourceManager {
 
     void CleanUp() {
         for (auto& object : g_genericMeshes) { object.second.CleanUp(); } g_genericMeshes.clear();
-        g_iesProfiles.clear();
         for (auto& object : g_meshBuffers)   { object.second.CleanUp(); } g_meshBuffers.clear();
         for (auto& object : g_textures)      { object.second.CleanUp(); } g_textures.clear();
 
+        g_iesProfiles.clear();
+        g_spriteSheetTextures.clear();
         g_textureNamesByBindlessIndex.clear();
     }
 
@@ -209,6 +211,38 @@ namespace Hell::ResourceManager {
         }
 
         return &it->second;
+    }
+
+    // Sprite Sheet Texture
+
+    SpriteSheetTexture& CreateSpriteSheetTexture(const std::string& name) {
+        auto it = g_spriteSheetTextures.find(name);
+
+        if (it != g_spriteSheetTextures.end()) {
+            Logging::Fatal() << "ResourceManager::CreateSpriteSheetTexture(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_spriteSheetTextures.try_emplace(name);
+        return result.first->second;
+    }
+
+    SpriteSheetTexture& GetSpriteSheetTexture(const std::string& name) {
+        auto it = g_spriteSheetTextures.find(name);
+
+        if (it == g_spriteSheetTextures.end()) {
+            Logging::Error() << "ResourceManager::GetSpriteSheetTexture(..) failed: '" << name << "' does not exist\n";
+
+            static SpriteSheetTexture invalid;
+            return invalid;
+        }
+
+        return it->second;
+    }
+
+    SpriteSheetTexture* GetSpriteSheetTexturePtr(const std::string& name) {
+        auto it = g_spriteSheetTextures.find(name);
+        return it != g_spriteSheetTextures.end() ? &it->second : nullptr;
     }
 
     // Texture

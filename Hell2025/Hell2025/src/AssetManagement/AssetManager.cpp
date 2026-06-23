@@ -34,7 +34,6 @@ namespace AssetManager {
         bool bakedSkinnedModels = false;
         bool materials = false;
         bool indexMaps = false;
-        bool spriteSheetTextures = false;
         bool modelBVHData = false;
         bool allComplete = false;
     } g_loadingComplete;
@@ -43,7 +42,6 @@ namespace AssetManager {
     std::vector<Material> g_materials;
     std::vector<Mesh> g_meshes;
     std::vector<Model> g_models;
-    std::vector<SpriteSheetTexture> g_spriteSheetTextures;
     std::vector<SkinnedMesh> g_skinnedMeshes;
     std::vector<SkinnedModel> g_skinnedModels;
     std::unordered_map<std::string, int> g_materialIndexMap;
@@ -78,13 +76,12 @@ namespace AssetManager {
         Hell::AssetLoader::LoadIESFiles();
 
         // Fire off all async loading calls
-        LoadPendingTexturesAsync();
         LoadPendingAnimationsAsync();
     }
 
     void UpdateLoading() {
         BlitLoadLog();
-        UpdateTextureLoading();
+        Hell::AssetLoader::Update();
         LoadPendingModelsAsync();
         LoadPendingSkinnedModelsAsync();
 
@@ -158,14 +155,6 @@ namespace AssetManager {
             return;
         }
 
-        if (!g_loadingComplete.spriteSheetTextures) {
-            g_loadingComplete.spriteSheetTextures = true;
-            BuildSpriteSheetTextures();
-            AddItemToLoadLog("Built sprite sheet textures");
-            Logging::Init() << "AssetManager built sprite sheet textures";
-            return;
-        }
-
         if (!g_loadingComplete.modelBVHData) {
             g_loadingComplete.modelBVHData = true;
             CopyInAllLoadedModelBvhData();
@@ -205,63 +194,6 @@ namespace AssetManager {
         for (FileInfo& fileInfo : Util::IterateDirectory("res/skinned_models")) {
             SkinnedModel& skinnedModel = g_skinnedModels.emplace_back();
             skinnedModel.SetFileInfo(fileInfo);
-        }
-        // Find sprite sheet textures
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/spritesheets")) {
-            SpriteSheetTexture& spriteSheetTexture = g_spriteSheetTextures.emplace_back();
-            spriteSheetTexture.SetFileInfo(fileInfo);
-        }
-        // Find all textures
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/uncompressed", { "png", "jpg", "tga" })) {
-            Texture& texture = CreateNewTexture(fileInfo.name);
-            texture.SetFileInfo(fileInfo);
-            texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
-            texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
-            texture.SetMinFilter(TextureFilter::LINEAR_MIPMAP);
-            texture.SetMagFilter(TextureFilter::LINEAR);
-            texture.RequestMipmaps();
-        }
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/decals", { "png", "jpg", "tga" })) {
-            Texture& texture = CreateNewTexture(fileInfo.name);
-            texture.SetFileInfo(fileInfo);
-            texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
-            texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_BORDER); // Clamp to border!
-            texture.SetMinFilter(TextureFilter::LINEAR_MIPMAP);
-            texture.SetMagFilter(TextureFilter::LINEAR);
-            texture.RequestMipmaps();
-        }
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/compressed", { "dds" })) {
-            Texture& texture = CreateNewTexture(fileInfo.name);
-            texture.SetFileInfo(fileInfo);
-            texture.SetImageDataType(ImageDataType::COMPRESSED);
-            texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
-            texture.SetMinFilter(TextureFilter::LINEAR_MIPMAP);
-            texture.SetMagFilter(TextureFilter::LINEAR);
-            texture.RequestMipmaps();
-        }
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/ui", { "png", "jpg", })) {
-            Texture& texture = CreateNewTexture(fileInfo.name);
-            texture.SetFileInfo(fileInfo);
-            texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
-            texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
-            texture.SetMinFilter(TextureFilter::LINEAR);
-            texture.SetMagFilter(TextureFilter::LINEAR);
-        }
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/exr", { "exr" })) {
-            Texture& texture = CreateNewTexture(fileInfo.name);
-            texture.SetFileInfo(fileInfo);
-            texture.SetImageDataType(ImageDataType::EXR);
-            texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
-            texture.SetMinFilter(TextureFilter::LINEAR);
-            texture.SetMagFilter(TextureFilter::NEAREST);
-        }
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/textures/spritesheets", { "png", "jpg", "tga" })) {
-            Texture& texture = CreateNewTexture(fileInfo.name);
-            texture.SetFileInfo(fileInfo);
-            texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
-            texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
-            texture.SetMinFilter(TextureFilter::LINEAR);
-            texture.SetMagFilter(TextureFilter::LINEAR);
         }
     }
 
@@ -359,10 +291,6 @@ namespace AssetManager {
 
     std::vector<SkinnedMesh>& GetSkinnedMeshes() {
         return g_skinnedMeshes;
-    }
-
-    std::vector<SpriteSheetTexture>& GetSpriteSheetTextures() {
-        return g_spriteSheetTextures;
     }
 
     std::unordered_map<std::string, Texture>& GetTextures() {

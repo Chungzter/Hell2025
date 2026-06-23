@@ -4,6 +4,7 @@
 #include "Hell/ResourceManagement/Types/IESProfile.h"
 #include "Hell/ResourceManagement/Types/MeshBuffer.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
+#include "Types/Renderer/SpriteSheetTexture.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -30,6 +31,10 @@ namespace Hell::ResourceManager {
     MeshBuffer& CreateMeshBuffer(const std::string& name);
     MeshBuffer& GetMeshBuffer(const std::string& name);
     MeshBuffer* GetMeshBufferPtr(const std::string& name);
+
+    SpriteSheetTexture& CreateSpriteSheetTexture(const std::string& name);
+    SpriteSheetTexture& GetSpriteSheetTexture(const std::string& name);
+    SpriteSheetTexture* GetSpriteSheetTexturePtr(const std::string& name);
 
     Texture& CreateTexture(const std::string& name);
     std::unordered_map<std::string, Texture>& GetTextures();

@@ -1,5 +1,5 @@
 #include "SpriteSheetObject.h"
-#include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Util/Util.h"
 
 SpriteSheetObject::SpriteSheetObject(const SpriteSheetObjectCreateInfo& createInfo) {
@@ -15,7 +15,7 @@ void SpriteSheetObject::Init(const SpriteSheetObjectCreateInfo& createInfo) {
     m_textureName = createInfo.textureName;
     m_animationSpeed = createInfo.animationSpeed;
     m_renderingEnabled = createInfo.renderingEnabled;
-    m_spriteSheetTexture = AssetManager::GetSpriteSheetTextureByName(m_textureName);
+    m_spriteSheetTexture = Hell::ResourceManager::GetSpriteSheetTexturePtr(m_textureName);
     m_uOffset = createInfo.uvOffset.x;
     m_vOffset = createInfo.uvOffset.y;
 

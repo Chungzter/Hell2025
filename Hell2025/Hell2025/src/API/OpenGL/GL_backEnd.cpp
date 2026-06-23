@@ -79,11 +79,7 @@ namespace OpenGLBackEnd {
         // Match Vulkan matrix shit
         glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 
-        // Texture baking PBOs
-        for (int i = 0; i < 48; ++i) {
-            PBO& pbo = g_textureBakingPBOs.emplace_back();
-            pbo.Init(MAX_DATA_SIZE);
-        }
+        // Old texture baking PBO allocation disabled. Texture uploads are owned by OpenGLTextureUploader.
 
         // Height map init shit (ABSTRACT ME BETTER!!!!!)
         int vertexBufferSize = HEIGHT_MAP_SIZE * HEIGHT_MAP_SIZE * sizeof(Vertex);

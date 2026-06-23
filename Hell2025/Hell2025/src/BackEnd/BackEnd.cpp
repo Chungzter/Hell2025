@@ -30,6 +30,7 @@
 #include "Managers/HouseManager.h"
 #include "Managers/MirrorManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/TextureUploader/TextureUploader.h"
 #include "Modelling/Unused/Modelling.h"
 #include "Physics/Physics.h"
 #include "Ragdoll/RagdollManager.h"
@@ -116,7 +117,7 @@ namespace BackEnd {
 
         if (GetAPI() == API::OPENGL) {
             OpenGLBackEnd::BeginFrame();
-            OpenGLBackEnd::UpdateTextureBaking();
+            TextureUploader::Update();
         }
         else if (GetAPI() == API::VULKAN) {
             //VulkanBackEnd::BeginFrame();
@@ -187,6 +188,7 @@ namespace BackEnd {
     }
 
     void CleanUp() {
+        TextureUploader::CleanUp();
         ResourceManager::CleanUp();
 
         if (GetAPI() == API::OPENGL) {
