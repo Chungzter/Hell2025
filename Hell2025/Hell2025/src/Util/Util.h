@@ -7,7 +7,8 @@
 #include "Hell/Render/VertexAttributes.h"
 
 #include "Math/AABB.h"
-#include "Types/Animation/Animation.h"
+
+#include "Hell/ResourceManagement/Types/Animation.h"
 
 #include <assimp/matrix3x3.h>
 #include <assimp/matrix4x4.h>

@@ -29,7 +29,6 @@ namespace AssetManager {
     struct LoadingComplte {
         bool models = false;
         bool skinnedModels = false;
-        bool textures = false;
         bool bakedModels = false;
         bool bakedSkinnedModels = false;
         bool indexMaps = false;
@@ -37,7 +36,6 @@ namespace AssetManager {
         bool allComplete = false;
     } g_loadingComplete;
 
-    std::vector<Animation> g_animations;
     std::vector<Mesh> g_meshes;
     std::vector<Model> g_models;
     std::vector<SkinnedMesh> g_skinnedMeshes;
@@ -69,10 +67,8 @@ namespace AssetManager {
 
         FindAssetPaths();
         Hell::AssetLoader::DiscoverAssets();
+        Hell::AssetLoader::LoadAnimations();
         Hell::AssetLoader::LoadIESFiles();
-
-        // Fire off all async loading calls
-        LoadPendingAnimationsAsync();
     }
 
     void UpdateLoading() {
@@ -84,7 +80,6 @@ namespace AssetManager {
         // Loading complete?
         g_loadingComplete.models = true;
         g_loadingComplete.skinnedModels = true;
-        g_loadingComplete.textures = true;
 
         for (Model& model : g_models) {
             if (model.GetLoadingState() != LoadingState::Value::LOADING_COMPLETE) {
@@ -95,25 +90,6 @@ namespace AssetManager {
         for (SkinnedModel& skinnedModel : g_skinnedModels) {
             if (skinnedModel.GetLoadingState() != LoadingState::Value::LOADING_COMPLETE) {
                 g_loadingComplete.skinnedModels = false;
-                return;
-            }
-        }
-        for (auto& [name, texture] : GetTextures()) {
-            if (texture.GetLoadingState() != LoadingState::Value::LOADING_COMPLETE) {
-                g_loadingComplete.textures = false;
-                return;
-            }
-
-            const bool wasBakeComplete = texture.BakeComplete();
-            texture.CheckForBakeCompletion();
-            const bool isBakeComplete = texture.BakeComplete();
-
-            if (!wasBakeComplete && isBakeComplete) {
-                AddItemToLoadLog(texture.GetFilePath());
-            }
-
-            if (!isBakeComplete) {
-                g_loadingComplete.textures = false;
                 return;
             }
         }
@@ -168,11 +144,6 @@ namespace AssetManager {
     }
 
     void FindAssetPaths() {
-        // Find all animations
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/animations")) {
-            Animation& animation = g_animations.emplace_back();
-            animation.SetFileInfo(fileInfo);
-        }
         // Find .model files
         for (FileInfo& fileInfo : Util::IterateDirectory("res/models")) {
             Model& model = g_models.emplace_back();
@@ -228,10 +199,6 @@ namespace AssetManager {
 
     bool LoadingComplete() {
         return g_loadingComplete.allComplete;
-    }
-
-    std::vector<Animation>& GetAnimations() {
-        return g_animations;
     }
 
     std::vector<uint32_t>& GetIndies() {

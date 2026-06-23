@@ -1,18 +1,12 @@
 #pragma once
 
-#include "Hell/Render/TextureTypes.h"
-
-#include <string>
-
-struct IESProfile;
-
 namespace Hell::AssetLoader {
 
     void DiscoverAssets();
     void Update();
-    void LoadRequired();
-    void LoadIESFiles();
+    void LoadRequired(); // TODO: rename to something that doesn't fell like a boolean
     bool LoadingComplete();
 
-    bool LoadIES(const std::string& path, IESProfile& outProfile);
+    void LoadAnimations();
+    void LoadIESFiles();
 }

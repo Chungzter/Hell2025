@@ -1,5 +1,9 @@
 #pragma once
+
+#include <glm/vec3.hpp>
+
 #include <string>
+#include <cstdint>
 
 struct SkinnedMesh {
     std::string name = "undefined";

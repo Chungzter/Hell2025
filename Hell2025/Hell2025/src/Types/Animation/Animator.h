@@ -1,9 +1,10 @@
 #pragma once
-#include "Animation.h"
 #include "Types/Renderer/SkinnedModel.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
+
+#include "Hell/ResourceManagement/Types/Animation.h"
 
 struct AnimationLayer {
     Animation* m_animation;

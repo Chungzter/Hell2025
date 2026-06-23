@@ -11,6 +11,7 @@
 namespace Hell::ResourceManager {
 
     namespace {
+        std::unordered_map<std::string, Animation> g_animations;
         std::unordered_map<std::string, GenericMesh> g_genericMeshes;
         std::unordered_map<std::string, IESProfile> g_iesProfiles;
         std::unordered_map<std::string, MeshBuffer> g_meshBuffers;
@@ -39,6 +40,7 @@ namespace Hell::ResourceManager {
         for (auto& object : g_meshBuffers)   { object.second.CleanUp(); } g_meshBuffers.clear();
         for (auto& object : g_textures)      { object.second.CleanUp(); } g_textures.clear();
 
+        g_animations.clear();
         g_iesProfiles.clear();
         g_materials.clear();
         g_materialIndices.clear();
@@ -114,6 +116,48 @@ namespace Hell::ResourceManager {
                 return a.name < b.name;
             });
         }
+    }
+
+    // Animation
+
+    Animation& CreateAnimation(const std::string& name) {
+        auto it = g_animations.find(name);
+
+        if (it != g_animations.end()) {
+            Logging::Fatal() << "ResourceManager::CreateAnimation(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_animations.emplace(name, Animation());
+        return result.first->second;
+    }
+
+    std::unordered_map<std::string, Animation>& GetAnimations() {
+        return g_animations;
+    }
+
+    Animation& GetAnimation(const std::string& name) {
+        auto it = g_animations.find(name);
+
+        if (it == g_animations.end()) {
+            Logging::Error() << "ResourceManager::GetAnimation(..) failed: '" << name << "' does not exist\n";
+
+            static Animation invalid;
+            return invalid;
+        }
+
+        return it->second;
+    }
+
+    Animation* GetAnimationPtr(const std::string& name) {
+        auto it = g_animations.find(name);
+
+        if (it == g_animations.end()) {
+            Logging::Error() << "ResourceManager::GetAnimationPtr(..) failed: '" << name << "' does not exist\n";
+            return nullptr;
+        }
+
+        return &it->second;
     }
 
     // Generic Mesh

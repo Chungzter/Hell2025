@@ -1,14 +1,14 @@
 #pragma once
 
 #include <Game/Types.h>
-#include "Hell/Render/VertexAttributes.h"
 
-#include "Types/Animation/Animation.h"
-#include "Hell/ResourceManagement/Types/IESProfile.h"
-#include "Hell/ResourceManagement/Types/Mesh.h"
 #include "Types/Renderer/Model.h"
 #include "Types/Renderer/SkinnedMesh.hpp"
 #include "Types/Renderer/SkinnedModel.h"
+
+#include "Hell/Render/VertexAttributes.h"
+#include "Hell/ResourceManagement/Types/IESProfile.h"
+#include "Hell/ResourceManagement/Types/Mesh.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
 
 #include <cstdint>
@@ -23,12 +23,6 @@ namespace AssetManager {
     bool LoadingComplete();
     void AddItemToLoadLog(std::string text);
     std::vector<std::string>& GetLoadLog();
-
-    // Animations
-    std::vector<Animation>& GetAnimations();
-    Animation* GetAnimationByName(const std::string& name);
-    Animation* GetAnimationByIndex(int index, bool printError = true);
-    int GetAnimationIndexByName(const std::string& name);
 
     // Mesh
     std::vector<Mesh>& GetMeshes();
@@ -93,8 +87,6 @@ namespace AssetManager {
     // Loading 
     void LoadPendingModelsAsync();
     void LoadPendingSkinnedModelsAsync();
-    void LoadPendingAnimationsAsync();
-    void LoadAnimation(Animation* animation);
     void LoadModel(Model* model);
     void LoadSkinnedModel(SkinnedModel* skinnedModel);
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Hell/ResourceManagement/Types/Animation.h"
 #include "Hell/ResourceManagement/Types/GenericMesh.h"
 #include "Hell/ResourceManagement/Types/IESProfile.h"
 #include "Hell/ResourceManagement/Types/Material.h"
@@ -21,6 +22,11 @@ namespace Hell::ResourceManager {
 
     void CleanUp();
     void AppendMemoryReport(MemoryTracker::MemoryReport& report);
+
+    Animation& CreateAnimation(const std::string& name);
+    std::unordered_map<std::string, Animation>& GetAnimations();
+    Animation& GetAnimation(const std::string& name);
+    Animation* GetAnimationPtr(const std::string& name);
 
     GenericMesh& CreateGenericMesh(const std::string& name);
     GenericMesh& GetGenericMesh(const std::string& name);

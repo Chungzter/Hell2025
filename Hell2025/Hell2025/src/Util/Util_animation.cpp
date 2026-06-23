@@ -7,7 +7,7 @@ namespace Util {
         for (unsigned int i = 0; i < animation->m_animatedNodes.size(); i++) {
             const AnimatedNode* animatedNode = &animation->m_animatedNodes[i];
 
-            if (Util::StrCmp(animatedNode->m_nodeName, NodeName)) {
+            if (animatedNode->m_nodeName == NodeName) {
                 return animatedNode;
             }
         }

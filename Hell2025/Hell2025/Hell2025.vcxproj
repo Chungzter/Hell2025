@@ -298,7 +298,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\API\Vulkan\vk_backend.cpp" />
     <ClCompile Include="src\API\Vulkan\Renderer\vk_renderer.cpp" />
     <ClCompile Include="src\API\Vulkan\vk_util.cpp" />
-    <ClCompile Include="src\AssetManagement\AssetManager_animation.cpp" />
     <ClCompile Include="src\AssetManagement\AssetManager_ies_profiles.cpp" />
     <ClCompile Include="src\AssetManagement\AssetManager_material.cpp" />
     <ClCompile Include="src\AssetManagement\AssetManager_mesh.cpp" />
@@ -353,8 +352,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\AssetFormats\ModelBvhFormat.cpp" />
     <ClCompile Include="src\Hell\AssetFormats\ModelFormat.cpp" />
     <ClCompile Include="src\Hell\AssetFormats\SkinnedModelFormat.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\AnimationLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\AssetLoader.cpp" />
-    <ClCompile Include="src\Hell\AssetLoader\IES.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\IESLoader.cpp" />
     <ClCompile Include="src\Hell\File\File.cpp" />
     <ClCompile Include="src\Hell\MemoryTracker\MemoryTracker.cpp" />
     <ClCompile Include="src\Game\UniqueID.cpp" />
@@ -550,7 +550,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Renderer\RenderDataManager.cpp" />
     <ClCompile Include="src\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Camera\Camera.cpp" />
-    <ClCompile Include="src\Types\Animation\Animation.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\Animation.cpp" />
     <ClCompile Include="src\Types\Renderer\SkinnedModel.cpp" />
     <ClCompile Include="src\Types\Game\AnimatedGameObject.cpp" />
     <ClCompile Include="src\Types\Game\GameObject.cpp" />
@@ -842,7 +842,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\File\MapFileFormat.h" />
     <ClInclude Include="src\Renderer\RenderDataManager.h" />
     <ClInclude Include="src\Renderer\Renderer.h" />
-    <ClInclude Include="src\Types\Animation\Animation.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\Animation.h" />
     <ClInclude Include="src\Types\Renderer\SkinnedMesh.hpp" />
     <ClInclude Include="src\Types\Renderer\SkinnedModel.h" />
     <ClInclude Include="src\Timer.hpp" />
