@@ -5,6 +5,8 @@
 #include "Types/Game/SpawnPoint.h"
 #include <map>
 
+#include "Hell/Math/VecXZ.h"
+
 struct FenceCreateInfo {
     std::vector<glm::vec2> controlPoints2D;
     std::string editorName = UNDEFINED_STRING;
@@ -325,7 +327,7 @@ struct MapCreateInfo {
     std::string name;
     uint32_t width = 4;
     uint32_t depth = 4;
-    ivecXZ spawnCoords = ivecXZ(0, 0);
+    Hell::ivecXZ spawnCoords = Hell::ivecXZ(0, 0);
     std::string m_sectorNames[MAX_MAP_WIDTH][MAX_MAP_DEPTH];
 };
 

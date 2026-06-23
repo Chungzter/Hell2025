@@ -17,10 +17,12 @@ namespace Editor {
             float maxRayDistance = 2000;
             glm::vec3 rayOrigin = GetMouseRayOriginByViewportIndex(GetHoveredViewportIndex());
             glm::vec3 rayDir = GetMouseRayDirectionByViewportIndex(GetHoveredViewportIndex());
+
             PhysXRayResult rayResult = Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
+            ObjectType objectType = UniqueID::GetType(rayResult.userData.objectId);
 
             // Place picture frame
-            if (rayResult.userData.objectType == ObjectType::WALL_SEGMENT) {
+            if (objectType == ObjectType::WALL_SEGMENT) {
                 Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                 PictureFrameCreateInfo createInfo;
                 createInfo.position = rayResult.hitPosition;

@@ -52,6 +52,8 @@ std::string FormatMemorySize(size_t bytes) {
     constexpr size_t bytesPerMegabyte = bytesPerKilobyte * 1024;
     constexpr size_t bytesPerGigabyte = bytesPerMegabyte * 1024;
 
+    if (bytes == 0) return "-";
+
     if (bytes < bytesPerKilobyte) {
         return std::to_string(bytes) + " B";
     }

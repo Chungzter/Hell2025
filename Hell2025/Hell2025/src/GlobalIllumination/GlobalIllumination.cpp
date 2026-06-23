@@ -1,6 +1,6 @@
 /*#include "GlobalIllumination.h"
 #include "AssetManagement/AssetManager.h"
-#include "Bvh/Gpu/Bvh.h"
+#include "Bvh/Gpu/BvhOLD.h"
 #include "Input/Input.h"
 #include "Renderer/Renderer.h"
 #include "Physics/Physics.h"

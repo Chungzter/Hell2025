@@ -3,11 +3,13 @@
 #include "Camera/Camera.h"
 #include "Camera/Frustum.h"
 #include "Inventory/Inventory.h"
-#include "Math/AABB.h"
 #include "Physics/Physics.h"
 #include "Types/Game/AnimatedGameObject.h"
 #include "Types/Game/TypeWriter.h"
 #include "Types/Renderer/SpriteSheetObject.h"
+
+#include "Hell/Math/AABB.h"
+#include "Hell/Math/VecXZ.h"
 
 struct Player {
 
@@ -267,7 +269,7 @@ public:
 
     glm::mat4 GetViewWeaponBoneWorldMatrix(const std::string& boneName);
 
-    ivecXZ GetChunkPos() { return m_chunkPos; }
+    Hell::ivecXZ GetChunkPos() { return m_chunkPos; }
 
     bool InventoryIsOpen();
     bool InventoryIsClosed();
@@ -302,7 +304,7 @@ private:
     int32_t m_respawnCount = 0;
 
     //glm::vec3 m_position = glm::vec3(0.0f);
-    ivecXZ m_chunkPos;
+    Hell::ivecXZ m_chunkPos;
 
     // Interact
 

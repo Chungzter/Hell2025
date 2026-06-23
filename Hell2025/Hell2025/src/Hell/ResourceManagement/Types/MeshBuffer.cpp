@@ -75,10 +75,15 @@ void MeshBuffer::CleanUp() {
     }
 }
 
-uint64_t MeshBuffer::AddMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name) {
+uint32_t MeshBuffer::AddMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name) {
     if (!m_initialized) Initialize();
 
     if (vertices.empty() || indices.empty()) return 0;
+
+    if (m_nextMeshId == std::numeric_limits<uint32_t>::max()) {
+        Logging::Error() << "MeshBuffer::AddMesh(..) failed: mesh ID space exhausted for '" << m_name << "'\n";
+        return 0;
+    }
 
     m_nextMeshId++;
 
@@ -100,7 +105,8 @@ uint64_t MeshBuffer::AddMesh(const std::vector<Vertex>& vertices, const std::vec
 
     mesh.aabbMin = aabbMin;
     mesh.aabbMax = aabbMax;
-    mesh.extents = (aabbMax - aabbMin) * 0.5f;
+    mesh.extents = aabbMax - aabbMin;
+    mesh.boundingSphereRadius = std::max(mesh.extents.x, std::max(mesh.extents.y, mesh.extents.z)) * 0.5f;
 
     return m_nextMeshId;
 }
@@ -326,8 +332,8 @@ uint32_t MeshBuffer::GetVAO() const {
     }
 }
 
-void MeshBuffer::RemoveMesh(uint64_t meshIndex) {
-    auto it = m_meshes.find(meshIndex);
+void MeshBuffer::RemoveMesh(uint32_t meshId) {
+    auto it = m_meshes.find(meshId);
     if (it == m_meshes.end()) return;
 
     Mesh& mesh = it->second;
@@ -438,7 +444,7 @@ size_t MeshBuffer::CalculateNewCapacity(size_t requiredCount, size_t currentCapa
     return std::max(requiredCount, static_cast<size_t>(currentCapacity * m_growthMultiplier));
 }
 
-Mesh* MeshBuffer::GetMeshById(uint64_t meshId) {
+Mesh* MeshBuffer::GetMeshById(uint32_t meshId) {
     auto it = m_meshes.find(meshId);
     if (it != m_meshes.end()) {
         return &it->second;
@@ -447,14 +453,14 @@ Mesh* MeshBuffer::GetMeshById(uint64_t meshId) {
     return nullptr;
 }
 
-std::span<Vertex> MeshBuffer::GetMeshVertexSpan(uint64_t meshId) {
+std::span<Vertex> MeshBuffer::GetMeshVertexSpan(uint32_t meshId) {
     Mesh* mesh = GetMeshById(meshId);
     if (!mesh) return {};
 
     return std::span<Vertex>(m_vertices.data() + mesh->baseVertex, mesh->vertexCount);
 }
 
-std::span<uint32_t> MeshBuffer::GetMeshIndexSpan(uint64_t meshId) {
+std::span<uint32_t> MeshBuffer::GetMeshIndexSpan(uint32_t meshId) {
     Mesh* mesh = GetMeshById(meshId);
     if (!mesh) return {};
 

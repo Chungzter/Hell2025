@@ -2,12 +2,11 @@
 
 #include "Game/CreateInfo.h"
 #include "Game/Enums.h"
-#include "Hell/Render/TextureTypes.h"
 #include "Game/Types.h"
+
+#include "Hell/Math/AABB.h"
+#include "Hell/Render/TextureTypes.h"
 #include "Hell/Render/VertexAttributes.h"
-
-#include "Math/AABB.h"
-
 #include "Hell/ResourceManagement/Types/Animation.h"
 
 #include <assimp/matrix3x3.h>

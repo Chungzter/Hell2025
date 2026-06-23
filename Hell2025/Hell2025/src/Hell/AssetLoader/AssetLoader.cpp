@@ -33,7 +33,7 @@ namespace Hell::AssetLoader {
         }
     }
 
-    void LoadRequired() {
+    void LoadMinimumRequiredAssets() {
         for (FileInfo& fileInfo : File::IterateDirectory("res/fonts", { "png" })) {
             Texture& texture = ResourceManager::CreateTexture(fileInfo.name);
             texture.SetFileInfo(fileInfo);

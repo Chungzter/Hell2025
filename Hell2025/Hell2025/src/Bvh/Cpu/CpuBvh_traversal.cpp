@@ -7,6 +7,13 @@
 
 namespace Bvh::Cpu {
 
+    static void UnpackTriangle(const BVHTriangle& triangle, glm::vec3& p0, glm::vec3& e1, glm::vec3& e2, glm::vec3& normal) {
+        p0 = glm::vec3(triangle.v0_and_e1x);
+        e1 = glm::vec3(triangle.v0_and_e1x.w, triangle.e1yz_and_e2xy.x, triangle.e1yz_and_e2xy.y);
+        e2 = glm::vec3(triangle.e1yz_and_e2xy.z, triangle.e1yz_and_e2xy.w, triangle.e2z_and_normal.x);
+        normal = glm::vec3(triangle.e2z_and_normal.y, triangle.e2z_and_normal.z, triangle.e2z_and_normal.w);
+    }
+
     bool IntersectNodeGpu(const RayData& rayData, const glm::vec3& aabbBoundsMin, const glm::vec3& aabbBoundsMax, float& t) {
         // Compute t values for the slabs defined by the AABB
         glm::vec3 t1(
@@ -81,7 +88,7 @@ namespace Bvh::Cpu {
         RayData rayData = ComputeRayData(localOrigin, localDir, localMinDistance, localMaxDistance);
 
         const std::vector<BvhNode>& meshBvhNodes = GetMeshGpuBvhNodes();
-        const std::vector<float>& triangleData = GetTriangleData();
+        const std::vector<BVHTriangle>& triangles = GetTriangles();
 
         stack[currentStackSize++] = instance.rootNodeIndex;
         while (currentStackSize != 0) {
@@ -97,21 +104,11 @@ namespace Bvh::Cpu {
             // Intersect primitives
             if (node.primitiveCount > 0) {
                 for (uint32_t i = 0; i < node.primitiveCount; i++) {
-                    int index = node.firstChildOrPrimitive + i * 12;
+                    const uint32_t floatOffset = node.firstChildOrPrimitive + i * 12;
+                    const BVHTriangle& triangle = triangles[floatOffset / 12];
 
                     glm::vec3 p0, e1, e2, normal;
-                    p0.x = triangleData[index + 0];
-                    p0.y = triangleData[index + 1];
-                    p0.z = triangleData[index + 2];
-                    e1.x = triangleData[index + 3];
-                    e1.y = triangleData[index + 4];
-                    e1.z = triangleData[index + 5];
-                    e2.x = triangleData[index + 6];
-                    e2.y = triangleData[index + 7];
-                    e2.z = triangleData[index + 8];
-                    normal.x = triangleData[index + 9];
-                    normal.y = triangleData[index + 10];
-                    normal.z = triangleData[index + 11];
+                    UnpackTriangle(triangle, p0, e1, e2, normal);
 
                     glm::vec3 p1 = p0 - e1;
                     glm::vec3 p2 = p0 + e2;
@@ -127,7 +124,7 @@ namespace Bvh::Cpu {
                         rayResult.hitFound = true;
                         rayResult.hitPosition = hitPositionWorld;
                         rayResult.distanceToHit = distanceToHit;
-                        rayResult.primtiviveId = index;
+                        rayResult.primtiviveId = floatOffset;
                         rayResult.primitiveTransform = instance.inverseWorldTransform;
                         rayResult.nodeBoundsMin = node.boundsMin;
                         rayResult.nodeBoundsMax = node.boundsMax;
@@ -222,10 +219,10 @@ namespace Bvh::Cpu {
         closestRayResult.distanceToHit = maxDistance;
 
         const std::vector<BvhNode>& meshBvhNodes = GetMeshGpuBvhNodes();
-        const std::vector<float>& triangleData = GetTriangleData();
+        const std::vector<BVHTriangle>& triangles = GetTriangles();
 
         // Bail early if the mesh BVHs did not load for some reason
-        if (meshBvhNodes.empty() || triangleData.empty()) return closestRayResult;
+        if (meshBvhNodes.empty() || triangles.empty()) return closestRayResult;
 
         // Walk the bvh
         stack[currentStackSize++] = instance.rootNodeIndex;
@@ -244,21 +241,11 @@ namespace Bvh::Cpu {
 
                 // IF so, then check intersections with the triangles within it
                 for (uint32_t i = 0; i < node.primitiveCount; i++) {
-                    uint32_t index = node.firstChildOrPrimitive + i * 12;
+                    const uint32_t floatOffset = node.firstChildOrPrimitive + i * 12;
+                    const BVHTriangle& triangle = triangles[floatOffset / 12];
 
                     glm::vec3 p0, e1, e2, normal;
-                    p0.x = triangleData[index + 0];
-                    p0.y = triangleData[index + 1];
-                    p0.z = triangleData[index + 2];
-                    e1.x = triangleData[index + 3];
-                    e1.y = triangleData[index + 4];
-                    e1.z = triangleData[index + 5];
-                    e2.x = triangleData[index + 6];
-                    e2.y = triangleData[index + 7];
-                    e2.z = triangleData[index + 8];
-                    normal.x = triangleData[index + 9];
-                    normal.y = triangleData[index + 10];
-                    normal.z = triangleData[index + 11];
+                    UnpackTriangle(triangle, p0, e1, e2, normal);
 
                     glm::vec3 p1 = p0 - e1;
                     glm::vec3 p2 = p0 + e2;
@@ -275,7 +262,7 @@ namespace Bvh::Cpu {
                             closestRayResult.hitFound = true;
                             closestRayResult.hitPosition = hitPositionWorld;
                             closestRayResult.distanceToHit = distanceToHit;
-                            closestRayResult.primtiviveId = index;
+                            closestRayResult.primtiviveId = floatOffset;
                             closestRayResult.primitiveTransform = instance.worldTransform;
                             closestRayResult.nodeBoundsMin = node.boundsMin;
                             closestRayResult.nodeBoundsMax = node.boundsMax;
@@ -365,24 +352,13 @@ namespace Bvh::Cpu {
     void RenderRayResultTriangle(BvhRayResult& rayResult, glm::vec4 color) {
         if (!rayResult.hitFound) return;
 
-        const std::vector<float>& triangleData = GetTriangleData();
-        int index = rayResult.primtiviveId;
+        const std::vector<BVHTriangle>& triangles = GetTriangles();
+        const size_t triangleIndex = rayResult.primtiviveId / 12;
 
-        if (index + 12 >= triangleData.size()) return;
+        if (triangleIndex >= triangles.size()) return;
 
         glm::vec3 p0, e1, e2, normal;
-        p0.x = triangleData[index + 0];
-        p0.y = triangleData[index + 1];
-        p0.z = triangleData[index + 2];
-        e1.x = triangleData[index + 3];
-        e1.y = triangleData[index + 4];
-        e1.z = triangleData[index + 5];
-        e2.x = triangleData[index + 6];
-        e2.y = triangleData[index + 7];
-        e2.z = triangleData[index + 8];
-        normal.x = triangleData[index + 9];
-        normal.y = triangleData[index + 10];
-        normal.z = triangleData[index + 11];
+        UnpackTriangle(triangles[triangleIndex], p0, e1, e2, normal);
 
         glm::vec3 p1 = p0 - e1;
         glm::vec3 p2 = p0 + e2;

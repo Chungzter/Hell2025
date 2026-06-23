@@ -119,7 +119,7 @@ namespace Physics {
         }
     }
 
-    void CreateHeightField(vecXZ& worldSpaceOffset, const float* heightValues) {
+    void CreateHeightField(Hell::vecXZ& worldSpaceOffset, const float* heightValues) {
         HeightField& g_heightFields = g_HeightFields.emplace_back();
         g_heightFields.Create(worldSpaceOffset, heightValues);
     }

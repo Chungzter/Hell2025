@@ -2,8 +2,10 @@
 #include <Game/Types.h>
 #include <Game/CreateInfo.h>
 #include "Types/Renderer/SpriteSheetTexture.h"
+
+#include "Hell/Math/AABB.h"
+
 #include <string>
-#include "Math/AABB.h"
 
 struct SpriteSheetObject {
 public:

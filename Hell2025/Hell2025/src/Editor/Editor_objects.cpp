@@ -37,7 +37,8 @@ namespace Editor {
 
         PhysXRayResult physxRayResult = Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, backfaceCulling);
         if (physxRayResult.hitFound) {
-            SetHoveredObjectType(physxRayResult.userData.objectType);
+            ObjectType type = UniqueID::GetType(physxRayResult.userData.objectId);
+            SetHoveredObjectType(type);
             SetHoveredObjectId(physxRayResult.userData.objectId);
             //std::cout << "phyx hit: " << physxRayResult.userData.objectId << "\n";
 

@@ -1,4 +1,10 @@
 #pragma once
+#include "Hell/Common.h"
+#include "Hell/BVH/Types.h"
+#include "Hell/File.h"
+#include "Hell/Math/GLM.h"
+#include "Hell/Math/VecXZ.h"
+#include <Hell/Render/TextureTypes.h>
 
 #include <Game/Constants.h>
 #include <Game/Enums.h>
@@ -8,12 +14,6 @@
 #include <limits>
 #include <string>
 #include <vector>
-
-#include "Hell/Common.h"
-#include "Hell/BVH/Types.h"
-#include "Hell/File.h"
-#include "Hell/Math/GLM.h"
-#include <Hell/Render/TextureTypes.h>
 #include <unordered_map>
 
 struct BlitRegion {
@@ -181,69 +181,7 @@ struct TileInstanceData {
     unsigned int offset;
 };
 
-struct vecXZ {
-    float x = 0.0f;
-    float z = 0.0f;
 
-    vecXZ() : x(0.0f), z(0.0f) {}
-    vecXZ(float x, float z) : x(x), z(z) {}
-
-    bool operator==(const vecXZ& other) const {
-        return x == other.x && z == other.z;
-    }
-
-    bool operator!=(const vecXZ& other) const {
-        return !(*this == other);
-    }
-
-    bool operator<(const vecXZ& other) const {
-        return (x < other.x) || (x == other.x && z < other.z);
-    }
-
-    bool operator>(const vecXZ& other) const {
-        return other < *this;
-    }
-
-    bool operator<=(const vecXZ& other) const {
-        return !(other < *this);
-    }
-
-    bool operator>=(const vecXZ& other) const {
-        return !(*this < other);
-    }
-};
-
-struct ivecXZ {
-    int x = 0;
-    int z = 0;
-
-    ivecXZ() : x(0), z(0) {}
-    ivecXZ(int x, int z) : x(x), z(z) {}
-
-    bool operator==(const ivecXZ& other) const {
-        return x == other.x && z == other.z;
-    }
-
-    bool operator!=(const ivecXZ& other) const {
-        return !(*this == other);
-    }
-
-    bool operator<(const ivecXZ& other) const {
-        return (x < other.x) || (x == other.x && z < other.z);
-    }
-
-    bool operator>(const ivecXZ& other) const {
-        return other < *this;
-    }
-
-    bool operator<=(const ivecXZ& other) const {
-        return !(other < *this);
-    }
-
-    bool operator>=(const ivecXZ& other) const {
-        return !(*this < other);
-    }
-};
 
 struct CubeRayResult {
     Transform cubeTransform = Transform();
@@ -344,7 +282,7 @@ struct RenderItem {
 
     int32_t localMeshNodeIndex = 0;
     int32_t opacityTextureIndex = 0;
-    int32_t meshId = 0;
+    uint32_t meshId = 0;
     int32_t blendingMode = static_cast<int32_t>(BlendingMode::DEFAULT);
 
     float tintColorR = 1.0f;
@@ -570,7 +508,7 @@ struct SpawnOffset {
 };
 
 struct HeightMapChunk {
-    ivecXZ coord;
+    Hell::ivecXZ coord;
     int baseIndex = 0;
     int baseVertex = 0;
     glm::vec3 aabbMin;
@@ -581,7 +519,6 @@ struct PhysicsUserData {
     uint64_t physicsId = 0;
     uint64_t objectId = 0;
     PhysicsType physicsType = PhysicsType::NONE;
-    ObjectType objectType = ObjectType::NO_TYPE;
 };
 
 struct PhysXRayResult {

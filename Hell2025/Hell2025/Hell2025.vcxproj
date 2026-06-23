@@ -332,10 +332,11 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Bible\MeshNodesConfig\GenericObjects\Plants.cpp" />
     <ClCompile Include="src\Bible\MeshNodesConfig\GenericObjects\TestModels.cpp" />
     <ClCompile Include="src\Bible\Info\Bible_inventoryItemInfo.cpp" />
-    <ClCompile Include="src\Bvh\Gpu\Bvh.cpp" />
+    <ClCompile Include="src\Bvh\Gpu\BvhOLD.cpp" />
     <ClCompile Include="src\Bvh\Gpu\Bvh_debug_draw.cpp" />
     <ClCompile Include="src\Bvh\Gpu\Bvh_math.cpp" />
     <ClCompile Include="src\Bvh\Gpu\Bvh_traversal.cpp" />
+    <ClCompile Include="src\Hell\BVH\BVH.cpp" />
     <ClCompile Include="src\Camera\Frustum.cpp" />
     <ClCompile Include="src\Config\Config.cpp" />
     <ClCompile Include="src\Audio\Audio.cpp" />
@@ -387,7 +388,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Editor\Objects\Editor_walls.cpp" />
     <ClCompile Include="src\Editor\Editor_objects.cpp" />
     <ClCompile Include="src\Editor\Objects\Editor_object_placement.cpp" />
-    <ClCompile Include="src\Math\OBB.cpp" />
+    <ClCompile Include="src\Hell\Math\OBB.cpp" />
     <ClCompile Include="src\Player\Player_items.cpp" />
     <ClCompile Include="src\Player\Player_ladder.cpp" />
     <ClCompile Include="src\Player\Player_update.cpp" />
@@ -467,7 +468,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Imgui\ImguiBackEnd.cpp" />
     <ClCompile Include="src\File\JSON.cpp" />
     <ClCompile Include="src\Imgui\Types\Types.cpp" />
-    <ClCompile Include="src\Math\AABB.cpp" />
+    <ClCompile Include="src\Hell\Math\AABB.cpp" />
     <ClCompile Include="src\Ocean\Ocean.cpp" />
     <ClCompile Include="src\Physics\Physics_d6_joints.cpp" />
     <ClCompile Include="src\Physics\Physics_ragdolls.cpp" />
@@ -658,9 +659,11 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\AssetFormats\AssetFormats.h" />
     <ClInclude Include="src\Hell\AssetLoader\AssetLoader.h" />
     <ClInclude Include="src\Hell\BVH\Types.h" />
+    <ClInclude Include="src\Hell\BVH\BVH.h" />
     <ClInclude Include="src\Hell\File.h" />
     <ClInclude Include="src\Hell\File\File.h" />
     <ClInclude Include="src\Hell\File\FileInfo.h" />
+    <ClInclude Include="src\Hell\Math\VecXZ.h" />
     <ClInclude Include="src\Hell\MemoryTracker\MemoryTracker.h" />
     <ClInclude Include="src\Game\RendereringConstants.h" />
     <ClInclude Include="src\Hell\Render\TextureTypes.h" />
@@ -669,7 +672,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\ResourceManagement\Types\Material.h" />
     <ClInclude Include="src\Hell\ResourceManagement\TextureUploader.h" />
     <ClInclude Include="src\Types\Core\ItemInfo.h" />
-    <ClInclude Include="src\Bvh\Gpu\Bvh.h" />
+    <ClInclude Include="src\Bvh\Gpu\BvhOLD.h" />
     <ClInclude Include="src\Common\CopyableAtomic.h" />
     <ClInclude Include="src\Hell\Math\GLM.h" />
     <ClInclude Include="src\API\OpenGL\GL_backend.h" />
@@ -733,7 +736,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Managers\MirrorManager.h" />
     <ClInclude Include="src\Managers\OpenableManager.h" />
     <ClInclude Include="src\Hell\Math\Math.h" />
-    <ClInclude Include="src\Math\OBB.h" />
+    <ClInclude Include="src\Hell\Math\OBB.h" />
     <ClInclude Include="src\Ragdoll\Ragdoll_util.h" />
     <ClInclude Include="src\Types\Characters\Enemies\CharacterSpine.h" />
     <ClInclude Include="src\Types\Characters\Enemies\Dobermann\Dobermann.h" />
@@ -781,7 +784,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Imgui\ImguiBackEnd.h" />
     <ClInclude Include="src\File\JSON.h" />
     <ClInclude Include="src\Imgui\Types\Types.h" />
-    <ClInclude Include="src\Math\AABB.h" />
+    <ClInclude Include="src\Hell\Math\AABB.h" />
     <ClInclude Include="src\Ocean\Ocean.h" />
     <ClInclude Include="src\Physics\CollisionReports.h" />
     <ClInclude Include="src\Physics\Types\D6Joint.h" />

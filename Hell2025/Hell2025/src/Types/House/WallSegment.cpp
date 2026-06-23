@@ -34,7 +34,7 @@ void WallSegment::Init(glm::vec3 start, glm::vec3 end, float height, uint64_t pa
     m_parentObjectId = parentObjectId;
 }
 
-void WallSegment::SetMeshId(uint64_t meshId) {
+void WallSegment::SetMeshId(uint32_t meshId) {
     m_meshId = meshId;
 }
 
@@ -104,6 +104,6 @@ void WallSegment::CreatePhysicsObject() {
     userData.physicsId = m_physicsId;
     userData.objectId = m_objectId;
     userData.physicsType = PhysicsType::RIGID_STATIC;
-    userData.objectType = ObjectType::WALL_SEGMENT;
+    //userData.objectType = ObjectType::WALL_SEGMENT;
     Physics::SetRigidStaticUserData(m_physicsId, userData);
 }

@@ -30,13 +30,11 @@ namespace AssetManager {
     int CreateMesh(const std::string& name, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
     int GetMeshIndexByName(const std::string& name);
     int GetMeshIndexByName(const std::string& name);
-    int GetQuadZFacingMeshIndex();
     Mesh* GetMeshByName(const std::string& name);
     Mesh* GetMeshByIndex(int index);
     Mesh* GetCubeMesh();
-    Mesh* GetQuadZFacingMesh();
     Mesh* GetMeshByModelNameMeshName(const std::string& modelName, const std::string& meshName);
-    Mesh* GetMeshByModelNameMeshIndex(const std::string& modelName, uint32_t meshIndex);
+    Mesh* GetMeshByModelNameMeshLocalIndex(const std::string& modelName, uint32_t meshIndex);
     int GetMeshIndexByModelNameMeshName(const std::string& modelName, const std::string& meshName);
     std::vector<Vertex> GetMeshVertices(Mesh* mesh);
     std::span<Vertex> GetMeshVerticesSpan(Mesh* mesh);

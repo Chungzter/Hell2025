@@ -1,4 +1,6 @@
 #pragma once
+#include "Hell/Math/VecXZ.h"
+
 #include <Game/Types.h>
 #include "Types/Game/SpawnPoint.h"
 #include <Game/CreateInfo.h>
@@ -50,7 +52,7 @@ namespace nlohmann {
 
     void to_json(nlohmann::json& j, const glm::vec2& v);
     void to_json(nlohmann::json& j, const glm::vec3& v);
-    void to_json(nlohmann::json& j, const std::map<ivecXZ, std::string>& map);
+    void to_json(nlohmann::json& j, const std::map<Hell::ivecXZ, std::string>& map);
 
     void from_json(const json& j, glm::mat4& m);
     void from_json(const json& j, glm::quat& q);

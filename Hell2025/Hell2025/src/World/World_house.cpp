@@ -68,7 +68,7 @@ namespace World {
                 meshBuffer.RemoveMesh(wallSegment.GetMeshId());
 
                 // Create new mesh
-                uint64_t meshId = meshBuffer.AddMesh(wallSegment.GetVertices(), wallSegment.GetIndices(), "WallSegment");
+                uint32_t meshId = meshBuffer.AddMesh(wallSegment.GetVertices(), wallSegment.GetIndices(), "WallSegment");
 
                 // Update mesh Id
                 wallSegment.SetMeshId(meshId);
@@ -84,7 +84,7 @@ namespace World {
             meshBuffer.RemoveMesh(housePlane.GetMeshId());
 
             // Create new mesh
-            uint64_t meshId = meshBuffer.AddMesh(housePlane.GetVertices(), housePlane.GetIndices(), "HousePlane");
+            uint32_t meshId = meshBuffer.AddMesh(housePlane.GetVertices(), housePlane.GetIndices(), "HousePlane");
 
             // Update mesh Id
             housePlane.SetMeshId(meshId);

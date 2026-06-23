@@ -22,16 +22,16 @@ struct MeshBuffer {
     ~MeshBuffer() = default;
 
     void PreAllocate(size_t maxVertices, size_t maxIndices);
-    void RemoveMesh(uint64_t meshIndex);
+    void RemoveMesh(uint32_t meshId);
     void Reset();
     void CleanUp();
     void PrintDebugInfo();
 
-    uint64_t AddMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name = UNDEFINED_STRING);
+    uint32_t AddMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name = UNDEFINED_STRING);
 
-    Mesh* GetMeshById(uint64_t meshId);
-    std::span<Vertex> GetMeshVertexSpan(uint64_t meshId);
-    std::span<uint32_t> GetMeshIndexSpan(uint64_t meshId);
+    Mesh* GetMeshById(uint32_t meshId);
+    std::span<Vertex> GetMeshVertexSpan(uint32_t meshId);
+    std::span<uint32_t> GetMeshIndexSpan(uint32_t meshId);
 
     size_t GetMeshCount() const               { return m_meshes.size(); }
     size_t GetAllocatedVertexCount() const    { return m_vertices.size(); }
@@ -66,11 +66,11 @@ private:
     std::string m_name = UNDEFINED_STRING;
     std::vector<Vertex> m_vertices;
     std::vector<uint32_t> m_indices;
-    std::unordered_map<uint64_t, Mesh> m_meshes;
+    std::unordered_map<uint32_t, Mesh> m_meshes;
     std::vector<MemoryBlock> m_freeVertexMemoryBlocks;
     std::vector<MemoryBlock> m_freeIndexMemoryBlocks;
 
-    uint64_t m_nextMeshId = 0;
+    uint32_t m_nextMeshId = 0;
     size_t m_vertexCapacity = 0;
     size_t m_indexCapacity = 0;
     size_t m_minCapacity = 1024;

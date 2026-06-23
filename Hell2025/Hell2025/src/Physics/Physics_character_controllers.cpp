@@ -39,7 +39,7 @@ namespace Physics {
 
         PhysicsUserData physicsUserData;
         physicsUserData.objectId = parentObjectId;
-        physicsUserData.objectType = ObjectType::CHARACTER_CONTROLLER;
+        //physicsUserData.objectType = ObjectType::CHARACTER_CONTROLLER;
         physicsUserData.physicsId = 0;
         physicsUserData.physicsType = PhysicsType::CHARACTER_CONTROLLER;
         pxController->getActor()->userData = new PhysicsUserData(physicsUserData);

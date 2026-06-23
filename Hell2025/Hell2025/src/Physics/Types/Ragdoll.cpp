@@ -21,7 +21,7 @@ void Ragdoll::SetFilterData(PhysicsFilterData physicsFilterData) {
     }
 }
 
-void Ragdoll::SetPhysicsData(uint64_t objectId, ObjectType objectType) {
+void Ragdoll::SetPhysicsData(uint64_t objectId) {
     for (int i = 0; i < m_rigidDynamicIds.size(); i++) {
         RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(m_rigidDynamicIds[i]);
         if (rigidDynamic) {
@@ -29,7 +29,6 @@ void Ragdoll::SetPhysicsData(uint64_t objectId, ObjectType objectType) {
             if (pxRigidDynamic) {
                 PhysicsUserData physicsUserData;
                 physicsUserData.objectId = objectId;
-                physicsUserData.objectType = objectType;
                 physicsUserData.physicsId = m_rigidDynamicIds[i];
                 physicsUserData.physicsType = PhysicsType::RIGID_DYNAMIC;
                 pxRigidDynamic->userData = new PhysicsUserData(physicsUserData);

@@ -137,7 +137,7 @@ void Shark::Init(const glm::vec3& initialPosition) {
 
 
     Ragdoll* ragdoll = Physics::GetRagdollById(animatedGameObject->GetRagdollId());
-    ragdoll->SetPhysicsData(m_objectId, ObjectType::SHARK);
+    ragdoll->SetPhysicsData(m_objectId);
 
     // Hack in a path
     glm::vec3 center(13.0f, 24.85, 36.0f);

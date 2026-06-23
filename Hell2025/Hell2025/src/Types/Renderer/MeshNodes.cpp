@@ -167,7 +167,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
                     userData.physicsId = meshNode->rigidDynamicId;
                     userData.objectId = meshNode->parentObjectId;
                     userData.physicsType = PhysicsType::RIGID_DYNAMIC;
-                    userData.objectType = UniqueID::GetType(meshNode->parentObjectId);
+                    //userData.objectType = UniqueID::GetType(meshNode->parentObjectId);
                     Physics::SetRigidDynamicUserData(meshNode->rigidDynamicId, userData);
                 }
             }

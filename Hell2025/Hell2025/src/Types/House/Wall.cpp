@@ -266,7 +266,7 @@ void Wall::SubmitRenderItems() {
     if (m_createInfo.wallType == WallType::WEATHER_BOARDS) {
 
 
-        for (uint64_t meshId : m_weatherBoardSegmentMeshIds) {
+        for (uint32_t meshId : m_weatherBoardSegmentMeshIds) {
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
             if (!mesh) continue;
 
@@ -353,7 +353,7 @@ void Wall::DrawSegmentLines(glm::vec4 color) {
 
 
 void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, int boardY, float boardWidth, std::vector<Vertex>& verticesOut, std::vector<uint32_t>& indicesOut) {
-    Mesh* mesh = AssetManager::GetMeshByModelNameMeshIndex("WeatherBoard", 0);
+    Mesh* mesh = AssetManager::GetMeshByModelNameMeshLocalIndex("WeatherBoard", 0);
     if (!mesh) return;
 
     std::span<Vertex> verticesSpan = AssetManager::GetMeshVerticesSpan(mesh);
@@ -406,7 +406,7 @@ void Wall::CleanUpWeatherBoardMesh() {
     MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
 
     // Clear any old mesh segments
-    for (uint64_t meshId : m_weatherBoardSegmentMeshIds) {
+    for (uint32_t meshId : m_weatherBoardSegmentMeshIds) {
         meshBuffer.RemoveMesh(meshId);
     }
 
@@ -505,7 +505,7 @@ void Wall::RecreateWeatherBoardMesh() {
             }
         }
 
-        uint64_t meshId = meshBuffer.AddMesh(vertices, indices, "Weatherboards");
+        uint32_t meshId = meshBuffer.AddMesh(vertices, indices, "Weatherboards");
         m_weatherBoardSegmentMeshIds.emplace_back(meshId);
     }
 }

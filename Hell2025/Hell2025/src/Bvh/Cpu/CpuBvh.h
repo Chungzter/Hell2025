@@ -45,7 +45,7 @@ namespace Bvh::Cpu {
 
     const std::vector<BvhNode>& GetMeshGpuBvhNodes();
     const std::vector<GpuPrimitiveInstance>& GetGpuEntityInstances(uint64_t sceneBvhId);
-    const std::vector<float>& GetTriangleData();
+    const std::vector<BVHTriangle>& GetTriangles();
 
     void RenderMeshTest(int index, glm::vec4 color, glm::mat4 worldTransform);
     void RenderMeshBvhTest(int index, glm::vec4 color, glm::mat4 worldTransform);

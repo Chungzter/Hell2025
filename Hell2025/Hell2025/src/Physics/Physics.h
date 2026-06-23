@@ -1,4 +1,11 @@
 #pragma once
+#include "Hell/Math/AABB.h"
+#include "Hell/Math/VecXZ.h"
+#include "Hell/Render/VertexAttributes.h"
+
+#include "Game/Types.h"
+#include "CollisionReports.h"
+
 #pragma warning(push, 0)
 #include <physx/PxPhysicsAPI.h>
 #include <physx/geometry/PxGeometryHelpers.h>
@@ -10,16 +17,10 @@
 #include "Physics/Types/Ragdoll.h"
 #include "Physics/Types/RigidDynamic.h"
 #include "Physics/Types/RigidStatic.h"
-#include "CollisionReports.h"
 
-#include "Game/Types.h"
-#include "Hell/Render/VertexAttributes.h"
-
-#include "Math/AABB.h"
 #include <string>
 #include <span>
 #include <vector>
-
 
 using namespace physx;
 
@@ -82,7 +83,7 @@ namespace Physics {
 
     // Height fields
     void UpdateHeightFields();
-    void CreateHeightField(vecXZ& worldSpaceOffset, const float* heightValues);
+    void CreateHeightField(Hell::vecXZ& worldSpaceOffset, const float* heightValues);
     void RemoveAnyHeightFieldMarkedForRemoval();
     const std::vector<HeightField>& GetHeightFields();
     void ActivateAllHeightFields();

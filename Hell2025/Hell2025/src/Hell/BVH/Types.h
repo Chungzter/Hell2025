@@ -18,6 +18,17 @@ struct BvhNode {
 };
 #pragma pack(pop)
 
+struct BVHTriangle {
+    glm::vec4 v0_and_e1x;     // p0.xyz, e1.x
+    glm::vec4 e1yz_and_e2xy;  // e1.yz, e2.xy
+    glm::vec4 e2z_and_normal; // e2.z, normal.xyz
+};
+
+static_assert(sizeof(BVHTriangle) == sizeof(float) * 12);
+static_assert(offsetof(BVHTriangle, v0_and_e1x) == 0);
+static_assert(offsetof(BVHTriangle, e1yz_and_e2xy) == sizeof(float) * 4);
+static_assert(offsetof(BVHTriangle, e2z_and_normal) == sizeof(float) * 8);
+
 struct RayData {
     float origin[3];
     float dir[3];
@@ -81,5 +92,5 @@ struct SceneBvh {
 
 struct MeshBvh {
     std::vector<BvhNode> m_nodes;
-    std::vector<float> m_triangleData;
+    std::vector<BVHTriangle> m_triangles;
 };

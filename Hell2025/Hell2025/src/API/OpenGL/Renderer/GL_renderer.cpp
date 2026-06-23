@@ -737,13 +737,16 @@ namespace OpenGLRenderer {
         // GBuffer
         OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
         gBuffer.Bind();
-        gBuffer.ClearAttachment("BaseColor", 0, 0, 0, 0);
-        gBuffer.ClearAttachment("Normal", 0, 0, 0, 0);
-        gBuffer.ClearAttachment("RMA", 0, 0, 0, 0);
-        gBuffer.ClearAttachment("Emissive", 0, 0, 0, 0);
-        gBuffer.ClearAttachment("Glass", 0, 0, 0, 0);
-        gBuffer.ClearAttachment("VelocityXYOcclusionSubSurface", 0, 0, 0, 1);
+        gBuffer.CreateAttachment("Lighting", GL_RGBA16F);
+        gBuffer.CreateAttachment("BaseColorMetallic", GL_RGBA8);
+        gBuffer.CreateAttachment("NormalXYRoughnessMisc", GL_RGB10_A2);
+        gBuffer.CreateAttachment("VelocityXYOcclusionSubSurface", GL_RGBA16F);
+        gBuffer.CreateAttachment("Visibility", GL_RG32UI);
+        gBuffer.CreateAttachment("Emissive", GL_RGBA8);
+        gBuffer.CreateDepthAttachment(GL_DEPTH32F_STENCIL8); // TODO: check what u actually need to clear stencil to
         gBuffer.ClearDepthAttachment(0.0f);
+
+        gBuffer.ClearAttachment("Glass", 0, 0, 0, 0); // TODO: remove me when/if u can
 
         // Decal mask
         OpenGLFrameBuffer& miscFullSizeFBO = GetFrameBuffer("MiscFullSize");

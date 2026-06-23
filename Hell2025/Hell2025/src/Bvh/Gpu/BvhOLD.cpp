@@ -1,8 +1,9 @@
-#include "Bvh.h"
+#include "BvhOLD.h"
 #include "Input/Input.h"
 #include "Renderer/Renderer.h"
 #include <Game/Constants.h>
 #include <Game/UniqueID.h>
+#include "Hell/BVH/BVH.h"
 #include "Util.h"
 #include "Timer.hpp"
 
@@ -34,7 +35,7 @@ namespace Bvh::Gpu {
     // Gpu data
     std::unordered_map<uint64_t, uint32_t> g_meshBvhRootNodeOffsetMapping; // Maps a flatterend MeshBvh's root node to its id
     std::vector<BvhNode> g_meshBvhsNodes;
-    std::vector<float> g_triangleData;
+    std::vector<BVHTriangle> g_triangles;
 
     glm::vec3 BvhVec3ToGlmVec3(MadmannVec3 vec);
     MadmannVec3 GlmVec3ToBvhVec3(glm::vec3 vec);
@@ -44,184 +45,13 @@ namespace Bvh::Gpu {
 
         MeshBvh& targetMeshBvh = g_meshBvhs[uniqueId];
         targetMeshBvh.m_nodes.swap(sourceMeshBvh.m_nodes);
-        targetMeshBvh.m_triangleData.swap(sourceMeshBvh.m_triangleData);
+        targetMeshBvh.m_triangles.swap(sourceMeshBvh.m_triangles);
         return uniqueId;
     }
 
     uint64_t CreateMeshBvhFromVertexData(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) {
-        //Timer timer("CreateBvhFromVertices() " + std::to_string(indices.size()) + " indices");
-
         uint64_t uniqueId = UniqueID::GetNextObjectId(ObjectType::UNDEFINED); // make me use another ID system !!!
-        MeshBvh& meshBvh = g_meshBvhs[uniqueId];
-
-        // Validate index count
-        if (indices.size() % 3 != 0) {
-            std::cout << "BVH::CreateMeshBvhFromVertexData() failed: index count " << indices.size() << " must be a multiple of 3\n";
-        }
-
-        size_t triangleCount = indices.size() / 3;
-        std::vector<MadmannBBox> bboxes(triangleCount);
-        std::vector<MadmannVec3> centers(triangleCount);
-
-        for (int i = 0; i < triangleCount; ++i) {
-            // Access the vertices for the current triangle
-            const size_t indexOffset = i * 3;
-
-            const size_t vertexIndex0 = indices[indexOffset];
-            const size_t vertexIndex1 = indices[indexOffset + 1];
-            const size_t vertexIndex2 = indices[indexOffset + 2];
-
-            const glm::vec3& p0 = vertices[vertexIndex0].position;
-            const glm::vec3& p1 = vertices[vertexIndex1].position;
-            const glm::vec3& p2 = vertices[vertexIndex2].position;
-
-            // Calculate bounding box and center
-            glm::vec3 min_p = glm::min(glm::min(p0, p1), p2);
-            glm::vec3 max_p = glm::max(glm::max(p0, p1), p2);
-            glm::vec3 center_p = (p0 + p1 + p2) / 3.0f;
-
-            bboxes[i] = MadmannBBox(MadmannVec3(min_p.x, min_p.y, min_p.z), MadmannVec3(max_p.x, max_p.y, max_p.z));
-            centers[i] = MadmannVec3(center_p.x, center_p.y, center_p.z);
-        }
-
-        MadmannBvhBuilder::Config config;
-        config.quality = MadmannBvhBuilder::Quality::High;
-
-        //MadmannBvh bvh = MadmannBvhBuilder::build(g_threadPool, bboxes, centers, config);
-        MadmannBvh bvh = MadmannBvhBuilder::build(bboxes, centers, config);
-
-        // Create our node array
-        int nodeCount = bvh.nodes.size();
-        meshBvh.m_nodes.resize(nodeCount);
-
-        // .. by iterating the bvh created by the library and extracting the relevant data
-        for (int i = 0; i < nodeCount; i++) {
-            const MadmannBvhNode& mmNode = bvh.nodes[i];
-            BvhNode& node = meshBvh.m_nodes[i];
-            node.boundsMin = glm::vec3(mmNode.bounds[0], mmNode.bounds[2], mmNode.bounds[4]);
-            node.boundsMax = glm::vec3(mmNode.bounds[1], mmNode.bounds[3], mmNode.bounds[5]);
-            node.primitiveCount = mmNode.index.value & ((1u << MadmannBvhNode::prim_count_bits) - 1);
-            node.firstChildOrPrimitive = mmNode.index.value >> MadmannBvhNode::prim_count_bits;
-        }
-
-        // Create the re-ordered triangle array
-        int floatCount = indices.size() / 3 * 3 * 4;
-        meshBvh.m_triangleData.reserve(floatCount);
-
-        // .. by walking the bvh and re-order triangles so that leaf node tris are adjacent, and updating the node indices
-        std::vector<uint32_t> stack;
-        const size_t GPU_TARGET_MAX_STACK_SIZE = 32;
-        stack.reserve(GPU_TARGET_MAX_STACK_SIZE);
-
-        if (!meshBvh.m_nodes.empty()) { // Push the root
-            stack.push_back(0);
-        }
-
-        size_t largestStackSize = 0;
-
-        while (!stack.empty()) {
-            // Track the maximum size the stack reaches
-            largestStackSize = std::max(largestStackSize, stack.size());
-
-            // Get the index from the back of the vector top of stack
-            uint32_t currentNodeIndex = stack.back();
-            stack.pop_back();
-
-            // Get the actual node
-            if (currentNodeIndex >= meshBvh.m_nodes.size()) {
-                std::cout << "Error: Invalid node index " << currentNodeIndex << " popped from stack!\n";
-                continue;
-            }
-            BvhNode& node = meshBvh.m_nodes[currentNodeIndex];
-
-            // Iterate primitives
-            if (node.primitiveCount > 0) {
-                uint32_t newPrimitiveFloatIndex = static_cast<uint32_t>(meshBvh.m_triangleData.size());
-
-                for (uint32_t i = 0; i < node.primitiveCount; i++) {
-                    const size_t originalPrimitiveId = node.firstChildOrPrimitive + i;
-                    const size_t triIndex = bvh.prim_ids[originalPrimitiveId];
-                    const size_t indexOffset = triIndex * 3;
-
-                    // Check index offset bounds
-                    if (indexOffset + 2 >= indices.size()) {
-                        std::cout << "Triangle index " << triIndex << " is out of range (max: " << (indices.size() / 3) - 1 << ")\n";
-                        return uniqueId;
-                    }
-
-                    // Retrieve triangle vertex indices
-                    int vertexIndex0 = indices[indexOffset];
-                    int vertexIndex1 = indices[indexOffset + 1];
-                    int vertexIndex2 = indices[indexOffset + 2];
-
-                    // Check vertex index bounds
-                    if (vertexIndex0 >= vertices.size()) {
-                        std::cout << "vertexIndex0 " << vertexIndex0 << " out of range of vertex buffer size " << vertices.size() << "\n";
-                        return uniqueId;
-                    }
-                    if (vertexIndex1 >= vertices.size()) {
-                        std::cout << "vertexIndex1 " << vertexIndex1 << " out of range of vertex buffer size " << vertices.size() << "\n";
-                        return uniqueId;
-                    }
-                    if (vertexIndex2 >= vertices.size()) {
-                        std::cout << "vertexIndex2 " << vertexIndex2 << " out of range of vertex buffer size " << vertices.size() << "\n";
-                        return uniqueId;
-                    }
-
-                    // Fetch triangle vertices
-                    const glm::vec3& p0 = vertices[vertexIndex0].position;
-                    const glm::vec3& p1 = vertices[vertexIndex1].position;
-                    const glm::vec3& p2 = vertices[vertexIndex2].position;
-
-                    // Precompute edges
-                    glm::vec3 e1 = p0 - p1;
-                    glm::vec3 e2 = p2 - p0;
-
-                    // Precompute normal
-                    glm::vec3 normal = cross(e1, e2);
-
-                    // Store p0
-                    meshBvh.m_triangleData.push_back(p0.x);
-                    meshBvh.m_triangleData.push_back(p0.y);
-                    meshBvh.m_triangleData.push_back(p0.z);
-
-                    // Store e1
-                    meshBvh.m_triangleData.push_back(e1.x);
-                    meshBvh.m_triangleData.push_back(e1.y);
-                    meshBvh.m_triangleData.push_back(e1.z);
-
-                    // Store e2
-                    meshBvh.m_triangleData.push_back(e2.x);
-                    meshBvh.m_triangleData.push_back(e2.y);
-                    meshBvh.m_triangleData.push_back(e2.z);
-
-                    // Store normal
-                    meshBvh.m_triangleData.push_back(normal.x);
-                    meshBvh.m_triangleData.push_back(normal.y);
-                    meshBvh.m_triangleData.push_back(normal.z);
-                }
-
-                // Update node primitive pointer to the start of the reordered data
-                // This index points to the first float (p0.x) of the first triangle in the leaf
-                node.firstChildOrPrimitive = newPrimitiveFloatIndex;
-            }
-
-            // The node is internal, so recurse
-            else {
-                stack.push_back(node.firstChildOrPrimitive + 0);
-                stack.push_back(node.firstChildOrPrimitive + 1);
-            }
-        }
-
-        // Check if the current size exceeds the target limit BEFORE popping
-        if (largestStackSize >= GPU_TARGET_MAX_STACK_SIZE) {
-            std::cout << "\n";
-            std::cout << "Warning: GPU BVH traversal stack size " << largestStackSize;
-            std::cout << " exceeded target GPU limit " << GPU_TARGET_MAX_STACK_SIZE << " ";
-            std::cout << "(" << indices.size() << " indices)\n";
-            std::cout << "\n";
-        }
-
+        g_meshBvhs[uniqueId] = Hell::Bvh::BuildMeshBvh(vertices, indices);
         return uniqueId;
     }
 
@@ -319,21 +149,21 @@ namespace Bvh::Gpu {
     void FlatternMeshBvhNodes() {
         g_meshBvhRootNodeOffsetMapping.clear();
         g_meshBvhsNodes.clear();
-        g_triangleData.clear();
+        g_triangles.clear();
 
         // Preallocate memory
         uint32_t totalNodeCount = 0;
-        uint32_t totalTriangleDataSize = 0;
+        uint32_t totalTriangleCount = 0;
         for (auto it = g_meshBvhs.begin(); it != g_meshBvhs.end(); ++it) {
             MeshBvh& meshBvh = it->second;
             totalNodeCount += (uint32_t)meshBvh.m_nodes.size();
-            totalTriangleDataSize += (uint32_t)meshBvh.m_triangleData.size();
+            totalTriangleCount += static_cast<uint32_t>(meshBvh.m_triangles.size());
         }
         g_meshBvhsNodes.reserve(totalNodeCount);
-        g_triangleData.reserve(totalTriangleDataSize);
+        g_triangles.reserve(totalTriangleCount);
 
         uint32_t rootNodeOffset = 0;
-        uint32_t baseTriangleOffset = 0;
+        uint32_t baseTriangleFloatOffset = 0;
 
         // Iterate each mesh bvh, and store its nodes and triangle data in the global arrays
         for (auto it = g_meshBvhs.begin(); it != g_meshBvhs.end(); ++it) {
@@ -351,7 +181,7 @@ namespace Bvh::Gpu {
 
                 // If the node is a leaf, add the base triangle offset
                 if (appendedNode.primitiveCount > 0) {
-                    appendedNode.firstChildOrPrimitive += baseTriangleOffset;
+                    appendedNode.firstChildOrPrimitive += baseTriangleFloatOffset;
                 }
                 // If it's not a leaf, then add the root node offset
                 else {
@@ -360,11 +190,11 @@ namespace Bvh::Gpu {
             }
 
             // Copy the triangle data from this mesh into the global vector
-            g_triangleData.insert(g_triangleData.end(), meshBvh.m_triangleData.begin(), meshBvh.m_triangleData.end());
+            g_triangles.insert(g_triangles.end(), meshBvh.m_triangles.begin(), meshBvh.m_triangles.end());
 
             // Increment offsets
             rootNodeOffset += (uint32_t)meshBvh.m_nodes.size();
-            baseTriangleOffset += (uint32_t)meshBvh.m_triangleData.size();
+            baseTriangleFloatOffset += static_cast<uint32_t>(meshBvh.m_triangles.size() * 12);
         }
     }
 
@@ -416,8 +246,8 @@ namespace Bvh::Gpu {
     //    return g_sceneBvhsNodes;
     //}
 
-    const std::vector<float>& GetTriangleData() {
-        return g_triangleData;
+    const std::vector<BVHTriangle>& GetTriangles() {
+        return g_triangles;
     }
 
     const std::vector<GpuPrimitiveInstance>& GetGpuEntityInstances(uint64_t sceneBvhId) {

@@ -5,7 +5,10 @@
 #pragma warning(pop)
 
 #include <Game/Types.h>
-#include "Math/AABB.h"
+
+#include "Hell/Math/AABB.h"
+
+#include <vector>
 
 using namespace physx;
 

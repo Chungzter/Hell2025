@@ -64,7 +64,7 @@ private:
     std::vector<Trim> m_trims;
     WallCreateInfo m_createInfo;
     SpawnOffset m_spawnOffset;
-    std::vector<uint64_t> m_weatherBoardSegmentMeshIds;
+    std::vector<uint32_t> m_weatherBoardSegmentMeshIds;
 
     void CreateCSGVertexData();
 };

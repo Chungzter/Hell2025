@@ -22,6 +22,8 @@
 
 #include "API/Vulkan/vk_backend.h"
 
+#include "Hell/AssetLoader/AssetLoader.h" // TODO: remove me
+
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
 /*

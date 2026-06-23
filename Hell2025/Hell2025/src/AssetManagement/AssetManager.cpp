@@ -33,6 +33,7 @@ namespace AssetManager {
         bool bakedSkinnedModels = false;
         bool indexMaps = false;
         bool modelBVHData = false;
+        bool textures = false;
         bool allComplete = false;
     } g_loadingComplete;
 
@@ -56,14 +57,11 @@ namespace AssetManager {
     void BlitLoadLog();
     void FindAssetPaths();
 
-    bool FileInfoIsAlbedoTexture(const FileInfo& fileInfo);
-    std::string GetMaterialNameFromFileInfo(const FileInfo& fileInfo);
-
     void Init() {
         Logging::Init() << "Initialized the AssetManager";
 
         Hell::AssetCompiler::CompileOutOfDateAssets();
-        Hell::AssetLoader::LoadRequired();
+        Hell::AssetLoader::LoadMinimumRequiredAssets();
 
         FindAssetPaths();
         Hell::AssetLoader::DiscoverAssets();
@@ -124,6 +122,17 @@ namespace AssetManager {
             CopyInAllLoadedModelBvhData();
             AddItemToLoadLog("Loaded model BVH data");
             Logging::Init() << "AssetManager loaded all BVH data";
+            return;
+        }
+
+        if (!g_loadingComplete.textures) {
+            if (!Hell::AssetLoader::LoadingComplete()) {
+                return;
+            }
+
+            g_loadingComplete.textures = true;
+            AddItemToLoadLog("Loaded textures");
+            Logging::Init() << "AssetManager loaded textures";
             return;
         }
 
@@ -259,7 +268,7 @@ namespace AssetManager {
             if (modelIndex != -1) {
                 Model* model = GetModelByIndex(modelIndex);
                 if (model) {
-                    int meshIndex =model->GetMeshIndices()[0];
+                    int meshIndex = model->GetMeshIndices()[0];
                     mesh = GetMeshByIndex(meshIndex);
                 }
             }
@@ -267,18 +276,7 @@ namespace AssetManager {
         return mesh;
     }
 
-    int GetQuadZFacingMeshIndex() {
-        static int meshIndex = GetModelByIndex(GetModelIndexByName("QuadZFacing"))->GetMeshIndices()[0];
-        return meshIndex;
-    }
-
-    Mesh* GetQuadZFacingMesh() {
-        // Clean me up
-        static Mesh* mesh = GetMeshByIndex(GetModelByIndex(GetModelIndexByName("QuadZFacing"))->GetMeshIndices()[0]);
-        return mesh;
-    }
-       
-    Mesh* GetMeshByModelNameMeshIndex(const std::string& modelName, uint32_t meshIndex) {
+    Mesh* GetMeshByModelNameMeshLocalIndex(const std::string& modelName, uint32_t meshIndex) {
         Model* model = GetModelByName(modelName);
         if (!model || meshIndex < 0 || meshIndex >= model->GetMeshCount()) {
             std::cout << "AssetManager::GetMeshByModelNameMeshIndex() failed: model name '" << modelName << "' not found\n";

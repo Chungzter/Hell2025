@@ -1,6 +1,7 @@
 ﻿#include "API/OpenGL/Renderer/GL_renderer.h"
 
 #include "Hell/Logging.h"
+#include "Hell/Math/VecXZ.h"
 
 #include "AssetManagement/AssetManager.h"
 #include "Types/Renderer/GrassMesh.h"
@@ -177,7 +178,7 @@ namespace OpenGLRenderer {
 
             int maxChunkDrawDistance = 3;
 
-            ivecXZ cameraChunk(static_cast<int>(std::floor(viewPos.x / HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE)),
+            Hell::ivecXZ cameraChunk(static_cast<int>(std::floor(viewPos.x / HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE)),
                                 static_cast<int>(std::floor(viewPos.z / HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE)));
 
             int32_t xBegin = cameraChunk.x - maxChunkDrawDistance;
@@ -197,7 +198,7 @@ namespace OpenGLRenderer {
             xEnd = std::min(xEnd, (int32_t)World::GetChunkCountX());
             zEnd = std::min(zEnd, (int32_t)World::GetChunkCountZ());
 
-            std::vector<vecXZ> chunkOffsets;
+            std::vector<Hell::vecXZ> chunkOffsets;
             AABB chunkAABB;
             glm::vec3 chunkBoundsMin;
             glm::vec3 chunkBoundsMax;
@@ -249,7 +250,7 @@ namespace OpenGLRenderer {
                 if (frustum.IntersectsAABBFast(chunkAABB)) {
                     float xOffset = chunk.coord.x * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE;
                     float zOffset = chunk.coord.z * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE;
-                    chunkOffsets.emplace_back(vecXZ(xOffset, zOffset));
+                    chunkOffsets.emplace_back(Hell::vecXZ(xOffset, zOffset));
                     //DrawAABB(chunkAABB, GREEN);
                 }
             }
@@ -261,7 +262,7 @@ namespace OpenGLRenderer {
             glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawIndexedIndirectCommand), &initialCmd);
 
             // Generate grass positions
-            for (vecXZ& chunkOffset: chunkOffsets) {
+            for (Hell::vecXZ& chunkOffset: chunkOffsets) {
                 GenerateBladePositions(chunkOffset.x, chunkOffset.z, viewportIndex);
             }
             // Then render for the current viewport

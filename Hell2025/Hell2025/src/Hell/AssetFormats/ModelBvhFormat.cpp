@@ -57,11 +57,11 @@ namespace Hell::AssetFormats {
             MeshBvhHeader meshHeader{};
             CopyBvhSignature(meshHeader.signature, MESH_BVH_SIGNATURE);
             meshHeader.nodeCount = meshBvh.m_nodes.size();
-            meshHeader.floatCount = meshBvh.m_triangleData.size();
+            meshHeader.floatCount = meshBvh.m_triangles.size() * 12;
 
             file.write(reinterpret_cast<const char*>(&meshHeader), sizeof(meshHeader));
             file.write(reinterpret_cast<const char*>(meshBvh.m_nodes.data()), meshBvh.m_nodes.size() * sizeof(BvhNode));
-            file.write(reinterpret_cast<const char*>(meshBvh.m_triangleData.data()), meshBvh.m_triangleData.size() * sizeof(float));
+            file.write(reinterpret_cast<const char*>(meshBvh.m_triangles.data()), meshBvh.m_triangles.size() * sizeof(BVHTriangle));
         }
 
         if (!file) {
@@ -97,10 +97,16 @@ namespace Hell::AssetFormats {
                 return false;
             }
 
+            if (header.floatCount % 12 != 0) {
+                Logging::Error() << "AssetFormats::LoadModelBvh(..) found an invalid triangle float count in '" << path << "'\n";
+                outBvh = {};
+                return false;
+            }
+
             meshBvh.m_nodes.resize(header.nodeCount);
-            meshBvh.m_triangleData.resize(header.floatCount);
+            meshBvh.m_triangles.resize(header.floatCount / 12);
             file.read(reinterpret_cast<char*>(meshBvh.m_nodes.data()), meshBvh.m_nodes.size() * sizeof(BvhNode));
-            file.read(reinterpret_cast<char*>(meshBvh.m_triangleData.data()), meshBvh.m_triangleData.size() * sizeof(float));
+            file.read(reinterpret_cast<char*>(meshBvh.m_triangles.data()), meshBvh.m_triangles.size() * sizeof(BVHTriangle));
         }
 
         if (!file) {

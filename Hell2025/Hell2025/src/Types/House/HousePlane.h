@@ -18,7 +18,7 @@ struct HousePlane {
     void UpdateVertexDataFromCreateInfo();
     void UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter);
     void SetMaterial(const std::string& materialName);
-    void SetMeshId(uint64_t meshId);
+    void SetMeshId(uint32_t meshId);
     void SetTextureScale(float value);
     void SetTextureOffsetU(float value);
     void SetTextureOffsetV(float value);
@@ -41,7 +41,7 @@ struct HousePlane {
     std::vector<glm::vec2>& GetNavMeshPoly()        { return m_navMeshPoly; }
     HousePlaneCreateInfo& GetCreateInfo()           { return m_createInfo; }
     HousePlaneType GetType() const                  { return m_createInfo.type; }
-    uint64_t GetMeshId() const                      { return m_meshId; }
+    uint32_t GetMeshId() const                      { return m_meshId; }
 
 private:
     uint64_t m_objectId = 0;
@@ -58,7 +58,7 @@ private:
     std::vector<glm::vec2> m_navMeshPoly;
     HousePlaneCreateInfo m_createInfo;
     bool m_hiddenInEditor = false;
-    uint64_t m_meshId = 0;
+    uint32_t m_meshId = 0;
 
     void CreatePhysicsObject();
 };

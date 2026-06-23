@@ -30,7 +30,7 @@ void Kangaroo::Init(KangarooCreateInfo createInfo) {
 
         Ragdoll* ragdoll = Physics::GetRagdollById(animatedGameObject->GetRagdollId());
         if (ragdoll) {
-            ragdoll->SetPhysicsData(animatedGameObject->GetRagdollId(), ObjectType::RAGDOLL_ENEMY);
+            ragdoll->SetPhysicsData(animatedGameObject->GetRagdollId());
         }
 
         animatedGameObject->PlayAndLoopAnimation("MainLayer", "Kangaroo_Idle", 1.0f);

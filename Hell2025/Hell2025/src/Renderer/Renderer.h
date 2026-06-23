@@ -1,6 +1,6 @@
 #pragma once
-#include "Math/AABB.h"
-#include "Math/OBB.h"
+#include "Hell/Math/AABB.h"
+#include "Hell/Math/OBB.h"
 #include "Types/Map/Map.h"
 
 #include <Game/Types.h>

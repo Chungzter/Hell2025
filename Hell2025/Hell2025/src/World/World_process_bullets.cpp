@@ -352,7 +352,7 @@ namespace World {
             PhysXRayResult rayResult;
             if (rayResult.hitFound) {
                 PhysicsType& physicsType = rayResult.userData.physicsType;
-                ObjectType& objectType = rayResult.userData.objectType;
+                ObjectType objectType = UniqueID::GetType(rayResult.userData.objectId);
                 uint64_t physicsId = rayResult.userData.physicsId;
                 uint64_t objectId = rayResult.userData.objectId;
 

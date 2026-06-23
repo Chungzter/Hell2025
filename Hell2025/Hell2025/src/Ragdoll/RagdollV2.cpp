@@ -162,7 +162,7 @@ void RagdollV2::Init(glm::vec3 spawnPosition, glm::vec3 spawnEulerRotation, cons
             // User data
             PhysicsUserData physicsUserData;
             physicsUserData.physicsType = PhysicsType::RIGID_DYNAMIC;
-            physicsUserData.objectType = ObjectType::RAGDOLL_V2;
+            //physicsUserData.objectType = ObjectType::RAGDOLL_V2;
             physicsUserData.physicsId = UniqueID::GetNextObjectId(ObjectType::RAGDOLL_V2);
             physicsUserData.objectId = m_ragdollId;
             pxrigid->userData = new PhysicsUserData(physicsUserData);

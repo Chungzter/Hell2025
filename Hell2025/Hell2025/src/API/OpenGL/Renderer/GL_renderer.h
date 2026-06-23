@@ -14,10 +14,9 @@
 #include "API/OpenGL/Types/GL_timer.h"
 #include "API/OpenGL/Types/GL_ssbo.h"
 
+#include "Hell/Math/AABB.h"
+#include "Hell/Math/OBB.h"
 #include "Hell/Render/VertexAttributes.h"
-
-#include "Math/AABB.h"
-#include "Math/OBB.h"
 
 #include "GlobalIllumination/DDGIVolume.h"
 

@@ -1,10 +1,11 @@
 #pragma once
+#include "Hell/Math/AABB.h"
+
 #pragma warning(push, 0)
 #include <physx/PxShape.h>
 #include <physx/PxRigidStatic.h>
 #pragma warning(pop)
 
-#include "Math/AABB.h"
 #include <vector>
 
 using namespace physx;

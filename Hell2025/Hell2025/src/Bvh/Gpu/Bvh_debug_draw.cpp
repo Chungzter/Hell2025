@@ -1,4 +1,4 @@
-#include "Bvh.h"
+#include "BvhOLD.h"
 #include "Debug/DebugDraw.h"
 
 namespace Bvh::Gpu {
@@ -7,10 +7,10 @@ namespace Bvh::Gpu {
         if (!MeshBvhExists(bvhId)) return;
             
         MeshBvh* meshBvh = GetMeshBvhById(bvhId);
-        for (int i = 0; i < meshBvh->m_triangleData.size(); i += 12) { // 12 floats per triangle
-            glm::vec3 p0 = glm::vec3(meshBvh->m_triangleData[i], meshBvh->m_triangleData[i + 1], meshBvh->m_triangleData[i + 2]);
-            glm::vec3 e1 = glm::vec3(meshBvh->m_triangleData[i + 3], meshBvh->m_triangleData[i + 4], meshBvh->m_triangleData[i + 5]);
-            glm::vec3 e2 = glm::vec3(meshBvh->m_triangleData[i + 6], meshBvh->m_triangleData[i + 7], meshBvh->m_triangleData[i + 8]);
+        for (const BVHTriangle& triangle : meshBvh->m_triangles) {
+            glm::vec3 p0 = glm::vec3(triangle.v0_and_e1x);
+            glm::vec3 e1 = glm::vec3(triangle.v0_and_e1x.w, triangle.e1yz_and_e2xy.x, triangle.e1yz_and_e2xy.y);
+            glm::vec3 e2 = glm::vec3(triangle.e1yz_and_e2xy.z, triangle.e1yz_and_e2xy.w, triangle.e2z_and_normal.x);
             glm::vec3 p1 = p0 - e1;
             glm::vec3 p2 = p0 + e2;
             p0 = worldTransform * glm::vec4(p0, 1.0f);

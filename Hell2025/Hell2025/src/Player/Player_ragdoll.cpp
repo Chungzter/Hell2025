@@ -21,5 +21,5 @@ void Player::InitRagdoll() {
     filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE);
 
     ragdoll->SetFilterData(filterData);
-    ragdoll->SetPhysicsData(GetPlayerId(), ObjectType::RAGDOLL_PLAYER);
+    ragdoll->SetPhysicsData(characterModel->GetObjectId());
 }

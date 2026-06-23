@@ -1,11 +1,13 @@
 #pragma once
-#include "Math/AABB.h"
+#include "Hell/Math/AABB.h"
+
 #include "Modelling/Types/ClippingCube.h"
+
 #include <vector>
 
 struct WallSegment {
     void Init(glm::vec3 start, glm::vec3 end, float height, uint64_t parentObjectId, const SpawnOffset& spawnOffset);
-    void SetMeshId(uint64_t meshId);
+    void SetMeshId(uint32_t meshId);
     void CleanUp();
     void CreateVertexData(std::vector<ClippingCube>& clippingCubes, float texOffsetX, float texOffsetY, float texScale);
     void CreatePhysicsObject();
@@ -14,7 +16,7 @@ struct WallSegment {
     const glm::vec3& GetEnd()                   const { return m_end; }
     const glm::vec3& GetNormal()                const { return m_normal; }
     const uint64_t GetObjectId()                const { return m_objectId; }
-    const uint64_t GetMeshId()                  const { return m_meshId; }
+    uint32_t GetMeshId()                        const { return m_meshId; }
     const uint64_t GetParentObjectId()          const { return m_parentObjectId; }
     const float GetHeight()                     const { return m_height; }
     const AABB& GetAABB()                       const { return m_aabb; }
@@ -34,6 +36,6 @@ private:
     std::vector<glm::vec3> m_corners;
     std::vector<Vertex> m_vertices;
     std::vector<uint32_t> m_indices;
-    uint64_t m_meshId = 0;
+    uint32_t m_meshId = 0;
     SpawnOffset m_spawnOffset;
 };

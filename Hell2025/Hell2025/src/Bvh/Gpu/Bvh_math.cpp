@@ -1,4 +1,4 @@
-#include "Bvh.h"
+#include "BvhOLD.h"
 
 namespace Bvh::Gpu {
     uint32_t FloatToBits(float x);

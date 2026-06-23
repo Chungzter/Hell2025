@@ -1,9 +1,8 @@
 #pragma once
-
-#include "Game/Types.h"
+#include "Hell/Math/AABB.h"
 #include "Hell/Render/VertexAttributes.h"
 
-#include "Math/AABB.h"
+#include "Game/Types.h"
 
 struct ClippingCube {
     void Update(const Transform& transform);

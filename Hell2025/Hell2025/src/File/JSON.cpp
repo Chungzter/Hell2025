@@ -1,8 +1,10 @@
 #pragma once
 #include "JSON.h"
 #include "AssetManagement/AssetManager.h"
-#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Util.h"
+
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 #include <fstream>
 
 #include <iostream> // TODO: cleanup logging
@@ -232,7 +234,7 @@ namespace nlohmann {
         };
     }
 
-    void to_json(nlohmann::json& j, const std::map<ivecXZ, std::string>& mapData) {
+    void to_json(nlohmann::json& j, const std::map<Hell::ivecXZ, std::string>& mapData) {
         nlohmann::json arr = nlohmann::json::array();
         for (const auto& m : mapData) {
             nlohmann::json item;
@@ -444,13 +446,13 @@ namespace nlohmann {
         info.blendingMode = Util::StringToBlendingMode(blendingModeString);
     }
 
-    void from_json(const nlohmann::json& j, std::map<ivecXZ, std::string>& mapData) {
+    void from_json(const nlohmann::json& j, std::map<Hell::ivecXZ, std::string>& mapData) {
         mapData.clear();
         for (const auto& item : j) {
             int x = item.at("x").get<int>();
             int z = item.at("z").get<int>();
             std::string sectorName = item.at("name").get<std::string>();
-            ivecXZ key(x, z);
+            Hell::ivecXZ key(x, z);
             mapData[key] = sectorName;
         }
     }

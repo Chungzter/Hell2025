@@ -1,7 +1,7 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
 #include "AssetManagement/AssetManager.h"
-#include "Bvh/Gpu/Bvh.h"
+#include "Bvh/Gpu/BvhOLD.h"
 #include "Debug/DebugDraw.h""
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
@@ -115,7 +115,7 @@ namespace OpenGLRenderer {
         const std::vector<BvhNode>& sceneNodes = ddgiVolume.GetSceneNodes();
         const std::vector<BvhNode>& meshBvhNodes = Bvh::Gpu::GetMeshGpuBvhNodes();
         const std::vector<GpuPrimitiveInstance>& entityInstances = Bvh::Gpu::GetGpuEntityInstances(sceneBvhId);
-        const std::vector<float>& triData = Bvh::Gpu::GetTriangleData();
+        const std::vector<BVHTriangle>& triangles = Bvh::Gpu::GetTriangles();
 
         const DDGIVolumeGPU ddgiVolumeGPU = ddgiVolume.GetGPUData();
         const std::vector<GPUAABB>& dirtyDoorABBBs = World::GetDirtyDoorAABBS();
@@ -127,7 +127,7 @@ namespace OpenGLRenderer {
         UpdateSSBO("SceneBvh", sceneNodes.size() * sizeof(BvhNode), sceneNodes.data());
         UpdateSSBO("MeshesBvh", meshBvhNodes.size() * sizeof(BvhNode), meshBvhNodes.data());
         UpdateSSBO("EntityInstances", entityInstances.size() * sizeof(GpuPrimitiveInstance), entityInstances.data());
-        UpdateSSBO("TriangleData", triData.size() * sizeof(float), triData.data());
+        UpdateSSBO("TriangleData", triangles.size() * sizeof(BVHTriangle), triangles.data());
 
         // Probe/Pointcloud data
         UpdateSSBO("DDGIVolume", sizeof(DDGIVolumeGPU), &ddgiVolumeGPU);
@@ -590,7 +590,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-        Mesh* mesh = AssetManager::GetMeshByModelNameMeshIndex("Sphere", 0);
+        Mesh* mesh = AssetManager::GetMeshByModelNameMeshLocalIndex("Sphere", 0);
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -764,7 +764,7 @@ namespace OpenGLRenderer {
     void DrawRaytracingBvh(DDGIVolume& volume) {
         const std::vector<BvhNode>& sceneNodes = volume.GetSceneNodes();
         const std::vector<BvhNode>& meshBvhNodes = Bvh::Gpu::GetMeshGpuBvhNodes();
-        const std::vector<float>& triData = Bvh::Gpu::GetTriangleData();
+        const std::vector<BVHTriangle>& triangles = Bvh::Gpu::GetTriangles();
 
         uint64_t sceneBvhId = volume.GetSceneBvhId();
         const std::vector<GpuPrimitiveInstance>& instances = Bvh::Gpu::GetGpuEntityInstances(sceneBvhId);
@@ -805,11 +805,12 @@ namespace OpenGLRenderer {
                         if (meshNode.primitiveCount > 0) {
                             // draw triangles in mesh leaf node
                             for (uint32_t j = 0; j < meshNode.primitiveCount; ++j) {
-                                uint32_t floatIdx = meshNode.firstChildOrPrimitive + (j * 12);
+                                uint32_t floatOffset = meshNode.firstChildOrPrimitive + (j * 12);
+                                const BVHTriangle& triangle = triangles[floatOffset / 12];
 
-                                glm::vec3 p0(triData[floatIdx], triData[floatIdx + 1], triData[floatIdx + 2]);
-                                glm::vec3 e1(triData[floatIdx + 3], triData[floatIdx + 4], triData[floatIdx + 5]);
-                                glm::vec3 e2(triData[floatIdx + 6], triData[floatIdx + 7], triData[floatIdx + 8]);
+                                glm::vec3 p0 = glm::vec3(triangle.v0_and_e1x);
+                                glm::vec3 e1 = glm::vec3(triangle.v0_and_e1x.w, triangle.e1yz_and_e2xy.x, triangle.e1yz_and_e2xy.y);
+                                glm::vec3 e2 = glm::vec3(triangle.e1yz_and_e2xy.z, triangle.e1yz_and_e2xy.w, triangle.e2z_and_normal.x);
 
                                 glm::vec3 p1 = p0 - e1;
                                 glm::vec3 p2 = p0 + e2;

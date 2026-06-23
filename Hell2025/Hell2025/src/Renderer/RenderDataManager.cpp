@@ -625,13 +625,13 @@ namespace RenderDataManager {
     }
 
     void CreateHouseMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset) {
-        std::unordered_map<uint64_t, std::size_t> commandMap;
+        std::unordered_map<uint32_t, std::size_t> commandMap;
         commands.reserve(renderItems.size());
 
         MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
 
         for (const RenderItem& renderItem : renderItems) {
-            uint64_t meshId = renderItem.meshId;
+            uint32_t meshId = renderItem.meshId;
 
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
             if (!mesh) continue;

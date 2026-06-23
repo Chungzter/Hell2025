@@ -108,7 +108,7 @@ Material* HousePlane::GetMaterial() {
     return ResourceManager::GetMaterialByIndex(m_materialIndex);
 }
 
-void HousePlane::SetMeshId(uint64_t meshId) {
+void HousePlane::SetMeshId(uint32_t meshId) {
     m_meshId = meshId;
 }
 
@@ -142,7 +142,7 @@ void HousePlane::CreatePhysicsObject() {
     userData.physicsId = m_physicsId;
     userData.objectId = m_objectId;
     userData.physicsType = PhysicsType::RIGID_STATIC;
-    userData.objectType = ObjectType::HOUSE_PLANE;
+    //userData.objectType = ObjectType::HOUSE_PLANE;
     Physics::SetRigidStaticUserData(m_physicsId, userData);
 }
 

@@ -1,9 +1,12 @@
 #include "HeightField.h"
 #include "Physics/Physics.h"
+#include "Game/UniqueId.h"
 
-#include <iostream> // TODO: cleanup logging
+#include "Hell/Logging.h"
 
-void HeightField::Create(vecXZ& worldSpaceOffset, const float* heightValues) {
+void HeightField::Create(Hell::vecXZ& worldSpaceOffset, const float* heightValues) {
+    m_objectId = UniqueID::GetNextObjectId(ObjectType::HEIGHT_MAP);
+
     PxPhysics* pxPhysics = Physics::GetPxPhysics();
     PxScene* pxScene = Physics::GetPxScene();
 
@@ -31,7 +34,7 @@ void HeightField::Create(vecXZ& worldSpaceOffset, const float* heightValues) {
     heightFieldDesc.samples.data = samples.data();
     heightFieldDesc.samples.stride = sizeof(PxHeightFieldSample);
     if (!heightFieldDesc.isValid()) {
-        std::cout << "Failed to create PxHeightField\n";
+        Logging::Error() << "HeightField::Create(..) failed to create PxHeightField\n";
         m_pxHeightField = nullptr; // Invalid height field description
         return;
     }
@@ -80,9 +83,8 @@ void HeightField::Create(vecXZ& worldSpaceOffset, const float* heightValues) {
     // Set user data
     PhysicsUserData userData;
     userData.physicsId = 0;
-    userData.objectId = 0;
+    userData.objectId = m_objectId;
     userData.physicsType = PhysicsType::HEIGHT_FIELD;
-    userData.objectType = ObjectType::HEIGHT_MAP;
     m_pxRigidStatic->userData = new PhysicsUserData(userData);
 
     // Update AABB

@@ -2,6 +2,13 @@
 #include "Util.h"
 #include <algorithm>
 
+namespace {
+    float DistanceSquared(const glm::vec3& a, const glm::vec3& b) {
+        glm::vec3 diff = a - b;
+        return diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+    }
+}
+
 AABB::AABB(const glm::vec3& min, const glm::vec3& max) {
     boundsMin = min;
     boundsMax = max;
@@ -36,7 +43,7 @@ bool AABB::ContainsPoint(const glm::vec3& point) const {
 
 bool AABB::IntersectsSphere(const glm::vec3& sphereCenter, float radius) const {
     glm::vec3 closestPoint = glm::clamp(sphereCenter, boundsMin, boundsMax);
-    float distSq = Util::DistanceSquared(closestPoint, sphereCenter);
+    float distSq = DistanceSquared(closestPoint, sphereCenter);
     return distSq <= (radius * radius);
 }
 

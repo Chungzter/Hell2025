@@ -1,7 +1,8 @@
 #pragma once
 #include "Camera/Frustum.h"
-#include "Math/AABB.h"
-#include "Math/OBB.h"
+
+#include "Hell/Math/AABB.h"
+#include "Hell/Math/OBB.h"
 
 namespace DebugDraw {
     void BeginFrame();

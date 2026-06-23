@@ -1,6 +1,6 @@
 #include "DDGIVolume.h"
 
-#include "Bvh/Gpu/Bvh.h"
+#include "Bvh/Gpu/BvhOLD.h"
 #include "Debug/DebugDraw.h"
 #include "AssetManagement/AssetManager.h" // remove me
 #include "World/World.h"

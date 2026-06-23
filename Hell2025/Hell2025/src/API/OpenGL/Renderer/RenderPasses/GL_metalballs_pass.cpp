@@ -87,7 +87,7 @@ namespace OpenGLRenderer {
 
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLShader* shader = GetShaderOLD("MetaBalls");
-        Mesh* mesh = AssetManager::GetMeshByModelNameMeshIndex("SphereLowRes", 0);
+        Mesh* mesh = AssetManager::GetMeshByModelNameMeshLocalIndex("SphereLowRes", 0);
 
         if (!gBuffer) return;
         if (!shader) return;
@@ -415,7 +415,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* bloodFluidFbo = GetFrameBufferOLD("BloodFluid");
         OpenGLShader* depthShader = GetShaderOLD("BloodFluidDepth");
         OpenGLShader* thicknessShader = GetShaderOLD("BloodFluidThickness");
-        Mesh* mesh = AssetManager::GetMeshByModelNameMeshIndex("SphereLowRes", 0);
+        Mesh* mesh = AssetManager::GetMeshByModelNameMeshLocalIndex("SphereLowRes", 0);
 
         if (!bloodFluidFbo) return;
         if (!thicknessShader) return;
