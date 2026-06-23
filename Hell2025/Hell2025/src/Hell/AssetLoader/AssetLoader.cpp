@@ -4,7 +4,7 @@
 #include "Hell/ImageTools/ImageTools.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Hell/TextureUploader/TextureUploader.h"
+#include "Hell/ResourceManagement/TextureUploader.h"
 
 #include <chrono>
 #include <cstring>
@@ -33,19 +33,7 @@ namespace Hell::AssetLoader {
         }
     }
 
-    // TODO: Move to Image tools eventually
-    ImageData LoadImageData(const std::string& path, ImageDataType type) {
-        switch (type) {
-            case ImageDataType::UNCOMPRESSED: return ImageTools::LoadUncompressedImage(path);
-            case ImageDataType::COMPRESSED:   return ImageTools::LoadDDS(path);
-            case ImageDataType::EXR:          return ImageTools::LoadEXRImage(path);
-            default:
-                Logging::Error() << "AssetLoader::LoadImageData(..) failed because image type was undefined for '" << path << "'\n";
-                return {};
-        }
-    }
-
-    void LoadFonts() {
+    void LoadRequired() {
         for (FileInfo& fileInfo : File::IterateDirectory("res/fonts", { "png" })) {
             Texture& texture = ResourceManager::CreateTexture(fileInfo.name);
             texture.SetFileInfo(fileInfo);
@@ -53,11 +41,28 @@ namespace Hell::AssetLoader {
             texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
             texture.SetMinFilter(TextureFilter::LINEAR);
             texture.SetMagFilter(TextureFilter::LINEAR);
-            texture.SetLoadingState(LoadingState::Value::LOADING_FROM_DISK);
-            texture.SetImageData(Hell::AssetLoader::LoadImageData(fileInfo.path, ImageDataType::UNCOMPRESSED));
+            texture.SetImageData(Hell::ImageTools::LoadImageData(fileInfo.path, ImageDataType::UNCOMPRESSED));
 
             if (!TextureUploader::ImmediateUpload(texture)) {
-                Logging::Error() << "AssetLoader::LoadFonts(..) failed to upload '" << fileInfo.path << "'\n";
+                Logging::Error() << "AssetLoader::LoadRequired(..) failed to upload '" << fileInfo.path << "'\n";
+                continue;
+            }
+
+            texture.SetLoadingState(LoadingState::Value::LOADING_COMPLETE);
+        }
+
+        for (FileInfo& fileInfo : File::IterateDirectory("res/textures/required", { "png" })) {
+            Texture& texture = ResourceManager::CreateTexture(fileInfo.name);
+            texture.SetFileInfo(fileInfo);
+            texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
+            texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
+            texture.SetMinFilter(TextureFilter::LINEAR_MIPMAP);
+            texture.SetMagFilter(TextureFilter::LINEAR);
+            texture.SetImageData(Hell::ImageTools::LoadImageData(fileInfo.path, ImageDataType::UNCOMPRESSED));
+            texture.RequestMipmaps();
+
+            if (!TextureUploader::ImmediateUpload(texture)) {
+                Logging::Error() << "AssetLoader::LoadRequired(..) failed to upload '" << fileInfo.path << "'\n";
                 continue;
             }
 
@@ -156,7 +161,7 @@ namespace Hell::AssetLoader {
 
             const std::string path = texture.GetFilePath();
             const ImageDataType type = texture.GetImageDataType();
-            g_textureLoadFutures.emplace_back(&texture, std::async(std::launch::async, [path, type] { return LoadImageData(path, type); }));
+            g_textureLoadFutures.emplace_back(&texture, std::async(std::launch::async, [path, type] { return ImageTools::LoadImageData(path, type); }));
         }
 
         for (size_t i = 0; i < g_textureLoadFutures.size();) {

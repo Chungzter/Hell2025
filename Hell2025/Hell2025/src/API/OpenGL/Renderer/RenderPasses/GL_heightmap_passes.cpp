@@ -25,6 +25,8 @@
 #include "Managers/MapManager.h"
 #include "World/World.h"
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 namespace OpenGLRenderer {
 
     void BlitWorldMap();
@@ -275,29 +277,29 @@ namespace OpenGLRenderer {
 
         ForceRasterizerState("GeometryPass_Default");
 
-        Material* material = AssetManager::GetDefaultMaterial();
-        int materialIndex = AssetManager::GetMaterialIndexByName("Ground_MudVeg");
-        material = AssetManager::GetMaterialByIndex(materialIndex);
+        Material* material = Hell::ResourceManager::GetDefaultMaterial();
+        int materialIndex = Hell::ResourceManager::GetMaterialIndexByName("Ground_MudVeg");
+        material = Hell::ResourceManager::GetMaterialByIndex(materialIndex);
 
-        Material* dirtRoadMaterial = AssetManager::GetMaterialByName("DirtRoad");
+        Material* dirtRoadMaterial = Hell::ResourceManager::GetMaterialByName("DirtRoad");
 
         if (Editor::IsOpen() && Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) {
-            material = AssetManager::GetDefaultMaterial();
+            material = Hell::ResourceManager::GetDefaultMaterial();
             shader->SetFloat("u_textureScaling", 0.1);
         }
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
+        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
+        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
+        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_basecolor)->GetGLTexture().GetHandle());
+        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_basecolor)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_normal)->GetGLTexture().GetHandle());
+        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_normal)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_rma)->GetGLTexture().GetHandle());;
+        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_rma)->GetGLTexture().GetHandle());;
         glBindTextureUnit(6, roadFramebuffer->GetColorAttachmentHandleByName("RoadMask"));
 
         glBindVertexArray(heightMapMesh.GetVAO());

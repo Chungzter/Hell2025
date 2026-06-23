@@ -1,5 +1,6 @@
 #include "Editor/Editor.h"
 #include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Debug/DebugDraw.h"
 #include "Hell/Logging.h"
 #include "Imgui/ImguiBackEnd.h"
@@ -75,7 +76,7 @@ namespace Editor {
         g_backfaceCulling.SetState(BackfaceCullingEnabled());
 
         g_materialDropDown.SetText("Material");
-        g_materialDropDown.SetOptions(AssetManager::GetMaterialNames());
+        g_materialDropDown.SetOptions(Hell::ResourceManager::GetMaterialNames());
 
         g_heightFloatInput.SetText("Height");
         g_heightFloatInput.SetRange(0.1f, 100.0f);

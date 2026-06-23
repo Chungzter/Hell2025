@@ -2,6 +2,8 @@
 #include <Game/Types.h>
 #include <Game/CreateInfo.h>
 
+#include "Hell/ResourceManagement/Types/Material.h"
+
 struct Decal {
     Decal() = default;
     Decal(const DecalCreateInfo& createInfo);
@@ -21,7 +23,7 @@ private:
 
     DecalType m_type = DecalType::UNDEFINED;
     DecalCreateInfo m_createInfo;
-    Material* m_material = nullptr;
+    int32_t m_materialIndex = -1;
     RenderItem m_renderItem;
     glm::vec3 m_localPosition = glm::vec3(0.0f);
     glm::vec3 m_localNormal = glm::vec3(0.0f);

@@ -37,7 +37,7 @@ void Wall::UpdateSegmentsTrimsAndVertexData() {
     //m_textureOffsetU = m_createInfo.textureOffsetU;
     //m_textureOffsetV = m_createInfo.textureOffsetV;
     //m_textureScale = m_createInfo.textureScale;
-    m_material = AssetManager::GetMaterialByName(m_createInfo.materialName);
+    m_materialIndex = ResourceManager::GetMaterialIndexByName(m_createInfo.materialName);
     m_ceilingTrimType = m_createInfo.ceilingTrimType;
     m_floorTrimType = m_createInfo.floorTrimType;
 
@@ -127,11 +127,16 @@ bool Wall::UpdatePointPosition(int pointIndex, glm::vec3 position, bool supressW
 }
 
 void Wall::SetMaterial(const std::string& materialName) {
-    if (Material* material = AssetManager::GetMaterialByName(materialName)) {
+    const int32_t materialIndex = ResourceManager::GetMaterialIndexByName(materialName);
+    if (materialIndex != -1) {
         m_createInfo.materialName = materialName;
-        m_material = AssetManager::GetMaterialByName(materialName);
+        m_materialIndex = materialIndex;
         UpdateSegmentsTrimsAndVertexData();
     }
+}
+
+Material* Wall::GetMaterial() {
+    return ResourceManager::GetMaterialByIndex(m_materialIndex);
 }
 
 void Wall::SetHeight(float value) {
@@ -265,7 +270,7 @@ void Wall::SubmitRenderItems() {
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
             if (!mesh) continue;
 
-            Material* material = AssetManager::GetMaterialByName("WeatherBoards0");
+            Material* material = ResourceManager::GetMaterialByName("WeatherBoards0");
             if (!material) continue;
 
             RenderItem renderItem;
@@ -290,10 +295,13 @@ void Wall::SubmitRenderItems() {
         Mesh* mesh = meshBuffer.GetMeshById(wallSegment.GetMeshId());
         if (!mesh) return;
 
+        Material* material = ResourceManager::GetMaterialByIndex(m_materialIndex);
+        if (!material) return;
+
 		RenderItem renderItem;
-		renderItem.baseColorTextureIndex = m_material->m_basecolor;
-		renderItem.normalMapTextureIndex = m_material->m_normal;
-		renderItem.rmaTextureIndex = m_material->m_rma;
+		renderItem.baseColorTextureIndex = material->m_basecolor;
+		renderItem.normalMapTextureIndex = material->m_normal;
+		renderItem.rmaTextureIndex = material->m_rma;
 		renderItem.modelMatrix = glm::mat4(1.0f);
 		renderItem.inverseModelMatrix = glm::mat4(1.0f);
 		renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
@@ -413,7 +421,7 @@ void Wall::RecreateWeatherBoardMesh() {
 
     if (m_createInfo.wallType != WallType::WEATHER_BOARDS) return;
 
-    Material* material = AssetManager::GetMaterialByName("WeatherBoards0");
+    Material* material = ResourceManager::GetMaterialByName("WeatherBoards0");
     Model* model = AssetManager::GetModelByName("WeatherBoard_Stop");
 
     if (!model) {

@@ -9,6 +9,8 @@
 #include "Debug/Debug.h"
 #include "Input/Input.h"
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 namespace OpenGLRenderer {
 
     //void HairLightingSkinnedResolvePass();
@@ -125,8 +127,8 @@ namespace OpenGLRenderer {
         }
 
         SetUniformInt("u_renderResolutionScale", 1.0f);
-        SetUniformInt("u_hairTextureIndex", AssetManager::GetTextureBindlessIndexByName("RatKingHair_FLOW_ID_ROOT", true));
-        SetUniformInt("u_hairBlendMapTextureIndex", AssetManager::GetTextureBindlessIndexByName("Gold_ALB", true));             // YO!
+        SetUniformInt("u_hairTextureIndex", Hell::ResourceManager::GetTextureBindlessIndexByName("RatKingHair_FLOW_ID_ROOT", true));
+        SetUniformInt("u_hairBlendMapTextureIndex", Hell::ResourceManager::GetTextureBindlessIndexByName("Gold_ALB", true));             // YO!
 
         BindShadowMapsRE();
         BindTextureUnit(5, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));

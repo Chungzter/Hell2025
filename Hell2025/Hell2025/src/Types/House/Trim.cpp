@@ -1,5 +1,6 @@
 #include "Trim.h"
 #include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util.h"
 #include <Game/UniqueID.h>
@@ -11,10 +12,12 @@ void Trim::Init(Transform transform, const std::string& modelName, const std::st
     m_objectId = UniqueID::GetNextObjectId(ObjectType::TRIM);
 
     Model* model = AssetManager::GetModelByName(modelName);
-    Material* material = AssetManager::GetMaterialByName(materialName);
+    m_materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
+    Material* material = Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
 
-    if (!model) {
+    if (!model || !material) {
         std::cout << "Trim::Init() failed: model name '" << modelName << "' not found\n";
+        return;
     }
 
     m_renderItem.modelMatrix = transform.to_mat4();

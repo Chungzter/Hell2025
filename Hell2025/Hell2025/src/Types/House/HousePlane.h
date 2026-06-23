@@ -4,6 +4,8 @@
 #include "Game/Types.h"
 #include "Hell/Render/VertexAttributes.h"
 
+#include "Hell/ResourceManagement/Types/Material.h"
+
 struct HousePlane {
     HousePlane() = default;
     HousePlane(uint64_t id, const HousePlaneCreateInfo& createInfo, const SpawnOffset& spawnOffset);
@@ -32,7 +34,8 @@ struct HousePlane {
     const std::string& GetEditorName() const        { return m_createInfo.editorName; }
     const uint64_t GetObjectId() const              { return m_objectId; }
     const uint64_t GetParentDoorId() const          { return m_createInfo.parentDoorId; }
-    Material* GetMaterial()                         { return m_material; };
+    Material* GetMaterial();
+    int32_t GetMaterialIndex() const                { return m_materialIndex; }
     std::vector<Vertex>& GetVertices()              { return m_vertices; }
     std::vector<uint32_t>& GetIndices()             { return m_indices; }
     std::vector<glm::vec2>& GetNavMeshPoly()        { return m_navMeshPoly; }
@@ -44,7 +47,7 @@ private:
     uint64_t m_objectId = 0;
     uint64_t m_parentDoorId = 0;
     uint64_t m_physicsId = 0;
-    Material* m_material = nullptr;
+    int32_t m_materialIndex = -1;
     glm::vec3 m_p0 = glm::vec3(0.0f);
     glm::vec3 m_p1 = glm::vec3(0.0f);
     glm::vec3 m_p2 = glm::vec3(0.0f);

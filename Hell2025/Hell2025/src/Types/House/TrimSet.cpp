@@ -1,5 +1,6 @@
 #include "TrimSet.h"
 #include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Input/Input.h"
 #include "Renderer/Renderer.h"
 #include "Util/Util.h"
@@ -101,7 +102,7 @@ void TrimSet::CreateRenderItems() {
 
     if (m_createInfo.type == TrimSetType::CEILING_FANCY) {
 		model = AssetManager::GetModelByName("TrimsCeilingFancy");
-		material = AssetManager::GetMaterialByName("WoodTrims");
+		material = Hell::ResourceManager::GetMaterialByName("WoodTrims");
     }
 
     if (!material) return;

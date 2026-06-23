@@ -29,8 +29,6 @@
 #include "Managers/OpenableManager.h"
 #include "Managers/HouseManager.h"
 #include "Managers/MirrorManager.h"
-#include "Hell/ResourceManagement/ResourceManager.h"
-#include "Hell/TextureUploader/TextureUploader.h"
 #include "Modelling/Unused/Modelling.h"
 #include "Physics/Physics.h"
 #include "Ragdoll/RagdollManager.h"
@@ -45,6 +43,9 @@
 #include "Integration/SDL.h"
 
 #include "Pathfinding/NavMesh.h"
+
+#include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/TextureUploader.h"
 
 #define NOMINMAX
 #ifdef _WIN32

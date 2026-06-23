@@ -2,6 +2,7 @@
 
 #include "Hell/ResourceManagement/Types/GenericMesh.h"
 #include "Hell/ResourceManagement/Types/IESProfile.h"
+#include "Hell/ResourceManagement/Types/Material.h"
 #include "Hell/ResourceManagement/Types/MeshBuffer.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
 #include "Types/Renderer/SpriteSheetTexture.h"
@@ -10,6 +11,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace Hell::MemoryTracker {
     struct MemoryReport;
@@ -27,6 +29,15 @@ namespace Hell::ResourceManager {
     IESProfile& CreateIESProfile(const std::string& name);
     IESProfile& GetIESProfile(const std::string& name);
     IESProfile* GetIESProfilePtr(const std::string& name);
+
+    Material& CreateMaterial(const std::string& name);
+    std::vector<Material>& GetMaterials();
+    std::vector<std::string> GetMaterialNames();
+    Material* GetDefaultMaterial();
+    Material* GetMaterialByIndex(int32_t index);
+    Material* GetMaterialByName(const std::string& name);
+    int32_t GetMaterialIndexByName(const std::string& name);
+    std::string GetMaterialNameByIndex(int32_t index);
 
     MeshBuffer& CreateMeshBuffer(const std::string& name);
     MeshBuffer& GetMeshBuffer(const std::string& name);

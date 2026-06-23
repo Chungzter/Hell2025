@@ -4,6 +4,7 @@
 #include "World/World.h"
 
 #include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/RenderDataManager.h"
 
 #include "Hell/Logging.h"
@@ -32,11 +33,11 @@ Decal::Decal(const DecalCreateInfo& createInfo) {
     float scale = 0.1f;
 
     if (m_type == DecalType::GLASS) {
-        m_material = AssetManager::GetMaterialByName("BulletHole_Glass");
+        m_materialIndex = Hell::ResourceManager::GetMaterialIndexByName("BulletHole_Glass");
         scale = 0.035f * 0.825f;
     }
     else if (m_type == DecalType::PLASTER) {
-        m_material = AssetManager::GetMaterialByName("BulletHole_Plaster");
+        m_materialIndex = Hell::ResourceManager::GetMaterialIndexByName("BulletHole_Plaster");
         scale = 0.02f * 0.5f;
     }
 
@@ -55,11 +56,14 @@ Decal::Decal(const DecalCreateInfo& createInfo) {
         return;
     }
 
+    Material* material = Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
+    if (!material) return;
+
     // Set persistent RenderItem values
     m_renderItem.meshIndex = meshIndex;
-    m_renderItem.baseColorTextureIndex = m_material->m_basecolor;
-    m_renderItem.normalMapTextureIndex = m_material->m_normal;
-    m_renderItem.rmaTextureIndex = m_material->m_rma;
+    m_renderItem.baseColorTextureIndex = material->m_basecolor;
+    m_renderItem.normalMapTextureIndex = material->m_normal;
+    m_renderItem.rmaTextureIndex = material->m_rma;
     m_renderItem.baseVertex = mesh->baseVertex;
     m_renderItem.baseIndex = mesh->baseIndex;
     m_renderItem.shadowBit = SHADOW_BIT_NONE;

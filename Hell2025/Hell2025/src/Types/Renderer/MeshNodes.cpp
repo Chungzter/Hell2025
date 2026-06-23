@@ -13,6 +13,8 @@
 #include "Game/UniqueID.h"
 #include "Util.h"
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std::vector<MeshNodeCreateInfo>& meshNodeCreateInfoSet) {
     Model* model = AssetManager::GetModelByName(modelName);
     if (!model) {
@@ -41,7 +43,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
 
         MeshNode& meshNode = m_meshNodes[i];
         meshNode.blendingMode = BlendingMode::DEFAULT;
-        meshNode.materialIndex = AssetManager::GetMaterialIndexByName(DEFAULT_MATERIAL_NAME);
+        meshNode.materialIndex = Hell::ResourceManager::GetMaterialIndexByName(DEFAULT_MATERIAL_NAME);
 		meshNode.transform = Transform();
 		meshNode.worldMatrix = glm::mat4(1.0f);
 		meshNode.prevWorldMatrix = glm::mat4(1.0f);
@@ -87,10 +89,10 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
 
         // Base color texture override
         if (createInfo.baseColorOverrideTextureName != UNDEFINED_STRING) {
-            meshNode->baseColorOverrideTextureIndex = AssetManager::GetTextureBindlessIndexByName(createInfo.baseColorOverrideTextureName);
+            meshNode->baseColorOverrideTextureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName(createInfo.baseColorOverrideTextureName);
         }
 
-        meshNode->materialIndex = AssetManager::GetMaterialIndexByName(createInfo.materialName);
+        meshNode->materialIndex = Hell::ResourceManager::GetMaterialIndexByName(createInfo.materialName);
         meshNode->blendingMode = createInfo.blendingMode;
         meshNode->customId = createInfo.customId;
         meshNode->decalType = createInfo.decalType;
@@ -298,7 +300,7 @@ void MeshNodes::SetTransformByMeshName(const std::string& meshName, Transform tr
 }
 
 void MeshNodes::SetMeshMaterials(const std::string& materialName) {
-    int materialIndex = AssetManager::GetMaterialIndexByName(materialName);
+    int materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
     if (materialIndex == -1) {
         Logging::Error() << "MeshNodes::SetMeshMaterials() failed: '" << materialName << "' not found";
         return;
@@ -309,7 +311,7 @@ void MeshNodes::SetMeshMaterials(const std::string& materialName) {
 }
 
 void MeshNodes::SetMaterialByMeshName(const std::string& meshName, const std::string& materialName) {
-    int materialIndex = AssetManager::GetMaterialIndexByName(materialName);
+    int materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
     if (materialIndex == -1) {
         Logging::Error() << "MeshNodes::SetMaterialByMeshName() failed: '" << materialName << "' not found";
         return;
@@ -406,9 +408,9 @@ int32_t MeshNodes::GetGlobalMeshIndex(int nodeIndex) {
 
 Material* MeshNodes::GetMaterial(int nodeIndex) {
     MeshNode* meshNode = GetMeshNodeByLocalIndex(nodeIndex);
-    if (!meshNode) return AssetManager::GetDefaultMaterial();
+    if (!meshNode) return Hell::ResourceManager::GetDefaultMaterial();
 
-    return AssetManager::GetMaterialByIndex(meshNode->materialIndex);
+    return Hell::ResourceManager::GetMaterialByIndex(meshNode->materialIndex);
 }
 
 void MeshNodes::UpdateHierarchy() {

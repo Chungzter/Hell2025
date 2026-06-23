@@ -3,6 +3,9 @@
 #include <Game/CreateInfo.h>
 #include "Types\Renderer\Model.h"
 
+// TODO: remove me
+#include "Hell/ResourceManagement/Types/Material.h"
+
 struct ChristmasTree {
     ChristmasTree() = default;
     ChristmasTree(const ChristmasTreeCreateInfo& createInfo, const SpawnOffset& spawnOffset);
@@ -20,6 +23,6 @@ private:
     glm::vec3 m_rotation = glm::vec3(0.0f);
     glm::mat4 m_modelMatrix = glm::mat4(1.0f);
     Model* m_model = nullptr;
-    Material* m_material = nullptr;
+    int32_t m_materialIndex = -1;
     std::vector<RenderItem> m_renderItems;
 };

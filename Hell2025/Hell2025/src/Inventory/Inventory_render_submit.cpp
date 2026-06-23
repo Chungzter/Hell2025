@@ -11,6 +11,8 @@
 
 #include <iostream> // TODO: cleanup logging
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 void Inventory::SubmitRenderItems() {
     if (m_state == InventoryState::MAIN_SCREEN) {
         m_locations.background = glm::ivec2(m_style.invOriginX, m_style.invOriginY);
@@ -123,9 +125,9 @@ void Inventory::SubmitItemExamineRenderItems() {
 }
 
 void Inventory::BlitInventoryBackground(glm::ivec2 origin, int width, int height) {
-    Texture* bgTexture = AssetManager::GetTextureByName("inv_background");
-    Texture* borderTexture = AssetManager::GetTextureByName("inv_border");
-    Texture* cornerTexture = AssetManager::GetTextureByName("inv_border_corner");
+    Texture* bgTexture = Hell::ResourceManager::GetTextureByName("inv_background");
+    Texture* borderTexture = Hell::ResourceManager::GetTextureByName("inv_border");
+    Texture* cornerTexture = Hell::ResourceManager::GetTextureByName("inv_border_corner");
 
     if (!bgTexture) return;
     if (!borderTexture) return;
@@ -240,15 +242,15 @@ void Inventory::BlitInventoryBackground(glm::ivec2 origin, int width, int height
 }
 
 void Inventory::BlitItemGrid(glm::ivec2 origin) {
-    Texture* squareSize1Texture = AssetManager::GetTextureByName("InvSquare_Size1");
-    Texture* squareSize2Texture = AssetManager::GetTextureByName("InvSquare_Size2");
-    Texture* squareSize3Texture = AssetManager::GetTextureByName("InvSquare_Size3");
-    Texture* squareSize1SelectedTexture = AssetManager::GetTextureByName("InvSquare_Size1Selected");
-    Texture* squareSize2SelectedTexture = AssetManager::GetTextureByName("InvSquare_Size2Selected");
-    Texture* squareSize3SelectedTexture = AssetManager::GetTextureByName("InvSquare_Size3Selected");
-    Texture* gridBorder = AssetManager::GetTextureByName("Inv_GridBorder");
-    Texture* gridBorderCorner = AssetManager::GetTextureByName("Inv_GridBorderCorner");
-    Texture* gridDivider = AssetManager::GetTextureByName("Inv_GridDivider");
+    Texture* squareSize1Texture = Hell::ResourceManager::GetTextureByName("InvSquare_Size1");
+    Texture* squareSize2Texture = Hell::ResourceManager::GetTextureByName("InvSquare_Size2");
+    Texture* squareSize3Texture = Hell::ResourceManager::GetTextureByName("InvSquare_Size3");
+    Texture* squareSize1SelectedTexture = Hell::ResourceManager::GetTextureByName("InvSquare_Size1Selected");
+    Texture* squareSize2SelectedTexture = Hell::ResourceManager::GetTextureByName("InvSquare_Size2Selected");
+    Texture* squareSize3SelectedTexture = Hell::ResourceManager::GetTextureByName("InvSquare_Size3Selected");
+    Texture* gridBorder = Hell::ResourceManager::GetTextureByName("Inv_GridBorder");
+    Texture* gridBorderCorner = Hell::ResourceManager::GetTextureByName("Inv_GridBorderCorner");
+    Texture* gridDivider = Hell::ResourceManager::GetTextureByName("Inv_GridDivider");
 
     if (!squareSize1Texture) return;
     if (!squareSize2Texture) return;
@@ -330,7 +332,7 @@ void Inventory::BlitItemGrid(glm::ivec2 origin) {
     // Icons
     for (InventoryItem& item : m_items) {
         std::string textureName = "InvItem_" + item.m_name;
-        Texture* texture = AssetManager::GetTextureByName(textureName);
+        Texture* texture = Hell::ResourceManager::GetTextureByName(textureName);
         if (!texture) {
             std::cout << "Could not render inventory icon for '" << item.m_name << "' coz ;" << textureName << "' was not found\n";
             continue;
@@ -562,7 +564,7 @@ void Inventory::BlitItemButtons(glm::ivec2 origin) {
 }
 
 void Inventory::RenderButton(glm::ivec2 location, const std::string& letter, const std::string& description) {
-    Texture* buttonTexture = AssetManager::GetTextureByName("inventory_green_button");
+    Texture* buttonTexture = Hell::ResourceManager::GetTextureByName("inventory_green_button");
     if (!buttonTexture) return;
 
     int buttonCenterX = location.x + (buttonTexture->GetWidth() * 0.5f);

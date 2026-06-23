@@ -46,13 +46,13 @@ namespace OpenGLRenderer {
        ///
        ///}
        //
-       //Material* material = AssetManager::GetMaterialByName("WeatherBoards0");
+       //Material* material = Hell::ResourceManager::GetMaterialByName("WeatherBoards0");
        //glActiveTexture(GL_TEXTURE0);
-       //glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
+       //glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
        //glActiveTexture(GL_TEXTURE1);
-       //glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
+       //glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
        //glActiveTexture(GL_TEXTURE2);
-       //glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
+       //glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
        //
        //ForceRasterizerState("GeometryPass_Default");
        //EditorRasterizerStateOverride();

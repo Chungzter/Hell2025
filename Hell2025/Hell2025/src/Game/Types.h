@@ -96,21 +96,6 @@ struct AnimatedTransform {
     glm::vec3 scale = glm::vec3(1);
 };
 
-struct Material {
-    Material() {}
-    std::string m_name = UNDEFINED_STRING;
-    int m_basecolor = 0;
-    int m_normal = 0;
-    int m_rma = 0;
-    int m_emissive = 0;
-    //int m_hairFlowMap = 0;
-    //int m_hairIdMap = 0;
-    //int m_hairRootMap = 0;
-    //int m_hairBlendMap = 0;
-    int m_opacity = 0;
-    int m_hairMaps = 0;
-};
-
 struct QueuedTextureBake {
     void* texture = nullptr;
     int jobID = 0;

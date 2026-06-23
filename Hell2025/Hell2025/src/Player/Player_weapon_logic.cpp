@@ -1,5 +1,6 @@
 ﻿#include "Player.h"
 #include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Audio/Audio.h"
 #include "Bible/Bible.h"
 #include "Core/Game.h"
@@ -379,7 +380,7 @@ void Player::SpawnCasing() {
     if (!Util::StrCmp(ammoInfo->casingModelName, UNDEFINED_STRING)) {
         BulletCasingCreateInfo createInfo;
         createInfo.modelIndex = AssetManager::GetModelIndexByName(ammoInfo->casingModelName);
-        createInfo.materialIndex = AssetManager::GetMaterialIndexByName(ammoInfo->casingMaterialName);
+        createInfo.materialIndex = Hell::ResourceManager::GetMaterialIndexByName(ammoInfo->casingMaterialName);
         createInfo.position = viewWeapon->GetBoneWorldPosition(weaponInfo->casingEjectionBoneName);
         createInfo.rotation.y = m_camera.GetYaw() + (HELL_PI * 0.5f);
         createInfo.force = glm::normalize(GetCameraRight() + glm::vec3(0.0f, Util::RandomFloat(0.7f, 0.9f), 0.0f)) * glm::vec3(weaponInfo->casingEjectionImpulse);
@@ -391,7 +392,7 @@ void Player::SpawnCasing() {
         createInfo.position += GetCameraUp() * glm::vec3(-0.025f);
 
         //if (alternateAmmo) {
-        //    createInfo.materialIndex = AssetManager::GetMaterialIndexByName("ShellGreen");
+        //    createInfo.materialIndex = Hell::ResourceManager::GetMaterialIndexByName("ShellGreen");
         //}
 
         createInfo.mass = 0.008f;

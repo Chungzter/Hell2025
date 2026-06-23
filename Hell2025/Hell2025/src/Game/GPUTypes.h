@@ -12,15 +12,3 @@ struct GpuParticle {
     float lifeTime = 0.0f;
     uint32_t exists = 0;
 };
-
-struct GPUMaterial {
-    int basecolor = 0;
-    int normal = 0;
-    int rma = 0;
-    int emissive = 0;
-
-    int opacity = 0;
-    int hairMaps = 0;
-    int padding;
-    int padding2;
-};

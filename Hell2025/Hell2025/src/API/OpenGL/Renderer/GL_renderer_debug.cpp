@@ -3,6 +3,8 @@
 #include "AssetManagement/AssetManager.h"
 #include "Managers/MapManager.h"
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 namespace OpenGLRenderer {
     
     void BlitDebugTextures() {
@@ -38,7 +40,7 @@ namespace OpenGLRenderer {
             blitFrameBuffer.CleanUp();
         }
 
-        // World heightmap
+        // World height map
         if (false) {
             OpenGLFrameBuffer* worldFrameBuffer = GetFrameBufferOLD("World");
             OpenGLFrameBuffer* roadFrameBuffer = GetFrameBufferOLD("Road");
@@ -61,7 +63,7 @@ namespace OpenGLRenderer {
 
         // Test texture
         if (false) {
-            Texture* texture = AssetManager::GetTextureByName("Glock_ALB");
+            Texture* texture = Hell::ResourceManager::GetTextureByName("Glock_ALB");
             if (texture) {
                 OpenGLTexture& glTexture = texture->GetGLTexture();
                 DebugBlitOpenGLTexture(glTexture.GetHandle(), 0.5f);

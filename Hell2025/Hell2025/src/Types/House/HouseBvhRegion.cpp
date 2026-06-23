@@ -1,6 +1,7 @@
 #include "HouseBvhRegion.h"
 #include "AssetManagement/AssetManager.h"
 #include "Bvh/Cpu/CpuBvh.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "World/World.h"
 
 void HouseBvhRegion::Update(const glm::vec3& worldBoundsMin, const glm::vec3& worldBoundsMax) {
@@ -88,7 +89,7 @@ void HouseBvhRegion::Update(const glm::vec3& worldBoundsMin, const glm::vec3& wo
 
     // Seal the door gaps in the walls
     for (Door& door : World::GetDoors()) {
-        Material* material = AssetManager::GetMaterialByName("Ceiling2"); // Rethink this?
+        Material* material = Hell::ResourceManager::GetMaterialByName("Ceiling2"); // Rethink this?
         const glm::mat4& modelMatrix = door.GetDoorModelMatrix();
 
         float padding = 0.02f; // matches clipping cube padding

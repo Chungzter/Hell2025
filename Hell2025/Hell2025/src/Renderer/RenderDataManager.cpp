@@ -21,6 +21,8 @@
 
 #include "Timer.hpp"
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 // Get me out of here
 #include "World/World.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
@@ -331,7 +333,7 @@ namespace RenderDataManager {
     void GatherEmissiveRenderItems() {
         g_renderItemsEmissive.clear();
 
-        int32_t blackTextureIndex = AssetManager::GetTextureBindlessIndexByName("Black");
+        int32_t blackTextureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("Black");
 
         for (RenderItem& renderItem : g_renderItems) {
 
@@ -355,7 +357,7 @@ namespace RenderDataManager {
                 //    std::string textureName = UNDEFINED_STRING;
                 //
                 //    if (renderItem.emissiveTextureIndex != -1) {
-                //        textureName = AssetManager::GetTextureByBindlessIndex(renderItem.emissiveTextureIndex)->GetFileName();
+                //        textureName = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.emissiveTextureIndex)->GetFileName();
                 //    }
                 //
                 //    if (mesh) {
@@ -587,10 +589,10 @@ namespace RenderDataManager {
             g_screenSpaceBloodDecalInstances[i].type = decal.GetType();
 
             switch (decal.GetType()) {
-                case 0: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureBindlessIndexByName("BloodDecal4"); break;
-                case 1: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureBindlessIndexByName("BloodDecal6"); break;
-                case 2: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureBindlessIndexByName("BloodDecal7"); break;
-                case 3: g_screenSpaceBloodDecalInstances[i].textureIndex = AssetManager::GetTextureBindlessIndexByName("BloodDecal9"); break;
+                case 0: g_screenSpaceBloodDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal4"); break;
+                case 1: g_screenSpaceBloodDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal6"); break;
+                case 2: g_screenSpaceBloodDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal7"); break;
+                case 3: g_screenSpaceBloodDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal9"); break;
                 default: continue;
             }
         }

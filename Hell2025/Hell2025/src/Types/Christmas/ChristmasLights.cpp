@@ -1,5 +1,6 @@
 #include "ChristmasLights.h"
 #include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Util.h"
 #include "Renderer/Renderer.h"
 #include <array>
@@ -57,8 +58,8 @@ void ChristmasLightSet::AddSegementFromLastPoint(const glm::vec3& nextPoint, flo
 void ChristmasLightSet::RecreateLightRenderItems() {
     // TODO but something like this...
     static Model* model = AssetManager::GetModelByName("ChristmasLight");
-    static int whiteMaterialIndex = AssetManager::GetMaterialIndexByName("ChristmasLightWhite");
-    static int blackMaterialIndex = AssetManager::GetMaterialIndexByName("Black");
+    static int whiteMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("ChristmasLightWhite");
+    static int blackMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Black");
 
     std::vector<glm::mat4> modelMatrices;
     m_renderItems.clear();
@@ -77,7 +78,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
 
     // Light
     for (const glm::mat4& modelMatrix : modelMatrices) {
-        Material* material = AssetManager::GetMaterialByIndex(whiteMaterialIndex);
+        Material* material = Hell::ResourceManager::GetMaterialByIndex(whiteMaterialIndex);
         RenderItem renderItem;
         renderItem.modelMatrix = modelMatrix;
         renderItem.meshIndex = model->GetMeshIndices()[1];;
@@ -96,7 +97,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
 
     // Plastic
     for (const glm::mat4& modelMatrix : modelMatrices) {
-        Material* material = AssetManager::GetMaterialByIndex(blackMaterialIndex);
+        Material* material = Hell::ResourceManager::GetMaterialByIndex(blackMaterialIndex);
         RenderItem renderItem;
         renderItem.modelMatrix = modelMatrix;
         renderItem.meshIndex = model->GetMeshIndices()[0];

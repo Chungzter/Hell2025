@@ -1,6 +1,7 @@
 #include "BulletCasing.h"
 #include "Util.h"
 #include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Audio/Audio.h"
 #include "Physics/Physics.h"
 #include "Game/RendereringConstants.h"
@@ -63,7 +64,7 @@ void BulletCasing::Update(float deltaTime) {
 }
 
 void BulletCasing::SubmitRenderItem() {
-    Material* material = AssetManager::GetMaterialByIndex(GetMaterialIndex());
+    Material* material = Hell::ResourceManager::GetMaterialByIndex(GetMaterialIndex());
 
     RenderItem renderItem;
     renderItem.modelMatrix = GetModelMatrix();

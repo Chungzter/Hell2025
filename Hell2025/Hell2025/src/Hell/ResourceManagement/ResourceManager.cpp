@@ -17,7 +17,21 @@ namespace Hell::ResourceManager {
         std::unordered_map<std::string, SpriteSheetTexture> g_spriteSheetTextures;
         std::unordered_map<std::string, Texture> g_textures;
 
+        std::vector<Material> g_materials;
+        std::unordered_map<std::string, int32_t> g_materialIndices;
+        std::vector<std::string> g_materialNamesByIndex;
         std::vector<std::string> g_textureNamesByBindlessIndex;
+
+        Material CreateDefaultMaterial() {
+            Material material;
+            material.m_basecolor = GetTextureBindlessIndexByName("CheckerBoard_ALB");
+            material.m_normal = GetTextureBindlessIndexByName("DefaultNRM");
+            material.m_rma = GetTextureBindlessIndexByName("DefaultRMA");
+            material.m_emissive = GetTextureBindlessIndexByName("Black");
+            material.m_opacity = GetTextureBindlessIndexByName("White");
+            material.m_hairMaps = GetTextureBindlessIndexByName("Black");
+            return material;
+        }
     }
 
     void CleanUp() {
@@ -26,6 +40,9 @@ namespace Hell::ResourceManager {
         for (auto& object : g_textures)      { object.second.CleanUp(); } g_textures.clear();
 
         g_iesProfiles.clear();
+        g_materials.clear();
+        g_materialIndices.clear();
+        g_materialNamesByIndex.clear();
         g_spriteSheetTextures.clear();
         g_textureNamesByBindlessIndex.clear();
     }
@@ -175,6 +192,74 @@ namespace Hell::ResourceManager {
         return &it->second;
     }
 
+    // Material
+
+    Material& CreateMaterial(const std::string& name) {
+        auto it = g_materialIndices.find(name);
+
+        if (it != g_materialIndices.end()) {
+            Logging::Fatal() << "ResourceManager::CreateMaterial(..) failed: '" << name << "' already exists\n";
+            return g_materials[it->second];
+        }
+
+        const int32_t index = static_cast<int32_t>(g_materials.size());
+        g_materials.push_back(CreateDefaultMaterial());
+        g_materialIndices.emplace(name, index);
+        g_materialNamesByIndex.push_back(name);
+        return g_materials.back();
+    }
+
+    std::vector<Material>& GetMaterials() {
+        return g_materials;
+    }
+
+    std::vector<std::string> GetMaterialNames() {
+        return g_materialNamesByIndex;
+    }
+
+    Material* GetDefaultMaterial() {
+        auto it = g_materialIndices.find("CheckerBoard");
+        if (it == g_materialIndices.end()) {
+            Logging::Error() << "ResourceManager::GetDefaultMaterial() failed: 'CheckerBoard' does not exist\n";
+            return nullptr;
+        }
+
+        return &g_materials[it->second];
+    }
+
+    Material* GetMaterialByIndex(int32_t index) {
+        if (index >= 0 && static_cast<size_t>(index) < g_materials.size()) {
+            return &g_materials[index];
+        }
+
+        Logging::Error() << "ResourceManager::GetMaterialByIndex(..) failed: index '" << index << "' is out of range\n";
+        return GetDefaultMaterial();
+    }
+
+    Material* GetMaterialByName(const std::string& name) {
+        auto it = g_materialIndices.find(name);
+        if (it != g_materialIndices.end()) {
+            return GetMaterialByIndex(it->second);
+        }
+
+        Logging::Error() << "ResourceManager::GetMaterialByName(..) failed: '" << name << "' does not exist\n";
+        return GetDefaultMaterial();
+    }
+
+    int32_t GetMaterialIndexByName(const std::string& name) {
+        auto it = g_materialIndices.find(name);
+        return it != g_materialIndices.end() ? it->second : -1;
+    }
+
+    std::string GetMaterialNameByIndex(int32_t index) {
+        if (index >= 0 && static_cast<size_t>(index) < g_materialNamesByIndex.size()) {
+            return g_materialNamesByIndex[index];
+        }
+
+        Logging::Error() << "ResourceManager::GetMaterialNameByIndex(..) failed: index '" << index << "' is out of range\n";
+        return UNDEFINED_STRING;
+    }
+
     // Mesh Buffer
 
     MeshBuffer& CreateMeshBuffer(const std::string& name) {
@@ -301,10 +386,5 @@ namespace Hell::ResourceManager {
         }
 
         return -1;
-    }
-
-    void ReserveTextureStorage(size_t textureCount) {
-        g_textures.reserve(textureCount);
-        g_textureNamesByBindlessIndex.reserve(textureCount);
     }
 }

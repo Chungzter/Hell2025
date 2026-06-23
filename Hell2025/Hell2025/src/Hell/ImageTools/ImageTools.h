@@ -11,6 +11,7 @@ namespace Hell::ImageTools {
     void CreateAndExportDDS(const std::string& inputFilepath, const std::string& outputFilepath, bool createMipMaps);
 
     // Loading
+    ImageData LoadImageData(const std::string& path, ImageDataType type);
     ImageData LoadDDS(const std::string& filepath);
     ImageData LoadUncompressedImage(const std::string& filepath);
     ImageData LoadR16UNormImage(const std::string& filepath);

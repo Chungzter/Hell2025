@@ -1,6 +1,7 @@
 #pragma once
 #include "JSON.h"
 #include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Util.h"
 #include <fstream>
 
@@ -218,7 +219,7 @@ namespace nlohmann {
     }
 
     void to_json(nlohmann::json& j, const MeshRenderingInfo& info) {
-        Material* material = AssetManager::GetMaterialByIndex(info.materialIndex);
+        Material* material = Hell::ResourceManager::GetMaterialByIndex(info.materialIndex);
         Mesh* mesh = AssetManager::GetMeshByIndex(info.meshIndex);
 
         if (!material) return;
@@ -226,7 +227,7 @@ namespace nlohmann {
 
         j = nlohmann::json{
             {"meshName", mesh->GetName()},
-            {"materialName", material ? material->m_name : DEFAULT_MATERIAL_NAME },
+            {"materialName", material ? Hell::ResourceManager::GetMaterialNameByIndex(info.materialIndex) : DEFAULT_MATERIAL_NAME },
             {"blendingMode", Util::BlendingModeToString(info.blendingMode)}
         };
     }
@@ -439,7 +440,7 @@ namespace nlohmann {
         j.at("blendingMode").get_to(blendingModeString);
 
         info.meshIndex = AssetManager::GetMeshIndexByName(meshName);
-        info.materialIndex = AssetManager::GetMaterialIndexByName(materialName);
+        info.materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
         info.blendingMode = Util::StringToBlendingMode(blendingModeString);
     }
 

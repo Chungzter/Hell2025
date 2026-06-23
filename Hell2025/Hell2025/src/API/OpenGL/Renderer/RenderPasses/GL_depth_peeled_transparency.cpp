@@ -19,6 +19,7 @@
 #include <execution>
 // remove me
 
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 /*
 "DepthPeeledTransparency"] = OpenGLFrameBuffer("DepthPeeledTransparency", resolutions.gBuffer);
@@ -146,13 +147,13 @@ namespace OpenGLRenderer {
 					depthPeelColorShader->Bind();
 					BindImageTexture(4, depthPeeledTransparencyFbo->GetColorAttachmentHandleByName("ViewspaceDepth"), GL_READ_ONLY, GL_R32F);
 
-					Material* material = AssetManager::GetMaterialByName("Plastic");
+					Material* material = Hell::ResourceManager::GetMaterialByName("Plastic");
 					glActiveTexture(GL_TEXTURE3);
-					glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
+					glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
 					glActiveTexture(GL_TEXTURE4);
-					glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
+					glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
 					glActiveTexture(GL_TEXTURE5);
-					glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
+					glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
 
 
 					OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
@@ -166,11 +167,11 @@ namespace OpenGLRenderer {
 						if (!mesh) continue;
 
 						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+						glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
 						glActiveTexture(GL_TEXTURE1);
-						glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+						glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
 						glActiveTexture(GL_TEXTURE2);
-						glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+						glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
 
 						depthPeelColorShader->SetMat4("u_model", renderItem.modelMatrix);
 						depthPeelColorShader->SetMat4("u_inverseModel", renderItem.inverseModelMatrix);

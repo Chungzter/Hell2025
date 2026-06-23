@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+#include "Hell/ResourceManagement/Types/Material.h"
+
 struct Wall {
     Wall() = default;
     Wall(uint64_t id, const WallCreateInfo& createInfo, const SpawnOffset& spawnOffset);
@@ -43,7 +45,8 @@ struct Wall {
     const WallType GetWallType() const                                      { return m_createInfo.wallType; }
     const size_t GetPointCount() const                                      { return m_createInfo.points.size(); }
     const glm::vec3& GetWorldSpaceCenter() const                            { return m_worldSpaceCenter; }
-    Material* GetMaterial()                                                 { return m_material; };
+    Material* GetMaterial();
+    int32_t GetMaterialIndex() const                                        { return m_materialIndex; }
     const std::vector<RenderItem>& GetWeatherBoardstopRenderItems()         { return m_weatherBoardstopRenderItems; }
     std::vector<WallSegment>& GetWallSegments()                             { return m_wallSegments; }
     const uint64_t GetObjectId() const                                      { return m_objectId; }
@@ -52,7 +55,7 @@ struct Wall {
 
 private:
     uint64_t m_objectId = 0;
-    Material* m_material = nullptr;
+    int32_t m_materialIndex = -1;
     TrimType m_ceilingTrimType = TrimType::NONE;
     TrimType m_floorTrimType = TrimType::NONE;
     glm::vec3 m_worldSpaceCenter = glm::vec3(0.0f);

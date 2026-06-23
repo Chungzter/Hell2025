@@ -9,6 +9,8 @@
 
 #include <iostream> // TODO: cleanup logging
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 void Inventory::Init() {
     CloseInventory();
     ClearInventory();
@@ -129,7 +131,7 @@ glm::ivec2 Inventory::GetSelectedItemDescriptionSize() {
 int Inventory::GetCellSizeInPixels() {
     static int size = 0;
     if (size == 0) {
-        if (Texture* texture = AssetManager::GetTextureByName("InvSquare_Size1")) {
+        if (Texture* texture = Hell::ResourceManager::GetTextureByName("InvSquare_Size1")) {
             size = texture->GetWidth();
         }
     }

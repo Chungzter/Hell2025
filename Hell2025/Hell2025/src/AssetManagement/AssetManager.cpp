@@ -32,19 +32,16 @@ namespace AssetManager {
         bool textures = false;
         bool bakedModels = false;
         bool bakedSkinnedModels = false;
-        bool materials = false;
         bool indexMaps = false;
         bool modelBVHData = false;
         bool allComplete = false;
     } g_loadingComplete;
 
     std::vector<Animation> g_animations;
-    std::vector<Material> g_materials;
     std::vector<Mesh> g_meshes;
     std::vector<Model> g_models;
     std::vector<SkinnedMesh> g_skinnedMeshes;
     std::vector<SkinnedModel> g_skinnedModels;
-    std::unordered_map<std::string, int> g_materialIndexMap;
     std::unordered_map<std::string, int> g_modelIndexMap;
     std::vector<std::string> g_loadLog;
     std::vector<std::future<void>> g_futures;
@@ -60,7 +57,6 @@ namespace AssetManager {
     void AddItemToLoadLog(std::string text);
     void BlitLoadLog();
     void FindAssetPaths();
-    void LoadTexture(Texture* texture);
 
     bool FileInfoIsAlbedoTexture(const FileInfo& fileInfo);
     std::string GetMaterialNameFromFileInfo(const FileInfo& fileInfo);
@@ -69,7 +65,7 @@ namespace AssetManager {
         Logging::Init() << "Initialized the AssetManager";
 
         Hell::AssetCompiler::CompileOutOfDateAssets();
-        Hell::AssetLoader::LoadFonts();
+        Hell::AssetLoader::LoadRequired();
 
         FindAssetPaths();
         Hell::AssetLoader::DiscoverAssets();
@@ -139,18 +135,10 @@ namespace AssetManager {
             return;
         }
 
-        if (!g_loadingComplete.materials) {
-            g_loadingComplete.materials = true;
-            BuildMaterials();
-            AddItemToLoadLog("Built materials");
-            Logging::Init() << "AssetManager built materials";
-            return;
-        }
-
         if (!g_loadingComplete.indexMaps) {
             g_loadingComplete.indexMaps = true;
             BuildIndexMaps();
-            AddItemToLoadLog("Built material/texture index maps");
+            AddItemToLoadLog("Built model index map");
             Logging::Init() << "AssetManager built index maps";
             return;
         }
@@ -233,21 +221,9 @@ namespace AssetManager {
 
     void BuildIndexMaps() {
         g_modelIndexMap.clear();
-        g_materialIndexMap.clear();
         for (int i = 0; i < g_models.size(); i++) {
             g_modelIndexMap[g_models[i].GetName()] = i;
         }
-        for (int i = 0; i < g_materials.size(); i++) {
-            g_materialIndexMap[g_materials[i].m_name] = i;
-        }
-    }
-
-    Texture& CreateNewTexture(const std::string& name) {
-        return Hell::ResourceManager::CreateTexture(name);
-    }
-
-    void ReserveTextureStorage(size_t textureCount) {
-        Hell::ResourceManager::ReserveTextureStorage(textureCount);
     }
 
     bool LoadingComplete() {
@@ -264,21 +240,6 @@ namespace AssetManager {
 
     std::vector<Mesh>& GetMeshes() {
         return g_meshes;
-    }
-
-    std::vector<Material>& GetMaterials() {
-        return g_materials;
-    }
-
-    std::vector<std::string> GetMaterialNames() {
-        std::vector<std::string> result;
-        result.reserve(g_materials.size());
-
-        for (Material& material : g_materials) {
-            result.push_back(material.m_name);
-        }
-
-        return result;
     }
 
     std::vector<Model>& GetModels() {
@@ -315,10 +276,6 @@ namespace AssetManager {
 
     std::vector<Vertex>& GetWeightedVertices() {
         return g_weightedVertices;
-    }
-
-    std::unordered_map<std::string, int>& GetMaterialIndexMap() {
-        return g_materialIndexMap;
     }
 
     std::unordered_map<std::string, int>& GetModelIndexMap() {

@@ -6,6 +6,7 @@
 #include "World/World.h"
 
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 DDGIVolume::DDGIVolume(uint64_t id, DDGIVolumeCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_id = id;
@@ -149,7 +150,7 @@ void DDGIVolume::CreateTriangleData() {
 
     // Seal the door gaps in the walls
     for (Door& door : World::GetDoors()) {
-        Material* material = AssetManager::GetMaterialByName("Ceiling2");
+        Material* material = Hell::ResourceManager::GetMaterialByName("Ceiling2");
         const glm::mat4& modelMatrix = door.GetDoorModelMatrix();
         
         float padding = 0.02f; // matches clipping cube padding

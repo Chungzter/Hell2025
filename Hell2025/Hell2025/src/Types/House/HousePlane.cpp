@@ -20,7 +20,7 @@ HousePlane::HousePlane(uint64_t id, const HousePlaneCreateInfo& createInfo, cons
     m_createInfo.p2 += spawnOffset.translation; // is this correct/safe?
     m_createInfo.p3 += spawnOffset.translation; // is this correct/safe?
 
-    m_material = AssetManager::GetMaterialByName(m_createInfo.materialName);
+    m_materialIndex = ResourceManager::GetMaterialIndexByName(m_createInfo.materialName);
 
     UpdateVertexDataFromCreateInfo();
 }
@@ -84,7 +84,7 @@ void HousePlane::CleanUp() {
     m_p1 = glm::vec3(0.0f);
     m_p2 = glm::vec3(0.0f);
     m_p3 = glm::vec3(0.0f);
-    Material* m_material = nullptr;
+    m_materialIndex = -1;
 
     MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
     meshBuffer.RemoveMesh(m_meshId);
@@ -101,7 +101,11 @@ void HousePlane::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {
 
 void HousePlane::SetMaterial(const std::string& materialName) {
     m_createInfo.materialName = materialName;
-    m_material = AssetManager::GetMaterialByName(materialName);
+    m_materialIndex = ResourceManager::GetMaterialIndexByName(materialName);
+}
+
+Material* HousePlane::GetMaterial() {
+    return ResourceManager::GetMaterialByIndex(m_materialIndex);
 }
 
 void HousePlane::SetMeshId(uint64_t meshId) {
@@ -148,10 +152,13 @@ void HousePlane::SubmitRenderItem() {
     Mesh* mesh = meshBuffer.GetMeshById(m_meshId);
     if (!mesh) return;
 
+    Material* material = ResourceManager::GetMaterialByIndex(m_materialIndex);
+    if (!material) return;
+
 	RenderItem renderItem;
-	renderItem.baseColorTextureIndex = m_material->m_basecolor;
-	renderItem.normalMapTextureIndex = m_material->m_normal;
-	renderItem.rmaTextureIndex = m_material->m_rma;
+	renderItem.baseColorTextureIndex = material->m_basecolor;
+	renderItem.normalMapTextureIndex = material->m_normal;
+	renderItem.rmaTextureIndex = material->m_rma;
 	renderItem.modelMatrix = glm::mat4(1.0f);
 	renderItem.inverseModelMatrix = glm::mat4(1.0f);
 	renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);

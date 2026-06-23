@@ -30,15 +30,6 @@ namespace AssetManager {
     Animation* GetAnimationByIndex(int index, bool printError = true);
     int GetAnimationIndexByName(const std::string& name);
 
-    // Materials
-    std::vector<Material>& GetMaterials();
-    std::vector<std::string> GetMaterialNames();
-    Material* GetDefaultMaterial();
-    Material* GetMaterialByIndex(int index);
-    Material* GetMaterialByName(const std::string& name);
-    int GetMaterialIndexByName(const std::string& name);
-    std::string GetMaterialNameByIndex(int index);
-
     // Mesh
     std::vector<Mesh>& GetMeshes();
     int CreateMesh(const std::string& name, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, glm::vec3 aabbMin, glm::vec3 aabbMax, int parentIndex, glm::mat4 localTransform, glm::mat4 inverseBindTransform);
@@ -81,11 +72,6 @@ namespace AssetManager {
 
     // Textures
     std::unordered_map<std::string, Texture>& GetTextures();
-    Texture& CreateNewTexture(const std::string& name);
-    Texture* GetTextureByName(const std::string& name);
-    Texture* GetTextureByBindlessIndex(int32_t bindlessIndex);
-    int32_t GetTextureBindlessIndexByName(const std::string& name, bool ignoreWarning = true);
-    void ReserveTextureStorage(size_t textureCount);
 
     // Skinned Model
     std::vector<SkinnedModel>& GetSkinnedModels();
@@ -103,18 +89,14 @@ namespace AssetManager {
     // Building
     void BuildPrimitives();
     void BuildIndexMaps();
-    void BuildMaterials();
 
     // Loading 
-    void LoadPendingTexturesAsync();
-    void UpdateTextureLoading();
     void LoadPendingModelsAsync();
     void LoadPendingSkinnedModelsAsync();
     void LoadPendingAnimationsAsync();
     void LoadAnimation(Animation* animation);
     void LoadModel(Model* model);
     void LoadSkinnedModel(SkinnedModel* skinnedModel);
-    void LoadTexture(Texture* texture);
 
     // Baking
     void BakeModels();
@@ -127,11 +109,7 @@ namespace AssetManager {
     std::vector<Vertex>& GetVertices();
     std::vector<uint32_t>& GetIndies();
 
-    //std::vector<Vertex>& GetWeightedVertices();
-    //std::vector<uint32_t>& GetWeightedIndies();
-
     // Index maps
     std::unordered_map<std::string, int>& GetTextureIndexMap();
-    std::unordered_map<std::string, int>& GetMaterialIndexMap();
     std::unordered_map<std::string, int>& GetModelIndexMap();
 }

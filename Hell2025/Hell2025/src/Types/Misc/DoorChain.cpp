@@ -1,5 +1,6 @@
 #include "DoorChain.h"
 #include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Debug/DebugDraw.h"
 #include "Input/Input.h"
 #include "Physics/Physics.h"
@@ -187,7 +188,7 @@ void DoorChain::SubmitRenderItems() {
         if (RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(m_chainLinkPhysicsIds[i])) {
             glm::mat4 modelMatrix = rigidDynamic->GetWorldTransform();
 
-            Material* material = AssetManager::GetMaterialByName("Tokarev");
+            Material* material = Hell::ResourceManager::GetMaterialByName("Tokarev");
             RenderItem renderItem;
             renderItem.modelMatrix = modelMatrix;
             renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);

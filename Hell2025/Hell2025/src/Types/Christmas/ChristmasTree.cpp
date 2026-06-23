@@ -32,8 +32,9 @@ void ChristmasTree::CreateRenderItems() {
     //    return;
     //}
     //
-    //m_material = AssetManager::GetMaterialByName("ChristmasTree");
-    //if (!m_material) {
+    //m_materialIndex = Hell::ResourceManager::GetMaterialIndexByName("ChristmasTree");
+    //Material* material = Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
+    //if (!material) {
     //    std::cout << "Could not get ChristmasTree material\n";
     //    return;
     //}
@@ -51,10 +52,10 @@ void ChristmasTree::CreateRenderItems() {
     //    renderItem.baseVertex = mesh->baseVertex;
     //    renderItem.baseIndex = mesh->baseIndex;
     //
-    //    if (m_material) {
-    //        renderItem.baseColorTextureIndex = m_material->m_basecolor;
-    //        renderItem.normalMapTextureIndex = m_material->m_normal;
-    //        renderItem.rmaTextureIndex = m_material->m_rma;
+    //    if (material) {
+    //        renderItem.baseColorTextureIndex = material->m_basecolor;
+    //        renderItem.normalMapTextureIndex = material->m_normal;
+    //        renderItem.rmaTextureIndex = material->m_rma;
     //    }
     //
     //    Util::UpdateRenderItemAABB(renderItem);

@@ -6,6 +6,8 @@
 
 #include <iostream> // TODO clean up logging
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 void AnimatedMeshNodes::Init(uint64_t parentId, const std::string& modelName, const std::vector<AnimatedMeshNodeCreateInfo>& createInfoSet) {
 
 }
@@ -51,7 +53,7 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         RenderItem& renderItem = m_nodes[i].renderItem;
         SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(m_nodes[i].meshIndex);
 
-        Material* material = AssetManager::GetMaterialByIndex(m_nodes[i].materialIndex);
+        Material* material = Hell::ResourceManager::GetMaterialByIndex(m_nodes[i].materialIndex);
         renderItem.baseColorTextureIndex = material->m_basecolor;
         renderItem.rmaTextureIndex = material->m_rma;
         renderItem.normalMapTextureIndex = material->m_normal;
@@ -84,7 +86,7 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
 		}
 		// Additional textures (wound mask)
         else if (m_woundMaskTextureIndices[i] != -1) {
-            Material* wouldMaterial = AssetManager::GetMaterialByIndex(m_nodes[i].woundMaterialIndex);
+            Material* wouldMaterial = Hell::ResourceManager::GetMaterialByIndex(m_nodes[i].woundMaterialIndex);
             renderItem.additionalTextureIndex0 = wouldMaterial->m_basecolor;
             renderItem.additionalTextureIndex1 = wouldMaterial->m_normal;
             renderItem.additionalTextureIndex2 = wouldMaterial->m_rma;
@@ -140,7 +142,7 @@ void AnimatedMeshNodes::SetBlendingModeByMeshName(const std::string& meshName, B
 }
 
 void AnimatedMeshNodes::SetMeshMaterialByMeshName(const std::string& meshName, const std::string& materialName, BlendingMode blendingMode) {
-    int materialIndex = AssetManager::GetMaterialIndexByName(materialName);
+    int materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
 
     if (materialIndex == -1) {
         Logging::Error() << "AnimatedMeshNodes::SetMeshMaterialByMeshName(..) failed because '" << materialName << "' was not found\n";
@@ -182,7 +184,7 @@ void AnimatedMeshNodes::SetMeshFurShellDistanceAttenuation(const std::string& me
 
 void AnimatedMeshNodes::SetMeshMaterialByMeshIndex(int meshIndex, const std::string& materialName) {
     if (meshIndex >= 0 && meshIndex < m_nodes.size()) {
-        m_nodes[meshIndex].materialIndex = AssetManager::GetMaterialIndexByName(materialName);
+        m_nodes[meshIndex].materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
     }
 }
 
@@ -198,7 +200,7 @@ void AnimatedMeshNodes::SetMeshToRenderAsGlassByMeshIndex(const std::string& mes
 void AnimatedMeshNodes::SetMeshEmissiveColorTextureByMeshName(const std::string& meshName, const std::string& textureName) {
     for (AnimatedMeshNode& node : m_nodes) {
         if (node.meshName == meshName) {
-            node.emissiveColorTexutreIndex = AssetManager::GetTextureBindlessIndexByName(textureName);
+            node.emissiveColorTexutreIndex = Hell::ResourceManager::GetTextureBindlessIndexByName(textureName);
         }
     }
 }
@@ -206,14 +208,14 @@ void AnimatedMeshNodes::SetMeshEmissiveColorTextureByMeshName(const std::string&
 void AnimatedMeshNodes::SetMeshWoundMaterialByMeshName(const std::string& meshName, const std::string& textureName) {
     for (AnimatedMeshNode& node : m_nodes) {
         if (node.meshName == meshName) {
-            node.woundMaterialIndex = AssetManager::GetMaterialIndexByName(textureName);
+            node.woundMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName(textureName);
         }
     }
 }
 
 void AnimatedMeshNodes::SetAllMeshMaterials(const std::string& materialName) {
     for (AnimatedMeshNode& node : m_nodes) {
-        node.materialIndex = AssetManager::GetMaterialIndexByName(materialName);
+        node.materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
     }
 }
 

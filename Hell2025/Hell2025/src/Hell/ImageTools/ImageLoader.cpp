@@ -1,6 +1,8 @@
 #include "ImageTools.h"
 #include "DDS.h"
 
+#include "Hell/Logging.h"
+
 #include <stb_image.h>
 #include <tinyexr.h>
 
@@ -15,27 +17,36 @@
 namespace Hell::ImageTools {
 
     namespace {
+        ImageFormat GetUncompressedImageFormat(int channelCount) {
+            switch (channelCount) {
+            case 1: return ImageFormat::R8_UNORM;
+            case 2: return ImageFormat::RG8_UNORM;
+            case 3: return ImageFormat::RGB8_UNORM;
+            case 4: return ImageFormat::RGBA8_UNORM;
+            default: return ImageFormat::UNDEFINED;
+            }
+        }
 
-    ImageFormat GetUncompressedImageFormat(int channelCount) {
-        switch (channelCount) {
-        case 1: return ImageFormat::R8_UNORM;
-        case 2: return ImageFormat::RG8_UNORM;
-        case 3: return ImageFormat::RGB8_UNORM;
-        case 4: return ImageFormat::RGBA8_UNORM;
-        default: return ImageFormat::UNDEFINED;
+        uint32_t GetMaximumMipCount(uint32_t width, uint32_t height) {
+            uint32_t mipCount = 1;
+            uint32_t largestDimension = std::max(width, height);
+            while (largestDimension > 1) {
+                largestDimension /= 2;
+                ++mipCount;
+            }
+            return mipCount;
         }
     }
 
-    uint32_t GetMaximumMipCount(uint32_t width, uint32_t height) {
-        uint32_t mipCount = 1;
-        uint32_t largestDimension = std::max(width, height);
-        while (largestDimension > 1) {
-            largestDimension /= 2;
-            ++mipCount;
+    ImageData LoadImageData(const std::string& path, ImageDataType type) {
+        switch (type) {
+        case ImageDataType::UNCOMPRESSED: return LoadUncompressedImage(path);
+        case ImageDataType::COMPRESSED:   return LoadDDS(path);
+        case ImageDataType::EXR:          return LoadEXRImage(path);
+        default:
+            Logging::Error() << "ImageTools::LoadImageData(..) failed because image type was undefined for '" << path << "'\n";
+            return {};
         }
-        return mipCount;
-    }
-
     }
 
     ImageData LoadDDS(const std::string& filepath) {

@@ -10,6 +10,8 @@
 #include "Core/Game.h"
 #include "Renderer/Renderer.h"
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 namespace OpenGLRenderer {
 
     void SpriteSheetPass() {
@@ -41,7 +43,7 @@ namespace OpenGLRenderer {
             const std::vector<SpriteSheetRenderItem>& renderItems = player->GetSpriteSheetRenderItems();
             for (const SpriteSheetRenderItem& renderItem : renderItems) {
 
-                Texture* texture = AssetManager::GetTextureByBindlessIndex(renderItem.textureIndex);
+                Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.textureIndex);
                 if (!texture) {
                     std::cout << "Spritesheet pass had a null ptr texture from index " << renderItem.textureIndex << "\n";
                     continue;
@@ -71,7 +73,7 @@ namespace OpenGLRenderer {
             //glDisable(GL_DEPTH_TEST);
             for (Fireplace& fireplace : World::GetFireplaces()) {
                 const SpriteSheetRenderItem& renderItem = fireplace.GetFireSpriteSheetRenderItem();
-                Texture* texture = AssetManager::GetTextureByBindlessIndex(renderItem.textureIndex);
+                Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.textureIndex);
                 shader->SetInt("u_rowCount", renderItem.rowCount);
                 shader->SetInt("u_columnCount", renderItem.columnCount);
                 shader->SetInt("u_frameIndex", renderItem.frameIndex);
@@ -97,7 +99,7 @@ namespace OpenGLRenderer {
             for (SpriteSheetObject& bubbleSpriteSheetObject : World::GetBubbleSpriteSheetObjects()) {
                 if (bubbleSpriteSheetObject.GetTime() > 0) {
                     const SpriteSheetRenderItem& renderItem = bubbleSpriteSheetObject.GetRenderItem();
-                    Texture* texture = AssetManager::GetTextureByBindlessIndex(renderItem.textureIndex);
+                    Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.textureIndex);
                     shader->SetInt("u_rowCount", renderItem.rowCount);
                     shader->SetInt("u_columnCount", renderItem.columnCount);
                     shader->SetInt("u_frameIndex", renderItem.frameIndex);

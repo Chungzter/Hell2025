@@ -4,6 +4,7 @@
 #include "API/Vulkan/Types/VK_texture.h"
 #include "BackEnd/BackEnd.h"
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/MaterialBuilder.h"
 
 #include <algorithm>
 #include <cmath>
@@ -146,6 +147,7 @@ void Texture::SetTextureDataLevelBakeState(int index, BakeState state) {
 
 void Texture::SetFileInfo(FileInfo fileInfo) {
     m_fileInfo = fileInfo;
+    MaterialBuilder::RegisterTexture(*this);
 }
 
 void Texture::SetImageData(ImageData imageData) {

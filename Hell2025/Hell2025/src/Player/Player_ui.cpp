@@ -17,6 +17,8 @@
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 void Player::UpdateUI(float deltaTime) {
     if (Editor::IsOpen()) return;
 
@@ -137,7 +139,7 @@ void Player::UpdateUI(float deltaTime) {
             WeaponState* weaponState = GetCurrentWeaponState();
             WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
             if (weaponInfo->hasAutoSwitch) {
-                Texture* texture = AssetManager::GetTextureByName("Weapon_Auto");
+                Texture* texture = Hell::ResourceManager::GetTextureByName("Weapon_Auto");
                 if (GetCurrentWeaponType() == WeaponType::SHOTGUN && texture) {
                     int modifierPadding = 29;
                     int modifierX = TextBlitter::GetTextSize(totalText, "AmmoFont", smallScale).x + modifierPadding;
@@ -159,7 +161,7 @@ void Player::UpdateUI(float deltaTime) {
                     if (weaponState->shotgunSlug) {
                         shellTextureName = "ShotgunShellGreen";
                     }
-                    Texture* texture = AssetManager::GetTextureByName(shellTextureName);
+                    Texture* texture = Hell::ResourceManager::GetTextureByName(shellTextureName);
                     int shellScaleX = texture->GetWidth() * smallScale;
                     int shellScaleY = texture->GetHeight() * smallScale * 1.1f;
 
@@ -358,7 +360,7 @@ void Player::UpdateUI(float deltaTime) {
 
     // Press Start
     if (RespawnAllowed()) {
-        static Texture* texture = AssetManager::GetTextureByName("PressStart");
+        static Texture* texture = Hell::ResourceManager::GetTextureByName("PressStart");
         if (texture) {
             static int width = texture->GetWidth() * 2;
             static int height = texture->GetHeight() * 2;

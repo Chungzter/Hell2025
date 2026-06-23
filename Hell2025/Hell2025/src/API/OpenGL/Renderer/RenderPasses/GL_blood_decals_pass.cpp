@@ -6,6 +6,8 @@
 
 #include "Input/Input.h"
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 namespace OpenGLRenderer {
     void BloodDecalTileCulling();
     void BloodDecalDraw();
@@ -45,10 +47,10 @@ namespace OpenGLRenderer {
         glBindTextureUnit(2, gBuffer->GetDepthAttachmentHandle());
 
         if (BackEnd::RenderDocFound()) {
-            glBindTextureUnit(3, AssetManager::GetTextureByName("BloodDecal4")->GetGLTexture().GetHandle());
-            glBindTextureUnit(4, AssetManager::GetTextureByName("BloodDecal6")->GetGLTexture().GetHandle());
-            glBindTextureUnit(5, AssetManager::GetTextureByName("BloodDecal7")->GetGLTexture().GetHandle());
-            glBindTextureUnit(6, AssetManager::GetTextureByName("BloodDecal9")->GetGLTexture().GetHandle());
+            glBindTextureUnit(3, Hell::ResourceManager::GetTextureByName("BloodDecal4")->GetGLTexture().GetHandle());
+            glBindTextureUnit(4, Hell::ResourceManager::GetTextureByName("BloodDecal6")->GetGLTexture().GetHandle());
+            glBindTextureUnit(5, Hell::ResourceManager::GetTextureByName("BloodDecal7")->GetGLTexture().GetHandle());
+            glBindTextureUnit(6, Hell::ResourceManager::GetTextureByName("BloodDecal9")->GetGLTexture().GetHandle());
         }
 
         // Draw full screen triangle

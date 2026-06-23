@@ -28,6 +28,8 @@
 #include "API/OpenGL/Types/GL_texture_readback.h"
 
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 #include <Game/GPUTypes.h>
 #include "World/World.h"
 #include "Renderer/Renderer.h"
@@ -122,12 +124,12 @@ namespace OpenGLRenderer {
 
         // Attempt to load skybox
         std::vector<Texture*> textures = {
-            AssetManager::GetTextureByName("px"),
-            AssetManager::GetTextureByName("nx"),
-            AssetManager::GetTextureByName("py"),
-            AssetManager::GetTextureByName("ny"),
-            AssetManager::GetTextureByName("pz"),
-            AssetManager::GetTextureByName("nz"),
+            Hell::ResourceManager::GetTextureByName("px"),
+            Hell::ResourceManager::GetTextureByName("nx"),
+            Hell::ResourceManager::GetTextureByName("py"),
+            Hell::ResourceManager::GetTextureByName("ny"),
+            Hell::ResourceManager::GetTextureByName("pz"),
+            Hell::ResourceManager::GetTextureByName("nz"),
         };
         std::vector<GLuint> texturesHandles;
         for (Texture* texture : textures) {
@@ -141,19 +143,8 @@ namespace OpenGLRenderer {
         CreateBlurBuffers();
 
         // Upload materials
-        std::vector<Material>& materials = AssetManager::GetMaterials();
-        std::vector<GPUMaterial> gpuMaterials(materials.size());
-
-        for (int i = 0; i < materials.size(); i++) {
-            gpuMaterials[i].basecolor = materials[i].m_basecolor;
-            gpuMaterials[i].normal = materials[i].m_normal;
-            gpuMaterials[i].rma = materials[i].m_rma;
-            gpuMaterials[i].emissive = materials[i].m_emissive;
-            gpuMaterials[i].opacity = materials[i].m_opacity;
-            gpuMaterials[i].hairMaps = materials[i].m_hairMaps;
-        }
-
-        UploadSSBOStatic("Materials", gpuMaterials.size() * sizeof(GPUMaterial), gpuMaterials.data());
+        std::vector<Material>& materials = Hell::ResourceManager::GetMaterials();
+        UploadSSBOStatic("Materials", materials.size() * sizeof(Material), materials.data());
     }
 
     void CreateFrameBuffers() {
@@ -791,16 +782,16 @@ namespace OpenGLRenderer {
 
                 if (bindMaterial) {
                     glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE1);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE2);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE3);
 
                     // Try bind emissive texture
                     if (renderItem.emissiveTextureIndex != -1) {
-                        if (Texture* texture = AssetManager::GetTextureByBindlessIndex(renderItem.emissiveTextureIndex)) {
+                        if (Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.emissiveTextureIndex)) {
                             glBindTexture(GL_TEXTURE_2D, texture->GetGLTexture().GetHandle());
                         }
                     }
@@ -811,11 +802,11 @@ namespace OpenGLRenderer {
                 }
                 if (bindWoundMaterial) {
                     glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex0)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex0)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE5);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex1)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex1)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE6);
-                    glBindTexture(GL_TEXTURE_2D, AssetManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex2)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex2)->GetGLTexture().GetHandle());
                 }
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, command.indexCount, GL_UNSIGNED_INT, (GLvoid*)(command.firstIndex * sizeof(GLuint)), command.baseVertex);
@@ -1099,7 +1090,7 @@ namespace OpenGLRenderer {
             return it->second;
         }
 
-        Texture* texture = AssetManager::GetTextureByName(name);
+        Texture* texture = Hell::ResourceManager::GetTextureByName(name);
         if (!texture) {
             Logging::Fatal() << "OpenGLRenderer::GetTextureHandleByName() failed because '" << name << "' does not exist\n";
             return 0;

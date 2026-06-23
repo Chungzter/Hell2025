@@ -78,7 +78,7 @@ private:
     uint64_t m_objectId = 0;
     Model* m_doorModel = nullptr;
     Model * m_frameModel = nullptr;
-    Material* m_material = nullptr;
+    int32_t m_materialIndex = -1;
     OpeningState m_openingState = OpeningState::CLOSED;
     glm::vec3 m_position;
     glm::vec3 m_rotation;

@@ -2,6 +2,8 @@
 #include "../AssetManagement/AssetManager.h"
 #include "../BackEnd/BackEnd.h"
 
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 namespace OpenGLRenderer {
 
     void BlitToDefaultFrameBuffer(OpenGLFrameBuffer* srcFrameBuffer, const char* srcName, GLbitfield mask, GLenum filter) {
@@ -102,7 +104,7 @@ namespace OpenGLRenderer {
 
     RenderItem2D CreateRenderItem2D(const std::string& textureName, glm::ivec2 location, glm::ivec2 viewportSize, Alignment alignment, glm::vec3 colorTint, glm::ivec2 size) {
         // Get texture index and dimensions
-        Texture* texture = AssetManager::GetTextureByName(textureName);
+        Texture* texture = Hell::ResourceManager::GetTextureByName(textureName);
         if (!texture) {
             std::cout << "RendererUtil::CreateRenderItem2D() failed coz texture is nullptr\n";
             return RenderItem2D();
@@ -151,7 +153,7 @@ namespace OpenGLRenderer {
 
         RenderItem2D renderItem;
         renderItem.modelMatrix = transform.to_mat4();
-        renderItem.textureIndex = AssetManager::GetTextureBindlessIndexByName(textureName);
+        renderItem.textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName(textureName);
         renderItem.colorTintR = colorTint.r;
         renderItem.colorTintG = colorTint.g;
         renderItem.colorTintB = colorTint.b;

@@ -9,6 +9,8 @@
 
 #include <Game/CreateInfo.h>
 
+#include "Hell/ResourceManagement/Types/Material.h"
+
 struct MeshNode {
     uint64_t id; // unused. you need to think if it would be worthwhile storing all mesh nodes elsewhere
     uint64_t parentObjectId;

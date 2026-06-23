@@ -1,5 +1,6 @@
 #include "World.h"
 #include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Core/Game.h"
 #include "Editor/Editor.h"
 #include "Hell/Logging.h"
@@ -63,7 +64,7 @@ namespace World {
             int meshIndex = AssetManager::GetMeshIndexByModelNameMeshName("Primitives", "Cube");
             std::vector<Transform>& transforms = GetDoorAndWindowCubeTransforms();
             for (Transform& transform : transforms) {
-                Material* material = AssetManager::GetDefaultMaterial();
+                Material* material = Hell::ResourceManager::GetDefaultMaterial();
                 RenderItem renderItem;
                 renderItem.meshIndex = meshIndex;
                 renderItem.modelMatrix = transform.to_mat4();

@@ -53,8 +53,8 @@ public:
     VulkanTexture& GetVKTexture();
 
     const int GetMipmapLevelCount()                  { return m_mipmapLevelCount; }
-    const std::string& GetFileName()                 { return m_fileInfo.name; }
-    const std::string& GetFilePath()                 { return m_fileInfo.path; }
+    const std::string& GetFileName() const           { return m_fileInfo.name; }
+    const std::string& GetFilePath() const           { return m_fileInfo.path; }
     const FileInfo GetFileInfo() const               { return m_fileInfo; }
     const ImageDataType GetImageDataType() const     { return m_imageDataType; }
     const TextureWrapMode GetTextureWrapModeS() const { return m_wrapModeS; }
