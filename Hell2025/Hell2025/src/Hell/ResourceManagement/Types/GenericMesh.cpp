@@ -1,7 +1,7 @@
 #include "GenericMesh.h"
 
 #include "API/OpenGL/GL_resource_manager.h"
-#include "Backend/BackEnd.h"
+#include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 
 #include <algorithm>
@@ -20,7 +20,7 @@ void GenericMesh::UpdateVertexData(const void* vertices, size_t vertexCount, con
     m_vertexCount = vertexCount;
     m_vertexCapacity = std::max(m_vertexCapacity, vertexCount);
 
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId == 0) {
             m_openGLId = OpenGLResourceManager::CreateGenericMesh();
         }
@@ -33,7 +33,7 @@ void GenericMesh::UpdateIndexData(const std::vector<uint32_t>& indices) {
     m_indexCount = indices.size();
     m_indexCapacity = std::max(m_indexCapacity, indices.size());
 
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId == 0) {
             m_openGLId = OpenGLResourceManager::CreateGenericMesh();
         }
@@ -65,7 +65,7 @@ size_t GenericMesh::GetGPUAllocatedByteCount() const {
 }
 
 uint32_t GenericMesh::GetVAO() const {
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         OpenGLGenericMesh& mesh = OpenGLResourceManager::GetGenericMesh(m_openGLId);
         return mesh.GetVAO();
     }

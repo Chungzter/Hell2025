@@ -1,0 +1,236 @@
+#include "BackEnd.h"
+
+#include "Hell/Logging.h"
+
+#include <glad/gl.h>
+#include <GLFW/glfw3.h>
+#include <iostream>
+#include <string>
+#include "API/OpenGL/GL_backEnd.h"
+#include "API/OpenGL/GL_resource_manager.h"
+#include "API/OpenGL/Renderer/GL_renderer.h"
+#include "API/Vulkan/VK_backEnd.h"
+#include "Config/Config.h"
+
+#include "Integration/GLFW.h"
+#include "Integration/SDL.h"
+
+#include "Hell/Audio.h"
+#include "Hell/Input.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/TextureUploader.h"
+namespace Audio = Hell::Audio;
+namespace Input = Hell::Input;
+namespace InputMulti = Hell::InputMulti;
+
+#define NOMINMAX
+#ifdef _WIN32
+#include <windows.h>
+#include <tlhelp32.h>
+#endif
+
+// Prevent accidentally selecting integrated GPU
+extern "C" {
+    __declspec(dllexport) unsigned __int32 AmdPowerXpressRequestHighPerformance = 0x1;
+    __declspec(dllexport) unsigned __int32 NvOptimusEnablement = 0x1;
+}
+
+namespace Hell::BackEnd {
+    API g_api = API::UNDEFINED;
+    std::string g_title;
+    int g_presentTargetWidth = 0;
+    int g_presentTargetHeight = 0;
+    bool g_renderDocFound = false;
+
+    void CheckForRenderDoc();
+
+    bool Init(API api, WindowedMode windowMode, const std::string& title) {
+        g_api = api;
+        g_title = title;
+        CheckForRenderDoc();        // <--- COMMENT OUT THIS
+        //g_renderDocFound = true;  // <--- ADD THIS
+
+        Config::Init();
+        if (!GLFW::Init(api, windowMode)) {
+            return false;
+        }
+
+        if (GetAPI() == API::OPENGL) {
+            OpenGLBackEnd::Init();
+            OpenGLRenderer::Init();
+        }
+        else if (GetAPI() == API::VULKAN) {
+            if (!VulkanBackEnd::Init()) {
+                return false;
+            }
+        }
+
+        ResourceManager::Init();
+        Audio::Init();
+        Input::Init(GetWindowPointer());
+        InputMulti::Init();
+
+        glfwShowWindow(static_cast<GLFWwindow*>(GetWindowPointer()));
+        return true;
+    }
+
+    void BeginFrame() {
+        GLFW::BeginFrame(g_api);
+        Input::Update();
+        InputMulti::Update();
+        Audio::Update();
+
+        if (!WindowHasFocus()) {
+            InputMulti::ResetState();
+        }
+
+        if (GetAPI() == API::OPENGL) {
+            OpenGLBackEnd::BeginFrame();
+            TextureUploader::Update();
+        }
+        else if (GetAPI() == API::VULKAN) {
+            //VulkanBackEnd::BeginFrame();
+        }
+    }
+
+    void EndFrame() {
+        InputMulti::ResetMouseOffsets();
+        GLFW::EndFrame(g_api);
+    }
+
+    void CleanUp() {
+        TextureUploader::CleanUp();
+        ResourceManager::CleanUp();
+
+        if (GetAPI() == API::OPENGL) {
+            OpenGLResourceManager::CleanUp();
+            OpenGLRenderer::CleanUp();
+        }
+
+        GLFW::Destroy();
+    }
+
+    void SetAPI(API api) {
+        g_api = api;
+    }
+
+    void SetPresentTargetSize(int width, int height) {
+        g_presentTargetWidth = width;
+        g_presentTargetHeight = height;
+    }
+
+    const API GetAPI() {
+        return g_api;
+    }
+
+    void SetCursor(int cursor) {
+        GLFW::SetCursor(cursor);
+    }
+
+    // Window
+    void* GetWindowPointer() {
+        return GLFW::GetWindowPointer();;
+    }
+
+    const WindowedMode& GetWindowedMode() {
+        return GLFW::GetWindowedMode();
+    }
+
+    void SetWindowedMode(const WindowedMode& windowedMode) {
+        GLFW::SetWindowedMode(windowedMode);
+    }
+
+    void ToggleFullscreen() {
+        GLFW::ToggleFullscreen();
+    }
+
+    void ForceCloseWindow() {
+        GLFW::ForceCloseWindow();
+    }
+
+    bool WindowIsOpen() {
+        return GLFW::WindowIsOpen();
+    }
+
+    bool WindowHasFocus() {
+        return GLFW::WindowHasFocus();
+    }
+
+    bool WindowHasNotBeenForceClosed() {
+        return GLFW::WindowHasNotBeenForceClosed();
+    }
+
+    bool WindowIsMinimized() {
+        return GLFW::WindowIsMinimized();
+    }
+
+    int GetWindowedWidth() {
+        return GLFW::GetWindowedWidth();
+    }
+
+    int GetWindowedHeight() {
+        return GLFW::GetWindowedHeight();
+    }
+
+    int GetCurrentWindowWidth() {
+        return GLFW::GetCurrentWindowWidth();
+    }
+
+    int GetCurrentWindowHeight() {
+        return GLFW::GetCurrentWindowHeight();
+    }
+
+    int GetFullScreenWidth() {
+        return GLFW::GetFullScreenWidth();
+    }
+
+    int GetFullScreenHeight() {
+        return GLFW::GetFullScreenHeight();
+    }
+
+    int GetPresentTargetWidth() {
+        return g_presentTargetWidth;
+    }
+
+    int GetPresentTargetHeight() {
+        return g_presentTargetHeight;
+    }
+
+    void CheckForRenderDoc() {
+        #ifdef _WIN32
+        HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+        if (snapshot == INVALID_HANDLE_VALUE) {
+            g_renderDocFound = false;
+        }
+
+        MODULEENTRY32 moduleEntry;
+        moduleEntry.dwSize = sizeof(MODULEENTRY32);
+        bool found = false;
+        if (Module32First(snapshot, &moduleEntry)) {
+            do {
+                std::wstring wmodule(moduleEntry.szModule);
+                std::string moduleName(wmodule.begin(), wmodule.end());
+
+                if (moduleName.find("renderdoc.dll") != std::string::npos) {
+                    found = true;
+                    break;
+                }
+            } while (Module32Next(snapshot, &moduleEntry));
+        }
+        CloseHandle(snapshot);
+
+        g_renderDocFound = found;
+        #else
+        g_renderDocActive = false;
+        #endif
+    }
+
+    void ToggleBindlessTextures() {
+        g_renderDocFound = !g_renderDocFound;
+    }
+
+    bool RenderDocFound() {
+        return g_renderDocFound;
+    }
+
+}

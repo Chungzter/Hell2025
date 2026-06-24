@@ -2,7 +2,7 @@
 
 #include "API/OpenGL/GL_resource_manager.h"
 #include "API/Vulkan/Types/VK_texture.h"
-#include "BackEnd/BackEnd.h"
+#include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/MaterialBuilder.h"
 
@@ -14,26 +14,26 @@
 using namespace Hell;
 
 void Texture::CleanUp() {
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId != 0) {
             OpenGLResourceManager::RemoveTexture(m_openGLId);
             m_openGLId = 0;
         }
     }
-    else if (BackEnd::GetAPI() == API::VULKAN) {
+    else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
         // TODO
     }
 }
 
 OpenGLTexture& Texture::GetGLTexture() {
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId == 0) {
             m_openGLId = OpenGLResourceManager::CreateTexture();
         }
 
         return OpenGLResourceManager::GetTexture(m_openGLId);
     }
-    else if (BackEnd::GetAPI() == API::VULKAN) {
+    else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
         // TODO
     }
 
@@ -43,10 +43,10 @@ OpenGLTexture& Texture::GetGLTexture() {
 }
 
 VulkanTexture& Texture::GetVKTexture() {
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         Logging::Error() << "Texture::GetVKTexture() was called but API is OpenGL\n";
     }
-    else if (BackEnd::GetAPI() == API::VULKAN) {
+    else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
         // TODO
     }
 
@@ -124,12 +124,12 @@ size_t Texture::GetCPUAllocatedByteCount() const {
 }
 
 size_t Texture::GetGPUAllocatedByteCount() const {
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (OpenGLTexture* texture = OpenGLResourceManager::GetTexturePtr(m_openGLId)) {
             return texture->GetAllocatedByteCount();
         }
     }
-    else if (BackEnd::GetAPI() == API::VULKAN) {
+    else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
         // TODO
     }
 

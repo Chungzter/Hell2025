@@ -1,7 +1,7 @@
 #include "MeshBuffer.h"
 
 #include "API/OpenGL/GL_resource_manager.h"
-#include "Backend/BackEnd.h"
+#include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 
 #include <algorithm>
@@ -35,7 +35,7 @@ size_t MeshBuffer::GetGPUAllocatedByteCount() const {
 void MeshBuffer::Initialize() {
     Reset();
 
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId == 0) {
             m_openGLId = OpenGLResourceManager::CreateMeshBuffer();
         }
@@ -62,7 +62,7 @@ void MeshBuffer::Reset() {
     m_vertexCapacity = 0;
     m_indexCapacity = 0;
 
-    if (BackEnd::GetAPI() == API::OPENGL && m_openGLId != 0) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL && m_openGLId != 0) {
         OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
         meshBuffer.Reset();
     }
@@ -163,7 +163,7 @@ int32_t MeshBuffer::AddVertices(const std::vector<Vertex>& newVertices) {
         if (newCount > m_vertexCapacity) {
             m_vertexCapacity = CalculateNewCapacity(newCount, m_vertexCapacity);
 
-            if (BackEnd::GetAPI() == API::OPENGL) {
+            if (Hell::BackEnd::GetAPI() == API::OPENGL) {
                 OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
                 meshBuffer.ResizeVertexBuffer(m_vertexCapacity, m_vertices);
             }
@@ -172,7 +172,7 @@ int32_t MeshBuffer::AddVertices(const std::vector<Vertex>& newVertices) {
         m_vertices.resize(newCount);
         std::copy(newVertices.begin(), newVertices.end(), m_vertices.begin() + insertOffset);
 
-        if (BackEnd::GetAPI() == API::OPENGL) {
+        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
             OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.InsertVertices(newVertices, insertOffset);
         }
@@ -193,7 +193,7 @@ int32_t MeshBuffer::AddVertices(const std::vector<Vertex>& newVertices) {
 
         std::copy(newVertices.begin(), newVertices.end(), m_vertices.begin() + insertOffset);
 
-        if (BackEnd::GetAPI() == API::OPENGL) {
+        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
             OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.InsertVertices(newVertices, insertOffset);
         }
@@ -235,7 +235,7 @@ int32_t MeshBuffer::AddIndices(const std::vector<uint32_t>& newIndices) {
         if (newCount > m_indexCapacity) {
             m_indexCapacity = CalculateNewCapacity(newCount, m_indexCapacity);
 
-            if (BackEnd::GetAPI() == API::OPENGL) {
+            if (Hell::BackEnd::GetAPI() == API::OPENGL) {
                 OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
                 meshBuffer.ResizeIndexBuffer(m_indexCapacity, m_indices);
             }
@@ -244,7 +244,7 @@ int32_t MeshBuffer::AddIndices(const std::vector<uint32_t>& newIndices) {
         m_indices.resize(newCount);
         std::copy(newIndices.begin(), newIndices.end(), m_indices.begin() + insertOffset);
 
-        if (BackEnd::GetAPI() == API::OPENGL) {
+        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
             OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.InsertIndices(newIndices, insertOffset);
         }
@@ -265,7 +265,7 @@ int32_t MeshBuffer::AddIndices(const std::vector<uint32_t>& newIndices) {
 
         std::copy(newIndices.begin(), newIndices.end(), m_indices.begin() + insertOffset);
 
-        if (BackEnd::GetAPI() == API::OPENGL) {
+        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
             OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.InsertIndices(newIndices, insertOffset);
         }
@@ -300,7 +300,7 @@ int32_t MeshBuffer::AllocateExtraVertexSpace(size_t vertexCount) {
     if (blockEnd > m_vertexCapacity) {
         m_vertexCapacity = CalculateNewCapacity(blockEnd, m_vertexCapacity);
 
-        if (BackEnd::GetAPI() == API::OPENGL) {
+        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
             OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.ResizeVertexBuffer(m_vertexCapacity, m_vertices);
         }
@@ -322,7 +322,7 @@ int32_t MeshBuffer::AllocateExtraIndexSpace(size_t indexCount) {
     if (blockEnd > m_indexCapacity) {
         m_indexCapacity = CalculateNewCapacity(blockEnd, m_indexCapacity);
 
-        if (BackEnd::GetAPI() == API::OPENGL) {
+        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
             OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.ResizeIndexBuffer(m_indexCapacity, m_indices);
         }
@@ -343,7 +343,7 @@ uint32_t MeshBuffer::GetVBO() const {
         return 0;
     }
 
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
         return meshBuffer.GetVBO();
     }
@@ -359,7 +359,7 @@ uint32_t MeshBuffer::GetEBO() const {
         return 0;
     }
 
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
         return meshBuffer.GetEBO();
     }
@@ -375,7 +375,7 @@ uint32_t MeshBuffer::GetVAO() const {
         return 0;
     }
 
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
         return meshBuffer.GetVAO();
     }
@@ -484,7 +484,7 @@ void MeshBuffer::PreAllocate(size_t maxVertices, size_t maxIndices, size_t maxVe
     m_indexCapacity = maxIndices;
 
     // Allocate new GPU memory
-    if (BackEnd::GetAPI() == API::OPENGL) {
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
         meshBuffer.PreAllocate(m_vertexCapacity, m_indexCapacity);
     }

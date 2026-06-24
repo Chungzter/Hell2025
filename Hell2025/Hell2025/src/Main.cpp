@@ -11,11 +11,9 @@
 
 */
 
-#include "Backend/Backend.h"
-#include "Core/Game.h"
-#include "Editor/Editor.h"
+#include "Hell/Backend/BackEnd.h"
+#include "Unloved/Unloved.h"
 #include "Renderer/Renderer.h"
-#include "UI/UIBackEnd.h"
 #include <iostream>
 #include "Hell/Logging.h"
 
@@ -31,8 +29,6 @@ int main2() {
     return 0;
 }*/
 
-#include "Ragdoll/RagdollManager.h"
-
 int main() {
     std::cout << "\x1B[2J\x1B[H";
     std::cout << "We are all alone on life's journey, held captive by the limitations of human consciousness.\n";
@@ -47,39 +43,44 @@ int main() {
 	Logging::EnableLevel(Logging::Level::SUPPORT);
 
     // Init the back-end, sub-systems, and the minimum to render loading screen
-    if (!BackEnd::Init(API::OPENGL, WindowedMode::WINDOWED)) {
-        std::cout << "BackEnd::Init() FAILED!\n";
+    if (!Hell::BackEnd::Init(API::OPENGL, WindowedMode::WINDOWED, "Unloved")) {
+        std::cout << "Hell::BackEnd::Init() FAILED!\n";
+        return -1;
+    }
+    if (!Unloved::Init()) {
+        std::cout << "Unloved::Init() FAILED!\n";
         return -1;
     }
 
     // Program loop
-    while (BackEnd::WindowIsOpen()) {
+    while (Hell::BackEnd::WindowIsOpen()) {
 
-        BackEnd::UpdateSubSystems();
-        BackEnd::BeginFrame();
+        Unloved::UpdateSubSystems();
+        Hell::BackEnd::BeginFrame();
+        Unloved::BeginFrame();
 
         // Render loading screen
         if (!Hell::AssetLoader::LoadingComplete()) {
             Hell::AssetLoader::Update();
-            BackEnd::UpdateLoadingScreen();
+            Unloved::UpdateLoadingScreen();
             Renderer::RenderLoadingScreen();
 
             // Loading complete?
             if (Hell::AssetLoader::LoadingComplete()) {
-                BackEnd::OnAssetLoadingComplete();
-                Game::Create();
+                Unloved::OnAssetLoadingComplete();
             }
         }
         // Update/render game
         else {
             //Timer timer("GameLoop");
-            Renderer::PreGameLogicComputePasses();
-            BackEnd::UpdateGame();
-            Renderer::RenderGame();
+            Unloved::Update();
+            Unloved::Render();
         }
-        BackEnd::EndFrame();
+        Unloved::EndFrame();
+        Hell::BackEnd::EndFrame();
     }
 
-    BackEnd::CleanUp();
+    Unloved::CleanUp();
+    Hell::BackEnd::CleanUp();
     return 0;
 }
