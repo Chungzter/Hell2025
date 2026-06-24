@@ -1,22 +1,70 @@
 #include "SkinnedModel.h"
-#include "AssetManagement/AssetManager.h"
 #include "Util/Util.h"
 #include <mutex>
 #include "Hell/Logging.h"
 
+#include <cstddef>
 #include <iostream> // TODO clean up logging
+#include <utility>
 
-void SkinnedModel::BakeToAssetManager() {
+namespace {
+    size_t StringAllocatedByteCount(const std::string& value) {
+        return value.capacity() + 1;
+    }
+
+    size_t FileInfoAllocatedByteCount(const FileInfo& fileInfo) {
+        return StringAllocatedByteCount(fileInfo.path) +
+               StringAllocatedByteCount(fileInfo.name) +
+               StringAllocatedByteCount(fileInfo.ext) +
+               StringAllocatedByteCount(fileInfo.dir);
+    }
+
+    size_t NodeAllocatedByteCount(const Node& node) {
+        return StringAllocatedByteCount(node.name);
+    }
+
+    size_t SkinnedMeshDataAllocatedByteCount(const SkinnedMeshData& meshData) {
+        return StringAllocatedByteCount(meshData.name) +
+               meshData.vertices.capacity() * sizeof(Vertex) +
+               meshData.vertexWeights.capacity() * sizeof(VertexWeight) +
+               meshData.indices.capacity() * sizeof(uint32_t);
+    }
+
+    size_t BoneMappingAllocatedByteCount(const std::map<std::string, unsigned int>& mapping) {
+        size_t byteCount = mapping.size() * sizeof(std::pair<const std::string, unsigned int>);
+
+        for (const auto& [name, index] : mapping) {
+            byteCount += StringAllocatedByteCount(name);
+        }
+
+        return byteCount;
+    }
+
+    size_t SkinnedModelDataAllocatedByteCount(const SkinnedModelData& skinnedModelData) {
+        size_t byteCount = StringAllocatedByteCount(skinnedModelData.name);
+        byteCount += skinnedModelData.meshes.capacity() * sizeof(SkinnedMeshData);
+        byteCount += skinnedModelData.boneOffsets.capacity() * sizeof(glm::mat4);
+        byteCount += skinnedModelData.nodes.capacity() * sizeof(Node);
+        byteCount += BoneMappingAllocatedByteCount(skinnedModelData.boneMapping);
+
+        for (const SkinnedMeshData& meshData : skinnedModelData.meshes) {
+            byteCount += SkinnedMeshDataAllocatedByteCount(meshData);
+        }
+
+        for (const Node& node : skinnedModelData.nodes) {
+            byteCount += NodeAllocatedByteCount(node);
+        }
+
+        return byteCount;
+    }
+}
+
+void SkinnedModel::BuildRuntimeData() {
     m_vertexCount = m_skinnedModelData.vertexCount;
     m_indexCount = m_skinnedModelData.indexCount;
     m_boneOffsets = m_skinnedModelData.boneOffsets;
     m_nodes = m_skinnedModelData.nodes;
     m_boneMapping = m_skinnedModelData.boneMapping;
-
-    for (SkinnedMeshData& skinnedMeshData : m_skinnedModelData.meshes) {
-        int meshIndex = AssetManager::CreateSkinnedMesh2(skinnedMeshData);
-        AddMeshIndex(meshIndex);
-    }
 
     // Store bone node indices
     m_boneNodeIndices.assign(m_boneMapping.size(), -1);
@@ -48,6 +96,9 @@ void SkinnedModel::PrintBoneInfo() {
 
 void SkinnedModel::SetFileInfo(FileInfo fileInfo) {
     m_fileInfo = fileInfo;
+    if (m_name == "undefined") {
+        m_name = fileInfo.name;
+    }
 }
 
 bool SkinnedModel::BoneExists(const std::string& boneName) {
@@ -62,12 +113,24 @@ void SkinnedModel::SetVertexCount(uint32_t vertexCount) {
     m_vertexCount = vertexCount;
 }
 
-const std::string& SkinnedModel::GetName() {
-    return m_fileInfo.name;
+void SkinnedModel::SetName(std::string name) {
+    m_name = name;
 }
 
-void SkinnedModel::AddMeshIndex(uint32_t index) {
-    m_meshIndices.push_back(index);
+void SkinnedModel::SetSkinnedModelId(uint32_t skinnedModelId) {
+    m_skinnedModelId = skinnedModelId;
+}
+
+uint32_t SkinnedModel::GetSkinnedModelId() const {
+    return m_skinnedModelId;
+}
+
+const std::string& SkinnedModel::GetName() const {
+    return m_name;
+}
+
+void SkinnedModel::AddMeshIndex(uint32_t meshId) {
+    m_meshIndices.push_back(meshId);
 }
 
 uint32_t SkinnedModel::GetMeshCount() {
@@ -100,6 +163,24 @@ int32_t SkinnedModel::GetNodeIndex(const std::string& nodeName) {
     return (it != m_nodeMapping.end()) ? it->second : -1;
 }
 
+size_t SkinnedModel::GetCPUAllocatedByteCount() const {
+    size_t byteCount = FileInfoAllocatedByteCount(m_fileInfo);
+    byteCount += StringAllocatedByteCount(m_name);
+    byteCount += m_nodes.capacity() * sizeof(Node);
+    byteCount += m_boneOffsets.capacity() * sizeof(glm::mat4);
+    byteCount += BoneMappingAllocatedByteCount(m_boneMapping);
+    byteCount += BoneMappingAllocatedByteCount(m_nodeMapping);
+    byteCount += m_boneNodeIndices.capacity() * sizeof(int);
+    byteCount += m_meshIndices.capacity() * sizeof(uint32_t);
+    byteCount += SkinnedModelDataAllocatedByteCount(m_skinnedModelData);
+
+    for (const Node& node : m_nodes) {
+        byteCount += NodeAllocatedByteCount(node);
+    }
+
+    return byteCount;
+}
+
 const glm::mat4& SkinnedModel::GetBoneOffset(const std::string& boneName) {
     const int boneIndex = GetBoneIndex(boneName);
     if (boneIndex >= 0 && boneIndex < (int)m_boneOffsets.size()) {
@@ -120,12 +201,4 @@ const glm::mat4& SkinnedModel::GetInverseBindTransform(const std::string& nodeNa
 
     const static glm::mat4 identity(1.0f);
     return identity;
-}
-
-void SkinnedModel::SetLoadingState(LoadingState loadingState) {
-    m_loadingState = loadingState;
-}
-
-LoadingState SkinnedModel::GetLoadingState() const {
-    return m_loadingState;
 }

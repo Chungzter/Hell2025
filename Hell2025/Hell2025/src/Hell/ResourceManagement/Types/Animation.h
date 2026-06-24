@@ -6,7 +6,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 
-#include <map>
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -30,19 +30,19 @@ struct Animation {
     float m_ticksPerSecond = 0.0f;
     float m_finalTimeStamp = 0.0f;
     std::vector<AnimatedNode> m_animatedNodes;
-    std::map<std::string, unsigned int> m_NodeMapping;
 
     void SetFileInfo(const FileInfo& fileInfo);
-    void SetLoadingState(LoadingState value);
+    void SetLoadState(LoadState value);
 
     const FileInfo& GetFileInfo() const;
-    LoadingState GetLoadingState() const;
+    LoadState GetLoadState() const;
     float GetTicksPerSecond() const;
     const std::string& GetName() const;
+    size_t GetCPUAllocatedByteCount() const;
 
     void PrintNodeNames() const;
 
 private:
     FileInfo m_fileInfo;
-    LoadingState m_loadingState { LoadingState::Value::AWAITING_LOADING_FROM_DISK };
+    LoadState m_loadState = LoadState::QUEUED;
 };

@@ -1,48 +1,39 @@
 #include "../GL_renderer.h" 
 #include "../../GL_backend.h"
-#include "AssetManagement/AssetManager.h"
 #include "Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 namespace OpenGLRenderer {
 
     void SkyBoxPass() {
+        if (Editor::IsOpen()) return;
+
         ProfilerOpenGLZoneFunction();
 
-        //if (Editor::IsOpen()) return;
-
-        OpenGLShader* shader = GetShaderOLD("Skybox");
-        OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
+        OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
         OpenGLCubemapView* skyboxCubemapView = GetCubemapViewOLD("SkyboxNightSky");
-        Mesh* mesh = AssetManager::GetCubeMesh();
 
-        gBuffer->Bind();
-        gBuffer->DrawBuffers( {"Lighting" });
-        shader->Bind();
+        gBuffer.Bind();
+        gBuffer.SetViewport();
+        gBuffer.DrawBuffers({ "Lighting" });
 
-        ForceRasterizerState("SkyBox");
-        
+        BindShader("SkyboxRE");
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.depthFunc = GL_GREATER;
+
+        SetRasterizerState(state);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemapView->GetHandle());
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-        glDepthMask(GL_FALSE);
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
-        for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
-
-                Transform skyboxTransform;
-                skyboxTransform.position = RenderDataManager::GetViewportData()[i].viewPos;
-                skyboxTransform.scale = glm::vec3(200.0f);
-
-                shader->SetMat4("u_modelMatrix", skyboxTransform.to_mat4());
-
-                glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), 1, mesh->baseVertex, i);
-            }
-        }
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glDepthMask(GL_TRUE);
+        RenderFullscreenTriangle();
     }
 }

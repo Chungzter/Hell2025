@@ -1,6 +1,5 @@
 #include "GL_renderer.h"
 #include "API/OpenGL/GL_backEnd.h"
-#include "AssetManagement/AssetManager.h"
 #include "Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
@@ -423,7 +422,8 @@ namespace OpenGLRenderer {
 		OpenGLShader& opaqueShader = GetShader("LightingForward");
 		opaqueShader.Bind();
 
-		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+		glBindVertexArray(meshBuffer.GetVAO());
 		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.blended, state);
 
 		//glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
@@ -467,7 +467,7 @@ namespace OpenGLRenderer {
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemapView->GetHandle());
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         RenderFullscreenTriangle();
     }
@@ -573,7 +573,7 @@ namespace OpenGLRenderer {
         state.blendFuncDstfactor = GL_ONE;
         SetRasterizerState(state);
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
         glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
         glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
@@ -589,7 +589,7 @@ namespace OpenGLRenderer {
             for (const RenderItem& renderItem : drawInfoSet.glass[i]) {
                 shader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
 
-                Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+                Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
                 if (!mesh) continue;
 
                 glActiveTexture(GL_TEXTURE0);
@@ -636,13 +636,13 @@ namespace OpenGLRenderer {
         state.colorMask = true;
         state.depthFunc = GL_EQUAL;
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         MultiDrawPerViewportRE(fbo, drawInfoSet.emissive, state);
     }
 
     void RenderFullscreenTriangle() {
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 }

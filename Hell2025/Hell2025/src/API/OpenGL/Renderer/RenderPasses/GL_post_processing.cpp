@@ -1,5 +1,4 @@
 #include "../GL_renderer.h"
-#include "AssetManagement/AssetManager.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"
 

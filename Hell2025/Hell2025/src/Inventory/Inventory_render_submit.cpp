@@ -1,5 +1,4 @@
 #include "Inventory.h"
-#include "AssetManagement/AssetManager.h"
 #include "Config/Config.h"
 #include "Bible/Bible.h"
 #include "Core/Game.h"

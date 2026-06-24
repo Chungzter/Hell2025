@@ -1,7 +1,10 @@
-#include <iostream>
 #include <chrono>
-#include <unordered_map>
+#include <cstdint>
 #include <format>
+#include <iostream>
+#include <mutex>
+#include <string>
+#include <unordered_map>
 
 struct TimerResult {
     double allTimes = 0.0;
@@ -9,6 +12,7 @@ struct TimerResult {
 };
 
 inline std::unordered_map<std::string, TimerResult> g_timerResults;
+inline std::mutex g_timerResultsMutex;
 
 struct Timer {
     std::chrono::time_point<std::chrono::steady_clock> m_startTime;
@@ -20,10 +24,17 @@ struct Timer {
     {
     }
 
+    Timer(const Timer&) = delete;
+    Timer& operator=(const Timer&) = delete;
+    Timer(Timer&&) = delete;
+    Timer& operator=(Timer&&) = delete;
+
     ~Timer() {
         auto now = std::chrono::steady_clock::now();
         std::chrono::duration<double, std::milli> duration = now - m_startTime;
         double timeMs = duration.count();
+
+        std::lock_guard<std::mutex> lock(g_timerResultsMutex);
 
         auto& entry = g_timerResults[m_name];
         entry.allTimes += timeMs;

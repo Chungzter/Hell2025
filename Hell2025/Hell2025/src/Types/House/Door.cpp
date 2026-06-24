@@ -1,6 +1,5 @@
 #include "Door.h"
 #include "Audio/Audio.h"
-#include "AssetManagement/AssetManager.h"
 #include "Bible/Bible.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
@@ -116,38 +115,6 @@ void Door::Update(float deltaTime) {
 
     // DebugDraw();
 
-    //Mesh* mesh = AssetManager::GetMeshByModelNameMeshName("Door", "Door");
-    //if (mesh) {
-    //    AABB aabb = AABB(mesh->aabbMin, mesh->aabbMax);
-    //
-    //
-	//	Transform transform;
-	//	transform.position = m_position;
-	//	transform.rotation = m_rotation;
-    //
-	//	Transform openTransform;
-	//	openTransform.rotation.y = -m_createInfo.maxOpenValue;
-    //
-	//	glm::vec3 origin = transform.to_mat4() * mesh->localTransform * glm::vec4(mesh->aabbMax.x, mesh->aabbMin.y, mesh->aabbMax.z, 1.0f);
-	//	glm::vec3 oppositePointClosed = transform.to_mat4() * mesh->localTransform * glm::vec4(mesh->aabbMax.x, mesh->aabbMin.y, mesh->aabbMin.z, 1.0f);
-	//	glm::vec3 oppositePointOpen = transform.to_mat4() * mesh->localTransform * openTransform.to_mat4() * glm::vec4(mesh->aabbMax.x, mesh->aabbMin.y, mesh->aabbMin.z, 1.0f);
-    //
-	//	DebugDraw::DrawPoint(origin, YELLOW);
-	//	DebugDraw::DrawPoint(oppositePointClosed, RED);
-	//	DebugDraw::DrawPoint(oppositePointOpen, GREEN);
-    //
-    //    int segmentCount = 10;
-    //    float openIncrement = m_createInfo.maxOpenValue / (float)segmentCount;
-    //    for (int i = 0; i < segmentCount; i++) {
-    //
-	//		Transform openTransform;
-	//		openTransform.rotation.y = i * -openIncrement;
-	//		glm::vec3 oppositePoint = transform.to_mat4() * mesh->localTransform * openTransform.to_mat4() * glm::vec4(mesh->aabbMax.x, mesh->aabbMin.y, mesh->aabbMin.z, 1.0f);
-	//		DebugDraw::DrawPoint(oppositePoint, BLUE);
-    //    }
-    //}
-
-    //DebugDraw::DrawLine()
     //CreateRaytracingVertices();
 }
 

@@ -2,8 +2,6 @@
 
 #include "Hell/Logging.h"
 #include "Hell/Math/VecXZ.h"
-
-#include "AssetManagement/AssetManager.h"
 #include "Types/Renderer/GrassMesh.h"
 
 #include "API/OpenGL/GL_backend.h"

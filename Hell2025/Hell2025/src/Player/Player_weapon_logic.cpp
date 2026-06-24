@@ -1,5 +1,4 @@
 ﻿#include "Player.h"
-#include "AssetManagement/AssetManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Audio/Audio.h"
 #include "Bible/Bible.h"
@@ -379,7 +378,7 @@ void Player::SpawnCasing() {
 
     if (!Util::StrCmp(ammoInfo->casingModelName, UNDEFINED_STRING)) {
         BulletCasingCreateInfo createInfo;
-        createInfo.modelIndex = AssetManager::GetModelIndexByName(ammoInfo->casingModelName);
+        createInfo.modelId = Hell::ResourceManager::GetModelIdByName(ammoInfo->casingModelName);
         createInfo.materialIndex = Hell::ResourceManager::GetMaterialIndexByName(ammoInfo->casingMaterialName);
         createInfo.position = viewWeapon->GetBoneWorldPosition(weaponInfo->casingEjectionBoneName);
         createInfo.rotation.y = m_camera.GetYaw() + (HELL_PI * 0.5f);

@@ -5,7 +5,6 @@
 #include "API/OpenGL/Types/GL_pbo.hpp"
 #include "API/OpenGL/Types/GL_shader.h"
 #include "API/OpenGL/Types/GL_ssbo.h"
-#include "AssetManagement/AssetManager.h"
 #include "BackEnd/BackEnd.h"
 #include "Audio/Audio.h"
 #include "Core/Game.h"
@@ -737,14 +736,14 @@ namespace OpenGLRenderer {
         // GBuffer
         OpenGLFrameBuffer& gBuffer = GetFrameBuffer("GBuffer");
         gBuffer.Bind();
-        gBuffer.CreateAttachment("Lighting", GL_RGBA16F);
-        gBuffer.CreateAttachment("BaseColorMetallic", GL_RGBA8);
-        gBuffer.CreateAttachment("NormalXYRoughnessMisc", GL_RGB10_A2);
-        gBuffer.CreateAttachment("VelocityXYOcclusionSubSurface", GL_RGBA16F);
-        gBuffer.CreateAttachment("Visibility", GL_RG32UI);
-        gBuffer.CreateAttachment("Emissive", GL_RGBA8);
-        gBuffer.CreateDepthAttachment(GL_DEPTH32F_STENCIL8); // TODO: check what u actually need to clear stencil to
+        gBuffer.ClearAttachment("Lighting", 0, 0, 0, 1);
+        gBuffer.ClearAttachment("BaseColorMetallic", 0, 0, 0, 1);
+        gBuffer.ClearAttachment("NormalXYRoughnessMisc", 0, 0, 0, 1);
+        gBuffer.ClearAttachment("VelocityXYOcclusionSubSurface", 0, 0, 0, 1);
+        gBuffer.ClearAttachment("Emissive", 0.0f, 0.0f, 0.0f, 0.0f);
+        gBuffer.ClearAttachmentUI("Visibility", 0, 0, 0, 0);
         gBuffer.ClearDepthAttachment(0.0f);
+        gBuffer.ClearStencilBits(0);
 
         gBuffer.ClearAttachment("Glass", 0, 0, 0, 0); // TODO: remove me when/if u can
 
@@ -842,9 +841,9 @@ namespace OpenGLRenderer {
         }
     }
 
-    void DrawQuad() {
-        static Mesh* mesh = AssetManager::GetMeshByModelNameMeshName("Primitives", "Quad");
-        glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
+    void DrawFullscreenTriangle() {
+        BindEmptyVAO();
+        glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 
     void DebugHack(const std::string& message) {

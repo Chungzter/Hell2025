@@ -1,12 +1,14 @@
 #include "API/OpenGL/GL_backend.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
-#include "AssetManagement/AssetManager.h"
 #include "Core/Game.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
+
+#include <cstdint>
+#include <string>
 
 namespace OpenGLRenderer {
 
@@ -37,10 +39,20 @@ namespace OpenGLRenderer {
         static int textureIndexBloodNorm6 = Hell::ResourceManager::GetTextureBindlessIndexByName("blood_norm6");
         static int textureIndexBloodNorm7 = Hell::ResourceManager::GetTextureBindlessIndexByName("blood_norm7");
         static int textureIndexBloodNorm9 = Hell::ResourceManager::GetTextureBindlessIndexByName("blood_norm9");
-        static int meshIndex4 = AssetManager::GetModelByIndex(AssetManager::GetModelIndexByName("blood_mesh4"))->GetMeshIndices()[0];
-        static int meshIndex6 = AssetManager::GetModelByIndex(AssetManager::GetModelIndexByName("blood_mesh6"))->GetMeshIndices()[0];
-        static int meshIndex7 = AssetManager::GetModelByIndex(AssetManager::GetModelIndexByName("blood_mesh7"))->GetMeshIndices()[0];
-        static int meshIndex9 = AssetManager::GetModelByIndex(AssetManager::GetModelIndexByName("blood_mesh9"))->GetMeshIndices()[0];
+
+        auto getFirstMeshId = [](const std::string& modelName) -> uint32_t {
+            Model* model = Hell::ResourceManager::GetModelByName(modelName);
+            if (!model || model->GetMeshIndices().empty()) {
+                return 0;
+            }
+
+            return model->GetMeshIndices()[0];
+        };
+
+        static uint32_t meshId4 = getFirstMeshId("blood_mesh4");
+        static uint32_t meshId6 = getFirstMeshId("blood_mesh6");
+        static uint32_t meshId7 = getFirstMeshId("blood_mesh7");
+        static uint32_t meshId9 = getFirstMeshId("blood_mesh9");
 
         std::vector<VolumetricBloodSplatter>& volumetricBloodSplatters = World::GetVolumetricBloodSplatters();
 
@@ -56,26 +68,26 @@ namespace OpenGLRenderer {
             if (vatBlood.GetType() == 4) {
                 renderItem.baseColorTextureIndex = textureIndexBloodPos4;
                 renderItem.normalMapTextureIndex = textureIndexBloodNorm4;
-                renderItem.meshIndex = meshIndex4;
+                renderItem.meshId = meshId4;
             }
             else if (vatBlood.GetType() == 6) {
                 renderItem.baseColorTextureIndex = textureIndexBloodPos6;
                 renderItem.normalMapTextureIndex = textureIndexBloodNorm6;
-                renderItem.meshIndex = meshIndex6;
+                renderItem.meshId = meshId6;
             }
             else if (vatBlood.GetType() == 7) {
                 renderItem.baseColorTextureIndex = textureIndexBloodPos7;
                 renderItem.normalMapTextureIndex = textureIndexBloodNorm7;
-                renderItem.meshIndex = meshIndex7;
+                renderItem.meshId = meshId7;
             }
             else if (vatBlood.GetType() == 9) {
                 renderItem.baseColorTextureIndex = textureIndexBloodPos9;
                 renderItem.normalMapTextureIndex = textureIndexBloodNorm9;
-                renderItem.meshIndex = meshIndex9;
+                renderItem.meshId = meshId9;
             }
         }
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -86,7 +98,7 @@ namespace OpenGLRenderer {
 
             for (RenderItem& renderItem: renderItems) {
 
-                Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+                Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
                 if (!mesh) continue;
 
                 shader->SetMat4("u_modelMatrix", renderItem.modelMatrix);

@@ -1,10 +1,10 @@
 #include "Piano.h"
-#include "AssetManagement/AssetManager.h"
 #include "Audio/Audio.h"
 #include "Audio/Synth.h"
 #include "Editor/Editor.h"
 #include "Input/Input.h"
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Physics/Physics.h"
@@ -113,15 +113,15 @@ void Piano::Init(PianoCreateInfo& createInfo) {
     hingePin.meshName = "Yamaha_HingePin.001";
     hingePin.materialName = "Piano1";
 
-    if (Model* model = AssetManager::GetModelByName("Piano")) {
-        for (uint32_t meshIndex : model->GetMeshIndices()) {
-            if (Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex)) {
+    if (Model* model = Hell::ResourceManager::GetModelByName("Piano")) {
+        for (uint32_t meshId : model->GetMeshIndices()) {
+            if (Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId)) {
                 if (mesh->name.find("Yamaha_Key_") != std::string::npos) {
                     uint64_t keyId = UniqueID::GetNextCustomId();
                     PianoKey& pianoKey = m_keys[keyId];
-                    pianoKey.m_meshName = mesh->GetName();
-                    pianoKey.m_note = MeshNameToNote(mesh->GetName());
-                    pianoKey.m_isSharp = (mesh->GetName().find("#") != std::string::npos);
+                    pianoKey.m_meshName = mesh->name;
+                    pianoKey.m_note = MeshNameToNote(mesh->name);
+                    pianoKey.m_isSharp = (mesh->name.find("#") != std::string::npos);
 
                     MeshNodeCreateInfo& meshNodeCreateInfo = meshNodeCreateInfoSet.emplace_back();
                     meshNodeCreateInfo.meshName = mesh->name;

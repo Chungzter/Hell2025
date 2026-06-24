@@ -1,5 +1,4 @@
 #include "AnimatedMeshNodes.h"
-#include "AssetManagement/AssetManager.h"
 #include "Util/Util.h"
 
 #include "Hell/Logging.h"
@@ -15,7 +14,7 @@ void AnimatedMeshNodes::Init(uint64_t parentId, const std::string& modelName, co
 void AnimatedMeshNodes::SetSkinnedModel(uint64_t parentId, std::string name) {
     m_parentId = parentId;
 
-    SkinnedModel* ptr = AssetManager::GetSkinnedModelByName(name);
+    SkinnedModel* ptr = Hell::ResourceManager::GetSkinnedModelByName(name);
     if (ptr) {
         //std::cout << "SetSkinnedModel() " << name << " mesh count: " << m_skinnedModel->GetMeshCount() << "\n";
 
@@ -24,14 +23,19 @@ void AnimatedMeshNodes::SetSkinnedModel(uint64_t parentId, std::string name) {
         m_woundMaskTextureIndices.resize(m_skinnedModel->GetMeshCount());
 
         int meshCount = m_skinnedModel->GetMeshCount();
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
 
         for (int i = 0; i < meshCount; i++) {
-            SkinnedMesh* skinnedMesh = AssetManager::GetSkinnedMeshByIndex(m_skinnedModel->GetMeshIndices()[i]);
+            uint32_t meshId = m_skinnedModel->GetMeshIndices()[i];
+            Mesh* skinnedMesh = meshBuffer.GetMeshById(meshId);
+            Hell::SkinnedMeshMetadata* metadata = meshBuffer.GetSkinnedMeshMetadataByMeshId(meshId);
+            if (!skinnedMesh || !metadata) continue;
+
             AnimatedMeshNode& node = m_nodes.emplace_back();
-            node.meshIndex = m_skinnedModel->GetMeshIndices()[i];
+            node.meshId = meshId;
             node.meshName = skinnedMesh->name;
-            node.deforming = skinnedMesh->requiresSkinning;
-            node.baseSkinningVertex = skinnedMesh->baseVertexWeight;
+            node.deforming = metadata->requiresSkinning;
+            node.baseSkinningVertex = metadata->baseVertexWeight;
             m_woundMaskTextureIndices[i] = -1;
         }
     }
@@ -51,7 +55,10 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         if (m_nodes[i].blendingMode == BlendingMode::DO_NOT_RENDER) continue;
 
         RenderItem& renderItem = m_nodes[i].renderItem;
-        SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(m_nodes[i].meshIndex);
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        Mesh* mesh = meshBuffer.GetMeshById(m_nodes[i].meshId);
+        Hell::SkinnedMeshMetadata* metadata = meshBuffer.GetSkinnedMeshMetadataByMeshId(m_nodes[i].meshId);
+        if (!mesh || !metadata) continue;
 
         Material* material = Hell::ResourceManager::GetMaterialByIndex(m_nodes[i].materialIndex);
         renderItem.baseColorTextureIndex = material->m_basecolor;
@@ -63,16 +70,16 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         renderItem.prevModelMatrix = renderItem.modelMatrix; // TODO: write logic for on the first frame where this is identity
         renderItem.modelMatrix = modelMatrix;
         renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-        renderItem.meshIndex = m_skinnedModel->GetMeshIndices()[i];
+        renderItem.meshId = m_skinnedModel->GetMeshIndices()[i];
         renderItem.ignoredViewportIndex = m_ignoredViewportIndex;
         renderItem.exclusiveViewportIndex = m_exclusiveViewportIndex;
-        renderItem.baseVertexWeight = mesh->baseVertexWeight;
+        renderItem.baseVertexWeight = metadata->baseVertexWeight;
         //renderItem.furLength = m_nodes[i].furLength;
         //renderItem.furUVScale = m_nodes[i].furUVScale;
         //renderItem.furShellDistanceAttenuation = m_nodes[i].furShellDistanceAttenuation;
         renderItem.woundMaskTexutreIndex = m_woundMaskTextureIndices[i];
         renderItem.blockScreenSpaceBloodDecals = (int)true;
-        renderItem.baseVertex = mesh->baseVertexGlobal;
+        renderItem.baseVertex = mesh->baseVertex;
         renderItem.baseIndex = mesh->baseIndex;
 
         Util::PackUint64(m_parentId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
@@ -93,13 +100,13 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         }
 
         // Put it where it belongs
-        if (mesh->requiresSkinning) {
+        if (metadata->requiresSkinning) {
             renderItem.prevModelMatrix = renderItem.modelMatrix; // Hack because you are compute skinning and can't rely on shit here. FIGURE THIS OUT
             m_deformingRenderItems.push_back(renderItem);
         }
         else {
             // Update the model matrix to include the animated bone transform
-            int boneIndex = mesh->nonDeformingBoneIndex;
+            int boneIndex = metadata->nonDeformingBoneIndex;
 
             if (boneIndex >= 0 && boneIndex < boneSkinningMatrices.size()) {
                 renderItem.prevModelMatrix = renderItem.modelMatrix * boneSkinningMatrices[boneIndex]; // Hack because you are compute skinning and can't rely on shit here. FIGURE THIS OUT
@@ -122,10 +129,11 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
 
 void AnimatedMeshNodes::SetMeshWoundMaskTextureIndex(const std::string& meshName, int32_t woundMaskTextureIndex) {
     std::vector<uint32_t>& meshIndices = m_skinnedModel->GetMeshIndices();
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
 
     for (int i = 0; i < meshIndices.size(); i++) {
-        uint32_t meshIndex = meshIndices[i];
-        SkinnedMesh* skinnedMesh = AssetManager::GetSkinnedMeshByIndex(meshIndex);
+        uint32_t meshId = meshIndices[i];
+        Mesh* skinnedMesh = meshBuffer.GetMeshById(meshId);
         if (skinnedMesh && skinnedMesh->name == meshName) {
             m_woundMaskTextureIndices[i] = woundMaskTextureIndex;
             return;

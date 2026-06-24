@@ -1,5 +1,4 @@
 #include "PickUp.h"
-#include "AssetManagement/AssetManager.h"
 #include "Bible/Bible.h"
 #include "Physics/Physics.h"
 #include "Game/UniqueID.h"

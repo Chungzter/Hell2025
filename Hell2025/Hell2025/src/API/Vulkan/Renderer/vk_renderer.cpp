@@ -3,8 +3,9 @@
 #include "../Managers/vk_device_manager.h"
 #include "../Managers/vk_frame_manager.h"
 #include "../vk_util.h"
-#include "../../../AssetManagement/AssetManager.h"
 #include "../BackEnd/BackEnd.h"
+
+#include "Game/Types.h"
 
 namespace VulkanRenderer {
 
@@ -36,7 +37,7 @@ namespace VulkanRenderer {
         /*
         std::cout << "\n\\\\\\\\\\\\\\\\\\\nLoading screen\n\\\\\\\\\\\\\\\\\\\n\n";
 
-        Texture* texture = AssetManager::GetTextureByName("StandardFont");
+        Texture* texture = Hell::ResourceManager::GetTextureByName("StandardFont");
         VulkanTexture vkTexture = texture->GetVKTexture();
 
         std::cout << "AT START OF FRAME: StandardFont.png layout: " << VulkanUtil::VkImageLayoutToString(vkTexture.m_mipLayouts[0]) << "\n\n";

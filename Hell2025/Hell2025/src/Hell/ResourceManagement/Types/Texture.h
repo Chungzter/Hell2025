@@ -17,7 +17,7 @@ struct Texture {
 public:
     Texture() = default;
     void CleanUp();
-    void SetLoadingState(LoadingState value);
+    void SetUploadState(UploadState value);
     void SetFileInfo(FileInfo fileInfo);
     void SetImageData(ImageData imageData);
     void SetImageDataType(ImageDataType imageDataType);
@@ -65,10 +65,10 @@ public:
     uint64_t GetOpenGLId() const                     { return m_openGLId; }
     uint64_t GetVulkanId() const                     { return m_vulkanId; }
     int32_t GetBindlessIndex() const                 { return m_bindlessIndex; }
-    LoadingState GetLoadingState() const             { return m_loadingState; }
+    UploadState GetUploadState() const               { return m_uploadState; }
 
 private:
-    LoadingState m_loadingState { LoadingState::Value::AWAITING_LOADING_FROM_DISK };
+    UploadState m_uploadState = UploadState::NOT_REQUESTED;
     ImageDataType m_imageDataType = ImageDataType::UNDEFINED;
     TextureWrapMode m_wrapModeS = TextureWrapMode::REPEAT;
     TextureWrapMode m_wrapModeT = TextureWrapMode::REPEAT;

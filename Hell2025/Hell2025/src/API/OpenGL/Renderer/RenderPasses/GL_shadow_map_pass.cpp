@@ -1,6 +1,5 @@
 #include "API/OpenGL/GL_backend.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
-#include "AssetManagement/AssetManager.h"
 #include "Core/Game.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
@@ -32,6 +31,8 @@ namespace OpenGLRenderer {
         OpenGLHeightMapMesh& heightMapMesh = OpenGLBackEnd::GetHeightMapMesh();
         //const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const FlashLightShadowMapDrawInfo& flashLightShadowMapDrawInfo = RenderDataManager::GetFlashLightShadowMapDrawInfo();
+        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
+        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
         
         glm::mat4 heightMapModelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(HEIGHTMAP_SCALE_XZ, HEIGHTMAP_SCALE_Y, HEIGHTMAP_SCALE_XZ)); // move to height map manager
 
@@ -59,7 +60,7 @@ namespace OpenGLRenderer {
             // Scene geometry
             shader->SetBool("u_useInstanceData", true);
             glCullFace(GL_FRONT);
-            glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+            glBindVertexArray(meshBufferAssets.GetVAO());
 
             MultiDrawIndirect(flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i]);
 
@@ -86,13 +87,12 @@ namespace OpenGLRenderer {
             // Procedural
             shader->SetMat4("u_modelMatrix", glm::mat4(1.0f));
 
-            MeshBuffer& proceduralMeshBuffer = ResourceManager::GetMeshBuffer("Procedural");
-            glBindVertexArray(proceduralMeshBuffer.GetVAO());
+            glBindVertexArray(meshBufferProcedural.GetVAO());
 
             const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
             for (const RenderItem& renderItem : renderItems) {
 
-                Mesh* mesh = proceduralMeshBuffer.GetMeshById(renderItem.meshId);
+                Mesh* mesh = meshBufferProcedural.GetMeshById(renderItem.meshId);
                 if (!mesh) continue;
 
                 int indexCount = mesh->indexCount;
@@ -115,6 +115,9 @@ namespace OpenGLRenderer {
 
         if (!shader) return;
         if (!hiResShadowMaps) return;
+
+        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
+        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
 
         shader->Bind();
         shader->SetBool("u_useInstanceData", true);
@@ -143,7 +146,7 @@ namespace OpenGLRenderer {
         glViewport(0, 0, hiResShadowMaps->GetSize(), hiResShadowMaps->GetSize());
         glBindFramebuffer(GL_FRAMEBUFFER, hiResShadowMaps->GetHandle());
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(meshBufferAssets.GetVAO());
 
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
             const GPULight& gpuLight = gpuLightsHighRes[i];
@@ -179,7 +182,7 @@ namespace OpenGLRenderer {
 
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
         glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetSkinnedVertexDataVBO());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBufferAssets.GetEBO());
 
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
             const GPULight& gpuLight = gpuLightsHighRes[i];
@@ -265,8 +268,7 @@ namespace OpenGLRenderer {
         // Make lights store a list of their HouseRenderItems per frustum face that is only updated when the map changes
         // That will be when a HousePlane or Wall is added/modified
 
-        MeshBuffer& proceduralMeshBuffer = ResourceManager::GetMeshBuffer("Procedural");
-        glBindVertexArray(proceduralMeshBuffer.GetVAO());
+        glBindVertexArray(meshBufferProcedural.GetVAO());
         
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
             const GPULight& gpuLight = gpuLightsHighRes[i];
@@ -298,7 +300,7 @@ namespace OpenGLRenderer {
 
                     if (!frustum->IntersectsAABBFast(renderItem)) continue;
 
-                    Mesh* mesh = proceduralMeshBuffer.GetMeshById(renderItem.meshId);
+                    Mesh* mesh = meshBufferProcedural.GetMeshById(renderItem.meshId);
                     if (!mesh) continue;
 
                     int indexCount = mesh->indexCount;
@@ -321,6 +323,9 @@ namespace OpenGLRenderer {
 
         if (!shader) return;
         if (!shadowMapArray) return;
+
+        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
+        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
 
         int viewportCount = std::min(4, Game::GetLocalPlayerCount());
 
@@ -355,7 +360,7 @@ namespace OpenGLRenderer {
                 shader->SetMat4("u_projectionView", lightProjectionView);
 
                 // Geometry
-                glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+                glBindVertexArray(meshBufferAssets.GetVAO());
 
                 shader->SetBool("u_useInstanceData", true);
                 MultiDrawIndirect(drawInfoSet.moonLightCascades[j][i]);
@@ -364,13 +369,12 @@ namespace OpenGLRenderer {
                 shader->SetMat4("u_modelMatrix", glm::mat4(1.0f));
 
                 // Procedural
-                MeshBuffer& proceduralMeshBuffer = ResourceManager::GetMeshBuffer("Procedural");
-                glBindVertexArray(proceduralMeshBuffer.GetVAO());
+                glBindVertexArray(meshBufferProcedural.GetVAO());
 
                 //glDisable(GL_CULL_FACE);
                 const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
                 for (const RenderItem& renderItem : renderItems) {
-                    Mesh* mesh = proceduralMeshBuffer.GetMeshById(renderItem.meshId);
+                    Mesh* mesh = meshBufferProcedural.GetMeshById(renderItem.meshId);
                     if (!mesh) continue;
 
                     int indexCount = mesh->indexCount;

@@ -1,6 +1,5 @@
 #include "../GL_renderer.h"
 #include "../../GL_backend.h"
-#include "AssetManagement/AssetManager.h"
 #include "BackEnd/Backend.h"
 #include "Viewport/ViewportManager.h"
 #include "Editor/Editor.h"
@@ -21,8 +20,6 @@
 
 #include "Core/Game.h"
 
-// get me out of here
-#include "AssetManagement/AssetManager.h"
 // get me out of here
 
 using namespace Hell;
@@ -92,9 +89,10 @@ namespace OpenGLRenderer {
         //glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
         //glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-        glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataVBO());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
+        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("AssetGeometry");
+        glBindVertexArray(meshBuffer.GetVAO());
+        glBindBuffer(GL_ARRAY_BUFFER, meshBuffer.GetVBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBuffer.GetEBO());
 
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
@@ -183,7 +181,10 @@ namespace OpenGLRenderer {
         if (!editorMeshShader) return;
         if (!woundMaskArray) return;
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        {
+            MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("AssetGeometry");
+            glBindVertexArray(meshBuffer.GetVAO());
+        }
         glActiveTexture(GL_TEXTURE7);
         glBindTexture(GL_TEXTURE_2D_ARRAY, woundMaskArray->GetHandle());
 
@@ -272,7 +273,10 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
         glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetSkinnedVertexDataVBO());
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
+        {
+            MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("AssetGeometry");
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBuffer.GetEBO());
+        }
 
         shader->Bind();
         //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityXYOcclusionSubSurface" });
@@ -522,7 +526,10 @@ namespace OpenGLRenderer {
         //glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         //glDisable(GL_DEPTH_TEST);
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
+        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
+
+        glBindVertexArray(meshBufferAssets.GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -534,7 +541,7 @@ namespace OpenGLRenderer {
 
                 //mirror->DebugDraw();
 
-                Mesh* mesh = AssetManager::GetMeshByIndex(mirror->GetGlobalMeshIndex());
+                Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(mirror->GetGlobalMeshIndex());
                 if (!mesh) continue;
 
                 glm::mat4 modelMatrix = mirror->GetWorldMatrix();
@@ -569,7 +576,7 @@ namespace OpenGLRenderer {
         geometryShader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
         // Regular geometry
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(meshBufferAssets.GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -599,8 +606,7 @@ namespace OpenGLRenderer {
         houseGeometryShader->SetMat4("u_model", glm::mat4(1));
         houseGeometryShader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
-        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
-        glBindVertexArray(meshBuffer.GetVAO());
+        glBindVertexArray(meshBufferProcedural.GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -619,7 +625,7 @@ namespace OpenGLRenderer {
             const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
             for (const RenderItem& renderItem : renderItems) {
 
-                Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
+                Mesh* mesh = meshBufferProcedural.GetMeshById(renderItem.meshId);
                 if (!mesh) continue;
 
                 glActiveTexture(GL_TEXTURE0);

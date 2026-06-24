@@ -1,6 +1,4 @@
 #include "Bible/Bible.h"
-#include "AssetManagement/AssetManager.h"
-
 namespace Bible {
     void ConfigureTestModel(uint64_t id, MeshNodes* meshNodes) {
         std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;

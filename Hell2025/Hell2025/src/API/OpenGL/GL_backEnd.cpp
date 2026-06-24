@@ -1,10 +1,10 @@
 #pragma once
 #include <Game/Types.h>
 #include "GL_backend.h"
-#include "AssetManagement/BakeQueue.h"
-#include "AssetManagement/AssetManager.h"
+#include "GL_resource_manager.h"
 #include "BackEnd/Integration/GLFW.h"
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include <algorithm>
 #include <string>
 #include <iostream>
@@ -24,12 +24,8 @@ namespace OpenGLBackEnd {
     const size_t MAX_TEXTURE_HEIGHT = 4096;
     const size_t MAX_CHANNEL_COUNT = 4;
     const size_t MAX_DATA_SIZE = MAX_TEXTURE_WIDTH * MAX_TEXTURE_HEIGHT * MAX_CHANNEL_COUNT;
-    std::vector<PBO> g_textureBakingPBOs;
     PBO g_heightMapVerticesReadBackPBO;
     PBO g_heightMapIndicesReadBackPBO;
-    GLuint g_vertexDataVAO = 0;
-    GLuint g_vertexDataVBO = 0;
-    GLuint g_vertexDataEBO = 0;
     GLuint g_skinnedVertexDataVAO = 0;
     GLuint g_skinnedVertexDataVBO = 0;
     GLuint g_allocatedSkinnedVertexBufferSize = 0;
@@ -94,38 +90,6 @@ namespace OpenGLBackEnd {
         UpdateBindlessTextures();
     }
 
-    void OpenGLBackEnd::UploadVertexData(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) {
-
-        if (g_vertexDataVAO != 0) {
-            glDeleteVertexArrays(1, &g_vertexDataVAO);
-            glDeleteBuffers(1, &g_vertexDataVBO);
-            glDeleteBuffers(1, &g_vertexDataEBO);
-        }
-
-        glGenVertexArrays(1, &g_vertexDataVAO);
-        glGenBuffers(1, &g_vertexDataVBO);
-        glGenBuffers(1, &g_vertexDataEBO);
-
-        glBindVertexArray(g_vertexDataVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, g_vertexDataVBO);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_vertexDataEBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
-
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-    }
-
     void OpenGLBackEnd::AllocateSkinnedVertexBufferSpace(uint32_t vertexCount) {
         const uint32_t requiredSize = vertexCount * sizeof(Vertex);
 
@@ -164,40 +128,6 @@ namespace OpenGLBackEnd {
         }
     }
 
-    //void AllocateSkinnedVertexBufferSpaceOLD(uint32_t vertexCount) {
-    //    if (g_skinnedVertexDataVAO == 0) {
-    //        glGenVertexArrays(1, &g_skinnedVertexDataVAO);
-    //    }
-    //
-    //    if (g_allocatedSkinnedVertexBufferSize < (uint32_t)(vertexCount * sizeof(Vertex))) {
-    //        if (g_skinnedVertexDataVBO != 0) {
-    //            glDeleteBuffers(1, &g_skinnedVertexDataVBO);
-    //        }
-    //
-    //        glBindVertexArray(g_skinnedVertexDataVAO);
-    //        glGenBuffers(1, &g_skinnedVertexDataVBO);
-    //        glBindBuffer(GL_ARRAY_BUFFER, g_skinnedVertexDataVBO);
-    //
-    //        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(vertexCount * sizeof(Vertex)), nullptr, GL_STATIC_DRAW);
-    //
-    //        glEnableVertexAttribArray(0);
-    //        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)0);
-    //
-    //        glEnableVertexAttribArray(1);
-    //        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)offsetof(Vertex, normal));
-    //
-    //        glEnableVertexAttribArray(2);
-    //        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)offsetof(Vertex, uv));
-    //
-    //        glEnableVertexAttribArray(3);
-    //        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)offsetof(Vertex, tangent));
-    //
-    //        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    //
-    //        g_allocatedSkinnedVertexBufferSize = (uint32_t)(vertexCount * sizeof(Vertex));
-    //    }
-    //}
-
     void AllocateTextureMemory(Texture& texture) {
         OpenGLTexture& glTexture = texture.GetGLTexture();
         if (glTexture.GetHandle() != 0) return;
@@ -221,142 +151,10 @@ namespace OpenGLBackEnd {
         glTexture.MakeBindlessTextureResident();
     }
 
-    void ImmediateBake(QueuedTextureBake& queuedTextureBake) {
-        Texture* texture = static_cast<Texture*>(queuedTextureBake.texture);
-        OpenGLTexture& glTexture = texture->GetGLTexture();
-        int width = queuedTextureBake.width;
-        int height = queuedTextureBake.height;
-        GLenum format = OpenGLUtil::ImageFormatToGLFormat(queuedTextureBake.imageFormat);
-        GLenum internalFormat = OpenGLUtil::ImageFormatToGLInternalFormat(queuedTextureBake.imageFormat);
-        GLenum dataType = OpenGLUtil::ImageFormatToGLDataType(queuedTextureBake.imageFormat);
-        int level = queuedTextureBake.mipmapLevel;
-        int dataSize = queuedTextureBake.dataSize;
-        const void* data = queuedTextureBake.data;
-
-        GLuint textureHandle = glTexture.GetHandle();
-
-        // Bake texture data
-        if (IsCompressedImageFormat(queuedTextureBake.imageFormat)) {
-            glCompressedTextureSubImage2D(textureHandle, level, 0, 0, width, height, internalFormat, dataSize, data);
-        }
-        else {
-            glTextureSubImage2D(textureHandle, level, 0, 0, width, height, format, dataType, data);
-        }
-
-        texture->SetTextureDataLevelBakeState(level, BakeState::BAKE_COMPLETE);
-
-        // Generate Mipmaps if none were supplied
-        if (texture->MipmapsAreRequested()) {
-            if (texture->GetTextureDataCount() == 1) {
-                glGenerateTextureMipmap(textureHandle);
-            }
-        }
-        // Cleanup bake queue
-        BakeQueue::RemoveQueuedTextureBakeByJobID(queuedTextureBake.jobID);
-    }
-
-
-    void UpdateTextureBaking() {
-        size_t bakeCommandsIssuedPerFrame = g_textureBakingPBOs.size();
-
-        for (size_t i = 0; i < bakeCommandsIssuedPerFrame; i++) {
-            // Update PBO states
-            for (PBO& pbo : g_textureBakingPBOs) {
-                pbo.UpdateState();
-            }
-
-            // If any have completed, remove the job ID from the queue
-            for (PBO& pbo : g_textureBakingPBOs) {
-                uint32_t jobID = pbo.GetCustomValue();
-                if (pbo.IsSyncComplete() && jobID != -1) {
-                    QueuedTextureBake* queuedTextureBake = BakeQueue::GetQueuedTextureBakeByJobID(jobID);
-                    Texture* texture = static_cast<Texture*>(queuedTextureBake->texture);
-                    texture->SetTextureDataLevelBakeState(queuedTextureBake->mipmapLevel, BakeState::BAKE_COMPLETE);
-
-                    // Generate mipmaps if none were supplied
-                    if (texture->MipmapsAreRequested()) {
-                        if (texture->GetTextureDataCount() == 1) {
-                            glGenerateTextureMipmap(texture->GetGLTexture().GetHandle());
-                        }
-                    }
-                    BakeQueue::RemoveQueuedTextureBakeByJobID(jobID);
-                    pbo.SetCustomValue(-1);
-                }
-            }
-
-            // Bake the next queued texture bake (if one exists)
-            if (BakeQueue::GetQueuedTextureBakeJobCount() > 0) {
-                QueuedTextureBake* queuedTextureBake = BakeQueue::GetNextQueuedTextureBake();
-                if (queuedTextureBake) {
-                    AsyncBakeQueuedTextureBake(*queuedTextureBake);
-                }
-            }
-        }
-    }
-
-    void AsyncBakeQueuedTextureBake(QueuedTextureBake& queuedTextureBake) {
-        // Get next free PBO
-        PBO* pbo = nullptr;
-        for (PBO& queryPbo : g_textureBakingPBOs) {
-            if (queryPbo.IsSyncComplete()) {
-                pbo = &queryPbo;
-                break;
-            }
-        }
-
-        // Return early if no free PBOs
-        if (!pbo) {
-            std::cerr << "Warning: Attempting to use an active PBO!" << std::endl;
-            return;
-        }
-
-        queuedTextureBake.inProgress = true;
-
-        Texture* texture = static_cast<Texture*>(queuedTextureBake.texture);
-        int jobID = queuedTextureBake.jobID;
-        int width = queuedTextureBake.width;
-        int height = queuedTextureBake.height;
-        GLenum format = OpenGLUtil::ImageFormatToGLFormat(queuedTextureBake.imageFormat);
-        GLenum internalFormat = OpenGLUtil::ImageFormatToGLInternalFormat(queuedTextureBake.imageFormat);
-        GLenum dataType = OpenGLUtil::ImageFormatToGLDataType(queuedTextureBake.imageFormat);
-        int level = queuedTextureBake.mipmapLevel;
-        int dataSize = queuedTextureBake.dataSize;
-        const void* data = queuedTextureBake.data;
-
-        texture->SetTextureDataLevelBakeState(level, BakeState::BAKING_IN_PROGRESS);
-
-        // Map PBO and copy data
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo->GetHandle());
-        std::memcpy(pbo->GetPersistentBuffer(), data, dataSize);
-
-        // Upload data to the texture using DSA
-        GLuint textureHandle = texture->GetGLTexture().GetHandle();
-        if (IsCompressedImageFormat(queuedTextureBake.imageFormat)) {
-            glCompressedTextureSubImage2D(textureHandle, level, 0, 0, width, height, internalFormat, dataSize, 0);
-        }
-        else {
-            glTextureSubImage2D(textureHandle, level, 0, 0, width, height, format, dataType, 0);
-        }
-
-        // Start PBO sync and assign job ID
-        pbo->SyncStart();
-        pbo->SetCustomValue(jobID);
-
-        // Unbind PBO
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    }
-
-    void CleanUpBakingPBOs() {
-        for (PBO& pbo : g_textureBakingPBOs) {
-            pbo.CleanUp();
-        }
-        g_textureBakingPBOs.clear();
-    }
-
     void UpdateBindlessTextures() {
         int32_t highestBindlessIndex = -1;
 
-        for (auto& [name, texture] : AssetManager::GetTextures()) {
+        for (auto& [name, texture] : Hell::ResourceManager::GetTextures()) {
             if (texture.GetBindlessIndex() < 0) {
                 Logging::Error() << "OpenGLBackEnd::UpdateBindlessTextures() failed: texture '" << texture.GetFileName() << "' has invalid bindless index " << texture.GetBindlessIndex() << "\n";
                 return;
@@ -368,7 +166,7 @@ namespace OpenGLBackEnd {
         std::vector<GLuint64> bindlessTextureIDs(static_cast<size_t>(highestBindlessIndex + 1), 0);
         std::vector<bool> assignedSlots(bindlessTextureIDs.size(), false);
 
-        for (auto& [name, texture] : AssetManager::GetTextures()) {
+        for (auto& [name, texture] : Hell::ResourceManager::GetTextures()) {
             const int32_t bindlessIndex = texture.GetBindlessIndex();
 
             if (static_cast<size_t>(bindlessIndex) >= bindlessTextureIDs.size()) {
@@ -381,7 +179,18 @@ namespace OpenGLBackEnd {
                 return;
             }
 
-            bindlessTextureIDs[bindlessIndex] = texture.GetGLTexture().GetBindlessID();
+            if (texture.GetUploadState() != UploadState::UPLOADED) {
+                assignedSlots[bindlessIndex] = true;
+                continue;
+            }
+
+            OpenGLTexture* glTexture = OpenGLResourceManager::GetTexturePtr(texture.GetOpenGLId());
+            if (!glTexture || glTexture->GetHandle() == 0) {
+                Logging::Error() << "OpenGLBackEnd::UpdateBindlessTextures() failed: uploaded texture '" << texture.GetFileName() << "' has no OpenGL texture\n";
+                return;
+            }
+
+            bindlessTextureIDs[bindlessIndex] = glTexture->GetBindlessID();
             assignedSlots[bindlessIndex] = true;
         }
 
@@ -443,46 +252,6 @@ namespace OpenGLBackEnd {
         }    std::cout << "\n\n\n";
     }
 
-    //void ReadBackHeightmapMeshData() {
-    //    int indexCount = (     - 1) * (HEIGHT_MAP_SIZE - 1) * 6;
-    //    int vertexCount = HEIGHT_MAP_SIZE * HEIGHT_MAP_SIZE;
-    //    int vertexBufferSize = HEIGHT_MAP_SIZE * HEIGHT_MAP_SIZE * sizeof(Vertex);
-    //    int indexBufferSize = (HEIGHT_MAP_SIZE - 1) * (HEIGHT_MAP_SIZE - 1) * 6 * sizeof(uint32_t);
-    //
-    //    g_heightMapVerticesReadBackPBO.UpdateState();
-    //
-    //    if (!g_heightMapVerticesReadBackPBO.IsSyncComplete()) {
-    //        return; // Wait for sync
-    //    }
-    //
-    //    // Bind PBO to store vertex buffer data
-    //    glBindBuffer(GL_PIXEL_PACK_BUFFER, g_heightMapVerticesReadBackPBO.GetHandle());
-    //    glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_heightMapMesh.GetVBO());
-    //
-    //    // Copy the vertex buffer data into the PBO
-    //    glCopyBufferSubData(GL_SHADER_STORAGE_BUFFER, GL_PIXEL_PACK_BUFFER, 0, 0, vertexBufferSize);
-    //
-    //    // Sync and map buffer to access data
-    //    g_heightMapVerticesReadBackPBO.SyncStart();
-    //    const Vertex* mappedBuffer = reinterpret_cast<const Vertex*>(g_heightMapVerticesReadBackPBO.GetPersistentBuffer());
-    //
-    //    if (mappedBuffer) {
-    //        for (int i = 0; i < vertexCount; i++) {
-    //            const Vertex& v = mappedBuffer[i];
-    //            glm::vec3 pos = v.position;
-    //            pos.y *= 10;
-    //            //DebugDraw::DrawPoint(pos, GREEN);
-    //        }
-    //    }
-    //
-    //    // Unbind
-    //    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    //    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-    //}
-
-    GLuint GetVertexDataVAO()                            { return g_vertexDataVAO; }
-    GLuint GetVertexDataVBO()                            { return g_vertexDataVBO; }
-    GLuint GetVertexDataEBO()                            { return g_vertexDataEBO; }
     GLuint GetSkinnedVertexDataVAO()                     { return g_skinnedVertexDataVAO; }
     GLuint GetSkinnedVertexDataVBO()                     { return g_skinnedVertexDataVBO; }
     OpenGLHeightMapMesh& GetHeightMapMesh()              { return g_heightMapMesh; };

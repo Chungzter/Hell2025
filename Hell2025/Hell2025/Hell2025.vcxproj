@@ -298,13 +298,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\API\Vulkan\vk_backend.cpp" />
     <ClCompile Include="src\API\Vulkan\Renderer\vk_renderer.cpp" />
     <ClCompile Include="src\API\Vulkan\vk_util.cpp" />
-    <ClCompile Include="src\AssetManagement\AssetManager_ies_profiles.cpp" />
-    <ClCompile Include="src\AssetManagement\AssetManager_material.cpp" />
-    <ClCompile Include="src\AssetManagement\AssetManager_mesh.cpp" />
-    <ClCompile Include="src\AssetManagement\AssetManager_model.cpp" />
-    <ClCompile Include="src\AssetManagement\AssetManager_skinnedMesh.cpp" />
-    <ClCompile Include="src\AssetManagement\AssetManager_skinnedModel.cpp" />
-    <ClCompile Include="src\AssetManagement\AssetManager_vertex_data.cpp" />
     <ClCompile Include="src\Audio\MidiFile.cpp" />
     <ClCompile Include="src\Audio\MidiFileManager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='EditAndContinue|x64'">false</ExcludedFromBuild>
@@ -338,7 +331,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Camera\Frustum.cpp" />
     <ClCompile Include="src\Config\Config.cpp" />
     <ClCompile Include="src\Audio\Audio.cpp" />
-    <ClCompile Include="src\AssetManagement\BakeQueue.cpp" />
     <ClCompile Include="src\Callbacks\Callbacks.cpp" />
     <ClCompile Include="src\Core\Game.cpp" />
     <ClCompile Include="src\Core\P90MagManager.cpp" />
@@ -354,10 +346,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\AssetLoader\AnimationLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\AssetLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\IESLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\SpriteSheetLoader.cpp" />
     <ClCompile Include="src\Hell\File\File.cpp" />
     <ClCompile Include="src\Hell\MemoryTracker\MemoryTracker.cpp" />
     <ClCompile Include="src\Game\UniqueID.cpp" />
-    <ClCompile Include="src\Game\Resources.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\MaterialBuilder.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\ResourceID.cpp" />
     <ClCompile Include="src\Bible\Bible.cpp" />
@@ -550,7 +542,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Types\Game\GameObject.cpp" />
     <ClCompile Include="src\Input\Input.cpp" />
     <ClCompile Include="src\Main.cpp" />
-    <ClCompile Include="src\AssetManagement\AssetManager.cpp" />
     <ClCompile Include="src\Util\Util_animation.cpp" />
     <ClCompile Include="src\Util\Util_file.cpp" />
     <ClCompile Include="src\Util\Util_raycasting.cpp" />
@@ -711,14 +702,12 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Game\Constants.h" />
     <ClInclude Include="src\Game\Enums.h" />
     <ClInclude Include="src\Game\Types.h" />
-    <ClInclude Include="src\Game\Resources.h" />
     <ClInclude Include="src\Hell\Common.h" />
     <ClInclude Include="src\Hell\Common\Constants.h" />
     <ClInclude Include="src\Common\HellFunctionTypes.h" />
     <ClInclude Include="src\Common\LoadingState.h" />
     <ClInclude Include="src\Config\Config.h" />
     <ClInclude Include="src\Audio\Audio.h" />
-    <ClInclude Include="src\AssetManagement\BakeQueue.h" />
     <ClInclude Include="src\Callbacks\Callbacks.h" />
     <ClInclude Include="src\Game\UniqueID.h" />
     <ClInclude Include="src\Hell\ResourceManagement\ResourceID.h" />
@@ -838,14 +827,12 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Renderer\RenderDataManager.h" />
     <ClInclude Include="src\Renderer\Renderer.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\Animation.h" />
-    <ClInclude Include="src\Types\Renderer\SkinnedMesh.hpp" />
     <ClInclude Include="src\Types\Renderer\SkinnedModel.h" />
     <ClInclude Include="src\Timer.hpp" />
     <ClInclude Include="src\Camera\Camera.h" />
     <ClInclude Include="src\Types\Game\AnimatedGameObject.h" />
     <ClInclude Include="src\Types\Game\GameObject.h" />
     <ClInclude Include="src\Hardcoded.hpp" />
-    <ClInclude Include="src\AssetManagement\AssetManager.h" />
     <ClInclude Include="src\Hell\Common\Enums.h" />
     <ClInclude Include="src\Common\Primtives.hpp" />
     <ClInclude Include="src\Input\Input.h" />

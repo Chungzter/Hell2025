@@ -23,7 +23,8 @@ MeshBuffer::MeshBuffer(const std::string& name) {
 
 size_t MeshBuffer::GetCPUAllocatedByteCount() const {
     return (m_vertices.capacity() * sizeof(Vertex)) +
-           (m_indices.capacity() * sizeof(uint32_t));
+           (m_indices.capacity() * sizeof(uint32_t)) +
+           (m_vertexWeights.capacity() * sizeof(VertexWeight));
 }
 
 size_t MeshBuffer::GetGPUAllocatedByteCount() const {
@@ -48,8 +49,11 @@ void MeshBuffer::Initialize() {
 
 void MeshBuffer::Reset() {
     m_meshes.clear();
+    m_meshIdsByName.clear();
+    m_skinnedMeshMetadata.clear();
     m_vertices.clear();
     m_indices.clear();
+    m_vertexWeights.clear();
 
     m_freeVertexMemoryBlocks.clear();
     m_freeIndexMemoryBlocks.clear();
@@ -93,6 +97,7 @@ uint32_t MeshBuffer::AddMesh(const std::vector<Vertex>& vertices, const std::vec
     mesh.vertexCount = static_cast<uint32_t>(vertices.size());
     mesh.indexCount = static_cast<uint32_t>(indices.size());
     mesh.name = name;
+    m_meshIdsByName.emplace(name, m_nextMeshId);
 
     // Compute axis aligned bounding box limits
     glm::vec3 aabbMin(std::numeric_limits<float>::max());
@@ -109,6 +114,28 @@ uint32_t MeshBuffer::AddMesh(const std::vector<Vertex>& vertices, const std::vec
     mesh.boundingSphereRadius = std::max(mesh.extents.x, std::max(mesh.extents.y, mesh.extents.z)) * 0.5f;
 
     return m_nextMeshId;
+}
+
+uint32_t MeshBuffer::AddSkinnedMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::vector<VertexWeight>& vertexWeights, SkinnedMeshMetadata metadata, const std::string& name) {
+    if (metadata.requiresSkinning && vertexWeights.size() != vertices.size()) {
+        Logging::Error() << "MeshBuffer::AddSkinnedMesh(..) failed for '" << name << "': skinned meshes need one vertex weight per vertex\n";
+        return 0;
+    }
+
+    uint32_t meshId = AddMesh(vertices, indices, name);
+    if (meshId == 0) {
+        return 0;
+    }
+
+    if (metadata.requiresSkinning) {
+        metadata.baseVertexWeight = AddVertexWeights(vertexWeights);
+    }
+    else {
+        metadata.baseVertexWeight = -1;
+    }
+
+    m_skinnedMeshMetadata[meshId] = metadata;
+    return meshId;
 }
 
 int32_t MeshBuffer::AddVertices(const std::vector<Vertex>& newVertices) {
@@ -255,6 +282,17 @@ int32_t MeshBuffer::AddIndices(const std::vector<uint32_t>& newIndices) {
     return insertOffset;
 }
 
+int32_t MeshBuffer::AddVertexWeights(const std::vector<VertexWeight>& newVertexWeights) {
+    if (newVertexWeights.empty()) {
+        return -1;
+    }
+
+    int32_t insertOffset = static_cast<int32_t>(m_vertexWeights.size());
+    m_vertexWeights.reserve(m_vertexWeights.size() + newVertexWeights.size());
+    m_vertexWeights.insert(m_vertexWeights.end(), newVertexWeights.begin(), newVertexWeights.end());
+    return insertOffset;
+}
+
 int32_t MeshBuffer::AllocateExtraVertexSpace(size_t vertexCount) {
     size_t blockBegin = m_vertices.size();
     size_t blockEnd = m_vertices.size() + vertexCount;
@@ -300,6 +338,11 @@ int32_t MeshBuffer::AllocateExtraIndexSpace(size_t indexCount) {
 }
 
 uint32_t MeshBuffer::GetVBO() const {
+    if (m_openGLId == 0) {
+        Logging::Error() << "MeshBuffer::GetVBO() was called before OpenGL resources were initialized\n";
+        return 0;
+    }
+
     if (BackEnd::GetAPI() == API::OPENGL) {
         OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
         return meshBuffer.GetVBO();
@@ -311,6 +354,11 @@ uint32_t MeshBuffer::GetVBO() const {
 }
 
 uint32_t MeshBuffer::GetEBO() const {
+    if (m_openGLId == 0) {
+        Logging::Error() << "MeshBuffer::GetEBO() was called before OpenGL resources were initialized\n";
+        return 0;
+    }
+
     if (BackEnd::GetAPI() == API::OPENGL) {
         OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
         return meshBuffer.GetEBO();
@@ -322,6 +370,11 @@ uint32_t MeshBuffer::GetEBO() const {
 }
 
 uint32_t MeshBuffer::GetVAO() const {
+    if (m_openGLId == 0) {
+        Logging::Error() << "MeshBuffer::GetVAO() was called before OpenGL resources were initialized\n";
+        return 0;
+    }
+
     if (BackEnd::GetAPI() == API::OPENGL) {
         OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
         return meshBuffer.GetVAO();
@@ -398,11 +451,25 @@ void MeshBuffer::RemoveMesh(uint32_t meshId) {
     }
     m_freeIndexMemoryBlocks = std::move(mergedIndexBlocks);
 
+    const std::string removedMeshName = mesh.name;
+    auto nameIt = m_meshIdsByName.find(removedMeshName);
+    if (nameIt != m_meshIdsByName.end() && nameIt->second == meshId) {
+        m_meshIdsByName.erase(nameIt);
+
+        for (const auto& [otherMeshId, otherMesh] : m_meshes) {
+            if (otherMeshId != meshId && otherMesh.name == removedMeshName) {
+                m_meshIdsByName[removedMeshName] = otherMeshId;
+                break;
+            }
+        }
+    }
+
     // Remove the mesh
+    m_skinnedMeshMetadata.erase(meshId);
     m_meshes.erase(it);
 }
 
-void MeshBuffer::PreAllocate(size_t maxVertices, size_t maxIndices) {
+void MeshBuffer::PreAllocate(size_t maxVertices, size_t maxIndices, size_t maxVertexWeights) {
     if (maxVertices == 0 || maxIndices == 0) {
         Logging::Warning() << "MeshBuffer::PreAllocate() called with zero " << maxVertices << " vertices and " << maxIndices << " indices\n";
         return;
@@ -412,6 +479,7 @@ void MeshBuffer::PreAllocate(size_t maxVertices, size_t maxIndices) {
 
     m_vertices.resize(maxVertices);
     m_indices.resize(maxIndices);
+    m_vertexWeights.reserve(maxVertexWeights);
     m_vertexCapacity = maxVertices;
     m_indexCapacity = maxIndices;
 
@@ -453,6 +521,63 @@ Mesh* MeshBuffer::GetMeshById(uint32_t meshId) {
     return nullptr;
 }
 
+Mesh* MeshBuffer::GetMeshByName(const std::string& name) {
+    const uint32_t meshId = GetMeshIdByName(name);
+    if (meshId == 0) {
+        return nullptr;
+    }
+
+    return GetMeshById(meshId);
+}
+
+uint32_t MeshBuffer::GetMeshIdByName(const std::string& name) {
+    auto it = m_meshIdsByName.find(name);
+    if (it != m_meshIdsByName.end()) {
+        return it->second;
+    }
+
+    Logging::Error() << "MeshBuffer::GetMeshIdByName(..) failed for '" << m_name << "' because mesh '" << name << "' does not exist\n";
+    return 0;
+}
+
+const std::string& MeshBuffer::GetMeshNameByMeshId(uint32_t meshId) {
+    if (Mesh* mesh = GetMeshById(meshId)) {
+        return mesh->name;
+    }
+
+    const static std::string notFound = "NOT_FOUND";
+    return notFound;
+}
+
+uint32_t MeshBuffer::GetBaseVertexByMeshId(uint32_t meshId) {
+    if (Mesh* mesh = GetMeshById(meshId)) {
+        return mesh->baseVertex;
+    }
+
+    return 0;
+}
+
+uint32_t MeshBuffer::GetBaseIndexByMeshId(uint32_t meshId) {
+    if (Mesh* mesh = GetMeshById(meshId)) {
+        return mesh->baseIndex;
+    }
+
+    return 0;
+}
+
+SkinnedMeshMetadata* MeshBuffer::GetSkinnedMeshMetadataByMeshId(uint32_t meshId) {
+    auto it = m_skinnedMeshMetadata.find(meshId);
+    if (it != m_skinnedMeshMetadata.end()) {
+        return &it->second;
+    }
+
+    return nullptr;
+}
+
+bool MeshBuffer::HasSkinnedMeshMetadata(uint32_t meshId) const {
+    return m_skinnedMeshMetadata.find(meshId) != m_skinnedMeshMetadata.end();
+}
+
 std::span<Vertex> MeshBuffer::GetMeshVertexSpan(uint32_t meshId) {
     Mesh* mesh = GetMeshById(meshId);
     if (!mesh) return {};
@@ -465,6 +590,24 @@ std::span<uint32_t> MeshBuffer::GetMeshIndexSpan(uint32_t meshId) {
     if (!mesh) return {};
 
     return std::span<uint32_t>(m_indices.data() + mesh->baseIndex, mesh->indexCount);
+}
+
+std::span<VertexWeight> MeshBuffer::GetMeshVertexWeightSpan(uint32_t meshId) {
+    Mesh* mesh = GetMeshById(meshId);
+    SkinnedMeshMetadata* metadata = GetSkinnedMeshMetadataByMeshId(meshId);
+
+    if (!mesh || !metadata || !metadata->requiresSkinning || metadata->baseVertexWeight < 0) {
+        return {};
+    }
+
+    size_t base = static_cast<size_t>(metadata->baseVertexWeight);
+    size_t count = static_cast<size_t>(mesh->vertexCount);
+
+    if (base > m_vertexWeights.size() || count > m_vertexWeights.size() - base) {
+        return {};
+    }
+
+    return std::span<VertexWeight>(m_vertexWeights.data() + base, count);
 }
 
 void MeshBuffer::PrintDebugInfo() {
@@ -500,13 +643,16 @@ void MeshBuffer::PrintDebugInfo() {
 
     message += "Meshes\n";
     message += "  Mesh count: " + std::to_string(GetMeshCount()) + "\n";
+    message += "  Skinned mesh metadata count: " + std::to_string(GetSkinnedMeshMetadataCount()) + "\n";
     message += "  Used vertex count: " + std::to_string(usedVertexCount) + "\n";
     message += "  Used index count: " + std::to_string(usedIndexCount) + "\n";
+    message += "  Used vertex weight count: " + std::to_string(m_vertexWeights.size()) + "\n";
     message += "\n";
 
     message += "CPU storage\n";
     message += "  CPU allocated vertex count: " + std::to_string(GetAllocatedVertexCount()) + "\n";
     message += "  CPU allocated index count: " + std::to_string(GetAllocatedIndexCount()) + "\n";
+    message += "  CPU allocated vertex weight count: " + std::to_string(GetAllocatedVertexWeightCount()) + "\n";
     message += "  CPU free vertex count: " + std::to_string(freeVertexCount) + "\n";
     message += "  CPU free index count: " + std::to_string(freeIndexCount) + "\n";
     message += "\n";
@@ -548,6 +694,15 @@ void MeshBuffer::PrintDebugInfo() {
         message += "    AABB min: " + Vec3ToString(mesh.aabbMin) + "\n";
         message += "    AABB max: " + Vec3ToString(mesh.aabbMax) + "\n";
         message += "    Extents: " + Vec3ToString(mesh.extents) + "\n";
+
+        if (auto metadataIt = m_skinnedMeshMetadata.find(meshId); metadataIt != m_skinnedMeshMetadata.end()) {
+            const SkinnedMeshMetadata& metadata = metadataIt->second;
+            message += "    Skinned mesh metadata\n";
+            message += "      Requires skinning: " + std::string(metadata.requiresSkinning ? "true" : "false") + "\n";
+            message += "      Base vertex weight: " + std::to_string(metadata.baseVertexWeight) + "\n";
+            message += "      Non deforming bone index: " + std::to_string(metadata.nonDeformingBoneIndex) + "\n";
+        }
+
         message += "\n";
     }
 

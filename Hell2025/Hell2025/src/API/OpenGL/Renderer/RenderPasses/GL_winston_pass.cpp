@@ -1,12 +1,12 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
-#include "AssetManagement/AssetManager.h"
 #include "Core/Game.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
 #include "Game/UniqueID.h"
 #include "Config/Config.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 namespace OpenGLRenderer {
 
@@ -38,7 +38,7 @@ namespace OpenGLRenderer {
         glDepthFunc(GL_EQUAL);
 
         glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -70,7 +70,7 @@ namespace OpenGLRenderer {
 
                             shader->SetMat4("model", renderItem.modelMatrix);
 
-                            Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+                            Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
                             if (!mesh) continue;
 
                             glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);

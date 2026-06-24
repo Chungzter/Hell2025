@@ -1,5 +1,4 @@
 #include "ChristmasLights.h"
-#include "AssetManagement/AssetManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Util.h"
 #include "Renderer/Renderer.h"
@@ -57,7 +56,7 @@ void ChristmasLightSet::AddSegementFromLastPoint(const glm::vec3& nextPoint, flo
 
 void ChristmasLightSet::RecreateLightRenderItems() {
     // TODO but something like this...
-    static Model* model = AssetManager::GetModelByName("ChristmasLight");
+    static Model* model = Hell::ResourceManager::GetModelByName("ChristmasLight");
     static int whiteMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("ChristmasLightWhite");
     static int blackMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Black");
 
@@ -81,7 +80,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         Material* material = Hell::ResourceManager::GetMaterialByIndex(whiteMaterialIndex);
         RenderItem renderItem;
         renderItem.modelMatrix = modelMatrix;
-        renderItem.meshIndex = model->GetMeshIndices()[1];;
+        renderItem.meshId = model->GetMeshIndices()[1];;
         renderItem.baseColorTextureIndex = material->m_basecolor;
         renderItem.rmaTextureIndex = material->m_rma;
         renderItem.normalMapTextureIndex = material->m_normal;
@@ -100,7 +99,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         Material* material = Hell::ResourceManager::GetMaterialByIndex(blackMaterialIndex);
         RenderItem renderItem;
         renderItem.modelMatrix = modelMatrix;
-        renderItem.meshIndex = model->GetMeshIndices()[0];
+        renderItem.meshId = model->GetMeshIndices()[0];
         renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
         renderItem.baseColorTextureIndex = material->m_basecolor;
         renderItem.rmaTextureIndex = material->m_rma;
@@ -113,7 +112,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
 
     // Fill previous model matrices. These never move
     for (RenderItem& renderItem : m_renderItems) {
-        Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
         if (!mesh) continue;
 
         renderItem.baseVertex = mesh->baseVertex;

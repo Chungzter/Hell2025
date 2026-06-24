@@ -1,6 +1,5 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "Types/House/WeatherBoards.h"
-#include "AssetManagement/AssetManager.h"
 #include "Input/Input.h"
 #include "Viewport/ViewportManager.h"
 

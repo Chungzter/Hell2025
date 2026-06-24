@@ -6,6 +6,8 @@
 #include "Hell/ResourceManagement/Types/Material.h"
 #include "Hell/ResourceManagement/Types/MeshBuffer.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
+#include "Types/Renderer/Model.h"
+#include "Types/Renderer/SkinnedModel.h"
 #include "Types/Renderer/SpriteSheetTexture.h"
 
 #include <cstddef>
@@ -20,6 +22,7 @@ namespace Hell::MemoryTracker {
 
 namespace Hell::ResourceManager {
 
+    void Init();
     void CleanUp();
     void AppendMemoryReport(MemoryTracker::MemoryReport& report);
 
@@ -44,6 +47,19 @@ namespace Hell::ResourceManager {
     Material* GetMaterialByName(const std::string& name);
     int32_t GetMaterialIndexByName(const std::string& name);
     std::string GetMaterialNameByIndex(int32_t index);
+
+    Model& CreateModel(const std::string& name);
+    std::unordered_map<uint32_t, Model>& GetModels();
+    Model* GetModelById(uint32_t modelId);
+    Model* GetModelByName(const std::string& name);
+    uint32_t GetModelIdByName(const std::string& name);
+    void SetModelName(uint32_t modelId, const std::string& name);
+
+    SkinnedModel& CreateSkinnedModel(const std::string& name);
+    std::unordered_map<uint32_t, SkinnedModel>& GetSkinnedModels();
+    SkinnedModel* GetSkinnedModelById(uint32_t skinnedModelId);
+    SkinnedModel* GetSkinnedModelByName(const std::string& name);
+    uint32_t GetSkinnedModelIdByName(const std::string& name);
 
     MeshBuffer& CreateMeshBuffer(const std::string& name);
     MeshBuffer& GetMeshBuffer(const std::string& name);

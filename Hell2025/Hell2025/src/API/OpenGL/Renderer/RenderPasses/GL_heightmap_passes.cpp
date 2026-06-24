@@ -3,7 +3,6 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/Types/GL_heightmap_mesh.h"
 #include "API/OpenGL/Types/GL_texture_readback.h"
-#include "AssetManagement/AssetManager.h"
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
 #include "Core/Game.h"

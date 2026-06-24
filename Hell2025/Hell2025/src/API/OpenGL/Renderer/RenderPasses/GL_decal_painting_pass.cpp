@@ -1,6 +1,5 @@
 #include "API/OpenGL/Renderer/GL_renderer.h" 
 #include "API/OpenGL/GL_backend.h"
-#include "AssetManagement/AssetManager.h"
 #include "BackEnd/Backend.h"
 #include "Core/Game.h"
 #include "Editor/Editor.h"
@@ -8,6 +7,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 namespace OpenGLRenderer {
 
@@ -85,11 +85,11 @@ namespace OpenGLRenderer {
                     glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
                     glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetSkinnedVertexDataVBO());
                     //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
-                    uint32_t meshIndex = renderItem.meshIndex;
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
+                    uint32_t meshId = renderItem.meshId;
                     glm::mat4 modelMatrix = renderItem.modelMatrix;
                     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
-                    SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(meshIndex);
+                    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
                     uvShader->SetMat4("u_model", modelMatrix);
                     glDrawElementsInstancedBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), 1, renderItem.baseSkinnedVertex);
 

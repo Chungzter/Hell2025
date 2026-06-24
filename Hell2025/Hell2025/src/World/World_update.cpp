@@ -11,9 +11,6 @@
 
 #include "Ragdoll/RagdollManager.h"
 #include "Pathfinding/NavMesh.h"
-
-#include "AssetManagement/AssetManager.h"
-
 #include "Bible/Bible.h"
 #include "Types/Misc/DoorChain.h"
 
@@ -483,6 +480,18 @@ namespace World {
 
     void CalculateGPULights() {
         for (int i = 0; i < GetLights().size(); i++) {
+            Light& light = GetLights()[i];
+            if (!light.GetCreateInfo().saveToFile) {
+                continue;
+            }
+            RenderDataManager::SubmitGPULightHighRes(i);
+        }
+
+        for (int i = 0; i < GetLights().size(); i++) {
+            Light& light = GetLights()[i];
+            if (light.GetCreateInfo().saveToFile) {
+                continue;
+            }
             RenderDataManager::SubmitGPULightHighRes(i);
         }
     }

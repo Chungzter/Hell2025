@@ -1,5 +1,4 @@
 #include "Player.h"
-#include "AssetManagement/AssetManager.h"
 #include "Config/Config.h"
 #include "Debug/Debug.h"
 #include "Editor/Editor.h"
@@ -81,7 +80,7 @@ void Player::UpdateUI(float deltaTime) {
 //   if (Input::KeyDown(HELL_KEY_Y)) {
 //       texName = "inv11";
 //   }
-//   Texture* texture = AssetManager::GetTextureByName(texName);
+//   Texture* texture = Hell::ResourceManager::GetTextureByName(texName);
 //   //glm::ivec2 size = glm::ivec2(-1, -1);
 //   glm::ivec2 size = glm::ivec2(texture->GetWidth(0), texture->GetHeight(0));
 //
@@ -326,7 +325,7 @@ void Player::UpdateUI(float deltaTime) {
                     ObjectType hitType = UniqueID::GetType(hitId);
                     text += "- Hit pos: " + Util::Vec3ToString(m_bvhRayResult.hitPosition) + "\n";
                     text += "- Parent type: " + Util::ObjectTypeToString(hitType) + "\n";
-                    text += "- Mesh name: " + AssetManager::GetMeshNameByMeshIndex(m_bvhRayResult.globalMeshIndex) + "\n";
+                    text += "- Mesh name: " + Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshNameByMeshId(m_bvhRayResult.globalMeshIndex) + "\n";
                     text += "- Parent Id: " + std::to_string(UniqueID::GetLocal(m_bvhRayResult.objectId)) + "\n";
                     text += "- Openable Id: " + std::to_string(m_bvhRayResult.openableId) + "\n";
                     text += "- Custom Id: " + std::to_string(m_bvhRayResult.customId) + "\n";
@@ -374,7 +373,7 @@ void Player::UpdateUI(float deltaTime) {
     ////name = "FontTest_LockedWithAKey";
     ////name = "FontTest_YouUnlockedIt";
     //
-    //if (Texture* texture = AssetManager::GetTextureByName(name)) {
+    //if (Texture* texture = Hell::ResourceManager::GetTextureByName(name)) {
     //    int width = texture->GetWidth() * 2;
     //    int height = texture->GetHeight() * 2;
     //    int marginX = 100;

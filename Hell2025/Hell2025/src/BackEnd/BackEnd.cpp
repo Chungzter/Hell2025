@@ -10,7 +10,6 @@
 #include "API/OpenGL/GL_resource_manager.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/Vulkan/VK_backEnd.h"
-#include "AssetManagement/AssetManager.h"
 #include "Config/Config.h"
 #include "Audio/Audio.h"
 #include "Audio/MidiFileManager.h"
@@ -18,7 +17,6 @@
 #include "Bible/Bible.h"
 #include "Debug/Debug.h"
 #include "Core/Game.h"
-#include "Game/Resources.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include "Editor/Gizmo.h"
@@ -28,6 +26,7 @@
 #include "Input/InputMulti.h"
 #include "Managers/OpenableManager.h"
 #include "Managers/HouseManager.h"
+#include "Managers/MapManager.h"
 #include "Managers/MirrorManager.h"
 #include "Modelling/Unused/Modelling.h"
 #include "Physics/Physics.h"
@@ -44,6 +43,8 @@
 
 #include "Pathfinding/NavMesh.h"
 
+#include "Hell/AssetCompiler/AssetCompiler.h"
+#include "Hell/AssetLoader/AssetLoader.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/ResourceManagement/TextureUploader.h"
 
@@ -90,6 +91,7 @@ namespace BackEnd {
             }
         }
 
+        ResourceManager::Init();
         UIBackEnd::Init();
         Audio::Init();
         Bible::Init();
@@ -100,12 +102,12 @@ namespace BackEnd {
         Editor::Init();
         Synth::Init();
         MidiFileManager::Init();
-        Game::InitResources();
         Physics::Init();
         RagdollManager::Init();
         ImGuiBackEnd::Init();
         NavMeshManager::Init();
-        AssetManager::Init();
+        Hell::AssetCompiler::CompileOutOfDateAssets();
+        Hell::AssetLoader::Init();
 
         //Modelling::Init();
 
@@ -139,6 +141,21 @@ namespace BackEnd {
     void UpdateLoadingScreen() {
         UIBackEnd::Update();
         RenderDataManager::UpdateDrawCommandsUI();
+    }
+
+    void OnAssetLoadingComplete() {
+        Renderer::UploadVertexData();
+        HouseManager::Init();
+        MapManager::Init();
+        Renderer::InitWoundMaskArray();
+        World::Init();
+
+        // Free all cpu texture data
+        for (auto& [name, texture] : Hell::ResourceManager::GetTextures()) {
+            texture.FreeCPUMemory();
+        }
+
+        Renderer::InitMain();
     }
 
     void UpdateGame() {

@@ -1,5 +1,4 @@
 #include "World.h"
-#include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include "Hell/BVH/BVH.h"
@@ -31,15 +30,18 @@ namespace World {
 	}
 
     void CreateObjectInstanceDataFromRenderItem(const RenderItem& renderItem, std::vector<PrimitiveInstance>& container) {
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
+        if (!mesh) return;
+
         PrimitiveInstance& instance = container.emplace_back();
 		instance.worldTransform = renderItem.modelMatrix;
 		instance.inverseWorldTransform = renderItem.inverseModelMatrix;
         instance.worldAabbBoundsMin = renderItem.aabbMin;
         instance.worldAabbBoundsMax = renderItem.aabbMax;
         instance.worldAabbCenter = (renderItem.aabbMin + renderItem.aabbMax) * 0.5f;
-        instance.meshBvhId = AssetManager::GetMeshByIndex(renderItem.meshIndex)->meshBvhId;
+        instance.meshBvhId = mesh->meshBvhId;
         instance.openableId= renderItem.openableId;
-        instance.globalMeshIndex = renderItem.meshIndex;
+        instance.globalMeshIndex = renderItem.meshId;
         instance.customId = renderItem.customId;
         instance.localMeshNodeIndex = renderItem.localMeshNodeIndex;
         Util::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, instance.objectId);

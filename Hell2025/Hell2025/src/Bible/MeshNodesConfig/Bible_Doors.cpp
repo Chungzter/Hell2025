@@ -1,6 +1,4 @@
 #include "Bible/Bible.h"
-#include "AssetManagement/AssetManager.h"
-
 namespace Bible {
 
     void ConfigureDoorMeshNodes(uint64_t id, DoorCreateInfo& createInfo, MeshNodes* meshNodes) {

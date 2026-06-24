@@ -1,6 +1,5 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
-#include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h""
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
@@ -12,6 +11,7 @@
 #include <Game/Constants.h>
 #include "Hell/BVH/BVH.h"
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Core/Game.h" // For Game::GetTotalTime(). It's a hack to prevent colorful probe glitch at start
 
@@ -587,10 +587,16 @@ namespace OpenGLRenderer {
         BindSSBO(7, "DDGIVolume");
         BindSSBO(8, "ProbeStates");
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-        Mesh* mesh = AssetManager::GetMeshByModelNameMeshLocalIndex("Sphere", 0);
+        Model* sphereModel = Hell::ResourceManager::GetModelByName("Sphere");
+        if (!sphereModel || sphereModel->GetMeshIndices().empty()) return;
+        if (sphereModel->GetMeshCount() == 0) return;
+
+        uint32_t meshId = sphereModel->GetMeshIndices()[0];
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
+        if (!mesh) return;
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);

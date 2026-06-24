@@ -1,6 +1,8 @@
 #include "Debug.h"
 
+#include "Hell/Logging.h"
 #include "Hell/MemoryTracker/MemoryTracker.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
@@ -366,6 +368,25 @@ namespace Debug {
         }
         if (!allowed && g_debugRenderMode != DebugRenderMode::NONE) {
             NextDebugRenderMode();
+        }
+    }
+
+    void PrintModelMeshNames(const std::string& name) {
+        Model* model = Hell::ResourceManager::GetModelByName(name);
+        if (!model) {
+            Logging::Error() << "Debug::PrintModelMeshNames(..) failed coz model param was nullptr\n";
+            return;
+        }
+
+        std::cout << model->GetName() << "\n";
+        for (const uint32_t& meshId : model->GetMeshIndices()) {
+            Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
+            if (mesh) {
+                std::cout << " - " << mesh->name << "\n";
+            }
+            else {
+                std::cout << " - INVALID MESH SOMEHOW\n";
+            }
         }
     }
 

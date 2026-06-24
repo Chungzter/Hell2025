@@ -1,6 +1,5 @@
 #include "API/OpenGL/GL_backend.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
-#include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
@@ -19,7 +18,13 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
         OpenGLShader* shader = GetShaderOLD("SpriteSheet");
-        Mesh* mesh = AssetManager::GetMeshByModelNameMeshName("Primitives", "Quad");
+        Model* primitives = Hell::ResourceManager::GetModelByName("Primitives");
+        if (!primitives || primitives->GetMeshIndices().empty()) return;
+        if (primitives->GetMeshCount() == 0) return;
+
+        uint32_t meshId = primitives->GetMeshIndices()[0];
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
+        if (!mesh) return;
 
         std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = GetFrameBuffer(gBufferName);
@@ -29,7 +34,7 @@ namespace OpenGLRenderer {
         shader->Bind();
         ForceRasterizerState("SpriteSheetPass");
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);

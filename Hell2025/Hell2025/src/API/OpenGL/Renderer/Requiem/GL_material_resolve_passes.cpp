@@ -21,8 +21,9 @@ namespace OpenGLRenderer {
         BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
 
-        BindSSBO(0, OpenGLBackEnd::GetVertexDataVBO());
-        BindSSBO(1, OpenGLBackEnd::GetVertexDataEBO());
+        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("AssetGeometry");
+        BindSSBO(0, meshBuffer.GetVBO());
+        BindSSBO(1, meshBuffer.GetEBO());
         BindSSBO(2, "ViewportData");
         BindSSBO(3, "InstanceData");
         BindSSBO(4, "Samplers");
@@ -62,7 +63,7 @@ namespace OpenGLRenderer {
         BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
 
         BindSSBO(0, OpenGLBackEnd::GetSkinnedVertexDataVBO());
-        BindSSBO(1, OpenGLBackEnd::GetVertexDataEBO());
+        BindSSBO(1, ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
         BindSSBO(2, "ViewportData");
         BindSSBO(3, "InstanceData");
         BindSSBO(4, "Samplers");
@@ -148,7 +149,7 @@ namespace OpenGLRenderer {
         BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
 
         BindSSBO(0, OpenGLBackEnd::GetSkinnedVertexDataVBO());
-        BindSSBO(1, OpenGLBackEnd::GetVertexDataEBO());
+        BindSSBO(1, ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
         BindSSBO(2, "ViewportData");
         BindSSBO(3, "InstanceData");
         BindSSBO(4, "Samplers");

@@ -21,6 +21,13 @@ namespace Hell::TextureUploader {
         if (BackEnd::GetAPI() == API::VULKAN) { /*VulkanTextureUploader::Update(); */ }
     }
 
+    std::vector<Texture*> ConsumeCompletedUploads() {
+        if (BackEnd::GetAPI() == API::OPENGL) { return OpenGLTextureUploader::ConsumeCompletedUploads(); }
+        if (BackEnd::GetAPI() == API::VULKAN) { /*return VulkanTextureUploader::ConsumeCompletedUploads(); */ }
+
+        return {};
+    }
+
     void CleanUp() {
         if (BackEnd::GetAPI() == API::OPENGL) { OpenGLTextureUploader::CleanUp(); }
         if (BackEnd::GetAPI() == API::VULKAN) { /*VulkanTextureUploader::CleanUp(); */ }

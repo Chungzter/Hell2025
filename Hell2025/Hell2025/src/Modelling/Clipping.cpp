@@ -1,10 +1,13 @@
 #include "Clipping.h"
-#include "AssetManagement/AssetManager.h"
 #include "clipper2/clipper.h"
 #include "Hell/Math/GLM.h"
+#include "Hell/Math/OBB.h"
 #include "earcut/earcut.hpp"
 #include <glm/gtx/intersect.hpp>
 #include "Util.h"
+#include <algorithm>
+#include <cmath>
+#include <limits>
 
 namespace mapbox {
     namespace util {
@@ -207,31 +210,17 @@ namespace Clipping {
     ClippingCubeRayResult CastClippingCubeRay(const glm::vec3& rayOrigin, const glm::vec3 rayDir, std::vector<ClippingCube>& clippingCubes) {
         ClippingCubeRayResult rayResult;
         rayResult.distanceToHit = std::numeric_limits<float>::max();
-
-        Mesh* mesh = AssetManager::GetMeshByModelNameMeshName("Primitives", "Cube");
-        if (!mesh) return rayResult;
-
-        std::vector<Vertex>& vertices = AssetManager::GetVertices();
-        std::vector<uint32_t>& indices = AssetManager::GetIndices();
+        const AABB localCubeBounds(glm::vec3(-0.5f), glm::vec3(0.5f));
 
         for (ClippingCube& clippingCube : clippingCubes) {
-            const glm::mat4& modelMatrix = clippingCube.GetModelMatrix();
+            OBB obb(localCubeBounds, clippingCube.GetModelMatrix());
+            OBBRayResult obbRayResult = obb.Raycast(rayOrigin, rayDir, rayResult.distanceToHit);
 
-            for (int i = mesh->baseIndex; i < mesh->baseIndex + mesh->indexCount; i+=3) {
-                uint32_t idx0 = indices[i + 0];
-                uint32_t idx1 = indices[i + 1];
-                uint32_t idx2 = indices[i + 2];
-                const glm::vec3& vert0 = modelMatrix * glm::vec4(vertices[idx0 + mesh->baseVertex].position, 1.0f);
-                const glm::vec3& vert1 = modelMatrix * glm::vec4(vertices[idx1 + mesh->baseVertex].position, 1.0f);
-                const glm::vec3& vert2 = modelMatrix * glm::vec4(vertices[idx2 + mesh->baseVertex].position, 1.0f);
-                float t = 0;
-
-                if (Util::RayIntersectsTriangle(rayOrigin, rayDir, vert0, vert1, vert2, t) && t < rayResult.distanceToHit) {
-                    rayResult.distanceToHit = t;
-                    rayResult.hitFound = true;
-                    rayResult.hitPosition = rayOrigin + (rayDir * t);
-                    rayResult.hitClippingCube = &clippingCube;
-                }
+            if (obbRayResult.hitFound) {
+                rayResult.distanceToHit = obbRayResult.distanceToHit;
+                rayResult.hitFound = true;
+                rayResult.hitPosition = obbRayResult.hitPositionWorld;
+                rayResult.hitClippingCube = &clippingCube;
             }
         }
 

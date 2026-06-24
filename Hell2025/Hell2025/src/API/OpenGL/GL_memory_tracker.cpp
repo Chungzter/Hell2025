@@ -21,6 +21,7 @@ namespace OpenGLMemoryTracker {
             case GL_RG16F: return 4;
             case GL_RGB16F: return 6;
             case GL_RGBA16F: return 8;
+            case GL_R11F_G11F_B10F: return 4;
             case GL_R32F: return 4;
             case GL_RG32F: return 8;
             case GL_RGB32F: return 12;

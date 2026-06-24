@@ -1,5 +1,4 @@
 #include "Light.h"
-#include "AssetManagement/AssetManager.h"
 #include "Physics/Physics.h"
 #include "World/World.h"
 #include "Util.h"

@@ -1,15 +1,15 @@
 #include "Animator.h"
-#include "AssetManagement/AssetManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Util.h"
 
 void Animator::SetSkinnedModel(const std::string& skinnedModelName) {
-    m_skinnedModel= AssetManager::GetSkinnedModelByName(skinnedModelName);
+    m_skinnedModel = Hell::ResourceManager::GetSkinnedModelByName(skinnedModelName);
 }
 
 void Animator::PlayAnimation(const std::string& layerName, const std::string& animationName, float speed, bool loop) {
     Animation* animation = Hell::ResourceManager::GetAnimationPtr(animationName);
     if (!animation) return;
+    if (!m_skinnedModel) return;
 
     // Create layer if it doesn't exist
     if (!AnimationLayerExists(layerName)) {
@@ -24,7 +24,7 @@ void Animator::PlayAnimation(const std::string& layerName, const std::string& an
         return;
     }
 
-    int nodeCount = animation->m_animatedNodes.size();
+    int nodeCount = m_skinnedModel->GetNodeCount();
 
     animationLayer->m_animation = animation;
     animationLayer->m_globalNodeTransforms.resize(nodeCount);

@@ -11,7 +11,6 @@
 
 */
 
-#include "AssetManagement/AssetManager.h"
 #include "Backend/Backend.h"
 #include "Core/Game.h"
 #include "Editor/Editor.h"
@@ -22,7 +21,7 @@
 
 #include "API/Vulkan/vk_backend.h"
 
-#include "Hell/AssetLoader/AssetLoader.h" // TODO: remove me
+#include "Hell/AssetLoader/AssetLoader.h"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
@@ -60,13 +59,14 @@ int main() {
         BackEnd::BeginFrame();
 
         // Render loading screen
-        if (!AssetManager::LoadingComplete()) {
-            AssetManager::UpdateLoading();
+        if (!Hell::AssetLoader::LoadingComplete()) {
+            Hell::AssetLoader::Update();
             BackEnd::UpdateLoadingScreen();
             Renderer::RenderLoadingScreen();
 
             // Loading complete?
-            if (AssetManager::LoadingComplete()) {
+            if (Hell::AssetLoader::LoadingComplete()) {
+                BackEnd::OnAssetLoadingComplete();
                 Game::Create();
             }
         }

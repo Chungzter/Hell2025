@@ -10,7 +10,6 @@
 #include "Input/Input.h"
 #include "Types/Renderer/MeshNodes.h"
 #include "World/World.h"
-#include "AssetManagement/AssetManager.h"
 #include "clipper2/clipper.h"
 #include "earcut/earcut.hpp"
 #include "Timer.hpp"

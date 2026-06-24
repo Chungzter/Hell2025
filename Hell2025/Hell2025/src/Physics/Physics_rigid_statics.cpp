@@ -1,6 +1,6 @@
 #include "Physics.h"
 #include <Game/UniqueID.h>
-#include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Physics/Types/RigidStatic.h"
 #include <unordered_map>
 #include <vector>
@@ -201,7 +201,7 @@ namespace Physics {
        pxFilterData.word1 = (PxU32)filterData.collisionGroup;
        pxFilterData.word2 = (PxU32)filterData.collidesWith;
 
-       Model* model = AssetManager::GetModelByName(modelName);
+       Model* model = Hell::ResourceManager::GetModelByName(modelName);
        if (!model) {
            std::cout << "Physics::CreateRigidStaticFromConvexMeshFromModel() failed: '" << modelName << "' was not found \"n";
            return 0;
@@ -217,9 +217,10 @@ namespace Physics {
        RigidStatic& rigidStatic = g_rigidStatics[physicsID];
 
        // Create convex shapes
-       for (uint32_t meshIndex : model->GetMeshIndices()) {
-           Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex);
-           std::span<Vertex> vertices = AssetManager::GetVerticesSpan(mesh->baseVertex, mesh->vertexCount);
+       Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+       for (uint32_t meshId : model->GetMeshIndices()) {
+           Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
+           std::span<Vertex> vertices(meshBuffer.GetVertices().data() + mesh->baseVertex, mesh->vertexCount);
 
            std::vector<PxVec3> pxVertices;
            for (Vertex& vertex : vertices) {
@@ -266,20 +267,21 @@ namespace Physics {
 
 
    uint64_t CreateRigidStaticTriangleMeshFromModel(Transform transform, const std::string& modelName, PhysicsFilterData filterData) {
-       Model* model = AssetManager::GetModelByName(modelName);
+       Model* model = Hell::ResourceManager::GetModelByName(modelName);
        if (!model) {
            std::cout << "Physics::CreateRigidStaticTriangleMeshFromModel() failed: model name '" << modelName << "' not found\n";
            return 0;
        }
 
-       std::vector<Vertex>& globalVertices = AssetManager::GetVertices();
-       std::vector<uint32_t>& globalIndices = AssetManager::GetIndices();
+       Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+       std::vector<Vertex>& globalVertices = meshBuffer.GetVertices();
+       std::vector<uint32_t>& globalIndices = meshBuffer.GetIndices();
 
        std::vector<Vertex> vertices;
        std::vector<uint32_t> indices;
 
-       for (uint32_t meshIndex : model->GetMeshIndices()) {
-           Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex);
+       for (uint32_t meshId : model->GetMeshIndices()) {
+           Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
            if (!mesh) continue;
 
            for (int i = mesh->baseIndex; i < mesh->baseIndex + mesh->indexCount; i++) {

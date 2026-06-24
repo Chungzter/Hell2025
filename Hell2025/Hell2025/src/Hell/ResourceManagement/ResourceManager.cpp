@@ -4,6 +4,7 @@
 #include "Hell/MemoryTracker/MemoryTracker.h"
 
 #include <algorithm>
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -15,6 +16,10 @@ namespace Hell::ResourceManager {
         std::unordered_map<std::string, GenericMesh> g_genericMeshes;
         std::unordered_map<std::string, IESProfile> g_iesProfiles;
         std::unordered_map<std::string, MeshBuffer> g_meshBuffers;
+        std::unordered_map<uint32_t, Model> g_models;
+        std::unordered_map<std::string, uint32_t> g_modelIdsByName;
+        std::unordered_map<uint32_t, SkinnedModel> g_skinnedModels;
+        std::unordered_map<std::string, uint32_t> g_skinnedModelIdsByName;
         std::unordered_map<std::string, SpriteSheetTexture> g_spriteSheetTextures;
         std::unordered_map<std::string, Texture> g_textures;
 
@@ -22,6 +27,8 @@ namespace Hell::ResourceManager {
         std::unordered_map<std::string, int32_t> g_materialIndices;
         std::vector<std::string> g_materialNamesByIndex;
         std::vector<std::string> g_textureNamesByBindlessIndex;
+        uint32_t g_nextModelId = 0;
+        uint32_t g_nextSkinnedModelId = 0;
 
         Material CreateDefaultMaterial() {
             Material material;
@@ -35,6 +42,18 @@ namespace Hell::ResourceManager {
         }
     }
 
+    void Init() {
+        CreateGenericMesh("DebugLines2D");
+        CreateGenericMesh("DebugLines3D");
+        CreateGenericMesh("DebugPoints2D");
+        CreateGenericMesh("DebugPoints3D");
+        CreateGenericMesh("DebugMeshItemExamineLines");
+        CreateGenericMesh("UI");
+
+        CreateMeshBuffer("AssetGeometry");
+        CreateMeshBuffer("Procedural");
+    }
+
     void CleanUp() {
         for (auto& object : g_genericMeshes) { object.second.CleanUp(); } g_genericMeshes.clear();
         for (auto& object : g_meshBuffers)   { object.second.CleanUp(); } g_meshBuffers.clear();
@@ -45,77 +64,14 @@ namespace Hell::ResourceManager {
         g_materials.clear();
         g_materialIndices.clear();
         g_materialNamesByIndex.clear();
+        g_models.clear();
+        g_modelIdsByName.clear();
+        g_nextModelId = 0;
+        g_skinnedModels.clear();
+        g_skinnedModelIdsByName.clear();
+        g_nextSkinnedModelId = 0;
         g_spriteSheetTextures.clear();
         g_textureNamesByBindlessIndex.clear();
-    }
-
-    void AppendMemoryReport(MemoryTracker::MemoryReport& report) {
-        if (!g_genericMeshes.empty()) {
-            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
-            category.name = "Generic Meshes";
-            category.entries.reserve(g_genericMeshes.size());
-
-            for (const auto& [name, genericMesh] : g_genericMeshes) {
-                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
-                entry.name = name;
-                entry.cpuBytes = genericMesh.GetCPUAllocatedByteCount();
-                entry.gpuBytes = genericMesh.GetGPUAllocatedByteCount();
-            }
-
-            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
-                return a.name < b.name;
-            });
-        }
-
-        if (!g_meshBuffers.empty()) {
-            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
-            category.name = "Mesh Buffers";
-            category.entries.reserve(g_meshBuffers.size());
-
-            for (const auto& [name, meshBuffer] : g_meshBuffers) {
-                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
-                entry.name = name;
-                entry.cpuBytes = meshBuffer.GetCPUAllocatedByteCount();
-                entry.gpuBytes = meshBuffer.GetGPUAllocatedByteCount();
-            }
-
-            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
-                return a.name < b.name;
-            });
-        }
-
-        if (!g_iesProfiles.empty()) {
-            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
-            category.name = "IES Profiles";
-            category.entries.reserve(g_iesProfiles.size());
-
-            for (const auto& [name, iesProfile] : g_iesProfiles) {
-                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
-                entry.name = name;
-                entry.cpuBytes = iesProfile.GetCPUAllocatedByteCount();
-            }
-
-            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
-                return a.name < b.name;
-            });
-        }
-
-        if (!g_textures.empty()) {
-            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
-            category.name = "Textures";
-            category.entries.reserve(g_textures.size());
-
-            for (const auto& [name, texture] : g_textures) {
-                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
-                entry.name = name;
-                entry.cpuBytes = texture.GetCPUAllocatedByteCount();
-                entry.gpuBytes = texture.GetGPUAllocatedByteCount();
-            }
-
-            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
-                return a.name < b.name;
-            });
-        }
     }
 
     // Animation
@@ -304,6 +260,146 @@ namespace Hell::ResourceManager {
         return UNDEFINED_STRING;
     }
 
+    // Models
+
+    Model& CreateModel(const std::string& name) {
+        auto nameIt = g_modelIdsByName.find(name);
+
+        if (nameIt != g_modelIdsByName.end()) {
+            Logging::Fatal() << "ResourceManager::CreateModel(..) failed: '" << name << "' already exists\n";
+            return g_models[nameIt->second];
+        }
+
+        if (g_nextModelId == std::numeric_limits<uint32_t>::max()) {
+            Logging::Fatal() << "ResourceManager::CreateModel(..) failed: model ID space exhausted\n";
+            static Model invalid;
+            return invalid;
+        }
+
+        g_nextModelId++;
+
+        Model& model = g_models[g_nextModelId];
+        model.SetModelId(g_nextModelId);
+        model.SetName(name);
+        g_modelIdsByName[name] = g_nextModelId;
+
+        return model;
+    }
+
+    std::unordered_map<uint32_t, Model>& GetModels() {
+        return g_models;
+    }
+
+    Model* GetModelById(uint32_t modelId) {
+        auto it = g_models.find(modelId);
+        if (it != g_models.end()) {
+            return &it->second;
+        }
+
+        Logging::Error() << "ResourceManager::GetModelById(..) failed: model id '" << modelId << "' does not exist\n";
+        return nullptr;
+    }
+
+    Model* GetModelByName(const std::string& name) {
+        const uint32_t modelId = GetModelIdByName(name);
+        if (modelId == 0) {
+            return nullptr;
+        }
+
+        return GetModelById(modelId);
+    }
+
+    uint32_t GetModelIdByName(const std::string& name) {
+        auto it = g_modelIdsByName.find(name);
+        if (it != g_modelIdsByName.end()) {
+            return it->second;
+        }
+
+        Logging::Error() << "ResourceManager::GetModelIdByName(..) failed: model '" << name << "' does not exist\n";
+        return 0;
+    }
+
+    void SetModelName(uint32_t modelId, const std::string& name) {
+        Model* model = GetModelById(modelId);
+        if (!model) {
+            return;
+        }
+
+        auto existingNameIt = g_modelIdsByName.find(name);
+        if (existingNameIt != g_modelIdsByName.end() && existingNameIt->second != modelId) {
+            Logging::Fatal() << "ResourceManager::SetModelName(..) failed: model name '" << name << "' already exists\n";
+            return;
+        }
+
+        const std::string oldName = model->GetName();
+        auto oldNameIt = g_modelIdsByName.find(oldName);
+        if (oldNameIt != g_modelIdsByName.end() && oldNameIt->second == modelId) {
+            g_modelIdsByName.erase(oldNameIt);
+        }
+
+        model->SetName(name);
+        g_modelIdsByName[name] = modelId;
+    }
+
+    // Skinned Models
+
+    SkinnedModel& CreateSkinnedModel(const std::string& name) {
+        auto nameIt = g_skinnedModelIdsByName.find(name);
+
+        if (nameIt != g_skinnedModelIdsByName.end()) {
+            Logging::Fatal() << "ResourceManager::CreateSkinnedModel(..) failed: '" << name << "' already exists\n";
+            return g_skinnedModels[nameIt->second];
+        }
+
+        if (g_nextSkinnedModelId == std::numeric_limits<uint32_t>::max()) {
+            Logging::Fatal() << "ResourceManager::CreateSkinnedModel(..) failed: skinned model ID space exhausted\n";
+            static SkinnedModel invalid;
+            return invalid;
+        }
+
+        g_nextSkinnedModelId++;
+
+        SkinnedModel& skinnedModel = g_skinnedModels[g_nextSkinnedModelId];
+        skinnedModel.SetSkinnedModelId(g_nextSkinnedModelId);
+        skinnedModel.SetName(name);
+        g_skinnedModelIdsByName[name] = g_nextSkinnedModelId;
+
+        return skinnedModel;
+    }
+
+    std::unordered_map<uint32_t, SkinnedModel>& GetSkinnedModels() {
+        return g_skinnedModels;
+    }
+
+    SkinnedModel* GetSkinnedModelById(uint32_t skinnedModelId) {
+        auto it = g_skinnedModels.find(skinnedModelId);
+        if (it != g_skinnedModels.end()) {
+            return &it->second;
+        }
+
+        Logging::Error() << "ResourceManager::GetSkinnedModelById(..) failed: skinned model id '" << skinnedModelId << "' does not exist\n";
+        return nullptr;
+    }
+
+    SkinnedModel* GetSkinnedModelByName(const std::string& name) {
+        const uint32_t skinnedModelId = GetSkinnedModelIdByName(name);
+        if (skinnedModelId == 0) {
+            return nullptr;
+        }
+
+        return GetSkinnedModelById(skinnedModelId);
+    }
+
+    uint32_t GetSkinnedModelIdByName(const std::string& name) {
+        auto it = g_skinnedModelIdsByName.find(name);
+        if (it != g_skinnedModelIdsByName.end()) {
+            return it->second;
+        }
+
+        Logging::Error() << "ResourceManager::GetSkinnedModelIdByName(..) failed: skinned model '" << name << "' does not exist\n";
+        return 0;
+    }
+
     // Mesh Buffer
 
     MeshBuffer& CreateMeshBuffer(const std::string& name) {
@@ -430,5 +526,124 @@ namespace Hell::ResourceManager {
         }
 
         return -1;
+    }
+
+    // Memory report
+
+    void AppendMemoryReport(MemoryTracker::MemoryReport& report) {
+        if (!g_animations.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "Animations";
+            category.entries.reserve(g_animations.size());
+
+            for (const auto& [name, animation] : g_animations) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = animation.GetCPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
+
+        if (!g_genericMeshes.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "Generic Meshes";
+            category.entries.reserve(g_genericMeshes.size());
+
+            for (const auto& [name, genericMesh] : g_genericMeshes) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = genericMesh.GetCPUAllocatedByteCount();
+                entry.gpuBytes = genericMesh.GetGPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
+
+        if (!g_meshBuffers.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "Mesh Buffers";
+            category.entries.reserve(g_meshBuffers.size());
+
+            for (const auto& [name, meshBuffer] : g_meshBuffers) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = meshBuffer.GetCPUAllocatedByteCount();
+                entry.gpuBytes = meshBuffer.GetGPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
+
+        if (!g_iesProfiles.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "IES Profiles";
+            category.entries.reserve(g_iesProfiles.size());
+
+            for (const auto& [name, iesProfile] : g_iesProfiles) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = iesProfile.GetCPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
+
+        if (!g_models.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "Models";
+            category.entries.reserve(g_models.size());
+
+            for (const auto& [modelId, model] : g_models) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = model.GetName();
+                entry.cpuBytes = model.GetCPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
+
+        if (!g_skinnedModels.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "Skinned Models";
+            category.entries.reserve(g_skinnedModels.size());
+
+            for (const auto& [skinnedModelId, skinnedModel] : g_skinnedModels) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = skinnedModel.GetName();
+                entry.cpuBytes = skinnedModel.GetCPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
+
+        if (!g_textures.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "Textures";
+            category.entries.reserve(g_textures.size());
+
+            for (const auto& [name, texture] : g_textures) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = texture.GetCPUAllocatedByteCount();
+                entry.gpuBytes = texture.GetGPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
     }
 }

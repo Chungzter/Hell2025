@@ -1,6 +1,5 @@
 #include "../GL_renderer.h"
 #include "../../GL_backend.h"
-#include "AssetManagement/AssetManager.h"
 #include "BackEnd/Backend.h"
 #include "Viewport/ViewportManager.h"
 #include "Editor/Editor.h"
@@ -20,7 +19,6 @@
 #include "Core/Game.h"\
 
 // get me out of here
-#include "AssetManagement/AssetManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 // get me out of here
 
@@ -55,7 +53,7 @@ namespace OpenGLRenderer {
 
 		ForceRasterizerState("GeometryPass_Default");
 
-		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+		glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
 		// Fill the death butter
 		glEnable(GL_DEPTH_TEST);
@@ -74,7 +72,7 @@ namespace OpenGLRenderer {
 			glDepthFunc(GL_GREATER);
 
 			for (const RenderItem& renderItem : renderItems) {
-				Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+				Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
 				if (!mesh) continue;
 
 				shader->SetMat4("u_model", renderItem.modelMatrix);
@@ -119,7 +117,7 @@ namespace OpenGLRenderer {
 			glDepthFunc(GL_EQUAL);
 
 			for (const RenderItem& renderItem : renderItems) {
-				Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+				Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
 				if (!mesh) continue;
 
 				glActiveTexture(GL_TEXTURE0);
@@ -160,7 +158,7 @@ namespace OpenGLRenderer {
 		if (!gBuffer) return;
 		if (!shader) return;
 
-		glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+		glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
 		gBuffer->Bind();
 		gBuffer->DrawBuffers({ "Lighting" });

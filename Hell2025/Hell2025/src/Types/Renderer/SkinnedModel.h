@@ -1,27 +1,29 @@
 #pragma once
 #include <Game/Enums.h>
 #include <Game/Types.h>
-#include "LoadingState.h"
 #include "Hell/AssetFormats/AssetData.h"
 #include "Hell/File/FileInfo.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <map>
+#include <string>
 #include <vector>
 
 struct SkinnedModel {
     SkinnedModel() = default;
 
-    void BakeToAssetManager();
-    void AddMeshIndex(uint32_t index);
+    void BuildRuntimeData();
+    void AddMeshIndex(uint32_t meshId);
     void SetFileInfo(FileInfo fileInfo);
+    void SetName(std::string name);
+    void SetSkinnedModelId(uint32_t skinnedModelId);
     void SetVertexCount(uint32_t vertexCount);
-
-    void SetLoadingState(LoadingState loadingState);
-    LoadingState GetLoadingState() const;
 
     bool BoneExists(const std::string& boneName);
     const FileInfo& GetFileInfo();
-    const std::string& GetName();
+    uint32_t GetSkinnedModelId() const;
+    const std::string& GetName() const;
     std::vector<uint32_t>& GetMeshIndices();
     uint32_t GetMeshCount();
     uint32_t GetVertexCount();
@@ -29,6 +31,7 @@ struct SkinnedModel {
     uint32_t GetNodeCount();
     int32_t GetBoneIndex(const std::string& boneName);
     int32_t GetNodeIndex(const std::string& nodeName);
+    size_t GetCPUAllocatedByteCount() const;
     const glm::mat4& GetBoneOffset(const std::string& boneName);
     const glm::mat4& GetInverseBindTransform(const std::string& nodeName);
 
@@ -45,7 +48,8 @@ public:
 
 private:
     FileInfo m_fileInfo;
-    LoadingState m_loadingState { LoadingState::Value::AWAITING_LOADING_FROM_DISK };
+    uint32_t m_skinnedModelId = 0;
+    std::string m_name = "undefined";
     uint32_t m_vertexCount = 0;
     uint32_t m_indexCount = 0;
     std::vector<uint32_t> m_meshIndices;

@@ -1,5 +1,4 @@
 #include "Window.h"
-#include "AssetManagement/AssetManager.h"
 #include "Editor/Editor.h"
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"

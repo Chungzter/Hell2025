@@ -23,7 +23,7 @@ struct AnimatedMeshNode {
     int woundMaterialIndex = 0;
     int emissiveColorTexutreIndex = -1;
     bool renderAsGlass = false;
-    int meshIndex = -1;
+    uint32_t meshId = 0;
     float furLength = 0.0f;
     float furShellDistanceAttenuation = 0.0f;
     float furUVScale = 0.0f;

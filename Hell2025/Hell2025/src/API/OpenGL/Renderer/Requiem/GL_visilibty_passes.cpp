@@ -12,6 +12,8 @@ namespace OpenGLRenderer {
     void VisibilityPass() {
         ProfilerOpenGLZoneFunction();
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
+        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
 
         OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
         fbo.Bind();
@@ -40,12 +42,12 @@ namespace OpenGLRenderer {
 
         state.stencilRef = STENCIL_BIT_PROCEDUAL;
 
-        glBindVertexArray(ResourceManager::GetMeshBuffer("Procedural").GetVAO());
+        glBindVertexArray(meshBufferProcedural.GetVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.procedural, state);
 
         state.stencilRef = STENCIL_BIT_STATIC;
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(meshBufferAssets.GetVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.standard, state);
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingStandard, state);
     }
@@ -53,6 +55,7 @@ namespace OpenGLRenderer {
     void VisibilityAlphaDiscardPass() {
         ProfilerOpenGLZoneFunction();
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("AssetGeometry");
 
         OpenGLFrameBuffer& fbo = GetFrameBuffer("GBufferRE");
         fbo.Bind();
@@ -86,14 +89,14 @@ namespace OpenGLRenderer {
 
         state.stencilRef = STENCIL_BIT_STATIC;
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(meshBuffer.GetVAO());
 
         MultiDrawPerViewportRE(fbo, drawInfoSet.alphaDiscard, state);
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingAlphaDiscard, state);
 
         // Hair
         SetUniformBool("u_depthOffset", true);
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(meshBuffer.GetVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.hair, state);
         SetUniformBool("u_depthOffset", false);
     }

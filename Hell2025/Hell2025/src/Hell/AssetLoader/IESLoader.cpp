@@ -4,6 +4,7 @@
 #include "Hell/Logging.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/TextureUploader.h"
 #include "Hell/ResourceManagement/Types/IESProfile.h"
 
 #include <tinyies/tiny_ies.hpp>
@@ -75,6 +76,12 @@ namespace Hell::AssetLoader {
             texture.SetTextureWrapModeT(TextureWrapMode::CLAMP_TO_EDGE);
             texture.SetMinFilter(TextureFilter::LINEAR);
             texture.SetMagFilter(TextureFilter::LINEAR);
+
+            if (!TextureUploader::ImmediateUpload(texture)) {
+                texture.SetUploadState(UploadState::FAILED);
+                Logging::Error() << "AssetLoader::LoadIESFiles(..) failed to upload IES texture '" << fileInfo.name << "'\n";
+                continue;
+            }
 
             iesProfile.SetTextureIndex(texture.GetBindlessIndex());
         }

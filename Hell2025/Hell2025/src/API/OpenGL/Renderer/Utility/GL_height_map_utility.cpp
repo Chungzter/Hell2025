@@ -2,7 +2,6 @@
 #include "../../GL_backend.h"
 #include "API/OpenGL/Types/GL_heightmap_mesh.h"
 #include "Config/Config.h"
-#include "AssetManagement/AssetManager.h"
 #include "Viewport/ViewportManager.h"
 #include "Renderer/RenderDataManager.h"
 

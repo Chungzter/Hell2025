@@ -1,5 +1,4 @@
 #include "../GL_renderer.h"
-#include "AssetManagement/AssetManager.h"
 #include "Core/Game.h"
 #include "GlobalIllumination/GlobalIllumination.h"
 #include "World/World.h"
@@ -9,6 +8,7 @@
 #include "Config/Config.h"
 
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 namespace OpenGLRenderer {
 
@@ -46,7 +46,7 @@ namespace OpenGLRenderer {
         if (!finalImageFBO) return;
         if (!shader) return;
 
-        IESProfile* iesProfile = AssetManager::GetIESProfileByName("Lamp0");
+        IESProfile* iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp0");
         if (!iesProfile) return;
 
         shader->Bind();

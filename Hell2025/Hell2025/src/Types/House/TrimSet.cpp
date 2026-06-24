@@ -1,5 +1,4 @@
 #include "TrimSet.h"
-#include "AssetManagement/AssetManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Input/Input.h"
 #include "Renderer/Renderer.h"
@@ -101,7 +100,7 @@ void TrimSet::CreateRenderItems() {
     Model* model = nullptr;
 
     if (m_createInfo.type == TrimSetType::CEILING_FANCY) {
-		model = AssetManager::GetModelByName("TrimsCeilingFancy");
+		model = Hell::ResourceManager::GetModelByName("TrimsCeilingFancy");
 		material = Hell::ResourceManager::GetMaterialByName("WoodTrims");
     }
 
@@ -112,16 +111,16 @@ void TrimSet::CreateRenderItems() {
 	std::string internalCornerMeshName = "InternalCorner";
 	std::string externalCornerMeshName = "ExternalCorner";
 
-    int32_t trimMeshIndex = model->GetGlobalMeshIndexByMeshName(trimMeshName);
-    int32_t internalCornerMeshIndex = model->GetGlobalMeshIndexByMeshName(internalCornerMeshName);
-    int32_t externalCornerMeshIndex = model->GetGlobalMeshIndexByMeshName(externalCornerMeshName);
+    int32_t trimMeshId = model->GetGlobalMeshIndexByMeshName(trimMeshName);
+    int32_t internalCornerMeshId = model->GetGlobalMeshIndexByMeshName(internalCornerMeshName);
+    int32_t externalCornerMeshId = model->GetGlobalMeshIndexByMeshName(externalCornerMeshName);
 
     float trimScale = m_createInfo.trimScale;
     float trimLength = 1.0f * trimScale;
     float internalCornerPieceSize = 0;
 
-    // Get internal corner piece size if the mesh index is valid
-    if (Mesh* internalCornerMesh = AssetManager::GetMeshByIndex(internalCornerMeshIndex)) {
+    // Get internal corner piece size if the mesh id is valid
+    if (Mesh* internalCornerMesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(internalCornerMeshId)) {
         internalCornerPieceSize = (internalCornerMesh->aabbMax.z - 0.01f) * trimScale; // 0.01cm safety threshold to avoid gaps
     }
 
@@ -148,21 +147,21 @@ void TrimSet::CreateRenderItems() {
         }
 
         // Internal corner
-        if (m_corners[i].m_internal && internalCornerMeshIndex != -1) {
+        if (m_corners[i].m_internal && internalCornerMeshId != -1) {
             RenderItem& renderItem = m_renderItems.emplace_back();
             renderItem.modelMatrix = cornerTransform.to_mat4();
             renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-            renderItem.meshIndex = internalCornerMeshIndex;
+            renderItem.meshId = internalCornerMeshId;
             renderItem.baseColorTextureIndex = material->m_basecolor;
             renderItem.rmaTextureIndex = material->m_rma;
             renderItem.normalMapTextureIndex = material->m_normal;
         }
         // External corner
-        else if (!m_corners[i].m_internal && externalCornerMeshIndex != -1) {
+        else if (!m_corners[i].m_internal && externalCornerMeshId != -1) {
             RenderItem& renderItem = m_renderItems.emplace_back();
             renderItem.modelMatrix = cornerTransform.to_mat4();
             renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-            renderItem.meshIndex = externalCornerMeshIndex;
+            renderItem.meshId = externalCornerMeshId;
             renderItem.baseColorTextureIndex = material->m_basecolor;
             renderItem.rmaTextureIndex = material->m_rma;
             renderItem.normalMapTextureIndex = material->m_normal;
@@ -181,11 +180,11 @@ void TrimSet::CreateRenderItems() {
             transform.rotation.y = Util::YRotationBetweenTwoPoints(point, nextPoint);
 			transform.scale = glm::vec3(trimScale);
 
-            if (trimMeshIndex != -1) {
+            if (trimMeshId != -1) {
                 RenderItem& renderItem = m_renderItems.emplace_back();
                 renderItem.modelMatrix = transform.to_mat4();
                 renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-                renderItem.meshIndex = trimMeshIndex;
+                renderItem.meshId = trimMeshId;
                 renderItem.baseColorTextureIndex = material->m_basecolor;
                 renderItem.rmaTextureIndex = material->m_rma;
                 renderItem.normalMapTextureIndex = material->m_normal;
@@ -211,7 +210,7 @@ void TrimSet::CreateRenderItems() {
 		RenderItem& renderItem = m_renderItems.emplace_back();
 		renderItem.modelMatrix = transform.to_mat4();
 		renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-		renderItem.meshIndex = trimMeshIndex;
+		renderItem.meshId = trimMeshId;
 		renderItem.baseColorTextureIndex = material->m_basecolor;
 		renderItem.rmaTextureIndex = material->m_rma;
 		renderItem.normalMapTextureIndex = material->m_normal;
@@ -219,7 +218,7 @@ void TrimSet::CreateRenderItems() {
 
     // Shared logic
     for (RenderItem& renderItem : m_renderItems) {
-        Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
         if (!mesh) continue;
 
         renderItem.baseVertex = mesh->baseVertex;

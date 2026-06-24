@@ -1,5 +1,4 @@
 #include "Trim.h"
-#include "AssetManagement/AssetManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util.h"
@@ -11,7 +10,7 @@ void Trim::Init(Transform transform, const std::string& modelName, const std::st
     m_transform = transform;
     m_objectId = UniqueID::GetNextObjectId(ObjectType::TRIM);
 
-    Model* model = AssetManager::GetModelByName(modelName);
+    Model* model = Hell::ResourceManager::GetModelByName(modelName);
     m_materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
     Material* material = Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
 
@@ -22,7 +21,7 @@ void Trim::Init(Transform transform, const std::string& modelName, const std::st
 
     m_renderItem.modelMatrix = transform.to_mat4();
     m_renderItem.inverseModelMatrix = glm::inverse(m_renderItem.modelMatrix);
-    m_renderItem.meshIndex = model->GetMeshIndices()[0];
+    m_renderItem.meshId = model->GetMeshIndices()[0];
     m_renderItem.baseColorTextureIndex = material->m_basecolor;
     m_renderItem.rmaTextureIndex = material->m_rma;
     m_renderItem.normalMapTextureIndex = material->m_normal;

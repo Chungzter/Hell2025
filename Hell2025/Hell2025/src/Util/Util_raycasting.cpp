@@ -1,78 +1,22 @@
 #include "Util.h"
-#include "AssetManagement/AssetManager.h"
+#include "Hell/Math/OBB.h"
+
+#include <algorithm>
+#include <limits>
 
 namespace Util {
 
-
-    bool RayIntersectAABB(glm::vec3 rayOrigin, glm::vec3 inverseRayDir, float minDistance, float maxDistance, const glm::vec3& aabbBoundsMin, const glm::vec3& aabbBoundsMax, float& t, glm::vec3& localNormal) {
-        // Compute t values for the slabs defined by the AABB
-        glm::vec3 t1(
-            (aabbBoundsMin[0] - rayOrigin[0]) * inverseRayDir[0],
-            (aabbBoundsMin[1] - rayOrigin[1]) * inverseRayDir[1],
-            (aabbBoundsMin[2] - rayOrigin[2]) * inverseRayDir[2]
-        );
-
-        glm::vec3 t2(
-            (aabbBoundsMax[0] - rayOrigin[0]) * inverseRayDir[0],
-            (aabbBoundsMax[1] - rayOrigin[1]) * inverseRayDir[1],
-            (aabbBoundsMax[2] - rayOrigin[2]) * inverseRayDir[2]
-        );
-
-        // For each axis, tmin is the minimum and tmax is the maximum of t1 and t2
-        glm::vec3 tminVec = glm::min(t1, t2);
-        glm::vec3 tmaxVec = glm::max(t1, t2);
-
-        // Compute the overall tmin and tmax
-        float tmin = std::max({ tminVec.x, tminVec.y, tminVec.z, minDistance });
-        float tmax = std::min({ tmaxVec.x, tmaxVec.y, tmaxVec.z, maxDistance });
-
-		t = tmin;
-
-		if (tmin > tmax) {
-			return false;
-		}
-
-		// Determine the Local Normal based on which axis contributed the largest tminVec value
-		localNormal = glm::vec3(0.0f);
-		if (tmin == tminVec.x) {
-			localNormal.x = (t1.x < t2.x) ? -1.0f : 1.0f;
-		}
-		else if (tmin == tminVec.y) {
-			localNormal.y = (t1.y < t2.y) ? -1.0f : 1.0f;
-		}
-		else if (tmin == tminVec.z) {
-			localNormal.z = (t1.z < t2.z) ? -1.0f : 1.0f;
-		}
-
-		return true; // tmin <= tmax
-    }
-
     AABBRayResult RayIntersectAABB(glm::vec3 rayOrigin, glm::vec3 rayDir, float maxDistance, const AABB& aabb, const glm::mat4& worldTransform) {
         AABBRayResult result;
+        OBB obb(aabb, worldTransform);
+        OBBRayResult obbRayResult = obb.Raycast(rayOrigin, rayDir, maxDistance);
 
-		glm::mat4 inverseWorldTransform = glm::inverse(worldTransform);
-		glm::mat3 normalMatrix = glm::transpose(glm::mat3(inverseWorldTransform));
-
-        const float globalMinDistance = 0.001f;
-        glm::vec3 localOrigin = glm::vec3(inverseWorldTransform * glm::vec4(rayOrigin, 1.0f));
-        glm::vec3 localEnd = glm::vec3(inverseWorldTransform * glm::vec4(rayOrigin + rayDir * maxDistance, 1.0f));
-        glm::vec3 localDir = glm::normalize(localEnd - localOrigin);
-        float localMaxDistance = glm::length(localEnd - localOrigin);
-        float localMinDistance = globalMinDistance * localMaxDistance / maxDistance;
-
-        glm::vec3 inverseLocalRayDir = 1.0f / localDir;
-        glm::vec3 boundsMin = aabb.GetBoundsMin();
-        glm::vec3 boundsMax = aabb.GetBoundsMax();
-
-        float t = 0.0f;
-        glm::vec3 hitNormalLocal = glm::vec3(0.0f);
-
-		if (RayIntersectAABB(localOrigin, inverseLocalRayDir, localMinDistance, localMaxDistance, boundsMin, boundsMax, t, hitNormalLocal)) {
-			result.hitFound = true;
-			result.hitPositionLocal = localOrigin + (localDir * t);
-			result.hitPositionWorld = worldTransform * glm::vec4(result.hitPositionLocal, 1.0f);
-			result.hitNormalLocal = hitNormalLocal;
-			result.hitNormalWorld = glm::normalize(normalMatrix * result.hitNormalLocal);
+        if (obbRayResult.hitFound) {
+            result.hitFound = true;
+            result.hitPositionWorld = obbRayResult.hitPositionWorld;
+            result.hitPositionLocal = obbRayResult.hitPositionLocal;
+            result.hitNormalWorld = obbRayResult.hitNormalWorld;
+            result.hitNormalLocal = obbRayResult.hitNormalLocal;
         }
 
         return result;
@@ -81,32 +25,18 @@ namespace Util {
     CubeRayResult CastCubeRay(const glm::vec3& rayOrigin, const glm::vec3 rayDir, std::vector<Transform>& cubeTransforms, float maxDistance) {
         CubeRayResult rayResult;
         rayResult.distanceToHit = std::numeric_limits<float>::max();
-
-        Mesh* mesh = AssetManager::GetMeshByModelNameMeshName("Primitives", "Cube");
-        if (!mesh) return rayResult;
-
-        std::vector<Vertex>& vertices = AssetManager::GetVertices();
-        std::vector<uint32_t>& indices = AssetManager::GetIndices();
+        const AABB localCubeBounds(glm::vec3(-0.5f), glm::vec3(0.5f));
 
         for (Transform& cubeTransform : cubeTransforms) {
-            const glm::mat4& modelMatrix = cubeTransform.to_mat4();
+            OBB obb(localCubeBounds, cubeTransform.to_mat4());
+            OBBRayResult obbRayResult = obb.Raycast(rayOrigin, rayDir, std::min(maxDistance, rayResult.distanceToHit));
 
-            for (int i = mesh->baseIndex; i < mesh->baseIndex + mesh->indexCount; i += 3) {
-                uint32_t idx0 = indices[i + 0];
-                uint32_t idx1 = indices[i + 1];
-                uint32_t idx2 = indices[i + 2];
-                const glm::vec3& vert0 = modelMatrix * glm::vec4(vertices[idx0 + mesh->baseVertex].position, 1.0f);
-                const glm::vec3& vert1 = modelMatrix * glm::vec4(vertices[idx1 + mesh->baseVertex].position, 1.0f);
-                const glm::vec3& vert2 = modelMatrix * glm::vec4(vertices[idx2 + mesh->baseVertex].position, 1.0f);
-                float t = 0;
-
-                if (Util::RayIntersectsTriangle(rayOrigin, rayDir, vert0, vert1, vert2, t) && t < maxDistance && t < rayResult.distanceToHit) {
-                    rayResult.distanceToHit = t;
-                    rayResult.hitFound = true;
-                    rayResult.hitPosition = rayOrigin + (rayDir * t); 
-                    rayResult.cubeTransform = cubeTransform;
-                    rayResult.hitNormal = glm::normalize(glm::cross(vert1 - vert0, vert2 - vert0));
-                }
+            if (obbRayResult.hitFound) {
+                rayResult.distanceToHit = obbRayResult.distanceToHit;
+                rayResult.hitFound = true;
+                rayResult.hitPosition = obbRayResult.hitPositionWorld;
+                rayResult.cubeTransform = cubeTransform;
+                rayResult.hitNormal = obbRayResult.hitNormalWorld;
             }
         }
 

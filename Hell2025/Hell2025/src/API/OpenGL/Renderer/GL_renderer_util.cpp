@@ -1,5 +1,4 @@
 #include "GL_renderer.h"
-#include "../AssetManagement/AssetManager.h"
 #include "../BackEnd/BackEnd.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"

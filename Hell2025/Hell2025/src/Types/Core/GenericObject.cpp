@@ -1,5 +1,4 @@
 #include "GenericObject.h"
-#include "AssetManagement/AssetManager.h"
 #include "Bible/Bible.h"
 #include "Hell/Logging.h"
 #include "Managers/OpenableManager.h"

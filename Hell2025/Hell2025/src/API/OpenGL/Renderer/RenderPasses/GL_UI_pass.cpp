@@ -1,7 +1,5 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
-
-#include "AssetManagement/AssetManager.h"
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
 #include "Viewport/ViewportManager.h"

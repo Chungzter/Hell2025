@@ -3,25 +3,27 @@
 #include "Hell/File/FileInfo.h"
 #include <Game/Enums.h>
 #include <Game/Types.h>
-#include "LoadingState.h"
 #include "Hell/ResourceManagement/Types/Mesh.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 struct Model {
     Model() = default;
 
     void SetFileInfo(FileInfo fileInfo);
-    void AddMeshIndex(uint32_t index);
+    void AddMeshIndex(uint32_t meshId);
+    void SetModelId(uint32_t modelId);
     void SetName(std::string modelName);
     void SetAABB(glm::vec3 aabbMin, glm::vec3 aabbMax);
-    void SetLoadingState(LoadingState loadingState);
     int32_t GetGlobalMeshIndexByMeshName(const std::string& meshName);
     const glm::mat4& GetBoneLocalMatrix(const std::string& boneName) const;
 
-    LoadingState GetLoadingState() const;
+    uint32_t GetModelId() const                              { return m_modelId; }
     const FileInfo& GetFileInfo() const                       { return m_fileInfo; }
     const size_t GetMeshCount()  const                        { return m_meshIndices.size(); }
     const glm::vec3& GetAABBMin() const                       { return m_aabbMin; }
@@ -29,13 +31,15 @@ struct Model {
     const glm::vec3& GetExtents() const                       { return m_aabbMax - m_aabbMin; }
     const std::string GetName() const                         { return m_name; }
     const std::vector<uint32_t>& GetMeshIndices() const       { return m_meshIndices; }
+    size_t GetCPUAllocatedByteCount() const;
 
+    std::vector<ArmatureData> m_armatures;
     ModelData m_modelData;
     ModelBvhData m_modelBvhData;
 
 private:
     FileInfo m_fileInfo;
-    LoadingState m_loadingState{ LoadingState::Value::AWAITING_LOADING_FROM_DISK };
+    uint32_t m_modelId = 0;
     glm::vec3 m_aabbMin = glm::vec3(std::numeric_limits<float>::max());
     glm::vec3 m_aabbMax = glm::vec3(-std::numeric_limits<float>::max());
     std::string m_name = "undefined";

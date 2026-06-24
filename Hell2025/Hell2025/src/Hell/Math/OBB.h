@@ -4,7 +4,17 @@
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 
+#include <limits>
 #include <vector>
+
+struct OBBRayResult {
+	bool hitFound = false;
+	float distanceToHit = std::numeric_limits<float>::max();
+	glm::vec3 hitPositionWorld = glm::vec3(0.0f);
+	glm::vec3 hitPositionLocal = glm::vec3(0.0f);
+	glm::vec3 hitNormalWorld = glm::vec3(0.0f);
+	glm::vec3 hitNormalLocal = glm::vec3(0.0f);
+};
 
 struct OBB {
 	OBB() = default;
@@ -12,6 +22,7 @@ struct OBB {
 
 	void SetTransform(const glm::mat4& worldMatrix);
 	void SetLocalBounds(const AABB& localBounds);
+	OBBRayResult Raycast(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float maxDistance = std::numeric_limits<float>::max()) const;
 
 	const AABB& GetLocalBounds() const               { return m_localBounds; }
 	const glm::mat4& GetWorldTransform() const       { return m_worldTransform; }

@@ -174,6 +174,7 @@ namespace OpenGLUtil {
         case GL_RG16F: return "GL_RG16F";
         case GL_RGB16F: return "GL_RGB16F";
         case GL_RGBA16F: return "GL_RGBA16F";
+        case GL_R11F_G11F_B10F: return "GL_R11F_G11F_B10F";
         default: return "Unknown Internal Format";
         }
     }
@@ -267,8 +268,7 @@ namespace OpenGLUtil {
             // Floats
             case GL_R16F: case GL_RG16F: case GL_RGBA16F:      return GL_HALF_FLOAT;
 			case GL_R32F: case GL_RG32F: case GL_RGBA32F:      return GL_FLOAT;
-            //case GL_R11F_G11F_B10F:                            return GL_UNSIGNED_INT_10F_11F_11F_REV;
-            case GL_R11F_G11F_B10F:                            return GL_RGB;
+            case GL_R11F_G11F_B10F:                            return GL_FLOAT;
 
             // Depth/stencil
             case GL_DEPTH_COMPONENT16:                         return GL_UNSIGNED_SHORT;
@@ -325,6 +325,11 @@ namespace OpenGLUtil {
         case GL_RGB16F:
         case GL_RGB32F:
         case GL_SRGB8:
+        case GL_R11F_G11F_B10F:
+        case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+        case GL_COMPRESSED_SRGB_S3TC_DXT1:
+        case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT:
+        case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT:
             return GL_RGB;
         case GL_RGB8UI:
         case GL_RGB8I:
@@ -342,6 +347,14 @@ namespace OpenGLUtil {
         case GL_RGBA16F:
         case GL_RGBA32F:
         case GL_SRGB8_ALPHA8:
+        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+        case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1:
+        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+        case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3:
+        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+        case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5:
+        case GL_COMPRESSED_RGBA_BPTC_UNORM:
+        case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
             return GL_RGBA;
         case GL_RGBA8UI:
         case GL_RGBA8I:
@@ -355,6 +368,12 @@ namespace OpenGLUtil {
         case GL_RGB10_A2:
         case GL_RGB10_A2UI:
             return GL_RGBA;
+
+            // Compressed one/two-channel formats
+        case GL_COMPRESSED_RED_RGTC1:
+            return GL_RED;
+        case GL_COMPRESSED_RG_RGTC2:
+            return GL_RG;
 
             // Depth formats
         case GL_DEPTH_COMPONENT16:
@@ -417,6 +436,11 @@ namespace OpenGLUtil {
             case GL_RGB16F:
             case GL_RGB32F:
             case GL_SRGB8:
+            case GL_R11F_G11F_B10F:
+            case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+            case GL_COMPRESSED_SRGB_S3TC_DXT1:
+            case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT:
+            case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT:
             return GL_RGB;
 
             case GL_RGB8UI:
@@ -436,6 +460,14 @@ namespace OpenGLUtil {
             case GL_RGBA32F:
             case GL_SRGB8_ALPHA8:
             case GL_RGB10_A2: // packed but uploads as RGBA
+            case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+            case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1:
+            case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+            case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3:
+            case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5:
+            case GL_COMPRESSED_RGBA_BPTC_UNORM:
+            case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
             return GL_RGBA;
 
             case GL_RGBA8UI:
@@ -446,6 +478,13 @@ namespace OpenGLUtil {
             case GL_RGBA32I:
             case GL_RGB10_A2UI:
             return GL_RGBA_INTEGER;
+
+            // Compressed one/two-channel formats
+            case GL_COMPRESSED_RED_RGTC1:
+            return GL_RED;
+
+            case GL_COMPRESSED_RG_RGTC2:
+            return GL_RG;
 
             // Depth / stencil
             case GL_DEPTH_COMPONENT16:
@@ -458,7 +497,7 @@ namespace OpenGLUtil {
             return GL_DEPTH_STENCIL;
 
             default:
-            std::cout << "GetFormatFromInternalFormat: unsupported internal format\n";
+            std::cout << "GetFormatFromInternalFormat: unsupported internal format " << internalFormat << "\n";
             return -1;
         }
     }

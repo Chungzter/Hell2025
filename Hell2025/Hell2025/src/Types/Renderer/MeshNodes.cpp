@@ -1,5 +1,4 @@
 #include "MeshNodes.h"
-#include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h"
 #include <Game/RendereringConstants.h>
 #include "Hell/Logging.h"
@@ -16,7 +15,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std::vector<MeshNodeCreateInfo>& meshNodeCreateInfoSet) {
-    Model* model = AssetManager::GetModelByName(modelName);
+    Model* model = Hell::ResourceManager::GetModelByName(modelName);
     if (!model) {
         Logging::Error() << "MeshNodes::Init() failed because modelName was not found";
         return;
@@ -32,14 +31,14 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
     for (size_t i = 0; i < m_nodeCount; i++) {
         int globalMeshIndex = model->GetMeshIndices()[i];
 
-        Mesh* mesh = AssetManager::GetMeshByIndex(globalMeshIndex);
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(globalMeshIndex);
         if (!mesh) {
-            Logging::Error() << "MeshNodes::Init(...) failed to find mesh by global index " << i;
+            Logging::Error() << "MeshNodes::Init(...) failed to find mesh by id " << globalMeshIndex;
             continue;
         }
 
         // Map mesh name to local index for easy lookup
-        m_localIndexMap[mesh->GetName()] = i;
+        m_localIndexMap[mesh->name] = i;
 
         MeshNode& meshNode = m_meshNodes[i];
         meshNode.blendingMode = BlendingMode::DEFAULT;
@@ -71,14 +70,17 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
     }
 
     // If the model contains armatures, store the first one (TODO: allow more maybe)
-    if (model->m_modelData.armatures.size() > 0) {
-        m_armatureData = model->m_modelData.armatures[0];
+    if (!model->m_armatures.empty()) {
+        m_armatureData = model->m_armatures[0];
     }
 
     // Apply any mesh node create info
     for (const MeshNodeCreateInfo& createInfo : meshNodeCreateInfoSet) {
-		Mesh* mesh = AssetManager::GetMeshByName(createInfo.meshName);
 		MeshNode* meshNode = GetMeshNodeByMeshName(createInfo.meshName);
+        Mesh* mesh = nullptr;
+        if (meshNode) {
+            mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode->globalMeshIndex);
+        }
 
         // Validate
         if (!mesh || !meshNode) {
@@ -140,12 +142,13 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
                 else if (createInfo.rigidDynamic.shapeType == PhysicsShapeType::CONVEX_MESH) {
 
                     // Everything in here is sketchy. Fix it!
-                    if (Model* physicsModel = AssetManager::GetModelByName(createInfo.rigidDynamic.convexMeshModelName)) {
-                        int32_t meshIndex = physicsModel->GetMeshIndices()[0]; // you wanna do all mesh not just the first
-                        Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex);
+                    if (Model* physicsModel = Hell::ResourceManager::GetModelByName(createInfo.rigidDynamic.convexMeshModelName)) {
+                        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+                        int32_t meshId = physicsModel->GetMeshIndices()[0]; // you wanna do all mesh not just the first
+                        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
                         if (mesh) {
-                            std::span<Vertex> vertices = AssetManager::GetVerticesSpan(mesh->baseVertex, mesh->vertexCount);
-                            std::span<uint32_t> indices = AssetManager::GetIndicesSpan(mesh->baseIndex, mesh->indexCount);
+                            std::span<Vertex> vertices(meshBuffer.GetVertices().data() + mesh->baseVertex, mesh->vertexCount);
+                            std::span<uint32_t> indices(meshBuffer.GetIndices().data() + mesh->baseIndex, mesh->indexCount);
                             //meshNode->rigidDynamicId = Physics::CreateRigidDynamicFromConvexMeshVertices(spawnTransform, vertices, indices, mass, filterData);
                             meshNode->rigidDynamicId = Physics::CreateRigidDynamicWithCompoundConvexMeshesFromModel(createInfo.rigidDynamic.convexMeshModelName, mass, kinematic, filterData);
 
@@ -172,7 +175,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
                 }
             }
             else {
-                Logging::Warning() << "You tried to create an rigidDynamicAABB for mesh node " << mesh->GetName() << " but it already had a rigidDynamicId\n";
+                Logging::Warning() << "You tried to create an rigidDynamicAABB for mesh node " << mesh->name << " but it already had a rigidDynamicId\n";
             }
         }
 
@@ -188,10 +191,10 @@ void MeshNodes::PrintMeshNames() {
 
     for (size_t i = 0; i < m_meshNodes.size(); i++) {
         MeshNode& meshNode = m_meshNodes[i];
-        Mesh* mesh = AssetManager::GetMeshByIndex(meshNode.globalMeshIndex);
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode.globalMeshIndex);
         if (!mesh) continue;
 
-        std::cout << "-" << i << ": " << mesh->GetName() << "\n";
+        std::cout << "-" << i << ": " << mesh->name << "\n";
     }
 }
 
@@ -526,7 +529,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.renderItem.modelMatrix = meshNode.worldMatrix;
         meshNode.renderItem.prevModelMatrix = meshNode.prevWorldMatrix;
         meshNode.renderItem.inverseModelMatrix = meshNode.inverseWorldMatrix;
-        meshNode.renderItem.meshIndex = GetGlobalMeshIndex(i);
+        meshNode.renderItem.meshId = GetGlobalMeshIndex(i);
         meshNode.renderItem.baseColorTextureIndex = material->m_basecolor;
 		meshNode.renderItem.normalMapTextureIndex = material->m_normal;
 		meshNode.renderItem.rmaTextureIndex = material->m_rma;
@@ -581,8 +584,8 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         if (m_marksStaticSceneBvhAsDirty && MeshNodeIsStatic(i) && !Util::Mat4NearlyEqual(meshNode.worldMatrix, meshNode.prevWorldMatrix)) {
             World::MarkStaticSceneBvhDirty();
 
-            if (Mesh* mesh = AssetManager::GetMeshByIndex(meshNode.globalMeshIndex)) {
-                //std::cout << mesh->GetName() << " triggered shit\n";
+            if (Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode.globalMeshIndex)) {
+                //std::cout << mesh->name << " triggered shit\n";
             }
         }
     }
@@ -718,7 +721,7 @@ void MeshNodes::UpdateAABBsFromWorldMatrices() {
     bool found = false;
 
     for (MeshNode& meshNode : m_meshNodes) {
-        Mesh* mesh = AssetManager::GetMeshByIndex(meshNode.globalMeshIndex);
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode.globalMeshIndex);
         if (!mesh) continue;
 
         const glm::vec3 localMin = mesh->aabbMin;
@@ -759,7 +762,7 @@ void MeshNodes::UpdateAABBsFromWorldMatrices() {
     bool found = false;
 
     for (MeshNode& meshNode : m_meshNodes) {
-        Mesh* mesh = AssetManager::GetMeshByIndex(meshNode.globalMeshIndex);
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode.globalMeshIndex);
         if (!mesh) continue;
 
         glm::vec3 localMin = mesh->aabbMin;

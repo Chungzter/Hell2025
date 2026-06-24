@@ -3,6 +3,7 @@
 #include "Hell/BVH/Types.h"
 #include "Hell/Common.h"
 #include "Hell/Render/VertexAttributes.h"
+#include "Hell/ResourceManagement/Types/Animation.h"
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
@@ -66,7 +67,6 @@ struct SkinnedMeshData {
     glm::vec3 aabbMax = glm::vec3(-std::numeric_limits<float>::max());
     uint32_t vertexCount = 0;
     uint32_t indexCount = 0;
-    uint32_t localBaseVertex = 0;
     bool requiresSkinning = false;
     int32_t nonDeformingBoneIndex = -1;
 };
@@ -84,6 +84,10 @@ struct SkinnedModelData {
     uint32_t GetMeshCount() const { return static_cast<uint32_t>(meshes.size()); }
     uint32_t GetNodeCount() const { return static_cast<uint32_t>(nodes.size()); }
     uint32_t GetBoneCount() const { return static_cast<uint32_t>(boneOffsets.size()); }
+};
+
+struct AnimationData {
+    Animation animation;
 };
 
 struct ModelBvhData {

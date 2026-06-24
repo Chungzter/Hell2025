@@ -1,6 +1,4 @@
 ﻿#include "UIBackEnd.h"
-
-#include "AssetManagement/AssetManager.h"
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
 #include "Hell/Logging.h"

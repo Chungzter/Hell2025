@@ -193,7 +193,7 @@ namespace OpenGLRenderer {
 
 
     void CreateBlurBuffers();
-    void DrawQuad();
+    void DrawFullscreenTriangle();
 
     void BindEmptyVAO();
     GLuint GetTextureHandleByName(const std::string& name);

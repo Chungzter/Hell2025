@@ -1,5 +1,5 @@
 #include "Bible/Bible.h"
-#include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 namespace Bible {
     void ConfigureMeshNodesToilet(uint64_t id, MeshNodes* meshNodes) {
@@ -59,7 +59,7 @@ namespace Bible {
 
         meshNodes->Init(id, "BathroomBasin", meshNodeCreateInfoSet);
 
-        Model* model = AssetManager::GetModelByName(meshNodes->GetModelName());
+        Model* model = Hell::ResourceManager::GetModelByName(meshNodes->GetModelName());
     }
 
     void ConfigureMeshNodesBathroomCabinet(uint64_t id, MeshNodes* meshNodes) {
@@ -91,7 +91,7 @@ namespace Bible {
 
         meshNodes->Init(id, "BathroomCabinet", meshNodeCreateInfoSet);
 
-        Model* model = AssetManager::GetModelByName(meshNodes->GetModelName());
+        Model* model = Hell::ResourceManager::GetModelByName(meshNodes->GetModelName());
     }
 
     

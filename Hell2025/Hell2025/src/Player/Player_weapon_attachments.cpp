@@ -1,5 +1,4 @@
 #include "Player.h"
-#include "AssetManagement/AssetManager.h"
 #include "Bible/Bible.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"

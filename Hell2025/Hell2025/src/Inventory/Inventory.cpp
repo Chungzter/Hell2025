@@ -1,5 +1,4 @@
 #include "Inventory.h"
-#include "AssetManagement/AssetManager.h"
 #include "Bible/Bible.h"
 #include "Input/Input.h"
 #include "UI/TextBlitter.h"

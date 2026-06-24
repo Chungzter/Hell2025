@@ -21,24 +21,16 @@ namespace OpenGLBackEnd {
 	bool CheckSupport();
 
     // Textures
-    void UpdateTextureBaking();
     void AllocateTextureMemory(Texture& texture);
-    void ImmediateBake(QueuedTextureBake& queuedTextureBake);
-    void AsyncBakeQueuedTextureBake(QueuedTextureBake& queuedTextureBake);
-    void CleanUpBakingPBOs();
     const std::vector<GLuint64>& GetBindlessTextureIDs();
 
     // Buffers
-    void UploadVertexData(std::vector<Vertex>& vertices, std::vector<unsigned int>& indices);
     void AllocateSkinnedVertexBufferSpace(uint32_t vertexCount);
 
     void SetDepthClearValue(float value);
 
     OpenGLHeightMapMesh& GetHeightMapMesh();
 
-    GLuint GetVertexDataVAO();
-    GLuint GetVertexDataVBO();
-    GLuint GetVertexDataEBO();
     GLuint GetSkinnedVertexDataVAO();
     GLuint GetSkinnedVertexDataVBO();
 }

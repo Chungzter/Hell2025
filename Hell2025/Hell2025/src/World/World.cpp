@@ -5,8 +5,6 @@
 #include <Game/Types.h>
 #include <Game/UniqueID.h>
 #include "Util.h"
-
-#include "AssetManagement/AssetManager.h"
 #include "Audio/Audio.h"
 #include "Bible/Bible.h"
 #include "Core/Game.h"

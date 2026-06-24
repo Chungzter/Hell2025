@@ -303,7 +303,7 @@ struct BulletCasingCreateInfo {
     glm::vec3 rotation = glm::vec3(0.0f);
     glm::vec3 force = glm::vec3(0.0f);
     float mass = 0.0f;
-    uint32_t modelIndex = 0;
+    uint32_t modelId = 0;
     uint32_t materialIndex = 0;
 };
 

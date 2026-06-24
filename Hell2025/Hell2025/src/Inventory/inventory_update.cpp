@@ -1,8 +1,8 @@
 #include "Inventory.h"
-#include "AssetManagement/AssetManager.h"
 #include "Audio/Audio.h"
 #include "Bible/Bible.h"
 #include "Core/Game.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Input/Input.h"
 #include "Input/InputMulti.h"
 #include "Renderer/Renderer.h"
@@ -117,7 +117,7 @@ void Inventory::UpdateExamineScreen(float deltaTime) {
     if (!itemInfo) return;
     if (!player) return;
 
-    Model* model = AssetManager::GetModelByName(itemInfo->GetModelName());
+    Model* model = Hell::ResourceManager::GetModelByName(itemInfo->GetModelName());
     if (!model) {
         m_examineItemMeshNodes.CleanUp();
         return;

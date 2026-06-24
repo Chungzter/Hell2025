@@ -8,6 +8,7 @@ namespace BackEnd {
     void EndFrame();
 
     void UpdateLoadingScreen();
+    void OnAssetLoadingComplete();
     void UpdateGame();
     void UpdateSubSystems();
 

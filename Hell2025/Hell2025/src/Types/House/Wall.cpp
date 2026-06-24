@@ -1,5 +1,4 @@
 #include "Wall.h"
-#include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -353,11 +352,17 @@ void Wall::DrawSegmentLines(glm::vec4 color) {
 
 
 void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, int boardY, float boardWidth, std::vector<Vertex>& verticesOut, std::vector<uint32_t>& indicesOut) {
-    Mesh* mesh = AssetManager::GetMeshByModelNameMeshLocalIndex("WeatherBoard", 0);
+    Model* weatherBoardModel = ResourceManager::GetModelByName("WeatherBoard");
+    if (!weatherBoardModel || weatherBoardModel->GetMeshIndices().empty()) return;
+    if (weatherBoardModel->GetMeshCount() == 0) return;
+
+    uint32_t meshId = weatherBoardModel->GetMeshIndices()[0];
+    Mesh* mesh = ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
     if (!mesh) return;
 
-    std::span<Vertex> verticesSpan = AssetManager::GetMeshVerticesSpan(mesh);
-    std::span<uint32_t> indicesSpan = AssetManager::GetMeshIndicesSpan(mesh);
+    MeshBuffer& assetGeometry = ResourceManager::GetMeshBuffer("AssetGeometry");
+    std::span<Vertex> verticesSpan(assetGeometry.GetVertices().data() + mesh->baseVertex, mesh->vertexCount);
+    std::span<uint32_t> indicesSpan(assetGeometry.GetIndices().data() + mesh->baseIndex, mesh->indexCount);
 
     uint32_t baseVertex = verticesOut.size();
 
@@ -422,7 +427,7 @@ void Wall::RecreateWeatherBoardMesh() {
     if (m_createInfo.wallType != WallType::WEATHER_BOARDS) return;
 
     Material* material = ResourceManager::GetMaterialByName("WeatherBoards0");
-    Model* model = AssetManager::GetModelByName("WeatherBoard_Stop");
+    Model* model = Hell::ResourceManager::GetModelByName("WeatherBoard_Stop");
 
     if (!model) {
         Logging::Error() << "Wall::CreateWeatherBoards() failed to load model 'WeatherBoard_Stop'";
@@ -447,12 +452,15 @@ void Wall::RecreateWeatherBoardMesh() {
         RenderItem& renderItem = m_weatherBoardstopRenderItems.emplace_back();
         renderItem.modelMatrix = transform.to_mat4();
         renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-        renderItem.meshIndex = model->GetMeshIndices()[0];
+        renderItem.meshId = model->GetMeshIndices()[0];
         renderItem.baseColorTextureIndex = material->m_basecolor;
         renderItem.rmaTextureIndex = material->m_rma;
         renderItem.normalMapTextureIndex = material->m_normal;
-        renderItem.baseIndex = AssetManager::GetBaseIndexByMeshIndex(renderItem.meshIndex);
-        renderItem.baseVertex = AssetManager::GetBaseVertexByMeshIndex(renderItem.meshIndex);
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        if (Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId)) {
+            renderItem.baseIndex = mesh->baseIndex;
+            renderItem.baseVertex = mesh->baseVertex;
+        }
         renderItem.shadowBit |= (SHADOW_BIT_CAST_SHADOW | SHADOW_BIT_CAST_CSM_SHADOW | SHADOW_BIT_STATIC);
 
         Util::UpdateRenderItemAABB(renderItem);

@@ -1,5 +1,4 @@
 #include "ChristmasTree.h"
-#include "AssetManagement/AssetManager.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"
 #include "Util/Util.h"
@@ -26,7 +25,7 @@ ChristmasTree::ChristmasTree(const ChristmasTreeCreateInfo& createInfo, const Sp
 void ChristmasTree::CreateRenderItems() {
     //m_renderItems.clear();
     //
-    //m_model = AssetManager::GetModelByName("ChristmasTree");
+    //m_model = Hell::ResourceManager::GetModelByName("ChristmasTree");
     //if (!m_model) {
     //    std::cout << "Could not get ChristmasTree model\n";
     //    return;
@@ -40,14 +39,14 @@ void ChristmasTree::CreateRenderItems() {
     //}
     //
     //for (uint32_t meshIndex : m_model->GetMeshIndices()) {
-    //    Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex);
+    //    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshIndex);
     //    if (!mesh) continue;
     //
     //    RenderItem& renderItem = m_renderItems.emplace_back();
     //    renderItem.objectType = (int)ObjectType::GAME_OBJECT;
     //    renderItem.modelMatrix = m_modelMatrix;
     //    renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-    //    renderItem.meshIndex = meshIndex;
+    //    renderItem.meshId = meshIndex;
     //    renderItem.castShadows = false;
     //    renderItem.baseVertex = mesh->baseVertex;
     //    renderItem.baseIndex = mesh->baseIndex;

@@ -1,5 +1,4 @@
 #include "PictureFrame.h"
-#include "AssetManagement/AssetManager.h"
 #include "Hell/Logging.h"
 #include "Game/UniqueID.h"
 #include "Util.h"

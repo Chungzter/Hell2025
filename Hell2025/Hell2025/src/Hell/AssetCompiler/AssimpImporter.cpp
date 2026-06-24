@@ -231,7 +231,6 @@ namespace Hell::AssetCompiler {
         GrabSkeleton(modelData.nodes, scene->mRootNode, -1);
 
         // Get vertex data
-        uint32_t localBaseVertex = 0;
         std::unordered_map<std::string, int> meshNameCounts;
         for (int i = 0; i < scene->mNumMeshes; i++) {
             const aiMesh* assimpMesh = scene->mMeshes[i];
@@ -251,9 +250,8 @@ namespace Hell::AssetCompiler {
                 meshData.name = rawName;
             }
 
-            meshData.localBaseVertex = localBaseVertex;
             meshData.vertices.reserve(meshData.vertexCount);
-            meshData.vertexWeights.reserve(meshData.vertexCount);
+            meshData.vertexWeights.resize(meshData.vertexCount);
             meshData.indices.reserve(meshData.indexCount);
 
             // Get vertices
@@ -387,7 +385,6 @@ namespace Hell::AssetCompiler {
 
             std::cout << modelData.name << " [" << meshData.name << "]: " << Util::BoolToString(meshData.requiresSkinning) << " " << foundBoneIndex << " nonDeformingBoneIndex " << meshData.vertexCount << " verts \n";
 
-            localBaseVertex += (uint32_t)meshData.vertices.size();
             modelData.vertexCount += (uint32_t)meshData.vertices.size();
             modelData.indexCount += (uint32_t)meshData.indices.size();
         }

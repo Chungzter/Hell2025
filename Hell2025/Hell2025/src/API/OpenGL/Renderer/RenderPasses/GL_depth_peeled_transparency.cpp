@@ -1,6 +1,5 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
-#include "AssetManagement/AssetManager.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
@@ -71,9 +70,10 @@ namespace OpenGLRenderer {
 		ForceRasterizerState("GeometryPass_Default");
 
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
-        glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataVBO());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        glBindVertexArray(meshBuffer.GetVAO());
+        glBindBuffer(GL_ARRAY_BUFFER, meshBuffer.GetVBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBuffer.GetEBO());
 
 		//glBindVertexArray(OpenGLBackEnd::GetWeightedVertexDataVAO());
 		//glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataVBO());
@@ -126,11 +126,11 @@ namespace OpenGLRenderer {
 					glDepthFunc(GL_LESS);
 
 					for (const RenderItem& renderItem : renderItems) {
-						SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(renderItem.meshIndex);
+						Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
 						if (!mesh) continue;
 
 						depthPeelDepthShader->SetMat4("u_model", renderItem.modelMatrix);
-						glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertexGlobal);
+						glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertex);
 
 					}
 				}
@@ -163,7 +163,7 @@ namespace OpenGLRenderer {
 					glBindTexture(GL_TEXTURE_2D, gBuffer->GetDepthAttachmentHandle());
 
 					for (const RenderItem& renderItem : renderItems) {
-						SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(renderItem.meshIndex);
+						Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
 						if (!mesh) continue;
 
 						glActiveTexture(GL_TEXTURE0);
@@ -175,7 +175,7 @@ namespace OpenGLRenderer {
 
 						depthPeelColorShader->SetMat4("u_model", renderItem.modelMatrix);
 						depthPeelColorShader->SetMat4("u_inverseModel", renderItem.inverseModelMatrix);
-						glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertexGlobal);
+						glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertex);
 
 					}
 				}

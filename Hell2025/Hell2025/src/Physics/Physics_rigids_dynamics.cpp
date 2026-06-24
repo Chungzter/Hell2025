@@ -12,7 +12,7 @@
 #include "extensions/PxShapeExt.h"
 #include "geometry/PxGeometryQuery.h"
 
-#include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/Renderer.h"
 
 namespace Physics {
@@ -58,7 +58,7 @@ namespace Physics {
 
 
     uint64_t CreateRigidDynamicWithCompoundConvexMeshesFromModel(const std::string& modelName, float mass, bool kinematic, PhysicsFilterData filterData) {
-        Model* model = AssetManager::GetModelByName(modelName);
+        Model* model = Hell::ResourceManager::GetModelByName(modelName);
         if (!model) return 0;
 
         PxPhysics* pxPhysics = Physics::GetPxPhysics();
@@ -81,13 +81,14 @@ namespace Physics {
 
         std::vector<PxShape*> pxShapes;
         float volume = 0.0f;
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
 
-        for (uint32_t meshIndex : model->GetMeshIndices()) {
-            Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex);
+        for (uint32_t meshId : model->GetMeshIndices()) {
+            Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
             if (!mesh) continue;
 
-            std::span<Vertex> vertices = AssetManager::GetMeshVerticesSpan(mesh);
-            std::span<uint32_t> indices = AssetManager::GetMeshIndicesSpan(mesh);
+            std::span<Vertex> vertices(meshBuffer.GetVertices().data() + mesh->baseVertex, mesh->vertexCount);
+            std::span<uint32_t> indices(meshBuffer.GetIndices().data() + mesh->baseIndex, mesh->indexCount);
 
             volume += Util::GetConvexHullVolume(vertices, indices);
 

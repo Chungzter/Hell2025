@@ -19,8 +19,8 @@ private:
     uint64_t m_kinematicOriginPhysicsId = 0;
     std::vector<uint64_t> m_chainLinkPhysicsIds;
 
-    uint32_t m_chainLinkMeshIndex = 0;
-    uint32_t m_chainLinkEndMeshIndex = 0;
+    uint32_t m_chainLinkMeshId = 0;
+    uint32_t m_chainLinkEndMeshId = 0;
     
     bool m_animateFinalLink = false;
     glm::vec3 m_finalLinkPosition = glm::vec3(0.0f);

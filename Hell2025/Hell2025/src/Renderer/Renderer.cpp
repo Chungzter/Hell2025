@@ -3,7 +3,6 @@
 #include "API/OpenGL/GL_backend.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/Vulkan/Renderer/VK_renderer.h"
-#include "AssetManagement/AssetManager.h"
 #include "BackEnd/BackEnd.h"
 #include "Config/Config.h"
 #include "Debug/Debug.h"
@@ -113,7 +112,6 @@ namespace Renderer {
 
     void UploadVertexData() {
         if (BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLBackEnd::UploadVertexData(AssetManager::GetVertices(), AssetManager::GetIndices());
             OpenGLRenderer::UploadVertexWeights();
         }
         else if (BackEnd::GetAPI() == API::VULKAN) {

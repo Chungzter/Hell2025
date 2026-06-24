@@ -27,6 +27,7 @@ namespace {
             case GL_RG16F: return 4;
             case GL_RGB16F: return 6;
             case GL_RGBA16F: return 8;
+            case GL_R11F_G11F_B10F: return 4;
             case GL_R32F: return 4;
             case GL_RG32F: return 8;
             case GL_RGB32F: return 12;
@@ -64,7 +65,9 @@ GLuint64 OpenGLTexture::GetBindlessID() {
 }
 
 void OpenGLTexture::Create(int width, int height, int internalFormat, int mipmapLevelCount) {
-    if (m_handle != 0) Reset();
+    if (m_handle != 0 || m_bindlessID != 0) {
+        Reset();
+    }
 
     m_width = width;
     m_height = height;
@@ -138,6 +141,8 @@ void OpenGLTexture::UploadR16FData(const float* data, int width, int height, int
 }
 
 void OpenGLTexture::Reset() {
+    MakeBindlessTextureNonResident();
+
     if (m_handle) {
         glDeleteTextures(1, &m_handle);
         m_handle = 0;
@@ -145,6 +150,9 @@ void OpenGLTexture::Reset() {
     m_width = 0;
     m_height = 0;
     m_mipmapLevelCount = 0;
+    m_bindlessID = 0;
+    m_format = 0;
+    m_internalFormat = 0;
 }
 
 GLuint& OpenGLTexture::GetHandle() {
@@ -236,10 +244,22 @@ void OpenGLTexture::SetMagFilter(TextureFilter filter) {
 
 void OpenGLTexture::MakeBindlessTextureResident() {
     if (BackEnd::RenderDocFound()) return;
+
+    if (m_handle == 0 || glIsTexture(m_handle) != GL_TRUE) {
+        Logging::Error() << "OpenGLTexture::MakeBindlessTextureResident() failed: handle '" << m_handle << "' is not a valid texture\n";
+        m_bindlessID = 0;
+        return;
+    }
         
     if (m_bindlessID == 0) {
         m_bindlessID = glGetTextureHandleARB(m_handle);
     }
+
+    if (m_bindlessID == 0) {
+        Logging::Error() << "OpenGLTexture::MakeBindlessTextureResident() failed: texture '" << m_handle << "' returned an invalid bindless handle\n";
+        return;
+    }
+
     glMakeTextureHandleResidentARB(m_bindlessID);
 }
 

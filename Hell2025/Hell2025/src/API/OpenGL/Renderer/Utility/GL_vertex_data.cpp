@@ -1,10 +1,11 @@
 #include "../GL_renderer.h"
-#include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 namespace OpenGLRenderer {
 
     void UploadVertexWeights() {
-        std::vector<VertexWeight>& vertexWeights = AssetManager::GetVertexWeights();
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        std::vector<VertexWeight>& vertexWeights = meshBuffer.GetVertexWeights();
         UploadSSBOStatic("VertexWeights", sizeof(VertexWeight) * vertexWeights.size(), vertexWeights.data());
     }
 }

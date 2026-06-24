@@ -1,10 +1,10 @@
 #include "CharacterSpine.h"
-#include "AssetManagement/AssetManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 void CharacterSpine::Init(const std::string& skinnedModelName, const glm::vec3& position) {
     m_segmentCount = SHARK_SPINE_SEGMENT_COUNT;
 
-    SkinnedModel* skinnedModel = AssetManager::GetSkinnedModelByName(skinnedModelName);
+    SkinnedModel* skinnedModel = Hell::ResourceManager::GetSkinnedModelByName(skinnedModelName);
     if (!skinnedModel) return;
 
     for (int i = 0; i < skinnedModel->m_nodes.size(); i++) {

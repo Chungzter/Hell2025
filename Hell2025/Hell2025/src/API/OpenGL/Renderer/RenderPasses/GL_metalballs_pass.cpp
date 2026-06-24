@@ -1,12 +1,12 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
-#include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 // remove me
 #include "Core/Game.h"
@@ -87,7 +87,12 @@ namespace OpenGLRenderer {
 
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLShader* shader = GetShaderOLD("MetaBalls");
-        Mesh* mesh = AssetManager::GetMeshByModelNameMeshLocalIndex("SphereLowRes", 0);
+        Model* sphereModel = Hell::ResourceManager::GetModelByName("SphereLowRes");
+        if (!sphereModel || sphereModel->GetMeshIndices().empty()) return;
+        if (sphereModel->GetMeshCount() == 0) return;
+
+        uint32_t meshId = sphereModel->GetMeshIndices()[0];
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
 
         if (!gBuffer) return;
         if (!shader) return;
@@ -415,11 +420,17 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* bloodFluidFbo = GetFrameBufferOLD("BloodFluid");
         OpenGLShader* depthShader = GetShaderOLD("BloodFluidDepth");
         OpenGLShader* thicknessShader = GetShaderOLD("BloodFluidThickness");
-        Mesh* mesh = AssetManager::GetMeshByModelNameMeshLocalIndex("SphereLowRes", 0);
+        Model* sphereModel = Hell::ResourceManager::GetModelByName("SphereLowRes");
+        if (!sphereModel || sphereModel->GetMeshIndices().empty()) return;
+        if (sphereModel->GetMeshCount() == 0) return;
+
+        uint32_t meshId = sphereModel->GetMeshIndices()[0];
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
 
         if (!bloodFluidFbo) return;
         if (!thicknessShader) return;
         if (!thicknessShader) return;
+        if (!mesh) return;
 
         bloodFluidFbo->Bind();
         bloodFluidFbo->ClearAttachmentR("Depth", -1000.0f);

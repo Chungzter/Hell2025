@@ -1,6 +1,5 @@
 #include "GL_renderer.h"
 #include "API/OpenGL/Types/GL_texture.h"
-#include "AssetManagement/AssetManager.h"
 #include "Managers/MapManager.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"

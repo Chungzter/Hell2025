@@ -154,6 +154,7 @@ void Texture::SetImageData(ImageData imageData) {
     m_imageData = std::move(imageData);
     m_imageDataType = m_imageData.type;
     m_bakeComplete = false;
+    m_uploadState = UploadState::NOT_REQUESTED;
 
     // Calculate mipmap level count
     if (!m_imageData.mips.empty()) {
@@ -171,8 +172,8 @@ void Texture::SetImageDataType(ImageDataType imageDataType) {
     m_imageDataType = imageDataType;
 }
 
-void Texture::SetLoadingState(LoadingState loadingState) {
-    m_loadingState = loadingState;
+void Texture::SetUploadState(UploadState uploadState) {
+    m_uploadState = uploadState;
 }
 
 void Texture::SetTextureWrapMode(TextureWrapMode wrapMode) {

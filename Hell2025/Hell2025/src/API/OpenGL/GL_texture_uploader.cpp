@@ -12,7 +12,7 @@
 namespace OpenGLTextureUploader {
 
     namespace {
-        constexpr size_t MAX_IN_FLIGHT_UPLOAD_COUNT = 4;
+        constexpr size_t MAX_IN_FLIGHT_UPLOAD_COUNT = 8;
 
         struct UploadSlot {
             GLuint pbo = 0;
@@ -23,6 +23,7 @@ namespace OpenGLTextureUploader {
 
         std::array<UploadSlot, MAX_IN_FLIGHT_UPLOAD_COUNT> g_uploadSlots;
         std::deque<Texture*> g_uploadQueue;
+        std::vector<Texture*> g_completedUploads;
 
         size_t AlignPBOOffset(size_t offset) {
             constexpr size_t alignment = 4;
@@ -84,21 +85,27 @@ namespace OpenGLTextureUploader {
         }
 
         void MarkUploadInProgress(Texture& texture) {
+            texture.SetUploadState(UploadState::UPLOADING);
+
             for (int mipIndex = 0; mipIndex < texture.GetTextureDataCount(); ++mipIndex) {
                 texture.SetTextureDataLevelBakeState(mipIndex, BakeState::BAKING_IN_PROGRESS);
             }
         }
 
         void MarkUploadComplete(Texture& texture) {
+            texture.SetUploadState(UploadState::UPLOADED);
+
             for (int mipIndex = 0; mipIndex < texture.GetTextureDataCount(); ++mipIndex) {
                 texture.SetTextureDataLevelBakeState(mipIndex, BakeState::BAKE_COMPLETE);
             }
 
             texture.CheckForBakeCompletion();
+            g_completedUploads.push_back(&texture);
         }
 
         bool SubmitUpload(UploadSlot& slot, Texture& texture) {
             if (!ValidateTexture(texture)) {
+                texture.SetUploadState(UploadState::FAILED);
                 return false;
             }
 
@@ -113,6 +120,7 @@ namespace OpenGLTextureUploader {
 
                 if (imageData.mips[mipIndex].data.size() > std::numeric_limits<size_t>::max() - requiredSize) {
                     Logging::Error() << "OpenGLTextureUploader::SubmitUpload(..) failed because texture '" << texture.GetFileName() << "' is too large\n";
+                    texture.SetUploadState(UploadState::FAILED);
                     return false;
                 }
 
@@ -121,6 +129,7 @@ namespace OpenGLTextureUploader {
 
             if (requiredSize > static_cast<size_t>(std::numeric_limits<GLsizeiptr>::max())) {
                 Logging::Error() << "OpenGLTextureUploader::SubmitUpload(..) failed because texture '" << texture.GetFileName() << "' exceeds the maximum PBO size\n";
+                texture.SetUploadState(UploadState::FAILED);
                 return false;
             }
 
@@ -136,6 +145,7 @@ namespace OpenGLTextureUploader {
             std::byte* mappedData = static_cast<std::byte*>(glMapNamedBufferRange(slot.pbo, 0, static_cast<GLsizeiptr>(requiredSize), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT));
             if (!mappedData) {
                 Logging::Error() << "OpenGLTextureUploader::SubmitUpload(..) failed to map a PBO for texture '" << texture.GetFileName() << "'\n";
+                texture.SetUploadState(UploadState::FAILED);
                 return false;
             }
 
@@ -146,6 +156,7 @@ namespace OpenGLTextureUploader {
 
             if (glUnmapNamedBuffer(slot.pbo) == GL_FALSE) {
                 Logging::Error() << "OpenGLTextureUploader::SubmitUpload(..) failed to unmap a PBO for texture '" << texture.GetFileName() << "'\n";
+                texture.SetUploadState(UploadState::FAILED);
                 return false;
             }
 
@@ -185,6 +196,7 @@ namespace OpenGLTextureUploader {
 
     bool ImmediateUpload(Texture& texture) {
         if (!ValidateTexture(texture)) {
+            texture.SetUploadState(UploadState::FAILED);
             return false;
         }
 
@@ -217,6 +229,7 @@ namespace OpenGLTextureUploader {
     }
 
     void QueueUpload(Texture& texture) {
+        texture.SetUploadState(UploadState::QUEUED);
         g_uploadQueue.push_back(&texture);
     }
 
@@ -235,6 +248,9 @@ namespace OpenGLTextureUploader {
             }
             else if (result == GL_WAIT_FAILED) {
                 Logging::Error() << "OpenGLTextureUploader::Update(..) encountered a failed texture upload fence\n";
+                if (slot.texture) {
+                    slot.texture->SetUploadState(UploadState::FAILED);
+                }
                 glDeleteSync(slot.fence);
                 slot.fence = nullptr;
                 slot.texture = nullptr;
@@ -256,8 +272,15 @@ namespace OpenGLTextureUploader {
         }
     }
 
+    std::vector<Texture*> ConsumeCompletedUploads() {
+        std::vector<Texture*> completedUploads = std::move(g_completedUploads);
+        g_completedUploads.clear();
+        return completedUploads;
+    }
+
     void CleanUp() {
         g_uploadQueue.clear();
+        g_completedUploads.clear();
 
         for (UploadSlot& slot : g_uploadSlots) {
             if (slot.fence) {

@@ -1,7 +1,6 @@
 #include "DDGIVolume.h"
 
 #include "Debug/DebugDraw.h"
-#include "AssetManagement/AssetManager.h" // remove me
 #include "World/World.h"
 
 #include "Hell/BVH/BVH.h"

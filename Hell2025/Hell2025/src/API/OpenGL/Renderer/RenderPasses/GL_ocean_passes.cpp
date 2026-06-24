@@ -1,5 +1,4 @@
 #include "API/OpenGL//Renderer/GL_renderer.h"
-#include "AssetManagement/AssetManager.h"
 #include "Editor/Editor.h"
 #include "Core/Game.h"
 #include "Ocean/Ocean.h"

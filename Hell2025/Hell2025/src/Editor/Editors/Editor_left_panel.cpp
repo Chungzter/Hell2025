@@ -1,5 +1,4 @@
 #include "Editor/Editor.h"
-#include "AssetManagement/AssetManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Debug/DebugDraw.h"
 #include "Hell/Logging.h"

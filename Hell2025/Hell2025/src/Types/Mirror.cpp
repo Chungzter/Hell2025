@@ -1,16 +1,16 @@
 #pragma once
 #include "Mirror.h"
-#include "AssetManagement/AssetManager.h"
 #include "Config/Config.h"
 #include "Core/Game.h"
 #include "Debug/DebugDraw.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Util.h"
 
 Mirror::Mirror(uint64_t id, uint64_t parentId, uint32_t meshNodeIndex, uint32_t globalMeshIndex) {
-    Mesh* mesh = AssetManager::GetMeshByIndex(globalMeshIndex);
+    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(globalMeshIndex);
     m_objectId = id;
     m_parentId = parentId;
     m_meshNodeIndex = meshNodeIndex;
@@ -22,8 +22,8 @@ Mirror::Mirror(uint64_t id, uint64_t parentId, uint32_t meshNodeIndex, uint32_t 
         return;
     }
 
-    std::vector<Vertex> vertices = AssetManager::GetMeshVertices(mesh);
-    if (vertices.empty()) {
+    Hell::MeshBuffer& assetGeometry = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+    if (mesh->indexCount == 0) {
         Logging::Error() << "Mirror::Mirror(..) failed because mesh has no vertices";
         return;
     }
@@ -69,7 +69,9 @@ Mirror::Mirror(uint64_t id, uint64_t parentId, uint32_t meshNodeIndex, uint32_t 
     m_localCenter = (boundsMin + boundsMax) * glm::vec3(0.5f);
 
     // Local normal
-    m_localNormal = glm::normalize(vertices[0].normal);
+    const uint32_t firstIndex = assetGeometry.GetIndices()[mesh->baseIndex];
+    const Vertex& firstVertex = assetGeometry.GetVertices()[firstIndex + mesh->baseVertex];
+    m_localNormal = glm::normalize(firstVertex.normal);
 }
 
 

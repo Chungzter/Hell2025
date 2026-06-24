@@ -1,6 +1,5 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_backend.h"
-#include "AssetManagement/AssetManager.h"
 #include "Core/Game.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
@@ -37,7 +36,7 @@ namespace OpenGLRenderer {
         gBuffer->Bind();
         gBuffer->DrawBuffer("Glass");
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
         glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
         glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
@@ -55,7 +54,7 @@ namespace OpenGLRenderer {
             for (const RenderItem& renderItem : drawInfoSet.glass[i]) {
                 shader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
 
-                Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+                Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
                 if (!mesh) continue;
 
                 glActiveTexture(GL_TEXTURE0);

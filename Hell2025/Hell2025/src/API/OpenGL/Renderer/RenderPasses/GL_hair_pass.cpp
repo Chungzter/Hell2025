@@ -4,13 +4,12 @@
 #include "Config/Config.h"
 #include "Viewport/ViewportManager.h"
 #include "Renderer/RenderDataManager.h"
-
-#include "AssetManagement/AssetManager.h"
 #include "Audio/Audio.h"
 #include "Input/Input.h"
 #include "Renderer/Renderer.h"
 #include "Core/Game.h"
 #include "Debug/Debug.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Util/Util.h"
 
 namespace OpenGLRenderer {
@@ -63,6 +62,8 @@ namespace OpenGLRenderer {
 
         UpdateHairDebugInput();
 
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+
         // Clear textures do initial values
         hairFrameBuffer->Bind();
         hairFrameBuffer->ClearAttachment("Composite", 0, 0, 0, 0);
@@ -72,7 +73,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(OpenGLBackEnd::GetSkinnedVertexDataVAO());
         glBindBuffer(GL_ARRAY_BUFFER, OpenGLBackEnd::GetSkinnedVertexDataVBO());
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetWeightedVertexDataEBO());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGLBackEnd::GetVertexDataEBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBuffer.GetEBO());
 
         for (int j = 0; j < renderSettings.depthPeelCount; j++) {
 
@@ -91,7 +92,7 @@ namespace OpenGLRenderer {
             if (!g_cullFace) glDisable(GL_CULL_FACE);
 
             // Standard hair depth
-            glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+            glBindVertexArray(meshBuffer.GetVAO());
             for (int i = 0; i < 4; i++) {
                 if (drawInfoSet.hair[i].empty()) continue;
 
@@ -153,7 +154,7 @@ namespace OpenGLRenderer {
             glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, hiResShadowMaps->GetDepthTexture());
 
             // Standard hair color
-            glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+            glBindVertexArray(meshBuffer.GetVAO());
             for (int i = 0; i < 4; i++) {
                 if (drawInfoSet.hair[i].empty()) continue;
 

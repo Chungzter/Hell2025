@@ -17,7 +17,4 @@ struct Mesh {
     glm::mat4 localTransform = glm::mat4(1.0f);
     glm::mat4 inverseBindTransform = glm::mat4(1.0f);
 
-    void SetName(const std::string& name);
-    int32_t GetIndexCount();
-    const std::string& GetName();
 };

@@ -1,9 +1,9 @@
 #include "AnimatedGameObject.h"
-#include "AssetManagement/AssetManager.h"
 #include "Bible/Bible.h"
 #include "Core/Game.h"
 #include "Debug/DebugDraw.h"
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Input/Input.h"
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
@@ -378,7 +378,7 @@ void AnimatedGameObject::SetName(std::string name) {
 
 
 void AnimatedGameObject::SetSkinnedModel(const std::string& name, const std::string& presetName) {
-    SkinnedModel* ptr = AssetManager::GetSkinnedModelByName(name);
+    SkinnedModel* ptr = Hell::ResourceManager::GetSkinnedModelByName(name);
     if (ptr) {
         m_skinnedModel = ptr;
         m_animator.SetSkinnedModel(name);
@@ -565,7 +565,7 @@ int32_t AnimatedGameObject::GetNodeIndex(const std::string& nodeName) {
 
 const glm::mat4 AnimatedGameObject::GetBoneWorldMatrix(const std::string& boneName) {
     int nodeIndex = GetNodeIndex(boneName);
-    if (nodeIndex == -1 || m_animator.m_globalBlendedNodeTransforms.empty()) {
+    if (nodeIndex < 0 || nodeIndex >= int(m_animator.m_globalBlendedNodeTransforms.size())) {
         return glm::mat4(1.0f);
     }
     else {

@@ -1,5 +1,4 @@
 #include "HousePlane.h"
-#include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Physics/Physics.h"

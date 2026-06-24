@@ -3,7 +3,6 @@
 #include "Renderer/Renderer.h"
 #include "World/World.h"
 
-#include "AssetManagement/AssetManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/RenderDataManager.h"
 
@@ -48,9 +47,17 @@ Decal::Decal(const DecalCreateInfo& createInfo) {
     m_localMatrix *= glm::rotate(glm::mat4(1.0f), randomRotation, glm::vec3(0, 0, 1));
     m_localMatrix *= glm::scale(glm::mat4(1.0f), glm::vec3(scale));
 
-    static int meshIndex = AssetManager::GetMeshIndexByModelNameMeshName("Primitives", "Quad");
+    Model* primitives = Hell::ResourceManager::GetModelByName("Primitives");
+    if (!primitives || primitives->GetMeshIndices().empty()) {
+        Logging::Fatal() << "Decal::Decal(..) failed to get primitive quad mesh id\n";
+        return;
+    }
 
-    Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex);
+    if (primitives->GetMeshCount() == 0) return;
+        
+    uint32_t meshId = primitives->GetMeshIndices()[0];
+  
+    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
     if (!mesh) {
         Logging::Fatal() << "Decal::Decal(..) failed to get quad mesh index\n";
         return;
@@ -60,7 +67,7 @@ Decal::Decal(const DecalCreateInfo& createInfo) {
     if (!material) return;
 
     // Set persistent RenderItem values
-    m_renderItem.meshIndex = meshIndex;
+    m_renderItem.meshId = meshId;
     m_renderItem.baseColorTextureIndex = material->m_basecolor;
     m_renderItem.normalMapTextureIndex = material->m_normal;
     m_renderItem.rmaTextureIndex = material->m_rma;

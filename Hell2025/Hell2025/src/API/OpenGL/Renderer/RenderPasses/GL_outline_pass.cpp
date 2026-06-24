@@ -1,10 +1,10 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "API/OpenGL/GL_BackEnd.h"
-#include "AssetManagement/AssetManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 #include <vector>
 #include <set>
@@ -99,7 +99,7 @@ namespace OpenGLRenderer {
         outlineFBO->Bind();
         outlineFBO->ClearAttachmentI("Mask", 0);
         outlineFBO->ClearAttachmentI("Result", 0);
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
         glDisable(GL_DEPTH_TEST);
 
         // For each viewport
@@ -116,7 +116,7 @@ namespace OpenGLRenderer {
             maskShader->SetInt("u_viewportIndex", i);
             for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsOutline()) {
                 maskShader->SetMat4("u_modelMatrix", renderItem.modelMatrix);
-                Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+                Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertex);
             }
 
@@ -125,7 +125,14 @@ namespace OpenGLRenderer {
             outlineShader->SetVec2Array("u_offsets", offsets);
             outlineShader->SetInt("u_viewportIndex", i);
             int instanceCount = offsets.size();
-            Mesh* mesh = AssetManager::GetMeshByModelNameMeshName("Primitives", "Quad");
+            Model* primitives = Hell::ResourceManager::GetModelByName("Primitives");
+            if (!primitives || primitives->GetMeshIndices().empty()) return;
+            if (primitives->GetMeshCount() == 0) return;
+
+            uint32_t meshId = primitives->GetMeshIndices()[0];
+            Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
+            if (!mesh) return;
+
             glDrawBuffer(outlineFBO->GetColorAttachmentSlotByName("Result"));
             glBindTextureUnit(1, outlineFBO->GetColorAttachmentHandleByName("Mask"));
             glDrawElementsInstancedBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), instanceCount, mesh->baseVertex);

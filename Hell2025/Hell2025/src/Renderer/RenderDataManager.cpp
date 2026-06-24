@@ -1,5 +1,4 @@
 #include "RenderDataManager.h"
-#include "AssetManagement/AssetManager.h"
 #include "BackEnd/BackEnd.h"
 #include "Camera/Frustum.h"
 #include "Core/Game.h"
@@ -7,7 +6,6 @@
 #include "Editor/Editor.h"
 #include "Input/Input.h"
 #include "Managers/MirrorManager.h"
-#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Ocean/Ocean.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
@@ -353,7 +351,7 @@ namespace RenderDataManager {
                 g_renderItemsEmissive.push_back(renderItem);
 
                 //if (Input::KeyPressed(HELL_KEY_U)) {
-                //    Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+                //    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
                 //    std::string textureName = UNDEFINED_STRING;
                 //
                 //    if (renderItem.emissiveTextureIndex != -1) {
@@ -374,7 +372,7 @@ namespace RenderDataManager {
 
     void SortRenderItems(std::vector<RenderItem>& renderItems) {
         std::sort(renderItems.begin(), renderItems.end(), [](const RenderItem& a, const RenderItem& b) {
-            return a.meshIndex < b.meshIndex;
+            return a.meshId < b.meshId;
         });
     }
 
@@ -771,7 +769,7 @@ namespace RenderDataManager {
             if (frustum->IntersectsAABBFast(renderItem)) {
                 g_instanceData.push_back(renderItem);
 
-                //std::cout << gpuLight.lightIndex << " " << AssetManager::GetMeshByIndex(renderItem.meshIndex)->name << "\n";
+                //std::cout << gpuLight.lightIndex << " " << Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId)->name << "\n";
             }
         }
 
@@ -781,15 +779,20 @@ namespace RenderDataManager {
     }
 
     void CreateMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset) {
-        std::unordered_map<int, std::size_t> commandMap;
+        std::unordered_map<uint32_t, std::size_t> commandMap;
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
         commands.reserve(renderItems.size());
 
         for (const RenderItem& renderItem : renderItems) {
-            int meshIndex = renderItem.meshIndex;
-            Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex);
+            uint32_t meshId = renderItem.meshId;
+            Mesh* mesh = meshBuffer.GetMeshById(meshId);
+            if (!mesh) {
+                instanceOffset++;
+                continue;
+            }
 
             // If the command exists, increment its instance count
-            auto it = commandMap.find(meshIndex);
+            auto it = commandMap.find(meshId);
             if (it != commandMap.end()) {
                 commands[it->second].instanceCount++;
             }
@@ -803,7 +806,7 @@ namespace RenderDataManager {
                 cmd.baseInstance = EncodeBaseInstance(viewportIndex, instanceOffset);
                 cmd.instanceCount = 1;
 
-                commandMap[meshIndex] = index;
+                commandMap[meshId] = index;
             }
             instanceOffset++;
         }
@@ -811,9 +814,14 @@ namespace RenderDataManager {
 
     void CreateMultiDrawIndirectCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset) {
         commands.reserve(renderItems.size());
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
 
         for (const RenderItem& renderItem : renderItems) {
-            SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(renderItem.meshIndex);
+            Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
+            if (!mesh) {
+                instanceOffset++;
+                continue;
+            }
             std::size_t index = commands.size();
             auto& cmd = commands.emplace_back();
             cmd.indexCount = mesh->indexCount;
@@ -827,14 +835,19 @@ namespace RenderDataManager {
 
     void CreateMultiDrawIndirectCommandsSkinnedNonDeforming(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset) {
         commands.reserve(renderItems.size());
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
 
         for (const RenderItem& renderItem : renderItems) {
-            SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(renderItem.meshIndex);
+            Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
+            if (!mesh) {
+                instanceOffset++;
+                continue;
+            }
             std::size_t index = commands.size();
             auto& cmd = commands.emplace_back();
             cmd.indexCount = mesh->indexCount;
             cmd.firstIndex = mesh->baseIndex;
-            cmd.baseVertex = mesh->baseVertexGlobal;
+            cmd.baseVertex = mesh->baseVertex;
             cmd.baseInstance = EncodeBaseInstance(viewportIndex, instanceOffset);
             cmd.instanceCount = 1;
             instanceOffset++;
@@ -842,8 +855,9 @@ namespace RenderDataManager {
     }
 
     void SetRenderItemsBaseSkinnedVertex(std::vector<RenderItem>& renderItems) {
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
         for (RenderItem& renderItem : renderItems) {
-            SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(renderItem.meshIndex);
+            Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
             if (!mesh) continue;
 
             renderItem.baseSkinnedVertex = g_baseSkinnedVertex;
@@ -1171,7 +1185,22 @@ namespace RenderDataManager {
         //    DebugDraw::DrawPoint(light->GetPosition(), BLUE);
         //}
 
-        IESProfile* iesProfile = AssetManager::GetIESProfileByIESProfileType(light->GetIESProfileType());
+        IESProfile* iesProfile = nullptr;
+        switch (light->GetIESProfileType()) {
+            case IESProfileType::LAMP_0: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp0"); break;
+            case IESProfileType::LAMP_1: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp1"); break;
+            case IESProfileType::LAMP_2: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp2"); break;
+            case IESProfileType::LAMP_3: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp3"); break;
+            case IESProfileType::LAMP_4: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp4"); break;
+            case IESProfileType::LAMP_5: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp5"); break;
+            case IESProfileType::LAMP_6: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp6"); break;
+            case IESProfileType::LAMP_7: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp7"); break;
+            case IESProfileType::LAMP_8: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp8"); break;
+            case IESProfileType::LAMP_9: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp9"); break;
+            case IESProfileType::LAMP_10: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp10"); break;
+            case IESProfileType::LAMP_11: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp11"); break;
+            default: break;
+        }
         if (iesProfile) {
             gpuLight.iesExposure = light->GetIESExposure();
             gpuLight.iesTextureIndex = iesProfile->GetTextureIndex();

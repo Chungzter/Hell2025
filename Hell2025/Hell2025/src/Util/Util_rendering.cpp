@@ -1,6 +1,6 @@
 #include "Util.h"
-#include "AssetManagement/AssetManager.h"
 #include "Config/Config.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Input/Input.h"
 #include <array>
 
@@ -9,7 +9,7 @@
 namespace Util {
 
     void UpdateRenderItemAABBFastA(RenderItem& renderItem) {
-        Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
         if (!mesh) return;
 
         renderItem.aabbMin = glm::vec4(std::numeric_limits<float>::max());
@@ -33,7 +33,7 @@ namespace Util {
     }
 
     void UpdateRenderItemAABBFastB(RenderItem& renderItem) {
-        Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
         if (!mesh) return;
 
         glm::vec3& localMin = mesh->aabbMin;
@@ -62,7 +62,7 @@ namespace Util {
     }
 
     void UpdateRenderItemAABB(RenderItem& renderItem) {
-        Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
         if (!mesh) return;
 
         glm::vec3 aabbMin = glm::vec3(std::numeric_limits<float>::max());

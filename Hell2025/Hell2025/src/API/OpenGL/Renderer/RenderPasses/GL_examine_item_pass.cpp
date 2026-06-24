@@ -1,6 +1,5 @@
 #include "API/OpenGL/Renderer/GL_renderer.h" 
 #include "API/OpenGL/GL_backend.h"
-#include "AssetManagement/AssetManager.h"
 #include "BackEnd/Backend.h"
 #include "Core/Game.h"
 #include "Viewport/ViewportManager.h"
@@ -72,7 +71,7 @@ namespace OpenGLRenderer {
         shader->SetVec3("u_viewPos", cameraPosition); 
         shader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         // Non blended
         for (int i = 0; i < Game::GetLocalPlayerCount(); i++) {
@@ -97,7 +96,7 @@ namespace OpenGLRenderer {
                 std::vector<RenderItem> m_renderItems = inventory.GetRenderItems();
 
                 for (RenderItem& renderItem : m_renderItems) {
-                    Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+                    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
                     shader->SetMat4("u_model", renderItem.modelMatrix);
                     shader->SetMat4("u_inverseModel", renderItem.inverseModelMatrix);
                     glActiveTexture(GL_TEXTURE0);
@@ -109,7 +108,7 @@ namespace OpenGLRenderer {
 
                     glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertex);
             
-                   //std::cout << mesh->GetName() << "\n";
+                   //std::cout << mesh->name << "\n";
                    //std::cout << Util::Mat4ToString(renderItem.modelMatrix) << "\n\n";
                 }
         }

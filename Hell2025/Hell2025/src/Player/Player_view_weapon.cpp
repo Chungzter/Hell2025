@@ -3,10 +3,6 @@
 #include "Debug/Debug.h"
 #include "Input/Input.h"
 #include "Util/Util.h"
-
-#include "AssetManagement/AssetManager.h"
-
-// remove me
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 // remove me
@@ -87,10 +83,12 @@ void Player::UpdateViewWeapon(float deltaTime) {
     //if (Input::KeyPressed(HELL_KEY_E) && GetCurrentWeaponInfo()->itemInfoName == "P90") {
     //    std::cout << "\nP90\n";
     //    SkinnedModel* skinnedModel = viewWeapon->GetSkinnedModel();
-    //    for (uint32_t meshIndex : skinnedModel->GetMeshIndices()) {
-    //        SkinnedMesh* skinnedMesh = AssetManager::GetSkinnedMeshByIndex(meshIndex);
-    //        if (skinnedMesh->nonDeformingBoneIndex != -1) {
-    //            std::cout << skinnedMesh->name << " " << skinnedMesh->nonDeformingBoneIndex << "\n";
+    //    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+    //    for (uint32_t meshId : skinnedModel->GetMeshIndices()) {
+    //        Mesh* skinnedMesh = meshBuffer.GetMeshById(meshId);
+    //        Hell::SkinnedMeshMetadata* metadata = meshBuffer.GetSkinnedMeshMetadataByMeshId(meshId);
+    //        if (metadata && metadata->nonDeformingBoneIndex != -1) {
+    //            std::cout << skinnedMesh->GetName() << " " << metadata->nonDeformingBoneIndex << "\n";
     //        }
     //    }
     //    std::cout << "\n";

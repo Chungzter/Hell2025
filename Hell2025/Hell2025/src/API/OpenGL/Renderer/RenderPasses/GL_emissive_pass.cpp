@@ -42,7 +42,6 @@ namespace OpenGLRenderer {
             OpenGLShader* verticalShader = GetShaderOLD("BlurVertical");
             OpenGLShader* compositeShader = GetShaderOLD("EmissiveComposite");
 
-            glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
             glDisable(GL_DEPTH_TEST);
             glDepthMask(GL_FALSE);
 
@@ -69,7 +68,7 @@ namespace OpenGLRenderer {
                 glDrawBuffer(GL_COLOR_ATTACHMENT1);
                 verticalShader->Bind();
                 verticalShader->SetFloat("targetHeight", blurBuffer->GetHeight());
-                DrawQuad();
+                DrawFullscreenTriangle();
 
                 for (int j = 1; j < 4; j++) {
 
@@ -85,7 +84,7 @@ namespace OpenGLRenderer {
                     glDrawBuffer(GL_COLOR_ATTACHMENT0);
                     horizontalShader->Bind();
                     horizontalShader->SetFloat("targetWidth", GetBlurBuffer(i, j)->GetWidth());
-                    DrawQuad();
+                    DrawFullscreenTriangle();
 
                     // Second round blur (vertical)
                     glActiveTexture(GL_TEXTURE0);
@@ -93,7 +92,7 @@ namespace OpenGLRenderer {
                     glDrawBuffer(GL_COLOR_ATTACHMENT1);
                     verticalShader->Bind();
                     verticalShader->SetFloat("targetHeight", GetBlurBuffer(i, j)->GetHeight());
-                    DrawQuad();
+                    DrawFullscreenTriangle();
                 }
 
                 // Composite those blurred textures into the main lighting image
@@ -129,7 +128,6 @@ namespace OpenGLRenderer {
             GLuint handleA = emissiveBlurFBO->GetColorAttachmentHandleByName("ColorA");
             GLuint handleB = emissiveBlurFBO->GetColorAttachmentHandleByName("ColorB");
 
-            glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
             glDisable(GL_DEPTH_TEST);
             glDepthMask(GL_FALSE);
 
@@ -161,7 +159,7 @@ namespace OpenGLRenderer {
 
             verticalShader->Bind();
             verticalShader->SetFloat("targetHeight", fullHeight);
-            DrawQuad();
+            DrawFullscreenTriangle();
 
             for (int mip = 1; mip < 4; mip++) {
                 float currentW = fullWidth / std::pow(2.0f, mip);
@@ -180,7 +178,7 @@ namespace OpenGLRenderer {
 
                 horizontalShader->Bind();
                 horizontalShader->SetFloat("targetWidth", currentW);
-                DrawQuad();
+                DrawFullscreenTriangle();
 
                 // perform vertical blur on current mip
                 emissiveBlurFBO->SetColorAttachmentMipLevel("ColorB", mip);
@@ -194,7 +192,7 @@ namespace OpenGLRenderer {
                 verticalShader->Bind();
                 verticalShader->SetFloat("targetHeight", currentH);
 
-                DrawQuad();
+                DrawFullscreenTriangle();
             }
 
             // restore mip chain visibility

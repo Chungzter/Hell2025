@@ -1,5 +1,4 @@
 #include "DoorChain.h"
-#include "AssetManagement/AssetManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Debug/DebugDraw.h"
 #include "Input/Input.h"
@@ -9,7 +8,7 @@
 
 DoorChain::DoorChain(uint64_t id, DoorChainCreateInfo& createInfo, SpawnOffset& spawnOffset) {
 
-    Model* model = AssetManager::GetModelByName("ChainLink");
+    Model* model = Hell::ResourceManager::GetModelByName("ChainLink");
     if (!model) return;
 
     glm::mat4 linkBeginLocalBoneMatrix = model->GetBoneLocalMatrix("LinkBegin");
@@ -28,10 +27,10 @@ DoorChain::DoorChain(uint64_t id, DoorChainCreateInfo& createInfo, SpawnOffset& 
     float magicSpacingPercentage = 0.795f;
     float linkSpacing = (model->GetExtents().z * magicSpacingPercentage);
 
-    m_chainLinkMeshIndex = model->GetMeshIndices()[0];
-    m_chainLinkEndMeshIndex = model->GetMeshIndices()[0];
+    m_chainLinkMeshId = model->GetMeshIndices()[0];
+    m_chainLinkEndMeshId = model->GetMeshIndices()[0];
 
-    Mesh* chainLinkMesh = AssetManager::GetMeshByIndex(m_chainLinkMeshIndex);
+    Mesh* chainLinkMesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(m_chainLinkMeshId);
 
     glm::vec3 extents = chainLinkMesh->extents;// glm::vec3(0.18f, 0.08f, 0.6f) * 1.0f;
 
@@ -195,7 +194,7 @@ void DoorChain::SubmitRenderItems() {
             renderItem.baseColorTextureIndex = material->m_basecolor;
             renderItem.rmaTextureIndex = material->m_rma;
             renderItem.normalMapTextureIndex = material->m_normal;
-            renderItem.meshIndex = m_chainLinkMeshIndex;
+            renderItem.meshId = m_chainLinkMeshId;
             Util::UpdateRenderItemAABB(renderItem);
 
             RenderDataManager::SubmitRenderItem(renderItem);

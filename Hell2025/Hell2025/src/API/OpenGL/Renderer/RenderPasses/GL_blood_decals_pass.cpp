@@ -1,5 +1,4 @@
 #include "API/OpenGL/Renderer/GL_Renderer.h"
-#include "AssetManagement/AssetManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "World/World.h"

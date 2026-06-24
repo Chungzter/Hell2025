@@ -1,7 +1,7 @@
 #include "GameObject.h"
 
-#include "AssetManagement/AssetManager.h"
 #include "Debug/DebugDraw.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util.h"
@@ -71,7 +71,7 @@ void GameObject::SetScale(glm::vec3 scale) {
 
 
 void GameObject::SetModel(const std::string& name) {
-    Model* model = AssetManager::GetModelByIndex(AssetManager::GetModelIndexByName(name.c_str()));
+    Model* model = Hell::ResourceManager::GetModelByName(name);
     if (model) {
         std::vector<MeshNodeCreateInfo> emptyMeshNodeCreateInfoSet;
         m_meshNodes.Init(NO_ID, name, emptyMeshNodeCreateInfoSet);
@@ -124,7 +124,7 @@ void GameObject::UpdateRenderItems() {
 }
 
 void GameObject::SetConvexHullsFromModel(const std::string modelName) {
-    Model* model = AssetManager::GetModelByName(modelName);
+    Model* model = Hell::ResourceManager::GetModelByName(modelName);
     if (!model) return;
 
     PhysicsFilterData filterData;
@@ -153,10 +153,11 @@ void GameObject::SetConvexHullsFromModel(const std::string modelName) {
     pxScene->addActor(*pxRigidDynamic);
 
 
-    for (uint32_t meshIndex : model->GetMeshIndices()) {
-        Mesh* mesh = AssetManager::GetMeshByIndex(meshIndex);
+    for (uint32_t meshId : model->GetMeshIndices()) {
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
 
-        std::span<Vertex> vertices = AssetManager::GetVerticesSpan(mesh->baseVertex, mesh->vertexCount);
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        std::span<Vertex> vertices(meshBuffer.GetVertices().data() + mesh->baseVertex, mesh->vertexCount);
         PxShape* pxShape = Physics::CreateConvexShapeFromVertexList(vertices);
 
         pxShape->setQueryFilterData(pxFilterData);       // ray casts

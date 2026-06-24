@@ -10,6 +10,7 @@ namespace Hell::AssetFormats {
 
     namespace {
         inline constexpr char SKINNED_MODEL_SIGNATURE[] = "HELL_SKINNED_MODEL";
+        inline constexpr uint32_t SKINNED_MODEL_VERSION = 2;
 
         bool ReadSkinnedHeader(std::ifstream& file, SkinnedModelHeader& header) {
             file.read(header.signature, sizeof(header.signature));
@@ -22,7 +23,7 @@ namespace Hell::AssetFormats {
             file.read(reinterpret_cast<char*>(&header.boneCount), sizeof(header.boneCount));
             file.read(reinterpret_cast<char*>(&header.timestamp), sizeof(header.timestamp));
 
-            return file && header.version == 1 && std::memcmp(
+            return file && header.version == SKINNED_MODEL_VERSION && std::memcmp(
                 header.signature,
                 SKINNED_MODEL_SIGNATURE,
                 sizeof(header.signature)
@@ -71,7 +72,7 @@ namespace Hell::AssetFormats {
 
         SkinnedModelHeader header{};
         std::memcpy(header.signature, SKINNED_MODEL_SIGNATURE, sizeof(header.signature));
-        header.version = 1;
+        header.version = SKINNED_MODEL_VERSION;
         header.nameLength = static_cast<uint32_t>(model.name.size());
         header.vertexCount = model.vertexCount;
         header.indexCount = model.indexCount;
@@ -110,7 +111,6 @@ namespace Hell::AssetFormats {
             file.write(reinterpret_cast<const char*>(&nameLength), sizeof(nameLength));
             file.write(reinterpret_cast<const char*>(&vertexCount), sizeof(vertexCount));
             file.write(reinterpret_cast<const char*>(&indexCount), sizeof(indexCount));
-            file.write(reinterpret_cast<const char*>(&mesh.localBaseVertex), sizeof(mesh.localBaseVertex));
             file.write(mesh.name.data(), nameLength);
             file.write(reinterpret_cast<const char*>(&mesh.aabbMin), sizeof(mesh.aabbMin));
             file.write(reinterpret_cast<const char*>(&mesh.aabbMax), sizeof(mesh.aabbMax));
@@ -178,7 +178,6 @@ namespace Hell::AssetFormats {
             file.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
             file.read(reinterpret_cast<char*>(&mesh.vertexCount), sizeof(mesh.vertexCount));
             file.read(reinterpret_cast<char*>(&mesh.indexCount), sizeof(mesh.indexCount));
-            file.read(reinterpret_cast<char*>(&mesh.localBaseVertex), sizeof(mesh.localBaseVertex));
 
             mesh.name.resize(nameLength);
             file.read(mesh.name.data(), mesh.name.size());

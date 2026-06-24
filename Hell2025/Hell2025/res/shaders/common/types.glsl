@@ -85,7 +85,7 @@ struct RenderItem {
     vec4 aabbMin;
     vec4 aabbMax;
 
-    int meshIndex;
+    int meshIndexUNUSED;
     int baseColorTextureIndex;
     int normalMapTextureIndex;
     int rmaTextureIndex;

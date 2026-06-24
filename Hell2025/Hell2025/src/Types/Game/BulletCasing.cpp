@@ -1,6 +1,5 @@
 #include "BulletCasing.h"
 #include "Util.h"
-#include "AssetManagement/AssetManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Audio/Audio.h"
 #include "Physics/Physics.h"
@@ -11,7 +10,7 @@ BulletCasing::BulletCasing(BulletCasingCreateInfo createInfo) {
     m_materialIndex = createInfo.materialIndex;
 
     // Get model
-    Model* model = AssetManager::GetModelByIndex(createInfo.modelIndex);
+    Model* model = Hell::ResourceManager::GetModelById(createInfo.modelId);
     if (!model) {
         std::cout << "BulletCasing(BulletCasingCreateInfo createInfo) failed from invalid model\n";
         return;
@@ -21,8 +20,8 @@ BulletCasing::BulletCasing(BulletCasingCreateInfo createInfo) {
     }
 
     // Get mesh
-    m_meshIndex = model->GetMeshIndices()[0];
-    Mesh* mesh = AssetManager::GetMeshByIndex(m_meshIndex);
+    m_meshId = model->GetMeshIndices()[0];
+    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(m_meshId);
     if (!mesh) {
         std::cout << "BulletCasing(BulletCasingCreateInfo createInfo) failed from invalid mesh\n";
     }
@@ -72,10 +71,10 @@ void BulletCasing::SubmitRenderItem() {
     renderItem.baseColorTextureIndex = material->m_basecolor;
     renderItem.rmaTextureIndex = material->m_rma;
     renderItem.normalMapTextureIndex = material->m_normal;
-    renderItem.meshIndex = GetMeshIndex();
+    renderItem.meshId = GetMeshId();
     renderItem.shadowBit = SHADOW_BIT_NONE;
 
-    Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
     if (mesh) {
         renderItem.baseVertex = mesh->baseVertex;
         renderItem.baseIndex = mesh->baseIndex;

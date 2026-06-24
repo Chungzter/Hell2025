@@ -11,6 +11,8 @@ namespace Debug {
 	void NextDebugTextMode();
     void SetDebugRenderMode(DebugRenderMode mode);
 
+    void PrintModelMeshNames(const std::string& name);
+
     const std::string& GetText();
     const DebugRenderMode& GetDebugRenderMode();
     const DebugTextMode& GetDebugTextMode();

@@ -1,5 +1,4 @@
 #include "World.h"
-#include "AssetManagement/AssetManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Core/Game.h"
 #include "Editor/Editor.h"
@@ -59,23 +58,6 @@ namespace World {
             RenderDataManager::SubmitAnimatedMeshNodes(animatedGameObject.GetAnimatedMeshNodes());
         }
 
-        // Hack to render door and window cube transforms
-        if (true && false) {
-            int meshIndex = AssetManager::GetMeshIndexByModelNameMeshName("Primitives", "Cube");
-            std::vector<Transform>& transforms = GetDoorAndWindowCubeTransforms();
-            for (Transform& transform : transforms) {
-                Material* material = Hell::ResourceManager::GetDefaultMaterial();
-                RenderItem renderItem;
-                renderItem.meshIndex = meshIndex;
-                renderItem.modelMatrix = transform.to_mat4();
-                renderItem.baseColorTextureIndex = material->m_basecolor;
-                renderItem.normalMapTextureIndex = material->m_normal;
-                renderItem.rmaTextureIndex = material->m_rma;
-                Util::UpdateRenderItemAABB(renderItem);
-                RenderDataManager::SubmitRenderItem(renderItem);
-            }
-        }
-
         // Update UI after all else
         for (int i = 0; i < Game::GetLocalPlayerCount(); i++) {
             Player* player = Game::GetLocalPlayerByIndex(i);
@@ -96,7 +78,7 @@ namespace World {
         // 
         //         std::cout << objectId << " " << Util::EnumToString(UniqueID::GetType(objectId)) << " ";
         // 
-        //         Mesh* mesh = AssetManager::GetMeshByIndex(renderItem.meshIndex);
+        //         Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
         //         if (!mesh) {
         //             std::cout << "\n";
         //             continue;

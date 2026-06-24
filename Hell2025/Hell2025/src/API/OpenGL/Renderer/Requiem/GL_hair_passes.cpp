@@ -3,8 +3,6 @@
 #include "Game/RendereringConstants.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
-
-#include "AssetManagement/AssetManager.h"
 #include "Audio/Audio.h"
 #include "Debug/Debug.h"
 #include "Input/Input.h"
@@ -86,7 +84,8 @@ namespace OpenGLRenderer {
         OpenGLShader& shader = GetShader("DepthPrePassAlphaDiscardRE");
         shader.Bind();
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        glBindVertexArray(meshBuffer.GetVAO());
         MultiDrawPerViewport(&fbo, &shader, drawInfoSet.hair, state);
         MultiDrawPerViewport(&fbo, &shader, drawInfoSet.skinnedNonDeformingHair, state);
 
@@ -147,7 +146,8 @@ namespace OpenGLRenderer {
         BindShader("LightingForward");
         SetUniformBool("u_solidAlpha", true);
 
-        glBindVertexArray(OpenGLBackEnd::GetVertexDataVAO());
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        glBindVertexArray(meshBuffer.GetVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.hair, maskedState);
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingHair, maskedState);
 
