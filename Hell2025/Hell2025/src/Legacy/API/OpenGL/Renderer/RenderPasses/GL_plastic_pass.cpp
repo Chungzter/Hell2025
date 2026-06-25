@@ -8,7 +8,6 @@
 #include "Modelling/Unused/Modelling.h"
 #include "World/LegacyWorld.h"
 
-#include "Ragdoll/RagdollManager.h"
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
 

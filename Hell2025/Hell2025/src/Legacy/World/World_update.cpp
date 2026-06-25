@@ -8,7 +8,6 @@
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 
-#include "Ragdoll/RagdollManager.h"
 #include "Pathfinding/NavMesh.h"
 #include "Bible/Bible.h"
 #include "Types/Misc/DoorChain.h"
@@ -317,9 +316,9 @@ namespace LegacyWorld {
       //}
 
 
-        auto& ragdolls = RagdollManager::GetRagdolls();
+        auto& ragdolls = Hell::Physics::GetRagdolls();
         for (auto it = ragdolls.begin(); it != ragdolls.end(); ) {
-            RagdollV2& ragdoll = it->second;
+            Ragdoll& ragdoll = it->second;
 
             //ragdoll.Update();
 

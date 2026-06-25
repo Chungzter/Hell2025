@@ -338,53 +338,6 @@ namespace Util {
             glm::any(glm::isnan(matrix[3]));
     }
 
-    float GetDensity(float mass, float volume) {
-        return mass / volume;
-    }
-
-    float GetCubeVolume(const glm::vec3& halfExtents) {
-        return 8.0f * halfExtents.x * halfExtents.y * halfExtents.z;
-    }
-
-    float GetCubeVolume(const float& halfWidth, const float& halfHeight, const float& halfDepth) {
-        return GetCubeVolume(glm::vec3(halfWidth, halfHeight, halfDepth));
-    }
-
-    float GetSphereVolume(float radius) {
-        return (4.0f / 3.0f) * HELL_PI * radius * radius * radius;
-    }
-
-    float GetCapsuleVolume(float radius, float halfHeight) {
-        float cylHeight = halfHeight * 2.0f;
-        float cylVol = HELL_PI * radius * radius * cylHeight;
-        float sphVol = (4.0f / 3.0f) * HELL_PI * radius * radius * radius;
-        return cylVol + sphVol;
-    }
-
-    float GetConvexHullVolume(const std::span<Vertex>& vertices, const std::span<unsigned int>& indices) {
-        // Compute the centroid to use as the reference point
-        glm::vec3 reference(0.0f);
-        for (const Vertex& v : vertices) {
-            reference += v.position;
-        }
-        reference /= static_cast<float>(vertices.size());
-
-        float totalVolume = 0.0f;
-
-        // Each consecutive group of three indices defines a triangle
-        for (size_t i = 0; i < indices.size(); i += 3) {
-            const glm::vec3& v0 = vertices[indices[i]].position;
-            const glm::vec3& v1 = vertices[indices[i + 1]].position;
-            const glm::vec3& v2 = vertices[indices[i + 2]].position;
-
-            // Compute the tetrahedron volume formed by the triangle (v0, v1, v2) and the reference point
-            glm::vec3 crossProd = glm::cross(v1 - v0, v2 - v0);
-            float tetraVolume = std::abs(glm::dot(crossProd, reference - v0)) / 6.0f;
-            totalVolume += tetraVolume;
-        }
-        return totalVolume;
-    }
-
     bool IsPointInTriangle2D(const glm::vec2& pt, const glm::vec2& v0, const glm::vec2& v1, const glm::vec2& v2) {
         glm::vec2 v0v1 = v1 - v0;
         glm::vec2 v0v2 = v2 - v0;

@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+struct RagdollData;
+
 namespace Hell::AssetLoader {
 
     void Init();
@@ -17,8 +19,10 @@ namespace Hell::AssetLoader {
     std::vector<std::string>& GetLoadLog();
 
     AnimationData LoadAnimationData(FileInfo fileInfo);
+    RagdollData LoadRagdollData(const std::string& path);
     void CreateSpriteSheets();
     void LoadIESFiles();
     void LoadMidiFiles();
+    void LoadRagdollDataFiles();
     void LoadSoundFonts();
 }

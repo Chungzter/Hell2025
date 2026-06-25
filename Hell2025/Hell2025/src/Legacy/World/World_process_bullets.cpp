@@ -4,9 +4,7 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 
-#include "Ragdoll/RagdollManager.h"
 #include "Game/UniqueID.h"
-
 
 namespace LegacyWorld {
     float g_fleshHitHitTimer = 0.0f; // sound can only play if this is less or equal to 0.0f
@@ -15,71 +13,19 @@ namespace LegacyWorld {
 
     void SpawnBlood(const glm::vec3& position, const glm::vec3& direction);
 
-    void TriggerFleshHit() {
+    void TriggerFleshImpactAudio() {
         if (g_fleshHitHitTimer <= 0.0f) {
             g_fleshHitHitTimer = g_flashHitAudioDelay;
             GameOLD::PlayFleshImpactAudio();
         }
     }
 
+    void ProcessDobermannHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
+    void ProcessKangarooHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
+    void ProcessPlayerHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
+    void ProcessSharkHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
 
     void ProcessBullets() {
-
-        //Player* player1 = Game::GetLocalPlayerByIndex(0);
-        //Player* player2 = Game::GetLocalPlayerByIndex(0);
-        //
-        //DebugDraw::DrawPoint(LegacyWorld::GetPictureFrames()[0].GetPosition(), YELLOW);
-        //LegacyWorld::GetPictureFrames()[0].SetScale(glm::vec3(0, 0, 0));
-        //
-        //for (int i = 0; i < 2; i++) {
-        //    Player* player = Game::GetLocalPlayerByIndex(i);
-        //    RagdollV1* ragdoll = player->GetRagdoll();
-        //    for (uint64_t id : ragdoll->m_rigidDynamicIds) {
-        //        RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(id);
-        //
-        //        PhysicsFilterData filterData;
-        //        filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
-        //        filterData.collisionGroup = CollisionGroup::RAGDOLL_PLAYER;
-        //        filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE);
-        //
-        //
-        //        rigidDynamic->SetFilterData(filterData);
-        //
-        //    }
-        //}
-
-
-       // Hell::Physics::GetPxScene()->fetchResults(true);
-       // Hell::Physics::GetPxScene()->fetchQueries(true);
-       //
-       // Hell::Physics::GetPxScene()->sceneQueriesUpdate();
-
-        //if (Input::KeyPressed(HELL_KEY_E)) {
-        //
-        //
-        //    glm::vec3 rayOrigin = player2->GetCameraPosition() + player2->GetCameraForward();
-        //    glm::vec3 rayDirection = player2->GetCameraForward();
-        //    float rayLength = 10;
-        //
-        //    std::vector<PxRigidActor*> ignoredActors;
-        //    RaycastIgnoreFlags ignoreFlags = RaycastIgnoreFlags::PLAYER_CHARACTER_CONTROLLERS;
-        //
-        //    PhysXRayResult result = Hell::Physics::CastPhysXRay(rayOrigin, rayDirection, rayLength, false, ignoreFlags, ignoredActors);
-        //
-        //    std::cout << "hi: " << rayOrigin << " " << rayDirection << "\n";
-        //
-        //    if (result.hitFound) {
-        //        std::cout << "hit found\n";
-        //    }
-        //    else {
-        //        std::cout << "hit not found\n";
-        //    }
-        //}
-
-        //static glm::vec3 p = glm::vec3(0.0f);
-        //DebugDraw::DrawPoint(p, BLUE);
-
-
         g_fleshHitHitTimer -= GameOLD::GetDeltaTime();
         g_fleshHitHitTimer = std::max(g_fleshHitHitTimer, 0.0f);
 
@@ -96,13 +42,22 @@ namespace LegacyWorld {
 
             std::vector<PxRigidActor*> ignoredActors;
 
-            Player* player = GameOLD::GetPlayerByPlayerId(bullet.GetOwnerObjectId());
-            if (player) {
-                auto ragdollActors = Hell::Physics::GetRagdollPxRigidActors(player->GetRagdollId());
-                ignoredActors.insert(ignoredActors.end(), ragdollActors.begin(), ragdollActors.end());
+            int playerCount = GameOLD::GetLocalPlayerCount();
+            for (int i = 0; i < playerCount; i++) {
+                if (Player* player = GameOLD::GetLocalPlayerByIndex(i)) {
+                    if (PxRigidDynamic* characterControllerActor = player->GetCharacterControllerActor()) {
+                        ignoredActors.push_back(characterControllerActor);
+                    }
+                }
             }
 
-            PhysXRayResult physXRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDirection, rayLength, false, RaycastIgnoreFlags::PLAYER_CHARACTER_CONTROLLERS, ignoredActors);
+            Player* player = GameOLD::GetPlayerByPlayerId(bullet.GetOwnerObjectId());
+            if (player) {
+                auto RagdollActors = Hell::Physics::GetRagdollPxRigidActors(player->GetRagdollId());
+                ignoredActors.insert(ignoredActors.end(), RagdollActors.begin(), RagdollActors.end());
+            }
+
+            PhysXRayResult physXRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDirection, rayLength, false, ignoredActors);
             BvhRayResult bvhRayResult = LegacyWorld::ClosestHit(rayOrigin, bullet.GetDirection(), rayLength);
 
             // Defaults
@@ -150,6 +105,32 @@ namespace LegacyWorld {
             if (hitFound) {
 
                 ObjectType hitObjectType = UniqueID::GetType(objectId);
+                Hell::Physics::PhysicsObjectType physicsObjectType = Hell::Physics::GetPhysicsObjectType(physicsId);
+
+                std::cout << "\n";
+                std::cout << "Hit found " << GameOLD::GetTotalTime() << "\n";
+                std::cout << " ObjectId          " << objectId << "\n";
+                std::cout << " PhysicsId         " << physicsId << "\n";
+                std::cout << " ObjectType        " << Util::EnumToString(hitObjectType) << "\n";
+                std::cout << " PhysicsObjectType " << Util::EnumToString(physicsObjectType) << "\n";
+
+                glm::vec3 appliedForce = rayDirection * glm::vec3(5.0f);
+                if (physicsObjectType == Hell::Physics::PhysicsObjectType::RAGDOLL) {
+                    Hell::Physics::AddForceToRagdoll(physicsId, appliedForce);
+                }
+                else if (physicsObjectType == Hell::Physics::PhysicsObjectType::RIGID_DYNAMIC) {
+                    Hell::Physics::AddFoceToRigidDynamic(physicsId, appliedForce);
+                }
+
+                if (hitObjectType == ObjectType::DOBERMANN) ProcessDobermannHit(objectId, physicsId, bullet, hitPosition);
+                if (hitObjectType == ObjectType::KANGAROO)  ProcessKangarooHit(objectId, physicsId, bullet, hitPosition);
+                if (hitObjectType == ObjectType::PLAYER)    ProcessPlayerHit(objectId, physicsId, bullet, hitPosition);
+                if (hitObjectType == ObjectType::SHARK)     ProcessSharkHit(objectId, physicsId, bullet, hitPosition);
+              
+                if (hitObjectType == ObjectType::RAGDOLL_STANDALONE && physicsObjectType == Hell::Physics::PhysicsObjectType::RAGDOLL) {
+                    TriggerFleshImpactAudio();
+                    SpawnBlood(hitPosition, rayDirection);
+                }
 
                 // Bullet enters water
                 if (hitObjectType == ObjectType::WATER_PLANE_TOP) {
@@ -174,7 +155,6 @@ namespace LegacyWorld {
                     std::cout << "Spawning a new bullet exiting the ocean\n";
                 }
 
-
                 // If this bullet belongs to a bullet trail, then destroy the trail
                 if (bullet.GetParentBulletTrailId() != 0) {
                     LegacyWorld::RemoveObject(bullet.GetParentBulletTrailId());
@@ -193,15 +173,6 @@ namespace LegacyWorld {
                 if (!bullet.CreatesDecals()) {
                     createDecal = false;
                 }
-
-                //bool createBlood = (Hell::Physics::GetRagdollById(physicsId) != nullptr) ||
-                //                   (RagdollManager::GetRagdollV2ById(physicsId) != nullptr);
-                //
-                //if (Hell::Physics::GetRigidDynamicById(physicsId) != nullptr) {
-                //    createBlood = true;
-                //    std::cout << "Shot rigid dynamic\n";
-                //}
-
 
                 // Create the decal
                 if (createDecal) {
@@ -238,75 +209,6 @@ namespace LegacyWorld {
                     }
                 }
 
-                // Dobermann hit
-                for (Dobermann& dobermann : GetDobermanns()) {
-                    if (objectId == dobermann.GetRagdollV2Id()) {
-                        dobermann.TakeDamage(bullet.GetDamage());
-                        SpawnBlood(hitPosition, -bullet.GetDirection());
-                        TriggerFleshHit();
-                    }
-
-                    //if (objectType == ObjectType::RAGDOLL_V2) {
-                        //float strength = 100000.0f;
-                        //glm::vec3 force = bullet.GetDirection() * strength;
-                        //RagdollManager::AddForce(physicsId, force);
-                    //}
-                }
-
-                // Kangaroo hit
-                for (AnimatedGameObject& animatedGameObject : GetAnimatedGameObjects()) {
-                    if (animatedGameObject.GetRagdollId() == objectId) {
-
-                        for (Kangaroo& kangaroo : GetKangaroos()) {
-                            if (kangaroo.GetAnimatedGameObject() == &animatedGameObject) {
-                                SpawnBlood(hitPosition, -bullet.GetDirection());
-                                TriggerFleshHit();
-                            }
-                        }
-                    }
-                }
-
-                // Shark Kit
-                if (Shark* shark = LegacyWorld::GetSharkByObjectId(objectId)) {
-                    shark->GiveDamage(bullet.GetOwnerObjectId(), bullet.GetDamage());
-                    SpawnBlood(hitPosition, -bullet.GetDirection());
-                    TriggerFleshHit();
-                }
-
-                // Apply physics force      (THIS DOES NOT WORK FOR BVH PHYSICS HITS YOU THINK?????)
-                if (physicsId != 0) {
-                    float strength = 25000.0f;
-                    strength = 15000.0f;
-                    glm::vec3 force = bullet.GetDirection() * strength;
-                    RagdollManager::AddForce(physicsId, force);
-                    Hell::Physics::AddFoceToRigidDynamic(physicsId, force);
-                    std::cout << "applied physx force\n";
-                }
-
-                // Shot player ragdoll
-                if (Player* player = GameOLD::GetPlayerByPlayerId(objectId)) {
-                    // Head shot hack
-                    if (RagdollV1* ragdoll = player->GetRagdoll()) {
-                        int max = std::min(ragdoll->m_rigidDynamicIds.size(), ragdoll->m_correspondingBoneNames.size());
-                        for (int i = 0; i < max; i++) {
-                            if (ragdoll->m_rigidDynamicIds[i] == physXRayResult.userData.physicsId) {
-                                if (ragdoll->m_correspondingBoneNames[i] == "CC_Base_Head") {
-                                    player->Kill(true);
-                                }
-                            }
-                        }
-                    }
-
-                    player->GiveDamage(bullet.GetDamage(), bullet.GetOwnerObjectId());
-                    TriggerFleshHit();
-
-                    // REMOVE ME!!!! you are already doing this below. figure out better force system
-                    float strength = 1000.0f;
-                    glm::vec3 force = bullet.GetDirection() * strength;
-                    Hell::Physics::AddFoceToRigidDynamic(physicsId, force);
-                    SpawnBlood(hitPosition, -bullet.GetDirection());
-                }
-
                 // Decal texture painting
                 if (bullet.CreatesDecalTexturePaintedWounds()) {
                     DecalPaintingInfo decalPaintingInfo;
@@ -326,49 +228,6 @@ namespace LegacyWorld {
                     glm::vec3 force = bullet.GetDirection() * strength;
                     object->GetMeshNodes().AddForceToPhsyics(force);
                 }
-
-                // TEST FOR CHAIN
-                //if (rayResult.hitFound) {
-                //    PhysicsType& physicsType = rayResult.userData.physicsType;
-                //    ObjectType& objectType = rayResult.userData.objectType;
-                //    uint64_t physicsId = rayResult.userData.physicsId;
-                //    uint64_t objectId = rayResult.userData.objectId;
-                //
-                //    // Apply force if object is dynamic
-                //    if (physicsType == PhysicsType::RIGID_DYNAMIC) {
-                //        //float strength = 200.0f;
-                //        float strength = 1000.0f;
-                //        glm::vec3 force = bullet.GetDirection() * strength;
-                //        Hell::Physics::AddFoceToRigidDynamic(physicsId, force);
-                //        std::cout << "Shot a rigid dynamic TEST\n";
-                //    }
-                //}
-            }
-
-            // On hit
-            PhysXRayResult rayResult;
-            if (rayResult.hitFound) {
-                PhysicsType& physicsType = rayResult.userData.physicsType;
-                ObjectType objectType = UniqueID::GetType(rayResult.userData.objectId);
-                uint64_t physicsId = rayResult.userData.physicsId;
-                uint64_t objectId = rayResult.userData.objectId;
-
-                // Blood
-                //if (objectType == ObjectType::RAGDOLL_PLAYER ||
-                //    objectType == ObjectType::RAGDOLL_ENEMY ||
-                //    objectType == ObjectType::RAGDOLL_V2 ||
-                //    objectType == ObjectType::SHARK) {
-                //    SpawnBlood(rayResult.hitPosition, -bullet.GetDirection());
-                //}
-
-                // Apply force if object is dynamic
-                if (physicsType == PhysicsType::RIGID_DYNAMIC) {
-                    //float strength = 200.0f;
-                    float strength = 1000.0f;
-                    glm::vec3 force = bullet.GetDirection() * strength;
-                    Hell::Physics::AddFoceToRigidDynamic(physicsId, force);
-                    std::cout << "Shot a rigid dynamic\n";
-                }
             }
         }
 
@@ -376,11 +235,12 @@ namespace LegacyWorld {
         bullets = newBullets;
     }
 
+    // Spawn blood
+
     void SpawnBlood(const glm::vec3& position, const glm::vec3& direction) {
-        // Create VAT blood then and there
         AddVATBlood(position, direction);
 
-        // For the screenspace decal blood, cast a ray directly down and create it at the ray hit position
+        // For the screen space decal blood, cast a ray directly down and create it at the ray hit position
         glm::vec3 rayOrigin = position;
         glm::vec3 rayDirection = glm::vec3(0.0f, -1.0f, 0.0f);
         float rayLength = 100;
@@ -392,5 +252,65 @@ namespace LegacyWorld {
             decalCreateInfo.direction = direction;
             AddScreenSpaceBloodDecal(decalCreateInfo);
         }
+    }
+
+    // Dobermann hit
+
+    void ProcessDobermannHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
+        Dobermann* dobermann = LegacyWorld::GetDobermannByObjectId(objectId);
+        if (!dobermann) return;
+
+        dobermann->TakeDamage(bullet.GetDamage());
+
+        SpawnBlood(hitPosition, -bullet.GetDirection());
+        TriggerFleshImpactAudio();
+    }
+
+    // Shark hit
+
+    void ProcessSharkHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
+        Shark* shark = LegacyWorld::GetSharkByObjectId(objectId);
+        if (!shark) return;
+
+        shark->GiveDamage(bullet.GetOwnerObjectId(), bullet.GetDamage());
+
+        SpawnBlood(hitPosition, -bullet.GetDirection());
+        TriggerFleshImpactAudio();
+    }
+
+    // Kangaroo hit
+
+    void ProcessKangarooHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
+        Kangaroo* kangaroo = LegacyWorld::GetKangarooByObjectId(objectId);
+        if (!kangaroo) return;
+
+        kangaroo->GiveDamage(bullet.GetDamage());
+
+        SpawnBlood(hitPosition, -bullet.GetDirection());
+        TriggerFleshImpactAudio();
+    }
+
+    // Player hit
+
+    void ProcessPlayerHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
+        Player* player = GameOLD::GetPlayerByPlayerId(objectId);
+        if (!player) return;
+
+        Ragdoll* ragdoll = player->GetRagdoll();
+        if (!ragdoll) return;
+
+        // Head shot
+        if (ragdoll->GetBoneNameByPhysicsId(physicsId) == "CC_Base_Head") {
+            player->Kill(true);
+            std::cout << "[Player head shot]\n";
+        }
+        // body shot
+        else {
+            player->GiveDamage(bullet.GetDamage(), bullet.GetOwnerObjectId());
+            std::cout << "[Player body shot]\n";
+        }
+
+        TriggerFleshImpactAudio();
+        SpawnBlood(hitPosition, -bullet.GetDirection());
     }
 }

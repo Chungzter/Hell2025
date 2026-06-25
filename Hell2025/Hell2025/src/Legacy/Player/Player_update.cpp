@@ -9,6 +9,7 @@ namespace Audio = Hell::Audio;
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
+#include "Renderer/Renderer.h" // For ragdoll draw settings. TODO: get me out of here
 
 void Player::Update(float deltaTime) {
     m_moving = false;
@@ -27,6 +28,14 @@ void Player::Update(float deltaTime) {
     }
     if (AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject()) {
         characterModel->SetIgnoredViewportIndex(m_viewportIndex);
+        if (Ragdoll* ragdoll = GetRagdoll()) {
+            if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
+                characterModel->DisableRendering();
+            }
+            else {
+                characterModel->EnableRendering();
+            }
+        }
     }
 
     // Toggle inventory

@@ -214,6 +214,8 @@ namespace LegacyWorld {
     PictureFrame* GetPictureFrameByObjectId(uint64_t objectId);
     Wall* GetWallByObjectId(uint64_t objectId);
     Wall* GetWallByWallSegmentObjectId(uint64_t objectId);
+    Dobermann* GetDobermannByObjectId(uint64_t objectId);
+    Kangaroo* GetKangarooByObjectId(uint64_t objectId);
     Shark* GetSharkByObjectId(uint64_t objectId);
     Window* GetWindowByObjectId(uint64_t objectId);
     GameObject* GetGameObjectByIndex(int32_t index);

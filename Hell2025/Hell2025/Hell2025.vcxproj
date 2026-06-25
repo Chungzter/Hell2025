@@ -341,6 +341,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\AssetLoader\AssetLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\IESLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\MidiFileLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\RagdollDataLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\SpriteSheetLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\SoundFontLoader.cpp" />
     <ClCompile Include="src\Hell\File\File.cpp" />
@@ -399,10 +400,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Legacy\Inventory\Inventory_render_submit.cpp" />
     <ClCompile Include="src\Legacy\Inventory\inventory_update.cpp" />
     <ClCompile Include="src\Legacy\Managers\MapManager.cpp" />
-    <ClCompile Include="src\Legacy\Ragdoll\Api.cpp" />
-    <ClCompile Include="src\Legacy\Ragdoll\RagdollV2Data.cpp" />
-    <ClCompile Include="src\Legacy\Ragdoll\RagdollManager.cpp" />
-    <ClCompile Include="src\Legacy\Ragdoll\RagdollV2.cpp" />
+    <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollAPI.cpp" />
+    <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollData.cpp" />
+    <ClCompile Include="src\Hell\Physics\Ragdoll\Ragdoll.cpp" />
     <ClCompile Include="src\Legacy\Types\Core\Openable.cpp" />
     <ClCompile Include="src\Legacy\Types\Game\BulletTrail.cpp" />
     <ClCompile Include="src\Legacy\Types\Game\Decal.cpp" />
@@ -454,10 +454,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Legacy\Imgui\Types\Types.cpp" />
     <ClCompile Include="src\Hell\Math\AABB.cpp" />
     <ClCompile Include="src\Legacy\Ocean\Ocean.cpp" />
-    <ClCompile Include="src\Hell\Physics\Physics_ragdolls.cpp" />
     <ClCompile Include="src\Hell\Physics\Types\D6Joint.cpp" />
     <ClCompile Include="src\Legacy\Player\Player_piano.cpp" />
-    <ClCompile Include="src\Hell\Physics\Types\RagdollV1.cpp" />
     <ClCompile Include="src\Legacy\Types\Exterior\Road.cpp" />
     <ClCompile Include="src\Legacy\Types\Generics\GenericBouncable.cpp" />
     <ClCompile Include="src\Legacy\Types\House\WeatherBoards.cpp" />
@@ -474,7 +472,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\ResourceManagement\Types\Mesh.cpp" />
     <ClCompile Include="src\Legacy\Types\Renderer\MeshBufferOLD.cpp" />
     <ClCompile Include="src\Legacy\Types\Renderer\MeshNodes.cpp" />
-    <ClCompile Include="src\Legacy\Types\Renderer\Model.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\Model.cpp" />
     <ClCompile Include="src\Legacy\Types\House\Trim.cpp" />
     <ClCompile Include="src\Legacy\Types\House\WallSegment.cpp" />
     <ClCompile Include="src\Hell\Physics\PhysicsDebug.cpp" />
@@ -511,7 +509,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Legacy\Player\Player_weapon_logic_shotgun.cpp" />
     <ClCompile Include="src\Hell\Physics\PhysicsUtil.cpp" />
     <ClCompile Include="src\Legacy\Types\Renderer\GrassMesh.cpp" />
-    <ClCompile Include="src\Legacy\Types\Renderer\SpriteSheetTexture.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\SpriteSheetTexture.cpp" />
     <ClCompile Include="src\Legacy\API\OpenGL\Types\GL_texture_readback.cpp" />
     <ClCompile Include="src\Legacy\Types\Game\BulletCasing.cpp" />
     <ClCompile Include="src\Legacy\Types\Game\Light.cpp" />
@@ -540,7 +538,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Legacy\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Legacy\Camera\Camera.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\Animation.cpp" />
-    <ClCompile Include="src\Legacy\Types\Renderer\SkinnedModel.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\SkinnedModel.cpp" />
     <ClCompile Include="src\Legacy\Types\Game\AnimatedGameObject.cpp" />
     <ClCompile Include="src\Legacy\Types\Game\GameObject.cpp" />
     <ClCompile Include="src\Hell\Input\Input.cpp" />
@@ -746,7 +744,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Math\Math.h" />
     <ClInclude Include="src\Hell\Math\Transform.h" />
     <ClInclude Include="src\Hell\Math\OBB.h" />
-    <ClInclude Include="src\Legacy\Ragdoll\Ragdoll_util.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollUtil.h" />
     <ClInclude Include="src\Legacy\Types\Characters\Enemies\CharacterSpine.h" />
     <ClInclude Include="src\Legacy\Types\Characters\Enemies\Dobermann\Dobermann.h" />
     <ClInclude Include="src\Legacy\Inventory\Inventory.h" />
@@ -759,11 +757,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Legacy\Pathfinding\NavMesh.h" />
     <ClInclude Include="src\Legacy\Pathfinding\Pathfinding.h" />
     <ClInclude Include="src\Hell\Physics\Types\CharacterController.h" />
-    <ClInclude Include="src\Legacy\Ragdoll\Api.h" />
-    <ClInclude Include="src\Legacy\Ragdoll\RagdollV2Data.h" />
-    <ClInclude Include="src\Legacy\Ragdoll\RagdollManager.h" />
-    <ClInclude Include="src\Legacy\Ragdoll\RagdollV2.h" />
-    <ClInclude Include="src\Legacy\Ragdoll\Types.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollAPI.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollData.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\Ragdoll.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollTypes.h" />
     <ClInclude Include="src\Legacy\GlobalIllumination\GlobalIllumination.h" />
     <ClInclude Include="src\Legacy\Types\Animation\Animator.h" />
     <ClInclude Include="src\Legacy\Types\Christmas\ChristmasLights.h" />
@@ -796,7 +793,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Legacy\Ocean\Ocean.h" />
     <ClInclude Include="src\Hell\Physics\CollisionReports.h" />
     <ClInclude Include="src\Hell\Physics\Types\D6Joint.h" />
-    <ClInclude Include="src\Hell\Physics\Types\RagdollV1.h" />
     <ClInclude Include="src\Legacy\Types\Exterior\Fence.h" />
     <ClInclude Include="src\Legacy\Types\Exterior\PowerPoleSet.h" />
     <ClInclude Include="src\Legacy\Types\Exterior\Road.h" />
@@ -821,7 +817,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\ResourceManagement\Types\MidiFile.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\SoundFont.h" />
     <ClInclude Include="src\Legacy\Types\Renderer\MeshNodes.h" />
-    <ClInclude Include="src\Legacy\Types\Renderer\Model.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\Model.h" />
     <ClInclude Include="src\Legacy\Types\House\Trim.h" />
     <ClInclude Include="src\Legacy\Types\House\WallSegment.h" />
     <ClInclude Include="src\Hell\Physics\Types\HeightField.h" />
@@ -840,7 +836,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Legacy\Types\Game\Map.h" />
     <ClInclude Include="src\Hell\Physics\Physics.h" />
     <ClInclude Include="src\Legacy\Types\Renderer\GrassMesh.h" />
-    <ClInclude Include="src\Legacy\Types\Renderer\SpriteSheetTexture.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\SpriteSheetTexture.h" />
     <ClInclude Include="src\Legacy\API\OpenGL\Types\GL_texture_readback.h" />
     <ClInclude Include="src\Legacy\Types\Game\BulletCasing.h" />
     <ClInclude Include="src\Legacy\Types\Game\Light.h" />
@@ -856,7 +852,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Legacy\Renderer\RenderDataManager.h" />
     <ClInclude Include="src\Legacy\Renderer\Renderer.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\Animation.h" />
-    <ClInclude Include="src\Legacy\Types\Renderer\SkinnedModel.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\SkinnedModel.h" />
     <ClInclude Include="src\Legacy\Timer.hpp" />
     <ClInclude Include="src\Legacy\Camera\Camera.h" />
     <ClInclude Include="src\Legacy\Types\Game\AnimatedGameObject.h" />

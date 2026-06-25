@@ -7,7 +7,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/Scene.h>
 #include <assimp/PostProcess.h>
-#include "Util/Util.h"
+#include <cmath>
 #include <numeric>
 
 #include <map>
@@ -15,6 +15,38 @@
 #include <string>
 
 #include <iostream> // TODO: cleanup logging
+
+namespace {
+
+    float Sanitize(float val) {
+        const float threshold = 1e-5f;
+
+        if (std::abs(val) < threshold) {
+            return 0.0f;
+        }
+        if (std::abs(val - 1.0f) < threshold) {
+            return 1.0f;
+        }
+        if (std::abs(val + 1.0f) < threshold) {
+            return -1.0f;
+        }
+
+        return val;
+    }
+
+    glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
+        glm::mat4 to;
+        to[0][0] = Sanitize(from.a1); to[1][0] = Sanitize(from.a2); to[2][0] = Sanitize(from.a3); to[3][0] = Sanitize(from.a4);
+        to[0][1] = Sanitize(from.b1); to[1][1] = Sanitize(from.b2); to[2][1] = Sanitize(from.b3); to[3][1] = Sanitize(from.b4);
+        to[0][2] = Sanitize(from.c1); to[1][2] = Sanitize(from.c2); to[2][2] = Sanitize(from.c3); to[3][2] = Sanitize(from.c4);
+        to[0][3] = Sanitize(from.d1); to[1][3] = Sanitize(from.d2); to[2][3] = Sanitize(from.d3); to[3][3] = Sanitize(from.d4);
+        return to;
+    }
+
+    const char* BoolToString(bool b) {
+        return b ? "TRUE" : "FALSE";
+    }
+}
 
 namespace Hell::AssetCompiler {
 
@@ -119,7 +151,7 @@ namespace Hell::AssetCompiler {
         // Create the joint node
         Node node;
         node.name = pNode->mName.C_Str();
-        node.inverseBindTransform = Util::aiMatrix4x4ToGlm(pNode->mTransformation);
+        node.inverseBindTransform = aiMatrix4x4ToGlm(pNode->mTransformation);
         node.parentIndex = parentIndex;
 
         // Determine the current node's index and push it
@@ -145,7 +177,7 @@ namespace Hell::AssetCompiler {
 
         Node node;
         node.name = pNode->mName.C_Str();
-        node.inverseBindTransform = Util::aiMatrix4x4ToGlm(pNode->mTransformation);
+        node.inverseBindTransform = aiMatrix4x4ToGlm(pNode->mTransformation);
         node.parentIndex = parentIndex;
 
         // Determine the current node's index and push it
@@ -217,7 +249,7 @@ namespace Hell::AssetCompiler {
                     modelData.boneMapping[boneName] = boneIndex;
 
                     // Store bone info
-                    glm::mat4 boneOffset = Util::aiMatrix4x4ToGlm(bone->mOffsetMatrix);
+                    glm::mat4 boneOffset = aiMatrix4x4ToGlm(bone->mOffsetMatrix);
                     modelData.boneOffsets.push_back(boneOffset);
 
                     //if (modelData.name == "Knife") {
@@ -383,7 +415,7 @@ namespace Hell::AssetCompiler {
                 meshData.nonDeformingBoneIndex = -1;
             }
 
-            std::cout << modelData.name << " [" << meshData.name << "]: " << Util::BoolToString(meshData.requiresSkinning) << " " << foundBoneIndex << " nonDeformingBoneIndex " << meshData.vertexCount << " verts \n";
+            std::cout << modelData.name << " [" << meshData.name << "]: " << BoolToString(meshData.requiresSkinning) << " " << foundBoneIndex << " nonDeformingBoneIndex " << meshData.vertexCount << " verts \n";
 
             modelData.vertexCount += (uint32_t)meshData.vertices.size();
             modelData.indexCount += (uint32_t)meshData.indices.size();

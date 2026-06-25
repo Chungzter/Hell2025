@@ -1,15 +1,16 @@
 #pragma once
-#include "Types/Renderer/SkinnedModel.h"
+#include "Hell/ResourceManagement/Types/Animation.h"
+#include "Hell/ResourceManagement/Types/SkinnedModel.h"
+#include "Hell/Transform.h"
+
 #include <string>
 #include <vector>
 #include <unordered_map>
 
-#include "Hell/ResourceManagement/Types/Animation.h"
-
 struct AnimationLayer {
     Animation* m_animation;
-    std::vector<AnimatedTransform> m_globalNodeTransforms;
-    std::vector<AnimatedTransform> m_localNodeTransforms;
+    std::vector<Hell::QuatTransform> m_globalNodeTransforms;
+    std::vector<Hell::QuatTransform> m_localNodeTransforms;
     std::vector<float> m_boneWeights;
     float m_AnimationWeight = 1.0f;
     float m_currentTime = 0.0f;

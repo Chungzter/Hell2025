@@ -1,18 +1,17 @@
 #include "Physics.h"
-#include <Game/Constants.h>
 #include "Hell/Physics/PhysicsTypes.h"
 #include "Hell/Logging.h"
 #include <iostream>
 
-PxFilterFlags contactReportFilterShader(PxFilterObjectAttributes attributes0, PxFilterData filterData0, PxFilterObjectAttributes attributes1, PxFilterData filterData1, PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize) {
-    PX_UNUSED(attributes0);
-    PX_UNUSED(attributes1);
-    PX_UNUSED(constantBlockSize);
-    PX_UNUSED(constantBlock);
+PxFilterFlags contactReportFilterShader(PxFilterObjectAttributes /*attributes0*/, PxFilterData filterData0, PxFilterObjectAttributes /*attributes1*/, PxFilterData filterData1, PxPairFlags& pairFlags, const void* /*constantBlock*/, PxU32 /*constantBlockSize*/) {
     // generate contacts for all that were not filtered above
     pairFlags = PxPairFlag::eCONTACT_DEFAULT;
 
     if (filterData0.word2 == CollisionGroup::NO_COLLISION) {
+        return PxFilterFlag::eKILL;
+    }
+    else if ((filterData0.word3 & RAGDOLL_SELF_COLLISION_FILTER_TAG_MASK) == RAGDOLL_SELF_COLLISION_FILTER_TAG &&
+             filterData0.word3 == filterData1.word3) {
         return PxFilterFlag::eKILL;
     }
     else if ((filterData0.word2 & filterData1.word1) && (filterData1.word2 & filterData0.word1)) {
@@ -113,7 +112,6 @@ namespace Hell::Physics {
         pxScene->setFlag(PxSceneFlag::eENABLE_STABILIZATION, true);
         // This may not work!
 
-        LoadRagdollsFromDisk();
     }
 
     void AddCollisionReport(CollisionReport& collisionReport) {
@@ -172,8 +170,8 @@ void CCTHitCallback::onShapeHit(const PxControllerShapeHit& hit) {
     Hell::Physics::GetCharacterCollisionReports().push_back(report);
 }
 
-void CCTHitCallback::onControllerHit(const PxControllersHit& hit) {
+void CCTHitCallback::onControllerHit(const PxControllersHit& /*hit*/) {
 }
 
-void CCTHitCallback::onObstacleHit(const PxControllerObstacleHit& hit) {
+void CCTHitCallback::onObstacleHit(const PxControllerObstacleHit& /*hit*/) {
 }

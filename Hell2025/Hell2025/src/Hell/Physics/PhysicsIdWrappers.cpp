@@ -2,6 +2,34 @@
 #include "Hell/Logging.h"
 
 namespace Hell::Physics {
+    
+    // Ragdolls
+
+    void AddForceToRagdoll(uint64_t physicsId, const glm::vec3& force) {
+        for (auto& pair : GetRagdolls()) {
+            pair.second.AddForce(physicsId, force);
+        }
+    }
+
+    std::vector<physx::PxRigidActor*> GetRagdollPxRigidActors(uint64_t ragdollId) {
+        std::vector<physx::PxRigidActor*> actors;
+        if (ragdollId == 0) {
+            return actors;
+        }
+
+        if (Ragdoll* ragdoll = Hell::Physics::GetRagdollById(ragdollId)) {
+            actors.reserve(ragdoll->m_pxRigidDynamics.size());
+            for (physx::PxRigidDynamic* pxRigidDynamic : ragdoll->m_pxRigidDynamics) {
+                if (pxRigidDynamic) {
+                    actors.push_back(pxRigidDynamic);
+                }
+            }
+        }
+
+        return actors;
+    }
+
+    // Rigid Dynamics
 
     bool RigidDynamicIsKinematic(uint64_t rigidDynamicId) {
         RigidDynamic* rigidDynamic = GetRigidDynamicById(rigidDynamicId);
@@ -72,6 +100,9 @@ namespace Hell::Physics {
         rigidDynamic->SetKinematicTarget(globalPoseMatrix);
     }
 
+
+    // Rigid Statics
+
     glm::mat4 GetRigidStaticGlobalPose(uint64_t rigidStaticId) {
         RigidStatic* rigidStatic = GetRigidStaitcById(rigidStaticId);
         if (!rigidStatic) return glm::mat4(1.0f);
@@ -98,6 +129,8 @@ namespace Hell::Physics {
 
         rigidStatic->SetUserData(physicsUserData);
     }
+
+    // Character Controllers
 
     AABB GetCharacterControllerAABB(uint64_t characterControllerId) {
         CharacterController* characterController = GetCharacterControllerById(characterControllerId);

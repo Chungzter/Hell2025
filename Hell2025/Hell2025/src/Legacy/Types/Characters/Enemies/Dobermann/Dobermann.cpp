@@ -2,7 +2,6 @@
 #include "Hell/Logging.h"
 #include "Debug/DebugDraw.h"
 #include "Pathfinding/NavMesh.h"
-#include "Ragdoll/RagdollManager.h"
 #include "Renderer/Renderer.h"
 #include "World/LegacyWorld.h"
 #include "Game/UniqueID.h"
@@ -19,9 +18,13 @@ namespace Input = Hell::Input;
 void Dobermann::Init(DobermannCreateInfo createInfo) {
     m_createInfo = createInfo;
 
+    PhysicsFilterData filterData;
+    filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
+    filterData.collisionGroup = CollisionGroup::RAGDOLL_ENEMY;
+    filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
+
     m_objectId = UniqueID::GetNextObjectId(ObjectType::DOBERMANN);
-    //m_ragdollV2Id = RagdollManager::SpawnRagdoll(createInfo.position, createInfo.eulerDirection, "manikin2");
-    m_ragdollV2Id = RagdollManager::SpawnRagdoll(createInfo.position, createInfo.eulerDirection, "dobermann_new"); 
+    m_RagdollId = Hell::Physics::SpawnRagdoll(createInfo.position, createInfo.eulerDirection, "dobermann_new", m_objectId, filterData);
 
     g_animatedGameObjectObjectId = LegacyWorld::CreateAnimatedGameObject();
 
@@ -32,8 +35,7 @@ void Dobermann::Init(DobermannCreateInfo createInfo) {
     animatedGameObject->SetMeshMaterialByMeshName("Jaw", "DobermannMouthBlood");
     animatedGameObject->SetMeshMaterialByMeshName("Tongue", "DobermannMouthBlood");
     animatedGameObject->SetMeshMaterialByMeshName("Iris", "DobermannIris");
-    animatedGameObject->SetRagdollV2Id(m_ragdollV2Id);
-    DisableRagdollRender();
+    animatedGameObject->SetRagdollId(m_RagdollId);
 
     int32_t woundMaskIndex = Renderer::GetNextFreeWoundMaskIndexAndMarkItTaken();
     animatedGameObject->SetMeshWoundMaskTextureIndex("Body", woundMaskIndex);
@@ -48,9 +50,9 @@ void Dobermann::Init(DobermannCreateInfo createInfo) {
 }
 
 void Dobermann::TakeDamage(uint32_t damage) {
-    RagdollV2* ragdoll = RagdollManager::GetRagdollV2ById(m_ragdollV2Id);
+    Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_RagdollId);
     AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-    animatedGameObject->SetAnimationModeToRagdollV2();
+    animatedGameObject->SetAnimationModeToRagdoll();
 
     // Would this kill it?
     if (m_health > 0.0f && m_health - damage <= 0.0f) {
@@ -59,14 +61,6 @@ void Dobermann::TakeDamage(uint32_t damage) {
 
     // Apply damage
     m_health -= damage;
-}
-
-void Dobermann::EnableRagdollRender() {
-    m_renderRagdoll = true;
-}
-
-void Dobermann::DisableRagdollRender() {
-    m_renderRagdoll = false;
 }
 
 void Dobermann::SetPosition(const glm::vec3& position) {
@@ -113,21 +107,12 @@ void Dobermann::DebugDraw() {
 
 void Dobermann::Update(float deltaTime) {
     AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-    RagdollV2* ragdoll = RagdollManager::GetRagdollV2ById(m_ragdollV2Id);
+    Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_RagdollId);
 
     //DebugDraw();
 
     if (!ragdoll) return;
     if (!animatedGameObject) return;
-
-    if (Input::KeyPressed(HELL_KEY_I)) {
-        if (m_renderRagdoll) {
-            DisableRagdollRender();
-        }
-        else {
-            EnableRagdollRender();
-        }
-    }
 
     if (Input::KeyPressed(HELL_KEY_Y)) {
         ResetToInitialState();
@@ -229,15 +214,11 @@ void Dobermann::Update(float deltaTime) {
     //    animatedGameObject->PlayAndLoopAnimation("MainLayer", "Dobermann_Walk", 1.0f);
     //}
 
-    // Ragdoll rendering
-    if (m_renderRagdoll) {
+    if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
         animatedGameObject->DisableRendering();
-        ragdoll->EnableRendering();
     }
     else {
         animatedGameObject->EnableRendering();
-        ragdoll->DisableRendering();
-
     }
     //DebugDraw::DrawPoint(GetPosition(), PINK);
 

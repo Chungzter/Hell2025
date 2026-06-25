@@ -1,7 +1,7 @@
 #pragma once
 #include "Camera/Frustum.h"
 #include "Types/Renderer/MeshNodes.h"
-#include "Types/Renderer/Model.h"
+#include "Hell/ResourceManagement/Types/Model.h"
 #include <Game/CreateInfo.h>
 #include <Game/Types.h>
 

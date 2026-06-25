@@ -9,7 +9,6 @@
 #include "Modelling/Unused/Modelling.h"
 #include "World/LegacyWorld.h"
 
-#include "Ragdoll/RagdollManager.h"
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
 
@@ -380,82 +379,56 @@ namespace OpenGLRenderer {
             }
         }
 
-        OpenGLShader* ragdollShader = GetShaderOLD("DebugRagdoll");
-        ragdollShader->Bind();
-        ForceRasterizerState("GeometryPass_Default");
-        EditorRasterizerStateOverride();
+        // Debug draw ragdolls
+        if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
+            OpenGLShader* ragdollShader = GetShaderOLD("DebugRagdoll");
+            ragdollShader->Bind();
+            ForceRasterizerState("GeometryPass_Default");
+            EditorRasterizerStateOverride();
 
-        for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
+            MeshBuffer& physicsDebugGeometry = ResourceManager::GetMeshBuffer("PhysicsDebugGeometry");
+            if (physicsDebugGeometry.GetMeshCount() > 0) {
+                for (int i = 0; i < 4; i++) {
+                    Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+                    if (viewport->IsVisible()) {
+                        OpenGLRenderer::SetViewport(gBuffer, viewport);
 
-                ragdollShader->SetInt("u_playerIndex", i);
-                ragdollShader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+                        Player* player = GameOLD::GetLocalPlayerByIndex(i);
+                        if (!player) continue;
 
-                // Ragdoll
-                auto& ragdolls = RagdollManager::GetRagdolls();
+                        ragdollShader->SetInt("u_playerIndex", i);
+                        ragdollShader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 
-                for (auto it = ragdolls.begin(); it != ragdolls.end(); ) {
-                    RagdollV2& ragdoll = it->second;
+                        glBindVertexArray(physicsDebugGeometry.GetVAO());
 
-                    if (ragdoll.RenderingEnabled()) {
-                        MeshBufferOLD& meshBuffer = ragdoll.GetMeshBuffer();
-                        glBindVertexArray(meshBuffer.GetGLMeshBuffer().GetVAO());
+                        // Ragdoll
+                        auto& ragdolls = Hell::Physics::GetRagdolls();
 
-                        for (int j = 0; j < meshBuffer.GetMeshCount(); j++) {
-                            if (meshBuffer.GetIndices().size() == 0) continue;
+                        for (auto it = ragdolls.begin(); it != ragdolls.end(); ) {
+                            Ragdoll& ragdoll = it->second;
 
-                            Mesh* mesh = meshBuffer.GetMeshByIndex(j);
-                            glm::mat4 modelMatrix = ragdoll.GetModelMatrixByRigidIndex(j);
-                            ragdollShader->SetMat4("u_model", modelMatrix);
-                            ragdollShader->SetVec3("u_color", ragdoll.GetMarkerColorByRigidIndex(j));
+                            // Dont render current viewports ragdoll. It blocks the screen.
+                            bool skipRendering = (player->GetRagdollId() == it->first);
 
-                            glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
+                            if (!skipRendering) {
+                                for (uint32_t rigidIndex = 0; rigidIndex < ragdoll.m_pxRigidDynamics.size(); rigidIndex++) {
+                                    const uint32_t meshId = ragdoll.GetMarkerDebugMeshIdByRigidIndex(rigidIndex);
+                                    if (meshId == 0) continue;
+
+                                    Mesh* mesh = physicsDebugGeometry.GetMeshById(meshId);
+                                    if (!mesh) continue;
+
+                                    glm::mat4 modelMatrix = ragdoll.GetModelMatrixByRigidIndex(rigidIndex);
+                                    ragdollShader->SetMat4("u_model", modelMatrix);
+                                    ragdollShader->SetVec3("u_color", ragdoll.GetMarkerColorByRigidIndex(rigidIndex));
+
+                                    glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
+                                }
+                            }
+                            it++;
                         }
                     }
-                    it++;
                 }
-
-                // Door debug
-                //for (Door& door : LegacyWorld::GetDoors()) {
-                //    MeshBuffer& meshBuffer = door.m_raytracingDoorMesh;
-                //    glBindVertexArray(meshBuffer.GetGLMeshBuffer().GetVAO());
-                //
-                //    for (int j = 0; j < meshBuffer.GetMeshCount(); j++) {
-                //        if (meshBuffer.GetIndices().size() == 0) continue;
-                //
-                //        MeshNode* meshNode = door.GetMeshNodes().GetMeshNodeByMeshName("Door_Hinges");
-                //        glm::mat4 modelMatrix = meshNode->worldMatrix;
-                //        modelMatrix[3][1] = door.GetDoorModelMatrix()[3][1];
-                //
-                //        Mesh* mesh = meshBuffer.GetMeshByIndex(j);
-                //        ragdollShader->SetMat4("u_model", modelMatrix);
-                //        ragdollShader->SetVec3("u_color", glm::vec3(1, 0, 0));
-                //
-                //        //glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
-                //    }
-                //}
-
-                //for (DDGIVolume& volume : LegacyWorld::GetDDGIVolumes()) {
-                //    MeshBuffer& meshBuffer = volume.m_staticMeshBuffer;
-                //    glBindVertexArray(meshBuffer.GetGLMeshBuffer().GetVAO());
-                //
-                //
-                //    for (int j = 0; j < meshBuffer.GetMeshCount(); j++) {
-                //        if (meshBuffer.GetIndices().size() == 0) continue;
-                //
-                //        Mesh* mesh = meshBuffer.GetMeshByIndex(j);
-                //        ragdollShader->SetMat4("u_model", glm::mat4(1.0f));
-                //        ragdollShader->SetVec3("u_color", glm::vec3(1, 0, 0));
-                //
-                //        std::cout << meshBuffer.GetVertices().size() << "\n";
-                //
-                //        glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
-                //    }
-                //
-                //    break;
-                //}
             }
         }
 
@@ -638,4 +611,3 @@ namespace OpenGLRenderer {
         gBuffer->BindDepthAttachmentFrom(*gBuffer);
     }
 }
-

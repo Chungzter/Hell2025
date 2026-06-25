@@ -6,6 +6,8 @@
 #include "Pathfinding/AStar.h"
 #include "Hell/Physics/Types/CharacterController.h"
 
+struct Ragdoll;
+
 enum struct KanagarooAgroState {
     CHILLING,
     ANGRY,
@@ -41,6 +43,7 @@ struct Kangaroo {
     void GoToTarget(glm::vec3 targetPosition);
 
     AnimatedGameObject* GetAnimatedGameObject();
+    Ragdoll* GetRagdoll();
 
     const std::string GetDebugInfoString();
     const std::string GetAnimationStateAsString();
@@ -52,7 +55,9 @@ struct Kangaroo {
     void MarkWoundTextureAsCleared();
 
     int GetHealth()                             { return m_health; }
+    uint64_t GetObjectId()                      { return m_objectId; }
     uint64_t GetCharacterControllerId ()        { return m_characterControllerId; }
+    uint64_t GetRagdollId()                   { return m_RagdollId; }
     glm::vec3 GetPosition()                     { return m_position; }
     bool WoundTextureNeedsClearing()            { return m_woundTextureNeedsClearing; }
 
@@ -101,8 +106,10 @@ private:
     bool m_woundTextureNeedsClearing = false;
 
     uint64_t m_ambientLoopAudioHandle = 0;
+    uint64_t m_objectId = 0;
     uint64_t m_characterControllerId = 0;
     uint64_t m_animatedGameObjectId = 0;
+    uint64_t m_RagdollId = 0;
 
     KangarooCreateInfo m_createInfo;
     KanagarooAgroState m_agroState = KanagarooAgroState::CHILLING;

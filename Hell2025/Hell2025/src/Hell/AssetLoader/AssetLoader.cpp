@@ -420,6 +420,7 @@ namespace Hell::AssetLoader {
         DiscoverAssets();
         LoadIESFiles();
         LoadMidiFiles();
+        LoadRagdollDataFiles();
         LoadSoundFonts();
     }
 

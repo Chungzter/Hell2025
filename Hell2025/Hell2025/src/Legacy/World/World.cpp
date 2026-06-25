@@ -21,8 +21,6 @@
 
 #include "Pathfinding/AStarMap.h"
 
-#include "Hell/Physics/Types/RagdollV1.h"
-
 #include "Hell/Containers/SlotMap.h"
 
 using namespace Hell;
@@ -100,15 +98,6 @@ namespace LegacyWorld {
     } g_worldState;
 
     void Init() {
-        //KangarooCreateInfo kangarooCreateInfo;
-        //
-        //kangarooCreateInfo.position = glm::vec3(48, 32.6, 39);
-        //kangarooCreateInfo.rotation = glm::vec3(0, HELL_PI * -0.5f, 0);
-        //AddKangaroo(kangarooCreateInfo);
-        //
-        //kangarooCreateInfo.position = glm::vec3(48, 32.6, 36);
-        //kangarooCreateInfo.rotation = glm::vec3(0, HELL_PI * -0.5f, 0);
-        //AddKangaroo(kangarooCreateInfo);
 
         NewRun();
 
@@ -147,21 +136,6 @@ namespace LegacyWorld {
             LoadMapInstanceObjects(mapInstanceCreateInfo.mapName, spawnOffset);
             LoadMapInstanceHouses(mapInstanceCreateInfo.mapName, spawnOffset);
 
-
-        // Add all this to the map editor tomorrow
-        // Add all this to the map editor tomorrow
-        // Add all this to the map editor tomorrow
-
-            // Hack in a Christmas tree
-            //ChristmasTreeCreateInfo christmasTreeCreateInfo;
-            //christmasTreeCreateInfo.position = glm::vec3(8.13f, 0.15f, 1.2f);
-            //christmasTreeCreateInfo.rotation.y = Util::RandomFloat(0, HELL_PI);
-            //AddChristmasTree(christmasTreeCreateInfo, spawnOffset);
-            //
-            //christmasTreeCreateInfo.position = glm::vec3(0.78f, 0.15f, 2.25f);
-            //christmasTreeCreateInfo.rotation.y = Util::RandomFloat(0, HELL_PI);
-            //AddChristmasTree(christmasTreeCreateInfo, spawnOffset);
-
             Logging::Warning() << "MAKE SURE YOU REMOVE THIS LINE break IT IS DISABLING THE LOAD OF THE SECOND MAP INSTANCE";
             break;
             i++;
@@ -169,28 +143,7 @@ namespace LegacyWorld {
 
         RecreateAllHouseGeometry();
 
-        //GlobalIllumination::SetGlobalIlluminationStructuresDirtyState(true);
-
         GameObjectCreateInfo createInfo;
-        //createInfo.position = glm::vec3(40.65f, 31.0f, 34.1f);
-        //createInfo.modelName = "Drawers2";
-
-        //AddGameObject(createInfo);
-        //g_gameObjects[0].SetMeshMaterial("Frame", "T_Main_01a");
-        //g_gameObjects[0].SetMeshMaterial("Drawers", "Drawers_Drawers");
-        //g_gameObjects[0].SetMeshMaterial("Handles", "Drawers_Handles");
-        //g_gameObjects[0].SetMeshMaterial("Key", "T_SmallKey_01a");
-
-        //
-        //createInfo2.position = glm::vec3(37.25f, 31.0f, 35.5f);
-        //createInfo2.scale = glm::vec3(1.0f);
-        //createInfo2.modelName = "DobermannTest";
-        //AddGameObject(createInfo2);
-        //g_gameObjects[1].SetMeshMaterial("Dobermann", "DobermannMouthBlood");
-        //g_gameObjects[1].SetMeshMaterial("Iris", "DobermannIris");
-        //g_gameObjects[1].SetMeshMaterial("Tongue", "DobermannMouthBlood");
-        //g_gameObjects[1].SetMeshMaterial("Jaw", "DobermannMouthBlood");
-
         createInfo.position = glm::vec3(32.45f, 30.52f, 10.22f);
         createInfo.rotation.y = -HELL_PI * 0.5f;
         createInfo.scale = glm::vec3(1.0f);
@@ -200,11 +153,20 @@ namespace LegacyWorld {
         g_gameObjects[0].SetMeshMaterial("ReflectorRed", "Red");
 
         DobermannCreateInfo dobermannCreateInfo;
-        //dobermannCreateInfo.position = glm::vec3(41.0f, 31.0f, 35.0f);
-        //AddDobermann(dobermannCreateInfo);
-
         dobermannCreateInfo.position = glm::vec3(37.2f, 31.0f, 35.3f);
         AddDobermann(dobermannCreateInfo);
+
+        KangarooCreateInfo kangarooCreateInfo;
+        kangarooCreateInfo.position = glm::vec3(48, 32.6, 39);
+        kangarooCreateInfo.rotation = glm::vec3(0, HELL_PI * -0.5f, 0);
+        AddKangaroo(kangarooCreateInfo);
+
+        PhysicsFilterData filterData;
+        filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
+        filterData.collisionGroup = CollisionGroup::RAGDOLL_ENEMY;
+        filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
+        Hell::Physics::SpawnRagdoll(glm::vec3(36, 31, 36), glm::vec3(0.0f, 0.2f, 0.0f), "manikin", UniqueID::GetNextObjectId(ObjectType::RAGDOLL_STANDALONE), filterData);
+        Hell::Physics::SpawnRagdoll(glm::vec3(37, 31, 36), glm::vec3(0.0f, -0.4f, 0.0f), "manikin", UniqueID::GetNextObjectId(ObjectType::RAGDOLL_STANDALONE), filterData);
     }
 
     void LoadMapInstancesHeightMapData(std::vector<MapInstanceCreateInfo> mapInstanceCreateInfoSet) {
@@ -1365,6 +1327,34 @@ namespace LegacyWorld {
         for (Shark& shark: g_sharks) {
             if (shark.GetObjectId() == objectId) {
                 return &shark;
+            }
+        }
+        return nullptr;
+    }
+
+    Dobermann* GetDobermannByObjectId(uint64_t objectId) {
+        for (Dobermann& dobermann : g_dobermanns) {
+            CharacterController* characterController = dobermann.GetCharacterController();
+            if (!characterController) continue;
+
+            auto* pxController = characterController->GetPxController();
+            if (!pxController) continue;
+
+            auto* pxActor = pxController->getActor();
+            if (!pxActor) continue;
+
+            PhysicsUserData* userData = static_cast<PhysicsUserData*>(pxActor->userData);
+            if (userData && userData->objectId == objectId) {
+                return &dobermann;
+            }
+        }
+        return nullptr;
+    }
+
+    Kangaroo* GetKangarooByObjectId(uint64_t objectId) {
+        for (Kangaroo& kangaroo : g_kangaroos) {
+            if (kangaroo.GetObjectId() == objectId) {
+                return &kangaroo;
             }
         }
         return nullptr;

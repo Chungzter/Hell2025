@@ -17,7 +17,6 @@ namespace Audio = Hell::Audio;
 #include "Pathfinding/AStarMap.h"
 #include "Pathfinding/NavMesh.h"
 #include "Hell/Physics/Physics.h"
-#include "Ragdoll/RagdollManager.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "UI/UIBackEnd.h"
@@ -43,7 +42,6 @@ namespace Unloved {
         ViewportManager::Init();
         Editor::Init();
         Hell::Physics::Init();
-        RagdollManager::Init();
         ImGuiBackEnd::Init();
         NavMeshManager::Init();
         Hell::AssetCompiler::CompileOutOfDateAssets();
@@ -103,8 +101,16 @@ namespace Unloved {
         AStarMap::Update();
         GameOLD::Update();
 
-        Hell::Physics::StepSimulation();
+        if (Editor::IsClosed()) {
+            Hell::Physics::StepSimulation();
+        }
         Hell::Physics::SyncRuntimeState();
+        if (Editor::IsClosed()) {
+            Hell::Physics::UpdateHeightFields();
+        }
+        else {
+            Hell::Physics::ActivateAllHeightFields();
+        }
 
         MirrorManager::Update();
 
@@ -150,6 +156,7 @@ namespace Unloved {
         // Renderer
         if (Renderer::GameIsRendering()) {
             if (Input::KeyPressed(HELL_KEY_H))            Renderer::HotloadShaders();
+            if (Input::KeyPressed(HELL_KEY_I))            Renderer::ToggleRagdollRendering();
             if (Input::KeyPressed(HELL_KEY_M))            Renderer::ToggleScreenSpaceReflections();
             if (Input::KeyPressed(HELL_KEY_L))            Renderer::ToggleLighting();
             if (Input::KeyPressed(HELL_KEY_SEMICOLON))    Renderer::ToggleSphericalHarmonics();

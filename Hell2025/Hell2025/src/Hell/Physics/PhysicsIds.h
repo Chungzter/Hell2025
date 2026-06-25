@@ -14,8 +14,7 @@ namespace Hell::Physics {
         GROUND_PLANE,
         CHARACTER_CONTROLLER,
         D6_JOINT,
-        RAGDOLL_V1,
-        RAGDOLL_V2
+        RAGDOLL
     };
 
     inline constexpr uint32_t PHYSICS_ID_TYPE_BITS = 16;

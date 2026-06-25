@@ -27,6 +27,7 @@ namespace Renderer {
     void ToggleIrradianceProbeSampling();
     void TogglePointCloud();
     void TogglePointCloudGrid();
+    void ToggleRagdollRendering();
     void ToggleScreenSpaceReflections();
     void ToggleSphericalHarmonics();
 

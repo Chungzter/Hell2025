@@ -1,7 +1,8 @@
 #pragma once
 #include "Types/Game/AnimatedGameObject.h"
-#include "Hell/Physics/Types/RagdollV1.h"
 #include <vector>
+
+struct Ragdoll;
 
 #define SHARK_SPINE_SEGMENT_COUNT 11
 #define COLLISION_SPHERE_RADIUS 1
@@ -28,7 +29,7 @@ struct Shark {
     void DrawDebug();
 
     AnimatedGameObject* GetAnimatedGameObject();
-    RagdollV1* GetRadoll();
+    Ragdoll* GetRagdoll();
 
     glm::vec3 m_spinePositions[SHARK_SPINE_SEGMENT_COUNT];
     std::string m_spineBoneNames[SHARK_SPINE_SEGMENT_COUNT];
@@ -37,6 +38,7 @@ struct Shark {
     const bool IsDead() const { return !m_alive; }
     const bool IsAlive() const { return m_alive; }
     const uint64_t& GetObjectId() const { return m_objectId; };
+    const uint64_t& GetRagdollId() const { return m_RagdollId; };
 
     SharkHuntingState GetHuntingState() { return m_huntingState; }
     SharkMovementState GetMovementState() { return m_movementState; }
@@ -70,6 +72,7 @@ private:
 
 
     uint64_t m_objectId = 0;
+    uint64_t m_RagdollId = 0;
     uint64_t g_animatedGameObjectObjectId = 0; 
     uint64_t m_huntedPlayerId = 0;
     int m_health = SHARK_HEALTH_MAX;
@@ -148,7 +151,6 @@ private:
   //
   // PxRigidDynamic* m_headPxRigidDynamic = nullptr;
   //
-  // RagdollV1* GetRadoll();
   // AnimatedGameObject* GetAnimatedGameObject();
   // std::string GetDebugText();       
   // glm::vec3 GetForwardVector();

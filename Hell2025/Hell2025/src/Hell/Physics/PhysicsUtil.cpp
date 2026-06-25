@@ -1,8 +1,10 @@
 #include "PhysicsUtil.h"
 #include "Physics.h"
-#include "Util.h"
+#include "Hell/Common/Constants.h"
 
 #include <algorithm>
+#include <cmath>
+#include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream> // TODO: cleanup logging
 
@@ -98,6 +100,49 @@ namespace Hell::Physics {
         }
     }
 
+    float GetDensity(float mass, float volume) {
+        return mass / volume;
+    }
+
+    float GetCubeVolume(const glm::vec3& halfExtents) {
+        return 8.0f * halfExtents.x * halfExtents.y * halfExtents.z;
+    }
+
+    float GetCubeVolume(float halfWidth, float halfHeight, float halfDepth) {
+        return GetCubeVolume(glm::vec3(halfWidth, halfHeight, halfDepth));
+    }
+
+    float GetSphereVolume(float radius) {
+        return (4.0f / 3.0f) * HELL_PI * radius * radius * radius;
+    }
+
+    float GetCapsuleVolume(float radius, float halfHeight) {
+        float cylHeight = halfHeight * 2.0f;
+        float cylVol = HELL_PI * radius * radius * cylHeight;
+        float sphVol = GetSphereVolume(radius);
+        return cylVol + sphVol;
+    }
+
+    float GetConvexHullVolume(const std::span<Vertex>& vertices, const std::span<unsigned int>& indices) {
+        glm::vec3 reference(0.0f);
+        for (const Vertex& vertex : vertices) {
+            reference += vertex.position;
+        }
+        reference /= static_cast<float>(vertices.size());
+
+        float totalVolume = 0.0f;
+        for (size_t i = 0; i < indices.size(); i += 3) {
+            const glm::vec3& v0 = vertices[indices[i]].position;
+            const glm::vec3& v1 = vertices[indices[i + 1]].position;
+            const glm::vec3& v2 = vertices[indices[i + 2]].position;
+
+            const glm::vec3 crossProd = glm::cross(v1 - v0, v2 - v0);
+            const float tetraVolume = std::abs(glm::dot(crossProd, reference - v0)) / 6.0f;
+            totalVolume += tetraVolume;
+        }
+        return totalVolume;
+    }
+
     float ComputeShapeVolume(physx::PxShape* pxShape) {
         if (!pxShape) {
             std::cout << "Hell::Physics::ComputeShapeDenisty() failed: pxShape was nullptr\n";
@@ -110,15 +155,15 @@ namespace Hell::Physics {
 
         if (pxGeometryType == physx::PxGeometryType::Enum::eBOX) {
             const physx::PxBoxGeometry& box = pxGeometryHolder.box();
-            return Util::GetCubeVolume(box.halfExtents.x, box.halfExtents.y, box.halfExtents.z);
+            return GetCubeVolume(box.halfExtents.x, box.halfExtents.y, box.halfExtents.z);
         }
         else if (pxGeometryType == physx::PxGeometryType::Enum::eSPHERE) {
             const physx::PxSphereGeometry& sphere = pxGeometryHolder.sphere();
-            return Util::GetSphereVolume(sphere.radius);
+            return GetSphereVolume(sphere.radius);
         }
         else if (pxGeometryType == physx::PxGeometryType::Enum::eCAPSULE) {
             const physx::PxCapsuleGeometry& capsule = pxGeometryHolder.capsule();
-            return Util::GetCapsuleVolume(capsule.radius, capsule.halfHeight);
+            return GetCapsuleVolume(capsule.radius, capsule.halfHeight);
         }
         else {
             std::cout << "Hell::Physics::ComputeShapeVolume() failed: pxShape was not cube, sphere, or capsule\n";

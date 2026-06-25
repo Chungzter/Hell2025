@@ -2,24 +2,18 @@
 #include "Hell/Logging.h"
 
 void Player::InitRagdoll() {
-    HELL_LOG_FUNCTION
-
     AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject();
     if (!characterModel) return;
 
-    // Set ragdoll
-    characterModel->SetRagdoll("UnisexGuy", 85.0f);
+    const glm::vec3 spawnPosition = GetFootPosition();
+    const glm::vec3 spawnRotation = glm::vec3(0.0f, m_camera.GetEulerRotation().y + HELL_PI, 0.0f);
 
-    // Get ragdoll
-    RagdollV1* ragdoll = GetRagdoll();
-    if (!ragdoll) return;
-
-    // Set ragdoll PhysX filter and user data
     PhysicsFilterData filterData;
     filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
     filterData.collisionGroup = CollisionGroup::RAGDOLL_PLAYER;
-    filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE);
+    filterData.collidesWith = CollisionGroup::ENVIROMENT_OBSTACLE;
 
-    ragdoll->SetFilterData(filterData);
-    ragdoll->SetPhysicsData(characterModel->GetObjectId());
+    const uint64_t RagdollId = Hell::Physics::SpawnRagdoll(spawnPosition, spawnRotation, "UnisexGuy", m_playerId, filterData);
+
+    characterModel->SetRagdollId(RagdollId);
 }

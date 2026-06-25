@@ -43,24 +43,8 @@ enum RaycastGroup {
     DOBERMAN = 32
 };
 
-enum class RaycastIgnoreFlags : uint32_t {
-    NONE = 0,
-    PLAYER_CHARACTER_CONTROLLERS = 1 << 0,
-    PLAYER_RAGDOLLS = 1 << 1,
-};
-
-inline RaycastIgnoreFlags operator|(RaycastIgnoreFlags a, RaycastIgnoreFlags b) {
-    return static_cast<RaycastIgnoreFlags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
-}
-
-inline RaycastIgnoreFlags operator&(RaycastIgnoreFlags a, RaycastIgnoreFlags b) {
-    return static_cast<RaycastIgnoreFlags>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
-}
-
-inline RaycastIgnoreFlags& operator|=(RaycastIgnoreFlags& a, RaycastIgnoreFlags b) {
-    a = a | b;
-    return a;
-}
+inline constexpr uint32_t RAGDOLL_SELF_COLLISION_FILTER_TAG = 0xa5000000;
+inline constexpr uint32_t RAGDOLL_SELF_COLLISION_FILTER_TAG_MASK = 0xff000000;
 
 struct PhysicsFilterData {
     RaycastGroup raycastGroup = RaycastGroup::RAYCAST_DISABLED;

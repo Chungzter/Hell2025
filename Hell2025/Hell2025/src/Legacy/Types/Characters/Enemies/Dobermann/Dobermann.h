@@ -18,8 +18,6 @@ struct Dobermann {
     void ResetToInitialState();
     void SetPosition(const glm::vec3& position);
 
-	void EnableRagdollRender();
-	void DisableRagdollRender();
 	void TakeDamage(uint32_t damage);
 
     void DebugDraw();
@@ -29,7 +27,7 @@ struct Dobermann {
     glm::vec3 GetPosition();
 
     const glm::vec3& GetForward() const             { return m_forward; }
-	uint64_t GetRagdollV2Id()                       { return m_ragdollV2Id; }
+	uint64_t GetRagdollId()                       { return m_RagdollId; }
     const DobermannState GetDobermannState() const  { return m_state; }
 
 private:
@@ -39,11 +37,10 @@ private:
     DobermannCreateInfo m_createInfo;
 	uint64_t g_animatedGameObjectObjectId = 0;
 	uint64_t m_objectId = 0;
-	uint64_t m_ragdollV2Id = 0;
+	uint64_t m_RagdollId = 0;
     uint64_t m_characterControllerId = 0;
 	float m_health = 0.0f;
     float m_initalHealth = 1.0f;
-	bool m_renderRagdoll = false;
     DobermannState m_state = DobermannState::LAY;
     glm::vec3 m_target = glm::vec3(0.0f);
     std::vector<glm::vec3> m_path;

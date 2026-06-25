@@ -8,7 +8,6 @@
 namespace Input = Hell::Input;
 namespace InputMulti = Hell::InputMulti;
 
-
 void Player::UpdateHeadBob(float deltaTime) {
     if (!HasControl()) return;
 
@@ -151,15 +150,14 @@ void Player::UpdateCamera(float deltaTime) {
 
     if (!IsAlive()) {
         AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject();
-        RagdollV1* ragdoll = GetRagdoll();
+        Ragdoll* Ragdoll = GetRagdoll();
 
-        if (characterModel) {
+        if (characterModel && Ragdoll) {
             characterModel->SetAnimationModeToRagdoll();
         }
 
-        if (ragdoll) {
-            ragdoll->ActivatePhysics();
-            glm::mat4 headMatrix = ragdoll->GetRigidWorlTransform("CC_Base_Head");
+        if (Ragdoll) {
+            glm::mat4 headMatrix = Ragdoll->GetRigidWorldTransform("CC_Base_Head");
             m_deathCamViewMatrix = glm::inverse(headMatrix);
         }
     }

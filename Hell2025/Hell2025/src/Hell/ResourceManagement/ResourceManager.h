@@ -8,9 +8,9 @@
 #include "Hell/ResourceManagement/Types/MidiFile.h"
 #include "Hell/ResourceManagement/Types/SoundFont.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
-#include "Types/Renderer/Model.h"
-#include "Types/Renderer/SkinnedModel.h"
-#include "Types/Renderer/SpriteSheetTexture.h"
+#include "Hell/ResourceManagement/Types/Model.h"
+#include "Hell/ResourceManagement/Types/SkinnedModel.h"
+#include "Hell/ResourceManagement/Types/SpriteSheetTexture.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -21,6 +21,8 @@
 namespace Hell::MemoryTracker {
     struct MemoryReport;
 }
+
+struct RagdollData;
 
 namespace Hell::ResourceManager {
 
@@ -66,6 +68,11 @@ namespace Hell::ResourceManager {
     Model* GetModelByName(const std::string& name);
     uint32_t GetModelIdByName(const std::string& name);
     void SetModelName(uint32_t modelId, const std::string& name);
+
+    RagdollData& CreateRagdollData(const std::string& name);
+    RagdollData& CreateRagdollData(RagdollData&& ragdollData);
+    RagdollData& GetRagdollData(const std::string& name);
+    RagdollData* GetRagdollDataByName(const std::string& name);
 
     SkinnedModel& CreateSkinnedModel(const std::string& name);
     std::unordered_map<uint32_t, SkinnedModel>& GetSkinnedModels();

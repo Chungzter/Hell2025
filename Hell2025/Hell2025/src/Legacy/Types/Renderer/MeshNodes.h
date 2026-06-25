@@ -1,13 +1,13 @@
 #pragma once
 #include <Game/Enums.h>
 #include <Game/Types.h>
-#include "Model.h"
 
 #include <Game/CreateInfo.h>
 
 #include "Hell/Math/AABB.h"
 #include "Hell/Math/OBB.h"
 #include "Hell/ResourceManagement/Types/Material.h"
+#include "Hell/ResourceManagement/Types/Model.h"
 
 #include <vector>
 #include <unordered_map>

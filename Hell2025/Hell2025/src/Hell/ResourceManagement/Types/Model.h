@@ -1,8 +1,6 @@
 #pragma once
 #include "Hell/AssetFormats/AssetData.h"
 #include "Hell/File/FileInfo.h"
-#include <Game/Enums.h>
-#include <Game/Types.h>
 #include "Hell/ResourceManagement/Types/Mesh.h"
 
 #include <cstddef>

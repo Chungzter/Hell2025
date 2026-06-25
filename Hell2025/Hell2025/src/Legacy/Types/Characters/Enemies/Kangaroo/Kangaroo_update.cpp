@@ -3,9 +3,21 @@
 #include "Util.h"
 
 #include "Core/GameOLD.h"   // remove me
-
+#include "Renderer/Renderer.h" // TODO get me out of here
 
 void Kangaroo::Update(float deltaTime) {
+    AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
+    Ragdoll* ragdoll = GetRagdoll();
+
+    if (animatedGameObject && ragdoll) {
+        if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
+            animatedGameObject->DisableRendering();
+        }
+        else {
+            animatedGameObject->EnableRendering();
+        }
+    }
+
     if (m_animationState == KanagarooAnimationState::BITE) {
         m_timeSinceBiteBegan += deltaTime;
     }

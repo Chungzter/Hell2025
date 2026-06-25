@@ -27,16 +27,16 @@ struct CharacterCollisionReport {
 class CCTHitCallback : public PxUserControllerHitReport {
 public:
     void onShapeHit(const PxControllerShapeHit& hit);
-    void onControllerHit(const PxControllersHit& hit);
-    void onObstacleHit(const PxControllerObstacleHit& hit);
+    void onControllerHit(const PxControllersHit& /*hit*/);
+    void onObstacleHit(const PxControllerObstacleHit& /*hit*/);
 };
 
 class ContactReportCallback : public PxSimulationEventCallback {
 public:
-    void onConstraintBreak(PxConstraintInfo* constraints, PxU32 count) { PX_UNUSED(constraints); PX_UNUSED(count); }
-    void onWake(PxActor** actors, PxU32 count) { PX_UNUSED(actors); PX_UNUSED(count); }
-    void onSleep(PxActor** actors, PxU32 count) { PX_UNUSED(actors); PX_UNUSED(count); }
-    void onTrigger(PxTriggerPair* pairs, PxU32 count) { PX_UNUSED(pairs); PX_UNUSED(count); }
+    void onConstraintBreak(PxConstraintInfo* /*constraints*/, PxU32 /*count*/) {}
+    void onWake(PxActor** /*actors*/, PxU32 /*count*/) {}
+    void onSleep(PxActor** /*actors*/, PxU32 /*count*/) {}
+    void onTrigger(PxTriggerPair* /*pairs*/, PxU32 /*count*/) {}
     void onAdvance(const PxRigidBody* const*, const PxTransform*, const PxU32) {}
 
     void onContact(const PxContactPairHeader& pairHeader, const PxContactPair* /*pairs*/, PxU32 /*nbPairs*/) {

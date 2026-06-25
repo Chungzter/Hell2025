@@ -9,17 +9,12 @@
 #include "Game/UniqueID.h"
 #include "Util.h"
 
+#include <iostream>
 #include <unordered_set>
-#include <Ragdoll/RagdollManager.h>
 
 AnimatedGameObject::AnimatedGameObject(uint64_t id) {
     m_objectId = id;
 }
-
-void AnimatedGameObject::SetRagdoll(const std::string& ragdollName, float ragdollTotalWeight) {
-    m_ragdollId = Hell::Physics::CreateRagdollByName(ragdollName, ragdollTotalWeight);
-}
-
 
 void AnimatedGameObject::UpdateRenderItems() {
     m_animatedMeshNodes.UpdateRenderItems(GetModelMatrix(), m_boneSkinningMatrices);
@@ -35,36 +30,7 @@ const uint32_t AnimatedGameObject::GetVerteXCount() {
 }
 
 void AnimatedGameObject::UpdateBoneTransformsFromRagdoll() {
-    RagdollV1* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
-    if (!ragdoll) return;
-    if (!m_skinnedModel) return;
-
-    int nodeCount = m_skinnedModel->m_nodes.size();
-    m_animator.m_globalBlendedNodeTransforms.resize(nodeCount);
-
-    for (int i = 0; i < m_skinnedModel->m_nodes.size(); i++) {
-        std::string NodeName = m_skinnedModel->m_nodes[i].name;
-        glm::mat4 nodeTransformation = glm::mat4(1);
-        nodeTransformation = m_skinnedModel->m_nodes[i].inverseBindTransform;
-        unsigned int parentIndex = m_skinnedModel->m_nodes[i].parentIndex;
-        glm::mat4 ParentTransformation = (parentIndex == -1) ? glm::mat4(1) : m_animator.m_globalBlendedNodeTransforms[parentIndex];
-        glm::mat4 GlobalTransformation = ParentTransformation * nodeTransformation;
-
-        for (int j = 0; j < ragdoll->m_correspondingBoneNames.size(); j++) {
-            if (ragdoll->m_correspondingBoneNames[j] == NodeName) {
-                RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(ragdoll->m_rigidDynamicIds[j]);
-                PxRigidDynamic* pxRigidDynamic = rigidDynamic->GetPxRigidDynamic();
-                GlobalTransformation = Hell::Physics::PxMat44ToGlmMat4(pxRigidDynamic->getGlobalPose());
-            }
-        }
-
-        m_animator.m_globalBlendedNodeTransforms[i] = GlobalTransformation;
-    }
-}
-
-
-void AnimatedGameObject::UpdateBoneTransformsFromRagdollV2() {
-    RagdollV2* ragdoll = RagdollManager::GetRagdollV2ById(m_ragdollV2Id);
+    Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
     if (!ragdoll) return;
     if (!m_skinnedModel) return;
 
@@ -94,11 +60,8 @@ void AnimatedGameObject::UpdateBoneTransformsFromRagdollV2() {
 void AnimatedGameObject::Update(float deltaTime) {
     if (!m_skinnedModel) return;
 
-    if (m_animationMode == AnimationMode::RAGDOLL) {
+    if (m_animationMode == AnimationMode::RAGDOLL_V2) {
         UpdateBoneTransformsFromRagdoll();
-    }
-    else if (m_animationMode == AnimationMode::RAGDOLL_V2) {
-        UpdateBoneTransformsFromRagdollV2();
     }
     else {
         if (m_animationMode == AnimationMode::BINDPOSE) {
@@ -124,77 +87,41 @@ void AnimatedGameObject::Update(float deltaTime) {
         m_boneSkinningMatrices[b] = m_animator.m_globalBlendedNodeTransforms[nodeIdx] * m_skinnedModel->m_boneOffsets[b];
     }
 
-    // If it has a ragdoll
-    if (m_animationMode == AnimationMode::BINDPOSE ||
-        m_animationMode == AnimationMode::ANIMATION) {
-
-        RagdollV1* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
-        if (ragdoll) {
-            ragdoll->SetRigidGlobalPosesFromAnimatedGameObject(this);
-        }
-
-        if (m_ragdollV2Id != 0) {
-            RagdollV2* ragdollV2 = RagdollManager::GetRagdollV2ById(m_ragdollV2Id);
-            if (ragdollV2) {
-                ragdollV2->SetRigidGlobalPosesFromAnimatedGameObject(this);
-            }
-        }
+    // If it has a ragdoll then sink the ragdoll rigids to the animated pose
+    if (m_animationMode == AnimationMode::BINDPOSE || m_animationMode == AnimationMode::ANIMATION) {
+        SyncRagdollToAnimation();
     }
-    //if (m_animationMode != AnimationMode::RAGDOLL_V2) {
-    //
-    //
-    //
-    //
-    //}
+}
 
-    RagdollV1* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
-    if (ragdoll && false) {
-        for (int i = 0; i < ragdoll->m_components.joints.size(); i++) {
+void AnimatedGameObject::SyncRagdollToAnimation() {
+    Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
+    if (!ragdoll) return;
 
-            JointComponent& joint = ragdoll->m_components.joints[i];
-            D6Joint* d6Joint = Hell::Physics::GetD6JointById(ragdoll->m_d6JointIds[i]);
-            PxD6Joint* pxD6Joint = d6Joint->GetPxD6Joint();
+    for (int i = 0; i < ragdoll->m_markerBoneNames.size(); i++) {
+        const std::string& boneName = ragdoll->m_markerBoneNames[i];
 
-            // Linear spring
-            joint.limit_linearStiffness = 10000;
-            joint.limit_linearDampening = 1000000;
-            joint.drive_angularStiffness = 10000;
-            joint.drive_angularDamping = 1000000;
-
-            const PxSpring linearSpring = PxSpring(joint.limit_linearStiffness, joint.limit_linearDampening);
-
-            if (joint.limit.x > -1) {
-                const PxJointLinearLimitPair limitX = PxJointLinearLimitPair(-joint.limit.x, joint.limit.x, linearSpring);
-                pxD6Joint->setLinearLimit(PxD6Axis::eX, limitX);
-            }
-
-            if (joint.limit.y > -1) {
-                const PxJointLinearLimitPair limitY = PxJointLinearLimitPair(-joint.limit.y, joint.limit.y, linearSpring);
-                pxD6Joint->setLinearLimit(PxD6Axis::eY, limitY);
-            }
-
-            if (joint.limit.z > -1) {
-                const PxJointLinearLimitPair limitZ = PxJointLinearLimitPair(-joint.limit.z, joint.limit.z, linearSpring);
-                pxD6Joint->setLinearLimit(PxD6Axis::eZ, limitZ);
-            }
-
-            const PxSpring angularSpring = PxSpring(joint.drive_angularStiffness, joint.drive_angularDamping);
-            const PxJointAngularLimitPair twistLimit = PxJointAngularLimitPair(-joint.twist, joint.twist, angularSpring);
-            const PxJointLimitCone swingLimit = PxJointLimitCone(joint.swing1, joint.swing2, angularSpring);
-
-            pxD6Joint->setTwistLimit(twistLimit);
-            pxD6Joint->setSwingLimit(swingLimit);
+        int nodeIndex = GetNodeIndex(boneName);
+        if (nodeIndex == -1) {
+            continue;
         }
 
+        PxRigidDynamic* pxRigidDynamic = ragdoll->m_pxRigidDynamics[i];
+        if (!pxRigidDynamic) {
+            Logging::Error() << "pxRigidDynamic for " << boneName << " is nullptr";
+            continue;
+        }
+
+        glm::mat4 boneWorldMatrix = GetModelMatrix() * GetAnimatedTransformByNodeIndex(nodeIndex);
+        PxTransform pxTransform = PxTransform(Hell::Physics::GlmMat4ToPxMat44(boneWorldMatrix));
+
+        pxRigidDynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+        pxRigidDynamic->setGlobalPose(pxTransform);
     }
 }
 
 void AnimatedGameObject::CleanUp() {
-    if (m_ragdollId != 0) {
-        Hell::Physics::MarkRagdollForRemoval(m_ragdollId);
-    }
+    Hell::Physics::MarkRagdollForRemoval(m_ragdollId);
 }
-
 
 void AnimatedGameObject::SetMeshWoundMaskTextureIndex(const std::string& meshName, int32_t woundMaskTextureIndex) {
     m_animatedMeshNodes.SetMeshWoundMaskTextureIndex(meshName, woundMaskTextureIndex);
@@ -286,21 +213,9 @@ void AnimatedGameObject::SetAnimationModeToBindPose() {
 
 
 void AnimatedGameObject::SetAnimationModeToRagdoll() {
-    RagdollV1* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
-    if (!ragdoll) return;
-
-    if (m_animationMode != AnimationMode::RAGDOLL) {
-        m_animationMode = AnimationMode::RAGDOLL;
-        m_animator.ClearAllAnimations();
-        ragdoll->ActivatePhysics();
-    }
-}
-
-
-void AnimatedGameObject::SetAnimationModeToRagdollV2() {
-    RagdollV2* ragdoll = RagdollManager::GetRagdollV2ById(m_ragdollV2Id);
+    Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
     if (!ragdoll) {
-        Logging::Error() << "AnimatedGameObject::SetAnimationModeToRagdollV2() failed because m_ragdollId [" << m_ragdollV2Id << "] was not found in the RagdollManager";
+        Logging::Error() << "AnimatedGameObject::SetAnimationModeToRagdoll() failed because m_ragdollId [" << m_ragdollId << "] was not found in the RagdollManager";
         return;
     }
 
@@ -345,7 +260,7 @@ const glm::mat4 AnimatedGameObject::GetModelMatrix() {
         return m_modelMatrixOverride;
     }
 
-    if (m_animationMode == AnimationMode::RAGDOLL || m_animationMode == AnimationMode::RAGDOLL_V2) {
+    if (m_animationMode == AnimationMode::RAGDOLL_V2) {
         return glm::mat4(1);
     }
     else {
@@ -563,8 +478,8 @@ const glm::vec3 AnimatedGameObject::GetBoneWorldPosition(const std::string& bone
     return GetBoneWorldMatrix(boneName)[3];
 }
 
-void AnimatedGameObject::SetRagdollV2Id(uint64_t ragdollV2Id) {
-    m_ragdollV2Id = ragdollV2Id;
+void AnimatedGameObject::SetRagdollId(uint64_t RagdollId) {
+    m_ragdollId = RagdollId;
 }
 
 void AnimatedGameObject::SetAdditiveTransform(const std::string& nodeName, const glm::mat4& matrix) {

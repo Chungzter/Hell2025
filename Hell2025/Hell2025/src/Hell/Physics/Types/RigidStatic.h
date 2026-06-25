@@ -15,7 +15,7 @@
 using namespace physx;
 
 struct RigidStatic {
-    void Update(float deltaTime);
+    void Update(float /*deltaTime*/);
     void SetPxRigidStatic(PxRigidStatic* rigidStatic);
     void AddPxShape(PxShape* shape);
     void MarkForRemoval();

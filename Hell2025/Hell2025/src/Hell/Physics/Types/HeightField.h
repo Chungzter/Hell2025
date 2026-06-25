@@ -16,7 +16,7 @@
 using namespace physx;
 
 struct HeightField {
-    void Create(Hell::vecXZ& worldSpaceOffset, const float* heightValues);
+    void Create(Hell::vecXZ& worldSpaceOffset, const float* heightValues, float heightScale, float rowScale, float colScale);
     void ActivatePhsyics();
     void DisablePhsyics();
     void MarkForRemoval();

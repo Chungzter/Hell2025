@@ -1,5 +1,7 @@
 #pragma once
-#include <Game/Types.h>
+#include "Hell/File/FileInfo.h"
+
+#include <cstdint>
 #include <string>
 
 struct Texture;

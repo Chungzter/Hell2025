@@ -1,7 +1,7 @@
 #pragma once
 #include <Game/Types.h>
 #include <Game/CreateInfo.h>
-#include "Types/Renderer/SpriteSheetTexture.h"
+#include "Hell/ResourceManagement/Types/SpriteSheetTexture.h"
 
 #include "Hell/Math/AABB.h"
 

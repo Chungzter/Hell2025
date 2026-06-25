@@ -31,7 +31,21 @@ void Player::UpdateCursorRays() {
     // PhysX Ray
     glm::vec3 cameraRayOrigin = GetCameraPosition();
     glm::vec3 cameraRayDirection = GetCameraForward();
-    m_physXRayResult = Hell::Physics::CastPhysXRay(cameraRayOrigin, cameraRayDirection, maxRayDistance, false, RaycastIgnoreFlags::PLAYER_CHARACTER_CONTROLLERS | RaycastIgnoreFlags::PLAYER_RAGDOLLS);
+
+    std::vector<PxRigidActor*> ignoredActors;
+    int playerCount = GameOLD::GetLocalPlayerCount();
+    for (int i = 0; i < playerCount; i++) {
+        if (Player* player = GameOLD::GetLocalPlayerByIndex(i)) {
+            if (PxRigidDynamic* characterControllerActor = player->GetCharacterControllerActor()) {
+                ignoredActors.push_back(characterControllerActor);
+            }
+
+            auto ragdollActors = Hell::Physics::GetRagdollPxRigidActors(player->GetRagdollId());
+            ignoredActors.insert(ignoredActors.end(), ragdollActors.begin(), ragdollActors.end());
+        }
+    }
+
+    m_physXRayResult = Hell::Physics::CastPhysXRay(cameraRayOrigin, cameraRayDirection, maxRayDistance, false, ignoredActors);
 
     // Bvh Ray result
     glm::vec3 rayOrigin = GetCameraPosition();

@@ -1,6 +1,6 @@
 #pragma once
 #include <Game/Types.h>
-#include "Types/Renderer/Model.h"
+#include "Hell/ResourceManagement/Types/Model.h"
 
 #include "Hell/ResourceManagement/Types/Material.h"
 

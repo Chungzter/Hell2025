@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "Types/Renderer/SkinnedModel.h"
+#include "Hell/ResourceManagement/Types/SkinnedModel.h"
 
 struct AnimatedMeshNodeCreateInfo {
     std::string meshName;

@@ -12,9 +12,9 @@
 #include "Hell/Physics/Types/CharacterController.h"
 #include "Hell/Physics/Types/D6Joint.h"
 #include "Hell/Physics/Types/HeightField.h"
-#include "Hell/Physics/Types/RagdollV1.h"
 #include "Hell/Physics/Types/RigidDynamic.h"
 #include "Hell/Physics/Types/RigidStatic.h"
+#include "Hell/Physics/Ragdoll/Ragdoll.h"
 #include "Hell/Render/VertexAttributes.h"
 #include "Hell/Transform.h"
 
@@ -30,12 +30,12 @@ using namespace physx;
 namespace Hell::Physics {
     std::unordered_map<uint64_t, CharacterController>& GetCharacterControllers();
     std::unordered_map<uint64_t, D6Joint>& GetD6Joints();
-    std::vector<HeightField>& GetHeightFields();
-    std::unordered_map<std::string, RagdollV1Data>& GetRagdollV1DataSet();
-    std::unordered_map<uint64_t, RagdollV1>& GetRagdolls();
+    std::unordered_map<uint64_t, Ragdoll>& GetRagdolls();
     std::unordered_map<uint64_t, RigidDynamic>& GetRigidDynamics();
-    std::vector<AABB>& GetActiveRididDynamicAABBs();
     std::unordered_map<uint64_t, RigidStatic>& GetRigidStatics();
+
+    std::vector<AABB>& GetActiveRididDynamicAABBs();
+    std::vector<HeightField>& GetHeightFields();
 
     CharacterController* GetCharacterControllerById(uint64_t characterControllerId);
     void RemoveAnyCharacterControllerMarkedForRemoval();
@@ -53,11 +53,10 @@ namespace Hell::Physics {
     void MarkAllHeightFieldsForRemoval();
     int GetHeightFieldCount();
 
-    RagdollV1* GetRagdollById(uint64_t ragdollId);
-    bool RagdollExists(uint64_t ragdollId);
+    Ragdoll* GetRagdollById(uint64_t ragdollId);
+    uint64_t SpawnRagdoll(const glm::vec3& position, const glm::vec3& eulerRotation, const std::string& ragdollName, uint64_t parentObjectId, PhysicsFilterData filterData);
+    void RemoveAnyRagdollMarkedForRemoval();
     void MarkRagdollForRemoval(uint64_t ragdollId);
-    void RemoveAnyRagdollsMarkedForRemoval();
-    int GetRagdollCount();
 
     bool RigidDynamicExists(uint64_t rigidDynamicId);
     void MarkRigidDynamicForRemoval(uint64_t rigidDynamicId);
@@ -72,8 +71,7 @@ namespace Hell::Physics {
     void RemoveAnyRigidStaticMarkedForRemoval();
     int GetRigidStaticCount();
 
-    uint64_t CreateRagdollByName(const std::string& name, float totalRagdollWeight);
-    void CreateHeightField(Hell::vecXZ& worldSpaceOffset, const float* heightValues);
+    void CreateHeightField(Hell::vecXZ& worldSpaceOffset, const float* heightValues, float heightScale, float rowScale, float colScale);
 
     uint64_t CreateRigidDynamicFromConvexMeshVertices(Transform transform, const std::span<Vertex>& vertices, const std::span<uint32_t>& indices, float mass, PhysicsFilterData filterData, glm::vec3 initialForce = glm::vec3(0.0f), glm::vec3 initialTorque = glm::vec3(0.0f));
     uint64_t CreateRigidDynamicWithCompoundConvexMeshesFromModel(const std::string& modelName, float mass, bool kinematic, PhysicsFilterData filterData);

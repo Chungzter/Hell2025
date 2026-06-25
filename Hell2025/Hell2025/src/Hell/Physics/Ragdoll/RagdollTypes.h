@@ -1,9 +1,21 @@
 #pragma once
-#include "Hell/Physics/Physics.h"
+
 #include "magnum/MagnumMath.hpp"
+
+#pragma warning(push, 0)
+#include <physx/foundation/PxMat44.h>
+#include <physx/foundation/PxQuat.h>
+#pragma warning(pop)
+
+#include <cstddef>
 #include <filesystem>
+#include <glm/mat4x4.hpp>
+#include <iomanip>
+#include <ostream>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 enum struct RdBehaviour {
     kInherit,
@@ -29,6 +41,13 @@ enum struct RdMotion {
     RdMotionLocked,
     RdMotionLimited,
     RdMotionFree
+};
+
+enum struct RdCombineMode {
+    kAverage,
+    kMin,
+    kMultiply,
+    kMax
 };
 
 using RdMatrix3 = Magnum::Math::Matrix3<double>;
@@ -119,10 +138,10 @@ inline RdQuaternion RdEulerToRdQuaternion(const RdEulerRotation& euler) {
            RdQuaternion::rotation((RdRadians)euler.x(), RdVector::xAxis());
 }
 
-inline PxQuat RdEulerToPxQuat(RdEulerRotation euler) {
+inline physx::PxQuat RdEulerToPxQuat(RdEulerRotation euler) {
     const RdQuaternion quat = RdEulerToRdQuaternion(euler);
     const RdVector vec = quat.vector();
-    return PxQuat(
+    return physx::PxQuat(
         static_cast<float>(vec.x()),
         static_cast<float>(vec.y()),
         static_cast<float>(vec.z()),
@@ -179,6 +198,14 @@ inline RdMotion StringToRdMotion(const RdString& str) {
     if (str == "Limited")               return RdMotion::RdMotionLimited;
     if (str == "Free")                  return RdMotion::RdMotionFree;
     return RdMotion::RdMotionLocked;
+}
+
+inline RdCombineMode StringToRdCombineMode(const RdString& str) {
+    if (str == "Average" || str == "kAverage")      return RdCombineMode::kAverage;
+    if (str == "Min" || str == "kMin")              return RdCombineMode::kMin;
+    if (str == "Multiply" || str == "kMultiply")    return RdCombineMode::kMultiply;
+    if (str == "Max" || str == "kMax")              return RdCombineMode::kMax;
+    return RdCombineMode::kMultiply;
 }
 
 inline glm::mat4 RdMatrixToGlmMat4(const RdMatrix& matrix) {

@@ -4,7 +4,7 @@
 #include "DeadLock.h"
 #include "Types/Renderer/MeshBufferOLD.h"
 #include "Types/Renderer/MeshNodes.h"
-#include "Types/Renderer/Model.h"
+#include "Hell/ResourceManagement/Types/Model.h"
 
 struct Door {
     Door() = default;

@@ -1,9 +1,10 @@
 #include "HeightField.h"
 #include "Hell/Physics/Physics.h"
+#include "Hell/Transform.h"
 
 #include "Hell/Logging.h"
 
-void HeightField::Create(Hell::vecXZ& worldSpaceOffset, const float* heightValues) {
+void HeightField::Create(Hell::vecXZ& worldSpaceOffset, const float* heightValues, float heightScale, float rowScale, float colScale) {
     m_physicsId = Hell::Physics::CreatePhysicsId(Hell::Physics::PhysicsObjectType::HEIGHT_FIELD);
 
     PxPhysics* pxPhysics = Hell::Physics::GetPxPhysics();
@@ -39,10 +40,6 @@ void HeightField::Create(Hell::vecXZ& worldSpaceOffset, const float* heightValue
     }
     m_pxHeightField = PxCreateHeightField(heightFieldDesc, pxPhysics->getPhysicsInsertionCallback());
 
-    float heightScale = HEIGHTMAP_SCALE_Y;
-    float rowScale = HEIGHTMAP_SCALE_XZ;
-    float colScale = HEIGHTMAP_SCALE_XZ;
-
     PxShapeFlags shapeFlags(PxShapeFlag::eSCENE_QUERY_SHAPE | PxShapeFlag::eSIMULATION_SHAPE);
 
     PhysicsFilterData filterData;
@@ -58,7 +55,7 @@ void HeightField::Create(Hell::vecXZ& worldSpaceOffset, const float* heightValue
     m_pxShape->setFlag(PxShapeFlag::eVISUALIZATION, true);
 
     // Create rigid static
-    Transform transform;
+    Hell::Transform transform;
     transform.position = glm::vec3(worldSpaceOffset.x, 0.0f, worldSpaceOffset.z);
     transform.position *= glm::vec3(0.5f); // no idea why you gotta divide by 2
 

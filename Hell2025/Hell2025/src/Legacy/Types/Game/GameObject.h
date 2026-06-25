@@ -3,7 +3,7 @@
 #include <Game/CreateInfo.h>
 #include "Hell/Physics/Types/RigidDynamic.h"
 #include "Types/Renderer/MeshNodes.h"
-#include "Types/Renderer/Model.h"
+#include "Hell/ResourceManagement/Types/Model.h"
 
 struct GameObject {
     GameObject() = default;

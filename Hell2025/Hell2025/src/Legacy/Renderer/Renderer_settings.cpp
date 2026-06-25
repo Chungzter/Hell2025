@@ -61,6 +61,16 @@ namespace Renderer {
         Debug::BlitQuickDebugMessage("Point Cloud Grid: " + onOff);
     }
 
+
+    void ToggleRagdollRendering() {
+        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        RendererSettings& rendererSettings = GetCurrentRendererSettings();
+        rendererSettings.debugDrawRagdolls = !rendererSettings.debugDrawRagdolls;
+
+        std::string onOff = rendererSettings.debugDrawRagdolls ? "ON" : "OFF";
+        Debug::BlitQuickDebugMessage("Draw Ragdolls: " + onOff);
+    }
+
     void ToggleSphericalHarmonics() {
         Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();

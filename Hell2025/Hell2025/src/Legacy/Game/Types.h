@@ -447,6 +447,7 @@ struct RendererSettings {
     bool debugDrawPointCloud = false;
     bool debugDrawPointCloudGrid = false;
     bool debugDrawIrradianceProbes = false;
+    bool debugDrawRagdolls = false;
     bool enableIrradianceProbeSampling = true;
     bool enableLighting = true;
     bool irradianceUsesSH = false;

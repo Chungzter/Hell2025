@@ -1,9 +1,10 @@
 #include "Physics.h"
 
 #include <glm/geometric.hpp>
+#include <utility>
 
 namespace Hell::Physics {
-    PxQueryHitType::Enum RaycastFilterCallback::preFilter(const PxFilterData& filterData, const PxShape* shape, const PxRigidActor* actor, PxHitFlags& queryFlags) {
+    PxQueryHitType::Enum RaycastFilterCallback::preFilter(const PxFilterData& filterData, const PxShape* shape, const PxRigidActor* actor, PxHitFlags& /*queryFlags*/) {
         const PxFilterData sf = shape->getQueryFilterData();
 
         for (const PxRigidActor* pxRigidActor : m_ignoredActors) {
@@ -19,7 +20,7 @@ namespace Hell::Physics {
         return PxQueryHitType::eBLOCK;
     }
 
-    PxQueryHitType::Enum RaycastFilterCallback::postFilter(const PxFilterData& filterData, const PxQueryHit& hit, const PxShape* shape, const PxRigidActor* actor) {
+    PxQueryHitType::Enum RaycastFilterCallback::postFilter(const PxFilterData& /*filterData*/, const PxQueryHit& /*hit*/, const PxShape* /*shape*/, const PxRigidActor* /*actor*/) {
         return PxQueryHitType::eBLOCK;
     }
 
@@ -36,7 +37,7 @@ namespace Hell::Physics {
         }
     }
 
-    PxQueryHitType::Enum RaycastHeightFieldFilterCallback::preFilter(const PxFilterData& filterData, const PxShape* shape, const PxRigidActor* actor, PxHitFlags& queryFlags) {
+    PxQueryHitType::Enum RaycastHeightFieldFilterCallback::preFilter(const PxFilterData& /*filterData*/, const PxShape* shape, const PxRigidActor* /*actor*/, PxHitFlags& /*queryFlags*/) {
         const PxGeometryHolder geomHolder = shape->getGeometry();
         if (geomHolder.getType() != PxGeometryType::eHEIGHTFIELD) {
             return PxQueryHitType::eNONE;
@@ -44,11 +45,11 @@ namespace Hell::Physics {
         return PxQueryHitType::eBLOCK;
     }
 
-    PxQueryHitType::Enum RaycastHeightFieldFilterCallback::postFilter(const PxFilterData& filterData, const PxQueryHit& hit, const PxShape* shape, const PxRigidActor* actor) {
+    PxQueryHitType::Enum RaycastHeightFieldFilterCallback::postFilter(const PxFilterData& /*filterData*/, const PxQueryHit& /*hit*/, const PxShape* /*shape*/, const PxRigidActor* /*actor*/) {
         return PxQueryHitType::eBLOCK;
     }
 
-    PxQueryHitType::Enum RaycastStaticEnviromentFilterCallback::preFilter(const PxFilterData& filterData, const PxShape* shape, const PxRigidActor* actor, PxHitFlags& queryFlags) {
+    PxQueryHitType::Enum RaycastStaticEnviromentFilterCallback::preFilter(const PxFilterData& /*filterData*/, const PxShape* shape, const PxRigidActor* /*actor*/, PxHitFlags& /*queryFlags*/) {
         const PxGeometryHolder geomHolder = shape->getGeometry();
         if (geomHolder.getType() != PxGeometryType::eHEIGHTFIELD && geomHolder.getType() != PxGeometryType::eTRIANGLEMESH) {
             return PxQueryHitType::eNONE;
@@ -56,7 +57,7 @@ namespace Hell::Physics {
         return PxQueryHitType::eBLOCK;
     }
 
-    PxQueryHitType::Enum RaycastStaticEnviromentFilterCallback::postFilter(const PxFilterData& filterData, const PxQueryHit& hit, const PxShape* shape, const PxRigidActor* actor) {
+    PxQueryHitType::Enum RaycastStaticEnviromentFilterCallback::postFilter(const PxFilterData& /*filterData*/, const PxQueryHit& /*hit*/, const PxShape* /*shape*/, const PxRigidActor* /*actor*/) {
         return PxQueryHitType::eBLOCK;
     }
 
@@ -132,7 +133,7 @@ namespace Hell::Physics {
         return result;
     }
 
-    PhysXRayResult CastPhysXRay(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, float rayLength, bool cullBackFacing, RaycastIgnoreFlags ignoreFlags, std::vector<PxRigidActor*> ignoredActors) {
+    PhysXRayResult CastPhysXRay(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, float rayLength, bool cullBackFacing, std::vector<PxRigidActor*> ignoredActors) {
         PxScene* scene = Hell::Physics::GetPxScene();
         PxVec3 origin = PxVec3(rayOrigin.x, rayOrigin.y, rayOrigin.z);
         PxVec3 unitDir = PxVec3(rayDirection.x, rayDirection.y, rayDirection.z);
@@ -158,8 +159,7 @@ namespace Hell::Physics {
         result.userData = PhysicsUserData();
 
         RaycastFilterCallback callback;
-        callback.m_ignoredActors = GetIgnoreList(ignoreFlags);
-        callback.m_ignoredActors.insert(callback.m_ignoredActors.end(), ignoredActors.begin(), ignoredActors.end());
+        callback.m_ignoredActors = std::move(ignoredActors);
 
         result.hitFound = scene->raycast(origin, unitDir, maxDistance, hit, outputFlags, filterData, &callback);
 

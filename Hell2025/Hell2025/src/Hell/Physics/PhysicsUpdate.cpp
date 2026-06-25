@@ -1,5 +1,4 @@
 #include "Physics.h"
-#include "Editor/Editor.h"
 #include "Hell/Time.h"
 
 #include <unordered_map>
@@ -8,15 +7,14 @@
 namespace Hell::Physics {
     namespace {
         void StepPhysics(float deltaTime);
-        void UpdateHeightFields();
         void UpdateActiveRigidDynamicAABBList();
         void UpdateAllRigidDynamics(float deltaTime);
     }
 
     void BeginFrame() {
         RemoveAnyHeightFieldMarkedForRemoval();
-        RemoveAnyRagdollsMarkedForRemoval();
         RemoveAnyD6JointMarkedForRemoval();
+        RemoveAnyRagdollMarkedForRemoval();
         RemoveAnyRigidDynamicMarkedForRemoval();
         RemoveAnyRigidStaticMarkedForRemoval();
         RemoveAnyCharacterControllerMarkedForRemoval();
@@ -24,9 +22,7 @@ namespace Hell::Physics {
 
     void StepSimulation() {
         while (Hell::Time::ConsumeFixedStep()) {
-            if (Editor::IsClosed()) {
-                StepPhysics(Hell::Time::FixedDeltaTime());
-            }
+            StepPhysics(Hell::Time::FixedDeltaTime());
         }
     }
 
@@ -40,18 +36,6 @@ namespace Hell::Physics {
     void SyncRuntimeState() {
         UpdateAllRigidDynamics(Hell::Time::DeltaTime());
         UpdateActiveRigidDynamicAABBList();
-        UpdateHeightFields();
-    }
-
-    namespace {
-    void StepPhysics(float deltaTime) {
-        ClearCollisionReports();
-
-        PxScene* pxScene = GetPxScene();
-        pxScene->simulate(deltaTime);
-        pxScene->fetchResults(true);
-        //pxScene->sceneQueriesUpdate();
-        //pxScene->fetchSceneQueries(true);
     }
 
     void UpdateHeightFields() {
@@ -64,47 +48,51 @@ namespace Hell::Physics {
             float threshold = 0.25f;
 
             // Enable heightfield physics if other active PhysX object AABBs intersect heightfield AABB
-            if (Editor::IsClosed()) {
+            // Character controllers
+            const std::unordered_map<uint64_t, CharacterController>& characterControllers = GetCharacterControllers();
+            for (auto it = characterControllers.begin(); it != characterControllers.end(); ) {
+                const CharacterController& characterController = it->second;
 
-                // Character controllers
-                const std::unordered_map<uint64_t, CharacterController>& characterControllers = GetCharacterControllers();
-                for (auto it = characterControllers.begin(); it != characterControllers.end(); ) {
-                    const CharacterController& characterController = it->second;
+                const AABB characterControllerAABB = characterController.GetAABB();
+                if (heightFieldAABB.IntersectsAABB(characterControllerAABB, threshold)) {
+                    intersectionFound = true;
+                    break;
+                }
+                it++;
+            }
 
-                    const AABB characterControllerAABB = characterController.GetAABB();
-                    if (heightFieldAABB.IntersectsAABB(characterControllerAABB, threshold)) {
+            // Active rigid dynamics
+            if (!intersectionFound) {
+                const std::vector<AABB>& activeRigidAABBS = GetActiveRididDynamicAABBs();
+                for (const AABB& aabb : activeRigidAABBS) {
+
+                    //DebugDraw::DrawAABB(aabb, GREEN);
+
+                    if (heightFieldAABB.IntersectsAABB(aabb, threshold)) {
                         intersectionFound = true;
                         break;
                     }
-                    it++;
-                }
-
-                // Active rigid dynamics
-                if (!intersectionFound) {
-                    const std::vector<AABB>& activeRigidAABBS = GetActiveRididDynamicAABBs();
-                    for (const AABB& aabb : activeRigidAABBS) {
-
-                        //DebugDraw::DrawAABB(aabb, GREEN);
-
-                        if (heightFieldAABB.IntersectsAABB(aabb, threshold)) {
-                            intersectionFound = true;
-                            break;
-                        }
-                    }
                 }
             }
-            // Activate physics so ray casts work in the sector editor
-            if (Editor::IsOpen() && Editor::GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
-                heightfield.ActivatePhsyics();
-            }
-            // Regular check
-            else if (intersectionFound) {
+
+            if (intersectionFound) {
                 heightfield.ActivatePhsyics();
             }
             else {
                 heightfield.DisablePhsyics();
             }
         }
+    }
+
+    namespace {
+    void StepPhysics(float deltaTime) {
+        ClearCollisionReports();
+
+        PxScene* pxScene = GetPxScene();
+        pxScene->simulate(deltaTime);
+        pxScene->fetchResults(true);
+        //pxScene->sceneQueriesUpdate();
+        //pxScene->fetchSceneQueries(true);
     }
 
     void UpdateActiveRigidDynamicAABBList() {

@@ -1,8 +1,9 @@
 #pragma once
-#include "Types.h"
+#include "RagdollTypes.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
+
 #include <vector>
 
 struct JsonComponent {

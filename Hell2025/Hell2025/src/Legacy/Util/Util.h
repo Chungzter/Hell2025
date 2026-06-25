@@ -15,7 +15,6 @@
 #include <nlohmann/json.hpp>
 
 #include <filesystem>
-#include <span>
 #include <type_traits>
 #include <vector>
 
@@ -55,12 +54,6 @@ namespace Util {
     bool IsNan(const glm::vec3& value);
     bool IsNan(const glm::vec4& value);
     bool IsNaN(const glm::mat4& matrix);
-    float GetDensity(float mass, float volume);
-    float GetConvexHullVolume(const std::span<Vertex>& vertices, const std::span<unsigned int>& indices);
-    float GetCubeVolume(const glm::vec3& halfExtents);
-    float GetCubeVolume(const float& halfWidth, const float& halfHeight, const float& halfDepth);
-    float GetSphereVolume(float radius);
-    float GetCapsuleVolume(float radius, float halfHeight);
     AABB GetAABBFromPoints(std::vector<glm::vec3>& points);
     bool Mat4NearlyEqual(const glm::mat4& a, const glm::mat4& b);
     bool NearlyEqualTransform(const Transform& a, const Transform& b);

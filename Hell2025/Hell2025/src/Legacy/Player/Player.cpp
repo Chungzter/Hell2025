@@ -2,6 +2,7 @@
 #include <Game/Constants.h>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include <vector>
 
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
@@ -239,7 +240,7 @@ void Player::Respawn() {
     float maxRayDistance = 2000;
     glm::vec3 rayOrigin = GetFootPosition() + glm::vec3(0, 2, 0);
     glm::vec3 rayDir = glm::vec3(0, 1, 0);
-    PhysXRayResult physxRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
+    PhysXRayResult physxRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true, std::vector<physx::PxRigidActor*>());
     if (!physxRayResult.hitFound) {
         m_flashlightOn = true;
     }
@@ -248,6 +249,10 @@ void Player::Respawn() {
     AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject();
     if (characterModel) {
         characterModel->SetAnimationModeToAnimated();
+    }
+
+    if (Ragdoll* Ragdoll = GetRagdoll()) {
+        Ragdoll->DisableSimulation();
     }
 
     m_respawnCount++;
@@ -439,7 +444,9 @@ void Player::Kill(bool wasHeadShot) {
         m_shopInventory.CloseInventory();
 
         if (AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject()) {
-            characterModel->SetAnimationModeToRagdoll();
+            if (GetRagdoll()) {
+                characterModel->SetAnimationModeToRagdoll();
+            }
         }
 
         Audio::PlayAudio("Death0.wav", 1.0f);
@@ -519,8 +526,11 @@ uint64_t Player::GetRagdollId() {
     return characterModel->GetRagdollId();
 }
 
-RagdollV1* Player::GetRagdoll() {
-    return Hell::Physics::GetRagdollById(GetRagdollId());
+Ragdoll* Player::GetRagdoll() {
+    const uint64_t RagdollId = GetRagdollId();
+    if (RagdollId == 0) return nullptr;
+
+    return Hell::Physics::GetRagdollById(RagdollId);
 }
 
 bool Player::InventoryIsOpen() {

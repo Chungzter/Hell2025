@@ -1,7 +1,7 @@
 #include "RigidStatic.h"
 #include "Hell/Physics/Physics.h"
 
-void RigidStatic::Update(float deltaTime) {
+void RigidStatic::Update(float /*deltaTime*/) {
     
 }
 

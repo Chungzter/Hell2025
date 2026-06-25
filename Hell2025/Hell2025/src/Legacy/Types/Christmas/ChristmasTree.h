@@ -1,7 +1,7 @@
 #pragma once
 #include <Game/Types.h>
 #include <Game/CreateInfo.h>
-#include "Types\Renderer\Model.h"
+#include "Hell/ResourceManagement/Types/Model.h"
 
 // TODO: remove me
 #include "Hell/ResourceManagement/Types/Material.h"

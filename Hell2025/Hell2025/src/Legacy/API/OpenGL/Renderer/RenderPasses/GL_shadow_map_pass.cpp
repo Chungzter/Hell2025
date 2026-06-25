@@ -7,8 +7,6 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "World/LegacyWorld.h"
 
-#include "Ragdoll/RagdollManager.h"
-
 using namespace Hell;
 
 namespace OpenGLRenderer {

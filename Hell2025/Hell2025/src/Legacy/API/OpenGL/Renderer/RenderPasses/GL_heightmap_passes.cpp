@@ -244,7 +244,7 @@ namespace OpenGLRenderer {
             chunk.aabbMax = aabbMax;
 
             Hell::vecXZ worldSpaceOffest = Hell::vecXZ(chunk.coord.x * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE, chunk.coord.z * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE);
-            Hell::Physics::CreateHeightField(worldSpaceOffest, chunkReadBackDataSet[i].vertices);
+            Hell::Physics::CreateHeightField(worldSpaceOffest, chunkReadBackDataSet[i].vertices, HEIGHTMAP_SCALE_Y, HEIGHTMAP_SCALE_XZ, HEIGHTMAP_SCALE_XZ);
        }
     }
 

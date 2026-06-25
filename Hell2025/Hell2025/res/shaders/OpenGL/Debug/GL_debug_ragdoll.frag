@@ -1,35 +1,36 @@
 #version 460 core
 
-layout (location = 0) out vec4 BaseColorOut;
-layout (location = 1) out vec4 NormalsOut;
-layout (location = 2) out vec4 RMAOut;
-layout (location = 3) out vec4 WorldPositionOut;
-layout (location = 4) out vec4 EmissiveOut;
-layout (location = 6) out vec4 EmssiveMask;
+#include "../../common/normal_encoding.glsl"
 
-in vec3 Normal;
-in vec4 WorldPos;
+layout (location = 0) out vec4 BaseColorMetallicOut;
+layout (location = 1) out vec4 NormalXYRoughnessMiscOut;
+layout (location = 2) out vec4 EmissiveOut;
+layout (location = 3) out vec4 VelocityXYOcclusionSubSurfaceOut;
 
-uniform int u_playerIndex;
+in vec3 v_normal;
+
 uniform vec3 u_color;
 
 void main() {
+    float roughness = 0.8;
+    float metallic = 0.1;
+    float ao = 1.0;
+    float thickness = 0.0;
 
-    BaseColorOut.rgb = u_color;
-	BaseColorOut.a = 1.0;
+    // Basecolor / Metallic out
+    BaseColorMetallicOut.rgb = u_color.rgb;
+    BaseColorMetallicOut.a = metallic;
 
-    NormalsOut.rgb = normalize(Normal);
-	NormalsOut.a = 1.0;//u_playerIndex;
+    // NormalXY / Roughness out
+    NormalXYRoughnessMiscOut.rg = EncodeNormal(v_normal);
+    NormalXYRoughnessMiscOut.b = roughness;
+    NormalXYRoughnessMiscOut.a = 0.0; // Misc 4 bit value
 
-    RMAOut.rgb = vec3(0.8, 0.1, 1);
-	RMAOut.a = 0.0;
+    // Emissive
+    EmissiveOut.rgb = vec3(0);
+    EmissiveOut.a = thickness;
 
-    EmssiveMask.rgb = vec3(0.0); // ??
-	EmssiveMask.a = 1.0;         // ??
-
-    EmissiveOut.rgb = vec3(0.0);
-	EmissiveOut.a = 1.0;
-
-    WorldPositionOut.rgb = WorldPos.rgb;
-    WorldPositionOut.a = 1.0;
+    // Velocity
+    vec2 velocity = vec2(0, 0);
+    VelocityXYOcclusionSubSurfaceOut = vec4(velocity, ao, 1.0);
 }

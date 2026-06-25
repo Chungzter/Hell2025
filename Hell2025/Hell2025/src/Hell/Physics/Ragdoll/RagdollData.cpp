@@ -1,9 +1,39 @@
-#include "RagdollV2Data.h"
+#include "RagdollData.h"
+
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
-#include "Util.h"
 
-void RagdollV2Data::PrintMarkerInfo() {
+#include <iostream>
+
+namespace {
+    std::string BoolToString(bool b) {
+        return b ? "TRUE" : "FALSE";
+    }
+}
+
+RagdollData::RagdollData(const std::string& name) {
+    m_name = name;
+}
+
+size_t RagdollData::GetCPUAllocatedByteCount() const {
+    size_t bytes = m_groups.capacity() * sizeof(RagdollGroup);
+    bytes += m_markers.capacity() * sizeof(RagdollMarker);
+    bytes += m_joints.capacity() * sizeof(RagdollJoint);
+
+    for (const RagdollGroup& group : m_groups) {
+        bytes += group.markerJsonIds.capacity() * sizeof(RdString);
+        bytes += group.markerNames.capacity() * sizeof(RdString);
+    }
+
+    for (const RagdollMarker& marker : m_markers) {
+        bytes += marker.convexMeshVertices.capacity() * sizeof(RdPoint);
+        bytes += marker.convexMeshIndices.capacity() * sizeof(RdUint);
+    }
+
+    return bytes;
+}
+
+void RagdollData::PrintMarkerInfo() {
     for (RagdollMarker& marker : m_markers) {
         std::cout << "Name:                          " << marker.name << "\n";
         std::cout << "Bone path:                     " << marker.bonePath << "\n";
@@ -20,8 +50,8 @@ void RagdollV2Data::PrintMarkerInfo() {
 
         std::cout << "Mass:                          " << marker.mass << "\n";
         std::cout << "Contact stiffness:             " << marker.contactStiffness << "\n";
-        std::cout << "Contact damping:               " << marker.contactDamping << "\n";
-        std::cout << "Drive slerp:                   " << Util::BoolToString(marker.driveSlerp) << "\n";
+        std::cout << "Contact damping ratio:         " << marker.contactDampingRatio << "\n";
+        std::cout << "Drive slerp:                   " << BoolToString(marker.driveSlerp) << "\n";
         std::cout << "Drive spring type:             " << marker.driveSpringType << "\n";
         std::cout << "Linear stiffness:              " << marker.linearStiffness << "\n";
         std::cout << "Linear dampingRatio:           " << marker.linearDampingRatio << "\n";
@@ -29,15 +59,15 @@ void RagdollV2Data::PrintMarkerInfo() {
         std::cout << "Angular dampingRatio:          " << marker.angularDampingRatio << "\n";
         std::cout << "Input type:                    " << marker.inputType << "\n";
         std::cout << "Collision group:               " << marker.collisionGroup << "\n";
-        std::cout << "Use root stiffness:            " << Util::BoolToString(marker.useRootStiffness) << "\n";
-        std::cout << "Use linear angular stiffness:  " << Util::BoolToString(marker.useLinearAngularStiffness) << "\n";
+        std::cout << "Use root stiffness:            " << BoolToString(marker.useRootStiffness) << "\n";
+        std::cout << "Use linear angular stiffness:  " << BoolToString(marker.useLinearAngularStiffness) << "\n";
         std::cout << "Limit range (twist,s1,s2):     " << marker.limitRange << "\n";
         std::cout << "Mesh vertex count:             " << static_cast<unsigned>(marker.convexMeshVertices.size()) << "\n";
         std::cout << "Mesh index count:              " << static_cast<unsigned>(marker.convexMeshIndices.size()) << "\n";
         std::cout << "linearDamping:                 " << marker.linearDamping << "\n";
         std::cout << "angularDamping:                " << marker.angularDamping << "\n";
-        std::cout << "Is kinematic:                  " << Util::BoolToString(marker.isKinematic) << "\n";
-        std::cout << "EnableCCD                      " << Util::BoolToString(marker.enableCCD) << "\n";
+        std::cout << "Is kinematic:                  " << BoolToString(marker.isKinematic) << "\n";
+        std::cout << "EnableCCD                      " << BoolToString(marker.enableCCD) << "\n";
         std::cout << "Input matrix:\n" << marker.inputMatrix << "\n";
         std::cout << "Origin matrix:\n" << marker.originMatrix << "\n";
         std::cout << "Parent frame:\n" << marker.parentFrame << "\n";
@@ -45,7 +75,7 @@ void RagdollV2Data::PrintMarkerInfo() {
     }
 }
 
-void RagdollV2Data::PrintJointInfo() {
+void RagdollData::PrintJointInfo() {
     for (RagdollJoint& joint : m_joints) {
         std::cout << "Name:                          " << joint.name << "\n";
         std::cout << "Child name:                    " << joint.childName << "\n";
@@ -58,8 +88,8 @@ void RagdollV2Data::PrintJointInfo() {
         std::cout << "Limit range (twist,s1,s2):     " << joint.limitRange << "\n";
         std::cout << "Limit stiffness:               " << joint.limitStiffness << "\n";
         std::cout << "Limit dampingRatio:            " << joint.limitDampingRatio << "\n";
-        std::cout << "Limit auto-orient:             " << Util::BoolToString(joint.limitAutoOrient) << "\n";
-        std::cout << "Drive slerp:                   " << Util::BoolToString(joint.driveSlerp) << "\n";
+        std::cout << "Limit auto-orient:             " << BoolToString(joint.limitAutoOrient) << "\n";
+        std::cout << "Drive slerp:                   " << BoolToString(joint.driveSlerp) << "\n";
         std::cout << "Drive spring type:             " << joint.driveSpringType << "\n";
         std::cout << "Drive linear stiffness:        " << joint.driveLinearStiffness << "\n";
         std::cout << "Drive linear damping:          " << joint.driveLinearDamping << "\n";
@@ -70,8 +100,8 @@ void RagdollV2Data::PrintJointInfo() {
         std::cout << "Drive angular amt (swing):     " << joint.driveAngularAmountSwing << "\n";
         std::cout << "Drive max linear force:        " << joint.driveMaxLinearForce << "\n";
         std::cout << "Drive max angular force:       " << joint.driveMaxAngularForce << "\n";
-        std::cout << "Drive worldspace:              " << Util::BoolToString(joint.driveWorldspace) << "\n";
-        std::cout << "Ignore mass:                   " << Util::BoolToString(joint.ignoreMass) << "\n";
+        std::cout << "Drive worldspace:              " << BoolToString(joint.driveWorldspace) << "\n";
+        std::cout << "Ignore mass:                   " << BoolToString(joint.ignoreMass) << "\n";
         std::cout << "Parent frame:\n" << joint.parentFrame << "\n";
         std::cout << "Child frame:\n" << joint.childFrame << "\n";
         std::cout << "Drive target:\n" << joint.driveTarget << "\n";
@@ -79,7 +109,7 @@ void RagdollV2Data::PrintJointInfo() {
     }
 }
 
-void RagdollV2Data::PrintSolverInfo() {
+void RagdollData::PrintSolverInfo() {
     std::cout << "Ragdoll Solver\n";
     std::cout << "positionIterations: " << m_solver.positionIterations << "\n";
     std::cout << "gravity: " << m_solver.gravity << "\n";
@@ -90,10 +120,10 @@ void RagdollV2Data::PrintSolverInfo() {
     std::cout << "angularLimitDamping: " << m_solver.angularLimitDamping << "\n";
 }
 
-const RagdollMarker* RagdollV2Data::GetMarkerByName(const RdString& name) const {
+const RagdollMarker* RagdollData::GetMarkerByName(const RdString& name) const {
     for (const auto& m : m_markers)
         if (m.name == name) return &m;
 
-    Logging::Error() << "RagdollV2::GetMarkerByName() failed to find " << name;
+    Logging::Error() << "Ragdoll::GetMarkerByName() failed to find " << name;
     return nullptr;
 }

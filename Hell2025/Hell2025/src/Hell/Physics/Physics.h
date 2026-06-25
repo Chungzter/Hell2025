@@ -11,7 +11,6 @@
 #include "Hell/Physics/PhysicsUtil.h"
 #include "Hell/Render/VertexAttributes.h"
 
-#include "Game/Types.h"
 #include "CollisionReports.h"
 
 #pragma warning(push, 0)
@@ -22,7 +21,6 @@
 #include "Hell/Physics/Types/CharacterController.h"
 #include "Hell/Physics/Types/D6Joint.h"
 #include "Hell/Physics/Types/HeightField.h"
-#include "Hell/Physics/Types/RagdollV1.h"
 #include "Hell/Physics/Types/RigidDynamic.h"
 #include "Hell/Physics/Types/RigidStatic.h"
 
@@ -48,17 +46,13 @@ namespace Hell::Physics {
     CCTHitCallback& GetCharacterControllerHitCallback();    
     PxControllerManager* GetCharacterControllerManager();
 
-    // Ragdolls
-    void LoadRagdollsFromDisk();
-    std::vector<PxRigidDynamic*> GetRagdollPxRigidDynamics(uint64_t ragdollId);
-    std::vector<PxRigidActor*> GetRagdollPxRigidActors(uint64_t ragdollId);
-
     // Materials
     PxMaterial* GetDefaultMaterial();
     PxMaterial* GetGrassMaterial();
 
     // Height fields
     void ActivateAllHeightFields();
+    void UpdateHeightFields();
 
     // Misc
 

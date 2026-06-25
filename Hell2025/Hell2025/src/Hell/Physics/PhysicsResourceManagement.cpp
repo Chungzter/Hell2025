@@ -1,11 +1,12 @@
 #include "Physics.h"
+#include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Util.h"
 
-#include <cfloat>
 #include <glm/geometric.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/trigonometric.hpp>
+
+#include <cfloat>
 #include <iostream> // TODO: cleanup logging
 #include <unordered_map>
 #include <vector>
@@ -13,21 +14,21 @@
 namespace Hell::Physics {
     std::unordered_map<uint64_t, CharacterController> g_characterControllers;
     std::unordered_map<uint64_t, D6Joint> g_d6Joints;
-    std::vector<HeightField> g_HeightFields;
-    std::unordered_map<std::string, RagdollV1Data> g_ragdollV1DataSet;
-    std::unordered_map<uint64_t, RagdollV1> g_ragdolls;
+    std::unordered_map<uint64_t, Ragdoll> g_ragdolls;
     std::unordered_map<uint64_t, RigidDynamic> g_rigidDynamics;
-    std::vector<AABB> g_activeRigidDynamicAABBs;
     std::unordered_map<uint64_t, RigidStatic> g_rigidStatics;
+    std::vector<HeightField> g_HeightFields;
+    std::vector<AABB> g_activeRigidDynamicAABBs;
 
     std::unordered_map<uint64_t, CharacterController>& GetCharacterControllers() { return g_characterControllers; }
-    std::unordered_map<uint64_t, D6Joint>& GetD6Joints() { return g_d6Joints; }
-    std::vector<HeightField>& GetHeightFields() { return g_HeightFields; }
-    std::unordered_map<std::string, RagdollV1Data>& GetRagdollV1DataSet() { return g_ragdollV1DataSet; }
-    std::unordered_map<uint64_t, RagdollV1>& GetRagdolls() { return g_ragdolls; }
-    std::unordered_map<uint64_t, RigidDynamic>& GetRigidDynamics() { return g_rigidDynamics; }
-    std::vector<AABB>& GetActiveRididDynamicAABBs() { return g_activeRigidDynamicAABBs; }
-    std::unordered_map<uint64_t, RigidStatic>& GetRigidStatics() { return g_rigidStatics; }
+    std::unordered_map<uint64_t, D6Joint>& GetD6Joints()                         { return g_d6Joints; }
+    std::unordered_map<uint64_t, Ragdoll>& GetRagdolls()                         { return g_ragdolls; }
+    std::unordered_map<uint64_t, RigidDynamic>& GetRigidDynamics()               { return g_rigidDynamics; }
+    std::unordered_map<uint64_t, RigidStatic>& GetRigidStatics()                 { return g_rigidStatics; }
+    std::vector<HeightField>& GetHeightFields()                                  { return g_HeightFields; }
+    std::vector<AABB>& GetActiveRididDynamicAABBs()                              { return g_activeRigidDynamicAABBs; }
+
+    // Character controllers
 
     CharacterController* GetCharacterControllerById(uint64_t characterControllerId) {
         if (CharacterControllerExists(characterControllerId)) {
@@ -67,6 +68,8 @@ namespace Hell::Physics {
         return GetCharacterControllers().size();
     }
 
+    // D6 Joints
+
     D6Joint* GetD6JointById(uint64_t d6JointId) {
         if (D6JointExists(d6JointId)) {
             return &GetD6Joints()[d6JointId];
@@ -104,6 +107,8 @@ namespace Hell::Physics {
     int GetD6JointCount() {
         return GetD6Joints().size();
     }
+
+    // Height Fields
 
     void RemoveAnyHeightFieldMarkedForRemoval() {
         PxScene* pxScene = Hell::Physics::GetPxScene();
@@ -156,47 +161,7 @@ namespace Hell::Physics {
         return (int)GetHeightFields().size();
     }
 
-    RagdollV1* GetRagdollById(uint64_t ragdollId) {
-        if (RagdollExists(ragdollId)) {
-            return &GetRagdolls()[ragdollId];
-        }
-        return nullptr;
-    }
-
-    bool RagdollExists(uint64_t ragdollId) {
-        return GetRagdolls().find(ragdollId) != GetRagdolls().end();
-    }
-
-    void MarkRagdollForRemoval(uint64_t ragdollId) {
-        if (RagdollExists(ragdollId)) {
-            RagdollV1& ragdoll = GetRagdolls()[ragdollId];
-            ragdoll.MarkForRemoval();
-        }
-    }
-
-    void RemoveAnyRagdollsMarkedForRemoval() {
-        for (auto it = GetRagdolls().begin(); it != GetRagdolls().end(); ) {
-            RagdollV1& ragdoll = it->second;
-
-            if (ragdoll.IsMarkedForRemoval()) {
-                for (uint64_t rigidDynamicId : ragdoll.m_rigidDynamicIds) {
-                    Hell::Physics::MarkRigidDynamicForRemoval(rigidDynamicId);
-                }
-                for (uint64_t d6JointId : ragdoll.m_d6JointIds) {
-                    Hell::Physics::MarkD6JointForRemoval(d6JointId);
-                }
-
-                it = GetRagdolls().erase(it);
-            }
-            else {
-                ++it;
-            }
-        }
-    }
-
-    int GetRagdollCount() {
-        return GetRagdolls().size();
-    }
+    // Rigid Dynamics
 
     bool RigidDynamicExists(uint64_t rigidDynamicId) {
         return GetRigidDynamics().find(rigidDynamicId) != GetRigidDynamics().end();
@@ -249,6 +214,50 @@ namespace Hell::Physics {
     int GetRigidDynamicCount() {
         return GetRigidDynamics().size();
     }
+
+    // Ragdolls
+
+    Ragdoll* GetRagdollById(uint64_t ragdollId) {
+        auto it = g_ragdolls.find(ragdollId);
+        return it != g_ragdolls.end() ? &it->second : nullptr;
+    }
+
+    uint64_t SpawnRagdoll(const glm::vec3& position, const glm::vec3& eulerRotation, const std::string& ragdollName, uint64_t parentObjectId, PhysicsFilterData filterData) {
+        if (!Hell::ResourceManager::GetRagdollDataByName(ragdollName)) {
+            Logging::Error() << "Physics::SpawnRagdoll() failed to find ragdoll data named '" << ragdollName << "'";
+            return 0;
+        }
+
+        uint64_t ragdollId = Hell::Physics::CreatePhysicsId(Hell::Physics::PhysicsObjectType::RAGDOLL);
+
+        Ragdoll& ragdoll = g_ragdolls[ragdollId] = Ragdoll();
+        ragdoll.Init(position, eulerRotation, ragdollName, ragdollId, parentObjectId, filterData);
+        Logging::Debug() << "Created ragdoll '" << ragdollName << "' at " << position << " with id '" << ragdollId << "'";
+
+        return ragdollId;
+    }
+
+    void RemoveAnyRagdollMarkedForRemoval() {
+        for (auto it = GetRagdolls().begin(); it != GetRagdolls().end(); ) {
+            Ragdoll& ragdoll = it->second;
+
+            if (!ragdoll.IsMarkedForRemoval()) {
+                ++it;
+                continue;
+            }
+
+            ragdoll.CleanUp();
+            it = GetRagdolls().erase(it);
+        }
+    }
+
+    void MarkRagdollForRemoval(uint64_t ragdollId) {
+        if (Ragdoll* ragdoll = GetRagdollById(ragdollId)) {
+            ragdoll->MarkForRemoval();
+        }
+    }
+
+    // Rigid Statics
 
     bool RigidStaticExists(uint64_t rigidStaticId) {
         return GetRigidStatics().find(rigidStaticId) != GetRigidStatics().end();
@@ -499,285 +508,9 @@ namespace Hell::Physics {
         return physicsID;
     }
 
-    void CreateHeightField(Hell::vecXZ& worldSpaceOffset, const float* heightValues) {
+    void CreateHeightField(Hell::vecXZ& worldSpaceOffset, const float* heightValues, float heightScale, float rowScale, float colScale) {
         HeightField& g_heightFields = g_HeightFields.emplace_back();
-        g_heightFields.Create(worldSpaceOffset, heightValues);
-    }
-
-    inline PxTransform GlmMat4ToPxTransform(const glm::mat4& m) {
-        glm::vec3 t = glm::vec3(m[3]);                  // column-major translation
-        glm::quat q = glm::quat_cast(m);                // extract rotation
-        return PxTransform(Hell::Physics::GlmVec3toPxVec3(t), Hell::Physics::GlmQuatToPxQuat(q));
-    }
-
-    uint64_t CreateRagdollByName(const std::string& name, float ragdollTotalWeight) {
-        if (g_ragdollV1DataSet.find(name) == g_ragdollV1DataSet.end()) {
-            std::cout << "Hell::Physics::CreateRagdollByName() failed: '" << name << "' not found\n";
-            return 0;
-        }
-
-        uint64_t ragdollID = CreatePhysicsId(PhysicsObjectType::RAGDOLL_V1);
-
-        RagdollV1& ragdoll = g_ragdolls[ragdollID];
-        ragdoll.m_name = name;
-
-        RagdollV1Data ragdollV1Data = g_ragdollV1DataSet[name];
-
-        // Temp vector of RigidComponent Ids to lookup
-        std::vector <uint32_t> rigidComponentIds;
-
-        for (RigidComponent& rigidComponent : ragdollV1Data.rigids) {
-            PxTransform shapeOffsetTranslation = PxTransform(PxVec3(rigidComponent.offset.x, rigidComponent.offset.y, rigidComponent.offset.z));
-            PxQuat pxRotation = GlmQuatToPxQuat(rigidComponent.rotation);            
-            PxTransform shapeOffsetRotation = PxTransform(pxRotation);
-            glm::mat4 restMatrix = rigidComponent.restMatrix;
-
-            glm::mat4 shapeOffsetMatrix = Hell::Physics::PxMat44ToGlmMat4(shapeOffsetTranslation.transform(shapeOffsetRotation));
-
-            if (rigidComponent.shapeType == "Capsule") {
-                rigidComponent.radius *= rigidComponent.scaleAbsoluteVector.x;
-                rigidComponent.capsuleLength *= rigidComponent.scaleAbsoluteVector.y;
-                float halfExtent = rigidComponent.capsuleLength * 0.5f;
-                float radius = rigidComponent.radius;
-
-                PxMaterial* material = Hell::Physics::GetDefaultMaterial();
-                PxCapsuleGeometry geom = PxCapsuleGeometry(radius, halfExtent);
-                PxShape* pxShape = Hell::Physics::GetPxPhysics()->createShape(geom, *material, true);
-
-                uint64_t rigidDynmamicId = Hell::Physics::CreateRigidDynamicFromPxShape(pxShape, restMatrix, shapeOffsetMatrix);
-                ragdoll.m_rigidDynamicIds.push_back(rigidDynmamicId);
-                ragdoll.m_correspondingBoneNames.push_back(rigidComponent.correspondingJointName);
-
-                rigidComponentIds.push_back(rigidComponent.ID);
-            }
-            else if (rigidComponent.shapeType == "Box") {
-                rigidComponent.boxExtents.x *= rigidComponent.scaleAbsoluteVector.x;
-                rigidComponent.boxExtents.y *= rigidComponent.scaleAbsoluteVector.y;
-                rigidComponent.boxExtents.z *= rigidComponent.scaleAbsoluteVector.z;
-                float halfExtent = rigidComponent.capsuleLength;
-                float radius = rigidComponent.radius;
-
-                PxMaterial* material = Hell::Physics::GetDefaultMaterial();
-                PxBoxGeometry geom = PxBoxGeometry(rigidComponent.boxExtents.x * 0.5f, rigidComponent.boxExtents.y * 0.5f, rigidComponent.boxExtents.z * 0.5f);
-                PxShape* pxShape = Hell::Physics::GetPxPhysics()->createShape(geom, *material, true);
-
-                uint64_t rigidDynmamicId = Hell::Physics::CreateRigidDynamicFromPxShape(pxShape, restMatrix, shapeOffsetMatrix);
-                ragdoll.m_rigidDynamicIds.push_back(rigidDynmamicId);
-                ragdoll.m_correspondingBoneNames.push_back(rigidComponent.correspondingJointName);
-
-                rigidComponentIds.push_back(rigidComponent.ID);
-            }
-            else if (rigidComponent.shapeType == "Sphere") {
-                rigidComponent.radius *= rigidComponent.scaleAbsoluteVector.x;
-                float radius = rigidComponent.radius;
-
-                PxMaterial* material = Hell::Physics::GetDefaultMaterial();
-                PxSphereGeometry geom = PxSphereGeometry(radius);
-                PxShape* pxShape = Hell::Physics::GetPxPhysics()->createShape(geom, *material, true);
-
-                uint64_t rigidDynmamicId = Hell::Physics::CreateRigidDynamicFromPxShape(pxShape, restMatrix, shapeOffsetMatrix);
-                ragdoll.m_rigidDynamicIds.push_back(rigidDynmamicId);
-                ragdoll.m_correspondingBoneNames.push_back(rigidComponent.correspondingJointName);
-
-                rigidComponentIds.push_back(rigidComponent.ID);
-            }
-            else {
-                std::cout << "RigidComponent '" << rigidComponent.name << "' had invalid shape\n";
-                continue;
-            }
-        }
-
-        // Compute the total volume of the ragdoll
-        float totalVolume = 0.0f;
-        for (uint64_t rigidDynamicId : ragdoll.m_rigidDynamicIds) {
-            RigidDynamic* rigidDynamic = GetRigidDynamicById(rigidDynamicId);
-
-            if (rigidDynamic) {
-                totalVolume += rigidDynamic->GetVolume();
-            }
-        }
-
-        // Compute the mass of each shape relative to the total weight of the ragdoll
-        for (uint64_t rigidDynamicId : ragdoll.m_rigidDynamicIds) {
-            RigidDynamic* rigidDynamic = GetRigidDynamicById(rigidDynamicId);
-
-            if (rigidDynamic) {
-                float volume = rigidDynamic->GetVolume();
-                float mass = ragdollTotalWeight * (volume / totalVolume);
-                float density = Util::GetDensity(mass, volume);
-                rigidDynamic->UpdateMassAndInertia(density);
-            }
-        }
-
-        // Does this do anything?
-        for (uint64_t rigidDynamicId : ragdoll.m_rigidDynamicIds) {
-            RigidDynamic* rigidDynamic = GetRigidDynamicById(rigidDynamicId);
-            rigidDynamic->GetPxRigidDynamic()->setSolverIterationCounts(8, 1);
-        }
-
-        // Set some reasonable default filter data
-        PhysicsFilterData filterData;
-        filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
-        filterData.collisionGroup = CollisionGroup::RAGDOLL_ENEMY;
-        filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER);
-
-
-        for (uint64_t rigidDynamicId : ragdoll.m_rigidDynamicIds) {
-            RigidDynamic* rigidDynamic = GetRigidDynamicById(rigidDynamicId);
-            if (rigidDynamic) {
-                rigidDynamic->SetFilterData(filterData);
-            }
-        }
-
-        PxScene* pxScene = Hell::Physics::GetPxScene();
-
-        for (JointComponent& joint : ragdollV1Data.joints) {
-            if (joint.parentID == 0) continue;
-
-            uint64_t parentRigidDynamicId = 0, childRigidDynamicId = 0;
-            for (int i = 0; i < rigidComponentIds.size(); i++) {
-                if (rigidComponentIds[i] == joint.parentID)
-                    parentRigidDynamicId = ragdoll.m_rigidDynamicIds[i];
-                else if (rigidComponentIds[i] == joint.childID)
-                    childRigidDynamicId = ragdoll.m_rigidDynamicIds[i];
-            }
-            auto* parentRigidDynamic = GetRigidDynamicById(parentRigidDynamicId);
-            auto* childRigidDynamic = GetRigidDynamicById(childRigidDynamicId);
-            if (!parentRigidDynamic || !childRigidDynamic) {
-                std::cout << "�failed to retrieve parent or child\n";
-                continue;
-            }
-
-            PxRigidDynamic* pPx = parentRigidDynamic->GetPxRigidDynamic();
-            PxRigidDynamic* cPx = childRigidDynamic->GetPxRigidDynamic();
-
-            PxTransform absP = GlmMat4ToPxTransform(joint.absParentFrame);
-            PxTransform absC = GlmMat4ToPxTransform(joint.absChildFrame);
-
-            PxTransform localP = pPx->getGlobalPose().transformInv(absP);
-            PxTransform localC = cPx->getGlobalPose().transformInv(absC);
-
-            glm::mat4 glmLocalP = Hell::Physics::PxMat44ToGlmMat4(localP);
-            glm::mat4 glmLocalC = Hell::Physics::PxMat44ToGlmMat4(localC);
-
-            uint64_t d6JointId = Hell::Physics::CreateD6Joint(
-                parentRigidDynamicId,
-                childRigidDynamicId,
-                joint.parentFrame,
-                joint.childFrame 
-            );
-
-            ragdoll.m_d6JointIds.push_back(d6JointId);
-
-
-            D6Joint* d6Joint = Hell::Physics::GetD6JointById(d6JointId);
-            PxD6Joint* pxD6Joint = d6Joint->GetPxD6Joint();
-            if (!d6Joint) {
-                std::cout << "Hell::Physics::CreateRagdollByName() failed to retrieve d6Joint by id " << d6JointId << "\n";
-                continue;
-            }
-
-           //PxD6Joint* pxD6Joint = d6Joint->GetPxD6Joint();
-           //if (!pxD6Joint) {
-           //    std::cout << "Hell::Physics::CreateRagdollByName() failed because a pxD6Joint was nullptr\n";
-           //    continue;
-           //}
-
-            // Linear spring
-            //joint.limit_linearStiffness = 10000;
-            //joint.limit_linearDampening = 1000000;
-            //joint.drive_angularStiffness = 10000;
-            //joint.drive_angularDamping = 1000000;
-
-
-            const PxSpring linearSpring = PxSpring(joint.limit_linearStiffness, joint.limit_linearDampening);
-
-            if (joint.limit.x > -1) {
-                const PxJointLinearLimitPair limitX = PxJointLinearLimitPair(-joint.limit.x, joint.limit.x, linearSpring);
-                pxD6Joint->setLinearLimit(PxD6Axis::eX, limitX);
-            }
-
-            if (joint.limit.y > -1) {
-                const PxJointLinearLimitPair limitY = PxJointLinearLimitPair(-joint.limit.y, joint.limit.y, linearSpring);
-                pxD6Joint->setLinearLimit(PxD6Axis::eY, limitY);
-            }
-
-            if (joint.limit.z > -1) {
-                const PxJointLinearLimitPair limitZ = PxJointLinearLimitPair(-joint.limit.z, joint.limit.z, linearSpring);
-                pxD6Joint->setLinearLimit(PxD6Axis::eZ, limitZ);
-            }
-
-            const PxSpring angularSpring = PxSpring(joint.drive_angularStiffness, joint.drive_angularDamping);
-            const PxJointAngularLimitPair twistLimit = PxJointAngularLimitPair(-joint.twist, joint.twist, angularSpring);
-            const PxJointLimitCone swingLimit = PxJointLimitCone(joint.swing1, joint.swing2, angularSpring);
-
-            pxD6Joint->setTwistLimit(twistLimit);
-            pxD6Joint->setSwingLimit(swingLimit);
-
-           // pxD6Joint->setConstraintFlag(PxConstraintFlag::ePROJECTION, true);
-           // pxD6Joint->setConstraintFlag(PxD6JointFlag::ePROJECTION, true);
-           // pxD6Joint->setProjectionLinearTolerance(0.05f);
-           // pxD6Joint->setProjectionAngularTolerance(glm::radians(0.5f));
-
-            if (joint.limit.x > 0) pxD6Joint->setMotion(PxD6Axis::eX, PxD6Motion::eLIMITED);
-            if (joint.limit.y > 0) pxD6Joint->setMotion(PxD6Axis::eY, PxD6Motion::eLIMITED);
-            if (joint.limit.z > 0) pxD6Joint->setMotion(PxD6Axis::eZ, PxD6Motion::eLIMITED);
-
-            if (joint.limit.x < 0) pxD6Joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
-            if (joint.limit.y < 0) pxD6Joint->setMotion(PxD6Axis::eY, PxD6Motion::eLOCKED);
-            if (joint.limit.z < 0) pxD6Joint->setMotion(PxD6Axis::eZ, PxD6Motion::eLOCKED);
-
-            if (joint.twist > 0) pxD6Joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLIMITED);
-            if (joint.swing1 > 0) pxD6Joint->setMotion(PxD6Axis::eSWING1, PxD6Motion::eLIMITED);
-            if (joint.swing2 > 0) pxD6Joint->setMotion(PxD6Axis::eSWING2, PxD6Motion::eLIMITED);
-
-            if (joint.twist < 0) pxD6Joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLOCKED);
-            if (joint.swing1 < 0) pxD6Joint->setMotion(PxD6Axis::eSWING1, PxD6Motion::eLOCKED);
-            if (joint.swing2 < 0) pxD6Joint->setMotion(PxD6Axis::eSWING2, PxD6Motion::eLOCKED);
-
-
-            if (joint.drive_enabled) {
-                float driveForceLimit = FLT_MAX;    // Maximum force; ignored
-                bool isAcceleration = true;         // read from the json file some day when you aren't lazy
-
-                // Temp hack because you don't think you need drives. Do you?
-                if (false) {
-                    PxD6JointDrive linearDrive = PxD6JointDrive(joint.limit_linearStiffness, joint.limit_linearDampening, driveForceLimit, isAcceleration);
-                    pxD6Joint->setDrive(PxD6Drive::eX, linearDrive);
-                    pxD6Joint->setDrive(PxD6Drive::eY, linearDrive);
-                    pxD6Joint->setDrive(PxD6Drive::eZ, linearDrive);
-                }
-
-                // Temp hack because you don't think you need drives. Do you?
-                if (false) {
-                    PxD6JointDrive angularDrive = PxD6JointDrive(joint.drive_angularStiffness, joint.drive_angularDamping, driveForceLimit, isAcceleration);
-                    pxD6Joint->setDrive(PxD6Drive::eTWIST, angularDrive);
-                    pxD6Joint->setDrive(PxD6Drive::eSWING, angularDrive);
-                    pxD6Joint->setDrive(PxD6Drive::eSLERP, angularDrive);
-                }
-
-                // TODO: Allow for changes to be made to both parent and child frames without affecting the drive target
-                // Currently you cannot edit the child anchorpoint!!!
-
-                // It's been too many years since you wrote the above comment, one day unravel what the fuck you're talking about there
-            }
-
-            else {
-                // Temp hack because you don't think you need drives. Do you?
-                if (false) {
-                    const PxD6JointDrive defaultDrive{ 0.0f, 0.0f, 0.0f, false };
-                    pxD6Joint->setDrive(PxD6Drive::eX, defaultDrive);
-                    pxD6Joint->setDrive(PxD6Drive::eY, defaultDrive);
-                    pxD6Joint->setDrive(PxD6Drive::eZ, defaultDrive);
-                    pxD6Joint->setDrive(PxD6Drive::eTWIST, defaultDrive);
-                    pxD6Joint->setDrive(PxD6Drive::eSWING, defaultDrive);
-                    pxD6Joint->setDrive(PxD6Drive::eSLERP, defaultDrive);
-                }
-            }
-        }
-
-        ragdoll.m_components = ragdollV1Data;
-        return ragdollID;
+        g_heightFields.Create(worldSpaceOffset, heightValues, heightScale, rowScale, colScale);
     }
 
     uint64_t CreateRigidDynamicWithCompoundConvexMeshesFromModel(const std::string& modelName, float mass, bool kinematic, PhysicsFilterData filterData) {
@@ -813,7 +546,7 @@ namespace Hell::Physics {
             std::span<Vertex> vertices(meshBuffer.GetVertices().data() + mesh->baseVertex, mesh->vertexCount);
             std::span<uint32_t> indices(meshBuffer.GetIndices().data() + mesh->baseIndex, mesh->indexCount);
 
-            volume += Util::GetConvexHullVolume(vertices, indices);
+            volume += GetConvexHullVolume(vertices, indices);
 
             // Create convex shape
             std::vector<PxVec3> pxVertices;
@@ -850,7 +583,7 @@ namespace Hell::Physics {
             pxShapes.push_back(pxShape);
         }
 
-        float density = Util::GetDensity(mass, volume);
+        float density = GetDensity(mass, volume);
         PxRigidBodyExt::updateMassAndInertia(*pxRigidDynamic, density);
 
         pxScene->addActor(*pxRigidDynamic);
@@ -867,8 +600,8 @@ namespace Hell::Physics {
         PxScene* pxScene = Hell::Physics::GetPxScene();
         PxMaterial* material = Hell::Physics::GetDefaultMaterial();
 
-        float volume = Util::GetConvexHullVolume(vertices, indices);
-        float density = Util::GetDensity(mass, volume);
+        float volume = GetConvexHullVolume(vertices, indices);
+        float density = GetDensity(mass, volume);
 
         PxFilterData pxFilterData;
         pxFilterData.word0 = (PxU32)filterData.raycastGroup;
@@ -944,8 +677,8 @@ namespace Hell::Physics {
         float halfWidth = boxExtents.x * 0.5f;
         float halfHeight = boxExtents.y * 0.5f;
         float halfDepth = boxExtents.z * 0.5f;
-        float volume = Util::GetCubeVolume(halfWidth, halfHeight, halfDepth);
-        float density = Util::GetDensity(mass, volume);
+        float volume = GetCubeVolume(halfWidth, halfHeight, halfDepth);
+        float density = GetDensity(mass, volume);
 
         PxFilterData pxFilterData;
         pxFilterData.word0 = (PxU32)filterData.raycastGroup;
@@ -1030,8 +763,8 @@ namespace Hell::Physics {
         pxRigidDynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, kinematic);
 
         // Mass stuff
-        float volume = Util::GetCubeVolume(halfWidth, halfHeight, halfDepth);
-        float density = Util::GetDensity(mass, volume);
+        float volume = GetCubeVolume(halfWidth, halfHeight, halfDepth);
+        float density = GetDensity(mass, volume);
         PxRigidBodyExt::updateMassAndInertia(*pxRigidDynamic, density);
 
         // Create DynamicBox

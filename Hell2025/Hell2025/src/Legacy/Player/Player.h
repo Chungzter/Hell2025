@@ -11,6 +11,8 @@
 #include "Hell/Math/AABB.h"
 #include "Hell/Math/VecXZ.h"
 
+struct Ragdoll;
+
 struct Player {
 
 public:
@@ -109,7 +111,7 @@ public:
     glm::mat4 m_deathCamViewMatrix = glm::mat4(1.0f);
 
     // Ragdoll
-    RagdollV1* GetRagdoll();
+    Ragdoll* GetRagdoll();
     uint64_t GetRagdollId();
 
     // Ladder

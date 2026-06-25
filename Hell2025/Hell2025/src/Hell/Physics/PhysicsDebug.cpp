@@ -17,17 +17,15 @@ namespace {
 
     bool RagdollOwnsPxRigidDynamic(physx::PxRigidDynamic* pxRigidDynamic) {
         for (auto it = Hell::Physics::GetRagdolls().begin(); it != Hell::Physics::GetRagdolls().end(); ) {
-            RagdollV1& ragdoll = it->second;
-            for (uint64_t rigidDynamicId : ragdoll.m_rigidDynamicIds) {
-                RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(rigidDynamicId);
-                if (rigidDynamic) {
-                    if (pxRigidDynamic == rigidDynamic->GetPxRigidDynamic()) {
-                        return true;
-                    }
+            Ragdoll& ragdoll = it->second;
+            for (physx::PxRigidDynamic* ragdollRigidDynamic : ragdoll.m_pxRigidDynamics) {
+                if (pxRigidDynamic == ragdollRigidDynamic) {
+                    return true;
                 }
             }
             it++;
         }
+
         return false;
     }
 }
@@ -76,10 +74,6 @@ namespace Hell::Physics {
         pxScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 0.05f);
         pxScene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LOCAL_FRAMES, 1.0f);
         pxScene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LIMITS, 1.0f);
-
-        // Ignore player ragdolls
-        //auto playerRagdolls = Hell::Physics::GetIgnoreList(RaycastIgnoreFlags::PLAYER_RAGDOLLS);
-       // ignoreList.insert(ignoreList.end(), playerRagdolls.begin(), playerRagdolls.end());
 
         // Prepare
         PxU32 nbActors = pxScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC);
@@ -142,7 +136,7 @@ namespace Hell::Physics {
         std::string result = "PhysX Object counts\n";
         result += "- D6 Joints: " + std::to_string(GetD6JointCount()) + "\n";
         result += "- Height Fields: " + std::to_string(GetHeightFieldCount()) + "\n";
-        result += "- Ragdolls: " + std::to_string(GetRagdollCount()) + "\n";
+        result += "- Ragdolls: " + std::to_string(Hell::Physics::GetRagdolls().size()) + "\n";
         result += "- Rigid Dynamics: " + std::to_string(GetRigidDynamicCount()) + "\n";
         result += "- Rigid Statics: " + std::to_string(GetRigidStaticCount()) + "\n";
         return result;
@@ -159,6 +153,18 @@ namespace Hell::Physics {
             //std::cout << "position: " << rigidDynamic.GetCurrentPosition() << " ";
             std::cout << "\n";
 
+            it++;
+        }
+    }
+
+    void PrintSceneRagdollInfo() {
+        std::cout << "\n Ragdolls\n\n";
+
+        for (auto it = Hell::Physics::GetRagdolls().begin(); it != Hell::Physics::GetRagdolls().end(); ) {
+            const uint64_t id = it->first;
+            Ragdoll& ragdoll = it->second;
+
+            std::cout << " " << id << " - " << ragdoll.m_pxRigidDynamics.size() << " rigids\n";
             it++;
         }
     }

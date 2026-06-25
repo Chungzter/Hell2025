@@ -1,11 +1,11 @@
 #pragma once
 #include "Types/Animation/Animator.h"
-#include "Types/Renderer/SkinnedModel.h"
+#include "Hell/ResourceManagement/Types/SkinnedModel.h"
 #include "Types/Renderer/AnimatedMeshNodes.h"
 #include <unordered_map>
 
 struct AnimatedGameObject {
-    enum class AnimationMode { BINDPOSE, ANIMATION, RAGDOLL, RAGDOLL_V2 };
+    enum class AnimationMode { BINDPOSE, ANIMATION, RAGDOLL_V2 };
 
 public:
     AnimatedGameObject() = default;
@@ -34,7 +34,6 @@ public:
     void SetAnimationModeToAnimated();
     void SetAnimationModeToBindPose();
     void SetAnimationModeToRagdoll();
-    void SetAnimationModeToRagdollV2();
 
 
     void SetBlendingModeByMeshName(const std::string& meshName, BlendingMode blendingMode);
@@ -49,7 +48,6 @@ public:
     void SetAllMeshMaterials(const std::string& materialName);
     void SetAllMeshBlendingModes(BlendingMode blendingMode);
 
-    void SetRagdoll(const std::string& ragdollName, float ragdollTotalWeight);
     void EnableModelMatrixOverride();
     void SetCameraMatrix(const glm::mat4& matrix);
     void DrawBones(int exclusiveViewportIndex = -1);
@@ -63,7 +61,7 @@ public:
     void PrintMeshNames();
     void SetAdditiveTransform(const std::string& nodeName, const glm::mat4& matrix);
     void PauseAllAnimationLayers();
-    void SetRagdollV2Id(uint64_t ragdollV2Id);
+    void SetRagdollId(uint64_t RagdollId);
 
     bool AnimationIsPastFrameNumber(const std::string& animationLayerName, int frameNumber);
     bool AnimationByNameIsComplete(const std::string& name);
@@ -97,7 +95,7 @@ public:
 
     bool RenderingEnabled()                                                           { return m_animatedMeshNodes.RenderingEnabled(); }
     const uint64_t& GetObjectId() const                                               { return m_objectId; }
-    const uint64_t& GetRagdollId() const                                              { return m_ragdollId; }
+    const uint64_t& GetRagdollId() const                                            { return m_ragdollId; }
     const uint32_t GetBaseTransfromIndex() const                                      { return baseTransformIndex; }
     const uint32_t& GetIgnoredViewportIndex() const                                   { return m_animatedMeshNodes.GetIgnoredViewportIndex(); };
     const uint32_t& GetExclusiveViewportIndex() const                                 { return m_animatedMeshNodes.GetExclusiveViewportIndex(); };
@@ -113,7 +111,7 @@ public:
 
 private:
     void UpdateBoneTransformsFromRagdoll();
-    void UpdateBoneTransformsFromRagdollV2();
+    void SyncRagdollToAnimation();
 
     AnimationMode m_animationMode = AnimationMode::BINDPOSE;
     Animator m_animator;
@@ -126,8 +124,7 @@ private:
 
     std::vector<glm::mat4> m_boneSkinningMatrices;
     uint64_t m_objectId = 0;
-    uint64_t m_ragdollId = 0;   // REMOVE ME WHEN U CAN
-    uint64_t m_ragdollV2Id = 0;
+    uint64_t m_ragdollId = 0;
     uint32_t baseTransformIndex = -1;
     bool m_useModelMatrixOverride = false;
 };

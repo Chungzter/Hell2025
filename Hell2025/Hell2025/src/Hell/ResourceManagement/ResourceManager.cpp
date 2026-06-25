@@ -2,6 +2,7 @@
 
 #include "Hell/Logging.h"
 #include "Hell/MemoryTracker/MemoryTracker.h"
+#include "Hell/Physics/Ragdoll/RagdollData.h"
 
 #include <algorithm>
 #include <limits>
@@ -19,6 +20,7 @@ namespace Hell::ResourceManager {
         std::unordered_map<std::string, MeshBuffer> g_meshBuffers;
         std::unordered_map<std::string, MidiFile> g_midiFiles;
         std::unordered_map<std::string, uint32_t> g_modelIdsByName;
+        std::unordered_map<std::string, RagdollData> g_ragdollData;
         std::unordered_map<std::string, uint32_t> g_skinnedModelIdsByName;
         std::unordered_map<std::string, SoundFont> g_soundFonts;
         std::unordered_map<std::string, SpriteSheetTexture> g_spriteSheetTextures;
@@ -58,6 +60,7 @@ namespace Hell::ResourceManager {
         CreateGenericMesh("UI");
 
         CreateMeshBuffer("AssetGeometry");
+        CreateMeshBuffer("PhysicsDebugGeometry");
         CreateMeshBuffer("Procedural");
     }
 
@@ -75,6 +78,7 @@ namespace Hell::ResourceManager {
         g_models.clear();
         g_modelIdsByName.clear();
         g_nextModelId = 0;
+        g_ragdollData.clear();
         g_skinnedModels.clear();
         g_skinnedModelIdsByName.clear();
         g_nextSkinnedModelId = 0;
@@ -208,6 +212,57 @@ namespace Hell::ResourceManager {
 
         if (it == g_iesProfiles.end()) {
             Logging::Error() << "ResourceManager::GetIESProfilePtr(..) failed: '" << name << "' does not exist\n";
+            return nullptr;
+        }
+
+        return &it->second;
+    }
+
+    // Ragdoll Data
+
+    RagdollData& CreateRagdollData(const std::string& name) {
+        auto it = g_ragdollData.find(name);
+
+        if (it != g_ragdollData.end()) {
+            Logging::Fatal() << "ResourceManager::CreateRagdollData(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_ragdollData.emplace(name, RagdollData(name));
+        return result.first->second;
+    }
+
+    RagdollData& CreateRagdollData(RagdollData&& ragdollData) {
+        const std::string name = ragdollData.GetName();
+        auto it = g_ragdollData.find(name);
+
+        if (it != g_ragdollData.end()) {
+            Logging::Fatal() << "ResourceManager::CreateRagdollData(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_ragdollData.emplace(name, std::move(ragdollData));
+        return result.first->second;
+    }
+
+    RagdollData& GetRagdollData(const std::string& name) {
+        auto it = g_ragdollData.find(name);
+
+        if (it == g_ragdollData.end()) {
+            Logging::Error() << "ResourceManager::GetRagdollData(..) failed: '" << name << "' does not exist\n";
+
+            static RagdollData invalid;
+            return invalid;
+        }
+
+        return it->second;
+    }
+
+    RagdollData* GetRagdollDataByName(const std::string& name) {
+        auto it = g_ragdollData.find(name);
+
+        if (it == g_ragdollData.end()) {
+            Logging::Error() << "ResourceManager::GetRagdollDataByName(..) failed: '" << name << "' does not exist\n";
             return nullptr;
         }
 
@@ -714,6 +769,22 @@ namespace Hell::ResourceManager {
                 MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
                 entry.name = name;
                 entry.cpuBytes = iesProfile.GetCPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
+
+        if (!g_ragdollData.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "Ragdoll Data";
+            category.entries.reserve(g_ragdollData.size());
+
+            for (const auto& [name, ragdollData] : g_ragdollData) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = ragdollData.GetCPUAllocatedByteCount();
             }
 
             std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {

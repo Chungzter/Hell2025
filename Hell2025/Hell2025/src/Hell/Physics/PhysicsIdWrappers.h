@@ -7,7 +7,14 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 
+namespace physx {
+    class PxRigidActor;
+}
+
 namespace Hell::Physics {
+    void AddForceToRagdoll(uint64_t physicsId, const glm::vec3& force);
+    std::vector<physx::PxRigidActor*> GetRagdollPxRigidActors(uint64_t ragdollId);
+
     bool RigidDynamicIsKinematic(uint64_t rigidDynamicId);
     bool RigidDynamicIsDirty(uint64_t rigidDynamicId);
     glm::mat4 GetRigidDynamicWorldMatrix(uint64_t rigidDynamicId);

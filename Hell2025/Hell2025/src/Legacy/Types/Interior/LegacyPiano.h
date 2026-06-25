@@ -2,7 +2,7 @@
 #include <Game/Enums.h>
 #include <Game/Types.h>
 #include "Types/Renderer/MeshNodes.h"
-#include "Types/Renderer/Model.h"
+#include "Hell/ResourceManagement/Types/Model.h"
 #include <unordered_map>
 #include <Game/CreateInfo.h>
 

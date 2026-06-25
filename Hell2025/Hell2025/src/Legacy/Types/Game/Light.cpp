@@ -5,7 +5,6 @@
 #include "Game/UniqueID.h"
 #include "Timer.hpp"
 
-#include "Ragdoll/RagdollManager.h"
 #include "Core/GameOLD.h"
 #include "Renderer/Renderer.h"
 #include "Editor/Editor.h"
@@ -108,7 +107,7 @@ void Light::RaycastWorldBounds() {
 void Light::ConfigureMeshNodes() {
     // Mount position
     glm::vec3 mountPosition = m_createInfo.position;
-	PhysXRayResult rayResult = Hell::Physics::CastPhysXRay(m_createInfo.position, glm::vec3(0.0f, 1.0f, 0.0f), 100.0f, RaycastGroup::RAYCAST_ENABLED);
+	PhysXRayResult rayResult = Hell::Physics::CastPhysXRay(m_createInfo.position, glm::vec3(0.0f, 1.0f, 0.0f), 100.0f);
 	if (rayResult.hitFound) {
         mountPosition = rayResult.hitPosition;
 	}

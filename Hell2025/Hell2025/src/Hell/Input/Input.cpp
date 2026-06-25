@@ -1,10 +1,10 @@
 #include "Input.h"
+
+#include "Hell/Backend/BackEnd.h"
+#include "Hell/Logging.h"
+
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
-#include "Hell/Backend/BackEnd.h"
-#include "Util/Util.h"
-
-#include "Hell/Logging.h"
 
 namespace Hell::Input {
     bool g_keyPressed[372];

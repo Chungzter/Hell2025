@@ -1,7 +1,9 @@
-#include "Api.h"
+#include "RagdollAPI.h"
+
+#include "Hell/Logging.h"
+
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
-#include "Hell/Logging.h"
 
 bool JsonRegistry::has(RdString entity, const char* component) const {
     return _doc["entities"][entity.c_str()]["components"].HasMember(component);

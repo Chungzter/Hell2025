@@ -5,34 +5,40 @@
 #include "Core/GameOLD.h"
 #include "Renderer/Renderer.h"
 #include "Hell/Logging.h"
+#include "Game/UniqueID.h"
 #include "Timer.hpp"
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
 
 void Kangaroo::Init(KangarooCreateInfo createInfo) {
     m_createInfo = createInfo;
+    m_objectId = UniqueID::GetNextObjectId(ObjectType::KANGAROO);
 
     Respawn();
     
     if (m_animatedGameObjectId == 0) {
         m_animatedGameObjectId = LegacyWorld::CreateAnimatedGameObject();
+
+        PhysicsFilterData filterData;
+        filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
+        filterData.collisionGroup = CollisionGroup::RAGDOLL_ENEMY;
+        filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
+
         AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
         animatedGameObject->SetSkinnedModel("Kangaroo");
         animatedGameObject->SetRotationY(HELL_PI);
         animatedGameObject->SetAnimationModeToBindPose();
         animatedGameObject->SetName("Roo");
-        animatedGameObject->SetRagdoll("Kangaroo", 1500.0f);
+
+        m_RagdollId = Hell::Physics::SpawnRagdoll(m_position, m_rotation, "Kangaroo", m_objectId, filterData);
+
+        animatedGameObject->SetRagdollId(m_RagdollId);
         animatedGameObject->SetAllMeshMaterials("Kangaroo");
         animatedGameObject->SetMeshMaterialByMeshName("LeftEye_Iris", "KangarooIris");
         animatedGameObject->SetMeshMaterialByMeshName("RightEye_Iris", "KangarooIris");
 
         animatedGameObject->SetBlendingModeByMeshName("LeftEye_Sclera", BlendingMode::DO_NOT_RENDER);
         animatedGameObject->SetBlendingModeByMeshName("RightEye_Sclera", BlendingMode::DO_NOT_RENDER);
-
-        RagdollV1* ragdoll = Hell::Physics::GetRagdollById(animatedGameObject->GetRagdollId());
-        if (ragdoll) {
-            ragdoll->SetPhysicsData(animatedGameObject->GetRagdollId());
-        }
 
         animatedGameObject->PlayAndLoopAnimation("MainLayer", "Kangaroo_Idle", 1.0f);
 
@@ -67,6 +73,10 @@ void Kangaroo::Respawn() {
         animatedGameObject->SetRotationY(m_rotation.y);
         animatedGameObject->SetRotationZ(m_rotation.z);
 
+        if (Ragdoll* ragdoll = GetRagdoll()) {
+            ragdoll->SetToInitialPose();
+            ragdoll->DisableSimulation();
+        }
         animatedGameObject->SetAnimationModeToAnimated();
         animatedGameObject->PlayAndLoopAnimation("MainLayer", "Kangaroo_Idle", 1.0f);
     }
@@ -81,12 +91,21 @@ AnimatedGameObject* Kangaroo::GetAnimatedGameObject(){
     return LegacyWorld::GetAnimatedGameObjectByObjectId(m_animatedGameObjectId);
 }
 
+Ragdoll* Kangaroo::GetRagdoll() {
+    if (m_RagdollId == 0) {
+        return nullptr;
+    }
+    return Hell::Physics::GetRagdollById(m_RagdollId);
+}
+
 void Kangaroo::Kill() {
     if (m_alive) {
         Audio::PlayAudio("Kangaroo_Death.wav", 1.0f);
 
         AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        animatedGameObject->SetAnimationModeToRagdoll();
+        if (animatedGameObject) {
+            animatedGameObject->SetAnimationModeToRagdoll();
+        }
         m_health = 0;
         m_alive = false;
         m_agroState = KanagarooAgroState::KANGAROO_DEAD;
