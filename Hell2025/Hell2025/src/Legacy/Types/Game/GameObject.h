@@ -1,7 +1,7 @@
 #pragma once
 #include <Game/Types.h>
 #include <Game/CreateInfo.h>
-#include "Physics/Types/RigidDynamic.h"
+#include "Hell/Physics/Types/RigidDynamic.h"
 #include "Types/Renderer/MeshNodes.h"
 #include "Types/Renderer/Model.h"
 

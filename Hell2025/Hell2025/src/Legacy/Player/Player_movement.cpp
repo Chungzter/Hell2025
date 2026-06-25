@@ -36,7 +36,7 @@ void Player::UpdateMovement(float deltaTime) {
     UpdateLadderMovement(deltaTime);
 
     // Character controller AABB
-    m_characterControllerAABB = Physics::GetCharacterControllerAABB(m_characterControllerId);
+    m_characterControllerAABB = Hell::Physics::GetCharacterControllerAABB(m_characterControllerId);
 }
 
 void Player::UpdateWalkingMovement(float deltaTime) {
@@ -49,7 +49,7 @@ void Player::UpdateWalkingMovement(float deltaTime) {
         // You need to find a way to cleanly determine character controller grounded states, and whether its head is touching the ceiling
         // FIND ME
         PxController* m_characterController = nullptr;
-        CharacterController* characterControler = Physics::GetCharacterControllerById(m_characterControllerId);
+        CharacterController* characterControler = Hell::Physics::GetCharacterControllerById(m_characterControllerId);
         if (characterControler) {
             m_characterController = characterControler->GetPxController();
         }
@@ -134,18 +134,18 @@ void Player::UpdateWalkingMovement(float deltaTime) {
         }
 
         // Update character controller
-        Physics::MoveCharacterController(m_characterControllerId, displacement);
-        //m_position = Physics::GetCharacterControllerPosition(m_characterControllerId);
+        Hell::Physics::MoveCharacterController(m_characterControllerId, displacement);
+        //m_position = Hell::Physics::GetCharacterControllerPosition(m_characterControllerId);
 
         // Check grounded state
         m_grounded = false;
-        for (CharacterCollisionReport& report : Physics::GetCharacterCollisionReports()) {
+        for (CharacterCollisionReport& report : Hell::Physics::GetCharacterCollisionReports()) {
             m_grounded = (report.characterController == m_characterController && report.hitNormal.y > 0.5f);
         }
 
         // Check for head hitting ceiling
         bool ceilingHit = false;
-        for (CharacterCollisionReport& report : Physics::GetCharacterCollisionReports()) {
+        for (CharacterCollisionReport& report : Hell::Physics::GetCharacterCollisionReports()) {
             if (report.characterController == m_characterController && report.hitNormal.y < -0.5f) {
                 ceilingHit = true;
                 break;
@@ -155,7 +155,7 @@ void Player::UpdateWalkingMovement(float deltaTime) {
             m_yVelocity = 0.0f;
         }
 
-        Physics::ClearCharacterControllerCollsionReports();
+        Hell::Physics::ClearCharacterControllerCollsionReports();
 
         // Piano hacks
         if (IsPlayingPiano()) {
@@ -260,10 +260,10 @@ void Player::UpdateSwimmingMovement(float deltaTime) {
     displacement.y += m_swimVerticalAcceleration;
 
     // Update character controller
-    Physics::MoveCharacterController(m_characterControllerId, displacement);
-    //m_position = Physics::GetCharacterControllerPosition(m_characterControllerId);
+    Hell::Physics::MoveCharacterController(m_characterControllerId, displacement);
+    //m_position = Hell::Physics::GetCharacterControllerPosition(m_characterControllerId);
 
-    Physics::ClearCharacterControllerCollsionReports();
+    Hell::Physics::ClearCharacterControllerCollsionReports();
 
     //static bool test = false;
     //if (Input::KeyPressed(HELL_KEY_L)) {
@@ -286,7 +286,7 @@ void Player::UpdateSwimmingMovement(float deltaTime) {
             float downDot = glm::dot(m_camera.GetForward(), glm::vec3(0.0f, -1.0f, 0.0f));
             const float lookDownThreshold = 0.01f;
             if (downDot < lookDownThreshold) {
-                Physics::MoveCharacterController(m_characterControllerId, snapDisplacement);
+                Hell::Physics::MoveCharacterController(m_characterControllerId, snapDisplacement);
             }
         }
     }

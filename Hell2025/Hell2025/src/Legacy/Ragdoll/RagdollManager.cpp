@@ -51,18 +51,18 @@ inline std::string lastSegment(std::string s) {
 }
 
 namespace RagdollManager {
-    std::unordered_map<std::string, RagdollInfo> g_ragdollInfoSet; // Maps RagdollInfo to filename
+    std::unordered_map<std::string, RagdollV2Data> g_ragdollV2DataSet; // Maps RagdollV2Data to filename
     std::unordered_map<uint64_t, RagdollV2> g_ragdolls;
     MeshBufferOLD g_meshBuffer;
 
     void LoadFile(const FileInfo& fileInfo);
-    void LoadMarkers(RagdollInfo& ragdoll, rapidjson::Document& doc);
-    void LoadJoints(RagdollInfo& ragdoll, rapidjson::Document& doc);
-    void LoadSolver(RagdollInfo& ragdoll, rapidjson::Document& doc);
+    void LoadMarkers(RagdollV2Data& ragdoll, rapidjson::Document& doc);
+    void LoadJoints(RagdollV2Data& ragdoll, rapidjson::Document& doc);
+    void LoadSolver(RagdollV2Data& ragdoll, rapidjson::Document& doc);
 
     void Init() {
         Logging::Init() << "RagdollManager::Init()";
-        for (FileInfo& fileInfo : Util::IterateDirectory("res/", { "rag" })) {
+        for (FileInfo& fileInfo : Util::IterateDirectory("res/ragdolls/v2/", { "rag" })) {
             LoadFile(fileInfo);
         }
 
@@ -87,14 +87,14 @@ namespace RagdollManager {
         rapidjson::Document doc;
         doc.Parse(jsonString.c_str());
 
-        RagdollInfo& ragdollInfo = g_ragdollInfoSet[fileInfo.name] = RagdollInfo();
-        LoadSolver(ragdollInfo, doc);
-        LoadMarkers(ragdollInfo, doc);
-        LoadJoints(ragdollInfo, doc);
+        RagdollV2Data& ragdollData = g_ragdollV2DataSet[fileInfo.name] = RagdollV2Data();
+        LoadSolver(ragdollData, doc);
+        LoadMarkers(ragdollData, doc);
+        LoadJoints(ragdollData, doc);
     }
 
 
-    void LoadSolver(RagdollInfo& ragdoll, rapidjson::Document& doc) {
+    void LoadSolver(RagdollV2Data& ragdoll, rapidjson::Document& doc) {
         RdJsonRegistry registry{ doc };
 
         for (const auto& m : doc["entities"].GetObject()) {
@@ -129,7 +129,7 @@ namespace RagdollManager {
         }
     }
 
-    void LoadMarkers(RagdollInfo& ragdoll, rapidjson::Document& doc) {
+    void LoadMarkers(RagdollV2Data& ragdoll, rapidjson::Document& doc) {
         RdJsonRegistry registry{ doc };
 
         for (const auto& m : doc["entities"].GetObject()) {
@@ -244,7 +244,7 @@ namespace RagdollManager {
         }
     }
 
-    void LoadJoints(RagdollInfo& ragdoll, rapidjson::Document& doc) {
+    void LoadJoints(RagdollV2Data& ragdoll, rapidjson::Document& doc) {
         RdJsonRegistry registry{ doc };
 
         // Build a map of jsonEntity to marker name
@@ -388,9 +388,9 @@ namespace RagdollManager {
         }
     }
 
-    RagdollInfo* GetRagdollInfoByName(const std::string& filename) {
-        auto it = g_ragdollInfoSet.find(filename);
-        return it != g_ragdollInfoSet.end() ? &it->second : nullptr;
+    RagdollV2Data* GetRagdollV2DataByName(const std::string& filename) {
+        auto it = g_ragdollV2DataSet.find(filename);
+        return it != g_ragdollV2DataSet.end() ? &it->second : nullptr;
     }
 
     RagdollV2* GetRagdollV2ById(uint64_t ragdollId) {

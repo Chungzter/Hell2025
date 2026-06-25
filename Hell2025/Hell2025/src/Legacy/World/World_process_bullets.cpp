@@ -1,4 +1,4 @@
-#include "World.h"
+#include "LegacyWorld.h"
 #include "Core/GameOLD.h"
 #include "Viewport/ViewportManager.h"
 #include "Renderer/Renderer.h"
@@ -33,9 +33,9 @@ namespace LegacyWorld {
         //
         //for (int i = 0; i < 2; i++) {
         //    Player* player = Game::GetLocalPlayerByIndex(i);
-        //    Ragdoll* ragdoll = player->GetRagdoll();
+        //    RagdollV1* ragdoll = player->GetRagdoll();
         //    for (uint64_t id : ragdoll->m_rigidDynamicIds) {
-        //        RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(id);
+        //        RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(id);
         //
         //        PhysicsFilterData filterData;
         //        filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
@@ -49,10 +49,10 @@ namespace LegacyWorld {
         //}
 
 
-       // Physics::GetPxScene()->fetchResults(true);
-       // Physics::GetPxScene()->fetchQueries(true);
+       // Hell::Physics::GetPxScene()->fetchResults(true);
+       // Hell::Physics::GetPxScene()->fetchQueries(true);
        //
-       // Physics::GetPxScene()->sceneQueriesUpdate();
+       // Hell::Physics::GetPxScene()->sceneQueriesUpdate();
 
         //if (Input::KeyPressed(HELL_KEY_E)) {
         //
@@ -64,7 +64,7 @@ namespace LegacyWorld {
         //    std::vector<PxRigidActor*> ignoredActors;
         //    RaycastIgnoreFlags ignoreFlags = RaycastIgnoreFlags::PLAYER_CHARACTER_CONTROLLERS;
         //
-        //    PhysXRayResult result = Physics::CastPhysXRay(rayOrigin, rayDirection, rayLength, false, ignoreFlags, ignoredActors);
+        //    PhysXRayResult result = Hell::Physics::CastPhysXRay(rayOrigin, rayDirection, rayLength, false, ignoreFlags, ignoredActors);
         //
         //    std::cout << "hi: " << rayOrigin << " " << rayDirection << "\n";
         //
@@ -98,11 +98,11 @@ namespace LegacyWorld {
 
             Player* player = GameOLD::GetPlayerByPlayerId(bullet.GetOwnerObjectId());
             if (player) {
-                auto ragdollActors = Physics::GetRagdollPxRigidActors(player->GetRagdollId());
+                auto ragdollActors = Hell::Physics::GetRagdollPxRigidActors(player->GetRagdollId());
                 ignoredActors.insert(ignoredActors.end(), ragdollActors.begin(), ragdollActors.end());
             }
 
-            PhysXRayResult physXRayResult = Physics::CastPhysXRay(rayOrigin, rayDirection, rayLength, false, RaycastIgnoreFlags::PLAYER_CHARACTER_CONTROLLERS, ignoredActors);
+            PhysXRayResult physXRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDirection, rayLength, false, RaycastIgnoreFlags::PLAYER_CHARACTER_CONTROLLERS, ignoredActors);
             BvhRayResult bvhRayResult = LegacyWorld::ClosestHit(rayOrigin, bullet.GetDirection(), rayLength);
 
             // Defaults
@@ -188,16 +188,16 @@ namespace LegacyWorld {
                                              meshNode->blendingMode == BlendingMode::STAINED_GLASS);
 
                 bool createDecal = (meshNode && meshNode->decalType != DecalType::UNDEFINED) ||
-                                   (Physics::GetRigidStaitcById(physicsId) != nullptr);
+                                   (Hell::Physics::GetRigidStaitcById(physicsId) != nullptr);
 
                 if (!bullet.CreatesDecals()) {
                     createDecal = false;
                 }
 
-                //bool createBlood = (Physics::GetRagdollById(physicsId) != nullptr) ||
+                //bool createBlood = (Hell::Physics::GetRagdollById(physicsId) != nullptr) ||
                 //                   (RagdollManager::GetRagdollV2ById(physicsId) != nullptr);
                 //
-                //if (Physics::GetRigidDynamicById(physicsId) != nullptr) {
+                //if (Hell::Physics::GetRigidDynamicById(physicsId) != nullptr) {
                 //    createBlood = true;
                 //    std::cout << "Shot rigid dynamic\n";
                 //}
@@ -279,14 +279,14 @@ namespace LegacyWorld {
                     strength = 15000.0f;
                     glm::vec3 force = bullet.GetDirection() * strength;
                     RagdollManager::AddForce(physicsId, force);
-                    Physics::AddFoceToRigidDynamic(physicsId, force);
+                    Hell::Physics::AddFoceToRigidDynamic(physicsId, force);
                     std::cout << "applied physx force\n";
                 }
 
                 // Shot player ragdoll
                 if (Player* player = GameOLD::GetPlayerByPlayerId(objectId)) {
                     // Head shot hack
-                    if (Ragdoll* ragdoll = player->GetRagdoll()) {
+                    if (RagdollV1* ragdoll = player->GetRagdoll()) {
                         int max = std::min(ragdoll->m_rigidDynamicIds.size(), ragdoll->m_correspondingBoneNames.size());
                         for (int i = 0; i < max; i++) {
                             if (ragdoll->m_rigidDynamicIds[i] == physXRayResult.userData.physicsId) {
@@ -303,7 +303,7 @@ namespace LegacyWorld {
                     // REMOVE ME!!!! you are already doing this below. figure out better force system
                     float strength = 1000.0f;
                     glm::vec3 force = bullet.GetDirection() * strength;
-                    Physics::AddFoceToRigidDynamic(physicsId, force);
+                    Hell::Physics::AddFoceToRigidDynamic(physicsId, force);
                     SpawnBlood(hitPosition, -bullet.GetDirection());
                 }
 
@@ -339,7 +339,7 @@ namespace LegacyWorld {
                 //        //float strength = 200.0f;
                 //        float strength = 1000.0f;
                 //        glm::vec3 force = bullet.GetDirection() * strength;
-                //        Physics::AddFoceToRigidDynamic(physicsId, force);
+                //        Hell::Physics::AddFoceToRigidDynamic(physicsId, force);
                 //        std::cout << "Shot a rigid dynamic TEST\n";
                 //    }
                 //}
@@ -366,7 +366,7 @@ namespace LegacyWorld {
                     //float strength = 200.0f;
                     float strength = 1000.0f;
                     glm::vec3 force = bullet.GetDirection() * strength;
-                    Physics::AddFoceToRigidDynamic(physicsId, force);
+                    Hell::Physics::AddFoceToRigidDynamic(physicsId, force);
                     std::cout << "Shot a rigid dynamic\n";
                 }
             }
@@ -384,7 +384,7 @@ namespace LegacyWorld {
         glm::vec3 rayOrigin = position;
         glm::vec3 rayDirection = glm::vec3(0.0f, -1.0f, 0.0f);
         float rayLength = 100;
-        PhysXRayResult rayResult = Physics::CastPhysXRayStaticEnvironment(rayOrigin, rayDirection, rayLength);
+        PhysXRayResult rayResult = Hell::Physics::CastPhysXRayStaticEnvironment(rayOrigin, rayDirection, rayLength);
 
         if (rayResult.hitFound) {
             ScreenSpaceBloodDecalCreateInfo decalCreateInfo;

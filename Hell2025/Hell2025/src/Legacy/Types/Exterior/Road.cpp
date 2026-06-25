@@ -1,6 +1,6 @@
 #include "Road.h"
 #include "Debug/DebugDraw.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Util.h"
 
 #include "Renderer/RenderDataManager.h"
@@ -21,7 +21,7 @@ void Road::Init() {
     m_controlPoints3D.clear();
 
     for (glm::vec2& point : m_controlPoints2D) {
-        glm::vec3 worldPosition = Physics::GetHeightMapPositionAtXZ(point.x, point.y);
+        glm::vec3 worldPosition = Hell::Physics::GetHeightMapPositionAtXZ(point.x, point.y);
         m_controlPoints3D.push_back(worldPosition);
     }
 
@@ -33,7 +33,7 @@ void Road::Init() {
 
         // Snap to heightmap
         for (glm::vec3& point : m_worldPoints) {
-            point = Physics::GetHeightMapPositionAtXZ(point.x, point.z);
+            point = Hell::Physics::GetHeightMapPositionAtXZ(point.x, point.z);
         }
     }
 }

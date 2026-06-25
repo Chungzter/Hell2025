@@ -18,5 +18,4 @@ namespace UniqueID {
 
     uint64_t GetNextObjectId(ObjectType type);
     uint32_t GetNextCustomId();
-    uint64_t GetNextPhysicsId();
 }

@@ -1,7 +1,7 @@
 #include "Editor.h"
 #include "Config/Config.h"
 #include "Hell/Logging.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Viewport/ViewportManager.h"
 
 namespace Editor {
@@ -14,7 +14,7 @@ namespace Editor {
         float maxRayDistance = 2000;
         glm::vec3 rayOrigin = GetMouseRayOriginByViewportIndex(GetHoveredViewportIndex());
         glm::vec3 rayDir = GetMouseRayDirectionByViewportIndex(GetHoveredViewportIndex());
-        return Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
+        return Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
     }
 
     float GetScalingFactor(int targetSizeInPixels) {

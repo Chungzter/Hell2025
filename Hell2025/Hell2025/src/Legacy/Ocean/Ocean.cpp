@@ -10,7 +10,7 @@
 #include "Hell/Logging.h"
 #include "Game/UniqueID.h"
 
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Util.h"
 
 namespace Ocean {
@@ -85,20 +85,20 @@ namespace Ocean {
         glm::vec3 planePosition = glm::vec3(0.0f, g_oceanOriginY, 0.0f);
         glm::vec3 planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
 
-        g_waterPlaneUpFacingPhysicsID = Physics::CreateRigidStaticPlane(planePosition, planeNormal, filterData);
-        g_waterPlaneDownFacingPhysicsID = Physics::CreateRigidStaticPlane(planePosition, planeNormal * glm::vec3(-1.0f), filterData);
+        g_waterPlaneUpFacingPhysicsID = Hell::Physics::CreateRigidStaticPlane(planePosition, planeNormal, filterData);
+        g_waterPlaneDownFacingPhysicsID = Hell::Physics::CreateRigidStaticPlane(planePosition, planeNormal * glm::vec3(-1.0f), filterData);
 
         PhysicsUserData physicsUserData;
         physicsUserData.objectId = UniqueID::GetNextObjectId(ObjectType::WATER_PLANE_TOP);
-        Physics::SetRigidStaticUserData(g_waterPlaneUpFacingPhysicsID, physicsUserData);
+        Hell::Physics::SetRigidStaticUserData(g_waterPlaneUpFacingPhysicsID, physicsUserData);
 
         physicsUserData.objectId = UniqueID::GetNextObjectId(ObjectType::WATER_PLANE_BOTTOM);
-        Physics::SetRigidStaticUserData(g_waterPlaneDownFacingPhysicsID, physicsUserData);
+        Hell::Physics::SetRigidStaticUserData(g_waterPlaneDownFacingPhysicsID, physicsUserData);
     }
 
     void DestroyPhysicsPlane() {
-        Physics::RemoveRigidStatic(g_waterPlaneUpFacingPhysicsID);
-        Physics::RemoveRigidStatic(g_waterPlaneDownFacingPhysicsID);
+        Hell::Physics::RemoveRigidStatic(g_waterPlaneUpFacingPhysicsID);
+        Hell::Physics::RemoveRigidStatic(g_waterPlaneDownFacingPhysicsID);
     }
 
     void ReComputeH0() {

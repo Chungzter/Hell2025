@@ -4,7 +4,7 @@ namespace Audio = Hell::Audio;
 #include "Debug/DebugDraw.h"
 #include "Editor/Gizmo.h"
 #include "Hell/Logging.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
@@ -38,7 +38,7 @@ namespace Editor {
 
         //std::cout << "ray origin: " << rayOrigin << "  ray dir: " << rayDir << "\n";
 
-        PhysXRayResult physxRayResult = Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, backfaceCulling);
+        PhysXRayResult physxRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, backfaceCulling);
         if (physxRayResult.hitFound) {
             ObjectType type = UniqueID::GetType(physxRayResult.userData.objectId);
             SetHoveredObjectType(type);
@@ -73,8 +73,8 @@ namespace Editor {
         }
 
         // Height map mouse position
-        Physics::ActivateAllHeightFields();
-        PhysXRayResult heightMapResult = Physics::CastPhysXRayHeightMap(rayOrigin, rayDir, 10000.0f);
+        Hell::Physics::ActivateAllHeightFields();
+        PhysXRayResult heightMapResult = Hell::Physics::CastPhysXRayHeightMap(rayOrigin, rayDir, 10000.0f);
         g_heightMapMouseHitFound = heightMapResult.hitFound;
         g_heightMapMouseHitPosition = heightMapResult.hitPosition;
     }

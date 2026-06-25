@@ -12,7 +12,6 @@ namespace Audio = Hell::Audio;
 #include "Editor/Editor.h"
 #include "Imgui/ImGuiBackEnd.h"
 #include "Player/Player.h"
-#include "Physics/Physics.h"
 #include "GlobalIllumination/GlobalIllumination.h"
 #include "UI/UIBackEnd.h"
 #include "Viewport/ViewportManager.h"
@@ -106,13 +105,6 @@ namespace GameOLD {
 
         OpenableManager::Update(g_deltaTime);
         LegacyWorld::Update(g_deltaTime);
-
-        // Physics
-        while (Hell::Time::ConsumeFixedStep()) {
-            if (Editor::IsClosed()) {
-                Physics::StepPhysics(Hell::Time::FixedDeltaTime());
-            }
-        }
 
         //GlobalIllumination::Update();
 

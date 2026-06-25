@@ -11,7 +11,7 @@
 
 #include "Ragdoll/RagdollManager.h"
 #include "Hell/Logging.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 
 #include "Types/Mirror.h"
 #include "Managers/MirrorManager.h"

@@ -1,7 +1,7 @@
 #include "AStarMap.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Ocean/Ocean.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "World/LegacyWorld.h"
 
 #include "Hell/Logging.h"
@@ -54,7 +54,7 @@ namespace AStarMap {
 
 
         // Mark all ocean and house cells as walls
-        Physics::ActivateAllHeightFields();
+        Hell::Physics::ActivateAllHeightFields();
 
         for (int i = 0; i < AStarMap::GetCellCount(); i++) {
             glm::ivec2 cellCoords = Index2D(i);
@@ -67,7 +67,7 @@ namespace AStarMap {
             glm::vec3 rayDirection = glm::vec3(0.0f, -1.0f, 0.0f);
             float rayLength = 1000;
 
-            PhysXRayResult rayresult = Physics::CastPhysXRayStaticEnvironment(rayOrigin, rayDirection, rayLength);
+            PhysXRayResult rayresult = Hell::Physics::CastPhysXRayStaticEnvironment(rayOrigin, rayDirection, rayLength);
 
             if (rayresult.hitFound) {
 
@@ -104,7 +104,7 @@ namespace AStarMap {
     }
 
     void UpdateDebugMeshesFromHeightField() {
-        Physics::ActivateAllHeightFields();
+        Hell::Physics::ActivateAllHeightFields();
         UpdateDebugGridMesh();
         UpdateDebugSolidMesh();
     }
@@ -122,7 +122,7 @@ namespace AStarMap {
                 glm::vec3 rayOrigin = vertex.position + glm::vec3(0, 100, 0);
                 glm::vec3 rayDirection = glm::vec3(0, -1, 0);
                 float rayLength = 1000;
-                PhysXRayResult result = Physics::CastPhysXRayHeightMap(rayOrigin, rayDirection, rayLength);
+                PhysXRayResult result = Hell::Physics::CastPhysXRayHeightMap(rayOrigin, rayDirection, rayLength);
                 if (result.hitFound) {
                     vertex.position = result.hitPosition + glm::vec3(0.0f, 0.02f, 0.0f);
                 }
@@ -167,7 +167,7 @@ namespace AStarMap {
                 // Raycast down to sample height
                 glm::vec3 rayOrigin = vertex.position + glm::vec3(0, 100, 0);
                 glm::vec3 rayDirection = glm::vec3(0, -1, 0);
-                PhysXRayResult result = Physics::CastPhysXRayHeightMap(rayOrigin, rayDirection, 1000.0f);
+                PhysXRayResult result = Hell::Physics::CastPhysXRayHeightMap(rayOrigin, rayDirection, 1000.0f);
                 if (result.hitFound) {
                     vertex.position = result.hitPosition + glm::vec3(0.0f, 0.02f, 0.0f);
                 }

@@ -1,7 +1,7 @@
 #include "HousePlane.h"
 #include "Debug/DebugDraw.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "World/LegacyWorld.h"
 #include "Game/UniqueID.h"
@@ -58,7 +58,7 @@ void HousePlane::UpdateVertexDataFromCreateInfo() {
         Util::SetNormalsAndTangentsFromVertices(v0, v1, v2);
     }
 
-    Physics::MarkRigidStaticForRemoval(m_physicsId);
+    Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
     CreatePhysicsObject();
 
     // Calculate worldspace center
@@ -74,7 +74,7 @@ void HousePlane::UpdateVertexDataFromCreateInfo() {
 }
 
 void HousePlane::CleanUp() {
-    Physics::MarkRigidStaticForRemoval(m_physicsId);
+    Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
     m_vertices.clear();
     m_indices.clear();
     m_objectId = 0;
@@ -127,14 +127,14 @@ void HousePlane::SetTextureOffsetV(float value) {
 }
 
 void HousePlane::CreatePhysicsObject() {
-    Physics::MarkRigidStaticForRemoval(m_physicsId);
+    Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
 
     PhysicsFilterData filterData;
     filterData.raycastGroup = RAYCAST_ENABLED;
     filterData.collisionGroup = CollisionGroup::ENVIROMENT_OBSTACLE;
     filterData.collidesWith = (CollisionGroup)(GENERIC_BOUNCEABLE | BULLET_CASING | RAGDOLL_PLAYER | RAGDOLL_ENEMY | CHARACTER_CONTROLLER | ITEM_PICK_UP);
 
-    m_physicsId = Physics::CreateRigidStaticTriangleMeshFromVertexData(Transform(), m_vertices, m_indices, filterData);
+    m_physicsId = Hell::Physics::CreateRigidStaticTriangleMeshFromVertexData(Transform(), m_vertices, m_indices, filterData);
 
     // Set PhysX user data
     PhysicsUserData userData;
@@ -142,7 +142,7 @@ void HousePlane::CreatePhysicsObject() {
     userData.objectId = m_objectId;
     userData.physicsType = PhysicsType::RIGID_STATIC;
     //userData.objectType = ObjectType::HOUSE_PLANE;
-    Physics::SetRigidStaticUserData(m_physicsId, userData);
+    Hell::Physics::SetRigidStaticUserData(m_physicsId, userData);
 }
 
 void HousePlane::SubmitRenderItem() {

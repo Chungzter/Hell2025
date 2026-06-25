@@ -1,4 +1,4 @@
-#include "World.h"
+#include "LegacyWorld.h"
 #include "Debug/DebugDraw.h"
 #include "Hell/Logging.h"
 

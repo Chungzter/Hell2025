@@ -16,7 +16,7 @@ namespace Audio = Hell::Audio;
 #include "Managers/MirrorManager.h"
 #include "Pathfinding/AStarMap.h"
 #include "Pathfinding/NavMesh.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Ragdoll/RagdollManager.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
@@ -42,7 +42,7 @@ namespace Unloved {
         Gizmo::Init();
         ViewportManager::Init();
         Editor::Init();
-        Physics::Init();
+        Hell::Physics::Init();
         RagdollManager::Init();
         ImGuiBackEnd::Init();
         NavMeshManager::Init();
@@ -62,7 +62,7 @@ namespace Unloved {
         UpdateLazyKeypresses();
         DebugDraw::BeginFrame();
         GameOLD::BeginFrame();
-        Physics::BeginFrame();
+        Hell::Physics::BeginFrame();
         RenderDataManager::BeginFrame();
         UIBackEnd::BeginFrame();
         World::BeginFrame();
@@ -102,11 +102,11 @@ namespace Unloved {
 
         AStarMap::Update();
         GameOLD::Update();
-        MirrorManager::Update();
 
-        Physics::UpdateAllRigidDynamics(deltaTime);
-        Physics::UpdateActiveRigidDynamicAABBList();
-        Physics::UpdateHeightFields();
+        Hell::Physics::StepSimulation();
+        Hell::Physics::SyncRuntimeState();
+
+        MirrorManager::Update();
 
         World::SubmitRenderItems();
 

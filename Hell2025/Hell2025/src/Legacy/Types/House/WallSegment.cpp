@@ -1,7 +1,7 @@
 #include "WallSegment.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Modelling/Clipping.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Renderer/Renderer.h"
 #include "Util.h"
 #include "Game/UniqueID.h"
@@ -39,7 +39,7 @@ void WallSegment::SetMeshId(uint32_t meshId) {
 }
 
 void WallSegment::CleanUp() {
-    Physics::MarkRigidStaticForRemoval(m_physicsId);
+    Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
 
     MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
     meshBuffer.RemoveMesh(m_meshId);
@@ -89,14 +89,14 @@ void WallSegment::CreateVertexData(std::vector<ClippingCube>& clippingCubes, flo
 }
 
 void WallSegment::CreatePhysicsObject() {
-    Physics::MarkRigidStaticForRemoval(m_physicsId);
+    Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
 
     PhysicsFilterData filterData;
     filterData.raycastGroup = RAYCAST_ENABLED;
     filterData.collisionGroup = CollisionGroup::ENVIROMENT_OBSTACLE;
     filterData.collidesWith = (CollisionGroup)(GENERIC_BOUNCEABLE | BULLET_CASING | RAGDOLL_PLAYER | RAGDOLL_ENEMY | CHARACTER_CONTROLLER | ITEM_PICK_UP);
 
-    m_physicsId = Physics::CreateRigidStaticTriangleMeshFromVertexData(Transform(), m_vertices, m_indices, filterData);
+    m_physicsId = Hell::Physics::CreateRigidStaticTriangleMeshFromVertexData(Transform(), m_vertices, m_indices, filterData);
     m_objectId = UniqueID::GetNextObjectId(ObjectType::WALL_SEGMENT);
 
     // Set PhysX user data
@@ -105,5 +105,5 @@ void WallSegment::CreatePhysicsObject() {
     userData.objectId = m_objectId;
     userData.physicsType = PhysicsType::RIGID_STATIC;
     //userData.objectType = ObjectType::WALL_SEGMENT;
-    Physics::SetRigidStaticUserData(m_physicsId, userData);
+    Hell::Physics::SetRigidStaticUserData(m_physicsId, userData);
 }

@@ -3,7 +3,7 @@
 namespace Audio = Hell::Audio;
 #include "Bible/Bible.h"
 #include "Core/GameOLD.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Util/Util.h"
 #include "Managers/OpenableManager.h"
 #include "World/LegacyWorld.h"
@@ -31,7 +31,7 @@ void Player::UpdateCursorRays() {
     // PhysX Ray
     glm::vec3 cameraRayOrigin = GetCameraPosition();
     glm::vec3 cameraRayDirection = GetCameraForward();
-    m_physXRayResult = Physics::CastPhysXRay(cameraRayOrigin, cameraRayDirection, maxRayDistance, false, RaycastIgnoreFlags::PLAYER_CHARACTER_CONTROLLERS | RaycastIgnoreFlags::PLAYER_RAGDOLLS);
+    m_physXRayResult = Hell::Physics::CastPhysXRay(cameraRayOrigin, cameraRayDirection, maxRayDistance, false, RaycastIgnoreFlags::PLAYER_CHARACTER_CONTROLLERS | RaycastIgnoreFlags::PLAYER_RAGDOLLS);
 
     // Bvh Ray result
     glm::vec3 rayOrigin = GetCameraPosition();
@@ -77,8 +77,8 @@ void Player::UpdateInteract() {
         glm::vec3 spherePosition = m_interactHitPosition - GetCameraForward() * (sphereRadius * 1.25f);
 
         PxCapsuleGeometry overlapSphereShape = PxCapsuleGeometry(sphereRadius, 0);
-        const PxTransform overlapSphereTranform = PxTransform(Physics::GlmVec3toPxVec3(spherePosition));
-        PhysXOverlapReport overlapReport = Physics::OverlapTest(overlapSphereShape, overlapSphereTranform, CollisionGroup(GENERIC_BOUNCEABLE | GENERTIC_INTERACTBLE | ITEM_PICK_UP | ENVIROMENT_OBSTACLE));
+        const PxTransform overlapSphereTranform = PxTransform(Hell::Physics::GlmVec3toPxVec3(spherePosition));
+        PhysXOverlapReport overlapReport = Hell::Physics::OverlapTest(overlapSphereShape, overlapSphereTranform, CollisionGroup(GENERIC_BOUNCEABLE | GENERTIC_INTERACTBLE | ITEM_PICK_UP | ENVIROMENT_OBSTACLE));
 
         // Sort by distance to player
         sort(overlapReport.hits.begin(), overlapReport.hits.end(), [this, spherePosition](PhysXOverlapResult& lhs, PhysXOverlapResult& rhs) {

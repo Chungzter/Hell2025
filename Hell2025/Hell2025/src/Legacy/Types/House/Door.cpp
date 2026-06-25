@@ -3,7 +3,7 @@
 #include "Bible/Bible.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "Managers/OpenableManager.h"
 #include "Game/UniqueID.h"
@@ -104,7 +104,7 @@ void Door::Update(float deltaTime) {
     // Retrieve physics AABB
     bool found = false;
     for (const MeshNode& meshNode : m_meshNodes.GetNodes()) {
-        if (RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(meshNode.rigidDynamicId)) {
+        if (RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(meshNode.rigidDynamicId)) {
             if (found) {
                 Logging::Warning() << "There's a door with more than 1 mesh node with a rigidDynamicId\n";
             }

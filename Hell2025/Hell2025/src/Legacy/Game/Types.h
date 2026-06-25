@@ -4,6 +4,8 @@
 #include "Hell/File.h"
 #include "Hell/Math/GLM.h"
 #include "Hell/Math/VecXZ.h"
+#include "Hell/Physics/PhysicsTypes.h"
+#include "Hell/Transform.h"
 #include <Hell/Render/TextureTypes.h>
 
 #include <Game/Constants.h>
@@ -53,48 +55,8 @@ struct AABBRayResult {
     glm::vec3 hitNormalLocal = glm::vec3(0.0f);
 };
 
-struct Transform {
-    glm::vec3 position = glm::vec3(0);
-    glm::vec3 rotation = glm::vec3(0);
-    glm::vec3 scale = glm::vec3(1);
-
-    Transform() = default;
-
-    explicit Transform(const glm::vec3& position, const glm::vec3& rotation = glm::vec3(0.0f), const glm::vec3& scale = glm::vec3(1.0f)) {
-        this->position = position;
-        this->rotation = rotation;
-        this->scale = scale;
-    }
-
-    glm::mat4 to_mat4() const {
-        glm::mat4 m = glm::translate(glm::mat4(1), position);
-        m *= glm::mat4_cast(glm::quat(rotation));
-        m = glm::scale(m, scale);
-        return m;
-    };
-};
-
-struct AnimatedTransform {
-    AnimatedTransform() = default;
-    AnimatedTransform(glm::mat4 matrix) {
-        glm::vec3 skew;
-        glm::vec4 perspective;
-        glm::decompose(matrix, scale, rotation, translation, skew, perspective);
-    }
-    glm::mat4 to_mat4() const {
-        glm::mat4 m = glm::translate(glm::mat4(1), translation);
-        m *= glm::mat4_cast(rotation);
-        m = glm::scale(m, scale);
-        return m;
-    };
-    glm::vec3 to_forward_vector() const {
-        glm::quat q = glm::quat(rotation);
-        return glm::normalize(q * glm::vec3(0.0f, 0.0f, 1.0f));
-    }
-    glm::vec3 translation = glm::vec3(0);
-    glm::quat rotation = glm::quat(1, 0, 0, 0);
-    glm::vec3 scale = glm::vec3(1);
-};
+using Transform = Hell::Transform;
+using AnimatedTransform = Hell::QuatTransform;
 
 struct QueuedTextureBake {
     void* texture = nullptr;
@@ -471,12 +433,6 @@ struct PlayerControls {
     unsigned int TOGGLE_INVENTORY = HELL_KEY_WIN_TAB;
 };
 
-struct PhysicsFilterData {
-    RaycastGroup raycastGroup = RaycastGroup::RAYCAST_DISABLED;
-    CollisionGroup collisionGroup = CollisionGroup::NO_COLLISION;
-    CollisionGroup collidesWith = CollisionGroup::ENVIROMENT_OBSTACLE;
-};
-
 struct SelectionRectangleState {
     int beginX = 0;
     int beginY = 0;
@@ -509,35 +465,6 @@ struct HeightMapChunk {
     int baseVertex = 0;
     glm::vec3 aabbMin;
     glm::vec3 aabbMax;
-};
-
-struct PhysicsUserData {
-    uint64_t physicsId = 0;
-    uint64_t objectId = 0;
-    PhysicsType physicsType = PhysicsType::NONE;
-};
-
-struct PhysXRayResult {
-    PhysicsUserData userData;
-    std::string hitObjectName = UNDEFINED_STRING;
-    glm::vec3 hitPosition = glm::vec3(0.0f);
-    glm::vec3 hitNormal = glm::vec3(0.0f);
-    glm::vec3 rayDirection = glm::vec3(0.0f);
-    bool hitFound = false;
-    float distanceToHit = std::numeric_limits<float>::max();
-};
-
-struct PhysXOverlapResult {
-    PhysicsUserData userData;
-    glm::vec3 objectPosition;
-};
-
-struct PhysXOverlapReport {
-    std::vector<PhysXOverlapResult> hits;
-
-    bool HitsFound() {
-        return hits.size();
-    }
 };
 
 struct OceanReadbackData {

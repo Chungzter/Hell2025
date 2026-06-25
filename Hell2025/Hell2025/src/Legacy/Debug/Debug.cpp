@@ -12,7 +12,7 @@
 #include "Managers/MirrorManager.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Viewport/ViewportManager.h"
 #include "UI/UIBackEnd.h"
 #include "World/LegacyWorld.h"
@@ -40,6 +40,16 @@ namespace Debug {
 
     std::string g_quickMessage = UNDEFINED_STRING;
     float g_quickMessageTimer = 0;
+
+    Hell::Physics::DebugMode ToPhysicsDebugMode(DebugRenderMode debugRenderMode) {
+        switch (debugRenderMode) {
+            case DebugRenderMode::PHYSX_ALL:       return Hell::Physics::DebugMode::ALL;
+            case DebugRenderMode::PHYSX_RAYCAST:   return Hell::Physics::DebugMode::RAYCAST_SHAPES;
+            case DebugRenderMode::PHYSX_COLLISION: return Hell::Physics::DebugMode::COLLISION_SHAPES;
+            case DebugRenderMode::RAGDOLLS:        return Hell::Physics::DebugMode::RAGDOLLS;
+            default:                               return Hell::Physics::DebugMode::NONE;
+        }
+    }
 
     void DisplayGlobalDebugText();
     void DisplayMemoryTrackerInfo();
@@ -298,12 +308,12 @@ namespace Debug {
                 DebugDraw::DrawLine(decal.GetPosition(), decal.GetPosition() + decal.GetWorldNormal() * 0.05f, OUTLINE_COLOR);
             }
         }
-        if (g_debugRenderMode == DebugRenderMode::PHYSX_ALL ||
-            g_debugRenderMode == DebugRenderMode::PHYSX_COLLISION ||
-            g_debugRenderMode == DebugRenderMode::RAGDOLLS ||
-            g_debugRenderMode == DebugRenderMode::PHYSX_RAYCAST) {
-            Physics::ForceZeroStepUpdate();
-            Physics::SubmitDebugLinesToRenderer(g_debugRenderMode);
+        Hell::Physics::DebugMode physicsDebugMode = ToPhysicsDebugMode(g_debugRenderMode);
+        if (physicsDebugMode != Hell::Physics::DebugMode::NONE) {
+            Hell::Physics::ForceZeroStepUpdate();
+            for (const Hell::Physics::PhysicsDebugLine& line : Hell::Physics::GetPhysicsDebugLines(physicsDebugMode)) {
+                DebugDraw::DrawLine(line.p1, line.p2, line.color);
+            }
         }
     }
 

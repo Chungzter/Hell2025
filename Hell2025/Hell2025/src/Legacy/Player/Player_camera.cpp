@@ -151,7 +151,7 @@ void Player::UpdateCamera(float deltaTime) {
 
     if (!IsAlive()) {
         AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject();
-        Ragdoll* ragdoll = GetRagdoll();
+        RagdollV1* ragdoll = GetRagdoll();
 
         if (characterModel) {
             characterModel->SetAnimationModeToRagdoll();

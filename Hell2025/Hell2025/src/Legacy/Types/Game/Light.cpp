@@ -1,5 +1,5 @@
 #include "Light.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "World/LegacyWorld.h"
 #include "Util.h"
 #include "Game/UniqueID.h"
@@ -108,7 +108,7 @@ void Light::RaycastWorldBounds() {
 void Light::ConfigureMeshNodes() {
     // Mount position
     glm::vec3 mountPosition = m_createInfo.position;
-	PhysXRayResult rayResult = Physics::CastPhysXRay(m_createInfo.position, glm::vec3(0.0f, 1.0f, 0.0f), 100.0f, RaycastGroup::RAYCAST_ENABLED);
+	PhysXRayResult rayResult = Hell::Physics::CastPhysXRay(m_createInfo.position, glm::vec3(0.0f, 1.0f, 0.0f), 100.0f, RaycastGroup::RAYCAST_ENABLED);
 	if (rayResult.hitFound) {
         mountPosition = rayResult.hitPosition;
 	}

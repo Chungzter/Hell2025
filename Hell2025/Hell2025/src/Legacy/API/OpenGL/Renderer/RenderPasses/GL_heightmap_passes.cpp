@@ -18,7 +18,7 @@
 
 #include "Hell/Audio.h"
 
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 
 #include "Managers/MapManager.h"
 #include "World/LegacyWorld.h"
@@ -223,7 +223,7 @@ namespace OpenGLRenderer {
             glGetTextureSubImage(handle, level, xOffset, yOffset, zOffset, width, height, depth, GL_RED, GL_FLOAT, dataSize, chunkReadBackDataSet[i].vertices);
         }
 
-        Physics::MarkAllHeightFieldsForRemoval();
+        Hell::Physics::MarkAllHeightFieldsForRemoval();
 
         // For each chunk determine the AABB
         for (int i = 0; i < chunkCount; i++) {
@@ -244,7 +244,7 @@ namespace OpenGLRenderer {
             chunk.aabbMax = aabbMax;
 
             Hell::vecXZ worldSpaceOffest = Hell::vecXZ(chunk.coord.x * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE, chunk.coord.z * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE);
-            Physics::CreateHeightField(worldSpaceOffest, chunkReadBackDataSet[i].vertices);
+            Hell::Physics::CreateHeightField(worldSpaceOffest, chunkReadBackDataSet[i].vertices);
        }
     }
 

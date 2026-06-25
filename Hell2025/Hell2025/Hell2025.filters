@@ -84,6 +84,30 @@
     <ClCompile Include="src\Hell\Time\Time.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Hell\Math\Transform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\Physics\PhysicsIds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\Physics\PhysicsIdWrappers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\Physics\PhysicsDebug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\Physics\PhysicsOverlapQuery.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\Physics\PhysicsRayQuery.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\Physics\PhysicsUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\Physics\PhysicsUpdate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\Hell\ResourceManagement\Types\SoundFont.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -125,6 +149,30 @@
     <ClInclude Include="src\Hell\Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Hell\Physics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\Physics\PhysicsTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\Physics\PhysicsDebug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\Physics\PhysicsIds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\Physics\PhysicsIdWrappers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\Physics\PhysicsOverlapQuery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\Physics\PhysicsRayQuery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\Physics\PhysicsUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\Hell\Input\Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -146,7 +194,13 @@
     <ClInclude Include="src\Hell\Time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Hell\Transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\Hell\Time\Time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\Math\Transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Hell\ResourceManagement\Types\SoundFont.h">

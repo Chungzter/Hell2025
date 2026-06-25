@@ -4,7 +4,7 @@
 #include "Debug/DebugDraw.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "Game/UniqueID.h"
 #include "Util.h"
@@ -17,7 +17,7 @@ AnimatedGameObject::AnimatedGameObject(uint64_t id) {
 }
 
 void AnimatedGameObject::SetRagdoll(const std::string& ragdollName, float ragdollTotalWeight) {
-    m_ragdollId = Physics::CreateRagdollByName(ragdollName, ragdollTotalWeight);
+    m_ragdollId = Hell::Physics::CreateRagdollByName(ragdollName, ragdollTotalWeight);
 }
 
 
@@ -35,7 +35,7 @@ const uint32_t AnimatedGameObject::GetVerteXCount() {
 }
 
 void AnimatedGameObject::UpdateBoneTransformsFromRagdoll() {
-    Ragdoll* ragdoll = Physics::GetRagdollById(m_ragdollId);
+    RagdollV1* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
     if (!ragdoll) return;
     if (!m_skinnedModel) return;
 
@@ -52,9 +52,9 @@ void AnimatedGameObject::UpdateBoneTransformsFromRagdoll() {
 
         for (int j = 0; j < ragdoll->m_correspondingBoneNames.size(); j++) {
             if (ragdoll->m_correspondingBoneNames[j] == NodeName) {
-                RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(ragdoll->m_rigidDynamicIds[j]);
+                RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(ragdoll->m_rigidDynamicIds[j]);
                 PxRigidDynamic* pxRigidDynamic = rigidDynamic->GetPxRigidDynamic();
-                GlobalTransformation = Physics::PxMat44ToGlmMat4(pxRigidDynamic->getGlobalPose());
+                GlobalTransformation = Hell::Physics::PxMat44ToGlmMat4(pxRigidDynamic->getGlobalPose());
             }
         }
 
@@ -82,7 +82,7 @@ void AnimatedGameObject::UpdateBoneTransformsFromRagdollV2() {
         for (int j = 0; j < ragdoll->m_markerBoneNames.size(); j++) {
             if (ragdoll->m_markerBoneNames[j] == NodeName) {
                 PxRigidDynamic* pxRigidDynamic = ragdoll->m_pxRigidDynamics[j];
-                GlobalTransformation = Physics::PxMat44ToGlmMat4(pxRigidDynamic->getGlobalPose());
+                GlobalTransformation = Hell::Physics::PxMat44ToGlmMat4(pxRigidDynamic->getGlobalPose());
             }
         }
 
@@ -128,7 +128,7 @@ void AnimatedGameObject::Update(float deltaTime) {
     if (m_animationMode == AnimationMode::BINDPOSE ||
         m_animationMode == AnimationMode::ANIMATION) {
 
-        Ragdoll* ragdoll = Physics::GetRagdollById(m_ragdollId);
+        RagdollV1* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
         if (ragdoll) {
             ragdoll->SetRigidGlobalPosesFromAnimatedGameObject(this);
         }
@@ -147,12 +147,12 @@ void AnimatedGameObject::Update(float deltaTime) {
     //
     //}
 
-    Ragdoll* ragdoll = Physics::GetRagdollById(m_ragdollId);
+    RagdollV1* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
     if (ragdoll && false) {
         for (int i = 0; i < ragdoll->m_components.joints.size(); i++) {
 
             JointComponent& joint = ragdoll->m_components.joints[i];
-            D6Joint* d6Joint = Physics::GetD6JointById(ragdoll->m_d6JointIds[i]);
+            D6Joint* d6Joint = Hell::Physics::GetD6JointById(ragdoll->m_d6JointIds[i]);
             PxD6Joint* pxD6Joint = d6Joint->GetPxD6Joint();
 
             // Linear spring
@@ -191,7 +191,7 @@ void AnimatedGameObject::Update(float deltaTime) {
 
 void AnimatedGameObject::CleanUp() {
     if (m_ragdollId != 0) {
-        Physics::MarkRagdollForRemoval(m_ragdollId);
+        Hell::Physics::MarkRagdollForRemoval(m_ragdollId);
     }
 }
 
@@ -286,7 +286,7 @@ void AnimatedGameObject::SetAnimationModeToBindPose() {
 
 
 void AnimatedGameObject::SetAnimationModeToRagdoll() {
-    Ragdoll* ragdoll = Physics::GetRagdollById(m_ragdollId);
+    RagdollV1* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
     if (!ragdoll) return;
 
     if (m_animationMode != AnimationMode::RAGDOLL) {

@@ -11,7 +11,7 @@ void Player::InitRagdoll() {
     characterModel->SetRagdoll("UnisexGuy", 85.0f);
 
     // Get ragdoll
-    Ragdoll* ragdoll = GetRagdoll();
+    RagdollV1* ragdoll = GetRagdoll();
     if (!ragdoll) return;
 
     // Set ragdoll PhysX filter and user data

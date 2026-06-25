@@ -6,7 +6,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "World/LegacyWorld.h"
 #include "Util.h"
 #include "Game/UniqueID.h"
@@ -142,14 +142,14 @@ void Piano::Init(PianoCreateInfo& createInfo) {
     //filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
     //filterData.collisionGroup = CollisionGroup::ENVIROMENT_OBSTACLE;
     //filterData.collidesWith = (CollisionGroup)(CHARACTER_CONTROLLER | BULLET_CASING | ITEM_PICK_UP | RAGDOLL_ENEMY);
-    //m_rigidStaticId = Physics::CreateRigidStaticConvexMeshFromModel(m_transform, "PianoConvexMesh", filterData);
+    //m_rigidStaticId = Hell::Physics::CreateRigidStaticConvexMeshFromModel(m_transform, "PianoConvexMesh", filterData);
     //
     //PhysicsUserData userData;
     //userData.physicsId = m_rigidStaticId;
     //userData.objectId = m_pianoObjectId;
     //userData.physicsType = PhysicsType::RIGID_STATIC;
     //userData.objectType = ObjectType::PIANO;
-    //Physics::SetRigidStaticUserData(m_rigidStaticId, userData);
+    //Hell::Physics::SetRigidStaticUserData(m_rigidStaticId, userData);
 
     CalculatePianoKeyWorldspaceCenters();
 }
@@ -179,13 +179,13 @@ void Piano::SetPosition(glm::vec3 position) {
     m_transform.position = position;
 
     // Update collision mesh position
-    Physics::SetRigidStaticWorldTransform(m_rigidStaticId, m_transform.to_mat4());
+    Hell::Physics::SetRigidStaticWorldTransform(m_rigidStaticId, m_transform.to_mat4());
 
     CalculatePianoKeyWorldspaceCenters();
 }
 
 void Piano::CleanUp() {
-    Physics::MarkRigidStaticForRemoval(m_rigidStaticId);
+    Hell::Physics::MarkRigidStaticForRemoval(m_rigidStaticId);
 	m_meshNodes.CleanUp();
 }
 

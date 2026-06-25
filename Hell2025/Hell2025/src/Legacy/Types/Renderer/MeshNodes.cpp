@@ -7,7 +7,7 @@
 #include "Managers/OpenableManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "World/LegacyWorld.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Game/UniqueID.h"
 #include "Util.h"
 
@@ -136,7 +136,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
                 bool kinematic = createInfo.rigidDynamic.kinematic;
 
                 if (createInfo.rigidDynamic.shapeType == PhysicsShapeType::BOX) {
-                    meshNode->rigidDynamicId = Physics::CreateRigidDynamicFromBoxExtents(spawnTransform, extents, kinematic, mass, filterData, offsetTransform);
+                    meshNode->rigidDynamicId = Hell::Physics::CreateRigidDynamicFromBoxExtents(spawnTransform, extents, kinematic, mass, filterData, offsetTransform);
                 }
                 else if (createInfo.rigidDynamic.shapeType == PhysicsShapeType::CONVEX_MESH) {
 
@@ -148,12 +148,12 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
                         if (mesh) {
                             std::span<Vertex> vertices(meshBuffer.GetVertices().data() + mesh->baseVertex, mesh->vertexCount);
                             std::span<uint32_t> indices(meshBuffer.GetIndices().data() + mesh->baseIndex, mesh->indexCount);
-                            //meshNode->rigidDynamicId = Physics::CreateRigidDynamicFromConvexMeshVertices(spawnTransform, vertices, indices, mass, filterData);
-                            meshNode->rigidDynamicId = Physics::CreateRigidDynamicWithCompoundConvexMeshesFromModel(createInfo.rigidDynamic.convexMeshModelName, mass, kinematic, filterData);
+                            //meshNode->rigidDynamicId = Hell::Physics::CreateRigidDynamicFromConvexMeshVertices(spawnTransform, vertices, indices, mass, filterData);
+                            meshNode->rigidDynamicId = Hell::Physics::CreateRigidDynamicWithCompoundConvexMeshesFromModel(createInfo.rigidDynamic.convexMeshModelName, mass, kinematic, filterData);
 
                             // DIRTY (fix me)
                             if (kinematic) {
-                                if (RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(meshNode->rigidDynamicId)) {
+                                if (RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(meshNode->rigidDynamicId)) {
                                     if (PxRigidDynamic* pxRigidDynamic = rigidDynamic->GetPxRigidDynamic()) {
                                         pxRigidDynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
                                     }
@@ -170,7 +170,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
                     userData.objectId = meshNode->parentObjectId;
                     userData.physicsType = PhysicsType::RIGID_DYNAMIC;
                     //userData.objectType = UniqueID::GetType(meshNode->parentObjectId);
-                    Physics::SetRigidDynamicUserData(meshNode->rigidDynamicId, userData);
+                    Hell::Physics::SetRigidDynamicUserData(meshNode->rigidDynamicId, userData);
                 }
             }
             else {
@@ -262,7 +262,7 @@ bool MeshNodes::MeshNodeIsNonKinematicRigidDynamic(int localNodeIndex) {
     MeshNode* currentNode = GetMeshNodeByLocalIndex(localNodeIndex);
 
     while (currentNode) {
-        if (currentNode->rigidDynamicId != 0 && !Physics::RigidDynamicIsKinematic(currentNode->rigidDynamicId)) return true;
+        if (currentNode->rigidDynamicId != 0 && !Hell::Physics::RigidDynamicIsKinematic(currentNode->rigidDynamicId)) return true;
 
         // Walk up the tree via parent index
         currentNode = GetMeshNodeByLocalIndex(currentNode->localParentIndex);
@@ -275,7 +275,7 @@ void MeshNodes::CleanUp() {
     // First remove physics shapes
     for (MeshNode& meshNode : m_meshNodes) {
         if (meshNode.rigidDynamicId != 0) {
-            Physics::MarkRigidDynamicForRemoval(meshNode.rigidDynamicId);
+            Hell::Physics::MarkRigidDynamicForRemoval(meshNode.rigidDynamicId);
         }
     }
 
@@ -427,8 +427,8 @@ void MeshNodes::UpdateHierarchy() {
             meshNode.localMatrix = meshNode.localTransform * meshNode.transform.to_mat4() * meshNode.scaleMatrix;
 
             // Overwrite with non-kinematic rigid transform if this node has one
-            if (!m_firstFrame && meshNode.rigidDynamicId != 0 && !Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId) && Editor::IsClosed()) {
-                if (RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(meshNode.rigidDynamicId)) {
+            if (!m_firstFrame && meshNode.rigidDynamicId != 0 && !Hell::Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId) && Editor::IsClosed()) {
+                if (RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(meshNode.rigidDynamicId)) {
                     meshNode.localMatrix = rigidDynamic->GetWorldTransform() * meshNode.scaleMatrix;
                 }
             }
@@ -471,7 +471,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
 
     // Dirty if any node was rigid and moved
     for (MeshNode& meshNode : m_meshNodes) {
-        if (meshNode.rigidDynamicId != 0 && Physics::RigidDynamicIsDirty(meshNode.rigidDynamicId)) {
+        if (meshNode.rigidDynamicId != 0 && Hell::Physics::RigidDynamicIsDirty(meshNode.rigidDynamicId)) {
             hierarchyDirty = true;
             break;
         }
@@ -618,7 +618,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
 void MeshNodes::SleepAllPhysics() {
     for (MeshNode& meshNode : m_meshNodes) {
         if (meshNode.rigidDynamicId != 0) {
-            if (RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(meshNode.rigidDynamicId)) {
+            if (RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(meshNode.rigidDynamicId)) {
                 if (PxRigidDynamic* pxRigidDynamic = rigidDynamic->GetPxRigidDynamic()) {
                     pxRigidDynamic->clearForce(PxForceMode::eFORCE);
                     pxRigidDynamic->clearTorque(PxForceMode::eFORCE);
@@ -637,7 +637,7 @@ void MeshNodes::WakeAllPhysics() {
             continue;
         }
 
-        if (RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(meshNode.rigidDynamicId)) {
+        if (RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(meshNode.rigidDynamicId)) {
             if (PxRigidDynamic* pxRigidDynamic = rigidDynamic->GetPxRigidDynamic()) {
 
                 pxRigidDynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, false);
@@ -658,8 +658,8 @@ void MeshNodes::WakeAllPhysics() {
 void MeshNodes::AddForceToPhsyics(const glm::vec3 force) {
     for (MeshNode& meshNode : m_meshNodes) {
         if (meshNode.rigidDynamicId != 0) {
-            if (!Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId)) {
-                 Physics::AddFoceToRigidDynamic(meshNode.rigidDynamicId, force);
+            if (!Hell::Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId)) {
+                 Hell::Physics::AddFoceToRigidDynamic(meshNode.rigidDynamicId, force);
             }
         }
     }
@@ -696,7 +696,7 @@ void MeshNodes::DisableMarkingStaticSceneBvhAsDirty() {
 void MeshNodes::InitPhysicsTransforms() {
 	for (MeshNode& meshNode : m_meshNodes) {
         if (meshNode.rigidDynamicId != 0 && Editor::IsClosed()) {
-            Physics::SetRigidDynamicGlobalPose(meshNode.rigidDynamicId, meshNode.worldMatrix);
+            Hell::Physics::SetRigidDynamicGlobalPose(meshNode.rigidDynamicId, meshNode.worldMatrix);
 		}
 	}
 }
@@ -705,9 +705,9 @@ void MeshNodes::InitPhysicsTransforms() {
 void MeshNodes::UpdateKinematicPhysicsTransforms() {
 	for (MeshNode& meshNode : m_meshNodes) {
         if (meshNode.rigidDynamicId != 0 && meshNode.openableId != 0 && Editor::IsClosed()) {
-            if (Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId)) {
+            if (Hell::Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId)) {
                 if (meshNode.movedThisFrame) {
-                    Physics::SetRigidDynamicKinematicTarget(meshNode.rigidDynamicId, meshNode.worldMatrix);
+                    Hell::Physics::SetRigidDynamicKinematicTarget(meshNode.rigidDynamicId, meshNode.worldMatrix);
                }
             }
         }

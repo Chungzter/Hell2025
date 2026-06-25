@@ -2,7 +2,7 @@
 
 #include "Debug/DebugDraw.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util.h"
 #include <Game/UniqueID.h>
@@ -22,7 +22,7 @@ GameObject::GameObject(GameObjectCreateInfo createInfo) {
         filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
         filterData.collisionGroup = CollisionGroup::ENVIROMENT_OBSTACLE;
         filterData.collidesWith = (CollisionGroup)(CHARACTER_CONTROLLER | BULLET_CASING | ITEM_PICK_UP);
-        m_physicsId = Physics::CreateRigidStaticConvexMeshFromModel(m_transform, "Bench_ConvexHulls", filterData);
+        m_physicsId = Hell::Physics::CreateRigidStaticConvexMeshFromModel(m_transform, "Bench_ConvexHulls", filterData);
     }
 
     m_objectId = UniqueID::GetNextObjectId(ObjectType::GAME_OBJECT);
@@ -48,7 +48,7 @@ void GameObject::Update(float deltaTime) {
 }
 
 void GameObject::CleanUp() {
-    Physics::MarkRigidStaticForRemoval(m_physicsId);
+    Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
     m_meshNodes.CleanUp();
 }
 
@@ -138,12 +138,12 @@ void GameObject::SetConvexHullsFromModel(const std::string modelName) {
     //PxRigidDynamic* pxRigidDynamic = m_rigidDynamic.GetPxRigidDynamic();
 
     // Create rigid dynamic
-    PxPhysics* pxPhysics = Physics::GetPxPhysics();
-    PxScene* pxScene = Physics::GetPxScene();
+    PxPhysics* pxPhysics = Hell::Physics::GetPxPhysics();
+    PxScene* pxScene = Hell::Physics::GetPxScene();
 
     
 
-    PxQuat quat = Physics::GlmQuatToPxQuat(glm::quat(m_transform.rotation));
+    PxQuat quat = Hell::Physics::GlmQuatToPxQuat(glm::quat(m_transform.rotation));
     PxTransform pxTransform = PxTransform(PxVec3(m_transform.position.x, m_transform.position.y, m_transform.position.z), quat);
     PxRigidDynamic* pxRigidDynamic = pxPhysics->createRigidDynamic(pxTransform);
     //pxRigidDynamic->attachShape(*pxShape);
@@ -156,7 +156,7 @@ void GameObject::SetConvexHullsFromModel(const std::string modelName) {
 
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
         std::span<Vertex> vertices(meshBuffer.GetVertices().data() + mesh->baseVertex, mesh->vertexCount);
-        PxShape* pxShape = Physics::CreateConvexShapeFromVertexList(vertices);
+        PxShape* pxShape = Hell::Physics::CreateConvexShapeFromVertexList(vertices);
 
         pxShape->setQueryFilterData(pxFilterData);       // ray casts
         pxShape->setSimulationFilterData(pxFilterData);  // collisions

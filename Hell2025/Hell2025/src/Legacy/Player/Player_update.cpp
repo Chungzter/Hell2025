@@ -88,7 +88,7 @@ void Player::Update(float deltaTime) {
     glm::vec3 rayOrigin = GetCameraPosition();
     glm::vec3 rayDirection = glm::vec3(0.0f, -1.0f, 0.0f);
     float rayLength = 100.0f;
-    PhysXRayResult rayResult = Physics::CastPhysXRayStaticEnvironment(rayOrigin, rayDirection, rayLength);
+    PhysXRayResult rayResult = Hell::Physics::CastPhysXRayStaticEnvironment(rayOrigin, rayDirection, rayLength);
     m_feetAboveHeightField = (rayResult.hitFound && rayResult.userData.physicsType == PhysicsType::HEIGHT_FIELD);
 
     // Running

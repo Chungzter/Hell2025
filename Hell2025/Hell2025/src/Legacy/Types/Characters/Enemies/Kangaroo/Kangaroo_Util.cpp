@@ -1,5 +1,5 @@
 #include "Kangaroo.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Util/Util.h"
 
 const std::string Kangaroo::GetAnimationStateAsString() {
@@ -22,7 +22,7 @@ void Kangaroo::CreateCharacterController(glm::vec3 position) {
     physicsFilterData.collisionGroup = CollisionGroup::CHARACTER_CONTROLLER;
     physicsFilterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER);
 
-    m_characterControllerId = Physics::CreateCharacterController(666666, position, capsuleHeight, capsuleRadius, physicsFilterData);
+    m_characterControllerId = Hell::Physics::CreateCharacterController(666666, position, capsuleHeight, capsuleRadius, physicsFilterData);
 }
 
 bool Kangaroo::HasValidPath() {

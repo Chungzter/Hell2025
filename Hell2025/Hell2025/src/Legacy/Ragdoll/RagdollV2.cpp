@@ -35,10 +35,10 @@ inline PxTransform PxTransformFromRest(const RdMatrix& restM, float sceneScale) 
 }
 
 void RagdollV2::Init(glm::vec3 spawnPosition, glm::vec3 spawnEulerRotation, const std::string& ragdollName, uint64_t ragdollId) {
-    RagdollInfo* ragdollInfo = RagdollManager::GetRagdollInfoByName(ragdollName);
-    if (!ragdollInfo) return;
+    RagdollV2Data* ragdollData = RagdollManager::GetRagdollV2DataByName(ragdollName);
+    if (!ragdollData) return;
 
-    RagdollSolver& solver = ragdollInfo->m_solver;
+    RagdollSolver& solver = ragdollData->m_solver;
 
     m_ragdollId = ragdollId;
     m_scale = solver.sceneScale;
@@ -49,12 +49,12 @@ void RagdollV2::Init(glm::vec3 spawnPosition, glm::vec3 spawnEulerRotation, cons
 
     CleanUp();
 
-    PxTransform rootPose(Physics::GlmMat4ToPxMat44(m_spawnTransform.to_mat4()));
+    PxTransform rootPose(Hell::Physics::GlmMat4ToPxMat44(m_spawnTransform.to_mat4()));
 
-    PxPhysics* physics = Physics::GetPxPhysics();
-    PxScene* scene = Physics::GetPxScene();
+    PxPhysics* physics = Hell::Physics::GetPxPhysics();
+    PxScene* scene = Hell::Physics::GetPxScene();
 
-    for (RagdollMarker& marker : ragdollInfo->m_markers) {
+    for (RagdollMarker& marker : ragdollData->m_markers) {
         // Store color for rendering
         glm::vec3 color = glm::vec3(marker.color.x(), marker.color.g(), marker.color.b());
         m_markerColors.push_back(color);
@@ -63,7 +63,7 @@ void RagdollV2::Init(glm::vec3 spawnPosition, glm::vec3 spawnEulerRotation, cons
         m_markerBoneNames.push_back(marker.boneName);
 
         // Create mesh for rendering from shape
-        AddMarkerMeshData(marker, ragdollInfo->m_solver);
+        AddMarkerMeshData(marker, ragdollData->m_solver);
 
         PxTransform restTransform = PxTransformFromRest(marker.originMatrix, m_scale);
         PxRigidDynamic* pxrigid = physics->createRigidDynamic(rootPose.transform(restTransform));
@@ -72,7 +72,7 @@ void RagdollV2::Init(glm::vec3 spawnPosition, glm::vec3 spawnEulerRotation, cons
         const bool kinematic = (marker.inputType == (RdEnum)RdBehaviour::kKinematic);
         pxrigid->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, kinematic);
 
-        PxShape* shape = RagdollUtil::CreateShape(marker, ragdollInfo->m_solver);
+        PxShape* shape = RagdollUtil::CreateShape(marker, ragdollData->m_solver);
 
         if (shape) {
 
@@ -172,17 +172,17 @@ void RagdollV2::Init(glm::vec3 spawnPosition, glm::vec3 spawnEulerRotation, cons
     m_meshBuffer.UpdateBuffers();
 
     std::unordered_map<std::string, PxRigidDynamic*> actorByMarker;
-    for (int i = 0; i < ragdollInfo->m_markers.size(); i++) {
-        actorByMarker[ragdollInfo->m_markers[i].name] = m_pxRigidDynamics[i];
+    for (int i = 0; i < ragdollData->m_markers.size(); i++) {
+        actorByMarker[ragdollData->m_markers[i].name] = m_pxRigidDynamics[i];
     }
 
-    const float sceneScale = (float)ragdollInfo->m_solver.sceneScale;
+    const float sceneScale = (float)ragdollData->m_solver.sceneScale;
 
     // Pull per joint limit springs
-    float linK = (float)ragdollInfo->m_solver.linearLimitStiffness;
-    float linC = (float)ragdollInfo->m_solver.linearLimitDamping;
-    float angK = (float)ragdollInfo->m_solver.angularLimitStiffness;
-    float angC = (float)ragdollInfo->m_solver.angularLimitDamping;
+    float linK = (float)ragdollData->m_solver.linearLimitStiffness;
+    float linC = (float)ragdollData->m_solver.linearLimitDamping;
+    float angK = (float)ragdollData->m_solver.angularLimitStiffness;
+    float angC = (float)ragdollData->m_solver.angularLimitDamping;
 
     // Apply legacy compatibility 10000x scaling with overflow guards
     const float MAXV = std::numeric_limits<float>::max();
@@ -220,7 +220,7 @@ void RagdollV2::Init(glm::vec3 spawnPosition, glm::vec3 spawnEulerRotation, cons
         #endif
     };
 
-    for (RagdollJoint& j : ragdollInfo->m_joints)
+    for (RagdollJoint& j : ragdollData->m_joints)
     {
         auto itP = actorByMarker.find(j.parentName);
         auto itC = actorByMarker.find(j.childName);
@@ -233,8 +233,8 @@ void RagdollV2::Init(glm::vec3 spawnPosition, glm::vec3 spawnEulerRotation, cons
         PxRigidActor* child = itC->second;
 
         // parent/child local frames from JSON, scale translation only
-        PxTransform lp(Physics::GlmMat4ToPxMat44(RdMatrixToGlmMat4(j.parentFrame)));
-        PxTransform lc(Physics::GlmMat4ToPxMat44(RdMatrixToGlmMat4(j.childFrame)));
+        PxTransform lp(Hell::Physics::GlmMat4ToPxMat44(RdMatrixToGlmMat4(j.parentFrame)));
+        PxTransform lc(Hell::Physics::GlmMat4ToPxMat44(RdMatrixToGlmMat4(j.childFrame)));
         if (sceneScale != 1.0f) { lp.p *= sceneScale; lc.p *= sceneScale; }
 
         PxD6Joint* d6 = PxD6JointCreate(*physics, parent, lp, child, lc);
@@ -290,7 +290,7 @@ void RagdollV2::Update() {
     //for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
     //    PxTransform pxTransform = pxRigidDynamic->getGlobalPose();
     //    PxMat44 pxMatrix(pxTransform);
-    //    glm::mat4 matrix = Physics::PxMat44ToGlmMat4(pxMatrix);
+    //    glm::mat4 matrix = Hell::Physics::PxMat44ToGlmMat4(pxMatrix);
     //}
 }
 
@@ -334,15 +334,15 @@ void RagdollV2::EnableSimulation() {
 }
 
 void RagdollV2::SetToInitialPose() {
-    RagdollInfo* ragdollInfo = RagdollManager::GetRagdollInfoByName(m_ragdollName);
-    if (!ragdollInfo) return;
+    RagdollV2Data* ragdollData = RagdollManager::GetRagdollV2DataByName(m_ragdollName);
+    if (!ragdollData) return;
 
-    const PxTransform spawnTransform(Physics::GlmMat4ToPxMat44(m_spawnTransform.to_mat4()));
-    PxTransform rootPose(Physics::GlmMat4ToPxMat44(m_spawnTransform.to_mat4()));
+    const PxTransform spawnTransform(Hell::Physics::GlmMat4ToPxMat44(m_spawnTransform.to_mat4()));
+    PxTransform rootPose(Hell::Physics::GlmMat4ToPxMat44(m_spawnTransform.to_mat4()));
 
-    const size_t count = std::min(m_pxRigidDynamics.size(), ragdollInfo->m_markers.size());
+    const size_t count = std::min(m_pxRigidDynamics.size(), ragdollData->m_markers.size());
     for (size_t i = 0; i < count; ++i) {
-        const RagdollMarker& marker = ragdollInfo->m_markers[i];
+        const RagdollMarker& marker = ragdollData->m_markers[i];
         PxTransform restTransform = PxTransformFromRest(marker.originMatrix, m_scale);
         m_pxRigidDynamics[i]->setGlobalPose(rootPose.transform(restTransform));
         m_pxRigidDynamics[i]->setLinearVelocity(PxVec3(0));
@@ -351,8 +351,8 @@ void RagdollV2::SetToInitialPose() {
 }
 
 void RagdollV2::CleanUp() {
-    PxPhysics* pxPhysics = Physics::GetPxPhysics();
-    PxScene* pxScene = Physics::GetPxScene();
+    PxPhysics* pxPhysics = Hell::Physics::GetPxPhysics();
+    PxScene* pxScene = Hell::Physics::GetPxScene();
 
     for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
         if (pxRigidDynamic) {
@@ -434,7 +434,7 @@ glm::mat4 RagdollV2::GetModelMatrixByRigidIndex(uint32_t index) const {
     }
     Transform scaleTransform;
     scaleTransform.scale = glm::vec3(m_scale);
-    return Physics::PxMat44ToGlmMat4(m_pxRigidDynamics[index]->getGlobalPose()) * scaleTransform.to_mat4();
+    return Hell::Physics::PxMat44ToGlmMat4(m_pxRigidDynamics[index]->getGlobalPose()) * scaleTransform.to_mat4();
 }
 
 void RagdollV2::AddMarkerMeshData(RagdollMarker& marker, RagdollSolver& solver) {
@@ -717,7 +717,7 @@ void RagdollV2::SetRigidGlobalPosesFromAnimatedGameObject(AnimatedGameObject* an
                     glm::mat4 boneMatrixLocal = animatedGameObject->GetAnimatedTransformByBoneName(boneName);
                     glm::mat4 boneMatrixWorld = objectMatrixWorld * boneMatrixLocal;
 
-                    PxTransform pxTransform = PxTransform(Physics::GlmMat4ToPxMat44(boneMatrixWorld));
+                    PxTransform pxTransform = PxTransform(Hell::Physics::GlmMat4ToPxMat44(boneMatrixWorld));
                     pxRigidDynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
                     pxRigidDynamic->setGlobalPose(pxTransform);
                     break;

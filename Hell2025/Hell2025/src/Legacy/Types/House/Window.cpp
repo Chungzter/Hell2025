@@ -1,6 +1,6 @@
 #include "Window.h"
 #include "Editor/Editor.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "Game/UniqueID.h"
 #include "Util.h"
@@ -72,7 +72,7 @@ Window::Window(uint64_t id, const WindowCreateInfo& createInfo, const SpawnOffse
     //filterData.collisionGroup = CollisionGroup::ENVIROMENT_OBSTACLE;
     //filterData.collidesWith = (CollisionGroup)(GENERIC_BOUNCEABLE | BULLET_CASING | RAGDOLL_PLAYER | RAGDOLL_ENEMY);
     //
-    //m_physicsId = Physics::CreateRigidStaticTriangleMeshFromModel(m_transform, "WindowGlassPhysX", filterData);
+    //m_physicsId = Hell::Physics::CreateRigidStaticTriangleMeshFromModel(m_transform, "WindowGlassPhysX", filterData);
     //
     //// Set PhysX user data
     //PhysicsUserData userData;
@@ -80,18 +80,18 @@ Window::Window(uint64_t id, const WindowCreateInfo& createInfo, const SpawnOffse
     //userData.objectId = m_objectId;
     //userData.physicsType = PhysicsType::RIGID_STATIC;
     //userData.objectType = ObjectType::WINDOW;
-    //Physics::SetRigidStaticUserData(m_physicsId, userData);
+    //Hell::Physics::SetRigidStaticUserData(m_physicsId, userData);
 }
 
 void Window::CleanUp() {
-    Physics::MarkRigidStaticForRemoval(m_physicsId);
+    Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
 }
 
 void Window::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
     m_transform.position = position;
     m_meshNodes.Update(m_transform.to_mat4());
-    Physics::SetRigidStaticWorldTransform(m_physicsId, m_transform.to_mat4());
+    Hell::Physics::SetRigidStaticWorldTransform(m_physicsId, m_transform.to_mat4());
 }
 
 void Window::SetRotationY(float value) {

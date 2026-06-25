@@ -1,6 +1,6 @@
 #pragma once
 #include "Types/Game/AnimatedGameObject.h"
-#include "Physics/Types/Ragdoll.h"
+#include "Hell/Physics/Types/RagdollV1.h"
 #include <vector>
 
 #define SHARK_SPINE_SEGMENT_COUNT 11
@@ -28,7 +28,7 @@ struct Shark {
     void DrawDebug();
 
     AnimatedGameObject* GetAnimatedGameObject();
-    Ragdoll* GetRadoll();
+    RagdollV1* GetRadoll();
 
     glm::vec3 m_spinePositions[SHARK_SPINE_SEGMENT_COUNT];
     std::string m_spineBoneNames[SHARK_SPINE_SEGMENT_COUNT];
@@ -148,7 +148,7 @@ private:
   //
   // PxRigidDynamic* m_headPxRigidDynamic = nullptr;
   //
-  // Ragdoll* GetRadoll();
+  // RagdollV1* GetRadoll();
   // AnimatedGameObject* GetAnimatedGameObject();
   // std::string GetDebugText();       
   // glm::vec3 GetForwardVector();

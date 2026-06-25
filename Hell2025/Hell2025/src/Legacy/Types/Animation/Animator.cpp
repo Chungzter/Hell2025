@@ -37,7 +37,7 @@ void Animator::PlayAnimation(const std::string& layerName, const std::string& an
 
     // Set default weight for each bone to 1.0 and transform to identity
     for (int i = 0; i < nodeCount; i++) {
-        animationLayer->m_globalNodeTransforms[i] = glm::mat4(1.0f);
+        animationLayer->m_globalNodeTransforms[i] = Hell::QuatTransform(glm::mat4(1.0f));
         animationLayer->m_boneWeights[i] = 1.0f;
     }
 }
@@ -193,7 +193,7 @@ void Animator::UpdateAnimations(float deltaTime) {
         }
         else {
             // Fallback to bind pose
-            finalLocals[i] = m_skinnedModel->m_nodes[i].inverseBindTransform;
+            finalLocals[i] = Hell::QuatTransform(m_skinnedModel->m_nodes[i].inverseBindTransform);
         }
     }
 

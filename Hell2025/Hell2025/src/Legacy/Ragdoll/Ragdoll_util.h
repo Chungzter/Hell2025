@@ -1,5 +1,5 @@
 #pragma once
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include <Game/Types.h>
 #include "Types.h"
 
@@ -38,7 +38,7 @@ namespace RagdollUtil {
 
 
     inline PxShape* CreateShape(RagdollMarker& marker, RagdollSolver& solver) {
-        PxPhysics* pxPhysics = Physics::GetPxPhysics();
+        PxPhysics* pxPhysics = Hell::Physics::GetPxPhysics();
         PxShape* pxShape = nullptr;
 
         PxMaterial* material = pxPhysics->createMaterial(marker.friction, marker.friction, marker.restitution );
@@ -107,7 +107,7 @@ namespace RagdollUtil {
                 vertex.position.z = point.z();
             }
             std::span<Vertex> vertexSpan(vertices.data(), vertices.size());
-            pxShape = Physics::CreateConvexShapeFromVertexList(vertexSpan);
+            pxShape = Hell::Physics::CreateConvexShapeFromVertexList(vertexSpan);
             PxMaterial* materials[] = { material };
             pxShape->setMaterials(materials, 1);
 

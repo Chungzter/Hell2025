@@ -3,7 +3,7 @@
 #include "Camera/Camera.h"
 #include "Camera/Frustum.h"
 #include "Inventory/Inventory.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Types/Game/AnimatedGameObject.h"
 #include "Types/Game/TypeWriter.h"
 #include "Types/Renderer/SpriteSheetObject.h"
@@ -109,7 +109,7 @@ public:
     glm::mat4 m_deathCamViewMatrix = glm::mat4(1.0f);
 
     // Ragdoll
-    Ragdoll* GetRagdoll();
+    RagdollV1* GetRagdoll();
     uint64_t GetRagdollId();
 
     // Ladder

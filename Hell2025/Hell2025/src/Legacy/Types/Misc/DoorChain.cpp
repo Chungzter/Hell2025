@@ -1,7 +1,7 @@
 #include "DoorChain.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Debug/DebugDraw.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util.h"
 #include "Hell/Input.h"
@@ -53,8 +53,8 @@ DoorChain::DoorChain(uint64_t id, DoorChainCreateInfo& createInfo, SpawnOffset& 
     // Origin kinematic body
     {
         float mass = 1.0f;
-        m_kinematicOriginPhysicsId = Physics::CreateRigidDynamicFromBoxExtents(originTransform, sizeOfOriginBox, true, mass, filterData, glm::mat4(1.0f));
-        RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(m_kinematicOriginPhysicsId);
+        m_kinematicOriginPhysicsId = Hell::Physics::CreateRigidDynamicFromBoxExtents(originTransform, sizeOfOriginBox, true, mass, filterData, glm::mat4(1.0f));
+        RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(m_kinematicOriginPhysicsId);
     }
 
     // Chain link
@@ -83,8 +83,8 @@ DoorChain::DoorChain(uint64_t id, DoorChainCreateInfo& createInfo, SpawnOffset& 
         float mass = 10.0f;
 
         // Create link rigid
-        uint64_t physicsId = Physics::CreateRigidDynamicFromBoxExtents(finalLinkTransform, extents, false, mass, filterData, shapeLocalPose);
-        RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(physicsId);
+        uint64_t physicsId = Hell::Physics::CreateRigidDynamicFromBoxExtents(finalLinkTransform, extents, false, mass, filterData, shapeLocalPose);
+        RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(physicsId);
         m_chainLinkPhysicsIds.push_back(physicsId);
 
 
@@ -102,7 +102,7 @@ DoorChain::DoorChain(uint64_t id, DoorChainCreateInfo& createInfo, SpawnOffset& 
 
         PhysicsUserData physicsUserData;
         physicsUserData.physicsId = physicsId;
-        Physics::SetRigidDynamicUserData(physicsId, physicsUserData);
+        Hell::Physics::SetRigidDynamicUserData(physicsId, physicsUserData);
 
         auto PxTransformToGlmMat4 = [](const PxTransform& t) {
             glm::quat q(t.q.w, t.q.x, t.q.y, t.q.z);
@@ -115,8 +115,8 @@ DoorChain::DoorChain(uint64_t id, DoorChainCreateInfo& createInfo, SpawnOffset& 
         uint64_t parentId = (i == 0) ? m_kinematicOriginPhysicsId : m_chainLinkPhysicsIds[i - 1];
         uint64_t childId = m_chainLinkPhysicsIds[i];
 
-        PxRigidDynamic* pxParent = Physics::GetRigidDynamicById(parentId)->GetPxRigidDynamic();
-        PxRigidDynamic* pxChild = Physics::GetRigidDynamicById(childId)->GetPxRigidDynamic();
+        PxRigidDynamic* pxParent = Hell::Physics::GetRigidDynamicById(parentId)->GetPxRigidDynamic();
+        PxRigidDynamic* pxChild = Hell::Physics::GetRigidDynamicById(childId)->GetPxRigidDynamic();
 
         PxTransform parentPose = pxParent->getGlobalPose();
         PxTransform childPose = pxChild->getGlobalPose();
@@ -148,9 +148,9 @@ DoorChain::DoorChain(uint64_t id, DoorChainCreateInfo& createInfo, SpawnOffset& 
         glm::mat4 parentFrame = PxTransformToGlmMat4(parentLocal);
         glm::mat4 childFrame = PxTransformToGlmMat4(childLocal);
 
-        uint64_t jointId = Physics::CreateD6Joint(parentId, childId, parentFrame, childFrame);
+        uint64_t jointId = Hell::Physics::CreateD6Joint(parentId, childId, parentFrame, childFrame);
 
-        D6Joint* d6 = Physics::GetD6JointById(jointId);
+        D6Joint* d6 = Hell::Physics::GetD6JointById(jointId);
         auto pxD6 = d6->GetPxD6Joint();
 
         // Start FREE on all axes
@@ -186,7 +186,7 @@ DoorChain::DoorChain(uint64_t id, DoorChainCreateInfo& createInfo, SpawnOffset& 
 
 void DoorChain::SubmitRenderItems() {
     for (int i = 0; i < m_chainLinkPhysicsIds.size(); i++) {
-        if (RigidDynamic* rigidDynamic = Physics::GetRigidDynamicById(m_chainLinkPhysicsIds[i])) {
+        if (RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(m_chainLinkPhysicsIds[i])) {
             glm::mat4 modelMatrix = rigidDynamic->GetWorldTransform();
 
             Material* material = Hell::ResourceManager::GetMaterialByName("Tokarev");
@@ -209,11 +209,11 @@ void DoorChain::SubmitRenderItems() {
 
 void DoorChain::CleanUp() {
     // Remove origin
-    Physics::MarkRigidDynamicForRemoval(m_kinematicOriginPhysicsId);
+    Hell::Physics::MarkRigidDynamicForRemoval(m_kinematicOriginPhysicsId);
 
     // Remove links
     for (uint64_t id : m_chainLinkPhysicsIds) {
-        Physics::MarkRigidDynamicForRemoval(id);
+        Hell::Physics::MarkRigidDynamicForRemoval(id);
     }
 }
 
@@ -224,7 +224,7 @@ void DoorChain::Update(float deltaTime) {
 
     uint64_t id = m_chainLinkPhysicsIds[linkCount - 1];
 
-    RigidDynamic* finalLinkRigidDynamic = Physics::GetRigidDynamicById(id);
+    RigidDynamic* finalLinkRigidDynamic = Hell::Physics::GetRigidDynamicById(id);
     if (!finalLinkRigidDynamic) return;
 
     PxRigidDynamic* pxRigidDynamic = finalLinkRigidDynamic->GetPxRigidDynamic();

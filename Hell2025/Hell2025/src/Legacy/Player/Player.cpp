@@ -239,7 +239,7 @@ void Player::Respawn() {
     float maxRayDistance = 2000;
     glm::vec3 rayOrigin = GetFootPosition() + glm::vec3(0, 2, 0);
     glm::vec3 rayDir = glm::vec3(0, 1, 0);
-    PhysXRayResult physxRayResult = Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
+    PhysXRayResult physxRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
     if (!physxRayResult.hitFound) {
         m_flashlightOn = true;
     }
@@ -314,7 +314,7 @@ const int32_t Player::GetViewportIndex() const {
 const glm::vec3 Player::GetFootPosition() const {
     // FIND ME
     PxController* m_characterController = nullptr;
-    CharacterController* characterControler = Physics::GetCharacterControllerById(m_characterControllerId);
+    CharacterController* characterControler = Hell::Physics::GetCharacterControllerById(m_characterControllerId);
     if (characterControler) {
         m_characterController = characterControler->GetPxController();
         PxExtendedVec3 pxPos = m_characterController->getFootPosition();
@@ -519,8 +519,8 @@ uint64_t Player::GetRagdollId() {
     return characterModel->GetRagdollId();
 }
 
-Ragdoll* Player::GetRagdoll() {
-    return Physics::GetRagdollById(GetRagdollId());
+RagdollV1* Player::GetRagdoll() {
+    return Hell::Physics::GetRagdollById(GetRagdollId());
 }
 
 bool Player::InventoryIsOpen() {

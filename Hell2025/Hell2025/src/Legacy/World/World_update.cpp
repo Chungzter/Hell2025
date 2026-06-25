@@ -1,4 +1,4 @@
-#include "World.h"
+#include "LegacyWorld.h"
 #include "Hell/Audio.h"
 #include "Core/GameOLD.h"
 #include "Core/P90MagManager.h"

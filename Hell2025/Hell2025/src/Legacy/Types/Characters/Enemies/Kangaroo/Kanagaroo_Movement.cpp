@@ -1,7 +1,7 @@
 #include "Kangaroo.h"
 #include "Util.h"
 #include "Core/GameOLD.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include "Pathfinding/AStarMap.h"
@@ -84,21 +84,21 @@ void Kangaroo::UpdateMovementLogic(float deltaTime) {
     displacement.y += m_yVelocity * deltaTime;
 
     // Move character controller
-    Physics::MoveCharacterController(m_characterControllerId, displacement);
-    m_position = Physics::GetCharacterControllerPosition(m_characterControllerId);
+    Hell::Physics::MoveCharacterController(m_characterControllerId, displacement);
+    m_position = Hell::Physics::GetCharacterControllerPosition(m_characterControllerId);
 
 
     // Check grounded state
     m_grounded = false;
-    for (CharacterCollisionReport& report : Physics::GetCharacterCollisionReports()) {
+    for (CharacterCollisionReport& report : Hell::Physics::GetCharacterCollisionReports()) {
         m_grounded = (report.characterController == characterController->GetPxController() && report.hitNormal.y > 0.5f);
     }
 
 
   // // Check grounded state
-  // for (CharacterCollisionReport& report : Physics::GetCharacterCollisionReports()) {
+  // for (CharacterCollisionReport& report : Hell::Physics::GetCharacterCollisionReports()) {
   //     m_grounded = (report.characterController == characterController->GetPxController() && report.hitNormal.y > 0.5f);
   // }
 
-    Physics::ClearCharacterControllerCollsionReports();
+    Hell::Physics::ClearCharacterControllerCollsionReports();
 }

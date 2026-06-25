@@ -3,7 +3,7 @@
 #include "Viewport/ViewportManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "World/LegacyWorld.h"
 
 #include "Debug/DebugDraw.h"

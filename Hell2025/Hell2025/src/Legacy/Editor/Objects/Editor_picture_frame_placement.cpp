@@ -21,7 +21,7 @@ namespace Editor {
             glm::vec3 rayOrigin = GetMouseRayOriginByViewportIndex(GetHoveredViewportIndex());
             glm::vec3 rayDir = GetMouseRayDirectionByViewportIndex(GetHoveredViewportIndex());
 
-            PhysXRayResult rayResult = Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
+            PhysXRayResult rayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
             ObjectType objectType = UniqueID::GetType(rayResult.userData.objectId);
 
             // Place picture frame

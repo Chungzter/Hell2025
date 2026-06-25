@@ -1,5 +1,6 @@
 #pragma once
 #include "Hell/Common.h"
+#include "Hell/Physics/PhysicsTypes.h"
 #include <cstdint>
 
 enum struct RendererMode {
@@ -40,16 +41,6 @@ enum struct CollisionShapeType {
     BOX,
     CAPSULE,
     CONVEX_MESH,
-    UNDEFINED
-};
-
-enum struct PhysicsType {
-    NONE = 0,
-    RIGID_DYNAMIC,
-    RIGID_STATIC,
-    HEIGHT_FIELD,
-    GROUND_PLANE,
-    CHARACTER_CONTROLLER,
     UNDEFINED
 };
 
@@ -213,30 +204,6 @@ enum WeaponAction {
 
 enum class ShellEjectionState {
     IDLE, AWAITING_SHELL_EJECTION
-};
-
-enum CollisionGroup : uint64_t {
-    NO_COLLISION = 0,
-    BULLET_CASING = 1,
-    CHARACTER_CONTROLLER = 2,
-    ENVIROMENT_OBSTACLE = 4,
-    GENERIC_BOUNCEABLE = 8,
-    ITEM_PICK_UP = 16,
-    RAGDOLL_PLAYER = 32,
-    DOG_CHARACTER_CONTROLLER = 64,
-    GENERTIC_INTERACTBLE = 128,
-    ENVIROMENT_OBSTACLE_NO_DOG = 256,
-    SHARK = 512,
-    LADDER = 1024,
-    RAGDOLL_ENEMY = 2048
-};
-
-// Re-evaluate how this works, coz it alway fucks you up,
-// and PhysX this group bitmask is used for more than just raycasts, pretty sure
-enum RaycastGroup {
-    RAYCAST_DISABLED = 0,
-    RAYCAST_ENABLED = 1,
-    DOBERMAN = 32
 };
 
 enum DebugRenderMode {
@@ -425,12 +392,6 @@ enum class SharkMovementDirection {
     UNDEFINED
 };
 
-enum class RaycastIgnoreFlags : uint32_t {
-    NONE = 0,
-    PLAYER_CHARACTER_CONTROLLERS = 1 << 0,
-    PLAYER_RAGDOLLS = 1 << 1,
-};
-
 enum class ChristmasPresentType : uint32_t {
     SMALL = 0,
     MEDIUM,
@@ -538,16 +499,3 @@ enum struct ChainLinkType {
 //    RIGID_STATIC,
 //    RIGID_DYNAMIC
 //};
-
-inline RaycastIgnoreFlags operator|(RaycastIgnoreFlags a, RaycastIgnoreFlags b) {
-    return static_cast<RaycastIgnoreFlags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
-}
-
-inline RaycastIgnoreFlags operator&(RaycastIgnoreFlags a, RaycastIgnoreFlags b) {
-    return static_cast<RaycastIgnoreFlags>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
-}
-
-inline RaycastIgnoreFlags& operator|=(RaycastIgnoreFlags& a, RaycastIgnoreFlags b) {
-    a = a | b;
-    return a;
-}

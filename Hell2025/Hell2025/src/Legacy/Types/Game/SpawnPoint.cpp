@@ -1,5 +1,5 @@
 #include "SpawnPoint.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Debug/DebugDraw.h"
 #include <Game/UniqueID.h>
 
@@ -23,7 +23,7 @@ void SpawnPoint::Init() {
     filterData.collisionGroup = CollisionGroup::NO_COLLISION;
     filterData.collidesWith = CollisionGroup::NO_COLLISION;
 
-    //m_rigidStaticId = Physics::CreateRigidStaticBoxFromExtents(transform, cubeExtents, filterData);
+    //m_rigidStaticId = Hell::Physics::CreateRigidStaticBoxFromExtents(transform, cubeExtents, filterData);
     //
     //// Set PhysX user data
     //PhysicsUserData userData;
@@ -31,11 +31,11 @@ void SpawnPoint::Init() {
     //userData.objectId = m_objectId;
     //userData.physicsType = PhysicsType::RIGID_STATIC;
     //userData.objectType = ObjectType::SPAWN_POINT;
-    //Physics::SetRigidStaticUserData(m_rigidStaticId, userData);
+    //Hell::Physics::SetRigidStaticUserData(m_rigidStaticId, userData);
 }
 
 void SpawnPoint::CleanUp() {
-    //Physics::MarkRigidStaticForRemoval(m_rigidStaticId);
+    //Hell::Physics::MarkRigidStaticForRemoval(m_rigidStaticId);
 }
 
 void SpawnPoint::DrawDebugCube() {

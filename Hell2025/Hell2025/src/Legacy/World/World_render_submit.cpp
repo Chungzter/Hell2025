@@ -1,4 +1,4 @@
-#include "World.h"
+#include "LegacyWorld.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Core/GameOLD.h"
 #include "Editor/Editor.h"

@@ -11,7 +11,7 @@
 
 // remove me
 #include "Core/GameOLD.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Util/Util.h"
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -177,7 +177,7 @@ namespace OpenGLRenderer {
         //glm::vec3 rayOrigin = Game::GetLocalPlayerByIndex(0)->GetCameraPosition();
         //glm::vec3 rayDirection = Game::GetLocalPlayerByIndex(0)->GetCameraForward();
         //float rayLength = 1.0f;;
-        //PhysXRayResult rayResult = Physics::CastPhysXRayStaticEnvironment(rayOrigin, rayDirection, rayLength);
+        //PhysXRayResult rayResult = Hell::Physics::CastPhysXRayStaticEnvironment(rayOrigin, rayDirection, rayLength);
         //
         //if (rayResult.hitFound) {
         //    origin = rayResult.hitPosition + (rayResult.hitNormal * 0.05f);
@@ -312,7 +312,7 @@ namespace OpenGLRenderer {
         //        glm::vec3 rayOrigin = particle.position;
         //        glm::vec3 rayDirection = glm::normalize(movement);
         //        float rayLength = glm::length(movement) * 1.1f;
-        //        PhysXRayResult rayResult = Physics::CastPhysXRayStaticEnvironment(rayOrigin, rayDirection, rayLength);
+        //        PhysXRayResult rayResult = Hell::Physics::CastPhysXRayStaticEnvironment(rayOrigin, rayDirection, rayLength);
         //
         //        // Collision detected, so halt it
         //        if (rayResult.hitFound) {
@@ -370,10 +370,10 @@ namespace OpenGLRenderer {
             glm::vec3 movement = particle.velocity * deltaTime;
 
             // Collision detection
-            // Note: Ensure Physics::CastPhysXRayStaticEnvironment is thread-safe!
+            // Note: Ensure Hell::Physics::CastPhysXRayStaticEnvironment is thread-safe!
             glm::vec3 rayDirection = glm::normalize(movement);
             float rayLength = glm::length(movement) * 1.1f;
-            PhysXRayResult rayResult = Physics::CastPhysXRayStaticEnvironment(pos, rayDirection, rayLength);
+            PhysXRayResult rayResult = Hell::Physics::CastPhysXRayStaticEnvironment(pos, rayDirection, rayLength);
 
             // Collision detected, so halt it
             if (rayResult.hitFound) {

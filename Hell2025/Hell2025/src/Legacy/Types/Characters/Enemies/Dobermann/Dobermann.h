@@ -2,7 +2,7 @@
 #include <Game/Types.h>'
 #include <Game/CreateInfo.h>
 #include "Types/Game/AnimatedGameObject.h"
-#include "Physics/Types/CharacterController.h"
+#include "Hell/Physics/Types/CharacterController.h"
 
 enum struct DobermannState {
     LAY,

@@ -17,11 +17,11 @@
 #include "Ocean/Ocean.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 
 #include "Pathfinding/AStarMap.h"
 
-#include "Physics/Types/Ragdoll.h"
+#include "Hell/Physics/Types/RagdollV1.h"
 
 #include "Hell/Containers/SlotMap.h"
 
@@ -372,14 +372,14 @@ namespace LegacyWorld {
         g_playersAwaitingRespawn = true;
 
         //Update(0.0f);
-        //Physics::ForceZeroStepUpdate();
+        //Hell::Physics::ForceZeroStepUpdate();
         //Update(0.0f);
-        //Physics::ForceZeroStepUpdate();
+        //Hell::Physics::ForceZeroStepUpdate();
         //Game::RespawnPlayers();
         //Update(0.0f);
-        //Physics::ForceZeroStepUpdate();
+        //Hell::Physics::ForceZeroStepUpdate();
         //Update(0.0f);
-        //Physics::ForceZeroStepUpdate();
+        //Hell::Physics::ForceZeroStepUpdate();
     }
 
     void BeginFrame() {
@@ -591,7 +591,7 @@ namespace LegacyWorld {
         if (Door* door = LegacyWorld::GetDoorByObjectId(objectId)) {
             door->SetPosition(position);
             RecreateAllHouseGeometry();
-            Physics::ForceZeroStepUpdate();
+            Hell::Physics::ForceZeroStepUpdate();
         }
 
         if (GenericObject* genericObject = LegacyWorld::GetGenericObjectById(objectId)) {
@@ -604,7 +604,7 @@ namespace LegacyWorld {
 
         if (Piano* piano = LegacyWorld::GetPianoByObjectId(objectId)) {
             piano->SetPosition(position);
-            Physics::ForceZeroStepUpdate();
+            Hell::Physics::ForceZeroStepUpdate();
         }
 
         if (HousePlane* plane = LegacyWorld::GetHousePlaneByObjectId(objectId)) {
@@ -638,14 +638,14 @@ namespace LegacyWorld {
 
         if (Wall* wall = LegacyWorld::GetWallByObjectId(objectId)) {
             wall->UpdateWorldSpaceCenter(position);
-            Physics::ForceZeroStepUpdate();
+            Hell::Physics::ForceZeroStepUpdate();
             RecreateAllHouseGeometry();
         }
 
         if (Window* window = LegacyWorld::GetWindowByObjectId(objectId)) {
             window->SetPosition(position);
             RecreateAllHouseGeometry();
-            Physics::ForceZeroStepUpdate();
+            Hell::Physics::ForceZeroStepUpdate();
         }
     }
 

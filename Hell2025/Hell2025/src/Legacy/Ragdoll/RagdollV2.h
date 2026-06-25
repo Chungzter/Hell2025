@@ -1,7 +1,7 @@
 #pragma once
 #include "Types/Renderer/MeshBufferOLD.h"
-#include "Physics/Physics.h"
-#include "RagdollInfo.h"
+#include "Hell/Physics/Physics.h"
+#include "RagdollV2Data.h"
 #include "Types.h"
 #include "Types/Game/AnimatedGameObject.h"
 

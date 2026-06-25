@@ -1,4 +1,4 @@
-#include "World.h"
+#include "LegacyWorld.h"
 #include "File/JSON.h"
 #include "Managers/HouseManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"

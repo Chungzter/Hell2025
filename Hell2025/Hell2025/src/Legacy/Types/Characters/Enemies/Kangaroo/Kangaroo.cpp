@@ -1,5 +1,5 @@
 #include "Kangaroo.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Pathfinding/AStarMap.h"
 #include "World/LegacyWorld.h"
 #include "Core/GameOLD.h"
@@ -29,7 +29,7 @@ void Kangaroo::Init(KangarooCreateInfo createInfo) {
         animatedGameObject->SetBlendingModeByMeshName("LeftEye_Sclera", BlendingMode::DO_NOT_RENDER);
         animatedGameObject->SetBlendingModeByMeshName("RightEye_Sclera", BlendingMode::DO_NOT_RENDER);
 
-        Ragdoll* ragdoll = Physics::GetRagdollById(animatedGameObject->GetRagdollId());
+        RagdollV1* ragdoll = Hell::Physics::GetRagdollById(animatedGameObject->GetRagdollId());
         if (ragdoll) {
             ragdoll->SetPhysicsData(animatedGameObject->GetRagdollId());
         }
@@ -142,7 +142,7 @@ bool Kangaroo::AnimationIsComplete() {
 }
 
 CharacterController* Kangaroo::GetCharacterController() {
-    return Physics::GetCharacterControllerById(m_characterControllerId);
+    return Hell::Physics::GetCharacterControllerById(m_characterControllerId);
 }
 
 glm::vec2 Kangaroo::GetGridPosition() {

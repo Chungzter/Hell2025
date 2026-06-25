@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 
 void Player::CreateCharacterController(const glm::vec3& position) {
 
@@ -13,11 +13,11 @@ void Player::CreateCharacterController(const glm::vec3& position) {
     physicsFilterData.collisionGroup = CollisionGroup::CHARACTER_CONTROLLER;
     physicsFilterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER);
 
-    m_characterControllerId = Physics::CreateCharacterController(m_playerId, position, capsuleHeight, capsuleRadius, physicsFilterData);
+    m_characterControllerId = Hell::Physics::CreateCharacterController(m_playerId, position, capsuleHeight, capsuleRadius, physicsFilterData);
 }
 
 void Player::SetFootPosition(glm::vec3 position) {
-    CharacterController* characterControler = Physics::GetCharacterControllerById(m_characterControllerId);
+    CharacterController* characterControler = Hell::Physics::GetCharacterControllerById(m_characterControllerId);
     if (characterControler) {
         PxController* pxControler = characterControler->GetPxController();
         PxExtendedVec3 pxVec3 = PxExtendedVec3(position.x, position.y, position.z);
@@ -27,7 +27,7 @@ void Player::SetFootPosition(glm::vec3 position) {
 
 PxShape* Player::GetCharacterControllerShape() {
 
-    CharacterController* characterControler = Physics::GetCharacterControllerById(m_characterControllerId);
+    CharacterController* characterControler = Hell::Physics::GetCharacterControllerById(m_characterControllerId);
     if (characterControler) {
         PxController* pxControler = characterControler->GetPxController();
 
@@ -41,7 +41,7 @@ PxShape* Player::GetCharacterControllerShape() {
 }
 
 PxRigidDynamic* Player::GetCharacterControllerActor() {
-    CharacterController* characterControler = Physics::GetCharacterControllerById(m_characterControllerId);
+    CharacterController* characterControler = Hell::Physics::GetCharacterControllerById(m_characterControllerId);
     if (characterControler) {
         PxController* pxControler = characterControler->GetPxController();
 

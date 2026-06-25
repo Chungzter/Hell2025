@@ -34,9 +34,9 @@ namespace Editor {
         float maxRayDistance = 2000;
         glm::vec3 rayOrigin = GetMouseRayOriginByViewportIndex(GetHoveredViewportIndex());
         glm::vec3 rayDir = GetMouseRayDirectionByViewportIndex(GetHoveredViewportIndex());
-        //PhysXRayResult rayResult = Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
+        //PhysXRayResult rayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
 
-        PhysXRayResult physXRayResult = Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, Editor::BackfaceCullingEnabled());
+        PhysXRayResult physXRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, Editor::BackfaceCullingEnabled());
         BvhRayResult bvhRayResult = LegacyWorld::ClosestHit(rayOrigin, rayDir, maxRayDistance);
 
         glm::vec3 hitPosition = glm::vec3(-9999.0f);
@@ -115,7 +115,7 @@ namespace Editor {
         // Power poles
         if (GetEditorState() == EditorState::PLACE_POWER_POLES) {
             if (Input::LeftMousePressed() && hitFound) {
-                glm::vec3 worldPosition = Physics::GetHeightMapPositionAtXZ(hitPosition.x, hitPosition.z);
+                glm::vec3 worldPosition = Hell::Physics::GetHeightMapPositionAtXZ(hitPosition.x, hitPosition.z);
                 glm::vec2 controlPoint2D = glm::vec2(worldPosition.x, worldPosition.z);
 
                 // Create first control point
@@ -145,7 +145,7 @@ namespace Editor {
         // Fences
         if (GetEditorState() == EditorState::PLACE_FENCE) {
             if (Input::LeftMousePressed() && hitFound) {
-                glm::vec3 worldPosition = Physics::GetHeightMapPositionAtXZ(hitPosition.x, hitPosition.z);
+                glm::vec3 worldPosition = Hell::Physics::GetHeightMapPositionAtXZ(hitPosition.x, hitPosition.z);
                 glm::vec2 controlPoint2D = glm::vec2(worldPosition.x, worldPosition.z);
 
                 // Create first control point

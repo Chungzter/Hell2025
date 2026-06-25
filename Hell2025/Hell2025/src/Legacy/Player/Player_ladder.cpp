@@ -33,6 +33,6 @@ void Player::UpdateLadderMovement(float deltaTime) {
 
     if (m_ladderOverlapIndexEyes != 0 && IsMoving() && !IsCrouching()) {
         glm::vec3 ladderMovementDisplacement = glm::vec3(0.0f, 1.0f, 0.0f) * ladderClimpingSpeed * deltaTime;
-        Physics::MoveCharacterController(m_characterControllerId, ladderMovementDisplacement);
+        Hell::Physics::MoveCharacterController(m_characterControllerId, ladderMovementDisplacement);
     }
 }

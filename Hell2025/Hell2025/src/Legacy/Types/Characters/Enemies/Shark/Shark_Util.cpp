@@ -1,5 +1,5 @@
 #include "Shark.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 
 void Shark::PlayAnimation(const std::string& animationName, float speed) {
     AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
@@ -26,7 +26,7 @@ int Shark::GetAnimationFrameNumber() {
 }
 
 glm::vec3 Shark::GetMouthPosition3D() {
-    Ragdoll* ragdoll = GetRadoll();
+    RagdollV1* ragdoll = GetRadoll();
     if (!ragdoll) return glm::vec3(0.0f);
 
     glm::mat4 headBoneTransform = ragdoll->GetRigidWorlTransform("BN_Head_00");

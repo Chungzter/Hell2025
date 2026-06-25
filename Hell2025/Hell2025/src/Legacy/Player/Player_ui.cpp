@@ -289,7 +289,7 @@ void Player::UpdateUI(float deltaTime) {
             // Physx Object Count
             if (false) {
                 text += "\n";
-                text += Physics::GetObjectCountsAsString();
+                text += Hell::Physics::GetObjectCountsAsString();
                 text += "\n";
             }
 

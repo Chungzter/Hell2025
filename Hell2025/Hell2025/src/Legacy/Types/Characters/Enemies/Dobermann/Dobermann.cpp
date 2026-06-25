@@ -178,7 +178,7 @@ void Dobermann::Update(float deltaTime) {
 
             glm::vec3 displacement = m_forward * speed * deltaTime;
 
-            Physics::MoveCharacterController(m_characterControllerId, displacement);
+            Hell::Physics::MoveCharacterController(m_characterControllerId, displacement);
 
             if (CharacterController* characterController = GetCharacterController()) {
                 SetPosition(characterController->GetFootPosition());
@@ -265,9 +265,9 @@ void Dobermann::CreateCharacterController(const glm::vec3& position) {
     //physicsFilterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER);
     physicsFilterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE);
 
-    m_characterControllerId = Physics::CreateCharacterController(m_objectId, position, capsuleHeight, capsuleRadius, physicsFilterData);
+    m_characterControllerId = Hell::Physics::CreateCharacterController(m_objectId, position, capsuleHeight, capsuleRadius, physicsFilterData);
 }
 
 CharacterController* Dobermann::GetCharacterController() {
-    return Physics::GetCharacterControllerById(m_characterControllerId);
+    return Hell::Physics::GetCharacterControllerById(m_characterControllerId);
 }

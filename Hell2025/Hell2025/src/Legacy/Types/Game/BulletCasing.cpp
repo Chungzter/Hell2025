@@ -2,7 +2,7 @@
 #include "Util.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Audio.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Game/RendereringConstants.h"
 #include "Renderer/RenderDataManager.h"
 
@@ -38,11 +38,11 @@ BulletCasing::BulletCasing(BulletCasingCreateInfo createInfo) {
     glm::vec3 force = createInfo.force;
     glm::vec3 torque = glm::vec3(Util::RandomFloat(-10.0f, 10.0f), Util::RandomFloat(-10.0f, 10.0f), Util::RandomFloat(-10.0f, 10.0f));
 
-    m_rigidDynamicId = Physics::CreateRigidDynamicFromBoxExtents(transform, mesh->extents, createInfo.mass, filterData, force, torque);
+    m_rigidDynamicId = Hell::Physics::CreateRigidDynamicFromBoxExtents(transform, mesh->extents, createInfo.mass, filterData, force, torque);
 }
 
 void BulletCasing::CleanUp() {
-    Physics::MarkRigidDynamicForRemoval(m_rigidDynamicId);
+    Hell::Physics::MarkRigidDynamicForRemoval(m_rigidDynamicId);
 }
 
 const glm::mat4& BulletCasing::GetModelMatrix() {
@@ -54,11 +54,11 @@ void BulletCasing::Update(float deltaTime) {
 
     float maxLifeTime = 5.0f;
     if (m_lifeTime > maxLifeTime) {
-        Physics::MarkRigidDynamicForRemoval(m_rigidDynamicId);
+        Hell::Physics::MarkRigidDynamicForRemoval(m_rigidDynamicId);
     }
 
-    if (Physics::RigidDynamicExists(m_rigidDynamicId)) {
-        m_modelMatrix = Physics::GetRigidDynamicWorldMatrix(m_rigidDynamicId);
+    if (Hell::Physics::RigidDynamicExists(m_rigidDynamicId)) {
+        m_modelMatrix = Hell::Physics::GetRigidDynamicWorldMatrix(m_rigidDynamicId);
     }
 }
 

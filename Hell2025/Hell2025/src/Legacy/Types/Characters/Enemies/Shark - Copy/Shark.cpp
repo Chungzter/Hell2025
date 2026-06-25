@@ -134,7 +134,7 @@ void Shark::Init(glm::vec3 initialPosition) {
     glm::vec3 spawnPos = glm::vec3(-50.0f, spawnHeight, 40.5f);
     SetPosition(spawnPos);
 
-    Ragdoll* ragdoll = Physics::GetRagdollById(animatedGameObject->GetRagdollId());
+    RagdollV1* ragdoll = Hell::Physics::GetRagdollById(animatedGameObject->GetRagdollId());
     ragdoll->SetPhysicsData(m_objectId, ObjectType::SHARK);
 
     // Hack in a path
@@ -589,10 +589,10 @@ void Shark::DrawSpinePoints() {
     }
 }
 
-Ragdoll* Shark::GetRadoll() {
+RagdollV1* Shark::GetRadoll() {
     AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
     if (animatedGameObject) {
-        return Physics::GetRagdollById(animatedGameObject->GetRagdollId());
+        return Hell::Physics::GetRagdollById(animatedGameObject->GetRagdollId());
     }
     else {
         return nullptr;
@@ -716,7 +716,7 @@ void Shark::Init() {
     }
 
     // Store PxRigidBody pointers
-    Ragdoll* ragdoll = GetRadoll();
+    RagdollV1* ragdoll = GetRadoll();
     for (int i = 0; i < SHARK_SPINE_SEGMENT_COUNT; i++) {
         for (int j = 0; j < ragdoll->m_rigidComponents.size(); j++) {
             RigidComponent& rigidComponent = ragdoll->m_rigidComponents[j];        
@@ -754,9 +754,9 @@ void Shark::CleanUp() {
     // to do: move this to ragdoll class, and also destroy the PxShape
     AnimatedGameObject* animatedGameObject = Scene::GetAnimatedGameObjectByIndex(m_animatedGameObjectIndex);
     if (animatedGameObject) {
-        Ragdoll& ragdoll = animatedGameObject->m_ragdoll;
+        RagdollV1& ragdoll = animatedGameObject->m_ragdoll;
         for (RigidComponent& rigidComponent : ragdoll.m_rigidComponents) {
-            Physics::Destroy(rigidComponent.pxRigidBody);
+            Hell::Physics::Destroy(rigidComponent.pxRigidBody);
         }
         ragdoll.m_rigidComponents.clear();
     }

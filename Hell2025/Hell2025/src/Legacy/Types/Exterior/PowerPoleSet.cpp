@@ -1,6 +1,6 @@
 #include "PowerPoleSet.h"
 #include "Hell/Logging.h"
-#include "Physics/Physics.h"
+#include "Hell/Physics/Physics.h"
 #include "Renderer/Renderer.h"
 #include "Util.h"
 
@@ -29,7 +29,7 @@ void PowerPoleSet::Init() {
 
     std::vector<glm::vec3> controlPoints3D;
     for (glm::vec2& point : m_createInfo.controlPoints2D) {
-        glm::vec3 worldPosition = Physics::GetHeightMapPositionAtXZ(point.x, point.y);
+        glm::vec3 worldPosition = Hell::Physics::GetHeightMapPositionAtXZ(point.x, point.y);
         controlPoints3D.push_back(worldPosition);
     }
 

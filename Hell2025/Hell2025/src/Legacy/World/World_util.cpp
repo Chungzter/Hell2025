@@ -1,4 +1,4 @@
-#include "World.h"
+#include "LegacyWorld.h"
 
 namespace LegacyWorld {
 

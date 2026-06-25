@@ -4,7 +4,7 @@
 #include <Game/CreateInfo.h>
 #include <Game/Constants.h>
 #include "Pathfinding/AStar.h"
-#include "Physics/Types/CharacterController.h"
+#include "Hell/Physics/Types/CharacterController.h"
 
 enum struct KanagarooAgroState {
     CHILLING,
