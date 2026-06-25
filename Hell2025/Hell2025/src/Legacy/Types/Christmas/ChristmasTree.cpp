@@ -1,6 +1,6 @@
 #include "ChristmasTree.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Util/Util.h"
 
 ChristmasTree::ChristmasTree(const ChristmasTreeCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
@@ -19,7 +19,7 @@ ChristmasTree::ChristmasTree(const ChristmasTreeCreateInfo& createInfo, const Sp
     christmasLightsCreateInfo.sprialTopCenter = createInfo.position + glm::vec3(-0.08f, 1.7f, -0.03f);
     christmasLightsCreateInfo.spiral = true;
 
-    World::AddChristmasLights(christmasLightsCreateInfo, spawnOffset);
+    LegacyWorld::AddChristmasLights(christmasLightsCreateInfo, spawnOffset);
 }
 
 void ChristmasTree::CreateRenderItems() {

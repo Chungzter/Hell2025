@@ -1,6 +1,6 @@
 #include "../GL_renderer.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 namespace OpenGLRenderer {
 

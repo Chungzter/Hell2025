@@ -4,7 +4,7 @@
 #include "Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
@@ -68,11 +68,11 @@ namespace OpenGLRenderer {
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
 
-                if (World::GetGameObjects().size() == 0) {
+                if (LegacyWorld::GetGameObjects().size() == 0) {
                     continue;
                 }
 
-                GameObject& bunny = World::GetGameObjects()[0];
+                GameObject& bunny = LegacyWorld::GetGameObjects()[0];
 
                 for (const RenderItem& renderItem : bunny.GetRenderItems()) {
 
@@ -210,7 +210,7 @@ namespace OpenGLRenderer {
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(hairFrameBuffer, viewport);
 
-                GameObject& bunny = World::GetGameObjects()[0];
+                GameObject& bunny = LegacyWorld::GetGameObjects()[0];
 
                 for (const RenderItem& renderItem : bunny.GetRenderItems()) {
 

@@ -1,11 +1,11 @@
 #include "Player.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 void Player::UpdateLadderIds() {
     m_ladderOverlapIndexFeet = 0;
     m_ladderOverlapIndexEyes = 0;
 
-    for (Ladder& ladder : World::GetLadders()) {
+    for (Ladder& ladder : LegacyWorld::GetLadders()) {
         float sphereRadius = 0.25f;
 
         if (ladder.GetOverlapHitBoxAABB().IntersectsSphere(GetFootPosition(), sphereRadius)) {

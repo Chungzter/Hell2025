@@ -29,7 +29,7 @@
 #include "Types/Generics/GenericBouncable.h"
 #include "Types/Generics/GenericStatic.h"
 #include "Types/Interior/PictureFrame.h"
-#include "Types/Interior/Piano.h"
+#include "Types/Interior/LegacyPiano.h"
 #include "Types/House/Door.h"
 #include "Types/House/Fireplace.h"
 #include "Types/House/HouseInstance.h"
@@ -66,7 +66,7 @@ struct HouseOccluderTriangle {
     int rmaTextureIndex = -1;
 };
 
-namespace World {
+namespace LegacyWorld {
     std::vector<SpriteSheetObject>& GetBubbleSpriteSheetObjects();
 
     void Init();

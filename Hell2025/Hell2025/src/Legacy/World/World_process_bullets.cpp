@@ -8,7 +8,7 @@
 #include "Game/UniqueID.h"
 
 
-namespace World {
+namespace LegacyWorld {
     float g_fleshHitHitTimer = 0.0f; // sound can only play if this is less or equal to 0.0f
     constexpr float g_flashHitAudioDelay = 0.2f; // sound can only play if this is less or equal to 0.0f
     bool g_awaitingFleshAudio = false;
@@ -28,8 +28,8 @@ namespace World {
         //Player* player1 = Game::GetLocalPlayerByIndex(0);
         //Player* player2 = Game::GetLocalPlayerByIndex(0);
         //
-        //DebugDraw::DrawPoint(World::GetPictureFrames()[0].GetPosition(), YELLOW);
-        //World::GetPictureFrames()[0].SetScale(glm::vec3(0, 0, 0));
+        //DebugDraw::DrawPoint(LegacyWorld::GetPictureFrames()[0].GetPosition(), YELLOW);
+        //LegacyWorld::GetPictureFrames()[0].SetScale(glm::vec3(0, 0, 0));
         //
         //for (int i = 0; i < 2; i++) {
         //    Player* player = Game::GetLocalPlayerByIndex(i);
@@ -103,7 +103,7 @@ namespace World {
             }
 
             PhysXRayResult physXRayResult = Physics::CastPhysXRay(rayOrigin, rayDirection, rayLength, false, RaycastIgnoreFlags::PLAYER_CHARACTER_CONTROLLERS, ignoredActors);
-            BvhRayResult bvhRayResult = World::ClosestHit(rayOrigin, bullet.GetDirection(), rayLength);
+            BvhRayResult bvhRayResult = LegacyWorld::ClosestHit(rayOrigin, bullet.GetDirection(), rayLength);
 
             // Defaults
             bool hitFound = false;
@@ -141,8 +141,8 @@ namespace World {
                     hitNormal = physXRayResult.hitNormal;
 
                     //std::cout << "physX hit closer" << "\n";
-                    //World::GetPictureFrames()[0].SetPosition(physXRayResult.hitPosition);
-                   // World::GetPictureFrames()[0].SetScale(glm::vec3(0.0f));
+                    //LegacyWorld::GetPictureFrames()[0].SetPosition(physXRayResult.hitPosition);
+                   // LegacyWorld::GetPictureFrames()[0].SetScale(glm::vec3(0.0f));
                 }
             }
 
@@ -177,11 +177,11 @@ namespace World {
 
                 // If this bullet belongs to a bullet trail, then destroy the trail
                 if (bullet.GetParentBulletTrailId() != 0) {
-                    World::RemoveObject(bullet.GetParentBulletTrailId());
+                    LegacyWorld::RemoveObject(bullet.GetParentBulletTrailId());
                 }
 
                 // Retrieve the hit MeshNode, this could be nullptr if the hit was a physics object
-                MeshNode* meshNode = World::GetMeshNodeByObjectIdAndLocalNodeIndex(objectId, localMeshNodeIndex);
+                MeshNode* meshNode = LegacyWorld::GetMeshNodeByObjectIdAndLocalNodeIndex(objectId, localMeshNodeIndex);
 
                 bool glassHit = meshNode && (meshNode->blendingMode == BlendingMode::GLASS ||
                                              meshNode->blendingMode == BlendingMode::MIRROR ||
@@ -233,7 +233,7 @@ namespace World {
 
                 // Trigger the closest piano note on piano hit
                 if (bullet.PlaysPiano()) {
-                    if (Piano* piano = World::GetPianoByObjectId(objectId)) {
+                    if (Piano* piano = LegacyWorld::GetPianoByObjectId(objectId)) {
                         piano->TriggerInternalNoteFromExternalBulletHit(hitPosition);
                     }
                 }
@@ -267,7 +267,7 @@ namespace World {
                 }
 
                 // Shark Kit
-                if (Shark* shark = World::GetSharkByObjectId(objectId)) {
+                if (Shark* shark = LegacyWorld::GetSharkByObjectId(objectId)) {
                     shark->GiveDamage(bullet.GetOwnerObjectId(), bullet.GetDamage());
                     SpawnBlood(hitPosition, -bullet.GetDirection());
                     TriggerFleshHit();
@@ -316,12 +316,12 @@ namespace World {
                 }
 
                 // This is probably sketchy...
-                if (PickUp* pickUp = World::GetPickUpByObjectId(objectId)) {
+                if (PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(objectId)) {
                     float strength = 250.0f;
                     glm::vec3 force = bullet.GetDirection() * strength;
                     pickUp->GetMeshNodes().AddForceToPhsyics(force);
                 }
-                if (GenericObject* object = World::GetGenericObjectById(objectId)) {
+                if (GenericObject* object = LegacyWorld::GetGenericObjectById(objectId)) {
                     float strength = 250.0f;
                     glm::vec3 force = bullet.GetDirection() * strength;
                     object->GetMeshNodes().AddForceToPhsyics(force);

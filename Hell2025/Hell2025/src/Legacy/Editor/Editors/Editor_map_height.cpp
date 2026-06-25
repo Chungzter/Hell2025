@@ -6,7 +6,7 @@ namespace Audio = Hell::Audio;
 #include "File/JSON.h"
 #include "Editor/Gizmo.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Viewport/ViewportManager.h"
 #include "Managers/MapManager.h"
 
@@ -62,9 +62,9 @@ namespace Editor {
         mapInstanceCreateInfo.mapName = Editor::GetEditorMapName();
         mapInstanceCreateInfo.spawnOffsetChunkX = 0;
         mapInstanceCreateInfo.spawnOffsetChunkZ = 0;
-        World::ClearAllObjects();
-        World::LoadMapInstancesHeightMapData({ mapInstanceCreateInfo });
-        World::EnableOcean();
+        LegacyWorld::ClearAllObjects();
+        LegacyWorld::LoadMapInstancesHeightMapData({ mapInstanceCreateInfo });
+        LegacyWorld::EnableOcean();
 
         MapManager::Init();                          // ?
         Renderer::RecalculateAllHeightMapData(true); // ?
@@ -195,7 +195,7 @@ namespace Editor {
 
             ///////if (reloadRequired) {
             ///////    MapCreateInfo* mapCreateInfo = MapManager::GetMapCreateInfoByName("MapHeightEditorMap");
-            ///////    World::LoadMap(mapCreateInfo);
+            ///////    LegacyWorld::LoadMap(mapCreateInfo);
             ///////    Renderer::RecalculateAllMapHeightData();
             ///////}
         }

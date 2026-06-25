@@ -5,7 +5,7 @@
 #include "File/MapFile.h"
 #include "Hell/Logging.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include <fstream>
 
@@ -51,7 +51,7 @@ namespace MapManager {
         }
 
         // Construct the JSON string
-        CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
+        CreateInfoCollection createInfoCollection = LegacyWorld::GetCreateInfoCollection();
         map->SetCreateInfoCollection(createInfoCollection);
         
         std::string createInfoJson = JSON::CreateInfoCollectionToJSON(createInfoCollection);
@@ -178,7 +178,7 @@ namespace MapManager {
             return;
         }
 
-        CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
+        CreateInfoCollection createInfoCollection = LegacyWorld::GetCreateInfoCollection();
         map->SetCreateInfoCollection(createInfoCollection);
     }
 

@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
@@ -14,7 +14,7 @@ void Player::UpdatePlayingPiano(float deltaTime) {
     if (!m_isPlayingPiano) return;
         
     // Error check, in case your piano is nullptr somehow
-    Piano* piano = World::GetPianoByObjectId(m_pianoId);
+    Piano* piano = LegacyWorld::GetPianoByObjectId(m_pianoId);
     if (!piano) {
         std::cout << "UpdatePlayingPiano() failed: tried to play a nullptr piano! m_pianoId is " << m_pianoId << "\n";
         m_isPlayingPiano = false;

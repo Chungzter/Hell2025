@@ -2,7 +2,7 @@
 #include "Types/House/WeatherBoards.h"
 #include "Viewport/ViewportManager.h"
 
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Util/Util.h"
 
 namespace OpenGLRenderer {
@@ -28,7 +28,7 @@ namespace OpenGLRenderer {
        //debugShader->Bind();
        //debugShader->SetMat4("u_model", modelMatrix);
        //
-       //MeshBuffer weatherboardMeshBuffer = World::GetWeatherBoardMeshBuffer();
+       //MeshBuffer weatherboardMeshBuffer = LegacyWorld::GetWeatherBoardMeshBuffer();
        //
        //
        //glBindVertexArray(weatherboardMeshBuffer.GetGLMeshBuffer().GetVAO());

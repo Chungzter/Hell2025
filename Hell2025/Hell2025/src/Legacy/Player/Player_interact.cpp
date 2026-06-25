@@ -6,7 +6,7 @@ namespace Audio = Hell::Audio;
 #include "Physics/Physics.h"
 #include "Util/Util.h"
 #include "Managers/OpenableManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include <algorithm>
 #include "Viewport/ViewportManager.h"
 #include "Hell/Logging.h"
@@ -36,7 +36,7 @@ void Player::UpdateCursorRays() {
     // Bvh Ray result
     glm::vec3 rayOrigin = GetCameraPosition();
     glm::vec3 rayDir = GetCameraForward();
-    m_bvhRayResult = World::ClosestHit(rayOrigin, rayDir, maxRayDistance);
+    m_bvhRayResult = LegacyWorld::ClosestHit(rayOrigin, rayDir, maxRayDistance);
 }
 
 
@@ -90,7 +90,7 @@ void Player::UpdateInteract() {
         if (overlapReport.hits.size()) {
             PhysicsUserData userData = overlapReport.hits[0].userData;
 
-            if (World::GetPickUpByObjectId(userData.objectId)) {
+            if (LegacyWorld::GetPickUpByObjectId(userData.objectId)) {
                 m_interactObjectId = userData.objectId;
                 m_interactOpenableId = 0;
                 m_interactCustomId = 0;
@@ -106,7 +106,9 @@ void Player::UpdateInteract() {
     m_interactFound = false;
 
     if (OpenableManager::IsInteractable(m_interactOpenableId, GetCameraPosition())) m_interactFound = true;
-    if (interactObjectType == ObjectType::PIANO && m_interactCustomId != 0)         m_interactFound = true;
+    if (interactObjectType == ObjectType::PIANO && m_interactCustomId != 0) {
+        m_interactFound = true;
+    }
     if (interactObjectType == ObjectType::PICK_UP)                                  m_interactFound = true;
 
     // Bail if nothing to interact with
@@ -123,7 +125,7 @@ void Player::UpdateInteract() {
         }
 
         // Pickups
-        if (PickUp* pickUp = World::GetPickUpByObjectId(m_interactObjectId)) {
+        if (PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(m_interactObjectId)) {
 
             if (!pickUp->IsDespawned()) {
 
@@ -145,12 +147,12 @@ void Player::UpdateInteract() {
 
                 if (pickUp->GetCreateInfo().respawn) {
                     pickUp->Despawn();
-                    for (Light& light : World::GetLights()) {
+                    for (Light& light : LegacyWorld::GetLights()) {
                         light.ForceDirty();
                     }
                 }
                 else {
-                    World::RemoveObject(m_interactObjectId);
+                    LegacyWorld::RemoveObject(m_interactObjectId);
                 }
                 Audio::PlayAudio("ItemPickUp.wav", 1.0f);
             }
@@ -162,7 +164,7 @@ void Player::UpdateInteract() {
 
         // Piano keys
         if (interactObjectType == ObjectType::PIANO && m_interactCustomId != 0) {
-            if (Piano* piano = World::GetPianoByObjectId(m_interactObjectId)) {
+            if (Piano* piano = LegacyWorld::GetPianoByObjectId(m_interactObjectId)) {
                 piano->PressKey(m_interactCustomId);
             }
         }
@@ -174,11 +176,11 @@ void Player::UpdateInteract() {
         glm::vec3 rayDir = GetCameraForward();
         float maxRayDistance = 100.0f;
 
-        BvhRayResult result = World::ClosestHit(rayOrigin, rayDir, maxRayDistance);
+        BvhRayResult result = LegacyWorld::ClosestHit(rayOrigin, rayDir, maxRayDistance);
         if (result.hitFound) {
             // Sit at
             //if (result.objectType == ObjectType::PIANO) {
-            //    for (Piano& potentialPiano : World::GetPianos()) {
+            //    for (Piano& potentialPiano : LegacyWorld::GetPianos()) {
             //        //if (potentialPiano.PianoBodyPartKeyExists(result.objectId)) {
             //        //    SitAtPiano(potentialPiano.GetObjectId());
             //        //}

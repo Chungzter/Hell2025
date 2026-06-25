@@ -6,7 +6,7 @@
 #include <ImGui/imgui.h>
 #include "Imgui/Types/Types.h"
 #include "Managers/MapManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include <Util.h>
 
@@ -126,8 +126,8 @@ namespace Editor {
                 g_outlinerHeader.SetTitle("Outliner");
 
                 g_outliner.SetItems("Ceilings", GetCeilingNames());
-                g_outliner.AddItems("DDGI Volumes", World::GetDDGIVolumes().ids());
-                g_outliner.AddItems("Lights", World::GetLightIds());
+                g_outliner.AddItems("DDGI Volumes", LegacyWorld::GetDDGIVolumes().ids());
+                g_outliner.AddItems("Lights", LegacyWorld::GetLightIds());
                 g_outliner.SetItems("Doors", GetDoorNames());
                 g_outliner.SetItems("Floors", GetFloorNames());
                 g_outliner.SetItems("Generic Objects", GetGenericObjectNames());
@@ -160,7 +160,7 @@ namespace Editor {
         // move to UpdateObjectProperties()
         //if (GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR || GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
         //    if (GetSelectedObjectType() == ObjectType::TREE) {
-        //        Tree* tree = World::GetTreeByObjectId(GetSelectedObjectId());
+        //        Tree* tree = LegacyWorld::GetTreeByObjectId(GetSelectedObjectId());
         //        if (tree) {
         //            g_objectNameInput.SetText(tree->GetEditorName());
         //            g_positionX.SetValue(tree->GetPosition().x);
@@ -216,7 +216,7 @@ namespace Editor {
                 ImGui::BeginChild("ObjectPropertiesScrollRegion", ImVec2(0.0f, remainingHeight), false);
 
                 // DDGI Volume
-                if (DDGIVolume* object = World::GetDDGIVolumeByObjectId(GetSelectedObjectId())) {
+                if (DDGIVolume* object = LegacyWorld::GetDDGIVolumeByObjectId(GetSelectedObjectId())) {
                     g_extentsX.SetValue(object->GetExtents().x);
                     g_extentsY.SetValue(object->GetExtents().y);
                     g_extentsZ.SetValue(object->GetExtents().z);
@@ -229,14 +229,14 @@ namespace Editor {
                 }
 
                 // Fireplace
-                if (Fireplace* fireplace = World::GetFireplaceById(GetSelectedObjectId())) {
+                if (Fireplace* fireplace = LegacyWorld::GetFireplaceById(GetSelectedObjectId())) {
                     EditorUI::FloatInput("Position X", fireplace->GetPosition().x, fireplace, &Fireplace::SetPositionX);
                     EditorUI::FloatInput("Position Y", fireplace->GetPosition().y, fireplace, &Fireplace::SetPositionY);
                     EditorUI::FloatInput("Position Z", fireplace->GetPosition().z, fireplace, &Fireplace::SetPositionZ);
                 }
 
                 // Lights
-                if (Light* light = World::GetLightByObjectId(GetSelectedObjectId())) {
+                if (Light* light = LegacyWorld::GetLightByObjectId(GetSelectedObjectId())) {
                     AABB aabb(light->GetWorldBoundsMin(), light->GetWorldBoundsMax());
                     DebugDraw::DrawAABB(aabb, YELLOW);
 
@@ -279,7 +279,7 @@ namespace Editor {
 
                 // Trees (LIKELY BROKEN)
                 //if (GetSelectedObjectType() == ObjectType::TREE) {
-                //    Tree* tree = World::GetTreeByObjectId(GetSelectedObjectId());
+                //    Tree* tree = LegacyWorld::GetTreeByObjectId(GetSelectedObjectId());
                 //    if (tree) {
                 //        if (g_positionX.CreateImGuiElements())  tree->SetPosition(glm::vec3(g_positionX.GetValue(), g_positionY.GetValue(), g_positionZ.GetValue()));
                 //        if (g_positionY.CreateImGuiElements())  tree->SetPosition(glm::vec3(g_positionX.GetValue(), g_positionY.GetValue(), g_positionZ.GetValue()));
@@ -292,7 +292,7 @@ namespace Editor {
                 //}
 
                 // Windows (BARELY FUNCITONAL)
-                if (Window* window = World::GetWindowByObjectId(GetSelectedObjectId())) {
+                if (Window* window = LegacyWorld::GetWindowByObjectId(GetSelectedObjectId())) {
                     g_positionX.SetValue(window->GetPosition().x);
                     g_positionY.SetValue(window->GetPosition().y);
                     g_positionZ.SetValue(window->GetPosition().z);
@@ -305,7 +305,7 @@ namespace Editor {
                 }
 
                 // Doors (BARELY FUNCITONAL)
-                if (Door* door = World::GetDoorByObjectId(GetSelectedObjectId())) {
+                if (Door* door = LegacyWorld::GetDoorByObjectId(GetSelectedObjectId())) {
                     g_positionX.SetValue(door->GetPosition().x);
                     g_positionY.SetValue(door->GetPosition().y);
                     g_positionZ.SetValue(door->GetPosition().z);
@@ -367,7 +367,7 @@ namespace Editor {
 
                 // Pick Ups
                 if (GetSelectedObjectType() == ObjectType::PICK_UP) {
-                    if (PickUp* pickUp = World::GetPickUpByObjectId(GetSelectedObjectId())) {
+                    if (PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(GetSelectedObjectId())) {
                         // Retrieve state
                         g_positionX.SetValue(pickUp->GetPosition().x);
                         g_positionY.SetValue(pickUp->GetPosition().y);
@@ -392,7 +392,7 @@ namespace Editor {
 
 
                 // House planes (aka floors and ceilings)
-                if (HousePlane* housePlane = World::GetHousePlaneByObjectId(GetSelectedObjectId())) {
+                if (HousePlane* housePlane = LegacyWorld::GetHousePlaneByObjectId(GetSelectedObjectId())) {
                     bool housePlaneUpdated = false;
 
                     g_materialDropDown.SetCurrentOption(housePlane->GetCreateInfo().materialName);
@@ -464,7 +464,7 @@ namespace Editor {
                 }
 
                 // Walls
-                if (Wall* wall = World::GetWallByObjectId(GetSelectedObjectId())) {
+                if (Wall* wall = LegacyWorld::GetWallByObjectId(GetSelectedObjectId())) {
                     g_materialDropDown.SetCurrentOption(wall->GetCreateInfo().materialName);
                     g_heightFloatInput.SetValue(wall->GetCreateInfo().height);
                     g_textureOffsetU.SetValue(wall->GetCreateInfo().textureOffsetU);
@@ -506,7 +506,7 @@ namespace Editor {
         }
 
         if (houseMeshUpdateRequired) {
-            World::RecreateAllHouseGeometry();
+            LegacyWorld::RecreateAllHouseGeometry();
         }
     }
 

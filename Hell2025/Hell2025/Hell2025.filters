@@ -13,6 +13,36 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Unloved">
+      <UniqueIdentifier>{A98D2A5D-37D4-4AE3-A069-E4B5F58E49E1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Unloved\World">
+      <UniqueIdentifier>{FE818687-C33B-4B54-92D9-63EE15D1F3A5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Unloved\World\Objects">
+      <UniqueIdentifier>{CC7B9340-BCC5-4A73-913B-5B588DD91B84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Unloved\World\Objects\Interior">
+      <UniqueIdentifier>{68230E3B-89D3-44DF-9747-36A227C673CE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Unloved\World\Objects\Interior\Piano">
+      <UniqueIdentifier>{D396B2F3-5E34-4C79-BFE6-5D72741E38D5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Unloved">
+      <UniqueIdentifier>{5B872755-5B53-4C62-A814-EEAB89A66F7A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Unloved\World">
+      <UniqueIdentifier>{53692A4D-CBA1-4FF4-92ED-A1B53CE4DCE5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Unloved\World\Objects">
+      <UniqueIdentifier>{28A79C21-AFB2-4D4F-85D1-64B3F0625084}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Unloved\World\Objects\Interior">
+      <UniqueIdentifier>{DCD98B16-5A04-4648-B583-E3946796D1BA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Unloved\World\Objects\Interior\Piano">
+      <UniqueIdentifier>{941AD83A-95EA-4ED9-936E-55381567B757}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
@@ -20,6 +50,15 @@
     </ClCompile>
     <ClCompile Include="src\Unloved\Unloved.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Unloved\World\World.cpp">
+      <Filter>Source Files\Unloved\World</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Unloved\World\Objects\Interior\Piano\Piano.cpp">
+      <Filter>Source Files\Unloved\World\Objects\Interior\Piano</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Unloved\World\Objects\Interior\Piano\PianoPlaybackManager.cpp">
+      <Filter>Source Files\Unloved\World\Objects\Interior\Piano</Filter>
     </ClCompile>
     <ClCompile Include="src\Hell\Backend\BackEnd.cpp">
       <Filter>Source Files</Filter>
@@ -39,6 +78,24 @@
     <ClCompile Include="src\Hell\Audio\Audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Hell\Audio\Synth.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\Time\Time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\ResourceManagement\Types\SoundFont.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\ResourceManagement\Types\MidiFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\AssetLoader\SoundFontLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hell\AssetLoader\MidiFileLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="vendor\glad\src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -46,6 +103,15 @@
   <ItemGroup>
     <ClInclude Include="src\Unloved\Unloved.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Unloved\World\World.h">
+      <Filter>Header Files\Unloved\World</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Unloved\World\Objects\Interior\Piano\Piano.h">
+      <Filter>Header Files\Unloved\World\Objects\Interior\Piano</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Unloved\World\Objects\Interior\Piano\PianoPlaybackManager.h">
+      <Filter>Header Files\Unloved\World\Objects\Interior\Piano</Filter>
     </ClInclude>
     <ClInclude Include="src\Hell\Backend\BackEnd.h">
       <Filter>Header Files</Filter>
@@ -72,6 +138,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Hell\Audio\Audio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\Audio\Synth.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\Time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\Time\Time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\ResourceManagement\Types\SoundFont.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hell\ResourceManagement\Types\MidiFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

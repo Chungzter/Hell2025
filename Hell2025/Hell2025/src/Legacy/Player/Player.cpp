@@ -16,7 +16,7 @@ namespace Audio = Hell::Audio;
 
 // Get me out of here
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 // Get me out of here
 
 void Player::Init(const glm::vec3& position, const glm::vec3& rotation, int32_t viewportIndex) {
@@ -29,8 +29,8 @@ void Player::Init(const glm::vec3& position, const glm::vec3& rotation, int32_t 
     m_inventory.SetLocalPlayerIndex(m_viewportIndex);
     m_shopInventory.SetLocalPlayerIndex(m_viewportIndex);
 
-    m_characterModelAnimatedGameObjectId= World::CreateAnimatedGameObject();
-    m_viewWeaponAnimatedGameObjectId = World::CreateAnimatedGameObject();
+    m_characterModelAnimatedGameObjectId= LegacyWorld::CreateAnimatedGameObject();
+    m_viewWeaponAnimatedGameObjectId = LegacyWorld::CreateAnimatedGameObject();
 
     AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
     viewWeapon->SetExclusiveViewportIndex(viewportIndex);
@@ -139,7 +139,7 @@ void Player::DiscardItem(const std::string& itemName) {
 	createInfo.respawn = false;
 	createInfo.type = Bible::GetItemType(itemName);
 
-	World::AddPickUp(createInfo);
+	LegacyWorld::AddPickUp(createInfo);
 }
 
 bool Player::PurchaseItem(const std::string& itemName) {
@@ -195,7 +195,7 @@ void Player::Respawn() {
     m_awaitingSpawn = false;
 
     // Get random spawn point
-    SpawnPoint spawnPoint = World::GetRandomCampaignSpawnPoint();
+    SpawnPoint spawnPoint = LegacyWorld::GetRandomCampaignSpawnPoint();
     glm::vec3 spawnPosition = spawnPoint.GetPosition() - glm::vec3(0.0f, 1.60, 0.0f);
 
     // Set position and camera rotation to spawn point
@@ -334,11 +334,11 @@ Camera& Player::GetCamera() {
 }
 
 AnimatedGameObject* Player::GetCharacterModelAnimatedGameObject() {
-    return World::GetAnimatedGameObjectByObjectId(m_characterModelAnimatedGameObjectId);
+    return LegacyWorld::GetAnimatedGameObjectByObjectId(m_characterModelAnimatedGameObjectId);
 }
 
 AnimatedGameObject* Player::GetViewWeaponAnimatedGameObject() {
-    return World::GetAnimatedGameObjectByObjectId(m_viewWeaponAnimatedGameObjectId);
+    return LegacyWorld::GetAnimatedGameObjectByObjectId(m_viewWeaponAnimatedGameObjectId);
 }
 
 bool Player::ViewportIsVisible() {
@@ -393,9 +393,9 @@ void Player::GiveDamage(int damage, uint64_t enemyId) {
 }
 
 float Player::DotToClosestToMermaid() {
-    if (World::GetMermaids().empty()) return 0;
+    if (LegacyWorld::GetMermaids().empty()) return 0;
 
-    Mermaid& mermaid = World::GetMermaids()[0];
+    Mermaid& mermaid = LegacyWorld::GetMermaids()[0];
     return glm::dot(mermaid.GetWorldForward(), GetCameraForward());
 }
 
@@ -408,9 +408,9 @@ void Player::SubtractCash(int amount) {
 }
 
 bool Player::IsFacingClosestMermaid() {
-    if (World::GetMermaids().empty()) return false;
+    if (LegacyWorld::GetMermaids().empty()) return false;
 
-    Mermaid& mermaid = World::GetMermaids()[0];
+    Mermaid& mermaid = LegacyWorld::GetMermaids()[0];
 
     const glm::vec3& cameraPositon = GetCameraPosition();
     const glm::vec3& cameraForward = GetCameraForward();

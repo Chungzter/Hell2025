@@ -1,12 +1,14 @@
 #pragma once
+#include <cstdint>
 #include <string>
-#include <vector>
 
-
-namespace MidiFileManager {
+namespace Unloved::PianoPlaybackManager {
     void Init();
-    void LoadMidiFile(const std::string& filename);
-    void Update(float deltaTime);
+    void Update();
+    void CleanUp();
+
+    void PlayTrack(int trackIndex);
+    void Stop();
 
     void AddDebugTextTimes(const std::string& text);
     void AddDebugTextEvent(const std::string& text);

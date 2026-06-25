@@ -2,7 +2,7 @@
 #include "Core/GameOLD.h"
 #include "Renderer/Renderer.h"
 #include "Math/LineMath.hpp"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "UniqueId.h"
 #include "Ocean/Ocean.h"
 
@@ -32,7 +32,7 @@ void Shark::Init(glm::vec3 initialPosition) {
     m_objectId = UniqueID::GetNextObjectId(ObjectType::SHARK);
 
 
-    g_animatedGameObjectObjectId = World::CreateAnimatedGameObject();
+    g_animatedGameObjectObjectId = LegacyWorld::CreateAnimatedGameObject();
 
     AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
     animatedGameObject->SetSkinnedModel("Shark");
@@ -333,7 +333,7 @@ void Shark::Update(float deltaTime) {
 }
 
 void Shark::CleanUp() {
-    World::RemoveObject(g_animatedGameObjectObjectId);
+    LegacyWorld::RemoveObject(g_animatedGameObjectObjectId);
 }
 
 void Shark::StraightenSpine(float deltaTime, float straightSpeed) {
@@ -577,7 +577,7 @@ bool Shark::TargetIsOnLeft(glm::vec3 targetPosition) {
 */
 
 AnimatedGameObject* Shark::GetAnimatedGameObject() {
-   return World::GetAnimatedGameObjectByObjectId(g_animatedGameObjectObjectId);
+   return LegacyWorld::GetAnimatedGameObjectByObjectId(g_animatedGameObjectObjectId);
 }
 
 void Shark::DrawSpinePoints() {

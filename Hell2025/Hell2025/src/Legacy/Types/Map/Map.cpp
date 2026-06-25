@@ -3,7 +3,7 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 #include "Util.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 void Map::CreateNew(const std::string& filename, int chunkCountX, int chunkCountZ, float initialHeight) {
     m_filename = filename;

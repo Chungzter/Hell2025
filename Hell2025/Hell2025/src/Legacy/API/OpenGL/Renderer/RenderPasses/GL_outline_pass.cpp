@@ -3,7 +3,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include <vector>

@@ -4,7 +4,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Util/Util.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Game/GPUTypes.h"
 #include "Hell/Input.h"
@@ -33,7 +33,7 @@ namespace OpenGLRenderer {
     void UploadAnyNewParticles() {
         ProfilerOpenGLZoneFunction();
 
-        std::vector<BulletTrailParticle>& particles = World::GetBulletTrailParticles();
+        std::vector<BulletTrailParticle>& particles = LegacyWorld::GetBulletTrailParticles();
         if (particles.empty()) return;
 
         std::vector<GpuParticle> gpuParticles;

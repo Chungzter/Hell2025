@@ -135,7 +135,8 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const PianoCreateInfo& createInfo) {
         j = nlohmann::json{
             {"Position", createInfo.position},
-            {"Rotation", createInfo.rotation}
+            {"Rotation", createInfo.rotation},
+            {"SoundFontName", createInfo.soundFontName}
         };
     }
 
@@ -344,6 +345,7 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, PianoCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
+        info.soundFontName = j.value("SoundFontName", std::string("YamahaGrandLiteV2"));
     }
 
     void from_json(const nlohmann::json& j, PickUpCreateInfo& info) {

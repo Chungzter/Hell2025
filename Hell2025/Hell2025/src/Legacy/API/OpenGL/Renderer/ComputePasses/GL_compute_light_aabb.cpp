@@ -4,7 +4,7 @@
 #include "Debug/DebugDraw.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Hell/Logging.h"
 
@@ -17,7 +17,7 @@
 namespace OpenGLRenderer {
 
     void ReserveLightAABBSSBOStorage() {
-        uint32_t size = World::GetLightCount() * sizeof(glm::vec4) * 2;
+        uint32_t size = LegacyWorld::GetLightCount() * sizeof(glm::vec4) * 2;
         ReserveSSBO("LightAABBs", size);
     }
 
@@ -37,7 +37,7 @@ namespace OpenGLRenderer {
         OpenGLShader* shader = GetShaderOLD("LightAABBPosition");
         if (!shader) return;
 
-        Light* light = World::GetLightByIndex(lightIndex);
+        Light* light = LegacyWorld::GetLightByIndex(lightIndex);
         if (!light) return;
 
         OpenGLCubemapFrameBuffer& fbo = GetCubemapFrameBuffer("LightAABB");
@@ -87,7 +87,7 @@ namespace OpenGLRenderer {
 
     void DrawHouse(OpenGLShader* shader) {
         Logging::Fatal() << "You called the suss function DrawHouse()\n";
-        //OpenGLMeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer().GetGLMeshBuffer();
+        //OpenGLMeshBuffer& houseMeshBuffer = LegacyWorld::GetHouseMeshBuffer().GetGLMeshBuffer();
         //glBindVertexArray(houseMeshBuffer.GetVAO());
         //
         //shader->SetMat4("u_model", glm::mat4(1.0f));
@@ -121,7 +121,7 @@ namespace OpenGLRenderer {
         int indicesPerChunk = 32 * 32 * 6;
         int indicesPerHeightMap = indicesPerChunk * 8 * 8;
 
-        for (HeightMapChunk& chunk : World::GetHeightMapChunks()) {
+        for (HeightMapChunk& chunk : LegacyWorld::GetHeightMapChunks()) {
 
             // Skip any chunks that don't intersect the light radius
             AABB chunkAABB(chunk.aabbMin, chunk.aabbMax);
@@ -147,7 +147,7 @@ namespace OpenGLRenderer {
     void ComputeMinMax(uint32_t lightIndex) {
         OpenGLShader* shader = GetShaderOLD("LightAABBMinMax");
         OpenGLSSBO* ssbo = GetSSBO("LightAABBs");
-        Light* light = World::GetLightByIndex(lightIndex);
+        Light* light = LegacyWorld::GetLightByIndex(lightIndex);
 
         if (!shader) return;
         if (!ssbo) return;
@@ -216,6 +216,6 @@ namespace OpenGLRenderer {
 			}
 		}
 
-        DebugDraw::DrawPoint(World::GetLightByIndex(lightIndex)->GetPosition(), YELLOW);
+        DebugDraw::DrawPoint(LegacyWorld::GetLightByIndex(lightIndex)->GetPosition(), YELLOW);
 	}
 }

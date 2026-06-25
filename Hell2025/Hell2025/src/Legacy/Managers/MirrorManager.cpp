@@ -1,6 +1,6 @@
 #include "MirrorManager.h"
 #include <Game/UniqueID.h>
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 namespace MirrorManager {
     Hell::SlotMap<Mirror> g_mirrors;
@@ -12,7 +12,7 @@ namespace MirrorManager {
 
     void Update() {
         for (Mirror& mirror : g_mirrors) {
-            if (GenericObject* genericObject = World::GetGenericObjectById(mirror.GetParentId())) {
+            if (GenericObject* genericObject = LegacyWorld::GetGenericObjectById(mirror.GetParentId())) {
                 const MeshNodes& meshNodes = genericObject->GetMeshNodes();
                 const glm::mat4& worldMatrix = meshNodes.GetWorldModelMatrix(mirror.GetMeshNodeIndex());
                 mirror.Update(worldMatrix);

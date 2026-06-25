@@ -7,6 +7,7 @@
 #include <limits>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace Hell::ResourceManager {
@@ -16,17 +17,23 @@ namespace Hell::ResourceManager {
         std::unordered_map<std::string, GenericMesh> g_genericMeshes;
         std::unordered_map<std::string, IESProfile> g_iesProfiles;
         std::unordered_map<std::string, MeshBuffer> g_meshBuffers;
-        std::unordered_map<uint32_t, Model> g_models;
+        std::unordered_map<std::string, MidiFile> g_midiFiles;
         std::unordered_map<std::string, uint32_t> g_modelIdsByName;
-        std::unordered_map<uint32_t, SkinnedModel> g_skinnedModels;
         std::unordered_map<std::string, uint32_t> g_skinnedModelIdsByName;
+        std::unordered_map<std::string, SoundFont> g_soundFonts;
         std::unordered_map<std::string, SpriteSheetTexture> g_spriteSheetTextures;
         std::unordered_map<std::string, Texture> g_textures;
 
-        std::vector<Material> g_materials;
         std::unordered_map<std::string, int32_t> g_materialIndices;
+
+        std::unordered_map<uint32_t, Model> g_models;
+        std::unordered_map<uint32_t, SkinnedModel> g_skinnedModels;
+
+        std::vector<Material> g_materials;
+
         std::vector<std::string> g_materialNamesByIndex;
         std::vector<std::string> g_textureNamesByBindlessIndex;
+
         uint32_t g_nextModelId = 0;
         uint32_t g_nextSkinnedModelId = 0;
 
@@ -64,12 +71,14 @@ namespace Hell::ResourceManager {
         g_materials.clear();
         g_materialIndices.clear();
         g_materialNamesByIndex.clear();
+        g_midiFiles.clear();
         g_models.clear();
         g_modelIdsByName.clear();
         g_nextModelId = 0;
         g_skinnedModels.clear();
         g_skinnedModelIdsByName.clear();
         g_nextSkinnedModelId = 0;
+        g_soundFonts.clear();
         g_spriteSheetTextures.clear();
         g_textureNamesByBindlessIndex.clear();
     }
@@ -168,6 +177,19 @@ namespace Hell::ResourceManager {
         return result.first->second;
     }
 
+    IESProfile& CreateIESProfile(IESProfile&& iesProfile) {
+        const std::string name = iesProfile.GetName();
+        auto it = g_iesProfiles.find(name);
+
+        if (it != g_iesProfiles.end()) {
+            Logging::Fatal() << "ResourceManager::CreateIESProfile(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_iesProfiles.emplace(name, std::move(iesProfile));
+        return result.first->second;
+    }
+
     IESProfile& GetIESProfile(const std::string& name) {
         auto it = g_iesProfiles.find(name);
 
@@ -258,6 +280,95 @@ namespace Hell::ResourceManager {
 
         Logging::Error() << "ResourceManager::GetMaterialNameByIndex(..) failed: index '" << index << "' is out of range\n";
         return UNDEFINED_STRING;
+    }
+
+    // Mesh Buffer
+
+    MeshBuffer& CreateMeshBuffer(const std::string& name) {
+        auto it = g_meshBuffers.find(name);
+
+        if (it != g_meshBuffers.end()) {
+            Logging::Fatal() << "ResourceManager::CreateMeshBuffer(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_meshBuffers.emplace(name, MeshBuffer(name));
+        return result.first->second;
+    }
+
+    MeshBuffer& GetMeshBuffer(const std::string& name) {
+        auto it = g_meshBuffers.find(name);
+
+        if (it == g_meshBuffers.end()) {
+            Logging::Error() << "ResourceManager::GetMeshBuffer(..) failed: '" << name << "' does not exist\n";
+
+            static MeshBuffer invalid;
+            return invalid;
+        }
+
+        return it->second;
+    }
+
+    MeshBuffer* GetMeshBufferPtr(const std::string& name) {
+        auto it = g_meshBuffers.find(name);
+
+        if (it == g_meshBuffers.end()) {
+            Logging::Error() << "ResourceManager::GetMeshBufferPtr(..) failed: '" << name << "' does not exist\n";
+            return nullptr;
+        }
+
+        return &it->second;
+    }
+
+    // MIDI Files
+
+    MidiFile& CreateMidiFile(const std::string& name) {
+        auto it = g_midiFiles.find(name);
+
+        if (it != g_midiFiles.end()) {
+            Logging::Fatal() << "ResourceManager::CreateMidiFile(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_midiFiles.emplace(name, MidiFile(name));
+        return result.first->second;
+    }
+
+    MidiFile& CreateMidiFile(MidiFile&& midiFile) {
+        const std::string name = midiFile.GetName();
+        auto it = g_midiFiles.find(name);
+
+        if (it != g_midiFiles.end()) {
+            Logging::Fatal() << "ResourceManager::CreateMidiFile(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_midiFiles.emplace(name, std::move(midiFile));
+        return result.first->second;
+    }
+
+    MidiFile& GetMidiFile(const std::string& name) {
+        auto it = g_midiFiles.find(name);
+
+        if (it == g_midiFiles.end()) {
+            Logging::Error() << "ResourceManager::GetMidiFile(..) failed: '" << name << "' does not exist\n";
+
+            static MidiFile invalid;
+            return invalid;
+        }
+
+        return it->second;
+    }
+
+    MidiFile* GetMidiFilePtr(const std::string& name) {
+        auto it = g_midiFiles.find(name);
+
+        if (it == g_midiFiles.end()) {
+            Logging::Error() << "ResourceManager::GetMidiFilePtr(..) failed: '" << name << "' does not exist\n";
+            return nullptr;
+        }
+
+        return &it->second;
     }
 
     // Models
@@ -400,38 +511,51 @@ namespace Hell::ResourceManager {
         return 0;
     }
 
-    // Mesh Buffer
+    // Sound Fonts
 
-    MeshBuffer& CreateMeshBuffer(const std::string& name) {
-        auto it = g_meshBuffers.find(name);
+    SoundFont& CreateSoundFont(const std::string& name) {
+        auto it = g_soundFonts.find(name);
 
-        if (it != g_meshBuffers.end()) {
-            Logging::Fatal() << "ResourceManager::CreateMeshBuffer(..) failed: '" << name << "' already exists\n";
+        if (it != g_soundFonts.end()) {
+            Logging::Fatal() << "ResourceManager::CreateSoundFont(..) failed: '" << name << "' already exists\n";
             return it->second;
         }
 
-        auto result = g_meshBuffers.emplace(name, MeshBuffer(name));
+        auto result = g_soundFonts.emplace(name, SoundFont(name));
         return result.first->second;
     }
 
-    MeshBuffer& GetMeshBuffer(const std::string& name) {
-        auto it = g_meshBuffers.find(name);
+    SoundFont& CreateSoundFont(SoundFont&& soundFont) {
+        const std::string name = soundFont.GetName();
+        auto it = g_soundFonts.find(name);
 
-        if (it == g_meshBuffers.end()) {
-            Logging::Error() << "ResourceManager::GetMeshBuffer(..) failed: '" << name << "' does not exist\n";
+        if (it != g_soundFonts.end()) {
+            Logging::Fatal() << "ResourceManager::CreateSoundFont(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
 
-            static MeshBuffer invalid;
+        auto result = g_soundFonts.emplace(name, std::move(soundFont));
+        return result.first->second;
+    }
+
+    SoundFont& GetSoundFont(const std::string& name) {
+        auto it = g_soundFonts.find(name);
+
+        if (it == g_soundFonts.end()) {
+            Logging::Error() << "ResourceManager::GetSoundFont(..) failed: '" << name << "' does not exist\n";
+
+            static SoundFont invalid;
             return invalid;
         }
 
         return it->second;
     }
 
-    MeshBuffer* GetMeshBufferPtr(const std::string& name) {
-        auto it = g_meshBuffers.find(name);
+    SoundFont* GetSoundFontPtr(const std::string& name) {
+        auto it = g_soundFonts.find(name);
 
-        if (it == g_meshBuffers.end()) {
-            Logging::Error() << "ResourceManager::GetMeshBufferPtr(..) failed: '" << name << "' does not exist\n";
+        if (it == g_soundFonts.end()) {
+            Logging::Error() << "ResourceManager::GetSoundFontPtr(..) failed: '" << name << "' does not exist\n";
             return nullptr;
         }
 

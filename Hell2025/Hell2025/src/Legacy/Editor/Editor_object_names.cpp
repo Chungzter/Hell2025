@@ -1,19 +1,19 @@
 #include "Editor.h"
 #include "Hell/Logging.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 namespace Editor {
 
     bool NameAvailable(const std::string& desiredName, ObjectType objectType) {
         if (objectType == ObjectType::DDGI_VOLUME) {
-            for (const DDGIVolume& object: World::GetDDGIVolumes()) {
+            for (const DDGIVolume& object: LegacyWorld::GetDDGIVolumes()) {
                 if (object.GetEditorName() == desiredName) {
                     return false;
                 }
             }
         }
         else if (objectType == ObjectType::DOOR) {
-            for (const Door& object : World::GetDoors()) {
+            for (const Door& object : LegacyWorld::GetDoors()) {
                 if (object.GetEditorName() == desiredName) {
                     return false;
                 }
@@ -21,21 +21,21 @@ namespace Editor {
         }
         
         else if (objectType == ObjectType::HOUSE_PLANE) {
-            for (const HousePlane& housePlane : World::GetHousePlanes()) {
+            for (const HousePlane& housePlane : LegacyWorld::GetHousePlanes()) {
                 if (housePlane.GetEditorName() == desiredName) {
                     return false;
                 }
             }
         }
         else if (objectType == ObjectType::GENERIC_OBJECT) {
-            for (const GenericObject& genericObject : World::GetGenericObjects()) {
+            for (const GenericObject& genericObject : LegacyWorld::GetGenericObjects()) {
                 if (genericObject.GetEditorName() == desiredName) {
                     return false;
                 }
             }
         }
         else if (objectType == ObjectType::WALL) {
-            for (const Wall& wall : World::GetWalls()) {
+            for (const Wall& wall : LegacyWorld::GetWalls()) {
                 if (wall.GetEditorName() == desiredName) {
                     return false;
                 }
@@ -126,9 +126,9 @@ namespace Editor {
     const std::vector<std::string>& GetCeilingNames() {
         static std::vector<std::string> names;
         names.clear();
-        names.reserve(World::GetHousePlanes().size());
+        names.reserve(LegacyWorld::GetHousePlanes().size());
 
-        for (const HousePlane& housePlane : World::GetHousePlanes()) {
+        for (const HousePlane& housePlane : LegacyWorld::GetHousePlanes()) {
             if (housePlane.GetType() == HousePlaneType::CEILING) {
                 names.push_back(housePlane.GetEditorName());
             }
@@ -139,9 +139,9 @@ namespace Editor {
     const std::vector<std::string>& GetDoorNames() {
         static std::vector<std::string> names;
         names.clear();
-        names.reserve(World::GetDoors().size());
+        names.reserve(LegacyWorld::GetDoors().size());
 
-        for (Door& door : World::GetDoors()) {
+        for (Door& door : LegacyWorld::GetDoors()) {
             std::string name = door.GetEditorName();
 
             if (name == UNDEFINED_STRING) {
@@ -157,9 +157,9 @@ namespace Editor {
         static std::vector<std::string> names;
 
         names.clear();
-        names.reserve(World::GetGenericObjects().size());
+        names.reserve(LegacyWorld::GetGenericObjects().size());
 
-        for (const GenericObject& genericObjects : World::GetGenericObjects()) {
+        for (const GenericObject& genericObjects : LegacyWorld::GetGenericObjects()) {
             names.push_back(genericObjects.GetEditorName());
         }
         return names;
@@ -168,9 +168,9 @@ namespace Editor {
     const std::vector<std::string>& GetFloorNames() {
         static std::vector<std::string> names;
         names.clear();
-        names.reserve(World::GetHousePlanes().size());
+        names.reserve(LegacyWorld::GetHousePlanes().size());
 
-        for (const HousePlane& housePlane : World::GetHousePlanes()) {
+        for (const HousePlane& housePlane : LegacyWorld::GetHousePlanes()) {
             if (housePlane.GetType() == HousePlaneType::FLOOR) {
                 names.push_back(housePlane.GetEditorName());
             }
@@ -181,9 +181,9 @@ namespace Editor {
     const std::vector<std::string>& GetUndefinedHousePlaneNames() {
         static std::vector<std::string> names;
         names.clear();
-        names.reserve(World::GetHousePlanes().size());
+        names.reserve(LegacyWorld::GetHousePlanes().size());
 
-        for (const HousePlane& housePlane : World::GetHousePlanes()) {
+        for (const HousePlane& housePlane : LegacyWorld::GetHousePlanes()) {
             if (housePlane.GetType() == HousePlaneType::UNDEFINED) {
                 names.push_back(housePlane.GetEditorName());
             }
@@ -195,9 +195,9 @@ namespace Editor {
         static std::vector<std::string> names;
 
         names.clear();
-        names.reserve(World::GetWalls().size());
+        names.reserve(LegacyWorld::GetWalls().size());
 
-        for (const Wall& wall : World::GetWalls()) {
+        for (const Wall& wall : LegacyWorld::GetWalls()) {
             names.push_back(wall.GetEditorName());
         }
 

@@ -2,7 +2,7 @@
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
 #include "Core/GameOLD.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 

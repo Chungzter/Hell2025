@@ -1,6 +1,6 @@
 #include "Light.h"
 #include "Physics/Physics.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Util.h"
 #include "Game/UniqueID.h"
 #include "Timer.hpp"
@@ -32,7 +32,7 @@ void Light::Update(float deltaTime) {
     // Bail if you are a fireplace light
     if (!m_createInfo.saveToFile) return; // <------------------ VERY HACKY
 
-    for (GPUAABB& gpuAabb : World::GetDirtyDoorAABBS()) {
+    for (GPUAABB& gpuAabb : LegacyWorld::GetDirtyDoorAABBS()) {
         AABB doorAABB(gpuAabb.boundsMin, gpuAabb.boundsMax);
         AABB lightCullingAABB(m_worldBoundsMin, m_worldBoundsMax);
 
@@ -77,7 +77,7 @@ void Light::RaycastWorldBounds() {
         glm::vec3 p1 = rayOrigin;
         glm::vec3 p2 = p1 + (rayDir * rayLength);
 
-        BvhRayResult rayResult = World::ClosestHouseLightOccluderHit(rayOrigin, rayDir, rayLength);
+        BvhRayResult rayResult = LegacyWorld::ClosestHouseLightOccluderHit(rayOrigin, rayDir, rayLength);
 
         if (rayResult.hitFound) {
             //DebugDraw::DrawLine(p1, rayResult.hitPosition, GREEN);
@@ -190,7 +190,7 @@ void Light::UpdateDirtyState() {
     m_dirtyForShadowMaps = false;
     bool printDebug = false;
 
-    for (Door& object : World::GetDoors()) {
+    for (Door& object : LegacyWorld::GetDoors()) {
         if (object.IsDirty()) {
             for (const RenderItem& renderItem : object.GetRenderItems()) {
                 AABB aabb(renderItem.aabbMin, renderItem.aabbMax);
@@ -203,7 +203,7 @@ void Light::UpdateDirtyState() {
         }
     }
 
-    for (GenericObject& object : World::GetGenericObjects()) {
+    for (GenericObject& object : LegacyWorld::GetGenericObjects()) {
         if (object.IsDirty()) {
             for (const RenderItem& renderItem : object.GetRenderItems()) {
                 AABB aabb(renderItem.aabbMin, renderItem.aabbMax);
@@ -215,7 +215,7 @@ void Light::UpdateDirtyState() {
             }
         }
     }
-    for (Piano& object : World::GetPianos()) {
+    for (Piano& object : LegacyWorld::GetPianos()) {
         if (object.IsDirty()) {
             for (const RenderItem& renderItem : object.GetRenderItems()) {
                 AABB aabb(renderItem.aabbMin, renderItem.aabbMax);
@@ -229,7 +229,7 @@ void Light::UpdateDirtyState() {
     }
 
     if (false)
-    for (PickUp& object : World::GetPickUps()) {
+    for (PickUp& object : LegacyWorld::GetPickUps()) {
         if (object.IsDirty()) {
             for (const RenderItem& renderItem : object.GetRenderItems()) {
                 AABB aabb(renderItem.aabbMin, renderItem.aabbMax);

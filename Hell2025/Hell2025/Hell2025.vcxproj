@@ -298,13 +298,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Legacy\API\Vulkan\vk_backend.cpp" />
     <ClCompile Include="src\Legacy\API\Vulkan\Renderer\vk_renderer.cpp" />
     <ClCompile Include="src\Legacy\API\Vulkan\vk_util.cpp" />
-    <ClCompile Include="src\Legacy\Audio\MidiFile.cpp" />
-    <ClCompile Include="src\Legacy\Audio\MidiFileManager.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='EditAndContinue|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="src\Legacy\Audio\Synth.cpp" />
+    <ClCompile Include="src\Hell\Audio\Synth.cpp" />
     <ClCompile Include="src\Hell\Backend\BackEnd.cpp" />
     <ClCompile Include="src\Hell\Backend\Integration\GLFW.cpp" />
     <ClCompile Include="src\Hell\Backend\Integration\SDL.cpp" />
@@ -346,7 +340,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\AssetLoader\AnimationLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\AssetLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\IESLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\MidiFileLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\SpriteSheetLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\SoundFontLoader.cpp" />
     <ClCompile Include="src\Hell\File\File.cpp" />
     <ClCompile Include="src\Hell\MemoryTracker\MemoryTracker.cpp" />
     <ClCompile Include="src\Legacy\Game\UniqueID.cpp" />
@@ -384,6 +380,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Legacy\Player\Player_update.cpp" />
     <ClCompile Include="src\Legacy\Renderer\Renderer_settings.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\MeshBuffer.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\MidiFile.cpp">
+      <ObjectFileName>$(IntDir)Hell_MidiFile.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="src\Hell\ResourceManagement\Types\SoundFont.cpp" />
     <ClCompile Include="src\Legacy\FeatureTest\FeatureTest.cpp" />
     <ClCompile Include="src\Legacy\Types\Characters\Enemies\CharacterSpine.cpp" />
     <ClCompile Include="src\Legacy\Types\Characters\Enemies\Dobermann\Dobermann.cpp" />
@@ -465,7 +465,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Legacy\Types\House\WeatherBoards.cpp" />
     <ClCompile Include="src\Legacy\Types\Generics\GenericStatic.cpp" />
     <ClCompile Include="src\Legacy\Types\Core\GenericObject.cpp" />
-    <ClCompile Include="src\Legacy\Types\Interior\Piano.cpp" />
+    <ClCompile Include="src\Legacy\Types\Interior\LegacyPiano.cpp">
+      <ObjectFileName>$(IntDir)Legacy_Piano.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="src\Legacy\Types\Interior\PictureFrame.cpp" />
     <ClCompile Include="src\Legacy\Types\Misc\DoorChain.cpp" />
     <ClCompile Include="src\Legacy\Types\Renderer\AnimatedMeshNodes.cpp" />
@@ -541,8 +543,16 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Legacy\Types\Game\AnimatedGameObject.cpp" />
     <ClCompile Include="src\Legacy\Types\Game\GameObject.cpp" />
     <ClCompile Include="src\Hell\Input\Input.cpp" />
+    <ClCompile Include="src\Hell\Time\Time.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Unloved\Unloved.cpp" />
+    <ClCompile Include="src\Unloved\World\World.cpp">
+      <ObjectFileName>$(IntDir)Unloved_World.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="src\Unloved\World\Objects\Interior\Piano\Piano.cpp">
+      <ObjectFileName>$(IntDir)Unloved_Piano.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="src\Unloved\World\Objects\Interior\Piano\PianoPlaybackManager.cpp" />
     <ClCompile Include="src\Legacy\Util\Util_animation.cpp" />
     <ClCompile Include="src\Legacy\Util\Util_file.cpp" />
     <ClCompile Include="src\Legacy\Util\Util_raycasting.cpp" />
@@ -660,7 +670,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\ResourceManagement\Types\Material.h" />
     <ClInclude Include="src\Hell\ResourceManagement\TextureUploader.h" />
     <ClInclude Include="src\Legacy\Types\Core\ItemInfo.h" />
-    <ClInclude Include="src\Legacy\Common\CopyableAtomic.h" />
     <ClInclude Include="src\Hell\Math\GLM.h" />
     <ClInclude Include="src\Legacy\API\OpenGL\GL_backend.h" />
     <ClInclude Include="src\Legacy\API\OpenGL\Renderer\GL_renderer.h" />
@@ -694,12 +703,13 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Legacy\API\Vulkan\vk_backend.h" />
     <ClInclude Include="src\Legacy\API\Vulkan\Renderer\vk_renderer.h" />
     <ClInclude Include="src\Legacy\API\Vulkan\vk_util.h" />
-    <ClInclude Include="src\Legacy\Audio\MidiFile.h" />
-    <ClInclude Include="src\Legacy\Audio\MidiFileManager.h" />
-    <ClInclude Include="src\Legacy\Audio\Synth.h" />
+    <ClInclude Include="src\Hell\Audio\Synth.h" />
     <ClInclude Include="src\Hell\Backend\BackEnd.h" />
     <ClInclude Include="src\Hell\Backend\Integration\GLFW.h" />
     <ClInclude Include="src\Unloved\Unloved.h" />
+    <ClInclude Include="src\Unloved\World\World.h" />
+    <ClInclude Include="src\Unloved\World\Objects\Interior\Piano\Piano.h" />
+    <ClInclude Include="src\Unloved\World\Objects\Interior\Piano\PianoPlaybackManager.h" />
     <ClInclude Include="src\Legacy\Camera\Frustum.h" />
     <ClInclude Include="src\Legacy\Game\CreateInfo.h" />
     <ClInclude Include="src\Legacy\Game\Constants.h" />
@@ -708,10 +718,11 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Common.h" />
     <ClInclude Include="src\Hell\Common\Constants.h" />
     <ClInclude Include="src\Legacy\Common\HellFunctionTypes.h" />
-    <ClInclude Include="src\Legacy\Common\LoadingState.h" />
     <ClInclude Include="src\Legacy\Config\Config.h" />
     <ClInclude Include="src\Hell\Audio.h" />
     <ClInclude Include="src\Hell\Audio\Audio.h" />
+    <ClInclude Include="src\Hell\Time.h" />
+    <ClInclude Include="src\Hell\Time\Time.h" />
     <ClInclude Include="src\Legacy\Callbacks\Callbacks.h" />
     <ClInclude Include="src\Legacy\Game\UniqueID.h" />
     <ClInclude Include="src\Hell\ResourceManagement\ResourceID.h" />
@@ -787,7 +798,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Legacy\Types\Core\GenericObject.h" />
     <ClInclude Include="src\Legacy\Types\Map\Map.h" />
     <ClInclude Include="src\Legacy\Types\Map\MapInstance.h" />
-    <ClInclude Include="src\Legacy\Types\Interior\Piano.h" />
+    <ClInclude Include="src\Legacy\Types\Interior\LegacyPiano.h" />
     <ClInclude Include="src\Legacy\Types\Interior\PictureFrame.h" />
     <ClInclude Include="src\Legacy\Types\Misc\DoorChain.h" />
     <ClInclude Include="src\Legacy\Types\Renderer\AnimatedMeshNodes.h" />
@@ -795,6 +806,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\ResourceManagement\Types\IESProfile.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\Mesh.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\MeshBuffer.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\MidiFile.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\SoundFont.h" />
     <ClInclude Include="src\Legacy\Types\Renderer\MeshNodes.h" />
     <ClInclude Include="src\Legacy\Types\Renderer\Model.h" />
     <ClInclude Include="src\Legacy\Types\House\Trim.h" />
@@ -863,7 +876,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Legacy\Util\Util.h" />
     <ClInclude Include="src\Legacy\Viewport\ViewportManager.h" />
     <ClInclude Include="src\Legacy\Managers\HouseManager.h" />
-    <ClInclude Include="src\Legacy\World\World.h" />
+    <ClInclude Include="src\Legacy\World\LegacyWorld.h" />
     <ClInclude Include="vendor\magic_enum\MagicEnum.hpp" />
     <ClInclude Include="vendor\stb_image\stb_image.h" />
     <ClInclude Include="vendor\stb_image\stb_image_write.h" />

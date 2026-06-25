@@ -3,7 +3,7 @@
 #include "Debug/DebugDraw.h"
 #include "Util.h"
 
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 // TODO: Move me Util.h and add division by zero checks
 float RoundUp(float value, float spacing) { return std::ceil(value / spacing) * spacing; }
@@ -159,7 +159,7 @@ void PointCloud::Update() {
     //std::fill(m_gridCellDirtyFlags.begin(), m_gridCellDirtyFlags.end(), 0);
     //
     //int i = 0;
-    //for (Light& light : World::GetLights()) {
+    //for (Light& light : LegacyWorld::GetLights()) {
     //    if (i == 3) {
     //        DirtyCellsInSphere(light.GetPosition(), light.GetRadius());
     //        Renderer::DrawSphere(light.GetPosition(), light.GetRadius(), WHITE);

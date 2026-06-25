@@ -1,6 +1,6 @@
 #include "World.h"
 
-namespace World {
+namespace LegacyWorld {
 
     // this whole is fucked and wastes you so much time in confusion,
     // abstract it all away with your new manager thing, and most importantly always return true

@@ -10,7 +10,7 @@
 struct IESProfile;
 
 namespace Hell::AssetLoader {
-    bool LoadIES(const std::string& path, IESProfile& outProfile);
+    IESProfile LoadIES(const std::string& path);
 }
 
 struct IESProfile {
@@ -42,7 +42,7 @@ struct IESProfile {
     size_t GetCPUAllocatedByteCount() const;
 
 private:
-    friend bool Hell::AssetLoader::LoadIES(const std::string& path, IESProfile& outProfile);
+    friend IESProfile Hell::AssetLoader::LoadIES(const std::string& path);
 
     void RecalculateDerivedValues();
 

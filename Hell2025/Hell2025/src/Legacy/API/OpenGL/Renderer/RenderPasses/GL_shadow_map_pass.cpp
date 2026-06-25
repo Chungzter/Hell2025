@@ -5,7 +5,7 @@
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Ragdoll/RagdollManager.h"
 
@@ -65,7 +65,7 @@ namespace OpenGLRenderer {
             MultiDrawIndirect(flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i]);
 
             // Heightfield chunks
-            std::vector<HeightMapChunk>& chunks = World::GetHeightMapChunks();
+            std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
             OpenGLHeightMapMesh& heightMapMesh = OpenGLBackEnd::GetHeightMapMesh();
             glBindVertexArray(heightMapMesh.GetVAO());
             shader->SetMat4("u_modelMatrix", heightMapModelMatrix);
@@ -135,7 +135,7 @@ namespace OpenGLRenderer {
         // Clear any shadow map that needs redrawing
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
             const GPULight& gpuLight = gpuLightsHighRes[i];
-            Light* light = World::GetLightByIndex(gpuLight.lightIndex);
+            Light* light = LegacyWorld::GetLightByIndex(gpuLight.lightIndex);
             
             if (light->IsDirtyForShadowMaps()) {
                 std::cout << i << " is dirty\n";
@@ -151,7 +151,7 @@ namespace OpenGLRenderer {
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
             const GPULight& gpuLight = gpuLightsHighRes[i];
 
-            Light* light = World::GetLightByIndex(gpuLight.lightIndex);
+            Light* light = LegacyWorld::GetLightByIndex(gpuLight.lightIndex);
             if (!light || !light->IsDirtyForShadowMaps()) continue;
 
             shader->SetFloat("farPlane", light->GetRadius());
@@ -181,7 +181,7 @@ namespace OpenGLRenderer {
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
             const GPULight& gpuLight = gpuLightsHighRes[i];
 
-            Light* light = World::GetLightByIndex(gpuLight.lightIndex);
+            Light* light = LegacyWorld::GetLightByIndex(gpuLight.lightIndex);
             if (!light || !light->IsDirtyForShadowMaps()) continue;
 
             shader->SetFloat("farPlane", light->GetRadius());
@@ -248,7 +248,7 @@ namespace OpenGLRenderer {
         for (int i = 0; i < gpuLightsHighRes.size(); i++) {
             const GPULight& gpuLight = gpuLightsHighRes[i];
 
-            Light* light = World::GetLightByIndex(gpuLight.lightIndex);
+            Light* light = LegacyWorld::GetLightByIndex(gpuLight.lightIndex);
             if (!light || !light->IsDirtyForShadowMaps()) continue;
 
             shader->SetFloat("farPlane", light->GetRadius());
@@ -359,7 +359,7 @@ namespace OpenGLRenderer {
                 }
 
                 // Weather boards
-                //MeshBuffer weatherboardMeshBuffer = World::GetWeatherBoardMeshBuffer();
+                //MeshBuffer weatherboardMeshBuffer = LegacyWorld::GetWeatherBoardMeshBuffer();
                 //glBindVertexArray(weatherboardMeshBuffer.GetGLMeshBuffer().GetVAO());
                 //int indexCount = weatherboardMeshBuffer.GetGLMeshBuffer().GetIndexCount();
                 //if (indexCount > 0) {

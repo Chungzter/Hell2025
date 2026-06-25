@@ -2,8 +2,6 @@
 
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
-#include "Audio/MidiFileManager.h"
-#include "Audio/Synth.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Bible/Bible.h"
 #include "Callbacks/Callbacks.h"
@@ -24,13 +22,15 @@ namespace Audio = Hell::Audio;
 #include "Renderer/RenderDataManager.h"
 #include "UI/UIBackEnd.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "Unloved/World/World.h"
 
 #include "Hell/AssetCompiler/AssetCompiler.h"
 #include "Hell/AssetLoader/AssetLoader.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Input.h"
+#include "Hell/Time.h"
 namespace Input = Hell::Input;
+namespace Time = Hell::Time;
 
 
 namespace Unloved {
@@ -42,8 +42,6 @@ namespace Unloved {
         Gizmo::Init();
         ViewportManager::Init();
         Editor::Init();
-        Synth::Init();
-        MidiFileManager::Init();
         Physics::Init();
         RagdollManager::Init();
         ImGuiBackEnd::Init();
@@ -55,11 +53,9 @@ namespace Unloved {
     }
 
     void UpdateSubSystems() {
-        float deltaTime = GameOLD::GetDeltaTime();
         //glfwSwapInterval(0);
 
-        Synth::Update(deltaTime);
-        MidiFileManager::Update(deltaTime);
+        World::Update();
     }
 
     void BeginFrame() {
@@ -96,7 +92,7 @@ namespace Unloved {
     void Update() {
         Renderer::PreGameLogicComputePasses();
 
-        float deltaTime = GameOLD::GetDeltaTime();
+        float deltaTime = Time::DeltaTime();
 
         ViewportManager::Update();
 
@@ -130,6 +126,7 @@ namespace Unloved {
     }
 
     void CleanUp() {
+        World::CleanUp();
     }
 
     void UpdateLazyKeypresses() {

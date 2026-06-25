@@ -5,7 +5,7 @@ namespace Audio = Hell::Audio;
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include "Hell/Logging.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Viewport/ViewportManager.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
@@ -37,7 +37,7 @@ namespace Editor {
         //PhysXRayResult rayResult = Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
 
         PhysXRayResult physXRayResult = Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, Editor::BackfaceCullingEnabled());
-        BvhRayResult bvhRayResult = World::ClosestHit(rayOrigin, rayDir, maxRayDistance);
+        BvhRayResult bvhRayResult = LegacyWorld::ClosestHit(rayOrigin, rayDir, maxRayDistance);
 
         glm::vec3 hitPosition = glm::vec3(-9999.0f);
         glm::vec3 hitNormal = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -101,7 +101,7 @@ namespace Editor {
                 createInfo.rotation = glm::vec3(0.0f);
                 createInfo.probeSpacing = 0.75f;
 
-                World::AddDDGIVolume(createInfo, SpawnOffset());
+                LegacyWorld::AddDDGIVolume(createInfo, SpawnOffset());
                 Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                 ExitObjectPlacement();
             }
@@ -124,12 +124,12 @@ namespace Editor {
                     PowerPoleSetCreateInfo createInfo;
                     createInfo.controlPoints2D = { controlPoint2D };
         
-                    g_placementObjectId = World::AddPowerPoleSet(createInfo, SpawnOffset());
+                    g_placementObjectId = LegacyWorld::AddPowerPoleSet(createInfo, SpawnOffset());
                     Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                 }
                 // Add new control point
                 else {
-                    if (PowerPoleSet* powerPoleSet = World::GetPowerPoleSetByObjectId(g_placementObjectId)) {
+                    if (PowerPoleSet* powerPoleSet = LegacyWorld::GetPowerPoleSetByObjectId(g_placementObjectId)) {
                         powerPoleSet->AddControlPoint(controlPoint2D);
                         Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                     }
@@ -154,12 +154,12 @@ namespace Editor {
                     FenceCreateInfo createInfo;
                     createInfo.controlPoints2D = { controlPoint2D };
 
-                    g_placementObjectId = World::AddFence(createInfo, SpawnOffset());
+                    g_placementObjectId = LegacyWorld::AddFence(createInfo, SpawnOffset());
                     Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                 }
                 // Add new control point
                 else {
-                    if (Fence* fence = World::GetFenceByObjectId(g_placementObjectId)) {
+                    if (Fence* fence = LegacyWorld::GetFenceByObjectId(g_placementObjectId)) {
                         fence->AddControlPoint(controlPoint2D);
                         Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                     }
@@ -189,11 +189,11 @@ namespace Editor {
                     lastPoint = hitPosition;
                     currentSag = defaultSag;
 
-                    g_placementObjectId = World::AddChristmasLights(createInfo, SpawnOffset());
+                    g_placementObjectId = LegacyWorld::AddChristmasLights(createInfo, SpawnOffset());
                     Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                 }
                 else {
-                    if (ChristmasLightSet* christmasLights = World::GetChristmasLightsByObjectId(g_placementObjectId)) {
+                    if (ChristmasLightSet* christmasLights = LegacyWorld::GetChristmasLightsByObjectId(g_placementObjectId)) {
                         christmasLights->AddSegementFromLastPoint(hitPosition, currentSag);
                         lastPoint = hitPosition;
                         Audio::PlayAudio(AUDIO_SELECT, 1.0f);
@@ -218,7 +218,7 @@ namespace Editor {
 
             // Draw line
             if (g_placementObjectId != 0) {
-                if (ChristmasLightSet* christmasLights = World::GetChristmasLightsByObjectId(g_placementObjectId)) {
+                if (ChristmasLightSet* christmasLights = LegacyWorld::GetChristmasLightsByObjectId(g_placementObjectId)) {
 
                     //float sag = christmasLights->GetCreateInfo().sagHeights;
                     glm::vec3 begin = lastPoint;
@@ -292,7 +292,7 @@ namespace Editor {
         FireplaceCreateInfo createInfo;
         createInfo.position = hitPosition;
         createInfo.type = fireplaceType;
-        World::AddFireplace(createInfo, SpawnOffset());
+        LegacyWorld::AddFireplace(createInfo, SpawnOffset());
         ExitObjectPlacement();
     }
 
@@ -315,8 +315,8 @@ namespace Editor {
 
         createInfo.type = housePlaneType;
 
-        World::AddHousePlane(createInfo, SpawnOffset());
-        World::RecreateAllHouseGeometry();
+        LegacyWorld::AddHousePlane(createInfo, SpawnOffset());
+        LegacyWorld::RecreateAllHouseGeometry();
         ExitObjectPlacement();
     }
 
@@ -325,7 +325,7 @@ namespace Editor {
         createInfo.position = hitPosition;
         createInfo.rotation.y = 0.0f;
         createInfo.type = genericObjectType;
-        World::AddGenericObject(createInfo, SpawnOffset());
+        LegacyWorld::AddGenericObject(createInfo, SpawnOffset());
         ExitObjectPlacement();
     }
 
@@ -337,7 +337,7 @@ namespace Editor {
         createInfo.respawn = true;
         createInfo.saveToFile = true;
         createInfo.type = Bible::GetItemType(pickUpName);
-        World::AddPickUp(createInfo, SpawnOffset());
+        LegacyWorld::AddPickUp(createInfo, SpawnOffset());
         ExitObjectPlacement();
     }
 
@@ -354,7 +354,7 @@ namespace Editor {
         createInfo.deadLockedAtInit = false;
         createInfo.maxOpenValue = 2.1f;
         createInfo.editorName = UNDEFINED_STRING;
-        World::AddDoor(createInfo, SpawnOffset());
+        LegacyWorld::AddDoor(createInfo, SpawnOffset());
         ExitObjectPlacement();
     }
 
@@ -362,7 +362,7 @@ namespace Editor {
         WindowCreateInfo createInfo;
         createInfo.position = hitPosition;
         createInfo.rotation = glm::vec3(0.0f);
-        World::AddWindow(createInfo, SpawnOffset());
+        LegacyWorld::AddWindow(createInfo, SpawnOffset());
         ExitObjectPlacement();
     }
 
@@ -370,7 +370,7 @@ namespace Editor {
         StaircaseCreateInfo createInfo;
         createInfo.position = hitPosition;
         createInfo.rotation = glm::vec3(0.0f);
-        World::AddStaircase(createInfo, SpawnOffset());
+        LegacyWorld::AddStaircase(createInfo, SpawnOffset());
         ExitObjectPlacement();
     }
 
@@ -388,7 +388,7 @@ namespace Editor {
         createInfo.type = LightType::HANGING_LIGHT;
         createInfo.radius = 3.0f;
         createInfo.strength = 1.0f;
-        World::AddLight(createInfo, SpawnOffset());
+        LegacyWorld::AddLight(createInfo, SpawnOffset());
         ExitObjectPlacement();
     }
 
@@ -396,7 +396,7 @@ namespace Editor {
         LadderCreateInfo createInfo;
         createInfo.position = hitPosition + glm::vec3(0.0f, 1.0f, 0.0f);
         createInfo.rotation = glm::vec3(0.0f);
-        World::AddLadder(createInfo, SpawnOffset());
+        LegacyWorld::AddLadder(createInfo, SpawnOffset());
         ExitObjectPlacement();
     }
 

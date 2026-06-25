@@ -1,5 +1,10 @@
 #include "Synth.h"
 #include "fluidsynth.h"
+#include "Hell/File.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/Types/SoundFont.h"
+
+#include <array>
 #include <iostream>
 
 void PrintSettings(void* data, const char* name, int type) {
@@ -7,16 +12,17 @@ void PrintSettings(void* data, const char* name, int type) {
 }
 
 void ErrorCallback(int level, const char* message, void* user_data) {
-    if (Synth::LogToConsoleEnabled()) {
+    if (Hell::Synth::LogToConsoleEnabled()) {
         fprintf(stderr, "%s\n", message);
     }
 }
 
-namespace Synth {
+namespace Hell::Synth {
     fluid_audio_driver_t* g_driver;
     fluid_settings_t* g_settings;
     fluid_synth_t* g_synth;
     bool g_logToConsole = false;
+    std::array<std::string, 16> g_selectedSoundFontNames;
         
     void Init() {
         g_settings = new_fluid_settings();
@@ -39,31 +45,51 @@ namespace Synth {
 
         //fluid_settings_foreach(g_settings, nullptr, PrintSettings);
 
-        // Load sound font
-        int sfid0 = LoadSoundFont("YamahaGrandLiteV2.sf2");
-        int sfid1 = LoadSoundFont("DiscardedWurlitzer.sf2");
-        //int sfid2 = LoadSoundFont("OutOfTune.sf2");
-        
-        fluid_synth_program_select(g_synth, 0, sfid0, 0, 0);
-        fluid_synth_program_select(g_synth, 1, sfid1, 0, 0);
-        //fluid_synth_program_select(g_synth, 2, sfid2, 0, 0);
-
         fluid_synth_set_gain(g_synth, 4.0);
+        g_selectedSoundFontNames.fill(UNDEFINED_STRING);
     }
 
-    int LoadSoundFont(const std::string& filename) {
-        std::string filepath = "res/audio/piano/" + filename;
-        int id = fluid_synth_sfload(g_synth, filepath.c_str(), 1);
+    SoundFont LoadSoundFont(const std::string& path) {
+        SoundFont soundFont(File::GetName(path));
+        int id = fluid_synth_sfload(g_synth, path.c_str(), 1);
         if (id == FLUID_FAILED) {
             if (LogToConsoleEnabled()) {
-                std::cout << "Synth::LoadSoundFont() failed to load " << filepath << "\n";
+                std::cout << "Synth::LoadSoundFont() failed to load " << path << "\n";
             }
-            return 0;
+            return {};
         }
         if (LogToConsoleEnabled()) {
-            std::cout << "Loaded sound font: " << filename << "\n";
+            std::cout << "Loaded sound font: " << path << "\n";
         }
-        return id;
+
+        soundFont.SetFluidSynthId(id);
+        return soundFont;
+    }
+
+    bool SelectSoundFont(const std::string& soundFontName, int channel) {
+        if (!g_synth || soundFontName == UNDEFINED_STRING || channel < 0 || channel >= static_cast<int>(g_selectedSoundFontNames.size())) {
+            return false;
+        }
+
+        if (g_selectedSoundFontNames[channel] == soundFontName) {
+            return true;
+        }
+
+        SoundFont* soundFont = ResourceManager::GetSoundFontPtr(soundFontName);
+        if (!soundFont || soundFont->GetFluidSynthId() < 0) {
+            return false;
+        }
+
+        const int result = fluid_synth_program_select(g_synth, channel, soundFont->GetFluidSynthId(), 0, 0);
+        if (result != FLUID_OK) {
+            if (LogToConsoleEnabled()) {
+                std::cout << "Synth::SelectSoundFont() failed to select '" << soundFontName << "'\n";
+            }
+            return false;
+        }
+
+        g_selectedSoundFontNames[channel] = soundFontName;
+        return true;
     }
 
     void PlayNote(int note, int velocity) {

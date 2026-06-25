@@ -1,4 +1,4 @@
-#include "World.h"
+#include "LegacyWorld.h"
 #include <Game/CreateInfo.h>
 #include <Game/Constants.h>
 #include "Hell/Logging.h"
@@ -27,7 +27,7 @@
 
 using namespace Hell;
 
-namespace World {
+namespace LegacyWorld {
     Hell::SlotMap<AnimatedGameObject> g_animatedGameObjects;
     Hell::SlotMap<ChristmasLightSet> g_christmasLightSets;
     Hell::SlotMap<DDGIVolume> g_ddgiVolumes;
@@ -217,7 +217,7 @@ namespace World {
             int32_t mapIndex = MapManager::GetMapIndexByName(mapInstanceCreateInfo.mapName);
             Map* map = MapManager::GetMapByName(mapInstanceCreateInfo.mapName);
             if (!map) {
-                Logging::Error() << "World::LoadMapInstancesHeightMapData() failed coz '" << mapInstanceCreateInfo.mapName << "' was not found";
+                Logging::Error() << "LegacyWorld::LoadMapInstancesHeightMapData() failed coz '" << mapInstanceCreateInfo.mapName << "' was not found";
                 return;
             }
 
@@ -273,7 +273,7 @@ namespace World {
 
         House* house = HouseManager::GetHouseByName(houseName);
         if (!house) {
-            Logging::Error() << "World::LoadHouseInstance() failed because " << houseName << " was not found";
+            Logging::Error() << "LegacyWorld::LoadHouseInstance() failed because " << houseName << " was not found";
             return;
         }
 
@@ -300,13 +300,13 @@ namespace World {
         Shark& shark = g_sharks.emplace_back();
         shark.Init(glm::vec3(5.0f, 28.85f, 40.0f));
 
-        Logging::Debug() << "World::LoadHouseInstance(): " << houseName << " at " << spawnOffset.translation;
+        Logging::Debug() << "LegacyWorld::LoadHouseInstance(): " << houseName << " at " << spawnOffset.translation;
     }
 
     void LoadMapInstanceObjects(const std::string& mapName, SpawnOffset spawnOffset) {
         Map* map = MapManager::GetMapByName(mapName);
         if (!map) {
-            Logging::Error() << "World::LoadMapInstanceObjects() failed coz '" << mapName << "' was not found";
+            Logging::Error() << "LegacyWorld::LoadMapInstanceObjects() failed coz '" << mapName << "' was not found";
             return;
         }
 
@@ -329,7 +329,7 @@ namespace World {
     void LoadMapInstanceHouses(const std::string& mapName, SpawnOffset spawnOffset) {
         Map* map = MapManager::GetMapByName(mapName);
         if (!map) {
-            Logging::Error() << "World::LoadMapInstanceHouses() failed coz '" << mapName << "' was not found";
+            Logging::Error() << "LegacyWorld::LoadMapInstanceHouses() failed coz '" << mapName << "' was not found";
             return;
         }
 
@@ -416,7 +416,7 @@ namespace World {
         if (DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetOrigin();
         // etc
 
-        Logging::Warning() << "World::GetObjectPosition(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(UniqueID::GetType(objectId)) << "\n";
+        Logging::Warning() << "LegacyWorld::GetObjectPosition(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(UniqueID::GetType(objectId)) << "\n";
         return invalid;
     }
 
@@ -426,7 +426,7 @@ namespace World {
         if (DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetRotation();
         // etc
 
-        Logging::Warning() << "World::GetObjectRotation(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(UniqueID::GetType(objectId)) << "\n";
+        Logging::Warning() << "LegacyWorld::GetObjectRotation(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(UniqueID::GetType(objectId)) << "\n";
         return invalid;
     }
 
@@ -521,7 +521,7 @@ namespace World {
             return &g_lights[index];
         }
         else {
-            std::cout << "World::GetLightByIndex() failed: index " << index << " out of range of size " << g_lights.size() << "\n";
+            std::cout << "LegacyWorld::GetLightByIndex() failed: index " << index << " out of range of size " << g_lights.size() << "\n";
             return nullptr;
         }
     }
@@ -545,7 +545,7 @@ namespace World {
     //}
 
     PianoKey* GetPianoKeyByObjectId(uint64_t objectId) {
-        for (Piano& piano : World::GetPianos()) {
+        for (Piano& piano : LegacyWorld::GetPianos()) {
             if (piano.PianoKeyExists(objectId)) {
                 return piano.GetPianoKey(objectId);
             }
@@ -554,7 +554,7 @@ namespace World {
     }
 
     PictureFrame* GetPictureFrameByObjectId(uint64_t objectId) {
-        for (PictureFrame& pictureFrame : World::GetPictureFrames()) {
+        for (PictureFrame& pictureFrame : LegacyWorld::GetPictureFrames()) {
             if (pictureFrame.GetObjectId() == objectId) {
                 return &pictureFrame;
             }
@@ -586,63 +586,63 @@ namespace World {
 
     void SetObjectPosition(uint64_t objectId, const glm::vec3& position) {
 
-        if (DDGIVolume* object = World::GetDDGIVolumeByObjectId(objectId)) object->SetOrigin(position);
+        if (DDGIVolume* object = LegacyWorld::GetDDGIVolumeByObjectId(objectId)) object->SetOrigin(position);
 
-        if (Door* door = World::GetDoorByObjectId(objectId)) {
+        if (Door* door = LegacyWorld::GetDoorByObjectId(objectId)) {
             door->SetPosition(position);
             RecreateAllHouseGeometry();
             Physics::ForceZeroStepUpdate();
         }
 
-        if (GenericObject* genericObject = World::GetGenericObjectById(objectId)) {
+        if (GenericObject* genericObject = LegacyWorld::GetGenericObjectById(objectId)) {
             genericObject->SetPosition(position);
         }
 
-        if (Fireplace* fireplace= World::GetFireplaceById(objectId)) {
+        if (Fireplace* fireplace= LegacyWorld::GetFireplaceById(objectId)) {
             fireplace->SetPosition(position);
         }
 
-        if (Piano* piano = World::GetPianoByObjectId(objectId)) {
+        if (Piano* piano = LegacyWorld::GetPianoByObjectId(objectId)) {
             piano->SetPosition(position);
             Physics::ForceZeroStepUpdate();
         }
 
-        if (HousePlane* plane = World::GetHousePlaneByObjectId(objectId)) {
+        if (HousePlane* plane = LegacyWorld::GetHousePlaneByObjectId(objectId)) {
             plane->UpdateWorldSpaceCenter(position);
             RecreateAllHouseGeometry();
         }
 
-        if (Ladder* ladder = World::GetLadderByObjectId(objectId)) {
+        if (Ladder* ladder = LegacyWorld::GetLadderByObjectId(objectId)) {
             ladder->SetPosition(position);
         }
 
-        if (Light* light = World::GetLightByObjectId(objectId)) {
+        if (Light* light = LegacyWorld::GetLightByObjectId(objectId)) {
             light->SetPosition(position);
         }
 
-        if (PickUp* pickUp = World::GetPickUpByObjectId(objectId)) {
+        if (PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(objectId)) {
             pickUp->SetPosition(position);
         }
 
-        if (PictureFrame* pictureFrame = World::GetPictureFrameByObjectId(objectId)) {
+        if (PictureFrame* pictureFrame = LegacyWorld::GetPictureFrameByObjectId(objectId)) {
             pictureFrame->SetPosition(position);
         }
 
-        if (Staircase* staircase = World::GetStaircaseByObjectId(objectId)) {
+        if (Staircase* staircase = LegacyWorld::GetStaircaseByObjectId(objectId)) {
             staircase->SetPosition(position);
         }
 
-        //if (Tree* tree = World::GetTreeByObjectId(objectId)) {
+        //if (Tree* tree = LegacyWorld::GetTreeByObjectId(objectId)) {
         //    tree->SetPosition(position);
         //}
 
-        if (Wall* wall = World::GetWallByObjectId(objectId)) {
+        if (Wall* wall = LegacyWorld::GetWallByObjectId(objectId)) {
             wall->UpdateWorldSpaceCenter(position);
             Physics::ForceZeroStepUpdate();
             RecreateAllHouseGeometry();
         }
 
-        if (Window* window = World::GetWindowByObjectId(objectId)) {
+        if (Window* window = LegacyWorld::GetWindowByObjectId(objectId)) {
             window->SetPosition(position);
             RecreateAllHouseGeometry();
             Physics::ForceZeroStepUpdate();
@@ -650,27 +650,27 @@ namespace World {
     }
 
     void SetObjectRotation(uint64_t objectId, const glm::vec3& rotation) {
-        if (DDGIVolume* object = World::GetDDGIVolumeByObjectId(objectId)) object->SetRotation(rotation);
+        if (DDGIVolume* object = LegacyWorld::GetDDGIVolumeByObjectId(objectId)) object->SetRotation(rotation);
 
-        if (Fireplace* object = World::GetFireplaceById(objectId)) {
+        if (Fireplace* object = LegacyWorld::GetFireplaceById(objectId)) {
             object->SetRotation(rotation);
         }
-        if (GenericObject* object = World::GetGenericObjectById(objectId)) {
+        if (GenericObject* object = LegacyWorld::GetGenericObjectById(objectId)) {
             object->SetRotation(rotation);
         }
-        if (Ladder* object = World::GetLadderByObjectId(objectId)) {
+        if (Ladder* object = LegacyWorld::GetLadderByObjectId(objectId)) {
             object->SetRotation(rotation);
         }
-        if (PickUp* object = World::GetPickUpByObjectId(objectId)) {
+        if (PickUp* object = LegacyWorld::GetPickUpByObjectId(objectId)) {
             object->SetRotation(rotation);
         }
-        if (Staircase* object = World::GetStaircaseByObjectId(objectId)) {
+        if (Staircase* object = LegacyWorld::GetStaircaseByObjectId(objectId)) {
             object->SetRotation(rotation);
         }
     }
 
     glm::vec3 GetGizmoOffest(uint64_t objectId) {
-        GenericObject* drawers = World::GetGenericObjectById(objectId);
+        GenericObject* drawers = LegacyWorld::GetGenericObjectById(objectId);
         if (drawers) {
             return drawers->GetGizmoOffset();
         }
@@ -802,7 +802,7 @@ namespace World {
         //    }
         //}
 
-        Logging::Error() << "World::RemoveObject() Failed to remove object " << objectId << ", check you have implemented type " << Util::EnumToString(UniqueID::GetType(objectId)) << "\n";
+        Logging::Error() << "LegacyWorld::RemoveObject() Failed to remove object " << objectId << ", check you have implemented type " << Util::EnumToString(UniqueID::GetType(objectId)) << "\n";
         return false;
     }
 
@@ -825,8 +825,8 @@ namespace World {
 
 
        //AnimatedGameObject* animatedGameObject2 = nullptr;
-       //uint64_t id2 = World::CreateAnimatedGameObject();
-       //animatedGameObject2 = World::GetAnimatedGameObjectByObjectId(id2);
+       //uint64_t id2 = LegacyWorld::CreateAnimatedGameObject();
+       //animatedGameObject2 = LegacyWorld::GetAnimatedGameObjectByObjectId(id2);
        //animatedGameObject2->SetSkinnedModel("Knife");
        //animatedGameObject2->SetName("Knife");
        //animatedGameObject2->SetAllMeshMaterials("Knife");
@@ -838,8 +838,8 @@ namespace World {
        //
        //
        //AnimatedGameObject* animatedGameObject = nullptr;
-       //uint64_t id = World::CreateAnimatedGameObject();
-       //animatedGameObject = World::GetAnimatedGameObjectByObjectId(id);
+       //uint64_t id = LegacyWorld::CreateAnimatedGameObject();
+       //animatedGameObject = LegacyWorld::GetAnimatedGameObjectByObjectId(id);
        //animatedGameObject->SetSkinnedModel("Glock");
        //animatedGameObject->SetName("Remington870");
        //animatedGameObject->SetAllMeshMaterials("Glock");
@@ -1008,7 +1008,7 @@ namespace World {
 
     uint64_t AddPickUp(PickUpCreateInfo createInfo, SpawnOffset spawnOffset) {
         if (!Bible::GetItemInfoByName(createInfo.name)) {
-            Logging::Warning() << "World::AddPickUp(..) failed: '" << createInfo.name << "' ItemInfo not found in bible";
+            Logging::Warning() << "LegacyWorld::AddPickUp(..) failed: '" << createInfo.name << "' ItemInfo not found in bible";
             return 0;
         }
 
@@ -1044,7 +1044,7 @@ namespace World {
 
     uint64_t AddWall(WallCreateInfo createInfo, SpawnOffset spawnOffset) {
         if (createInfo.points.empty()) {
-            std::cout << "World::AddWall() failed: createInfo has zero points!\n";
+            std::cout << "LegacyWorld::AddWall() failed: createInfo has zero points!\n";
             return 0;
         }
 
@@ -1124,12 +1124,16 @@ namespace World {
 
     void AddPiano(PianoCreateInfo createInfo, SpawnOffset spawnOffset) {
         createInfo.position += spawnOffset.translation;
+        if (createInfo.soundFontName == UNDEFINED_STRING) {
+            createInfo.soundFontName = "YamahaGrandLiteV2";
+        }
+
         Piano& piano = g_pianos.emplace_back();
         piano.Init(createInfo);
     }
 
     //void AddTree(TreeCreateInfo createInfo, SpawnOffset spawnOffset) {
-    //    Logging::Warning() << "World::AddTree(...) failed cause you removed the that did it, to stop some whack crash";
+    //    Logging::Warning() << "LegacyWorld::AddTree(...) failed cause you removed the that did it, to stop some whack crash";
     //    createInfo.position += spawnOffset.translation;
     //
     //    if (createInfo.editorName == UNDEFINED_STRING) {
@@ -1204,7 +1208,7 @@ namespace World {
 
     void UpdateWorldSpawnPointsFromMap(Map* map) {
         if (!map) {
-            Logging::Error() << "World::UpdateWorldSpawnPointsFromMap() failed coz map param was nullptr";
+            Logging::Error() << "LegacyWorld::UpdateWorldSpawnPointsFromMap() failed coz map param was nullptr";
             return;
         }
         g_spawnCampaignPoints = map->GetAdditionalMapData().playerCampaignSpawns;
@@ -1215,17 +1219,17 @@ namespace World {
     DDGIVolume& GetTestDDGIVolume() {
         static DDGIVolume invalid;
 
-        if (World::GetDDGIVolumes().size() > 1) {
-            Logging::Fatal() << "World::GetTestDDGIVolume() fucked up, you have more than one LightVolume and ALL your code assumes you only have one\n";
+        if (LegacyWorld::GetDDGIVolumes().size() > 1) {
+            Logging::Fatal() << "LegacyWorld::GetTestDDGIVolume() fucked up, you have more than one LightVolume and ALL your code assumes you only have one\n";
             return invalid;
         }
-        if (World::GetDDGIVolumes().size() == 1) {
-            for (DDGIVolume& ddgiVolume : World::GetDDGIVolumes()) {
+        if (LegacyWorld::GetDDGIVolumes().size() == 1) {
+            for (DDGIVolume& ddgiVolume : LegacyWorld::GetDDGIVolumes()) {
                 return ddgiVolume;
             }
         }
         else {
-            Logging::Fatal() << "World::GetTestDDGIVolume() fucked up, you have zero LightVolumes and ALL your code assumes you only have one\n";
+            Logging::Fatal() << "LegacyWorld::GetTestDDGIVolume() fucked up, you have zero LightVolumes and ALL your code assumes you only have one\n";
             return invalid;
         }
 
@@ -1338,7 +1342,7 @@ namespace World {
     //        meshNodes = &window->GetMeshNodes();
     //    }
     //    else {
-    //        Logging::Warning() << "World::GetBlendingModeByObjectIdAndMeshNodeLocalIndex(...) failed: unknown object type\n";
+    //        Logging::Warning() << "LegacyWorld::GetBlendingModeByObjectIdAndMeshNodeLocalIndex(...) failed: unknown object type\n";
     //        return BlendingMode::UNDEFINED;
     //    }
     //
@@ -1380,7 +1384,7 @@ namespace World {
         ids.clear();
         ids.reserve(g_lights.size());
 
-        for (Light& light : World::GetLights()) {
+        for (Light& light : LegacyWorld::GetLights()) {
             if (light.GetType() != LightType::FIREPLACE_FIRE) {
                 ids.push_back(light.GetObjectId());
             }

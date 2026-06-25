@@ -13,23 +13,22 @@
 
 namespace Hell::AssetLoader {
 
-    bool LoadIES(const std::string& path, IESProfile& outProfile) {
+    IESProfile LoadIES(const std::string& path) {
         tiny_ies<float>::light ies;
         std::string error;
         std::string warning;
 
         if (!tiny_ies<float>::load_ies(path, error, warning, ies)) {
             Logging::Error() << "AssetLoader::LoadIES() failed to load '" << path << "': " << error << "\n";
-            return false;
+            return {};
         }
 
         if (!warning.empty()) {
             Logging::Warning() << "AssetLoader::LoadIES() warning for '" << path << "': " << warning << "\n";
         }
 
-        IESProfile loadedProfile(outProfile.m_name);
-        loadedProfile.m_fileInfo = outProfile.m_fileInfo;
-        loadedProfile.m_textureIndex = outProfile.m_textureIndex;
+        IESProfile loadedProfile(File::GetName(path));
+        loadedProfile.m_fileInfo = File::GetInfo(path);
         loadedProfile.m_verticalAngles = std::move(ies.vertical_angles);
         loadedProfile.m_horizontalAngles = std::move(ies.horizontal_angles);
         loadedProfile.m_candelaValues = std::move(ies.candela);
@@ -38,15 +37,14 @@ namespace Hell::AssetLoader {
         loadedProfile.m_maxIntensity = ies.max_candela;
         loadedProfile.RecalculateDerivedValues();
 
-        outProfile = std::move(loadedProfile);
-        return true;
+        return loadedProfile;
     }
 
     void LoadIESFiles() {
         for (FileInfo& fileInfo : File::IterateDirectory("res/ies_profiles", { "ies" })) {
-            IESProfile& iesProfile = ResourceManager::GetIESProfile(fileInfo.name);
+            IESProfile iesProfile = LoadIES(fileInfo.path);
 
-            if (!LoadIES(fileInfo.path, iesProfile)) {
+            if (iesProfile.GetName() == UNDEFINED_STRING) {
                 continue;
             }
 
@@ -84,6 +82,7 @@ namespace Hell::AssetLoader {
             }
 
             iesProfile.SetTextureIndex(texture.GetBindlessIndex());
+            ResourceManager::CreateIESProfile(std::move(iesProfile));
         }
     }
 }

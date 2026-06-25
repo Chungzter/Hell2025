@@ -4,7 +4,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "Util/Util.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Core/GameOLD.h"
 #include "Renderer/Renderer.h"
@@ -76,7 +76,7 @@ namespace OpenGLRenderer {
 
             // No depth test for fire
             //glDisable(GL_DEPTH_TEST);
-            for (Fireplace& fireplace : World::GetFireplaces()) {
+            for (Fireplace& fireplace : LegacyWorld::GetFireplaces()) {
                 const SpriteSheetRenderItem& renderItem = fireplace.GetFireSpriteSheetRenderItem();
                 Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.textureIndex);
                 shader->SetInt("u_rowCount", renderItem.rowCount);
@@ -101,7 +101,7 @@ namespace OpenGLRenderer {
             }
 
 
-            for (SpriteSheetObject& bubbleSpriteSheetObject : World::GetBubbleSpriteSheetObjects()) {
+            for (SpriteSheetObject& bubbleSpriteSheetObject : LegacyWorld::GetBubbleSpriteSheetObjects()) {
                 if (bubbleSpriteSheetObject.GetTime() > 0) {
                     const SpriteSheetRenderItem& renderItem = bubbleSpriteSheetObject.GetRenderItem();
                     Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.textureIndex);

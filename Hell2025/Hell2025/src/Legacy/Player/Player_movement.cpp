@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include "Editor/Editor.h"
 #include "Ocean/Ocean.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Util.h"
 
 #include "Core/GameOLD.h" // for total time
@@ -24,7 +24,7 @@ void Player::UpdateMovement(float deltaTime) {
     //}
 
     if (Editor::IsClosed() && m_controlEnabled) {
-        if (World::HasOcean() && GetCameraPosition().y < Ocean::GetWaterHeightAtPlayer(m_viewportIndex) + 0.1f) {
+        if (LegacyWorld::HasOcean() && GetCameraPosition().y < Ocean::GetWaterHeightAtPlayer(m_viewportIndex) + 0.1f) {
             UpdateSwimmingMovement(deltaTime);
             //std::cout << " swimming\n";
         }

@@ -5,7 +5,7 @@ namespace Audio = Hell::Audio;
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "Util.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 void Player::UpdateFlashlight(float deltaTime) {
     // Toggle on/off
@@ -80,8 +80,8 @@ void Player::UpdateFlashlight(float deltaTime) {
     //}
 
     if (IsInShop()) {
-        if (World::GetMermaids().size()) {
-            Mermaid& mermaid = World::GetMermaids()[0];
+        if (LegacyWorld::GetMermaids().size()) {
+            Mermaid& mermaid = LegacyWorld::GetMermaids()[0];
             m_flashlightDirection = glm::normalize(mermaid.GetPosition() - GetFootPosition());
         }
     }

@@ -1,18 +1,19 @@
-#include "Piano.h"
+#include "LegacyPiano.h"
 #include "Hell/Audio.h"
-#include "Audio/Synth.h"
+#include "Hell/Audio/Synth.h"
 #include "Editor/Editor.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Physics/Physics.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Util.h"
 #include "Game/UniqueID.h"
 
 void Piano::Init(PianoCreateInfo& createInfo) {
     m_createInfo = createInfo;
+    m_soundFontName = createInfo.soundFontName;
 
     m_transform.position = createInfo.position;
     m_transform.rotation = createInfo.rotation;
@@ -157,7 +158,7 @@ void Piano::PressKey(uint32_t customId) {
     auto it = m_keys.find(customId);
     if (it != m_keys.end()) {
         PianoKey& key = it->second;
-        key.PressKey();
+        key.PressKey(m_soundFontName);
     }
 }
 
@@ -196,7 +197,7 @@ void Piano::Update(float deltaTime) {
         const uint32_t& objectId = pair.first;
 
         PianoKey& key = pair.second;
-        key.Update(deltaTime);
+        key.Update(deltaTime, m_soundFontName);
 
         if (key.IsDirty()) {
             Transform transform;
@@ -226,7 +227,7 @@ void Piano::TriggerInternalNoteFromExternalBulletHit(glm::vec3 bulletHitPositon)
     }
 
     if (closetKey) {
-        closetKey->PressKey(127, 0.1f);
+        closetKey->PressKey(m_soundFontName, 127, 0.1f);
     }
 }
 
@@ -244,13 +245,13 @@ void Piano::PlayMajorFirstInversion(int rootNote) {
         PianoKey& key = pair.second;
 
         if (key.m_note == rootNote) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
         if (key.m_note == majorThird) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
         if (key.m_note == fifth) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
     }
 }
@@ -265,13 +266,13 @@ void Piano::PlayMajor7th(int rootNote) {
         PianoKey& key = pair.second;
 
         if (key.m_note == rootNote) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
         if (key.m_note == seventh) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
         if (key.m_note == majorThird) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
     }
 }
@@ -284,13 +285,13 @@ void Piano::PlayMinor(int rootNote) {
         PianoKey& key = pair.second;
 
         if (key.m_note == rootNote) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
         if (key.m_note == minorThird) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
         if (key.m_note == fifth) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
     }
 }
@@ -304,13 +305,13 @@ void Piano::PlayMajor(int rootNote) {
         PianoKey& key = pair.second;
 
         if (key.m_note == rootNote) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
         if (key.m_note == third) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
         if (key.m_note == fifth) {
-            key.PressKey();
+            key.PressKey(m_soundFontName);
         }
     }
 }
@@ -319,13 +320,15 @@ void Piano::PlayKey(int note, int velocity, float duration) {
     for (auto& pair : m_keys) {
         PianoKey& key = pair.second;
         if (key.m_note == note) {
-            key.PressKey(velocity, duration);
+            key.PressKey(m_soundFontName, velocity, duration);
         }
     }
 }
 
 void Piano::SetSustain(bool value) {
-    Synth::SetSustain(value);
+    if (Hell::Synth::SelectSoundFont(m_soundFontName)) {
+        Hell::Synth::SetSustain(value);
+    }
 }
 
 
@@ -436,7 +439,7 @@ uint32_t Piano::MeshNameToNote(const std::string& meshName) {
     return 0;
 }
 
-void PianoKey::Update(float deltaTime) {
+void PianoKey::Update(float deltaTime, const std::string& soundFontName) {
     m_dirty = false;
 
     if (m_state == State::KEY_DOWN) {
@@ -458,15 +461,19 @@ void PianoKey::Update(float deltaTime) {
             m_xRotation = 0.0f;
             m_yTranslation = 0.0f;
             m_state = State::IDLE;
-            Synth::ReleaseNote(m_note);
+            if (Hell::Synth::SelectSoundFont(soundFontName)) {
+                Hell::Synth::ReleaseNote(m_note);
+            }
         }
     }
 }
 
-void PianoKey::PressKey(int velocity, float duration) {
+void PianoKey::PressKey(const std::string& soundFontName, int velocity, float duration) {
     // Play sound if you were not pressed already
     if (m_state == State::IDLE) {
-        Synth::PlayNote(m_note, velocity);
+        if (Hell::Synth::SelectSoundFont(soundFontName)) {
+            Hell::Synth::PlayNote(m_note, velocity);
+        }
     }
 
     m_state = State::KEY_DOWN;

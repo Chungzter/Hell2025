@@ -4,10 +4,10 @@
 #include "../Renderer/Renderer.h"
 
 #include <glad/gl.h>
-#include <GLFW/glfw3.h>
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
+#include "Hell/Time.h"
 #include "File/JSON.h"
 #include "Editor/Editor.h"
 #include "Imgui/ImGuiBackEnd.h"
@@ -21,14 +21,12 @@ namespace Audio = Hell::Audio;
 #include <Game/UniqueID.h>
 
 // Get me out of here
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 // Get me out of here
 
 namespace GameOLD {
     float g_deltaTime = 0;
     float g_totalTime = 0;
-    double g_deltaTimeAccumulator = 0.0;
-    double g_fixedDeltaTime = 1.0 / 60.0;
     bool g_glassHitAudioPlayedThisFrame = false;
     //glm::vec3 g_moonlightDirection = glm::normalize(glm::vec3(0.0f, 0.2f, 0.5f));
     glm::vec3 g_moonlightDirection = glm::normalize(glm::vec3(-0.5f, 0.2f, 0.0f));
@@ -80,11 +78,7 @@ namespace GameOLD {
     }
 
     void Update() {
-        static double lastTime = glfwGetTime();
-        double currentTime = glfwGetTime();
-        g_deltaTime = static_cast<float>(currentTime - lastTime);
-        lastTime = currentTime;
-        g_deltaTimeAccumulator += g_deltaTime;
+        g_deltaTime = Hell::Time::DeltaTime();
 
         // Total time
         g_totalTime += g_deltaTime;
@@ -92,7 +86,7 @@ namespace GameOLD {
             g_totalTime -= TIME_WRAP; // Keep it continuous
         }
 
-        World::UpdateBvhs();
+        LegacyWorld::UpdateBvhs();
 
         // Editor select menu open?
         if (Editor::IsOpen() || ImGuiBackEnd::OwnsMouse()) {
@@ -111,13 +105,12 @@ namespace GameOLD {
         }
 
         OpenableManager::Update(g_deltaTime);
-        World::Update(g_deltaTime);
+        LegacyWorld::Update(g_deltaTime);
 
         // Physics
-        while (g_deltaTimeAccumulator >= g_fixedDeltaTime) {
-            g_deltaTimeAccumulator -= g_fixedDeltaTime;
+        while (Hell::Time::ConsumeFixedStep()) {
             if (Editor::IsClosed()) {
-                Physics::StepPhysics((float)g_fixedDeltaTime);
+                Physics::StepPhysics(Hell::Time::FixedDeltaTime());
             }
         }
 

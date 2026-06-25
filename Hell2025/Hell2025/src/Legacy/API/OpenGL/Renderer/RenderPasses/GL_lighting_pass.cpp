@@ -1,7 +1,7 @@
 #include "../GL_renderer.h"
 #include "Core/GameOLD.h"
 #include "GlobalIllumination/GlobalIllumination.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Renderer/Renderer.h"
 #include "Ocean/Ocean.h"
 
@@ -57,7 +57,7 @@ namespace OpenGLRenderer {
         shader->SetInt("u_tileYCount", gBuffer->GetHeight() / TILE_SIZE);
         shader->SetBool("u_sampleProbes", Renderer::GetCurrentRendererSettings().enableIrradianceProbeSampling);
 
-        if (World::HasOcean()) {
+        if (LegacyWorld::HasOcean()) {
             shader->SetFloat("u_oceanHeight", Ocean::GetOceanOriginY());
         }
         else {

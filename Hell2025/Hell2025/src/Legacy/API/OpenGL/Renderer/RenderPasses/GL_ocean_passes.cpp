@@ -2,7 +2,7 @@
 #include "Editor/Editor.h"
 #include "Core/GameOLD.h"
 #include "Ocean/Ocean.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
@@ -21,7 +21,7 @@ namespace OpenGLRenderer {
     void OceanGeometryPass() {
         ProfilerOpenGLZoneFunction();
 
-        if (!World::HasOcean()) return;
+        if (!LegacyWorld::HasOcean()) return;
 
         OpenGLFrameBuffer* gBuffer = GetFrameBufferOLD("GBuffer");
         OpenGLFrameBuffer* waterFrameBuffer = GetFrameBufferOLD("Water");
@@ -170,7 +170,7 @@ namespace OpenGLRenderer {
 
     void OceanUnderWaterFlags() {
         ProfilerOpenGLZoneFunction();
-        if (!World::HasOcean()) return;
+        if (!LegacyWorld::HasOcean()) return;
 
         OpenGLFrameBuffer& fftFrameBuffer_band0 = GetFrameBuffer("FFT_band0");
         OpenGLFrameBuffer& fftFrameBuffer_band1 = GetFrameBuffer("FFT_band1");
@@ -192,7 +192,7 @@ namespace OpenGLRenderer {
 
     void OceanSurfaceCompositePass() {
         ProfilerOpenGLZoneFunction();
-        if (!World::HasOcean()) return;
+        if (!LegacyWorld::HasOcean()) return;
 
         std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = GetFrameBuffer(gBufferName);
@@ -246,7 +246,7 @@ namespace OpenGLRenderer {
 
     void OceanUnderwaterCompositePass() {
         ProfilerOpenGLZoneFunction();
-        if (!World::HasOcean()) return;
+        if (!LegacyWorld::HasOcean()) return;
 
         OpenGLFrameBuffer& miscFullSizeFrameBuffer = GetFrameBuffer("MiscFullSize");
         OpenGLFrameBuffer& waterFrameBuffer = GetFrameBuffer("Water");
@@ -282,7 +282,7 @@ namespace OpenGLRenderer {
     }
 
     void OceanHeightReadback() {
-        if (!World::HasOcean()) return;
+        if (!LegacyWorld::HasOcean()) return;
 
         OpenGLFrameBuffer* fftFrameBuffer_band0 = GetFrameBufferOLD("FFT_band0");
         OpenGLFrameBuffer* fftFrameBuffer_band1 = GetFrameBufferOLD("FFT_band1");

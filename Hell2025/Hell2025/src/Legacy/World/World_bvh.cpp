@@ -1,11 +1,11 @@
-#include "World.h"
+#include "LegacyWorld.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include "Hell/BVH/BVH.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Timer.hpp"
 
-namespace World {
+namespace LegacyWorld {
 	std::vector<PrimitiveInstance> g_dynamicSceneInstances;
 	std::vector<PrimitiveInstance> g_staticSceneInstances;
 	uint64_t g_dynamicSceneBvhId = 0;

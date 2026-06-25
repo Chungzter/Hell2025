@@ -3,7 +3,7 @@
 #include "Core/GameOLD.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 

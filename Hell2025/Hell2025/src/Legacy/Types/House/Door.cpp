@@ -8,7 +8,7 @@
 #include "Managers/OpenableManager.h"
 #include "Game/UniqueID.h"
 #include "Util.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Core/GameOLD.h"
 
@@ -75,7 +75,7 @@ void Door::UpdateFloor() {
     createInfo.textureScale = 0.4f;
     createInfo.materialName = "FloorBoards";
 
-    World::AddHousePlane(createInfo, SpawnOffset());
+    LegacyWorld::AddHousePlane(createInfo, SpawnOffset());
 }
 
 void Door::CleanUp() {

@@ -17,6 +17,8 @@ namespace Hell::AssetLoader {
     std::vector<std::string>& GetLoadLog();
 
     AnimationData LoadAnimationData(FileInfo fileInfo);
-    void LoadIESFiles();
     void CreateSpriteSheets();
+    void LoadIESFiles();
+    void LoadMidiFiles();
+    void LoadSoundFonts();
 }

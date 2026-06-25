@@ -2,7 +2,7 @@
 #include "API/OpenGL/GL_backend.h"
 #include "Renderer/RenderDataManager.h"
 #include "Core/GameOLD.h" // remove me when u can
-#include "World/World.h" // remove me when u can
+#include "World/LegacyWorld.h" // remove me when u can
 #include "Util.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 

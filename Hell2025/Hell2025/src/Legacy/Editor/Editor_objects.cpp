@@ -7,7 +7,7 @@ namespace Audio = Hell::Audio;
 #include "Physics/Physics.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Game/UniqueID.h"
 
 #include "Core/GameOLD.h"
@@ -51,7 +51,7 @@ namespace Editor {
         }
 
         // BVH ray
-        BvhRayResult bvhRayResult = World::ClosestHit(rayOrigin, rayDir, maxRayDistance);
+        BvhRayResult bvhRayResult = LegacyWorld::ClosestHit(rayOrigin, rayDir, maxRayDistance);
         if (bvhRayResult.hitFound) {
             float physXDistance = glm::distance(physxRayResult.hitPosition, rayOrigin);
             float bvhDistance = glm::distance(bvhRayResult.hitPosition, rayOrigin);
@@ -65,7 +65,7 @@ namespace Editor {
         }
 
         if (GetHoveredObjectType() == ObjectType::WALL_SEGMENT) {
-            Wall* wall = World::GetWallByWallSegmentObjectId(GetHoveredObjectId());
+            Wall* wall = LegacyWorld::GetWallByWallSegmentObjectId(GetHoveredObjectId());
             if (wall) {
                 SetHoveredObjectType(ObjectType::WALL);
                 SetHoveredObjectId(wall->GetObjectId());
@@ -103,7 +103,7 @@ namespace Editor {
         }
 
         if (GetSelectedObjectType() == ObjectType::WALL) {
-            if (Wall* wall = World::GetWallByObjectId(GetSelectedObjectId())) {
+            if (Wall* wall = LegacyWorld::GetWallByObjectId(GetSelectedObjectId())) {
 
                 wall->DrawSegmentVertices(OUTLINE_COLOR);
                 wall->DrawSegmentLines(OUTLINE_COLOR);
@@ -146,7 +146,7 @@ namespace Editor {
 
 
         // HACKKK
-        if (HousePlane* plane = World::GetHousePlaneByObjectId(GetSelectedObjectId())) {
+        if (HousePlane* plane = LegacyWorld::GetHousePlaneByObjectId(GetSelectedObjectId())) {
 
             plane->DrawEdges(OUTLINE_COLOR);
             plane->DrawVertices(OUTLINE_COLOR);
@@ -192,40 +192,40 @@ namespace Editor {
             SetSelectedObjectType(GetHoveredObjectType());
             SetSelectedObjectId(GetHoveredObjectId());
 
-            Gizmo::SetSourceObjectOffeset(World::GetGizmoOffest(GetSelectedObjectId()));
+            Gizmo::SetSourceObjectOffeset(LegacyWorld::GetGizmoOffest(GetSelectedObjectId()));
 
-            if (GenericObject* genericObject = World::GetGenericObjectById(GetSelectedObjectId())) {
+            if (GenericObject* genericObject = LegacyWorld::GetGenericObjectById(GetSelectedObjectId())) {
                 Gizmo::SetPosition(genericObject->GetPosition());
                 Gizmo::SetRotation(genericObject->GetRotation());
             }
 
-            if (Door* door = World::GetDoorByObjectId(GetSelectedObjectId())) {
+            if (Door* door = LegacyWorld::GetDoorByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(door->GetPosition());
                 Gizmo::SetRotation(door->GetRotation());
             }
 
-            if (Piano* piano = World::GetPianoByObjectId(GetSelectedObjectId())) {
+            if (Piano* piano = LegacyWorld::GetPianoByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(piano->GetPosition());
                 Gizmo::SetRotation(piano->GetPosition());
             }
 
-            if (PickUp* pickup = World::GetPickUpByObjectId(GetSelectedObjectId())) {
+            if (PickUp* pickup = LegacyWorld::GetPickUpByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(pickup->GetPosition());
                 Gizmo::SetRotation(pickup->GetRotation());
             }
 
-            if (Fireplace* fireplace = World::GetFireplaceById(GetSelectedObjectId())) {
+            if (Fireplace* fireplace = LegacyWorld::GetFireplaceById(GetSelectedObjectId())) {
                 Gizmo::SetPosition(fireplace->GetPosition());
                 Gizmo::SetRotation(fireplace->GetRotation());
             }
 
-            if (Staircase* staircase = World::GetStaircaseByObjectId(GetSelectedObjectId())) {
+            if (Staircase* staircase = LegacyWorld::GetStaircaseByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(staircase->GetPosition());
                 Gizmo::SetRotation(staircase->GetRotation());
             }
 
             if (GetSelectedObjectType() == ObjectType::HOUSE_PLANE) {
-                HousePlane* plane = World::GetHousePlaneByObjectId(GetSelectedObjectId());
+                HousePlane* plane = LegacyWorld::GetHousePlaneByObjectId(GetSelectedObjectId());
                 if (plane) {
                     // is this IF neccesssary? write safer less confusing logic!!!
                     if (GetEditorSelectionMode() == EditorSelectionMode::OBJECT) {
@@ -234,24 +234,24 @@ namespace Editor {
                 }
             }
 
-            if (Ladder* ladder = World::GetLadderByObjectId(GetSelectedObjectId())) {
+            if (Ladder* ladder = LegacyWorld::GetLadderByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(ladder->GetPosition());
                 Gizmo::SetRotation(ladder->GetRotation());
             }
 
-            if (Light* light = World::GetLightByObjectId(GetSelectedObjectId())) {
+            if (Light* light = LegacyWorld::GetLightByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(light->GetPosition());
             }
 
             if (GetSelectedObjectType() == ObjectType::PICTURE_FRAME) {
-                PictureFrame* pictureFrame = World::GetPictureFrameByObjectId(GetSelectedObjectId());
+                PictureFrame* pictureFrame = LegacyWorld::GetPictureFrameByObjectId(GetSelectedObjectId());
                 if (pictureFrame) {
                     Gizmo::SetPosition(pictureFrame->GetPosition());
                 }
             }
 
             if (GetSelectedObjectType() == ObjectType::WALL) {
-                if (Wall* wall = World::GetWallByObjectId(GetSelectedObjectId())) {
+                if (Wall* wall = LegacyWorld::GetWallByObjectId(GetSelectedObjectId())) {
 
                     // is this IF neccesssary? write safer less confusing logic!!!
                     if (GetEditorSelectionMode() == EditorSelectionMode::OBJECT) {
@@ -261,14 +261,14 @@ namespace Editor {
             }
 
             if (GetSelectedObjectType() == ObjectType::WINDOW) {
-                Window* window = World::GetWindowByObjectId(GetSelectedObjectId());
+                Window* window = LegacyWorld::GetWindowByObjectId(GetSelectedObjectId());
                 if (window) {
                     Gizmo::SetPosition(window->GetPosition());
                 }
             }
 
             //if (GetSelectedObjectType() == ObjectType::TREE) {
-            //    Tree* tree = World::GetTreeByObjectId(GetSelectedObjectId());
+            //    Tree* tree = LegacyWorld::GetTreeByObjectId(GetSelectedObjectId());
             //    if (tree) {
             //        Gizmo::SetPosition(tree->GetPosition());
             //    }
@@ -284,7 +284,7 @@ namespace Editor {
         if (GetEditorState() == EditorState::GIZMO_TRANSLATING) {
 
             if (GetEditorSelectionMode() == EditorSelectionMode::OBJECT) {
-                World::SetObjectPosition(GetSelectedObjectId(), Gizmo::GetPosition());
+                LegacyWorld::SetObjectPosition(GetSelectedObjectId(), Gizmo::GetPosition());
             }
             else if (GetEditorSelectionMode() == EditorSelectionMode::VERTEX) {
 
@@ -296,9 +296,9 @@ namespace Editor {
                 // HACK
                 // HACK
                 if (GetSelectedObjectType() == ObjectType::WALL) {
-                    if (Wall* wall = World::GetWallByObjectId(GetSelectedObjectId())) {
+                    if (Wall* wall = LegacyWorld::GetWallByObjectId(GetSelectedObjectId())) {
                         if (wall->UpdatePointPosition(g_selectedVertexIndex, Gizmo::GetPosition())) {
-                            World::RecreateAllHouseGeometry(); // this could be slow???????????????????????????????
+                            LegacyWorld::RecreateAllHouseGeometry(); // this could be slow???????????????????????????????
                         }
                     }
                 }
@@ -311,7 +311,7 @@ namespace Editor {
                 // HACK
                 // HACK
                 if (GetSelectedObjectType() == ObjectType::HOUSE_PLANE) {
-                    if (HousePlane* plane = World::GetHousePlaneByObjectId(GetSelectedObjectId())) {
+                    if (HousePlane* plane = LegacyWorld::GetHousePlaneByObjectId(GetSelectedObjectId())) {
 
                         HousePlaneCreateInfo& createInfo = plane->GetCreateInfo();
 
@@ -328,7 +328,7 @@ namespace Editor {
                             createInfo.p3 = Gizmo::GetPosition();
                         }
                         plane->UpdateVertexDataFromCreateInfo();
-                        World::RecreateAllHouseGeometry(); // this could be slow???????????????????????????????
+                        LegacyWorld::RecreateAllHouseGeometry(); // this could be slow???????????????????????????????
                     }
                 }
             }
@@ -337,7 +337,7 @@ namespace Editor {
 
         }
         if (GetEditorState() == EditorState::GIZMO_ROTATING) {
-            World::SetObjectRotation(GetSelectedObjectId(), Gizmo::GetRotation());
+            LegacyWorld::SetObjectRotation(GetSelectedObjectId(), Gizmo::GetRotation());
         }
 
     }

@@ -55,8 +55,8 @@ int main() {
     // Program loop
     while (Hell::BackEnd::WindowIsOpen()) {
 
-        Unloved::UpdateSubSystems();
         Hell::BackEnd::BeginFrame();
+        Unloved::UpdateSubSystems();
         Unloved::BeginFrame();
 
         // Render loading screen

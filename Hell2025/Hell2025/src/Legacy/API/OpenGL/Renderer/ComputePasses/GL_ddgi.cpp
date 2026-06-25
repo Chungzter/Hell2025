@@ -5,7 +5,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "GlobalIllumination/GlobalIllumination.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Util/Util.h"
 
 #include <Game/Constants.h>
@@ -87,15 +87,15 @@ namespace OpenGLRenderer {
     //void RenderSceneBvhTris(DDGIVolume& ddgiVolume);
 
     void UpdateGlobalIllumintation() {
-        if (World::GetDDGIVolumes().empty()) return;
+        if (LegacyWorld::GetDDGIVolumes().empty()) return;
 
         uint64_t id = 0;
-        for (DDGIVolume& volume : World::GetDDGIVolumes()) {
+        for (DDGIVolume& volume : LegacyWorld::GetDDGIVolumes()) {
             id = volume.GetId();
             break;
         }
 
-        DDGIVolume& ddgiVolume = *World::GetDDGIVolumeByObjectId(id);
+        DDGIVolume& ddgiVolume = *LegacyWorld::GetDDGIVolumeByObjectId(id);
         const PointCloud& pointCloud = ddgiVolume.GetPointClound();
 
         if (ddgiVolume.PointCloudNeedsGPUUpload()) {
@@ -121,7 +121,7 @@ namespace OpenGLRenderer {
         const std::vector<BVHTriangle>& triangles = sceneBvh->m_triangles;
 
         const DDGIVolumeGPU ddgiVolumeGPU = ddgiVolume.GetGPUData();
-        const std::vector<GPUAABB>& dirtyDoorABBBs = World::GetDirtyDoorAABBS();
+        const std::vector<GPUAABB>& dirtyDoorABBBs = LegacyWorld::GetDirtyDoorAABBS();
 
         // BVH data
         UpdateSSBO("SceneBvh", sceneNodes.size() * sizeof(BvhNode), sceneNodes.data());
@@ -196,7 +196,7 @@ namespace OpenGLRenderer {
 
         BindShader("ProbeStateUpdate");
 
-        SetUniformInt("u_dirtyDoorAABBCount", (int)World::GetDirtyDoorAABBS().size());
+        SetUniformInt("u_dirtyDoorAABBCount", (int)LegacyWorld::GetDirtyDoorAABBS().size());
         SetUniformFloat("u_time", g_time); // Hack to prevent colorful probe glitch at start
 
         DispatchCompute((ddgiVolume.GetTotalProbeCount() + 63) / 64, 1, 1);
@@ -207,7 +207,7 @@ namespace OpenGLRenderer {
 
         OpenGLShader* shader = GetShaderOLD("PointCloudLighting");
         shader->Bind();
-        shader->SetInt("u_lightCount", World::GetLightCount());
+        shader->SetInt("u_lightCount", LegacyWorld::GetLightCount());
 
         BindSSBO(4, "Lights");
         BindSSBO(5, "LightAABBs");

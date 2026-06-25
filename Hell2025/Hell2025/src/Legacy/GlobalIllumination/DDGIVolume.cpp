@@ -1,7 +1,7 @@
 #include "DDGIVolume.h"
 
 #include "Debug/DebugDraw.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Hell/BVH/BVH.h"
 #include "Hell/Logging.h"
@@ -75,7 +75,7 @@ void DDGIVolume::CreateRaytracingData() {
 void DDGIVolume::CreateTriangleData() {
     m_triangles.clear();
     std::vector<HouseOccluderTriangle> houseOccluderTriangles;
-    World::CreateHouseOccluderTriangles(m_boundsMin, m_boundsMax, houseOccluderTriangles);
+    LegacyWorld::CreateHouseOccluderTriangles(m_boundsMin, m_boundsMax, houseOccluderTriangles);
     m_triangles.reserve(houseOccluderTriangles.size());
 
     for (const HouseOccluderTriangle& sourceTriangle : houseOccluderTriangles) {
@@ -125,7 +125,7 @@ void DDGIVolume::CreateHouseBvh() {
 
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
-    World::CreateHouseOccluderGeometry(m_boundsMin, m_boundsMax, vertices, indices);
+    LegacyWorld::CreateHouseOccluderGeometry(m_boundsMin, m_boundsMax, vertices, indices);
 
     if (vertices.empty() || indices.empty()) {
         return;
@@ -282,7 +282,7 @@ void DDGIVolume::UpdateSceneBvh() {
     instance.worldAabbCenter = (instance.worldAabbBoundsMin + instance.worldAabbBoundsMax) * 0.5f;
 
     // Add all the doors
-    for (Door& door : World::GetDoors()) {
+    for (Door& door : LegacyWorld::GetDoors()) {
         // Bit of a hack but get the hinges matrix, then zero out the y translation to match the doors main model matrix
         MeshNode* meshNode = door.GetMeshNodes().GetMeshNodeByMeshName("Door_Hinges");
         glm::mat4 worldMatrix = meshNode->worldMatrix;

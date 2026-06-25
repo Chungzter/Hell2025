@@ -2,7 +2,7 @@
 #include "Bible/Bible.h"
 #include "Renderer/Renderer.h"
 #include "Util/Util.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 Fireplace::Fireplace(uint64_t id, const FireplaceCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_id = id;
@@ -139,7 +139,7 @@ void Fireplace::UpdateWorldMatrix() {
 
     // Remove the old light if there was one
     if (m_lightId != 0) {
-        World::RemoveObject(m_lightId);
+        LegacyWorld::RemoveObject(m_lightId);
     }
 
     LightCreateInfo lightCreateInfo;
@@ -148,9 +148,9 @@ void Fireplace::UpdateWorldMatrix() {
     lightCreateInfo.saveToFile = false;
     lightCreateInfo.radius = 2.75f;
 
-    m_lightId = World::AddLight(lightCreateInfo, SpawnOffset());
+    m_lightId = LegacyWorld::AddLight(lightCreateInfo, SpawnOffset());
 
-    if (Light* light = World::GetLightByObjectId(m_lightId)) {
+    if (Light* light = LegacyWorld::GetLightByObjectId(m_lightId)) {
         light->m_doFlicker = true;
     }
 }
@@ -223,5 +223,5 @@ void Fireplace::Update(float deltaTime) {
 void Fireplace::CleanUp() {
     m_meshNodes.CleanUp();
 
-    World::RemoveObject(m_lightId);
+    LegacyWorld::RemoveObject(m_lightId);
 }

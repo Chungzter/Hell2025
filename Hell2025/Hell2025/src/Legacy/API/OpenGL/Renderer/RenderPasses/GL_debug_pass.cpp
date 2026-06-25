@@ -4,7 +4,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Physics/Physics.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Debug/DebugDraw.h"
 #include "Hell/ResourceManagement/ResourceManager.h"

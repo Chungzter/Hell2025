@@ -16,12 +16,16 @@
 #include "Integration/SDL.h"
 
 #include "Hell/Audio.h"
+#include "Hell/Audio/Synth.h"
 #include "Hell/Input.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/ResourceManagement/TextureUploader.h"
+#include "Hell/Time.h"
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
 namespace InputMulti = Hell::InputMulti;
+namespace Synth = Hell::Synth;
+namespace Time = Hell::Time;
 
 #define NOMINMAX
 #ifdef _WIN32
@@ -66,7 +70,9 @@ namespace Hell::BackEnd {
         }
 
         ResourceManager::Init();
+        Time::Init();
         Audio::Init();
+        Synth::Init();
         Input::Init(GetWindowPointer());
         InputMulti::Init();
 
@@ -75,10 +81,12 @@ namespace Hell::BackEnd {
     }
 
     void BeginFrame() {
+        Time::Update();
         GLFW::BeginFrame(g_api);
         Input::Update();
         InputMulti::Update();
         Audio::Update();
+        Synth::Update(Time::RawDeltaTime());
 
         if (!WindowHasFocus()) {
             InputMulti::ResetState();
@@ -99,6 +107,7 @@ namespace Hell::BackEnd {
     }
 
     void CleanUp() {
+        Synth::CleanUp();
         TextureUploader::CleanUp();
         ResourceManager::CleanUp();
 

@@ -3,7 +3,7 @@
 #include "Core/GameOLD.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
@@ -54,7 +54,7 @@ namespace OpenGLRenderer {
         static uint32_t meshId7 = getFirstMeshId("blood_mesh7");
         static uint32_t meshId9 = getFirstMeshId("blood_mesh9");
 
-        std::vector<VolumetricBloodSplatter>& volumetricBloodSplatters = World::GetVolumetricBloodSplatters();
+        std::vector<VolumetricBloodSplatter>& volumetricBloodSplatters = LegacyWorld::GetVolumetricBloodSplatters();
 
         static std::vector<RenderItem> renderItems;
         renderItems.clear();

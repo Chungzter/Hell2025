@@ -1,6 +1,6 @@
 #include "../GL_renderer.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 namespace OpenGLRenderer {
     std::vector<GPUChristmasLight> g_gpuLights;
 
@@ -35,7 +35,7 @@ namespace OpenGLRenderer {
         if (!shader) return;
 
         shader->Bind();
-        shader->SetInt("u_lightCount", World::GetLights().size());
+        shader->SetInt("u_lightCount", LegacyWorld::GetLights().size());
         shader->SetInt("u_tileXCount", GetTileCountX());
         shader->SetInt("u_tileYCount", GetTileCountY());
 
@@ -55,7 +55,7 @@ namespace OpenGLRenderer {
         g_gpuLights.clear();
 
         // Gather all the Christmas lights from ALL the ChristmasLightSets
-        Hell::SlotMap<ChristmasLightSet>& christmasLightSets = World::GetChristmasLightSets();
+        Hell::SlotMap<ChristmasLightSet>& christmasLightSets = LegacyWorld::GetChristmasLightSets();
 
         for (ChristmasLightSet& christmasLightSet : christmasLightSets) {
             const std::vector<GPUChristmasLight>& gpuLights = christmasLightSet.GetGPUChristmasLights();
@@ -94,7 +94,7 @@ namespace OpenGLRenderer {
         if (!shader) return;
 
         shader->Bind();
-        shader->SetInt("u_decalCount", World::GetScreenSpaceBloodDecals().size());
+        shader->SetInt("u_decalCount", LegacyWorld::GetScreenSpaceBloodDecals().size());
         shader->SetInt("u_tileXCount", GetTileCountX());
         shader->SetInt("u_tileYCount", GetTileCountY());
 
@@ -107,7 +107,7 @@ namespace OpenGLRenderer {
         glDispatchCompute(GetTileCountX(), GetTileCountY(), 1);
 
         //if (Input::KeyPressed(HELL_KEY_SPACE)) {
-        //    std::cout << "Blood count: " << World::GetScreenSpaceBloodDecals().size() << "\n";
+        //    std::cout << "Blood count: " << LegacyWorld::GetScreenSpaceBloodDecals().size() << "\n";
         //}
     }
 }

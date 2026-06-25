@@ -13,7 +13,7 @@ namespace Audio = Hell::Audio;
 
 
 // Get me out of here
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 // Get me out of here
@@ -65,8 +65,8 @@ namespace Editor {
             // Object deletion
             if (Input::KeyPressed(HELL_KEY_BACKSPACE)) {
                 if (GetSelectedObjectType() != ObjectType::NO_TYPE) {
-                    World::RemoveObject(GetSelectedObjectId());
-                    World::RecreateAllHouseGeometry();
+                    LegacyWorld::RemoveObject(GetSelectedObjectId());
+                    LegacyWorld::RecreateAllHouseGeometry();
                     Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                     UnselectAnyObject();
                 }

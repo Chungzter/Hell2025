@@ -14,7 +14,7 @@
 #include "Util/Util.h"
 #include "Ocean/Ocean.h"
 
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 
 struct GrassVertex {
@@ -187,14 +187,14 @@ namespace OpenGLRenderer {
             if (Editor::IsOpen()) {
                 xBegin = 0;
                 zBegin = 0;
-                xEnd = World::GetChunkCountX();
-                zEnd = World::GetChunkCountZ();
+                xEnd = LegacyWorld::GetChunkCountX();
+                zEnd = LegacyWorld::GetChunkCountZ();
             }
 
             xBegin = std::max(xBegin, 0);
             zBegin = std::max(zBegin, 0);
-            xEnd = std::min(xEnd, (int32_t)World::GetChunkCountX());
-            zEnd = std::min(zEnd, (int32_t)World::GetChunkCountZ());
+            xEnd = std::min(xEnd, (int32_t)LegacyWorld::GetChunkCountX());
+            zEnd = std::min(zEnd, (int32_t)LegacyWorld::GetChunkCountZ());
 
             std::vector<Hell::vecXZ> chunkOffsets;
             AABB chunkAABB;
@@ -206,7 +206,7 @@ namespace OpenGLRenderer {
                 for (int z = zBegin; z < zEnd; z++) {
 
                     // Skip chunks that don't exist
-                    const HeightMapChunk* chunk = World::GetChunk(x, z);
+                    const HeightMapChunk* chunk = LegacyWorld::GetChunk(x, z);
                     if (!chunk) continue;
 
                     chunkAABB = AABB(chunk->aabbMin, chunk->aabbMax);
@@ -231,7 +231,7 @@ namespace OpenGLRenderer {
             }
             */
 
-            for (HeightMapChunk& chunk : World::GetHeightMapChunks()) {
+            for (HeightMapChunk& chunk : LegacyWorld::GetHeightMapChunks()) {
                 chunkAABB = AABB(chunk.aabbMin, chunk.aabbMax);
 
                 // Check if within threshold to camera

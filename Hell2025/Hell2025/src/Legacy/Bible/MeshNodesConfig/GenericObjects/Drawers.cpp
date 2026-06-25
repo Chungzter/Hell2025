@@ -227,6 +227,6 @@ namespace Bible {
         //pickUpCreateInfo.name = "SPAS";
         //pickUpCreateInfo.parentLocalMeshNodeIndex = meshNodeIndex;
         //pickUpCreateInfo.position = 
-        //World::Create
+        //LegacyWorld::Create
     }
 }

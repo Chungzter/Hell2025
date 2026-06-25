@@ -18,7 +18,7 @@
 namespace Input = Hell::Input;
 
 
-namespace World {
+namespace LegacyWorld {
 
     void LazyDebugSpawns();
     void CalculateGPULights();
@@ -112,14 +112,14 @@ namespace World {
         if (Input::KeyPressed(HELL_KEY_NUMPAD_1)) {
             AnimatedGameObject* ratKidAO = GetRadKidAO();
             ratKidAO->SetAnimationModeToBindPose();
-            for (Light& light : World::GetLights()) {
+            for (Light& light : LegacyWorld::GetLights()) {
                 light.ForceDirty();
             }
         }
         if (Input::KeyPressed(HELL_KEY_NUMPAD_2)) {
             AnimatedGameObject* ratKidAO = GetRadKidAO();
             ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle3", 1.0f);
-            for (Light& light : World::GetLights()) {
+            for (Light& light : LegacyWorld::GetLights()) {
                 light.ForceDirty();
             }
         }
@@ -136,7 +136,7 @@ namespace World {
             else {
                 ratKidAO->SetPosition(glm::vec3(35.6f, 31.0f, 36.83f));
             }
-            for (Light& light : World::GetLights()) {
+            for (Light& light : LegacyWorld::GetLights()) {
                 light.ForceDirty();
             }
         }
@@ -453,9 +453,9 @@ namespace World {
         std::vector<Transform>& transforms = GetDoorAndWindowCubeTransforms();
 
         transforms.clear();
-        transforms.reserve(World::GetDoors().size() + GetWindows().size());
+        transforms.reserve(LegacyWorld::GetDoors().size() + GetWindows().size());
 
-        for (Door& door : World::GetDoors()) {
+        for (Door& door : LegacyWorld::GetDoors()) {
             Transform& transform = transforms.emplace_back();
             transform.position = door.GetPosition();
             transform.position.y += DOOR_HEIGHT / 2;

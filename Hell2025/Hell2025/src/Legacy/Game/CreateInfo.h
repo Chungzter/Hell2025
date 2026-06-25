@@ -209,6 +209,7 @@ struct HousePlaneCreateInfo {
 struct PianoCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
+    std::string soundFontName = UNDEFINED_STRING;
 };
 
 struct WallCreateInfo {

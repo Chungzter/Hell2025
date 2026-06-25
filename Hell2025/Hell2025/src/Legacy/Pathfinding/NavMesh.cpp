@@ -8,7 +8,7 @@
 #include "Core/GameOLD.h"
 #include "Debug/DebugDraw.h"
 #include "Types/Renderer/MeshNodes.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "clipper2/clipper.h"
 #include "earcut/earcut.hpp"
 #include "Timer.hpp"
@@ -192,7 +192,7 @@ namespace NavMeshManager {
         }
 
         // Gather floors
-        for (HousePlane& housePlane : World::GetHousePlanes()) {
+        for (HousePlane& housePlane : LegacyWorld::GetHousePlanes()) {
             if (housePlane.GetType() != HousePlaneType::FLOOR) continue;
 
             // Use y height as key
@@ -206,19 +206,19 @@ namespace NavMeshManager {
         }
 
         // Gather obstacles
-        for (Piano& piano : World::GetPianos()) {
+        for (Piano& piano : LegacyWorld::GetPianos()) {
             for (const MeshNode& meshNode : piano.GetMeshNodes().GetNodes()) {
                 AddMeshNodeToPath(meshNode, &LevelInfo::staticObstaclePaths);
             }
         }
-        for (Fireplace& fireplace : World::GetFireplaces()) {
+        for (Fireplace& fireplace : LegacyWorld::GetFireplaces()) {
             for (const MeshNode& meshNode : fireplace.GetMeshNodes().GetNodes()) {
                 if (meshNode.addToNavMesh) {
                     AddMeshNodeToPath(meshNode, &LevelInfo::staticObstaclePaths);
                 }
             }
         }
-        for (GenericObject& genericObject: World::GetGenericObjects()) {
+        for (GenericObject& genericObject: LegacyWorld::GetGenericObjects()) {
             for (const MeshNode& meshNode : genericObject.GetMeshNodes().GetNodes()) {
                 if (meshNode.addToNavMesh) {
                     AddMeshNodeToPath(meshNode, &LevelInfo::staticObstaclePaths);
@@ -256,7 +256,7 @@ namespace NavMeshManager {
         }
 
         // Cut doors out of the nav mesh
-        for (Door& door : World::GetDoors()) {
+        for (Door& door : LegacyWorld::GetDoors()) {
             for (const MeshNode& meshNode : door.GetMeshNodes().GetNodes()) {
                 if (meshNode.addToNavMesh) {
                     AddMeshNodeToPath(meshNode, &LevelInfo::dynamicObstaclePaths);
@@ -1051,8 +1051,8 @@ namespace NavMeshManager {
         //static bool runOnce = true;
         //if (runOnce) {
         //    runOnce = false;
-        //    if (World::GetDobermanns().size()) {
-        //        g_destination = World::GetDobermanns()[0].GetPosition();
+        //    if (LegacyWorld::GetDobermanns().size()) {
+        //        g_destination = LegacyWorld::GetDobermanns()[0].GetPosition();
         //    }
         //}
         //

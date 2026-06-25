@@ -2,7 +2,6 @@
 
 #include "API/OpenGL/Types/GL_texture.h"
 #include "API/Vulkan/Types/VK_texture.h"
-#include "Common/LoadingState.h"
 #include "Hell/Common.h"
 #include "Hell/File.h"
 #include "Hell/Math/GLM.h"

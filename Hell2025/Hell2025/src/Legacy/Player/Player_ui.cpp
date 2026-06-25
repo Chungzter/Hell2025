@@ -6,7 +6,7 @@
 #include "UI/TextBlitter.h"
 #include "UI/UiBackend.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include "Game/UniqueID.h"
 
@@ -212,8 +212,8 @@ void Player::UpdateUI(float deltaTime) {
 
             // Kangaroos
             if (false) {
-                if (World::GetKangaroos().size()) {
-                    Kangaroo& kangaroo = World::GetKangaroos()[0];
+                if (LegacyWorld::GetKangaroos().size()) {
+                    Kangaroo& kangaroo = LegacyWorld::GetKangaroos()[0];
                     text += kangaroo.GetDebugInfoString();
                 }
             }
@@ -281,7 +281,7 @@ void Player::UpdateUI(float deltaTime) {
 
             // Lights
             if (false) {
-                for (Light& Light : World::GetLights()) {
+                for (Light& Light : LegacyWorld::GetLights()) {
                     text += "Light: " + Util::BoolToString(Light.IsDirtyForShadowMaps()) + "\n";
                 }
             }
@@ -295,7 +295,7 @@ void Player::UpdateUI(float deltaTime) {
 
             // Shark
             if (false) {
-                for (Shark& shark : World::GetSharks()) {
+                for (Shark& shark : LegacyWorld::GetSharks()) {
                     text += shark.GetDebugInfoAsString();
                 }
             }
@@ -314,7 +314,7 @@ void Player::UpdateUI(float deltaTime) {
                 text += "\nBVH ray hit: " + Util::BoolToString(m_bvhRayResult.hitFound) + "\n";
 
                 if (m_bvhRayResult.hitFound) {
-                    MeshNode* meshNode = World::GetMeshNodeByObjectIdAndLocalNodeIndex(m_bvhRayResult.objectId, m_bvhRayResult.localMeshNodeIndex);
+                    MeshNode* meshNode = LegacyWorld::GetMeshNodeByObjectIdAndLocalNodeIndex(m_bvhRayResult.objectId, m_bvhRayResult.localMeshNodeIndex);
 
                     uint64_t hitId = m_bvhRayResult.objectId;
                     ObjectType hitType = UniqueID::GetType(hitId);

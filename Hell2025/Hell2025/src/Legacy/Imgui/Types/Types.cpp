@@ -5,7 +5,7 @@
 #include "Util/Util.h"
 #include <Imgui/imgui.h>
 #include "Editor/Editor.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 namespace EditorUI {
 
@@ -672,7 +672,7 @@ namespace EditorUI {
                 ImGui::Indent(objectIndent);
 
                 for (uint64_t objectId : objectIds) {
-                    const std::string& editorName = World::GetObjectEditorName(objectId);
+                    const std::string& editorName = LegacyWorld::GetObjectEditorName(objectId);
                     bool isSelected = (m_selectedObjectId == objectId);
 
                     std::string text = editorName;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 enum class API {
     OPENGL,
     VULKAN,
@@ -52,4 +54,20 @@ enum class CameraView {
     TOP,
     BOTTOM,
     UNDEFINED
+};
+
+enum class LoadState : uint8_t {
+    NOT_REQUESTED,
+    QUEUED,
+    LOADING,
+    LOADED,
+    FAILED
+};
+
+enum class UploadState : uint8_t {
+    NOT_REQUESTED,
+    QUEUED,
+    UPLOADING,
+    UPLOADED,
+    FAILED
 };

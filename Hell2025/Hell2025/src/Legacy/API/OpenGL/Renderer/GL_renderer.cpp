@@ -30,7 +30,7 @@ namespace Audio = Hell::Audio;
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include <Game/GPUTypes.h>
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Renderer/Renderer.h"
 #include <unordered_map>
 #include "Hell/Input.h"
@@ -587,7 +587,7 @@ namespace OpenGLRenderer {
         OceanHeightReadback();
 
         OpenGLFrameBuffer& hairFrameBuffer = g_frameBuffers["Hair"];
-        DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
+        DDGIVolume& ddgiVolume = LegacyWorld::GetTestDDGIVolume();
 
         glDisable(GL_DITHER);
 

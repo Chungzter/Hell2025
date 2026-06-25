@@ -2,7 +2,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/Renderer.h"
 #include "Util/Util.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 
 TrimSet::TrimSet(uint64_t id, const TrimSetCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
@@ -33,7 +33,7 @@ void TrimSet::CreateRenderItems() {
 
         // WARNING! This only works for one fireplace, because future ray casts overwrite any previous one
         AABBRayResult rayResult;
-        for (Fireplace& fireplace : World::GetFireplaces()) {
+        for (Fireplace& fireplace : LegacyWorld::GetFireplaces()) {
             rayResult = Util::RayIntersectAABB(rayOrigin, rayDir, maxDistance, fireplace.GetWallsAABB(), fireplace.GetWorldMatrix());
 
             // Hit fireplace?

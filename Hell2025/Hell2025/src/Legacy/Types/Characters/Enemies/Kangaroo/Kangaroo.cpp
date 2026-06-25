@@ -1,7 +1,7 @@
 #include "Kangaroo.h"
 #include "Physics/Physics.h"
 #include "Pathfinding/AStarMap.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Core/GameOLD.h"
 #include "Renderer/Renderer.h"
 #include "Hell/Logging.h"
@@ -15,7 +15,7 @@ void Kangaroo::Init(KangarooCreateInfo createInfo) {
     Respawn();
     
     if (m_animatedGameObjectId == 0) {
-        m_animatedGameObjectId = World::CreateAnimatedGameObject();
+        m_animatedGameObjectId = LegacyWorld::CreateAnimatedGameObject();
         AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
         animatedGameObject->SetSkinnedModel("Kangaroo");
         animatedGameObject->SetRotationY(HELL_PI);
@@ -78,7 +78,7 @@ void Kangaroo::Respawn() {
 }
 
 AnimatedGameObject* Kangaroo::GetAnimatedGameObject(){
-    return World::GetAnimatedGameObjectByObjectId(m_animatedGameObjectId);
+    return LegacyWorld::GetAnimatedGameObjectByObjectId(m_animatedGameObjectId);
 }
 
 void Kangaroo::Kill() {

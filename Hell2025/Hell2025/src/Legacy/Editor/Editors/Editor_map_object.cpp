@@ -8,7 +8,7 @@ namespace Audio = Hell::Audio;
 #include "Editor/Gizmo.h"
 #include "Managers/MapManager.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Imgui/ImguiBackEnd.h"
 #include <ImGui/imgui.h>
@@ -45,10 +45,10 @@ namespace Editor {
         mapInstanceCreateInfo.mapName = Editor::GetEditorMapName();
         mapInstanceCreateInfo.spawnOffsetChunkX = 0;
         mapInstanceCreateInfo.spawnOffsetChunkZ = 0;
-        World::ClearAllObjects();
-        World::LoadMapInstancesHeightMapData({ mapInstanceCreateInfo });
-        World::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
-        World::EnableOcean();
+        LegacyWorld::ClearAllObjects();
+        LegacyWorld::LoadMapInstancesHeightMapData({ mapInstanceCreateInfo });
+        LegacyWorld::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
+        LegacyWorld::EnableOcean();
 
         // Init UI
         InitFileMenuImGuiElements();

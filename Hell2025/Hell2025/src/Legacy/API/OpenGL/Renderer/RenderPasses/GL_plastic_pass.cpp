@@ -6,7 +6,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Modelling/Clipping.h"
 #include "Modelling/Unused/Modelling.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Ragdoll/RagdollManager.h"
 #include "Hell/Logging.h"

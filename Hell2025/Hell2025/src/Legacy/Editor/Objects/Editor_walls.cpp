@@ -2,7 +2,7 @@
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
@@ -20,7 +20,7 @@ namespace Editor {
             return;
         }
 
-        Wall* wall = World::GetWallByObjectId(GetPlacementObjectId());
+        Wall* wall = LegacyWorld::GetWallByObjectId(GetPlacementObjectId());
         if (!wall) return;
 
         std::cout << "wall point count: " << wall->GetPointCount() << "\n";
@@ -62,7 +62,7 @@ namespace Editor {
             glm::vec3 endPoint = wall->GetPointByIndex(wall->GetPointCount() -1);
             glm::vec3 newPoint = endPoint + glm::vec3(0.5f, 0.0, 0.5f);
             if (wall->AddPointToEnd(newPoint)) {
-                World::RecreateAllHouseGeometry();
+                LegacyWorld::RecreateAllHouseGeometry();
                 Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                 return;
             }
@@ -72,14 +72,14 @@ namespace Editor {
         if (Input::KeyPressed(HELL_KEY_F)) {
             Audio::PlayAudio(AUDIO_SELECT, 1.0f);
             wall->FlipFaces();
-            World::RecreateAllHouseGeometry();
+            LegacyWorld::RecreateAllHouseGeometry();
         }
 
         if (wall->GetPointCount() > 1) {
             // Move last point to mouse cursor
             int pointIndex = wall->GetPointCount() - 1;
             if (wall->UpdatePointPosition(pointIndex, rayHitPosition)) {
-                World::RecreateAllHouseGeometry();
+                LegacyWorld::RecreateAllHouseGeometry();
             }
 
             // Draw lines and points
@@ -111,8 +111,8 @@ namespace Editor {
         createInfo.ceilingTrimType = TrimType::TIMBER;
         createInfo.floorTrimType = TrimType::TIMBER;
         createInfo.useReversePointOrder = false;
-        SetPlacementObjectId(World::AddWall(createInfo));
-        World::RecreateAllHouseGeometry();
+        SetPlacementObjectId(LegacyWorld::AddWall(createInfo));
+        LegacyWorld::RecreateAllHouseGeometry();
         Audio::PlayAudio(AUDIO_SELECT, 1.0f);
         std::cout << "Beginning wall!\n";
     }

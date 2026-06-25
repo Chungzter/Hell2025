@@ -11,7 +11,7 @@
 #include "Imgui/ImguiBackEnd.h"
 #include "Util/Util.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Pathfinding/AStarMap.h"
 #include "lodepng/lodepng.h"
@@ -21,7 +21,7 @@
 #include "Physics/Physics.h"
 
 #include "Managers/MapManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Input.h"
@@ -81,8 +81,8 @@ namespace OpenGLRenderer {
         if (!shader) return;
         if (!worldFramebuffer) return;
 
-        int textureWidth = (World::GetChunkCountX() * HEIGHT_MAP_CHUNK_PIXEL_SIZE) + 1;
-        int textureHeight = (World::GetChunkCountZ() * HEIGHT_MAP_CHUNK_PIXEL_SIZE) + 1;
+        int textureWidth = (LegacyWorld::GetChunkCountX() * HEIGHT_MAP_CHUNK_PIXEL_SIZE) + 1;
+        int textureHeight = (LegacyWorld::GetChunkCountZ() * HEIGHT_MAP_CHUNK_PIXEL_SIZE) + 1;
 
         const glm::uvec2 textureSize = glm::uvec2(textureWidth, textureHeight);
 
@@ -96,7 +96,7 @@ namespace OpenGLRenderer {
 
         // Blit height maps
         shader->Bind();
-        for (MapInstance& mapInstance : World::GetMapInstances()) {
+        for (MapInstance& mapInstance : LegacyWorld::GetMapInstances()) {
             int offsetX = mapInstance.spawnOffsetChunkX * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
             int offsetZ = mapInstance.spawnOffsetChunkZ * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
             int heightMapTextureWidth = mapInstance.GetChunkCountX() * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
@@ -149,7 +149,7 @@ namespace OpenGLRenderer {
         int heightMapWidth = 256;
         int heightMapDepth = 512;
 
-        std::vector<HeightMapChunk>& chunks = World::GetHeightMapChunks();
+        std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
 
         heightMapMesh.AllocateMemory(chunks.size());
 
@@ -198,11 +198,11 @@ namespace OpenGLRenderer {
             float vertices[VERTICES_PER_CHUNK];
         };
 
-        int chunkCount = World::GetChunkCount();
+        int chunkCount = LegacyWorld::GetChunkCount();
         std::vector<ChunkReadBackData> chunkReadBackDataSet(chunkCount);
 
         // Readback height chunk data from gpu
-        std::vector<HeightMapChunk>& chunks = World::GetHeightMapChunks();
+        std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
         for (int i = 0; i < chunkCount; i++) {
             HeightMapChunk& chunk = chunks[i];
             GLint xOffset = chunk.coord.x * 32;
@@ -273,8 +273,8 @@ namespace OpenGLRenderer {
         shader->SetMat4("modelMatrix", modelMatrix);
         shader->SetMat4("inverseModelMatrix", inverseModelMatrix);
         shader->SetFloat("u_textureScaling", 1);
-        shader->SetFloat("u_worldWidth", World::GetWorldSpaceWidth());
-        shader->SetFloat("u_worldDepth", World::GetWorldSpaceDepth());
+        shader->SetFloat("u_worldWidth", LegacyWorld::GetWorldSpaceWidth());
+        shader->SetFloat("u_worldDepth", LegacyWorld::GetWorldSpaceDepth());
 
         ForceRasterizerState("GeometryPass_Default");
 
@@ -319,7 +319,7 @@ namespace OpenGLRenderer {
             int test = 0;
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
-                std::vector<HeightMapChunk>& chunks = World::GetHeightMapChunks();
+                std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
 
                 //std::cout << "chunks.size(): " << chunks.size() << "\n";
 

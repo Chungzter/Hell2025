@@ -1,5 +1,5 @@
 #include "OpenableManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include <atomic>
 #include <cstdint>
 

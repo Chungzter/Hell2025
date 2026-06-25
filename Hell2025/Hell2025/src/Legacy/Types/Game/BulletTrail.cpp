@@ -1,6 +1,6 @@
 #include "BulletTrail.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 BulletTrail::BulletTrail(uint64_t id, BulletCreateInfo& createInfo) {
     m_objectId = id;
@@ -75,7 +75,7 @@ void BulletTrail::Update(float deltaTime) {
         particle.rotation = Util::RandomFloat(0.0f, HELL_PI * 2.0f);
         particle.rotationalVelocity = Util::RandomFloat(-25.0f, 25.0f);
 
-        std::vector<BulletTrailParticle>& bulletTrailParticles = World::GetBulletTrailParticles();
+        std::vector<BulletTrailParticle>& bulletTrailParticles = LegacyWorld::GetBulletTrailParticles();
         bulletTrailParticles.emplace_back(particle);
 
         // Increment particle spacing
@@ -91,7 +91,7 @@ void BulletTrail::Update(float deltaTime) {
     BulletCreateInfo createInfo = m_createInfo;
     createInfo.origin = p1;
     createInfo.rayLength = glm::distance(p1, p2);
-    World::AddBullet(createInfo, m_objectId);
+    LegacyWorld::AddBullet(createInfo, m_objectId);
 }
 
 void BulletTrail::CleanUp() {

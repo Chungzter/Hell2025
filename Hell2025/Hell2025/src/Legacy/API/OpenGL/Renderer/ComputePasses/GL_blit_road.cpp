@@ -1,5 +1,5 @@
 #include "API/OpenGL/Renderer/GL_renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 namespace OpenGLRenderer {
 
@@ -10,11 +10,11 @@ namespace OpenGLRenderer {
         if (!roadFramebuffer) return;
         if (!shader) return;
 
-        if (World::GetRoads().empty()) return;
+        if (LegacyWorld::GetRoads().empty()) return;
 
         roadFramebuffer->ClearTexImage("RoadMask", 0.0f, 0.0f, 0.0f, 1.0f);
 
-        Road& road = World::GetRoads()[0];
+        Road& road = LegacyWorld::GetRoads()[0];
 
         std::vector<glm::vec4> controlPoints;
         for (glm::vec3 point : road.m_worldPoints) {
@@ -34,7 +34,7 @@ namespace OpenGLRenderer {
         int textureWidthInPixels = roadFramebuffer->GetWidth();
         int textureHeightInPixels = roadFramebuffer->GetHeight();
 
-        glm::vec2 u_worldSpanXZ = glm::vec2(World::GetWorldSpaceWidth(), World::GetWorldSpaceDepth());
+        glm::vec2 u_worldSpanXZ = glm::vec2(LegacyWorld::GetWorldSpaceWidth(), LegacyWorld::GetWorldSpaceDepth());
 
         float u_roadWidthInMeters = 4.3f;
         float u_roadEdgeFeatherInMeters = 0.3f;

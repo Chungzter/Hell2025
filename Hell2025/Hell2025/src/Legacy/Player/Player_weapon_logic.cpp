@@ -5,7 +5,7 @@ namespace Audio = Hell::Audio;
 #include "Bible/Bible.h"
 #include "Core/GameOLD.h"
 #include "Util.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Hell/Logging.h"
 
 // remove me
@@ -395,7 +395,7 @@ void Player::SpawnCasing() {
 
         createInfo.mass = 0.008f;
 
-        World::AddBulletCasing(createInfo);
+        LegacyWorld::AddBulletCasing(createInfo);
 
 
     }
@@ -428,7 +428,7 @@ void Player::SpawnBullet(float variance) {
         createInfo.weaponIndex = Bible::GetWeaponIndexFromWeaponName(weaponInfo->itemInfoName);
         createInfo.ownerObjectId = m_playerId;
 
-        World::AddBullet(createInfo);
+        LegacyWorld::AddBullet(createInfo);
     }
 }
 
@@ -451,7 +451,7 @@ void Player::SpawnUnderWaterBullet(float variance) {
     createInfo.weaponIndex = Bible::GetWeaponIndexFromWeaponName(weaponInfo->itemInfoName);
     createInfo.ownerObjectId = m_playerId;
 
-    World::AddBulletTrail(createInfo);
+    LegacyWorld::AddBulletTrail(createInfo);
 
 
     const std::vector<const char*> filenames = {
@@ -521,8 +521,8 @@ void Player::DropWeapons() {
                 force = glm::normalize(force);
                 force *= 200.0f;
 
-                uint64_t id = World::AddPickUp(createInfo);
-                if (PickUp* pickUp = World::GetPickUpByObjectId(id)) {
+                uint64_t id = LegacyWorld::AddPickUp(createInfo);
+                if (PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(id)) {
                     pickUp->GetMeshNodes().AddForceToPhsyics(force);
                     //std::cout << "Tried to add force to " << weaponInfo->itemInfoName << "\n";
                 }
@@ -571,7 +571,7 @@ void Player::UpdateMelleBulletWave(float deltaTime) {
             createInfo.playsPiano = false;
             createInfo.createsDecalTexturePaintedWounds = false;
 
-            World::AddBullet(createInfo);
+            LegacyWorld::AddBullet(createInfo);
             //DebugDraw::DrawLine(createInfo.origin, createInfo.origin + createInfo.direction * 0.5f, GREEN);
         }
     }

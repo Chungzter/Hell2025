@@ -2,7 +2,7 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Ocean/Ocean.h"
 #include "Physics/Physics.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Hell/Logging.h"
 
@@ -40,7 +40,7 @@ namespace AStarMap {
         }
 
         // Mark trees
-        //for (Tree& tree : World::GetTrees()) {
+        //for (Tree& tree : LegacyWorld::GetTrees()) {
         //    glm::vec3 position = tree.GetPosition();            
         //    int size = 2;
         //    glm::ivec2 treeCell = GetCellCoordsFromWorldSpacePosition(position);

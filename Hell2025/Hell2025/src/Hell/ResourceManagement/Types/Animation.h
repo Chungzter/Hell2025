@@ -1,6 +1,6 @@
 #pragma once
-#include "Common/LoadingState.h"
 
+#include "Hell/Common.h"
 #include "Hell/File.h"
 
 #include <glm/gtc/quaternion.hpp>

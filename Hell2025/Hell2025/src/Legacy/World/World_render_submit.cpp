@@ -7,7 +7,7 @@
 #include "Renderer/Renderer.h"
 
 
-namespace World {
+namespace LegacyWorld {
 
     void SubmitRenderItems() {
 

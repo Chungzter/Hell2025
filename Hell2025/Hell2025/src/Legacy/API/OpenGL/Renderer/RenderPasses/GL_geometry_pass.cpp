@@ -7,7 +7,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Modelling/Clipping.h"
 #include "Modelling/Unused/Modelling.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Ragdoll/RagdollManager.h"
 #include "Hell/Logging.h"
@@ -46,7 +46,7 @@ namespace OpenGLRenderer {
         shader->SetBool("u_flipNormalMapY", ShouldFlipNormalMapY());
         shader->SetBool("u_alphaDiscard", false);
 
-        //MeshBuffer& houseMeshBuffer = World::GetHouseMeshBuffer();
+        //MeshBuffer& houseMeshBuffer = LegacyWorld::GetHouseMeshBuffer();
         //OpenGLMeshBuffer& glHouseMeshBuffer = houseMeshBuffer.GetGLMeshBuffer();
         //glBindVertexArray(glHouseMeshBuffer.GetVAO());
 
@@ -357,7 +357,7 @@ namespace OpenGLRenderer {
                 christmasLightWireShader->SetMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 
                 // Draw Christmas light wires
-                for (ChristmasLightSet& lights : World::GetChristmasLightSets()) {
+                for (ChristmasLightSet& lights : LegacyWorld::GetChristmasLightSets()) {
                     std::vector<Wire>& wires = lights.GetWires();
                     for (Wire& wire : wires) {
                         MeshBufferOLD& meshBuffer = wire.GetMeshBuffer();
@@ -368,7 +368,7 @@ namespace OpenGLRenderer {
                 }
 
                 // Draw power pole wires
-                for (PowerPoleSet& powerPoleSet : World::GetPowerPoleSets()) {
+                for (PowerPoleSet& powerPoleSet : LegacyWorld::GetPowerPoleSets()) {
                     std::vector<Wire>& wires = powerPoleSet.GetWires();
                     for (Wire& wire : wires) {
                         MeshBufferOLD& meshBuffer = wire.GetMeshBuffer();
@@ -418,7 +418,7 @@ namespace OpenGLRenderer {
                 }
 
                 // Door debug
-                //for (Door& door : World::GetDoors()) {
+                //for (Door& door : LegacyWorld::GetDoors()) {
                 //    MeshBuffer& meshBuffer = door.m_raytracingDoorMesh;
                 //    glBindVertexArray(meshBuffer.GetGLMeshBuffer().GetVAO());
                 //
@@ -437,7 +437,7 @@ namespace OpenGLRenderer {
                 //    }
                 //}
 
-                //for (DDGIVolume& volume : World::GetDDGIVolumes()) {
+                //for (DDGIVolume& volume : LegacyWorld::GetDDGIVolumes()) {
                 //    MeshBuffer& meshBuffer = volume.m_staticMeshBuffer;
                 //    glBindVertexArray(meshBuffer.GetGLMeshBuffer().GetVAO());
                 //

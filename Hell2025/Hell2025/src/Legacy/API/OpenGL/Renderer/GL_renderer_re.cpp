@@ -3,7 +3,7 @@
 #include "Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Viewport/ViewportManager.h"
 
 #include "Game/RendereringConstants.h"
@@ -113,7 +113,7 @@ namespace OpenGLRenderer {
         ParticlePass();
 
         // DDGI Debug
-        DDGIVolume& ddgiVolume = World::GetTestDDGIVolume();
+        DDGIVolume& ddgiVolume = LegacyWorld::GetTestDDGIVolume();
         if (Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
         if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
         if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
@@ -477,7 +477,7 @@ namespace OpenGLRenderer {
 
     void OceanRE() {
         ProfilerOpenGLZoneFunction();
-        if (!World::HasOcean()) return;
+        if (!LegacyWorld::HasOcean()) return;
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 

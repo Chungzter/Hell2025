@@ -4,7 +4,7 @@
 #include "Game/UniqueID.h"
 #include "Util.h"
 
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Renderer/Renderer.h"
 
 PickUp::PickUp(uint64_t id, const PickUpCreateInfo& createInfo, const SpawnOffset& spawnOffset) {

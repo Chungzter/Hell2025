@@ -16,7 +16,7 @@ namespace Audio = Hell::Audio;
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 #include "Ocean/Ocean.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Hell/Logging.h"
 #include "Hell/Input.h"
@@ -99,26 +99,26 @@ namespace Editor {
             HouseManager::UpdateCreateInfoCollectionFromWorld(Editor::GetEditorHouseName());
 
             // Reload the single editor house
-            World::ClearAllObjects();
-            World::LoadSingleHouse(Editor::GetEditorHouseName());
+            LegacyWorld::ClearAllObjects();
+            LegacyWorld::LoadSingleHouse(Editor::GetEditorHouseName());
         }
         if (GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) {
             // Reload everything from the editor map file
             Renderer::RecalculateAllHeightMapData(false);
-            World::ClearAllObjects();
-            World::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
-            World::LoadMapInstanceHouses(Editor::GetEditorMapName(), SpawnOffset());
-            World::RecreateAllHouseGeometry();
+            LegacyWorld::ClearAllObjects();
+            LegacyWorld::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
+            LegacyWorld::LoadMapInstanceHouses(Editor::GetEditorMapName(), SpawnOffset());
+            LegacyWorld::RecreateAllHouseGeometry();
         }
         if (GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
             // Update the map file with everything in the world
             MapManager::UpdateCreateInfoCollectionFromWorld(Editor::GetEditorMapName());
 
             // Reload everything from the editor map file, except the heightmap
-            World::ClearAllObjects();
-            World::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
-            World::LoadMapInstanceHouses(Editor::GetEditorMapName(), SpawnOffset());
-            World::RecreateAllHouseGeometry();
+            LegacyWorld::ClearAllObjects();
+            LegacyWorld::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
+            LegacyWorld::LoadMapInstanceHouses(Editor::GetEditorMapName(), SpawnOffset());
+            LegacyWorld::RecreateAllHouseGeometry();
         }
 
         g_isOpen = false;
@@ -239,8 +239,8 @@ namespace Editor {
         // Draw world map perimeter and spawn points
         if (GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR || GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
             float h = 30.0f;
-            float w = World::GetWorldSpaceWidth();
-            float d = World::GetWorldSpaceDepth();
+            float w = LegacyWorld::GetWorldSpaceWidth();
+            float d = LegacyWorld::GetWorldSpaceDepth();
 
             // Draw perimeter
             glm::vec3 p0 = glm::vec3(0.0f, h, 0.0f);
@@ -264,7 +264,7 @@ namespace Editor {
             }
 
             // Draw cubes around spawn points
-            for (SpawnPoint& spawnPoint : World::GetCampaignSpawnPoints()) {
+            for (SpawnPoint& spawnPoint : LegacyWorld::GetCampaignSpawnPoints()) {
                 spawnPoint.DrawDebugCube();
             }
         }
@@ -448,8 +448,8 @@ namespace Editor {
     void SelectObject(uint64_t objectId) {
         Audio::PlayAudio(AUDIO_SELECT, 1.0f);
 
-        Gizmo::SetPosition(World::GetObjectPosition(objectId));
-        Gizmo::SetRotation(World::GetObjectRotation(objectId));
+        Gizmo::SetPosition(LegacyWorld::GetObjectPosition(objectId));
+        Gizmo::SetRotation(LegacyWorld::GetObjectRotation(objectId));
 
         ExitObjectPlacement();
         g_selectedObjectId = objectId;

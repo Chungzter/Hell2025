@@ -15,11 +15,11 @@
 #include "Physics/Physics.h"
 #include "Viewport/ViewportManager.h"
 #include "UI/UIBackEnd.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "UI/TextBlitter.h"
 #include "Util.h"
 
-#include "Audio/MidiFileManager.h"
+#include "Unloved/World/Objects/Interior/Piano/PianoPlaybackManager.h"
 #include <cstdint>
 #include <vector>
 #include <cmath>
@@ -63,11 +63,11 @@ namespace Debug {
     void UpdateDebugText() {
 
         // Midi notes override
-        if (MidiFileManager::IsPlaying()) {
-            UIBackEnd::BlitText(MidiFileManager::GetDebugTextTime(), "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
-            UIBackEnd::BlitText(MidiFileManager::GetDebugTextEvents(), "StandardFont", 250, 0, Alignment::TOP_LEFT, 2.0f);
-            UIBackEnd::BlitText(MidiFileManager::GetDebugTextVelocity(), "StandardFont", 500, 0, Alignment::TOP_LEFT, 2.0f);
-            UIBackEnd::BlitText(MidiFileManager::GetDebugTextTimeDurations(), "StandardFont", 750, 0, Alignment::TOP_LEFT, 2.0f);
+        if (Unloved::PianoPlaybackManager::IsPlaying()) {
+            UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextTime(), "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
+            UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextEvents(), "StandardFont", 250, 0, Alignment::TOP_LEFT, 2.0f);
+            UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextVelocity(), "StandardFont", 500, 0, Alignment::TOP_LEFT, 2.0f);
+            UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextTimeDurations(), "StandardFont", 750, 0, Alignment::TOP_LEFT, 2.0f);
             return;
         }
 
@@ -255,17 +255,17 @@ namespace Debug {
             if (Input::KeyPressed(HELL_KEY_LEFT)) lightIndex--;
             if (Input::KeyPressed(HELL_KEY_RIGHT)) lightIndex++;
 
-            if (lightIndex < 0) lightIndex = World::GetLightCount() - 1;
-            if (lightIndex == World::GetLightCount()) lightIndex = 0;
+            if (lightIndex < 0) lightIndex = LegacyWorld::GetLightCount() - 1;
+            if (lightIndex == LegacyWorld::GetLightCount()) lightIndex = 0;
 
-            if (Light* light = World::GetLightByIndex(lightIndex)) {
+            if (Light* light = LegacyWorld::GetLightByIndex(lightIndex)) {
                 AABB worldBounds = AABB(light->GetWorldBoundsMin(), light->GetWorldBoundsMax());
                 DebugDraw::DrawAABB(worldBounds, glm::vec4(light->GetColor(), 1.0f));
             }
         }
 
         if (g_debugRenderMode == DebugRenderMode::BONES) {
-            for (AnimatedGameObject& animatedGameObject : World::GetAnimatedGameObjects()) {
+            for (AnimatedGameObject& animatedGameObject : LegacyWorld::GetAnimatedGameObjects()) {
                 animatedGameObject.DrawBones();
             }
             for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
@@ -276,7 +276,7 @@ namespace Debug {
             }
         }
         if (g_debugRenderMode == DebugRenderMode::BONE_TANGENTS) {
-            for (AnimatedGameObject& animatedGameObject : World::GetAnimatedGameObjects()) {
+            for (AnimatedGameObject& animatedGameObject : LegacyWorld::GetAnimatedGameObjects()) {
                 //animatedGameObject.DrawBoneTangentVectors();
             }
             for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
@@ -287,13 +287,13 @@ namespace Debug {
             }
         }
         if (g_debugRenderMode == DebugRenderMode::CLIPPING_CUBES) {
-            for (ClippingCube& clippingCube : World::GetClippingCubes()) {
+            for (ClippingCube& clippingCube : LegacyWorld::GetClippingCubes()) {
                 clippingCube.DrawDebugCorners(OUTLINE_COLOR);
                 clippingCube.DrawDebugEdges(WHITE);
             }
         }
         if (g_debugRenderMode == DebugRenderMode::DECALS) {
-            for (const Decal& decal : World::GetDecals()) {
+            for (const Decal& decal : LegacyWorld::GetDecals()) {
                 DebugDraw::DrawPoint(decal.GetPosition(), OUTLINE_COLOR);
                 DebugDraw::DrawLine(decal.GetPosition(), decal.GetPosition() + decal.GetWorldNormal() * 0.05f, OUTLINE_COLOR);
             }

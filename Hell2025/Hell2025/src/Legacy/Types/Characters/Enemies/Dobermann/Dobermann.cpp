@@ -4,7 +4,7 @@
 #include "Pathfinding/NavMesh.h"
 #include "Ragdoll/RagdollManager.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Game/UniqueID.h"
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
@@ -23,7 +23,7 @@ void Dobermann::Init(DobermannCreateInfo createInfo) {
     //m_ragdollV2Id = RagdollManager::SpawnRagdoll(createInfo.position, createInfo.eulerDirection, "manikin2");
     m_ragdollV2Id = RagdollManager::SpawnRagdoll(createInfo.position, createInfo.eulerDirection, "dobermann_new"); 
 
-    g_animatedGameObjectObjectId = World::CreateAnimatedGameObject();
+    g_animatedGameObjectObjectId = LegacyWorld::CreateAnimatedGameObject();
 
     AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
     animatedGameObject->SetSkinnedModel("Dobermann");
@@ -244,7 +244,7 @@ void Dobermann::Update(float deltaTime) {
 }
 
 AnimatedGameObject* Dobermann::GetAnimatedGameObject() {
-    return World::GetAnimatedGameObjectByObjectId(g_animatedGameObjectObjectId);
+    return LegacyWorld::GetAnimatedGameObjectByObjectId(g_animatedGameObjectObjectId);
 }
 
 glm::vec3 Dobermann::GetPosition() {

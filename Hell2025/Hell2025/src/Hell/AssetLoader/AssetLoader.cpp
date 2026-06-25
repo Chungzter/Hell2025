@@ -419,6 +419,8 @@ namespace Hell::AssetLoader {
         LoadMinimumRequiredAssets();
         DiscoverAssets();
         LoadIESFiles();
+        LoadMidiFiles();
+        LoadSoundFonts();
     }
 
     void OnLoadingComplete() {
@@ -471,12 +473,6 @@ namespace Hell::AssetLoader {
             animation.SetFileInfo(fileInfo);
 
             CreateAnimationLoadJob(animation);
-        }
-
-        // IES Profiles
-        for (FileInfo& fileInfo : File::IterateDirectory("res/ies_profiles", { "ies" })) {
-            IESProfile& iesProfile = ResourceManager::CreateIESProfile(fileInfo.name);
-            iesProfile.SetFileInfo(fileInfo);
         }
 
         // Models

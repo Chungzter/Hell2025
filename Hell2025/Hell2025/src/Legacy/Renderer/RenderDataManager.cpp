@@ -22,7 +22,7 @@
 
 
 // Get me out of here
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "API/OpenGL/Renderer/GL_renderer.h"
 #include <vector>
 #include "Hell/Input.h"
@@ -556,7 +556,7 @@ namespace RenderDataManager {
             CreateDrawCommands(g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[playerIndex], g_renderItems, &flashLightFrustum, playerIndex, true);
 
             // Frustum cull the heightmap chunks
-            std::vector<HeightMapChunk>& chunks = World::GetHeightMapChunks();
+            std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
             for (int i = 0; i < chunks.size(); i++) {
                 HeightMapChunk& chunk = chunks[i];
                 if (flashLightFrustum.IntersectsAABBFast(AABB(chunk.aabbMin, chunk.aabbMax))) {
@@ -575,15 +575,15 @@ namespace RenderDataManager {
         }
 
         // Screenspace blood decals
-        std::sort(World::GetScreenSpaceBloodDecals().begin(), World::GetScreenSpaceBloodDecals().end(), [](const ScreenSpaceBloodDecal& a, const ScreenSpaceBloodDecal& b) {
+        std::sort(LegacyWorld::GetScreenSpaceBloodDecals().begin(), LegacyWorld::GetScreenSpaceBloodDecals().end(), [](const ScreenSpaceBloodDecal& a, const ScreenSpaceBloodDecal& b) {
             return a.m_type < b.m_type;
         });
 
-        int instanceCount = World::GetScreenSpaceBloodDecals().size();
+        int instanceCount = LegacyWorld::GetScreenSpaceBloodDecals().size();
         g_screenSpaceBloodDecalInstances.resize(instanceCount);
 
         for (int i = 0; i < instanceCount; i++) {
-            ScreenSpaceBloodDecal& decal = World::GetScreenSpaceBloodDecals()[i];
+            ScreenSpaceBloodDecal& decal = LegacyWorld::GetScreenSpaceBloodDecals()[i];
             g_screenSpaceBloodDecalInstances[i].modelMatrix = decal.GetModelMatrix();
             g_screenSpaceBloodDecalInstances[i].inverseModelMatrix = decal.GetInverseModelMatrix();
             g_screenSpaceBloodDecalInstances[i].type = decal.GetType();
@@ -736,7 +736,7 @@ namespace RenderDataManager {
         //std::string name = "light " + std::to_string(gpuLight.lightIndex);
         //Timer timer(name);
 
-        Light* light = World::GetLightByIndex(gpuLight.lightIndex);
+        Light* light = LegacyWorld::GetLightByIndex(gpuLight.lightIndex);
         if (!light) return;
 
         Frustum* frustum = light->GetFrustumByFaceIndex(faceIndex);
@@ -860,7 +860,7 @@ namespace RenderDataManager {
             uint64_t id = 0;
             Util::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, id);
 
-            AnimatedGameObject* animatedGameObject = World::GetAnimatedGameObjectByObjectId(id);
+            AnimatedGameObject* animatedGameObject = LegacyWorld::GetAnimatedGameObjectByObjectId(id);
             if (!animatedGameObject) continue;
 
             // Add the id if aint in the map yet
@@ -927,7 +927,7 @@ namespace RenderDataManager {
         g_combinedSkinnedRenderItems.insert(g_combinedSkinnedRenderItems.end(), g_skinnedRenderItemsHair.begin(), g_skinnedRenderItemsHair.end());
 
         // Gather all non deforming render items
-        //for (AnimatedGameObject& animatedGameObject : World::GetAnimatedGameObjects()) {
+        //for (AnimatedGameObject& animatedGameObject : LegacyWorld::GetAnimatedGameObjects()) {
 		//	if (animatedGameObject.RenderingEnabled()) {
 		//		g_skinnedNonDeformingSkinnedMeshRenderItems.insert(g_skinnedNonDeformingSkinnedMeshRenderItems.end(), animatedGameObject.GetNonDeformingRenderItems().begin(), animatedGameObject.GetNonDeformingRenderItems().end());
         //        g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent.insert(g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent.end(), animatedGameObject.GetNonDeformingRenderItemsDepthPeeledTransparent().begin(), animatedGameObject.GetNonDeformingRenderItemsDepthPeeledTransparent().end());
@@ -1154,7 +1154,7 @@ namespace RenderDataManager {
     void SubmitGPULightHighRes(uint32_t lightIndex) {
         if (g_gpuLightsHighRes.size() >= SHADOWMAP_HI_RES_COUNT) return;
 
-        Light* light = World::GetLightByIndex(lightIndex);
+        Light* light = LegacyWorld::GetLightByIndex(lightIndex);
         if (!light) return;
 
         GPULight& gpuLight = g_gpuLightsHighRes.emplace_back();

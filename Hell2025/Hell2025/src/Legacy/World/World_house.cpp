@@ -8,7 +8,7 @@
 
 using namespace Hell;
 
-namespace World {
+namespace LegacyWorld {
 
     void RecreateAllHouseGeometry() {
         RecreateAllProceduralWallMesh();
@@ -43,7 +43,7 @@ namespace World {
                 createInfoCeiling.trimScale = 0.95f;
 			}
 
-			World::AddTrimSet(createInfoCeiling, SpawnOffset());
+			LegacyWorld::AddTrimSet(createInfoCeiling, SpawnOffset());
 		}
     }
 

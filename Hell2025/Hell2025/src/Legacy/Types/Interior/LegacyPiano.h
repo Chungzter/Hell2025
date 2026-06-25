@@ -21,8 +21,8 @@ struct PianoKey {
     std::string m_meshName = "";
     State m_state = State::IDLE;
 
-    void Update(float deltaTime);
-    void PressKey(int velocity = 127, float duration = 0.05f);
+    void Update(float deltaTime, const std::string& soundFontName);
+    void PressKey(const std::string& soundFontName, int velocity = 127, float duration = 0.05f);
 
     bool IsDirty() const { return m_dirty; }
 
@@ -59,6 +59,7 @@ struct Piano {
     const glm::vec3 GetPosition() const                     { return m_transform.position; }
     const glm::vec3 GetRotation() const                     { return m_transform.rotation; }
     const glm::vec3& GetSeatPosition() const                { return m_seatPosition; }
+    const std::string& GetSoundFontName() const             { return m_soundFontName; }
     const PianoCreateInfo GetCreateInfo() const             { return m_createInfo; }
 
     static uint32_t MeshNameToNote(const std::string& meshName);
@@ -68,6 +69,7 @@ private:
     glm::mat4 m_worldMatrix;
     uint64_t m_pianoObjectId = 0;
     uint64_t m_rigidStaticId = 0;
+    std::string m_soundFontName = UNDEFINED_STRING;
     Transform m_transform;
     PianoCreateInfo m_createInfo;
     MeshNodes m_meshNodes;

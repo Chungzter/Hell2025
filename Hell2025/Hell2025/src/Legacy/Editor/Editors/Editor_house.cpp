@@ -10,7 +10,7 @@ namespace Audio = Hell::Audio;
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include <imgui/imgui.h>
 
 namespace Editor {
@@ -63,8 +63,8 @@ namespace Editor {
         SetEditorMode(EditorMode::HOUSE_EDITOR);
 
         // World state
-        World::LoadSingleHouse(Editor::GetEditorHouseName());
-        World::DisableOcean();
+        LegacyWorld::LoadSingleHouse(Editor::GetEditorHouseName());
+        LegacyWorld::DisableOcean();
 
         // Init UI
         InitFileMenuImGuiElements();
@@ -136,7 +136,7 @@ namespace Editor {
     //    HouseEditorEditorImguiElements& elements = g_houseEditorImguiElements;
     //
     //    // Update name input with height map name
-    //    elements.houseNameInput.SetText(World::GetCurrentMapName());
+    //    elements.houseNameInput.SetText(LegacyWorld::GetCurrentMapName());
     //
     //    //RendererSettings& renderSettings = Renderer::GetCurrentRendererSettings();
     //    //elements.drawGrass.SetState(renderSettings.drawGrass);
@@ -237,7 +237,7 @@ namespace Editor {
        //   // MOVED TO EDITOR_OBJECTS.cpp
        //}
        //if (GetSelectedObjectType() == ObjectType::PLANE) {
-       //    Plane* plane = World::GetPlaneByObjectId(GetSelectedObjectId());
+       //    Plane* plane = LegacyWorld::GetPlaneByObjectId(GetSelectedObjectId());
        //    if (plane) {
        //        plane->DrawEdges(OUTLINE_COLOR);
        //        plane->DrawVertices(OUTLINE_COLOR);

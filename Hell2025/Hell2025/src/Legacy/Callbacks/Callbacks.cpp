@@ -4,7 +4,7 @@
 #include "Editor/Editor.h"
 #include "Hell/Logging.h"
 #include "Managers/MapManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include <iostream>
 
@@ -47,7 +47,7 @@ namespace Callbacks {
     }
 
     void NewRun() {
-        World::NewRun();
+        LegacyWorld::NewRun();
     }
 
     void BeginAddingDoor() {

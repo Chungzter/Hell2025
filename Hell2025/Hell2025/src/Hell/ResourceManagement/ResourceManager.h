@@ -5,6 +5,8 @@
 #include "Hell/ResourceManagement/Types/IESProfile.h"
 #include "Hell/ResourceManagement/Types/Material.h"
 #include "Hell/ResourceManagement/Types/MeshBuffer.h"
+#include "Hell/ResourceManagement/Types/MidiFile.h"
+#include "Hell/ResourceManagement/Types/SoundFont.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
 #include "Types/Renderer/Model.h"
 #include "Types/Renderer/SkinnedModel.h"
@@ -36,6 +38,7 @@ namespace Hell::ResourceManager {
     GenericMesh* GetGenericMeshPtr(const std::string& name);
 
     IESProfile& CreateIESProfile(const std::string& name);
+    IESProfile& CreateIESProfile(IESProfile&& iesProfile);
     IESProfile& GetIESProfile(const std::string& name);
     IESProfile* GetIESProfilePtr(const std::string& name);
 
@@ -47,6 +50,15 @@ namespace Hell::ResourceManager {
     Material* GetMaterialByName(const std::string& name);
     int32_t GetMaterialIndexByName(const std::string& name);
     std::string GetMaterialNameByIndex(int32_t index);
+
+    MeshBuffer& CreateMeshBuffer(const std::string& name);
+    MeshBuffer& GetMeshBuffer(const std::string& name);
+    MeshBuffer* GetMeshBufferPtr(const std::string& name);
+
+    MidiFile& CreateMidiFile(const std::string& name);
+    MidiFile& CreateMidiFile(MidiFile&& midiFile);
+    MidiFile& GetMidiFile(const std::string& name);
+    MidiFile* GetMidiFilePtr(const std::string& name);
 
     Model& CreateModel(const std::string& name);
     std::unordered_map<uint32_t, Model>& GetModels();
@@ -61,9 +73,10 @@ namespace Hell::ResourceManager {
     SkinnedModel* GetSkinnedModelByName(const std::string& name);
     uint32_t GetSkinnedModelIdByName(const std::string& name);
 
-    MeshBuffer& CreateMeshBuffer(const std::string& name);
-    MeshBuffer& GetMeshBuffer(const std::string& name);
-    MeshBuffer* GetMeshBufferPtr(const std::string& name);
+    SoundFont& CreateSoundFont(const std::string& name);
+    SoundFont& CreateSoundFont(SoundFont&& soundFont);
+    SoundFont& GetSoundFont(const std::string& name);
+    SoundFont* GetSoundFontPtr(const std::string& name);
 
     SpriteSheetTexture& CreateSpriteSheetTexture(const std::string& name);
     SpriteSheetTexture& GetSpriteSheetTexture(const std::string& name);

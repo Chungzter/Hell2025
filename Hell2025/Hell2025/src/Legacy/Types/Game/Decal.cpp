@@ -1,7 +1,7 @@
 #pragma once
 #include "Decal.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/RenderDataManager.h"
@@ -22,7 +22,7 @@ Decal::Decal(const DecalCreateInfo& createInfo) {
     m_localPosition += m_localNormal * 0.0025f;
 
     // Determine type
-    if (MeshNode* meshNode = World::GetMeshNodeByObjectIdAndLocalNodeIndex(m_createInfo.parentObjectId, m_createInfo.localMeshNodeIndex)) {
+    if (MeshNode* meshNode = LegacyWorld::GetMeshNodeByObjectIdAndLocalNodeIndex(m_createInfo.parentObjectId, m_createInfo.localMeshNodeIndex)) {
         m_type = meshNode->decalType;
     }
     else {
@@ -103,7 +103,7 @@ void Decal::Update() {
 const glm::mat4& Decal::GetParentWorldMatrix() {
     static glm::mat4 identity = glm::mat4(1.0f);
 
-    if (MeshNode* meshNode = World::GetMeshNodeByObjectIdAndLocalNodeIndex(m_createInfo.parentObjectId, m_createInfo.localMeshNodeIndex)) {
+    if (MeshNode* meshNode = LegacyWorld::GetMeshNodeByObjectIdAndLocalNodeIndex(m_createInfo.parentObjectId, m_createInfo.localMeshNodeIndex)) {
         return meshNode->worldMatrix;
     }
     

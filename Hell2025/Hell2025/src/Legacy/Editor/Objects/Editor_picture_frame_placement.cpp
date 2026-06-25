@@ -2,7 +2,7 @@
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Viewport/ViewportManager.h"
 #include "Util.h"
 #include "Hell/Input.h"
@@ -30,7 +30,7 @@ namespace Editor {
                 PictureFrameCreateInfo createInfo;
                 createInfo.position = rayResult.hitPosition;
                 createInfo.rotation = Util::EulerRotationFromNormal(rayResult.hitNormal);
-                World::AddPictureFrame(createInfo);
+                LegacyWorld::AddPictureFrame(createInfo);
                 ExitObjectPlacement();
             }
         }

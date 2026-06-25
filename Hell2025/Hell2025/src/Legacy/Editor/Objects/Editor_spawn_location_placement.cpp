@@ -3,7 +3,7 @@
 #include "Hell/Logging.h"
 #include "Managers/MapManager.h"
 #include "Renderer/Renderer.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
@@ -17,7 +17,7 @@ namespace Editor {
             PhysXRayResult result = GetMouseRayPhsyXHitPosition();
             if (result.hitFound) {
                 map->AddPlayerCampaignSpawn(result.hitPosition);
-                World::UpdateWorldSpawnPointsFromMap(map);
+                LegacyWorld::UpdateWorldSpawnPointsFromMap(map);
                 ExitObjectPlacement();
                 Logging::Debug() << "Added player campaign spawn: " << result.hitPosition;
             }
@@ -32,7 +32,7 @@ namespace Editor {
             PhysXRayResult result = GetMouseRayPhsyXHitPosition();
             if (result.hitFound) {
                 map->AddPlayerDeathmatchSpawn(result.hitPosition);
-                World::UpdateWorldSpawnPointsFromMap(map);
+                LegacyWorld::UpdateWorldSpawnPointsFromMap(map);
                 Logging::Debug() << "Added player deathmatch spawn: " << result.hitPosition;
                 ExitObjectPlacement();
             }

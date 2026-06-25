@@ -4,7 +4,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Modelling/Clipping.h"
 #include "Renderer/RenderDataManager.h"]
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 #include "Hell/Logging.h"
 #include <Game/RendereringConstants.h>
@@ -187,7 +187,7 @@ void Wall::CleanUp() {
 
 void Wall::CreateTrims() {
     m_trims.clear();
-	World::RecreateAllDoorAndWindowCubeTransforms();
+	LegacyWorld::RecreateAllDoorAndWindowCubeTransforms();
 	return;
 
     // Ceiling
@@ -220,7 +220,7 @@ void Wall::CreateTrims() {
             const float eps = 1e-3f;
 
             while (remaining > eps) {
-                CubeRayResult r = Util::CastCubeRay(rayOrigin, rayDir, World::GetDoorAndWindowCubeTransforms(), remaining);
+                CubeRayResult r = Util::CastCubeRay(rayOrigin, rayDir, LegacyWorld::GetDoorAndWindowCubeTransforms(), remaining);
                 if (!r.hitFound) break;
 
                 // Only add a trim up to a NEAR face (entering the cube)
@@ -254,7 +254,7 @@ void Wall::CreateTrims() {
 
 void Wall::CreateCSGVertexData() {
     for (WallSegment& wallSegment : m_wallSegments) {
-        wallSegment.CreateVertexData(World::GetClippingCubes(), m_createInfo.textureOffsetU, m_createInfo.textureOffsetV, m_createInfo.textureScale);
+        wallSegment.CreateVertexData(LegacyWorld::GetClippingCubes(), m_createInfo.textureOffsetU, m_createInfo.textureOffsetV, m_createInfo.textureScale);
     }
 }
 
@@ -467,7 +467,7 @@ void Wall::RecreateWeatherBoardMesh() {
         Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }
 
-    World::RecreateAllDoorAndWindowCubeTransforms();
+    LegacyWorld::RecreateAllDoorAndWindowCubeTransforms();
 
 
     // Create new mesh segments
@@ -491,7 +491,7 @@ void Wall::RecreateWeatherBoardMesh() {
             const float eps = 1e-3f;
 
             while (remaining > eps) {
-                CubeRayResult rayResult = Util::CastCubeRay(rayOrigin, rayDir, World::GetDoorAndWindowCubeTransforms(), remaining);
+                CubeRayResult rayResult = Util::CastCubeRay(rayOrigin, rayDir, LegacyWorld::GetDoorAndWindowCubeTransforms(), remaining);
                 if (!rayResult.hitFound) break;
 
                 if (glm::dot(rayResult.hitNormal, rayDir) < 0.0f && rayResult.distanceToHit > eps) {

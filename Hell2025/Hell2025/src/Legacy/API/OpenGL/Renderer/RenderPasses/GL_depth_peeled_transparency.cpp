@@ -10,7 +10,7 @@
 // remove me
 #include "Core/GameOLD.h"
 #include "Physics/Physics.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Util/Util.h"
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>

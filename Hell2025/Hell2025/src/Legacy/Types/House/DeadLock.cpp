@@ -1,5 +1,5 @@
 #include "DeadLock.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 
 void DeadLock::Init(uint64_t parentDoorId, const glm::vec3& localOffset, DeadLockType type) {
     m_localOffset = localOffset;
@@ -32,7 +32,7 @@ void DeadLock::Init(uint64_t parentDoorId, const glm::vec3& localOffset, DeadLoc
 }
 
 void DeadLock::Update(float deltaTime) {
-    Door* parentDoor = World::GetDoorByObjectId(m_parentDoorId);
+    Door* parentDoor = LegacyWorld::GetDoorByObjectId(m_parentDoorId);
     if (!parentDoor) return;
 
     const glm::mat4& parentDoorModelMatrix = parentDoor->GetDoorModelMatrix();

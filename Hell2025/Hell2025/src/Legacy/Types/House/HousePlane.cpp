@@ -3,7 +3,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Game/UniqueID.h"
 #include "Util.h"
 

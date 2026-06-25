@@ -3,7 +3,7 @@
 #include "Core/GameOLD.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Game/UniqueID.h"
 #include "Config/Config.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -62,7 +62,7 @@ namespace OpenGLRenderer {
                 ObjectType interactObjectType = UniqueID::GetType(interactObjectId);
 
                 if (interactObjectType == ObjectType::PICK_UP) {
-                    PickUp* pickUp = World::GetPickUpByObjectId(interactObjectId);
+                    PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(interactObjectId);
                     if (pickUp) {
                         const std::vector<RenderItem>& renderItems = pickUp->GetRenderItems();
 

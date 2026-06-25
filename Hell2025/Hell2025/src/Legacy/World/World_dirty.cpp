@@ -2,7 +2,7 @@
 #include "Debug/DebugDraw.h"
 #include "Hell/Logging.h"
 
-namespace World {
+namespace LegacyWorld {
     void DebugDrawLightShadowMapDirtyFlags();
     bool IntersectAABB(const RenderItem& renderItemA, const glm::vec3& boundsMinB, const glm::vec3& boundsMaxB);
     bool IntersectAABB(const glm::vec3& boundsMinA, const glm::vec3& boundsMaxA, const RenderItem& renderItemB);
@@ -37,7 +37,7 @@ namespace World {
         light.SetShadowMapDirtyFlag(false);
 
         // Check doors
-        for (Door& object : World::GetDoors()) {
+        for (Door& object : LegacyWorld::GetDoors()) {
             if (object.IsDirty()) {
                 for (const RenderItem& renderItem : object.GetRenderItems()) {
                     if (IntersectAABB(renderItem, light.GetWorldBoundsMin(), light.GetWorldBoundsMax())) {
@@ -50,7 +50,7 @@ namespace World {
         }
 
         // Check generic objects
-        for (GenericObject& object : World::GetGenericObjects()) {
+        for (GenericObject& object : LegacyWorld::GetGenericObjects()) {
             if (object.IsDirty()) {
                 for (const RenderItem& renderItem : object.GetRenderItems()) {
                     if (IntersectAABB(renderItem, light.GetWorldBoundsMin(), light.GetWorldBoundsMax())) {
@@ -62,7 +62,7 @@ namespace World {
             }
         }
         // Check pianos
-        for (Piano& object : World::GetPianos()) {
+        for (Piano& object : LegacyWorld::GetPianos()) {
             if (object.IsDirty()) {
                 for (const RenderItem& renderItem : object.GetRenderItems()) {
                     if (IntersectAABB(renderItem, light.GetWorldBoundsMin(), light.GetWorldBoundsMax())) {
@@ -75,7 +75,7 @@ namespace World {
         }
 
         // Check pickups
-        //for (PickUp& object : World::GetPickUps()) {
+        //for (PickUp& object : LegacyWorld::GetPickUps()) {
         //    if (object.IsDirty()) {
         //        for (const RenderItem& renderItem : object.GetRenderItems()) {
         //            if (IntersectAABB(renderItem, light.GetWorldBoundsMin(), light.GetWorldBoundsMax())) {

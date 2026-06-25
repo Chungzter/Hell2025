@@ -5,7 +5,7 @@ namespace Audio = Hell::Audio;
 #include "Editor/Editor.h"
 #include "Ocean/Ocean.h"
 #include "Viewport/ViewportManager.h"
-#include "World/World.h"
+#include "World/LegacyWorld.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
@@ -138,7 +138,7 @@ void Player::Update(float deltaTime) {
 
     UpdateViewWeaponVisibility();
 
-    if (World::HasOcean()) {
+    if (LegacyWorld::HasOcean()) {
         float feetHeight = GetFootPosition().y;
         float waterHeight = Ocean::GetWaterHeightAtPlayer(m_viewportIndex);
         m_waterState.feetUnderWaterPrevious = m_waterState.feetUnderWater;

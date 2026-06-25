@@ -7,7 +7,7 @@
 namespace Input = Hell::Input;
 
 
-namespace World {
+namespace LegacyWorld {
 
     void UpdateBulletTrails(float deltaTime);
     void UpdateBulletTrailParticles(float deltaTime);
