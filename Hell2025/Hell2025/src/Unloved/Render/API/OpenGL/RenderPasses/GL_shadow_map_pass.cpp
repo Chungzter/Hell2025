@@ -1,0 +1,373 @@
+#include "Hell/Render/API/OpenGL/GL_back_end.h"
+#include "Unloved/Render/API/OpenGL/GL_renderer.h"
+#include "Core/GameOLD.h"
+#include "Renderer/RenderDataManager.h"
+#include "Renderer/Renderer.h"
+#include "Viewport/ViewportManager.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+#include "World/LegacyWorld.h"
+
+using namespace Hell;
+
+namespace OpenGLRenderer {
+
+    void RenderFlashLightShadowMaps();
+    void RenderPointLightShadowMaps();
+    void RenderMoonLightCascadedShadowMaps();
+
+    void RenderShadowMaps() {
+        RenderFlashLightShadowMaps();
+        RenderPointLightShadowMaps();
+        RenderMoonLightCascadedShadowMaps();
+    }
+
+    void RenderFlashLightShadowMaps() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("ShadowMap");
+        OpenGLShadowMap* shadowMapsFBO = OpenGL::ResourceManager::GetShadowMapPtr("FlashlightShadowMaps");
+        OpenGLHeightMapMesh& heightMapMesh = OpenGL::BackEnd::GetHeightMapMesh();
+        //const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+        const FlashLightShadowMapDrawInfo& flashLightShadowMapDrawInfo = RenderDataManager::GetFlashLightShadowMapDrawInfo();
+        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
+        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
+
+        glm::mat4 heightMapModelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(HEIGHTMAP_SCALE_XZ, HEIGHTMAP_SCALE_Y, HEIGHTMAP_SCALE_XZ)); // move to height map manager
+
+        glEnable(GL_DEPTH_TEST);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+
+        shadowMapsFBO->Bind();
+        shadowMapsFBO->SetViewport();
+
+        OpenGL::BindShader("ShadowMap");
+
+        for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
+            shadowMapsFBO->BindLayer(i);
+            shadowMapsFBO->ClearLayer(i);
+
+            glm::mat4 lightProjectionView = GameOLD::GetLocalPlayerByIndex(i)->GetFlashlightProjectionView();
+            OpenGL::SetUniformMat4("u_projectionView", lightProjectionView);
+
+            Frustum frustum;
+            frustum.Update(lightProjectionView);
+
+            // Scene geometry
+            OpenGL::SetUniformBool("u_useInstanceData", true);
+            glCullFace(GL_FRONT);
+            glBindVertexArray(meshBufferAssets.GetVAO());
+
+            MultiDrawIndirect(flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i]);
+
+            // Heightfield chunks
+            std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
+            OpenGLHeightMapMesh& heightMapMesh = OpenGL::BackEnd::GetHeightMapMesh();
+            glBindVertexArray(heightMapMesh.GetVAO());
+            OpenGL::SetUniformMat4("u_modelMatrix", heightMapModelMatrix);
+            OpenGL::SetUniformBool("u_useInstanceData", false);
+
+            for (uint32_t chunkIndex : flashLightShadowMapDrawInfo.heightMapChunkIndices[i]) {
+                HeightMapChunk& chunk = chunks[chunkIndex];
+                int indexCount = INDICES_PER_CHUNK;
+                int baseVertex = 0;
+                int baseIndex = chunk.baseIndex;
+                void* indexOffset = (GLvoid*)(baseIndex * sizeof(GLuint));
+                int instanceCount = 1;
+                int viewportIndex = i;
+                if (indexCount > 0) {
+                    glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indexOffset, instanceCount, baseVertex, viewportIndex);
+                }
+            }
+
+            // Procedural
+            OpenGL::SetUniformMat4("u_modelMatrix", glm::mat4(1.0f));
+
+            glBindVertexArray(meshBufferProcedural.GetVAO());
+
+            const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
+            for (const RenderItem& renderItem : renderItems) {
+
+                Mesh* mesh = meshBufferProcedural.GetMeshById(renderItem.meshId);
+                if (!mesh) continue;
+
+                int indexCount = mesh->indexCount;
+                int baseVertex = renderItem.baseVertex;
+                int baseIndex = renderItem.baseIndex;
+                glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
+            }
+        }
+
+        glBindVertexArray(0);
+        glCullFace(GL_BACK);
+    }
+
+    void RenderPointLightShadowMaps() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("ShadowCubeMap");
+        OpenGLShadowCubeMapArray* hiResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("HiRes");
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        if (!shader) return;
+        if (!hiResShadowMaps) return;
+
+        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
+        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
+
+        OpenGL::BindShader("ShadowCubeMap");
+        OpenGL::SetUniformBool("u_useInstanceData", true);
+
+        const std::vector<GPULight>& gpuLightsHighRes = RenderDataManager::GetGPULightsHighRes();
+
+		OpenGLRasterizerState state;
+		state.depthMask = true;
+		state.depthTestEnabled = true;
+		state.blendEnable = false;
+		state.cullfaceEnable = false;
+		state.cullfaceMode = GL_FRONT;
+		OpenGLRasterizerStateManager::ForceRasterizerState(state);
+
+        // Clear any shadow map that needs redrawing
+        for (int i = 0; i < gpuLightsHighRes.size(); i++) {
+            const GPULight& gpuLight = gpuLightsHighRes[i];
+            Light* light = LegacyWorld::GetLightByIndex(gpuLight.lightIndex);
+
+            if (light->IsDirtyForShadowMaps()) {
+                std::cout << i << " is dirty\n";
+                hiResShadowMaps->ClearDepthLayer(i, 1.0f);
+            }
+        }
+
+        glViewport(0, 0, hiResShadowMaps->GetSize(), hiResShadowMaps->GetSize());
+        glBindFramebuffer(GL_FRAMEBUFFER, hiResShadowMaps->GetHandle());
+
+        glBindVertexArray(meshBufferAssets.GetVAO());
+
+        for (int i = 0; i < gpuLightsHighRes.size(); i++) {
+            const GPULight& gpuLight = gpuLightsHighRes[i];
+
+            Light* light = LegacyWorld::GetLightByIndex(gpuLight.lightIndex);
+            if (!light || !light->IsDirtyForShadowMaps()) continue;
+
+            OpenGL::SetUniformFloat("farPlane", light->GetRadius());
+            OpenGL::SetUniformVec3("lightPosition", light->GetPosition());
+            OpenGL::SetUniformMat4("shadowMatrices[0]", light->GetProjectionView(0));
+            OpenGL::SetUniformMat4("shadowMatrices[1]", light->GetProjectionView(1));
+            OpenGL::SetUniformMat4("shadowMatrices[2]", light->GetProjectionView(2));
+            OpenGL::SetUniformMat4("shadowMatrices[3]", light->GetProjectionView(3));
+            OpenGL::SetUniformMat4("shadowMatrices[4]", light->GetProjectionView(4));
+            OpenGL::SetUniformMat4("shadowMatrices[5]", light->GetProjectionView(5));
+
+            for (int face = 0; face < 6; ++face) {
+                GLuint layer = i * 6 + face;
+                OpenGL::SetUniformInt("faceIndex", face);
+                glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, hiResShadowMaps->GetDepthTexture(), 0, layer);
+                MultiDrawIndirect(drawInfoSet.shadowMapHiRes[i][face]);
+            }
+        }
+
+
+        // HAIR
+
+        glBindVertexArray(OpenGL::BackEnd::GetSkinnedVertexDataVAO());
+        glBindBuffer(GL_ARRAY_BUFFER, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBufferAssets.GetEBO());
+
+        for (int i = 0; i < gpuLightsHighRes.size(); i++) {
+            const GPULight& gpuLight = gpuLightsHighRes[i];
+
+            Light* light = LegacyWorld::GetLightByIndex(gpuLight.lightIndex);
+            if (!light || !light->IsDirtyForShadowMaps()) continue;
+
+            OpenGL::SetUniformFloat("farPlane", light->GetRadius());
+            OpenGL::SetUniformVec3("lightPosition", light->GetPosition());
+            OpenGL::SetUniformMat4("shadowMatrices[0]", light->GetProjectionView(0));
+            OpenGL::SetUniformMat4("shadowMatrices[1]", light->GetProjectionView(1));
+            OpenGL::SetUniformMat4("shadowMatrices[2]", light->GetProjectionView(2));
+            OpenGL::SetUniformMat4("shadowMatrices[3]", light->GetProjectionView(3));
+            OpenGL::SetUniformMat4("shadowMatrices[4]", light->GetProjectionView(4));
+            OpenGL::SetUniformMat4("shadowMatrices[5]", light->GetProjectionView(5));
+
+            OpenGL::SetUniformBool("u_useInstanceData", false);
+
+            for (int face = 0; face < 6; ++face) {
+                OpenGL::SetUniformInt("faceIndex", face);
+                int shadowMapIndex = i;
+                GLuint layer = shadowMapIndex * 6 + face;
+
+                glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, hiResShadowMaps->GetDepthTexture(), 0, layer);
+
+
+                const std::vector<RenderItem>& instanceData = RenderDataManager::GetInstanceData();
+
+                for (const DrawIndexedIndirectCommand& command : drawInfoSet.skinnedStandard[0]) {
+                    int viewportIndex = command.baseInstance >> VIEWPORT_INDEX_SHIFT;
+                    int instanceOffset = command.baseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
+
+                    for (GLuint i = 0; i < command.instanceCount; ++i) {
+                        const RenderItem& renderItem = instanceData[instanceOffset + i];
+
+                        OpenGL::SetUniformMat4("u_modelMatrix", renderItem.modelMatrix);
+
+                        glDrawElementsBaseVertex(GL_TRIANGLES, command.indexCount, GL_UNSIGNED_INT, (GLvoid*)(command.firstIndex * sizeof(GLuint)), command.baseVertex);
+                    }
+                }
+
+                for (const DrawIndexedIndirectCommand& command : drawInfoSet.skinnedHair[0]) {
+                    int viewportIndex = command.baseInstance >> VIEWPORT_INDEX_SHIFT;
+                    int instanceOffset = command.baseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
+
+                    for (GLuint i = 0; i < command.instanceCount; ++i) {
+                        const RenderItem& renderItem = instanceData[instanceOffset + i];
+
+                        OpenGL::SetUniformMat4("u_modelMatrix", renderItem.modelMatrix);
+
+                        glDrawElementsBaseVertex(GL_TRIANGLES, command.indexCount, GL_UNSIGNED_INT, (GLvoid*)(command.firstIndex * sizeof(GLuint)), command.baseVertex);
+                    }
+                }
+
+
+            }
+        }
+
+
+        OpenGL::SetUniformBool("u_useInstanceData", false);
+        OpenGL::SetUniformMat4("u_modelMatrix", glm::mat4(1.0f));
+
+        // OPTIMIZE ME!
+        // Make lights store a list of their HouseRenderItems per frustum face that is only updated when the map changes
+        // That will be when a HousePlane or Wall is added/modified
+
+        glBindVertexArray(meshBufferProcedural.GetVAO());
+
+        for (int i = 0; i < gpuLightsHighRes.size(); i++) {
+            const GPULight& gpuLight = gpuLightsHighRes[i];
+
+            Light* light = LegacyWorld::GetLightByIndex(gpuLight.lightIndex);
+            if (!light || !light->IsDirtyForShadowMaps()) continue;
+
+            OpenGL::SetUniformFloat("farPlane", light->GetRadius());
+            OpenGL::SetUniformVec3("lightPosition", light->GetPosition());
+            OpenGL::SetUniformMat4("shadowMatrices[0]", light->GetProjectionView(0));
+            OpenGL::SetUniformMat4("shadowMatrices[1]", light->GetProjectionView(1));
+            OpenGL::SetUniformMat4("shadowMatrices[2]", light->GetProjectionView(2));
+            OpenGL::SetUniformMat4("shadowMatrices[3]", light->GetProjectionView(3));
+            OpenGL::SetUniformMat4("shadowMatrices[4]", light->GetProjectionView(4));
+            OpenGL::SetUniformMat4("shadowMatrices[5]", light->GetProjectionView(5));
+
+            for (int face = 0; face < 6; ++face) {
+                OpenGL::SetUniformInt("faceIndex", face);
+                int shadowMapIndex = i;
+                GLuint layer = shadowMapIndex * 6 + face;
+
+                glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, hiResShadowMaps->GetDepthTexture(), 0, layer);
+
+                Frustum* frustum = light->GetFrustumByFaceIndex(face);
+                if (!frustum) return;
+
+                const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
+                for (const RenderItem& renderItem : renderItems) {
+
+                    if (!frustum->IntersectsAABBFast(renderItem)) continue;
+
+                    Mesh* mesh = meshBufferProcedural.GetMeshById(renderItem.meshId);
+                    if (!mesh) continue;
+
+                    int indexCount = mesh->indexCount;
+                    int baseVertex = renderItem.baseVertex;
+                    int baseIndex = renderItem.baseIndex;
+                    glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
+                }
+            }
+        }
+    }
+
+
+    void RenderMoonLightCascadedShadowMaps() {
+        ProfilerOpenGLZoneFunction();
+
+        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+
+        OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("ShadowMap");
+        OpenGLShadowMapArray* shadowMapArray = OpenGL::ResourceManager::GetShadowMapArrayPtr("MoonlightCSM");
+
+        if (!shader) return;
+        if (!shadowMapArray) return;
+
+        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
+        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
+
+        int viewportCount = std::min(4, GameOLD::GetLocalPlayerCount());
+
+        for (int j = 0; j < viewportCount; j++) {
+            Player* player = GameOLD::GetLocalPlayerByIndex(j);
+            if (!player || !player->ViewportIsVisible()) continue;
+
+            const ViewportData& viewportData = RenderDataManager::GetViewportData()[j];
+
+            OpenGL::BindShader("ShadowMap");
+            OpenGL::SetUniformBool("u_useInstanceData", false);
+
+            size_t numLayers = SHADOW_CASCADE_COUNT;
+
+            shadowMapArray->Bind();
+            shadowMapArray->SetViewport();
+
+            glDisable(GL_CULL_FACE);
+            //glEnable(GL_CULL_FACE);
+            //glCullFace(GL_FRONT);  // peter panning
+
+            for (size_t i = 0; i < numLayers; ++i) {
+
+                //int textureLayer = i + (viewportCount * j * numLayers);
+                int textureLayer = int(i) + (j * int(numLayers)); // numLayers == SHADOW_CASCADE_COUNT
+
+                shadowMapArray->SetTextureLayer(textureLayer);
+                shadowMapArray->ClearDepth();
+
+                const glm::mat4& lightProjectionView = viewportData.csmLightProjectionView[i];
+
+                OpenGL::SetUniformMat4("u_projectionView", lightProjectionView);
+
+                // Geometry
+                glBindVertexArray(meshBufferAssets.GetVAO());
+
+                OpenGL::SetUniformBool("u_useInstanceData", true);
+                MultiDrawIndirect(drawInfoSet.moonLightCascades[j][i]);
+
+                OpenGL::SetUniformBool("u_useInstanceData", false);
+                OpenGL::SetUniformMat4("u_modelMatrix", glm::mat4(1.0f));
+
+                // Procedural
+                glBindVertexArray(meshBufferProcedural.GetVAO());
+
+                //glDisable(GL_CULL_FACE);
+                const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
+                for (const RenderItem& renderItem : renderItems) {
+                    Mesh* mesh = meshBufferProcedural.GetMeshById(renderItem.meshId);
+                    if (!mesh) continue;
+
+                    int indexCount = mesh->indexCount;
+                    int baseVertex = renderItem.baseVertex;
+                    int baseIndex = renderItem.baseIndex;
+                    glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
+                }
+
+                // Weather boards
+                //MeshBuffer weatherboardMeshBuffer = LegacyWorld::GetWeatherBoardMeshBuffer();
+                //glBindVertexArray(weatherboardMeshBuffer.GetGLMeshBuffer().GetVAO());
+                //int indexCount = weatherboardMeshBuffer.GetGLMeshBuffer().GetIndexCount();
+                //if (indexCount > 0) {
+                //    int baseIndex = 0;
+                //    int baseVertex = 0;
+                //    glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * baseIndex), baseVertex);
+                //}
+            }
+        }
+        glCullFace(GL_BACK);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+}

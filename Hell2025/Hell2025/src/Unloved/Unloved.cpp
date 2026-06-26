@@ -36,6 +36,7 @@ namespace Unloved {
     void UpdateLazyKeypresses();
 
     bool Init() {
+        Renderer::Init();
         UIBackEnd::Init();
         Bible::Init();
         Gizmo::Init();
@@ -133,6 +134,7 @@ namespace Unloved {
 
     void CleanUp() {
         World::CleanUp();
+        Renderer::CleanUp();
     }
 
     void UpdateLazyKeypresses() {

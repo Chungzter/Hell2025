@@ -26,7 +26,7 @@ struct Model {
     const size_t GetMeshCount()  const                        { return m_meshIndices.size(); }
     const glm::vec3& GetAABBMin() const                       { return m_aabbMin; }
     const glm::vec3& GetAABBMax() const                       { return m_aabbMax; }
-    const glm::vec3& GetExtents() const                       { return m_aabbMax - m_aabbMin; }
+    glm::vec3 GetExtents() const                              { return m_aabbMax - m_aabbMin; }
     const std::string GetName() const                         { return m_name; }
     const std::vector<uint32_t>& GetMeshIndices() const       { return m_meshIndices; }
     size_t GetCPUAllocatedByteCount() const;

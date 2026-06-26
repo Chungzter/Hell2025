@@ -199,17 +199,24 @@ namespace Debug {
         constexpr float scale = 2.0f;
         constexpr uint32_t spacing = 50;
 
+        const std::string headingColor = "[COL=0.56,0.93,0.56,1.0]";
+        const std::string rowColor = "[COL=1.0,0.65,0.0,1.0]";
+
         std::string names = "\n";
-        std::string cpuBytes = "CPU\n";
-        std::string gpuBytes = "GPU\n";
+        std::string cpuBytes = headingColor + "CPU\n";
+        std::string gpuBytes = headingColor + "GPU\n";
 
         MemoryReport memoryReport = GetMemoryReport();
 
         for (const MemoryReportCategory& category : memoryReport.categories) {
-            names += category.name + "\n";
-            gpuBytes += FormatMemorySize(category.GetTotalGPUBytes()) + "\n";
-            cpuBytes += FormatMemorySize(category.GetTotalCPUBytes()) + "\n";
+            names += rowColor + category.name + "\n";
+            gpuBytes += rowColor + FormatMemorySize(category.GetTotalGPUBytes()) + "\n";
+            cpuBytes += rowColor + FormatMemorySize(category.GetTotalCPUBytes()) + "\n";
         }
+
+        names += "\n" + headingColor + "Total\n";
+        gpuBytes += "\n" + headingColor + FormatMemorySize(memoryReport.GetTotalGPUBytes()) + "\n";
+        cpuBytes += "\n" + headingColor + FormatMemorySize(memoryReport.GetTotalCPUBytes()) + "\n";
 
         const int namesWidth = TextBlitter::GetTextSize(names, fontName, scale).x;
         const int gpuWidth = TextBlitter::GetTextSize(gpuBytes, fontName, scale).x;

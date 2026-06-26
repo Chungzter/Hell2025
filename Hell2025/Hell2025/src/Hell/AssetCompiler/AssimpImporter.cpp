@@ -96,6 +96,7 @@ namespace Hell::AssetCompiler {
         for (int i = 0; i < modelData.meshes.size(); i++) {
             MeshData& meshData = modelData.meshes[i];
             const aiMesh* assimpMesh = scene->mMeshes[i];
+
             // Vertices
             for (unsigned int j = 0; j < meshData.vertexCount; j++) {
                 meshData.vertices[j] = (Vertex{
@@ -112,6 +113,7 @@ namespace Hell::AssetCompiler {
                 meshData.aabbMin = glm::min(meshData.vertices[j].position, meshData.aabbMin);
                 meshData.aabbMax = glm::max(meshData.vertices[j].position, meshData.aabbMax);
             }
+
             // Get indices
             for (unsigned int j = 0; j < assimpMesh->mNumFaces; j++) {
                 const aiFace& face = assimpMesh->mFaces[j];
@@ -120,15 +122,17 @@ namespace Hell::AssetCompiler {
                 meshData.indices[baseIndex + 1] = face.mIndices[1];
                 meshData.indices[baseIndex + 2] = face.mIndices[2];
             }
+
             // Normalize the normals for each vertex
             for (Vertex& vertex : meshData.vertices) {
                 vertex.normal = glm::normalize(vertex.normal);
             }
+
             // Generate Tangents
-            for (int i = 0; i < meshData.indices.size(); i += 3) {
-                Vertex* vert0 = &meshData.vertices[meshData.indices[i]];
-                Vertex* vert1 = &meshData.vertices[meshData.indices[i + 1]];
-                Vertex* vert2 = &meshData.vertices[meshData.indices[i + 2]];
+            for (int j = 0; j < meshData.indices.size(); j += 3) {
+                Vertex* vert0 = &meshData.vertices[meshData.indices[j]];
+                Vertex* vert1 = &meshData.vertices[meshData.indices[j + 1]];
+                Vertex* vert2 = &meshData.vertices[meshData.indices[j + 2]];
                 glm::vec3 deltaPos1 = vert1->position - vert0->position;
                 glm::vec3 deltaPos2 = vert2->position - vert0->position;
                 glm::vec2 deltaUV1 = vert1->uv - vert0->uv;
@@ -140,6 +144,7 @@ namespace Hell::AssetCompiler {
                 vert1->tangent = tangent;
                 vert2->tangent = tangent;
             }
+
             modelData.aabbMin = glm::min(modelData.aabbMin, meshData.aabbMin);
             modelData.aabbMax = glm::max(modelData.aabbMax, meshData.aabbMax);
         }
@@ -228,8 +233,8 @@ namespace Hell::AssetCompiler {
         modelData.name = File::GetName(filepath);
         modelData.meshes.resize(scene->mNumMeshes);
         modelData.timestamp = File::GetLastModifiedTime(filepath);
-        modelData.vertexCount = 0;
-        modelData.indexCount = 0;
+        modelData.vertexCount = 0u;
+        modelData.indexCount = 0u;
 
         // Load bones
         int foundBoneCount = 0;

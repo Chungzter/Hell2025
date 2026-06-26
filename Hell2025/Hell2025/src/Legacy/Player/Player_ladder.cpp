@@ -2,23 +2,23 @@
 #include "World/LegacyWorld.h"
 
 void Player::UpdateLadderIds() {
-    m_ladderOverlapIndexFeet = 0;
-    m_ladderOverlapIndexEyes = 0;
+    m_ladderIdOverlapIndexFeet = 0;
+    m_ladderIdOverlapIndexEyes = 0;
 
     for (Ladder& ladder : LegacyWorld::GetLadders()) {
         float sphereRadius = 0.25f;
 
         if (ladder.GetOverlapHitBoxAABB().IntersectsSphere(GetFootPosition(), sphereRadius)) {
-            m_ladderOverlapIndexFeet = ladder.GetObjectId();
+            m_ladderIdOverlapIndexFeet = ladder.GetObjectId();
         }
         if (ladder.GetOverlapHitBoxAABB().IntersectsSphere(GetCameraPosition(), sphereRadius)) {
-            m_ladderOverlapIndexEyes = ladder.GetObjectId();
+            m_ladderIdOverlapIndexEyes = ladder.GetObjectId();
         }
     }
 }
 
 bool Player::IsOverlappingLadder() {
-    return (m_ladderOverlapIndexFeet != 0 && m_ladderOverlapIndexEyes != 0);
+    return (m_ladderIdOverlapIndexFeet != 0 && m_ladderIdOverlapIndexEyes != 0);
 }
 
 void Player::UpdateLadderMovement(float deltaTime) {
@@ -31,7 +31,7 @@ void Player::UpdateLadderMovement(float deltaTime) {
         return;
     }
 
-    if (m_ladderOverlapIndexEyes != 0 && IsMoving() && !IsCrouching()) {
+    if (m_ladderIdOverlapIndexEyes != 0 && IsMoving() && !IsCrouching()) {
         glm::vec3 ladderMovementDisplacement = glm::vec3(0.0f, 1.0f, 0.0f) * ladderClimpingSpeed * deltaTime;
         Hell::Physics::MoveCharacterController(m_characterControllerId, ladderMovementDisplacement);
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "API/OpenGL/Types/GL_texture.h"
+#include "Hell/Render/API/OpenGL/Types/GL_texture.h"
 #include "API/Vulkan/Types/VK_texture.h"
 #include "Hell/Common.h"
 #include "Hell/File.h"

@@ -1,6 +1,7 @@
 #include "MemoryTracker.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/Render/API/OpenGL/GL_resource_manager.h"
 
 #include <iomanip>
 #include <sstream>
@@ -80,6 +81,7 @@ std::string FormatMemorySize(size_t bytes) {
 MemoryReport GetMemoryReport() {
     MemoryReport report;
     ResourceManager::AppendMemoryReport(report);
+    OpenGL::ResourceManager::AppendMemoryReport(report);
     return report;
 }
 

@@ -26,14 +26,13 @@ namespace Hell::ResourceManager {
         std::unordered_map<std::string, SpriteSheetTexture> g_spriteSheetTextures;
         std::unordered_map<std::string, Texture> g_textures;
 
+        std::vector<Material> g_materials;
+        std::vector<std::string> g_materialNamesByIndex;
         std::unordered_map<std::string, int32_t> g_materialIndices;
 
         std::unordered_map<uint32_t, Model> g_models;
         std::unordered_map<uint32_t, SkinnedModel> g_skinnedModels;
 
-        std::vector<Material> g_materials;
-
-        std::vector<std::string> g_materialNamesByIndex;
         std::vector<std::string> g_textureNamesByBindlessIndex;
 
         uint32_t g_nextModelId = 0;
@@ -707,7 +706,7 @@ namespace Hell::ResourceManager {
         return -1;
     }
 
-    // Memory report
+    // Memory Report
 
     void AppendMemoryReport(MemoryTracker::MemoryReport& report) {
         if (!g_animations.empty()) {

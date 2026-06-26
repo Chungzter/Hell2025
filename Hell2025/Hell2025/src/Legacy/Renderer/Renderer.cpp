@@ -1,8 +1,9 @@
 #include "Renderer.h"
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
-#include "API/OpenGL/GL_backend.h"
-#include "API/OpenGL/Renderer/GL_renderer.h"
+#include "Hell/Render/API/OpenGL/GL_back_end.h"
+#include "Hell/Render/API/OpenGL/GL_resource_manager.h"
+#include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "API/Vulkan/Renderer/VK_renderer.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Config/Config.h"
@@ -18,6 +19,24 @@ namespace Renderer {
     std::vector<bool> g_freeWoundMaskIndices;
 
     bool g_gameIsRendering = false;
+
+    void Init() {
+        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
+            OpenGLRenderer::Init();
+        }
+        else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+            Logging::ToDo() << "Vulkan TODO: Renderer::Init()";
+        }
+    }
+
+    void CleanUp() {
+        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
+            OpenGLRenderer::CleanUp();
+        }
+        else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+            Logging::ToDo() << "Vulkan TODO: Renderer::CleanUp()";
+        }
+    }
 
     void InitMain() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
@@ -70,7 +89,8 @@ namespace Renderer {
 		Audio::PlayAudio(AUDIO_SELECT, 1.00f);
 
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::HotloadShaders();
+            OpenGL::UnbindShader();
+            OpenGL::ResourceManager::HotloadShaders();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan: HotloadShaders()";

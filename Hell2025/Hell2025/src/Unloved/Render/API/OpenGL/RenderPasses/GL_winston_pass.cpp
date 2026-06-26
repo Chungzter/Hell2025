@@ -1,0 +1,85 @@
+#include "Unloved/Render/API/OpenGL/GL_renderer.h"
+#include "Hell/Render/API/OpenGL/GL_back_end.h"
+#include "Core/GameOLD.h"
+#include "Renderer/RenderDataManager.h"
+#include "Viewport/ViewportManager.h"
+#include "World/LegacyWorld.h"
+#include "Game/UniqueID.h"
+#include "Config/Config.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+
+namespace OpenGLRenderer {
+
+    void WinstonPass() {
+        ProfilerOpenGLZoneFunction();
+
+        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+
+        OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("Winston");
+        OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
+
+        static float time = 0.0f;
+        time += GameOLD::GetDeltaTime();
+
+        OpenGL::BindShader("Winston");
+        OpenGL::SetUniformVec3("color", { 0, 0.9f, 1 });
+        OpenGL::SetUniformFloat("alpha", 0.01f);
+        OpenGL::SetUniformVec2("screensize", gBuffer->GetWidth(), gBuffer->GetHeight());
+        OpenGL::SetUniformFloat("near", Config::GetNearPlane());
+        OpenGL::SetUniformFloat("far", Config::GetFarPlane());
+        OpenGL::SetUniformFloat("u_time", time);
+
+        gBuffer->Bind();
+        gBuffer->DrawBuffer("Lighting");
+
+        glEnable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+        glEnable(GL_BLEND);
+        glDepthFunc(GL_EQUAL);
+
+        glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
+        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+
+        for (int i = 0; i < 4; i++) {
+            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            OpenGLRenderer::SetViewport(gBuffer, viewport);
+
+            glm::mat4 projectionMatrix = viewportData[i].projection;
+            glm::mat4 viewMatrix = viewportData[i].view;
+
+            OpenGL::SetUniformMat4("projection", projectionMatrix);
+            OpenGL::SetUniformMat4("view", viewMatrix);
+            OpenGL::SetUniformBool("useUniformColor", false);
+
+            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            if (!player) continue;
+
+            if (player->InteractFound()) {
+
+                uint64_t interactObjectId = player->GetInteractObjectId();
+                ObjectType interactObjectType = UniqueID::GetType(interactObjectId);
+
+                if (interactObjectType == ObjectType::PICK_UP) {
+                    PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(interactObjectId);
+                    if (pickUp) {
+                        const std::vector<RenderItem>& renderItems = pickUp->GetRenderItems();
+
+                        for (const RenderItem& renderItem : renderItems) {
+
+                            OpenGL::SetUniformMat4("model", renderItem.modelMatrix);
+
+                            Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
+                            if (!mesh) continue;
+
+                            glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
+                        }
+                    }
+                }
+            }
+        }
+
+        glDepthFunc(GL_LEQUAL);
+    }
+}

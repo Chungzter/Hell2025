@@ -1,6 +1,6 @@
 #include "Texture.h"
 
-#include "API/OpenGL/GL_resource_manager.h"
+#include "Hell/Render/API/OpenGL/GL_resource_manager.h"
 #include "API/Vulkan/Types/VK_texture.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
@@ -16,7 +16,7 @@ using namespace Hell;
 void Texture::CleanUp() {
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId != 0) {
-            OpenGLResourceManager::RemoveTexture(m_openGLId);
+            OpenGL::ResourceManager::RemoveTexture(m_openGLId);
             m_openGLId = 0;
         }
     }
@@ -28,10 +28,10 @@ void Texture::CleanUp() {
 OpenGLTexture& Texture::GetGLTexture() {
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId == 0) {
-            m_openGLId = OpenGLResourceManager::CreateTexture();
+            m_openGLId = OpenGL::ResourceManager::CreateTexture();
         }
 
-        return OpenGLResourceManager::GetTexture(m_openGLId);
+        return OpenGL::ResourceManager::GetTexture(m_openGLId);
     }
     else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
         // TODO
@@ -125,7 +125,7 @@ size_t Texture::GetCPUAllocatedByteCount() const {
 
 size_t Texture::GetGPUAllocatedByteCount() const {
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-        if (OpenGLTexture* texture = OpenGLResourceManager::GetTexturePtr(m_openGLId)) {
+        if (OpenGLTexture* texture = OpenGL::ResourceManager::GetTexturePtr(m_openGLId)) {
             return texture->GetAllocatedByteCount();
         }
     }

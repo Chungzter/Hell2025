@@ -6,9 +6,8 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <string>
-#include "API/OpenGL/GL_backEnd.h"
-#include "API/OpenGL/GL_resource_manager.h"
-#include "API/OpenGL/Renderer/GL_renderer.h"
+#include "Hell/Render/API/OpenGL/GL_back_end.h"
+#include "Hell/Render/API/OpenGL/GL_resource_manager.h"
 #include "API/Vulkan/VK_backEnd.h"
 #include "Config/Config.h"
 
@@ -60,8 +59,7 @@ namespace Hell::BackEnd {
         }
 
         if (GetAPI() == API::OPENGL) {
-            OpenGLBackEnd::Init();
-            OpenGLRenderer::Init();
+            OpenGL::BackEnd::Init();
         }
         else if (GetAPI() == API::VULKAN) {
             if (!VulkanBackEnd::Init()) {
@@ -93,7 +91,7 @@ namespace Hell::BackEnd {
         }
 
         if (GetAPI() == API::OPENGL) {
-            OpenGLBackEnd::BeginFrame();
+            OpenGL::BackEnd::BeginFrame();
             TextureUploader::Update();
         }
         else if (GetAPI() == API::VULKAN) {
@@ -112,8 +110,7 @@ namespace Hell::BackEnd {
         ResourceManager::CleanUp();
 
         if (GetAPI() == API::OPENGL) {
-            OpenGLResourceManager::CleanUp();
-            OpenGLRenderer::CleanUp();
+            OpenGL::ResourceManager::CleanUp();
         }
 
         GLFW::Destroy();

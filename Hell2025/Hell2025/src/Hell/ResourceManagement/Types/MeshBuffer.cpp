@@ -1,6 +1,6 @@
 #include "MeshBuffer.h"
 
-#include "API/OpenGL/GL_resource_manager.h"
+#include "Hell/Render/API/OpenGL/GL_resource_manager.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 
@@ -37,10 +37,10 @@ void MeshBuffer::Initialize() {
 
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId == 0) {
-            m_openGLId = OpenGLResourceManager::CreateMeshBuffer();
+            m_openGLId = OpenGL::ResourceManager::CreateMeshBuffer();
         }
 
-        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
         meshBuffer.Init(Vertex::GetLayout());
     }
 
@@ -63,7 +63,7 @@ void MeshBuffer::Reset() {
     m_indexCapacity = 0;
 
     if (Hell::BackEnd::GetAPI() == API::OPENGL && m_openGLId != 0) {
-        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
         meshBuffer.Reset();
     }
 
@@ -74,7 +74,7 @@ void MeshBuffer::CleanUp() {
     Reset();
 
     if (m_openGLId != 0) {
-        OpenGLResourceManager::RemoveMeshBuffer(m_openGLId);
+        OpenGL::ResourceManager::RemoveMeshBuffer(m_openGLId);
         m_openGLId = 0;
     }
 }
@@ -164,7 +164,7 @@ int32_t MeshBuffer::AddVertices(const std::vector<Vertex>& newVertices) {
             m_vertexCapacity = CalculateNewCapacity(newCount, m_vertexCapacity);
 
             if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-                OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+                OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
                 meshBuffer.ResizeVertexBuffer(m_vertexCapacity, m_vertices);
             }
         }
@@ -173,7 +173,7 @@ int32_t MeshBuffer::AddVertices(const std::vector<Vertex>& newVertices) {
         std::copy(newVertices.begin(), newVertices.end(), m_vertices.begin() + insertOffset);
 
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.InsertVertices(newVertices, insertOffset);
         }
 
@@ -194,7 +194,7 @@ int32_t MeshBuffer::AddVertices(const std::vector<Vertex>& newVertices) {
         std::copy(newVertices.begin(), newVertices.end(), m_vertices.begin() + insertOffset);
 
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.InsertVertices(newVertices, insertOffset);
         }
 
@@ -236,7 +236,7 @@ int32_t MeshBuffer::AddIndices(const std::vector<uint32_t>& newIndices) {
             m_indexCapacity = CalculateNewCapacity(newCount, m_indexCapacity);
 
             if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-                OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+                OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
                 meshBuffer.ResizeIndexBuffer(m_indexCapacity, m_indices);
             }
         }
@@ -245,7 +245,7 @@ int32_t MeshBuffer::AddIndices(const std::vector<uint32_t>& newIndices) {
         std::copy(newIndices.begin(), newIndices.end(), m_indices.begin() + insertOffset);
 
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.InsertIndices(newIndices, insertOffset);
         }
 
@@ -266,7 +266,7 @@ int32_t MeshBuffer::AddIndices(const std::vector<uint32_t>& newIndices) {
         std::copy(newIndices.begin(), newIndices.end(), m_indices.begin() + insertOffset);
 
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.InsertIndices(newIndices, insertOffset);
         }
 
@@ -301,7 +301,7 @@ int32_t MeshBuffer::AllocateExtraVertexSpace(size_t vertexCount) {
         m_vertexCapacity = CalculateNewCapacity(blockEnd, m_vertexCapacity);
 
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.ResizeVertexBuffer(m_vertexCapacity, m_vertices);
         }
     }
@@ -323,7 +323,7 @@ int32_t MeshBuffer::AllocateExtraIndexSpace(size_t indexCount) {
         m_indexCapacity = CalculateNewCapacity(blockEnd, m_indexCapacity);
 
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+            OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
             meshBuffer.ResizeIndexBuffer(m_indexCapacity, m_indices);
         }
     }
@@ -344,7 +344,7 @@ uint32_t MeshBuffer::GetVBO() const {
     }
 
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
         return meshBuffer.GetVBO();
     }
     else {
@@ -360,7 +360,7 @@ uint32_t MeshBuffer::GetEBO() const {
     }
 
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
         return meshBuffer.GetEBO();
     }
     else {
@@ -376,7 +376,7 @@ uint32_t MeshBuffer::GetVAO() const {
     }
 
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
         return meshBuffer.GetVAO();
     }
     else {
@@ -485,7 +485,7 @@ void MeshBuffer::PreAllocate(size_t maxVertices, size_t maxIndices, size_t maxVe
 
     // Allocate new GPU memory
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-        OpenGLMeshBuffer& meshBuffer = OpenGLResourceManager::GetMeshBuffer(m_openGLId);
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
         meshBuffer.PreAllocate(m_vertexCapacity, m_indexCapacity);
     }
 

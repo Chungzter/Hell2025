@@ -6,7 +6,9 @@
 #include <Game/Types.h>
 
 namespace Renderer {
+    void Init();
     void InitMain();
+    void CleanUp();
     void InitWoundMaskArray();
     void RenderLoadingScreen();
     void PreGameLogicComputePasses();

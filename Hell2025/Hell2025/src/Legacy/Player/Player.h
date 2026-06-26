@@ -115,8 +115,8 @@ public:
     uint64_t GetRagdollId();
 
     // Ladder
-    uint64_t m_ladderOverlapIndexFeet = -1;
-    uint64_t m_ladderOverlapIndexEyes = -1;
+    uint64_t m_ladderIdOverlapIndexFeet = 0;
+    uint64_t m_ladderIdOverlapIndexEyes = 0;
     float m_overlappedLadderHeight = 0.0f;
     float m_ladderFootstepAudioTimer = 0;
     float m_ladderFootstepAudioLoopLength = 0.5;

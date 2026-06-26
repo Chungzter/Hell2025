@@ -2,7 +2,7 @@
 #include <array>
 #include <vector>
 #include <Game/Types.h>
-#include "API/OpenGL/Types/GL_mesh_buffer.h"
+#include "Hell/Render/API/OpenGL/Types/GL_mesh_buffer.h"
 
 //struct Edge;
 

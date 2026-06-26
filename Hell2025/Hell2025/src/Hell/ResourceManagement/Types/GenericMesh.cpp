@@ -1,6 +1,6 @@
 #include "GenericMesh.h"
 
-#include "API/OpenGL/GL_resource_manager.h"
+#include "Hell/Render/API/OpenGL/GL_resource_manager.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 
@@ -22,10 +22,10 @@ void GenericMesh::UpdateVertexData(const void* vertices, size_t vertexCount, con
 
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId == 0) {
-            m_openGLId = OpenGLResourceManager::CreateGenericMesh();
+            m_openGLId = OpenGL::ResourceManager::CreateGenericMesh();
         }
 
-        OpenGLResourceManager::GetGenericMesh(m_openGLId).UpdateVertexData(vertices, vertexCount, layout);
+        OpenGL::ResourceManager::GetGenericMesh(m_openGLId).UpdateVertexData(vertices, vertexCount, layout);
     }
 }
 
@@ -35,16 +35,16 @@ void GenericMesh::UpdateIndexData(const std::vector<uint32_t>& indices) {
 
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId == 0) {
-            m_openGLId = OpenGLResourceManager::CreateGenericMesh();
+            m_openGLId = OpenGL::ResourceManager::CreateGenericMesh();
         }
 
-        OpenGLResourceManager::GetGenericMesh(m_openGLId).UpdateIndexData(indices);
+        OpenGL::ResourceManager::GetGenericMesh(m_openGLId).UpdateIndexData(indices);
     }
 }
 
 void GenericMesh::CleanUp() {
     if (m_openGLId != 0) {
-        OpenGLResourceManager::RemoveGenericMesh(m_openGLId);
+        OpenGL::ResourceManager::RemoveGenericMesh(m_openGLId);
         m_openGLId = 0;
     }
 
@@ -66,7 +66,7 @@ size_t GenericMesh::GetGPUAllocatedByteCount() const {
 
 uint32_t GenericMesh::GetVAO() const {
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-        OpenGLGenericMesh& mesh = OpenGLResourceManager::GetGenericMesh(m_openGLId);
+        OpenGLGenericMesh& mesh = OpenGL::ResourceManager::GetGenericMesh(m_openGLId);
         return mesh.GetVAO();
     }
     else {
