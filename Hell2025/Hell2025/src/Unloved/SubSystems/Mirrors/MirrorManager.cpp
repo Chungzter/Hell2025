@@ -1,12 +1,14 @@
 #include "MirrorManager.h"
-#include <Game/UniqueID.h>
-#include "World/LegacyWorld.h"
 
-namespace MirrorManager {
+#include "Legacy/World/LegacyWorld.h"
+
+#include "Unloved/ObjectId.h"
+
+namespace Unloved::MirrorManager {
     Hell::SlotMap<Mirror> g_mirrors;
 
     void AddMirror(uint64_t parentId, uint32_t meshNodeIndex, uint32_t globalMeshIndex) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::MIRROR);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::MIRROR);
         g_mirrors.emplace_with_id(id, id, parentId, meshNodeIndex, globalMeshIndex);
     }
 

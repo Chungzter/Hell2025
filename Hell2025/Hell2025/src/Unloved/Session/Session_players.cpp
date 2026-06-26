@@ -3,7 +3,7 @@
 #include "Hell/Containers/SlotMap.h"
 #include "Hell/Logging.h"
 
-#include <Game/UniqueID.h>
+#include "Unloved/ObjectId.h"
 
 namespace Unloved::Session {
     Hell::SlotMap<Player> g_players(8);
@@ -16,7 +16,7 @@ namespace Unloved::Session {
             return;
         }
 
-        const uint64_t playerId = UniqueID::GetNextObjectId(ObjectType::PLAYER);
+        const uint64_t playerId = Unloved::GetNextObjectId(ObjectType::PLAYER);
         const int32_t viewportIndex = static_cast<int32_t>(g_localPlayerIds.size());
         if (!g_players.emplace_with_id(playerId)) {
             return;
@@ -33,7 +33,7 @@ namespace Unloved::Session {
     }
 
     void AddRemotePlayer(const glm::vec3& position, const glm::vec3& rotation) {
-        const uint64_t playerId = UniqueID::GetNextObjectId(ObjectType::PLAYER);
+        const uint64_t playerId = Unloved::GetNextObjectId(ObjectType::PLAYER);
         if (!g_players.emplace_with_id(playerId)) {
             return;
         }

@@ -5,7 +5,7 @@
 #include "Hell/Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util.h"
-#include <Game/UniqueID.h>
+#include "Unloved/ObjectId.h"
 
 #include <iostream> // TODO clean up logging
 
@@ -25,7 +25,7 @@ GameObject::GameObject(GameObjectCreateInfo createInfo) {
         m_physicsId = Hell::Physics::CreateRigidStaticConvexMeshFromModel(m_transform, "Bench_ConvexHulls", filterData);
     }
 
-    m_objectId = UniqueID::GetNextObjectId(ObjectType::GAME_OBJECT);
+    m_objectId = Unloved::GetNextObjectId(ObjectType::GAME_OBJECT);
 }
 
 GameObjectCreateInfo GameObject::GetCreateInfo() {

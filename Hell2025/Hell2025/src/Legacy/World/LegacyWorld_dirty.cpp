@@ -1,5 +1,8 @@
 #include "LegacyWorld.h"
-#include "Debug/DebugDraw.h"
+
+#include "Legacy/Debug/DebugDraw.h"
+#include "Unloved/ObjectId.h"
+
 #include "Hell/Logging.h"
 
 namespace LegacyWorld {
@@ -106,7 +109,7 @@ namespace LegacyWorld {
     }
 
     void PrintDirtyLightDebugMessage(const Light& light, uint64_t intersectingObjectId) {
-        Logging::Debug() << "LIGHT " << light.GetObjectId() << " triggered dirty by " << Util::EnumToString(UniqueID::GetType(intersectingObjectId)) << " " << intersectingObjectId << "\n";
+        Logging::Debug() << "LIGHT " << light.GetObjectId() << " triggered dirty by " << Util::EnumToString(Unloved::GetObjectIdType(intersectingObjectId)) << " " << intersectingObjectId << "\n";
     }
 
     bool IntersectAABB(const RenderItem& renderItemA, const glm::vec3& boundsMinB, const glm::vec3& boundsMaxB) {

@@ -1,10 +1,10 @@
 #include "Dobermann.h"
 #include "Hell/Logging.h"
 #include "Debug/DebugDraw.h"
-#include "Pathfinding/NavMesh.h"
+#include "Unloved/SubSystems/NavMesh/NavMesh.h"
 #include "Renderer/Renderer.h"
 #include "World/LegacyWorld.h"
-#include "Game/UniqueID.h"
+#include "Unloved/ObjectId.h"
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
 
@@ -23,7 +23,7 @@ void Dobermann::Init(DobermannCreateInfo createInfo) {
     filterData.collisionGroup = CollisionGroup::RAGDOLL_ENEMY;
     filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
 
-    m_objectId = UniqueID::GetNextObjectId(ObjectType::DOBERMANN);
+    m_objectId = Unloved::GetNextObjectId(ObjectType::DOBERMANN);
     m_RagdollId = Hell::Physics::SpawnRagdoll(createInfo.position, createInfo.eulerDirection, "dobermann_new", m_objectId, filterData);
 
     g_animatedGameObjectObjectId = LegacyWorld::CreateAnimatedGameObject();
@@ -102,7 +102,7 @@ void Dobermann::DebugDraw() {
     DebugDraw::DrawLine(p1, p2, GREEN);
 
     // Path
-    NavMeshManager::DrawPath(m_path, WHITE);
+    Unloved::NavMeshManager::DrawPath(m_path, WHITE);
 }
 
 void Dobermann::Update(float deltaTime) {
@@ -147,7 +147,7 @@ void Dobermann::Update(float deltaTime) {
     if (m_state == DobermannState::WALK_TO_TARGET) {
         float speed = 1.0f;
 
-        m_path = NavMeshManager::FindPath(GetPosition(), m_target);
+        m_path = Unloved::NavMeshManager::FindPath(GetPosition(), m_target);
 
         
         if (m_path.size() >= 2) {

@@ -27,7 +27,7 @@ void Map::ClearToHeight(float height) {
         m_heightMapGLTexture.ClearR(height / HEIGHTMAP_SCALE_Y);
     }
     else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        std::cout << "Vulkan TODO: Map::ClearToHeight()\n";
+        Logging::ToDo() << "Vulkan TODO: Map::ClearToHeight()\n";
     }
 }
 
@@ -73,7 +73,7 @@ const glm::ivec2 Map::GetHeightMapTextureSize() {
         return glm::ivec2(m_heightMapGLTexture.GetWidth(), m_heightMapGLTexture.GetHeight());
     }
     else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        std::cout << "Vulkan TODO: Map::GetHeightMapTextureSize()\n";
+        Logging::ToDo() << "Vulkan TODO: Map::GetHeightMapTextureSize()\n";
         return glm::ivec2(0, 0);
     }
 }

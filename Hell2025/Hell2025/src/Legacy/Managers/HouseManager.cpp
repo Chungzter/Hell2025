@@ -27,7 +27,7 @@ namespace HouseManager {
 
         nlohmann::json json;
         if (!JSON::LoadJsonFromFile(json, path)) {
-            std::cerr << "HouseManager::LoadHouse() failed to open file: " << path;
+            Logging::Error() << "HouseManager::LoadHouse() failed to open file: " << path;
             return;
         }
 
@@ -80,7 +80,7 @@ namespace HouseManager {
         std::string outputPath = "res/houses/" + filename + ".house";
         std::ofstream file(outputPath, std::ios::binary | std::ios::trunc);
         if (!file.is_open()) {
-            std::cout << "Failed to open file for writing: " << outputPath << "\n";
+            Logging::Error() << "Failed to open file for writing: " << outputPath << "\n";
             return;
         }
 

@@ -13,7 +13,7 @@
 #include "Hell/Physics/Physics.h"
 
 #include "Types/Mirror.h"
-#include "Managers/MirrorManager.h"
+#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Unloved/Session/Session.h"
@@ -494,7 +494,7 @@ namespace OpenGLRenderer {
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
 
-                Mirror* mirror = MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());
+                Mirror* mirror = Unloved::MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());
                 if (!mirror) continue;
 
                 //mirror->DebugDraw();
@@ -541,7 +541,7 @@ namespace OpenGLRenderer {
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
 
-                Mirror* mirror = MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());
+                Mirror* mirror = Unloved::MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());
                 if (!mirror) continue;
 
                 OpenGL::SetUniformBool("u_useMirrorMatrix", true);
@@ -570,7 +570,7 @@ namespace OpenGLRenderer {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            Mirror* mirror = MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());
+            Mirror* mirror = Unloved::MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());
             if (!mirror) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);

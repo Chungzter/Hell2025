@@ -1,8 +1,15 @@
 #pragma once
-#include <Game/Types.h>
-#include <limits>
 
-namespace NavMeshManager {
+#include <glm/geometric.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+
+#include <cstdint>
+#include <limits>
+#include <vector>
+
+namespace Unloved::NavMeshManager {
 	struct NavTri {
         glm::vec3 v[3];
         int32_t neighbor[3]; // Index of neighbor across each edge, or -1

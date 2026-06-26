@@ -89,7 +89,7 @@ bool Wall::AddPointToEnd(glm::vec3 point, bool supressWarning) {
     glm::vec3& previousPoint = m_createInfo.points.back();
     float threshold = 0.05f;
     if (glm::distance(point, previousPoint) < threshold) {
-        std::cout << "Wall::AddPoint() failed: new point " << point << " is too close to previous point " << previousPoint << "\n";
+        Logging::Debug() << "Wall::AddPoint() failed: new point " << point << " is too close to previous point " << previousPoint << "\n";
         return false;
     }
 
@@ -100,7 +100,7 @@ bool Wall::AddPointToEnd(glm::vec3 point, bool supressWarning) {
 
 bool Wall::UpdatePointPosition(int pointIndex, glm::vec3 position, bool supressWarning) {
     if (pointIndex < 0 || pointIndex >= m_createInfo.points.size()) {
-        std::cout << "Wall::UpdatePointPosition() failed: point index " << pointIndex << " out of range of size " << m_createInfo.points.size() << "\n";
+        Logging::Debug() << "Wall::UpdatePointPosition() failed: point index " << pointIndex << " out of range of size " << m_createInfo.points.size() << "\n";
     }
 
     // Threshold check
@@ -108,14 +108,14 @@ bool Wall::UpdatePointPosition(int pointIndex, glm::vec3 position, bool supressW
     if (pointIndex > 0) {
         glm::vec3& previousPoint = m_createInfo.points[pointIndex - 1];
         if (glm::distance(position, previousPoint) < threshold) {
-            std::cout << "Wall::UpdatePointPosition() failed: new point " << position << " is too close to previous point " << previousPoint << "\n";
+            Logging::Debug() << "Wall::UpdatePointPosition() failed: new point " << position << " is too close to previous point " << previousPoint << "\n";
             return false;
         }
     }
     if (pointIndex < m_createInfo.points.size() - 1) {
         glm::vec3& nextPoint = m_createInfo.points[pointIndex + 1];
         if (glm::distance(position, nextPoint) < threshold) {
-            std::cout << "Wall::UpdatePointPosition() failed: new point " << position << " is too close to next point " << nextPoint << "\n";
+            Logging::Debug() << "Wall::UpdatePointPosition() failed: new point " << position << " is too close to next point " << nextPoint << "\n";
             return false;
         }
     }
@@ -171,7 +171,7 @@ const glm::vec3& Wall::GetPointByIndex(int pointIndex) {
     static glm::vec3 invalid = glm::vec3(0.0f);
 
     if (pointIndex < 0 || pointIndex >= m_createInfo.points.size()) {
-        std::cout << "Wall::GetPointByIndex() failed: point index " << pointIndex << " out of range of size " << m_createInfo.points.size() << "\n";
+        Logging::Error() << "Wall::GetPointByIndex() failed: point index " << pointIndex << " out of range of size " << m_createInfo.points.size() << "\n";
         return invalid;
     }
     return m_createInfo.points[pointIndex];

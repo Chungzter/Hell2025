@@ -6,6 +6,8 @@
 #include "Hell/BVH/BVH.h"
 #include "Hell/Logging.h"
 
+#include <iostream> // TODO: get me out of here
+
 DDGIVolume::DDGIVolume(uint64_t id, DDGIVolumeCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_id = id;
     m_createInfo = createInfo;

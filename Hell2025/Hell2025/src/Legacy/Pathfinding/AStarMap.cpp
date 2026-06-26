@@ -212,7 +212,7 @@ namespace AStarMap {
             //std::cout << "MarkCellAsObstacle() marked " << x << ", " << y << " as true, aka 1d idx " << idx << "\n";
         }
         else {
-            std::cout << "MarkCellAsObstacle() failed coz " << x << ", " << y << " is out of bounds\n";
+            Logging::Debug() << "MarkCellAsObstacle() failed coz " << x << ", " << y << " is out of bounds\n";
         }
     }
 
@@ -222,7 +222,7 @@ namespace AStarMap {
             g_map[idx] = 0;
         }
         else {
-            std::cout << "MarkCellAsObstacle() failed coz " << x << ", " << y << " is out of bounds\n";
+            Logging::Debug() << "MarkCellAsObstacle() failed coz " << x << ", " << y << " is out of bounds\n";
         }
     }
 

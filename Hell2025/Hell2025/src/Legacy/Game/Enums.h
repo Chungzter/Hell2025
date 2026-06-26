@@ -1,6 +1,7 @@
 #pragma once
 #include "Hell/Common.h"
 #include "Hell/Physics/PhysicsTypes.h"
+#include "Unloved/ObjectId/ObjectId_types.h"
 #include <cstdint>
 
 enum struct RendererMode {
@@ -63,70 +64,6 @@ enum class BlendingMode {
     DO_NOT_RENDER,
     STAINED_GLASS,
     UNDEFINED
-};
-
-enum class ObjectType : uint16_t {
-    NO_TYPE = 0,
-    BULLET_TRAIL,
-    CHARACTER_CONTROLLER,
-    CHRISTMAS_LIGHTS,
-    DECAL,
-    DDGI_VOLUME,
-    DOOR,
-    DOOR_FRAME,
-    DRAWER,
-    FENCE,
-    FIREPLACE,
-    GAME_OBJECT,
-    GENERIC_BOUNCABLE,
-    GENERIC_STATIC,
-    HEIGHT_MAP,
-    HOUSE_PLANE,
-    KANGAROO,
-    LADDER,
-    LIGHT,
-    MIRROR,
-    PIANO,
-    PICK_UP,
-    PICTURE_FRAME,
-    POWER_POLE_SET,
-    RAGDOLL_STANDALONE,
-    SHARK,
-    SPAWN_POINT,
-    STAIRCASE,
-    TREE,
-    TRIM_SET,
-    WALL,
-    WALL_SEGMENT,
-    WATER_PLANE_TOP,
-    WATER_PLANE_BOTTOM,
-    WINDOW,
-
-    ANIMATED_GAME_OBJECT,
-    CHRISMAS_PRESENT,
-    DOBERMANN,
-    GENERIC_OBJECT,
-    MESH_NODE,
-    NAV_MESH,
-    PLAYER,
-    TRIM,
-
-    UNDEFINED
-};
-
-enum struct OpenAxis {
-    TRANSLATE_X,
-    TRANSLATE_Y,
-    TRANSLATE_Z,
-    TRANSLATE_X_NEG,
-    TRANSLATE_Y_NEG,
-    TRANSLATE_Z_NEG,
-    ROTATE_X,
-    ROTATE_Y,
-    ROTATE_Z,
-    ROTATE_X_NEG,
-    ROTATE_Y_NEG,
-    ROTATE_Z_NEG,
 };
 
 enum struct EditorSelectionMode {
@@ -343,14 +280,6 @@ enum struct ProbeDebugState {
     REVLANCE,
     ACTIVE,
     STATE_COUNT,
-};
-
-enum class OpenState {
-    OPEN,
-    OPENING,
-    CLOSED,
-    CLOSING,
-    UNDEFINED
 };
 
 enum class PictureFrameType {

@@ -1,11 +1,11 @@
 #include "Openable.h"
-#include "Managers/OpenableManager.h"
-#include "World/LegacyWorld.h"
+
 #include "Hell/Input.h"
 #include "Hell/Audio.h"
-namespace Audio = Hell::Audio;
-namespace Input = Hell::Input;
 
+#include "Legacy/World/LegacyWorld.h"
+
+#include "Unloved/SubSystems/Openables/OpenableManager.h"
 
 void Openable::Init(const OpenableCreateInfo& createInfo, uint64_t parentObjectId) {
     m_currentOpenState = createInfo.initialOpenState;
@@ -88,14 +88,14 @@ std::string Openable::Interact(const glm::vec3& cameraPosition, const glm::vec3&
             if (door->CameraFacingDoorWorldForward(cameraPosition, cameraForward)) {
                 m_locked = false;
                 m_isDeadLock = false;
-                Audio::PlayAudio("Unlocked.wav", 1.0f);
+                Hell::Audio::PlayAudio("Unlocked.wav", 1.0f);
                 return "You unlocked it.";
             }
         }
     }
 
     if (m_locked && m_lockedAudio != UNDEFINED_STRING) {
-        Audio::PlayAudio(m_lockedAudio, 0.75f);
+        Hell::Audio::PlayAudio(m_lockedAudio, 0.75f);
 
         if (Door* door = LegacyWorld::GetDoorByObjectId(m_parentObjectId)) {
             if (door->GetDeadLockState()) {
@@ -113,14 +113,14 @@ std::string Openable::Interact(const glm::vec3& cameraPosition, const glm::vec3&
     if (m_currentOpenState == OpenState::OPEN) {
         m_currentOpenState = OpenState::CLOSING;
         if (m_closingAudio != UNDEFINED_STRING) {
-            Audio::PlayAudio(m_closingAudio, m_audioVolume);
+            Hell::Audio::PlayAudio(m_closingAudio, m_audioVolume);
         }
     }
 
     if (m_currentOpenState == OpenState::CLOSED) {
         m_currentOpenState = OpenState::OPENING;
         if (m_openingAudio != UNDEFINED_STRING) {
-            Audio::PlayAudio(m_openingAudio, m_audioVolume);
+            Hell::Audio::PlayAudio(m_openingAudio, m_audioVolume);
         }
     }
 
@@ -139,7 +139,7 @@ void Openable::Update(float deltaTime) {
             m_currentOpenState = OpenState::CLOSED;
 
             if (m_closedAudio != UNDEFINED_STRING) {
-                Audio::PlayAudio(m_closedAudio, m_audioVolume);
+                Hell::Audio::PlayAudio(m_closedAudio, m_audioVolume);
             }
         }
     }
@@ -152,7 +152,7 @@ void Openable::Update(float deltaTime) {
             m_currentOpenState = OpenState::OPEN;
 
             if (m_openedAudio != UNDEFINED_STRING) {
-                Audio::PlayAudio(m_openedAudio, m_audioVolume);
+                Hell::Audio::PlayAudio(m_openedAudio, m_audioVolume);
             }
         }
     }
@@ -184,10 +184,6 @@ void Openable::Update(float deltaTime) {
         case OpenAxis::ROTATE_Y_NEG:    m_transform.rotation.y = -m_currentOpenValue; break;
         case OpenAxis::ROTATE_Z_NEG:    m_transform.rotation.z = -m_currentOpenValue; break;
         default: break;
-    }
-
-    if (Input::KeyPressed(HELL_KEY_J)) {
-        m_dirty = true;
     }
 
     if (m_firstFrame) {

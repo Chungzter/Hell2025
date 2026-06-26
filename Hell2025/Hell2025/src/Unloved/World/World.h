@@ -61,8 +61,11 @@ namespace Unloved::World {
     void Init();
     void NewRun();
     void BeginFrame();
+    void UpdateBvhs();
     void Update();
     void UpdatePlayers();
+    void ProcessBullets();
+    void UpdateLegacyObjects();
     void SubmitRenderItems();
     void EndFrame();
     void CleanUp();

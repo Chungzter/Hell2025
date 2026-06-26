@@ -61,7 +61,7 @@ namespace MapManager {
         std::string outputPath = "res/maps/" + mapName + ".map";
         std::ofstream file(outputPath, std::ios::binary);
         if (!file.is_open()) {
-            std::cout << "Failed to open file for writing: " << outputPath << "\n";
+            Logging::Error() << "Failed to open file for writing: " << outputPath << "\n";
             return;
         }
 

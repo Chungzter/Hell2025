@@ -16,8 +16,8 @@ namespace Audio = Hell::Audio;
 #include "Player/Player.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util/Util.h"
-#include "UI/UIBackEnd.h"
-#include "UI/TextBlitter.h"
+#include "Hell/UI/UIBackEnd.h"
+#include "Hell/UI/TextBlitter.h"
 #include "Types/Game/GameObject.h"
 #include "../Timer.hpp"
 #include <glm/gtx/matrix_decompose.hpp>

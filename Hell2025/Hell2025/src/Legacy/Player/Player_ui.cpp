@@ -3,12 +3,13 @@
 #include "Debug/Debug.h"
 #include "Editor/Editor.h"
 #include "Util/Util.h"
-#include "UI/TextBlitter.h"
-#include "UI/UiBackend.h"
+#include "Hell/UI/TextBlitter.h"
+#include "Hell/UI/UIBackEnd.h"
 #include "Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
-#include "Game/UniqueID.h"
+#include "Unloved/SubSystems/Openables/OpenableManager.h"
+#include "Unloved/ObjectId.h"
 
 
 #include "Renderer/RenderDataManager.h"
@@ -245,7 +246,7 @@ void Player::UpdateUI(float deltaTime) {
 
             // Rays
             //if (true) {
-            //    text += "BVH ray: " + Util::ObjectTypeToString(UniqueID::GetType(m_bvhRayResult.objectId)) + " " + std::to_string(m_bvhRayResult.objectId) + "\n";
+            //    text += "BVH ray: " + Util::ObjectTypeToString(Unloved::GetObjectIdType(m_bvhRayResult.objectId)) + " " + std::to_string(m_bvhRayResult.objectId) + "\n";
             //    text += "PhysX ray: " + Util::ObjectTypeToString(m_physXRayResult.userData.objectType) + " " + std::to_string(m_physXRayResult.userData.objectId) + " " + Util::PhysicsTypeToString(m_physXRayResult.userData.physicsType) + " " + std::to_string(m_physXRayResult.userData.physicsId) + "\n";
             //    text += "Ray hit found: " + Util::BoolToString(m_rayHitFound) + " " + Util::ObjectTypeToString(m_rayHitObjectType) + " " + std::to_string(m_rayhitObjectId) + "\n";
             //    text += "Feet above height field: " + Util::BoolToString(m_feetAboveHeightField) + "\n";
@@ -317,11 +318,11 @@ void Player::UpdateUI(float deltaTime) {
                     MeshNode* meshNode = LegacyWorld::GetMeshNodeByObjectIdAndLocalNodeIndex(m_bvhRayResult.objectId, m_bvhRayResult.localMeshNodeIndex);
 
                     uint64_t hitId = m_bvhRayResult.objectId;
-                    ObjectType hitType = UniqueID::GetType(hitId);
+                    ObjectType hitType = Unloved::GetObjectIdType(hitId);
                     text += "- Hit pos: " + Util::Vec3ToString(m_bvhRayResult.hitPosition) + "\n";
                     text += "- Parent type: " + Util::ObjectTypeToString(hitType) + "\n";
                     text += "- Mesh name: " + Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshNameByMeshId(m_bvhRayResult.globalMeshIndex) + "\n";
-                    text += "- Parent Id: " + std::to_string(UniqueID::GetLocal(m_bvhRayResult.objectId)) + "\n";
+                    text += "- Parent Id: " + std::to_string(Unloved::GetObjectIdLocal(m_bvhRayResult.objectId)) + "\n";
                     text += "- Openable Id: " + std::to_string(m_bvhRayResult.openableId) + "\n";
                     text += "- Custom Id: " + std::to_string(m_bvhRayResult.customId) + "\n";
                     text += "- Mesh node index: " + std::to_string(m_bvhRayResult.localMeshNodeIndex) + "\n";
@@ -333,7 +334,7 @@ void Player::UpdateUI(float deltaTime) {
                         text += "- World AABB max: " + Util::Vec3ToString(meshNode->worldspaceAabb.GetBoundsMax()) + "\n";
                     }
 
-                    if (Openable* openable = OpenableManager::GetOpenableByOpenableId(m_bvhRayResult.openableId)) {
+                    if (Openable* openable = Unloved::OpenableManager::GetOpenableByOpenableId(m_bvhRayResult.openableId)) {
                         text += "\n";
                         text += "Open state: " + Util::OpenStateToString(openable->m_currentOpenState) + "\n";
                         text += "Value: " + std::to_string(openable->m_currentOpenValue) + "\n";

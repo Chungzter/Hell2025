@@ -5,8 +5,7 @@
 #include "Editor/Editor.h"
 #include "Hell/Physics/Physics.h"
 #include "Renderer/RenderDataManager.h"
-#include "Managers/OpenableManager.h"
-#include "Game/UniqueID.h"
+#include "Unloved/SubSystems/Openables/OpenableManager.h"
 #include "Util.h"
 #include "World/LegacyWorld.h"
 
@@ -37,7 +36,7 @@ Door::Door(uint64_t id, DoorCreateInfo& createInfo, SpawnOffset& spawnOffset) {
         // Iterate the mesh nodes, find any openable ID, and lock the cunt
         for (const MeshNode& meshNode : m_meshNodes.GetNodes()) {
             if (meshNode.openableId != 0) {
-                OpenableManager::LockOpenablebyId(meshNode.openableId);
+                Unloved::OpenableManager::LockOpenablebyId(meshNode.openableId);
             }
         }
     }

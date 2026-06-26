@@ -1,7 +1,7 @@
 #include "SpawnPoint.h"
 #include "Hell/Physics/Physics.h"
 #include "Debug/DebugDraw.h"
-#include <Game/UniqueID.h>
+#include "Unloved/ObjectId.h"
 
 SpawnPoint::SpawnPoint(const glm::vec3& position, const glm::vec3& camEuler) {
     m_position = position;
@@ -9,7 +9,7 @@ SpawnPoint::SpawnPoint(const glm::vec3& position, const glm::vec3& camEuler) {
 }
 
 void SpawnPoint::Init() {
-    m_objectId = UniqueID::GetNextObjectId(ObjectType::SPAWN_POINT);
+    m_objectId = Unloved::GetNextObjectId(ObjectType::SPAWN_POINT);
 
     // Create physics shape
     Transform transform;

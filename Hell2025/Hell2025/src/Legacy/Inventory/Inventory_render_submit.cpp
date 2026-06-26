@@ -3,8 +3,8 @@
 #include "Bible/Bible.h"
 #include "Unloved/Session/Session.h"
 #include "Hell/Logging.h"
-#include "UI/TextBlitter.h"
-#include "UI/UiBackend.h"
+#include "Hell/UI/TextBlitter.h"
+#include "Hell/UI/UIBackEnd.h"
 #include "Viewport/ViewportManager.h"
 
 #include <iostream> // TODO: cleanup logging

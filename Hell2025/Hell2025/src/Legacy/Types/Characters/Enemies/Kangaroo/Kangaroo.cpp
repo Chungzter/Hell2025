@@ -5,14 +5,14 @@
 #include "Unloved/Session/Session.h"
 #include "Renderer/Renderer.h"
 #include "Hell/Logging.h"
-#include "Game/UniqueID.h"
+#include "Unloved/ObjectId.h"
 #include "Timer.hpp"
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
 
 void Kangaroo::Init(KangarooCreateInfo createInfo) {
     m_createInfo = createInfo;
-    m_objectId = UniqueID::GetNextObjectId(ObjectType::KANGAROO);
+    m_objectId = Unloved::GetNextObjectId(ObjectType::KANGAROO);
 
     Respawn();
     

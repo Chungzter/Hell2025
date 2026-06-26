@@ -1,25 +1,27 @@
 #include "NavMesh.h"
 
 #include "Hell/Containers/SlotMap.h"
-#include "Hell/Math/GLM.h"
-#include "Hell/Math/Math.h"
 #include "Hell/Logging.h"
+#include "Hell/Math/Math.h"
 
+#include "Legacy/Debug/DebugDraw.h"
+#include "Legacy/Renderer/Renderer.h"
+#include "Legacy/Timer.hpp"
+#include "Legacy/Util/Util.h"
+#include "Legacy/World/LegacyWorld.h"
+
+#include "Unloved/ObjectId.h"
 #include "Unloved/Session/Session.h"
-#include "Debug/DebugDraw.h"
-#include "Types/Renderer/MeshNodes.h"
-#include "World/LegacyWorld.h"
+
 #include "clipper2/clipper.h"
 #include "earcut/earcut.hpp"
-#include "Timer.hpp"
-#include "Util.h"
 
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <queue>
+#include <unordered_map>
 #include <vector>
-#include "Hell/Input.h"
-#include "Hell/Audio.h"
-namespace Audio = Hell::Audio;
-namespace Input = Hell::Input;
-
 
 #define NAV_MESH_PROFILING 0
 
@@ -44,7 +46,7 @@ namespace mapbox {
     }
 }
 
-namespace NavMeshManager {
+namespace Unloved::NavMeshManager {
 
     struct LevelInfo {
         Clipper2Lib::PathsD staticPaths;
@@ -1029,45 +1031,21 @@ namespace NavMeshManager {
     }
 
     void Update() {
-        // Lazy toggle hack
-        
         for (NavMesh& navMesh : g_navMeshes) {
             navMesh.Update();
         }
 
-        static bool doThis = false;
-        if (Input::KeyPressed(HELL_KEY_O)) {
-            Audio::PlayAudio(AUDIO_SELECT, 1.0f);
-            doThis = !doThis;
+        if (!Renderer::GetCurrentRendererSettings().debugDrawNavMesh) {
+            return;
         }
-        if (!doThis) return;
-
 
         for (NavMesh& navMesh : g_navMeshes) {
             navMesh.DrawTris();
         }
-
-        // One once hack
-        //static bool runOnce = true;
-        //if (runOnce) {
-        //    runOnce = false;
-        //    if (LegacyWorld::GetDobermanns().size()) {
-        //        g_destination = LegacyWorld::GetDobermanns()[0].GetPosition();
-        //    }
-        //}
-        //
-        //glm::vec3 viewPos = Game::GetLocalPlayerByViewportIndex(0)->GetCameraPosition();
-        //
-        //// Place destination
-        //if (Input::KeyPressed(HELL_KEY_P)) {
-        //    g_destination = viewPos;
-        //}
-        //
-        //FindPath(viewPos, g_destination);
     }
 
     uint64_t CreateNavMesh(float agentRadius) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::NAV_MESH);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::NAV_MESH);
         g_navMeshes.emplace_with_id(id, id, agentRadius);
         return id;
     }

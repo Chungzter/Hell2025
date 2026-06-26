@@ -1,11 +1,13 @@
 #include "LegacyWorld.h"
 #include "Unloved/Session/Session.h"
-#include "Unloved/SubSystems/GameAudio.h"
+#include "Unloved/SubSystems/GameAudio/GameAudio.h"
 #include "Viewport/ViewportManager.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 
-#include "Game/UniqueID.h"
+#include "Unloved/ObjectId.h"
+
+#include <iostream> // TODO: get me out of here
 
 namespace LegacyWorld {
     bool g_awaitingFleshAudio = false;
@@ -93,7 +95,7 @@ namespace LegacyWorld {
             // Hit found?
             if (hitFound) {
 
-                ObjectType hitObjectType = UniqueID::GetType(objectId);
+                ObjectType hitObjectType = Unloved::GetObjectIdType(objectId);
                 Hell::Physics::PhysicsObjectType physicsObjectType = Hell::Physics::GetPhysicsObjectType(physicsId);
 
                 std::cout << "\n";

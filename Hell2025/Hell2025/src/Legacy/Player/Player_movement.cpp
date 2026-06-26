@@ -163,11 +163,6 @@ void Player::UpdateWalkingMovement(float deltaTime) {
             m_moving = false;
         }
     }
-
-    if (PressingWalkForward()) {
-        std::cout << GetTargetWalkingSpeed() << " " << IsRunning() << "\n";
-        //std::cout << GetFootPosition() << " " << Session::GetSessionTime() << " " << m_acceleration << "\n";
-    }
 }
 
 inline float SmoothLerp(float current, float target, float deltaTime, float smoothTime) {

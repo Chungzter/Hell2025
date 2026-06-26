@@ -3,12 +3,12 @@
 #include <Game/RendereringConstants.h>
 #include "Hell/Logging.h"
 #include "Editor/Editor.h"
-#include "Managers/MirrorManager.h"
-#include "Managers/OpenableManager.h"
+#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
+#include "Unloved/SubSystems/Openables/OpenableManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "World/LegacyWorld.h"
 #include "Hell/Physics/Physics.h"
-#include "Game/UniqueID.h"
+#include "Unloved/ObjectId.h"
 #include "Util.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -107,7 +107,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
         int nodeIndex = m_localIndexMap[createInfo.meshName];
 
         if (createInfo.openable.isOpenable) {
-            uint32_t openableId = OpenableManager::CreateOpenable(createInfo.openable, parentId);
+            uint32_t openableId = Unloved::OpenableManager::CreateOpenable(createInfo.openable, parentId);
             meshNode->openableId = openableId;
             meshNode->ownsOpenableId = true;
 
@@ -169,7 +169,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
                     userData.physicsId = meshNode->rigidDynamicId;
                     userData.objectId = meshNode->parentObjectId;
                     userData.physicsType = PhysicsType::RIGID_DYNAMIC;
-                    //userData.objectType = UniqueID::GetType(meshNode->parentObjectId);
+                    //userData.objectType = Unloved::GetObjectIdType(meshNode->parentObjectId);
                     Hell::Physics::SetRigidDynamicUserData(meshNode->rigidDynamicId, userData);
                 }
             }
@@ -180,21 +180,23 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
 
         // If blending mode is mirror, then add a new mirror to the world
         if (meshNode->blendingMode == BlendingMode::MIRROR) {
-            MirrorManager::AddMirror(parentId, meshNode->nodeIndex, meshNode->globalMeshIndex);
+            Unloved::MirrorManager::AddMirror(parentId, meshNode->nodeIndex, meshNode->globalMeshIndex);
         }
     }
 }
 
 void MeshNodes::PrintMeshNames() {
-    std::cout << m_modelName << "\n";
+    std::string message = m_modelName + "\n";
 
     for (size_t i = 0; i < m_meshNodes.size(); i++) {
         MeshNode& meshNode = m_meshNodes[i];
         Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode.globalMeshIndex);
         if (!mesh) continue;
 
-        std::cout << "-" << i << ": " << mesh->name << "\n";
+        message += "-" + std::to_string(i) + ": " + mesh->name + "\n";
     }
+
+    Logging::Debug() << message;
 }
 
 bool MeshNodes::NodeExists(const std::string& meshName) {
@@ -223,7 +225,7 @@ bool MeshNodes::MeshNodeIsOpen(const std::string& meshName) {
     const MeshNode* meshNode = GetMeshNodeByMeshName(meshName);
     if (!meshNode) return false;
 
-    if (Openable* openable = OpenableManager::GetOpenableByOpenableId(meshNode->openableId)) {
+    if (Openable* openable = Unloved::OpenableManager::GetOpenableByOpenableId(meshNode->openableId)) {
         if (openable->IsOpen()) {
             return false;
         }
@@ -235,7 +237,7 @@ bool MeshNodes::MeshNodeIsClosed(const std::string& meshName) {
     const MeshNode* meshNode = GetMeshNodeByMeshName(meshName);
     if (!meshNode) return false;
 
-    if (Openable* openable = OpenableManager::GetOpenableByOpenableId(meshNode->openableId)) {
+    if (Openable* openable = Unloved::OpenableManager::GetOpenableByOpenableId(meshNode->openableId)) {
         if (openable->IsClosed()) {
             return false;
         }
@@ -352,7 +354,7 @@ void MeshNodes::SetObjectIdByMeshName(const std::string& meshName, uint64_t id) 
 }
 
 void MeshNodes::SetOpenableByMeshName(const std::string& meshName, uint64_t openableId, uint64_t parentObjectId) {
-    Openable* openable = OpenableManager::GetOpenableByOpenableId(openableId);
+    Openable* openable = Unloved::OpenableManager::GetOpenableByOpenableId(openableId);
     if (!openable) {
         Logging::Error() << "MeshNodes::SetOpenableByMeshName failed: openableId " << openableId << " not found\n";
         return;
@@ -460,7 +462,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
     // Openables
     for (MeshNode& meshNode : m_meshNodes) {
         if (meshNode.ownsOpenableId) {
-            if (Openable* openable = OpenableManager::GetOpenableByOpenableId(meshNode.openableId)) {
+            if (Openable* openable = Unloved::OpenableManager::GetOpenableByOpenableId(meshNode.openableId)) {
                 if (openable->IsDirty()) {
                     meshNode.transform = openable->m_transform;
                     hierarchyDirty = true;
@@ -522,7 +524,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
 
         // Update render item
         meshNode.inverseWorldMatrix = glm::inverse(meshNode.worldMatrix);
-        meshNode.renderItem.objectType = (int)UniqueID::GetType(meshNode.parentObjectId);
+        meshNode.renderItem.objectType = (int)Unloved::GetObjectIdType(meshNode.parentObjectId);
         meshNode.renderItem.openableId = meshNode.openableId;
         meshNode.renderItem.customId = meshNode.customId;
         meshNode.renderItem.modelMatrix = meshNode.worldMatrix;

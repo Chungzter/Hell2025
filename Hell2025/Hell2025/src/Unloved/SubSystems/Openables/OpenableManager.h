@@ -1,11 +1,12 @@
 #pragma once
-#include <Game/CreateInfo.h>
-#include <Game/Constants.h>
-#include <Game/Enums.h>
-#include <Game/Types.h>
-#include "Types/Core/Openable.h"
+#include "Unloved/SubSystems/Openables/Openable.h"
 
-namespace OpenableManager {
+#include <glm/vec3.hpp>
+
+#include <cstdint>
+#include <string>
+
+namespace Unloved::OpenableManager {
     uint32_t CreateOpenable(const OpenableCreateInfo& createInfo, uint64_t parentObjectId);
     void Update(float deltaTime);
     std::string TriggerInteract(uint32_t openableId, const glm::vec3& cameraPosition, const glm::vec3& cameraForward);

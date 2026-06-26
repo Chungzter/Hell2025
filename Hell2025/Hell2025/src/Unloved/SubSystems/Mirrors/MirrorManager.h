@@ -1,9 +1,13 @@
 #pragma once
-#include <Game/Types.h>
-#include "Types/Mirror.h"
+
 #include "Hell/Containers/SlotMap.h"
 
-namespace MirrorManager {
+#include "Legacy/Game/Types.h"
+#include "Legacy/Types/Mirror.h"
+
+#include <cstdint>
+
+namespace Unloved::MirrorManager {
     void AddMirror(uint64_t parentId, uint32_t meshNodeIndex, uint32_t globalMeshIndex);
     void Update();
     void CleanUp();

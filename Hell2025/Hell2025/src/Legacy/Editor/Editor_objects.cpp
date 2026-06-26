@@ -8,7 +8,7 @@ namespace Audio = Hell::Audio;
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
-#include "Game/UniqueID.h"
+#include "Unloved/ObjectId.h"
 
 #include "Unloved/Session/Session.h"
 #include "Hell/Input.h"
@@ -40,13 +40,13 @@ namespace Editor {
 
         PhysXRayResult physxRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, backfaceCulling);
         if (physxRayResult.hitFound) {
-            ObjectType type = UniqueID::GetType(physxRayResult.userData.objectId);
+            ObjectType type = Unloved::GetObjectIdType(physxRayResult.userData.objectId);
             SetHoveredObjectType(type);
             SetHoveredObjectId(physxRayResult.userData.objectId);
             //std::cout << "phyx hit: " << physxRayResult.userData.objectId << "\n";
 
             //std::cout << "physx hit: " << physxRayResult.userData.objectId << " ";
-            //std::cout << Util::EnumToString(UniqueID::GetType(GetSelectedObjectId())) << " ";
+            //std::cout << Util::EnumToString(Unloved::GetObjectIdType(GetSelectedObjectId())) << " ";
             //std::cout << physxRayResult.hitPosition << " " << glm::distance(physxRayResult.hitPosition, rayOrigin) << "\n";
         }
 
@@ -56,11 +56,11 @@ namespace Editor {
             float physXDistance = glm::distance(physxRayResult.hitPosition, rayOrigin);
             float bvhDistance = glm::distance(bvhRayResult.hitPosition, rayOrigin);
             if (bvhDistance < physXDistance) {
-                SetHoveredObjectType(UniqueID::GetType(bvhRayResult.objectId));
+                SetHoveredObjectType(Unloved::GetObjectIdType(bvhRayResult.objectId));
                 SetHoveredObjectId(bvhRayResult.objectId);
             }
             //std::cout << "bvhRayResult hit: " << bvhRayResult.objectId << " ";
-            //std::cout << Util::EnumToString(UniqueID::GetType(GetSelectedObjectId())) << " ";
+            //std::cout << Util::EnumToString(Unloved::GetObjectIdType(GetSelectedObjectId())) << " ";
             //std::cout << bvhRayResult.hitPosition << " " << bvhDistance << "\n";
         }
 
@@ -81,11 +81,11 @@ namespace Editor {
 
     void UpdateObjectSelection() {
 
-        //std::cout << "Selected object: " << GetSelectedObjectId() << " " << Util::EnumToString(UniqueID::GetType(GetSelectedObjectId())) << "\n";
+        //std::cout << "Selected object: " << GetSelectedObjectId() << " " << Util::EnumToString(Unloved::GetObjectIdType(GetSelectedObjectId())) << "\n";
 
-        //switch (UniqueID::GetType(objectId)) {
+        //switch (Unloved::GetObjectIdType(objectId)) {
         //case ObjectType::DDGI_VOLUME: SetEditorSelectionMode(EditorSelectionMode::OBJECT); break;
-        //default: Logging::Warning() << "Editor::SelectObject(..) is missing selection mode implementation for " << Util::ObjectTypeToString(UniqueID::GetType(objectId)) << "\n"; break;
+        //default: Logging::Warning() << "Editor::SelectObject(..) is missing selection mode implementation for " << Util::ObjectTypeToString(Unloved::GetObjectIdType(objectId)) << "\n"; break;
         //}
 
 

@@ -1,11 +1,8 @@
 ﻿#include "UIBackEnd.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Config/Config.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "UI/TextBlitter.h"
-
-#include <iostream> // TODO clean up logging
+#include "Hell/UI/TextBlitter.h"
 
 using namespace Hell;
 
@@ -13,6 +10,8 @@ namespace UIBackEnd {
     std::vector<RenderItemUI> g_renderItems;
     std::vector<Vertex2D> g_vertices;
     std::vector<uint32_t> g_indices;
+    uint32_t g_uiResolutionWidth = 1;
+    uint32_t g_uiResolutionHeight = 1;
 
     void Init() {
         Logging::Init() << "Initialized the UI Backend";
@@ -31,6 +30,11 @@ namespace UIBackEnd {
         genericMesh.UpdateIndexData(g_indices);
     }
 
+    void SetUIResolution(uint32_t width, uint32_t height) {
+        g_uiResolutionWidth = width;
+        g_uiResolutionHeight = height;
+    }
+
     void BlitText(const std::string& text, const std::string& fontName, glm::ivec2 location, Alignment alignment, float scale, TextureFilter textureFilter) {
         BlitText(text, fontName, location.x, location.y, alignment, scale, textureFilter);
     }
@@ -38,33 +42,33 @@ namespace UIBackEnd {
     void BlitText(const std::string& text, const std::string& fontName, int originX, int originY, Alignment alignment, float scale, TextureFilter textureFilter) {
         int textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName(fontName);
         if (textureIndex == -1) {
-            std::cout << "UIBackEnd::BlitText() failed to find texture " << fontName << "\n";
+            Logging::Error() << "UIBackEnd::BlitText(..) failed to find texture " << fontName << "\n";
             return;
         }
 
         size_t baseIndex = g_indices.size();
-        const Resolutions& resolutions = Config::GetResolutions();
 
         if (!TextBlitter::FontExists(fontName)) {
-            Logging::Error() << "UIBackEnd::BlitText() failed to find " << fontName << "\n";
+            Logging::Error() << "UIBackEnd::BlitText(..) failed to find " << fontName << "\n";
             return;
         }
 
-        TextBlitter::BlitText(text, fontName, originX, originY, resolutions.ui, alignment, scale, textureIndex, g_vertices, g_indices);
+        const glm::ivec2 resolution(static_cast<int32_t>(g_uiResolutionWidth), static_cast<int32_t>(g_uiResolutionHeight));
+        TextBlitter::BlitText(text, fontName, originX, originY, resolution, alignment, scale, textureIndex, g_vertices, g_indices);
         
         size_t indexCount = g_indices.size() - baseIndex;
         if (indexCount == 0) return;
 
         RenderItemUI& renderItem = g_renderItems.emplace_back();
-        renderItem.baseVertex = 0;
-        renderItem.baseIndex = static_cast<int>(baseIndex);
-        renderItem.indexCount = static_cast<int>(indexCount);
-        renderItem.textureIndex = textureIndex;
-        renderItem.filterMode = (textureFilter == TextureFilter::NEAREST) ? 1 : 0;
+        renderItem.baseVertex = 0u;
+        renderItem.baseIndex = static_cast<uint32_t>(baseIndex);
+        renderItem.indexCount = static_cast<uint32_t>(indexCount);
+        renderItem.textureIndex = static_cast<uint32_t>(textureIndex);
+        renderItem.filterMode = (textureFilter == TextureFilter::NEAREST) ? 1u : 0u;
         renderItem.clipMinX = 0;
         renderItem.clipMinY = 0;
-        renderItem.clipMaxX = resolutions.ui.x;
-        renderItem.clipMaxY = resolutions.ui.y;
+        renderItem.clipMaxX = static_cast<int32_t>(g_uiResolutionWidth);
+        renderItem.clipMaxY = static_cast<int32_t>(g_uiResolutionHeight);
     }
 
     void BlitTexture(BlitTextureInfo info) {
@@ -75,13 +79,13 @@ namespace UIBackEnd {
         // Bail if texture not found
         int textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName(textureName);
         if (textureIndex == -1) {
-            std::cout << "BlitTexture() failed. Could not find texture '" << textureName << "'\n";
+            Logging::Error() << "UIBackEnd::BlitTexture(..) failed to find texture " << textureName << "\n";
             return;
         }
         // Get texture dimensions
         Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(textureIndex);
-        float w = (size.x != -1) ? size.x : texture->GetWidth();
-        float h = (size.y != -1) ? size.y : texture->GetHeight();
+        const float w = (size.x != -1) ? static_cast<float>(size.x) : static_cast<float>(texture->GetWidth());
+        const float h = (size.y != -1) ? static_cast<float>(size.y) : static_cast<float>(texture->GetHeight());
 
         glm::vec2 positions[4] = {};
         glm::vec2 uvs[4] = {
@@ -139,37 +143,36 @@ namespace UIBackEnd {
         glm::vec2 anchor = glm::round(glm::vec2(location));
 
         // Convert the final screen position to NDC
-        const Resolutions& resolutions = Config::GetResolutions();
         glm::vec2 finalVertices[4] = {};
 
         for (int i = 0; i < 4; ++i) {
             glm::vec2 screenPos = glm::vec2(anchor) + positions[i];
-            finalVertices[i].x = (screenPos.x / static_cast<float>(resolutions.ui.x)) * 2.0f - 1.0f;
-            finalVertices[i].y = 1.0f - (screenPos.y / static_cast<float>(resolutions.ui.y)) * 2.0f;
+            finalVertices[i].x = (screenPos.x / static_cast<float>(g_uiResolutionWidth)) * 2.0f - 1.0f;
+            finalVertices[i].y = 1.0f - (screenPos.y / static_cast<float>(g_uiResolutionHeight)) * 2.0f;
         }
 
-        size_t baseVertex = g_vertices.size();
-        g_vertices.reserve(baseVertex + 4);
+        const uint32_t baseVertex = static_cast<uint32_t>(g_vertices.size());
+        g_vertices.reserve(baseVertex + 4u);
         g_vertices.push_back({ { finalVertices[0].x, finalVertices[0].y }, uvs[0], colorTint });
         g_vertices.push_back({ { finalVertices[1].x, finalVertices[1].y }, uvs[1], colorTint });
         g_vertices.push_back({ { finalVertices[2].x, finalVertices[2].y }, uvs[2], colorTint });
         g_vertices.push_back({ { finalVertices[3].x, finalVertices[3].y }, uvs[3], colorTint });
 
-        size_t baseIndex = g_indices.size();
-        g_indices.reserve(baseIndex + 6);
-        g_indices.push_back(baseVertex + 0);
-        g_indices.push_back(baseVertex + 1);
-        g_indices.push_back(baseVertex + 2);
-        g_indices.push_back(baseVertex + 0);
-        g_indices.push_back(baseVertex + 2);
-        g_indices.push_back(baseVertex + 3);
+        const uint32_t baseIndex = static_cast<uint32_t>(g_indices.size());
+        g_indices.reserve(baseIndex + 6u);
+        g_indices.push_back(baseVertex + 0u);
+        g_indices.push_back(baseVertex + 1u);
+        g_indices.push_back(baseVertex + 2u);
+        g_indices.push_back(baseVertex + 0u);
+        g_indices.push_back(baseVertex + 2u);
+        g_indices.push_back(baseVertex + 3u);
 
         RenderItemUI& renderItem = g_renderItems.emplace_back();
-        renderItem.baseVertex = 0;
+        renderItem.baseVertex = 0u;
         renderItem.baseIndex = baseIndex;
-        renderItem.indexCount = 6;
-        renderItem.textureIndex = textureIndex;
-        renderItem.filterMode = (textureFilter == TextureFilter::NEAREST) ? 1 : 0;
+        renderItem.indexCount = 6u;
+        renderItem.textureIndex = static_cast<uint32_t>(textureIndex);
+        renderItem.filterMode = (textureFilter == TextureFilter::NEAREST) ? 1u : 0u;
         renderItem.clipMinX = clipMinX;
         renderItem.clipMinY = clipMinY;
         renderItem.clipMaxX = clipMaxX;

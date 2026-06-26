@@ -4,10 +4,15 @@
 
 #include "Legacy/Editor/Editor.h"
 #include "Legacy/Imgui/ImguiBackEnd.h"
+#include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Session/Session.h"
 
 namespace Unloved::World {
+    void UpdateBvhs() {
+        LegacyWorld::UpdateBvhs();
+    }
+
     void UpdatePlayers() {
         const float deltaTime = Hell::Time::DeltaTime();
         const bool disableControl = Editor::IsOpen() || ImGuiBackEnd::OwnsMouse();
@@ -30,5 +35,13 @@ namespace Unloved::World {
 
             player->Update(deltaTime);
         }
+    }
+
+    void ProcessBullets() {
+        LegacyWorld::ProcessBullets();
+    }
+
+    void UpdateLegacyObjects() {
+        LegacyWorld::Update(Hell::Time::DeltaTime());
     }
 }

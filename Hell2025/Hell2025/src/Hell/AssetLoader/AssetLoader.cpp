@@ -7,7 +7,7 @@
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/ResourceManagement/TextureUploader.h"
-#include "UI/UIBackEnd.h"
+#include "Hell/UI/UIBackEnd.h"
 
 #include <algorithm>
 #include <chrono>

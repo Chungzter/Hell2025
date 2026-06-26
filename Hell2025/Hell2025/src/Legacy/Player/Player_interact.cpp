@@ -5,7 +5,7 @@ namespace Audio = Hell::Audio;
 #include "Unloved/Session/Session.h"
 #include "Hell/Physics/Physics.h"
 #include "Util/Util.h"
-#include "Managers/OpenableManager.h"
+#include "Unloved/SubSystems/Openables/OpenableManager.h"
 #include "World/LegacyWorld.h"
 #include <algorithm>
 #include "Viewport/ViewportManager.h"
@@ -15,7 +15,7 @@ namespace Audio = Hell::Audio;
 #pragma warning(disable : 26498)
 
 #include "Renderer/Renderer.h"
-#include "Game/UniqueID.h"
+#include "Unloved/ObjectId.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
@@ -114,12 +114,12 @@ void Player::UpdateInteract() {
 
     //DebugDraw::DrawPoint(hitPosition, GREEN);
 
-    ObjectType interactObjectType = UniqueID::GetType(m_interactObjectId);
+    ObjectType interactObjectType = Unloved::GetObjectIdType(m_interactObjectId);
 
     // Convenience bool for setting crosshair
     m_interactFound = false;
 
-    if (OpenableManager::IsInteractable(m_interactOpenableId, GetCameraPosition())) m_interactFound = true;
+    if (Unloved::OpenableManager::IsInteractable(m_interactOpenableId, GetCameraPosition())) m_interactFound = true;
     if (interactObjectType == ObjectType::PIANO && m_interactCustomId != 0) {
         m_interactFound = true;
     }
@@ -130,9 +130,9 @@ void Player::UpdateInteract() {
 
     // PRESSED interact key
     if (PressedInteract()) {
-        if (OpenableManager::GetOpenableByOpenableId(m_interactOpenableId)) {
+        if (Unloved::OpenableManager::GetOpenableByOpenableId(m_interactOpenableId)) {
 
-            std::string openableText = OpenableManager::TriggerInteract(m_interactOpenableId, GetCameraPosition(), GetCameraForward());
+            std::string openableText = Unloved::OpenableManager::TriggerInteract(m_interactOpenableId, GetCameraPosition(), GetCameraForward());
             if (openableText != "") {
                 m_typeWriter.DisplayText(openableText);
             }

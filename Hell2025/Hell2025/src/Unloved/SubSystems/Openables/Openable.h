@@ -1,16 +1,18 @@
-// Openable.h
 #pragma once
-#include "Hell/Audio.h"
-#include <Game/CreateInfo.h>
-#include <Game/Constants.h>
-#include <Game/Enums.h>
-#include "Util.h"
-#include <Game/UniqueID.h>
+#include "Hell/Common/Constants.h"
+#include "Hell/Math/Transform.h"
+
+#include "Unloved/SubSystems/Openables/Openable_types.h"
+
+#include <glm/vec3.hpp>
+
+#include <cstdint>
+#include <string>
 
 struct Openable {
     OpenState m_currentOpenState = OpenState::CLOSED;
     OpenAxis m_openAxis = OpenAxis::TRANSLATE_Z;
-    Transform m_transform;
+    Hell::Transform m_transform;
     uint64_t m_parentObjectId = 0;
     std::string m_openingAudio = UNDEFINED_STRING;
     std::string m_closingAudio = UNDEFINED_STRING;

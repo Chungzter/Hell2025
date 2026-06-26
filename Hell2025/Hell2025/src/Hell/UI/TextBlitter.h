@@ -1,7 +1,9 @@
 #pragma once
-#include "Game/Enums.h"
+#include "Hell/Common/Enums.h"
 #include "Hell/Render/VertexAttributes.h"
-#include "UI/FontSpriteSheet.h"
+#include "Hell/UI/FontSpriteSheet.h"
+
+#include <glm/vec2.hpp>
 
 #include <cstdint>
 #include <string>

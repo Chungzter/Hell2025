@@ -1,25 +1,26 @@
 #include "LegacyWorld.h"
+
+#include "Legacy/Core/P90MagManager.h"
+#include "Legacy/Pathfinding/AStarMap.h"
+#include "Legacy/Renderer/RenderDataManager.h"
+#include "Legacy/Renderer/Renderer.h"
+#include "Legacy/Viewport/ViewportManager.h"
+#include "Legacy/Bible/Bible.h"
+#include "Legacy/Types/Misc/DoorChain.h"
+#include "Unloved/ObjectId.h"
+
 #include "Hell/Audio.h"
-#include "Unloved/Session/Session.h"
-#include "Core/P90MagManager.h"
-#include "Hell/Logging.h"
-#include "Pathfinding/AStarMap.h"
-#include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
-#include "Viewport/ViewportManager.h"
-
-#include "Pathfinding/NavMesh.h"
-#include "Bible/Bible.h"
-#include "Types/Misc/DoorChain.h"
-
 #include "Hell/Containers/SlotMap.h"
+#include "Hell/Logging.h"
 #include "Hell/Input.h"
+
+#include "Unloved/Session/Session.h"
+
 namespace Input = Hell::Input;
 
 
 namespace LegacyWorld {
 
-    void LazyDebugSpawns();
     void CalculateGPULights();
     void CalculateDirtyAABBs();
 
@@ -57,7 +58,6 @@ namespace LegacyWorld {
 
         ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.23f));
         ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle3", 1.0f);
-		//ratKidAO->PrintMeshNames();
 
     }
 
@@ -71,42 +71,7 @@ namespace LegacyWorld {
             player->GetCamera().SetEulerRotation(glm::vec3(-0.15f, 1.58f, 0.0f));
         }
 
-
         HackTest();
-        //static bool rotate = false;
-        //
-        //if (Input::KeyPressed(HELL_KEY_P)) {
-        //    rotate = !rotate;
-        //}
-        //
-        //if (rotate) {
-        //    Player* player = Game::GetLocalPlayerByViewportIndex(0);
-        //    AnimatedGameObject* ratKidAO = GetRadKidAO();
-        //
-        //    static float time = 0;
-        //    time += Game::GetDeltaTime();
-        //
-        //    float dist = 0.4f;
-        //    float speed = 1.0f;
-        //
-        //    glm::vec3 origin = ratKidAO->GetPosition() + glm::vec3(0, 0, 0.15f);
-        //    //DebugDraw::DrawPoint(origin + glm::vec3(0.0f, 1.6f, 0.0f), RED);
-        //
-        //    float angle = time * speed;
-        //
-        //    glm::vec3 offset = glm::vec3(sinf(angle) * dist, 0.0f, cosf(angle) * dist);
-        //    glm::vec3 position = origin + offset;
-        //
-        //    player->SetFootPosition(position);
-        //
-        //    glm::vec3 oldEuler = player->GetCamera().GetEulerRotation();
-        //    glm::vec3 dir = glm::normalize(origin - position);
-        //
-        //    glm::vec3 newEuler = oldEuler;
-        //    newEuler.y = atan2f(-dir.x, -dir.z);
-        //
-        //    player->GetCamera().SetEulerRotation(newEuler);
-        //}
 
         if (Input::KeyPressed(HELL_KEY_NUMPAD_1)) {
             AnimatedGameObject* ratKidAO = GetRadKidAO();
@@ -139,82 +104,6 @@ namespace LegacyWorld {
                 light.ForceDirty();
             }
         }
-
-        // FAILED DOOR CHAIN LINK SHIT
-        if (false) {
-            static Hell::SlotMap<DoorChain> doorchains;
-            static bool runOnce = true;
-
-            if (runOnce) {
-                runOnce = false;
-
-                SpawnOffset spawnOffset;
-
-                DoorChainCreateInfo createInfo;
-
-                // First chain
-                createInfo.position = glm::vec3(36, 32.6, 36);
-                const uint64_t id = UniqueID::GetNextObjectId(ObjectType::NO_TYPE);
-                doorchains.emplace_with_id(id, id, createInfo, spawnOffset);
-
-                // Second chain
-                createInfo.position = glm::vec3(37, 32.6, 37);
-                createInfo.rotation.y = HELL_PI * 0.5f;
-                const uint64_t id2 = UniqueID::GetNextObjectId(ObjectType::NO_TYPE);
-                doorchains.emplace_with_id(id2, id2, createInfo, spawnOffset);
-            }
-
-            for (DoorChain& doorChain : doorchains) {
-                doorChain.Update(deltaTime);
-                doorChain.SubmitRenderItems();
-            }
-        }
-
-        NavMeshManager::Update();
-
-        //if (Input::KeyPressed(HELL_KEY_LEFT)) {
-        //    static MermaidCreateInfo createInfo = GetMermaids()[0].GetCreateInfo();
-        //    createInfo.rotation.y += 0.05f;
-        //    GetMermaids()[0].Init(createInfo, SpawnOffset());
-        //}
-        //
-        //if (Input::KeyPressed(HELL_KEY_NUMPAD_3)) {
-        //
-        //    GetGameObjects()[0].SetPosition(Game::GetLocalPlayerByViewportIndex(0)->GetFootPosition());
-        //    for (Light& light : GetLights()) {
-        //        light.ForceDirty();
-        //    }
-        //}
-        //
-        //if (Input::KeyPressed(HELL_KEY_J)) {
-        //    PrintObjectCounts();
-        //}
-
-        //glm::vec3 rayOrigin = Game::GetLocalPlayerByViewportIndex(0)->GetCameraPosition();
-        //glm::vec3 rayDir = Game::GetLocalPlayerByViewportIndex(0)->GetCameraForward();
-        //glm::vec3 position = glm::vec3(1.0f);
-        //float radius = 0.5f;
-        //
-        //bool rayHit = Util::RayIntersectsSphere(rayOrigin, rayDir, position, radius);
-        //glm::vec4 color = rayHit ? GREEN : YELLOW;
-        //Renderer::DrawSphere(position, radius, color);
-        //
-        //if (rayHit) {
-        //    std::cout << "ray origin:      " << rayOrigin << "\n";
-        //    std::cout << "ray dir:         " << rayDir << "\n";
-        //    std::cout << "sphere position: " << position << "\n";
-        //    std::cout << "sphere radius:   " << radius << "\n\n";
-        //}
-
-        // Display closest AABB to mesh nodes to player 0
-        //for (GenericObject& genericObject : GetGenericObjects()) {
-        //    for (const MeshNode& meshNode : genericObject.GetMeshNodes().GetNodes()) {
-        //        const AABB& aabb = meshNode.worldspaceAabb;
-        //        glm::vec3 closestPoint = aabb.NearestPointTo(Game::GetLocalPlayerByViewportIndex(0)->GetCameraPosition());
-        //        DebugDraw::DrawAABB(aabb, PINK);
-        //        DebugDraw::DrawPoint(closestPoint, YELLOW);
-        //    }
-        //}
 
         if (g_trapKingID == 666) {
             g_trapKingID = CreateAnimatedGameObject();
@@ -262,13 +151,8 @@ namespace LegacyWorld {
             trapKingAO->SetMeshMaterialByMeshName("Boxers", "TrapKingBoxes");
 
             trapKingAO->SetPosition(glm::vec3(37.4f, 31.0f, 36.23f));
-            //trapKingAO->PrintMeshNames();
-
-            //trapKingAO->SetSkinnedModel("Remington870", "Remington870");
-            //trapKingAO->SetPosition(glm::vec3(37.4f, 32.0f, 36.23f));
 
             trapKingAO->SetAnimationModeToBindPose();
-            //trapKingAO->PlayAndLoopAnimation("Main", "RatKid_PistolWalk3", 1.0f);
         }
 
         glm::vec3 bunnyPos = glm::vec3(41.05f, 31.0f, 40.25f);
@@ -282,39 +166,6 @@ namespace LegacyWorld {
           AnimatedGameObject* ratKidAO = GetRadKidAO();
           ratKidAO->SetPosition(glm::vec3(37.0f, 31.0f, 36.73f));
       }
-
-
-      //static MeshNodes spasTest;
-      //static bool runOnce = true;
-      //if (runOnce) {
-      //    runOnce = false;
-      //    Bible::ConfigureMeshNodesByItemName(0, "Remington870", &spasTest, false);
-      //}
-      //
-      //float scale = 0.875f;
-      //
-      //Transform transform;
-      //transform.position = glm::vec3(37.325f, 32.575f, 36.54f);
-      //transform.rotation.y = HELL_PI * -0.5f;
-      //transform.scale = glm::vec3(scale);
-      //
-      //spasTest.Update(transform.to_mat4());
-      //RenderDataManager::SubmitRenderItems(spasTest.GetRenderItems());
-
-      //AnimatedGameObject* trapKingAO = GetTrapKingAO();
-      //trapKingAO->SetScale(scale);
-
-      //if (Input::KeyPressed(HELL_KEY_NUMPAD_9)) {
-      //    AnimatedGameObject* ratKidAO = GetRadKidAO();
-      //    ratKidAO->SetAnimationModeToBindPose();
-      //    Audio::PlayAudio(AUDIO_SELECT, 1.0f);
-      //}
-      //if (Input::KeyPressed(HELL_KEY_NUMPAD_0)) {
-      //    AnimatedGameObject* ratKidAO = GetRadKidAO();
-      //    ratKidAO->PlayAndLoopAnimation("Main", "RatKingSamTest", 1.0f);
-      //    Audio::PlayAudio(AUDIO_SELECT, 1.0f);
-      //}
-
 
         auto& ragdolls = Hell::Physics::GetRagdolls();
         for (auto it = ragdolls.begin(); it != ragdolls.end(); ) {
@@ -346,10 +197,6 @@ namespace LegacyWorld {
             }
             ++it;
         }
-
-
-        ProcessBullets();
-        LazyDebugSpawns();
 
         for (AnimatedGameObject& object : GetAnimatedGameObjects()) object.Update(deltaTime);
         for (BulletCasing& object : GetBulletCasings())             object.Update(deltaTime);
@@ -420,32 +267,6 @@ namespace LegacyWorld {
                 i--;
             }
         }
-    }
-
-    void LazyDebugSpawns() {
-        // AKs
-        //if (Input::KeyPressed(HELL_KEY_BACKSPACE)) {
-        //    PickUpCreateInfo createInfo;
-        //    createInfo.position = Game::GetLocalPlayerByViewportIndex(0)->GetCameraPosition();
-        //    createInfo.position += Game::GetLocalPlayerByViewportIndex(0)->GetCameraForward();
-        //    createInfo.rotation.x = Util::RandomFloat(-HELL_PI, HELL_PI);
-        //    createInfo.rotation.y = Util::RandomFloat(-HELL_PI, HELL_PI);
-        //    createInfo.rotation.z = Util::RandomFloat(-HELL_PI, HELL_PI);
-        //    createInfo.pickUpType = Util::PickUpTypeToString(PickUpType::AKS74U);
-        //    AddPickUp(createInfo);
-        //}
-
-        // Remingtons
-        //if (Input::KeyPressed(HELL_KEY_INSERT)) {
-        //    PickUpCreateInfo createInfo;
-        //    createInfo.position = Game::GetLocalPlayerByViewportIndex(0)->GetCameraPosition();
-        //    createInfo.position += Game::GetLocalPlayerByViewportIndex(0)->GetCameraForward();
-        //    createInfo.rotation.x = Util::RandomFloat(-HELL_PI, HELL_PI);
-        //    createInfo.rotation.y = Util::RandomFloat(-HELL_PI, HELL_PI);
-        //    createInfo.rotation.z = Util::RandomFloat(-HELL_PI, HELL_PI);
-        //    createInfo.pickUpType = Util::PickUpTypeToString(PickUpType::REMINGTON_870);
-        //    AddPickUp(createInfo);
-        //}
     }
 
     void RecreateAllDoorAndWindowCubeTransforms() {

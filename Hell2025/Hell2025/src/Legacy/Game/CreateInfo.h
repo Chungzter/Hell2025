@@ -2,6 +2,7 @@
 #include <Game/Enums.h>
 #include <Game/Types.h>
 #include <Game/Constants.h>
+#include "Unloved/SubSystems/Openables/Openable_types.h"
 #include "Types/Game/SpawnPoint.h"
 #include <map>
 
@@ -52,26 +53,6 @@ struct FireplaceCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
     std::string editorName = UNDEFINED_STRING;
-};
-
-struct OpenableCreateInfo {
-    bool isOpenable = false;
-    bool isDeadLock = false;
-    OpenState initialOpenState = OpenState::CLOSED;
-    OpenAxis openAxis = OpenAxis::TRANSLATE_Z;
-    std::string lockedAudio = "Locked.wav";
-    std::string openingAudio = UNDEFINED_STRING;
-    std::string closingAudio = UNDEFINED_STRING;
-    std::string openedAudio = UNDEFINED_STRING;
-    std::string closedAudio = UNDEFINED_STRING;
-    std::string prerequisiteOpenMeshName = UNDEFINED_STRING;
-    std::string prerequisiteClosedMeshName = UNDEFINED_STRING;
-    std::vector<std::string> additionalTriggerMeshNames;
-    float minOpenValue = 0.0f;
-    float maxOpenValue = HELL_PI * 0.5f;
-    float openSpeed = 1.0f;
-    float closeSpeed = 1.0f;
-    float audioVolume = 2.0f;
 };
 
 struct RigidDynamicCreateInfo {

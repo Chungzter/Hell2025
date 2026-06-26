@@ -12,7 +12,7 @@
 #include "Hell/Physics/Physics.h"
 
 #include "Types/Mirror.h"
-#include "Managers/MirrorManager.h"
+#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
 
 #include "Unloved/Session/Session.h"\
 

@@ -4,11 +4,11 @@
 #include "Unloved/Session/Session.h"
 #include "Config/Config.h"
 #include "Editor/Editor.h"
-#include "Managers/MirrorManager.h"
+#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
 #include "Ocean/Ocean.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
-#include "UI/UIBackend.h"
+#include "Hell/UI/UIBackEnd.h"
 #include "Unloved/World/World.h"
 #include <span>
 #include <unordered_map>
@@ -528,7 +528,7 @@ namespace RenderDataManager {
             CreateDrawCommands(set.emissive[i], g_renderItemsEmissive, &frustum, i);
 			CreateDrawCommandProcedural(set.procedural[i], g_renderItemsProcedural, &frustum, i);
 
-            if (Mirror* mirror = MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId())) {
+            if (Mirror* mirror = Unloved::MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId())) {
                 CreateDrawCommands(set.mirrorRenderItems[i], potentialMirrorItems, mirror->GetFrustum(i), i);
             }
         }

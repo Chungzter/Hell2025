@@ -4,7 +4,7 @@
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
-#include "Game/UniqueID.h"
+#include "Unloved/ObjectId.h"
 #include "Config/Config.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Time.h"
@@ -60,7 +60,7 @@ namespace OpenGLRenderer {
             if (player->InteractFound()) {
 
                 uint64_t interactObjectId = player->GetInteractObjectId();
-                ObjectType interactObjectType = UniqueID::GetType(interactObjectId);
+                ObjectType interactObjectType = Unloved::GetObjectIdType(interactObjectId);
 
                 if (interactObjectType == ObjectType::PICK_UP) {
                     PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(interactObjectId);

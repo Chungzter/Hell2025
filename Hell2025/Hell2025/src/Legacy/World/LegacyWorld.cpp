@@ -3,7 +3,7 @@
 #include <Game/Constants.h>
 #include "Hell/Logging.h"
 #include <Game/Types.h>
-#include <Game/UniqueID.h>
+#include "Unloved/ObjectId.h"
 #include "Util.h"
 #include "Hell/Audio.h"
 #include "Bible/Bible.h"
@@ -11,7 +11,7 @@
 #include "Editor/Editor.h"
 #include "Managers/HouseManager.h"
 #include "Managers/MapManager.h"
-#include "Managers/MirrorManager.h"
+#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "GlobalIllumination/GlobalIllumination.h"
 #include "Ocean/Ocean.h"
@@ -166,8 +166,8 @@ namespace LegacyWorld {
         filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
         filterData.collisionGroup = CollisionGroup::RAGDOLL_ENEMY;
         filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
-        Hell::Physics::SpawnRagdoll(glm::vec3(36, 31, 36), glm::vec3(0.0f, 0.2f, 0.0f), "manikin", UniqueID::GetNextObjectId(ObjectType::RAGDOLL_STANDALONE), filterData);
-        Hell::Physics::SpawnRagdoll(glm::vec3(37, 31, 36), glm::vec3(0.0f, -0.4f, 0.0f), "manikin", UniqueID::GetNextObjectId(ObjectType::RAGDOLL_STANDALONE), filterData);
+        Hell::Physics::SpawnRagdoll(glm::vec3(36, 31, 36), glm::vec3(0.0f, 0.2f, 0.0f), "manikin", Unloved::GetNextObjectId(ObjectType::RAGDOLL_STANDALONE), filterData);
+        Hell::Physics::SpawnRagdoll(glm::vec3(37, 31, 36), glm::vec3(0.0f, -0.4f, 0.0f), "manikin", Unloved::GetNextObjectId(ObjectType::RAGDOLL_STANDALONE), filterData);
     }
 
     void LoadMapInstancesHeightMapData(std::vector<MapInstanceCreateInfo> mapInstanceCreateInfoSet) {
@@ -379,7 +379,7 @@ namespace LegacyWorld {
         if (DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetOrigin();
         // etc
 
-        Logging::Warning() << "LegacyWorld::GetObjectPosition(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(UniqueID::GetType(objectId)) << "\n";
+        Logging::Warning() << "LegacyWorld::GetObjectPosition(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(Unloved::GetObjectIdType(objectId)) << "\n";
         return invalid;
     }
 
@@ -389,7 +389,7 @@ namespace LegacyWorld {
         if (DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetRotation();
         // etc
 
-        Logging::Warning() << "LegacyWorld::GetObjectRotation(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(UniqueID::GetType(objectId)) << "\n";
+        Logging::Warning() << "LegacyWorld::GetObjectRotation(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(Unloved::GetObjectIdType(objectId)) << "\n";
         return invalid;
     }
 
@@ -404,7 +404,7 @@ namespace LegacyWorld {
     }
 
     uint64_t CreateAnimatedGameObject() {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::ANIMATED_GAME_OBJECT);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::ANIMATED_GAME_OBJECT);
         g_animatedGameObjects.emplace_with_id(id, id);
         return id;
     }
@@ -765,7 +765,7 @@ namespace LegacyWorld {
         //    }
         //}
 
-        Logging::Error() << "LegacyWorld::RemoveObject() Failed to remove object " << objectId << ", check you have implemented type " << Util::EnumToString(UniqueID::GetType(objectId)) << "\n";
+        Logging::Error() << "LegacyWorld::RemoveObject() Failed to remove object " << objectId << ", check you have implemented type " << Util::EnumToString(Unloved::GetObjectIdType(objectId)) << "\n";
         return false;
     }
 
@@ -825,7 +825,7 @@ namespace LegacyWorld {
 
     void ClearAllObjects() {
         RemoveAllWeatherBoards();
-        MirrorManager::CleanUp();
+        Unloved::MirrorManager::CleanUp();
         Ocean::DestroyPhysicsPlane();
 
         for (BulletCasing& bulletCasing : g_bulletCasings)              bulletCasing.CleanUp();
@@ -913,17 +913,17 @@ namespace LegacyWorld {
     }
 
     void AddDDGIVolume(DDGIVolumeCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::DDGI_VOLUME);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::DDGI_VOLUME);
         g_ddgiVolumes.emplace_with_id(id, id, createInfo, spawnOffset);
     }
 
     void AddDoor(DoorCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::DOOR);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::DOOR);
         g_doors.emplace_with_id(id, id, createInfo, spawnOffset);
     }
 
     void AddGenericObject(GenericObjectCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::GENERIC_OBJECT);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::GENERIC_OBJECT);
 
         // Assign editor name
         if (createInfo.editorName == UNDEFINED_STRING) {
@@ -934,12 +934,12 @@ namespace LegacyWorld {
     }
 
     void AddWindow(WindowCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::WINDOW);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::WINDOW);
         g_windows.emplace_with_id(id, id, createInfo, spawnOffset);
     }
 
     void AddHousePlane(HousePlaneCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::HOUSE_PLANE);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::HOUSE_PLANE);
 
         // Assign editor name
         if (createInfo.editorName == UNDEFINED_STRING ||
@@ -952,19 +952,19 @@ namespace LegacyWorld {
 
 
     uint64_t AddChristmasLights(ChristmasLightsCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::CHRISTMAS_LIGHTS);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::CHRISTMAS_LIGHTS);
         g_christmasLightSets.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
 
     uint64_t AddFence(FenceCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::FENCE);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::FENCE);
         g_fences.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
 
     uint64_t AddLadder(LadderCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::LADDER);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::LADDER);
         g_ladders.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
@@ -975,32 +975,32 @@ namespace LegacyWorld {
             return 0;
         }
 
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::PICK_UP);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::PICK_UP);
         g_pickUps.emplace_with_id(id, id, createInfo, spawnOffset);
 
         return id;
     }
 
     uint64_t AddPictureFrame(PictureFrameCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::PICTURE_FRAME);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::PICTURE_FRAME);
         g_pictureFrames.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
 
     uint64_t AddPowerPoleSet(PowerPoleSetCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::POWER_POLE_SET);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::POWER_POLE_SET);
         g_powerPoleSets.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
 
     uint64_t AddStaircase(StaircaseCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::STAIRCASE);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::STAIRCASE);
         g_staircases.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
 
     uint64_t AddTrimSet(TrimSetCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::TRIM_SET);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::TRIM_SET);
         g_trimSets.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
@@ -1011,7 +1011,7 @@ namespace LegacyWorld {
             return 0;
         }
 
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::WALL);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::WALL);
 
         // Assign editor name
         if (createInfo.editorName == UNDEFINED_STRING) {
@@ -1025,7 +1025,7 @@ namespace LegacyWorld {
 
 
     void AddFireplace(FireplaceCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::FIREPLACE);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::FIREPLACE);
         g_fireplaces.emplace_with_id(id, id, createInfo, spawnOffset);
     }
 
@@ -1034,7 +1034,7 @@ namespace LegacyWorld {
     }
 
     void AddBulletTrail(BulletCreateInfo createInfo) {
-        const uint64_t id = UniqueID::GetNextObjectId(ObjectType::BULLET_TRAIL);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::BULLET_TRAIL);
         g_bulletTrails.emplace_with_id(id, id, createInfo);
     }
 
@@ -1067,7 +1067,7 @@ namespace LegacyWorld {
     }
 
     uint64_t AddLight(LightCreateInfo createInfo, SpawnOffset spawnOffset) {
-        uint64_t id = UniqueID::GetNextObjectId(ObjectType::LIGHT);
+        uint64_t id = Unloved::GetNextObjectId(ObjectType::LIGHT);
 
         //createInfo.position += spawnOffset.translation;
         g_lights.emplace_back(Light(id, createInfo, spawnOffset));

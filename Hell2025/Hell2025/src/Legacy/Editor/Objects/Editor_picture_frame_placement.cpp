@@ -6,6 +6,8 @@ namespace Audio = Hell::Audio;
 #include "Viewport/ViewportManager.h"
 #include "Util.h"
 #include "Hell/Input.h"
+#include "Unloved/ObjectId.h"
+
 namespace Input = Hell::Input;
 
 
@@ -22,7 +24,7 @@ namespace Editor {
             glm::vec3 rayDir = GetMouseRayDirectionByViewportIndex(GetHoveredViewportIndex());
 
             PhysXRayResult rayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
-            ObjectType objectType = UniqueID::GetType(rayResult.userData.objectId);
+            ObjectType objectType = Unloved::GetObjectIdType(rayResult.userData.objectId);
 
             // Place picture frame
             if (objectType == ObjectType::WALL_SEGMENT) {

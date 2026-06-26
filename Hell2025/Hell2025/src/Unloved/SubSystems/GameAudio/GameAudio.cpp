@@ -1,9 +1,11 @@
 #include "GameAudio.h"
 
-#include "Editor/Editor.h"
 #include "Hell/Audio.h"
 #include "Hell/Time.h"
-#include "Player/Player.h"
+
+#include "Legacy/Editor/Editor.h"
+#include "Legacy/Player/Player.h"
+
 #include "Unloved/Session/Session.h"
 
 #include <algorithm>

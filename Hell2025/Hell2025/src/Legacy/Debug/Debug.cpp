@@ -9,17 +9,17 @@
 #include "Unloved/Session/Session.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
-#include "Managers/MirrorManager.h"
+#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Hell/Physics/Physics.h"
 #include "Viewport/ViewportManager.h"
-#include "UI/UIBackEnd.h"
+#include "Hell/UI/UIBackEnd.h"
 #include "World/LegacyWorld.h"
-#include "UI/TextBlitter.h"
+#include "Hell/UI/TextBlitter.h"
 #include "Util.h"
 
-#include "Unloved/SubSystems/PianoPlaybackManager.h"
+#include "Unloved/SubSystems/PianoPlayback/PianoPlaybackManager.h"
 
 #include <cstdint>
 #include <vector>
@@ -92,8 +92,8 @@ namespace Debug {
 
         // Mirrors
         if (false) {
-            text += "Mirror count: " + std::to_string(MirrorManager::GetMirrors().size()) + "\n";
-            for (Mirror& mirror : MirrorManager::GetMirrors()) {
+            text += "Mirror count: " + std::to_string(Unloved::MirrorManager::GetMirrors().size()) + "\n";
+            for (Mirror& mirror : Unloved::MirrorManager::GetMirrors()) {
                 text += "- ";
                 text += std::to_string(mirror.GetObjectId()) + " ";
                 text += Util::Vec3ToString(mirror.GetWorldCenter()) + "\n";

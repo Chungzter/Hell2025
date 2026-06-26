@@ -1,5 +1,6 @@
 #include "DeadLock.h"
 #include "World/LegacyWorld.h"
+#include "Unloved/SubSystems/Openables/OpenableManager.h"
 
 void DeadLock::Init(uint64_t parentDoorId, const glm::vec3& localOffset, DeadLockType type) {
     m_localOffset = localOffset;
@@ -44,7 +45,7 @@ void DeadLock::Update(float deltaTime) {
 
 
     if (MeshNode* meshNode = parentDoor->GetMeshNodes().GetMeshNodeByMeshName("Door_Hinges")) {
-        if (Openable* openable = OpenableManager::GetOpenableByOpenableId(meshNode->openableId)) {
+        if (Openable* openable = Unloved::OpenableManager::GetOpenableByOpenableId(meshNode->openableId)) {
 
            
             glm::mat4 openableMatrix = openable->m_transform.to_mat4();

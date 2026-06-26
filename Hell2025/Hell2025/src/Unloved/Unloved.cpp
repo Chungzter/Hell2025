@@ -2,34 +2,31 @@
 
 #include "Hell/Audio.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Bible/Bible.h"
-#include "Callbacks/Callbacks.h"
-#include "Unloved/Session/Session.h"
-#include "Debug/Debug.h"
-#include "Debug/DebugDraw.h"
-#include "Editor/Editor.h"
-#include "Editor/Gizmo.h"
-#include "Imgui/ImguiBackEnd.h"
-#include "Managers/HouseManager.h"
-#include "Managers/MapManager.h"
-#include "Managers/MirrorManager.h"
-#include "Managers/OpenableManager.h"
-#include "Pathfinding/AStarMap.h"
-#include "Pathfinding/NavMesh.h"
 #include "Hell/Physics/Physics.h"
-#include "Renderer/Renderer.h"
-#include "Renderer/RenderDataManager.h"
-#include "UI/UIBackEnd.h"
-#include "Viewport/ViewportManager.h"
-
-#include "Unloved/SubSystems/GameAudio.h"
-#include "Unloved/SubSystems/SubSystems.h"
-#include "Unloved/World/World.h"
-#include "World/LegacyWorld.h"
-
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/UI/UIBackEnd.h"
 #include "Hell/Input.h"
 #include "Hell/Time.h"
+
+#include "Legacy/Bible/Bible.h"
+#include "Legacy/Callbacks/Callbacks.h"
+#include "Legacy/Config/Config.h"
+#include "Legacy/Debug/Debug.h"
+#include "Legacy/Debug/DebugDraw.h"
+#include "Legacy/Editor/Editor.h"
+#include "Legacy/Editor/Gizmo.h"
+#include "Legacy/Imgui/ImguiBackEnd.h"
+#include "Legacy/Managers/HouseManager.h"
+#include "Legacy/Managers/MapManager.h"
+#include "Legacy/Pathfinding/AStarMap.h"
+#include "Legacy/Renderer/Renderer.h"
+#include "Legacy/Renderer/RenderDataManager.h"
+#include "Legacy/Viewport/ViewportManager.h"
+
+#include "Unloved/Session/Session.h"
+#include "Unloved/SubSystems/GameAudio/GameAudio.h"
+#include "Unloved/SubSystems/SubSystems.h"
+#include "Unloved/World/World.h"
 
 namespace Input = Hell::Input;
 namespace Time = Hell::Time;
@@ -40,6 +37,8 @@ namespace Unloved {
 
     bool Init() {
         Renderer::Init();
+        const Resolutions& resolutions = Config::GetResolutions();
+        UIBackEnd::SetUIResolution(resolutions.ui.x, resolutions.ui.y);
         UIBackEnd::Init();
         Bible::Init();
         Gizmo::Init();
@@ -47,15 +46,10 @@ namespace Unloved {
         Editor::Init();
         Hell::Physics::Init();
         ImGuiBackEnd::Init();
-        NavMeshManager::Init();
 
         SubSystems::Init();
 
         return true;
-    }
-
-    void UpdateSubSystems() {
-        SubSystems::Update();
     }
 
     void BeginFrame() {
@@ -92,7 +86,7 @@ namespace Unloved {
     }
 
     void Update() {
-        SubSystems::Update();
+        SubSystems::PreWorldUpdate();
 
         Renderer::PreGameLogicComputePasses();
 
@@ -105,13 +99,12 @@ namespace Unloved {
         }
 
         AStarMap::Update();
-        LegacyWorld::UpdateBvhs();
+        World::UpdateBvhs();
         Unloved::Session::Update();
         World::UpdatePlayers();
-        OpenableManager::Update(deltaTime);
-        LegacyWorld::Update(deltaTime);
+        World::ProcessBullets();
+        World::UpdateLegacyObjects();
         World::Update();
-        SubSystems::UpdatePostSession();
 
         if (Editor::IsClosed()) {
             Hell::Physics::StepSimulation();
@@ -124,7 +117,7 @@ namespace Unloved {
             Hell::Physics::ActivateAllHeightFields();
         }
 
-        MirrorManager::Update();
+        SubSystems::PostWorldUpdate();
 
         World::SubmitRenderItems();
 
@@ -144,7 +137,7 @@ namespace Unloved {
     }
 
     void CleanUp() {
-        SubSystems::Update();
+        SubSystems::CleanUp();
         World::CleanUp();
         Renderer::CleanUp();
     }
@@ -172,6 +165,7 @@ namespace Unloved {
             if (Input::KeyPressed(HELL_KEY_H))            Renderer::HotloadShaders();
             if (Input::KeyPressed(HELL_KEY_I))            Renderer::ToggleRagdollRendering();
             if (Input::KeyPressed(HELL_KEY_M))            Renderer::ToggleScreenSpaceReflections();
+            if (Input::KeyPressed(HELL_KEY_O))            Renderer::ToggleDebugDraw();
             if (Input::KeyPressed(HELL_KEY_L))            Renderer::ToggleLighting();
             if (Input::KeyPressed(HELL_KEY_SEMICOLON))    Renderer::ToggleSphericalHarmonics();
             if (Input::KeyPressed(HELL_KEY_COMMA))        Renderer::TogglePointCloud();

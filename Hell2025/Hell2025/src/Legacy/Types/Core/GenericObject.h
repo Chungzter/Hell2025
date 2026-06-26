@@ -1,6 +1,6 @@
 #pragma once
 #include <Game/CreateInfo.h>
-#include "Managers/OpenableManager.h"
+#include "Unloved/SubSystems/Openables/OpenableManager.h"
 #include "Types/Renderer/MeshNodes.h"
 
 struct GenericObject {

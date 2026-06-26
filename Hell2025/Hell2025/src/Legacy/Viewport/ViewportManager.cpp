@@ -7,7 +7,7 @@
 #include "Unloved/Session/Session.h"
 #include "Imgui/ImguiBackEnd.h"
 #include "Editor/Editor.h"
-#include "Managers/MirrorManager.h"
+#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
 #include "Renderer/Renderer.h"
 
 #include <iostream> // TODO clean up logging

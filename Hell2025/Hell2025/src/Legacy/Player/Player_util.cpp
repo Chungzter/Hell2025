@@ -1,6 +1,6 @@
 #include "Player.h"
 #include "Config/Config.h"
-#include "Managers/MirrorManager.h"
+#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
 #include "Viewport/ViewportManager.h"
 
 glm::ivec2 Player::GetViewportCenter() {
@@ -36,7 +36,7 @@ uint64_t Player::GetClosestMirrorId() {
     uint64_t mirrorId = 0;
     float closestDistance = 9999999;
 
-    for (Mirror& mirror : MirrorManager::GetMirrors()) {
+    for (Mirror& mirror : Unloved::MirrorManager::GetMirrors()) {
         if (mirror.IsFacingViewportCamera(m_viewportIndex)) {
             float distanceToPlayer = glm::distance(mirror.GetWorldCenter(), GetCameraPosition());
 

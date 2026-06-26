@@ -1,5 +1,6 @@
 #include "FeatureTest.h"
-#include "UI/UIBackEnd.h"
+#include "Legacy/Game/Constants.h"
+#include "Hell/UI/UIBackEnd.h"
 
 namespace FeatureTest {
     

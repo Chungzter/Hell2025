@@ -3,7 +3,7 @@
 #include "Debug/DebugDraw.h"
 #include "Math/LineMath.hpp"
 #include "World/LegacyWorld.h"
-#include "Game/UniqueID.h"
+#include "Unloved/ObjectId.h"
 
 #include "Ocean/Ocean.h"
 #include "Hell/Input.h"
@@ -39,7 +39,7 @@ std::vector<glm::vec3> GetCirclePoints(const glm::vec3& center, int segments, fl
 }
 
 void Shark::Init(const glm::vec3& initialPosition) {
-    m_objectId = UniqueID::GetNextObjectId(ObjectType::SHARK);
+    m_objectId = Unloved::GetNextObjectId(ObjectType::SHARK);
     m_yHeight = Ocean::GetOceanOriginY();
 
     g_animatedGameObjectObjectId = LegacyWorld::CreateAnimatedGameObject();

@@ -2,13 +2,13 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util.h"
-#include <Game/UniqueID.h>
+#include "Unloved/ObjectId.h"
 
 #include <iostream> // TODO clean up logging
 
 void Trim::Init(Transform transform, const std::string& modelName, const std::string& materialName) {
     m_transform = transform;
-    m_objectId = UniqueID::GetNextObjectId(ObjectType::TRIM);
+    m_objectId = Unloved::GetNextObjectId(ObjectType::TRIM);
 
     Model* model = Hell::ResourceManager::GetModelByName(modelName);
     m_materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);

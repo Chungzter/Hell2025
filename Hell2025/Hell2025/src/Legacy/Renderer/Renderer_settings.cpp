@@ -71,6 +71,15 @@ namespace Renderer {
         Debug::BlitQuickDebugMessage("Draw Ragdolls: " + onOff);
     }
 
+    void ToggleDebugDraw() {
+        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        RendererSettings& rendererSettings = GetCurrentRendererSettings();
+        rendererSettings.debugDrawNavMesh = !rendererSettings.debugDrawNavMesh;
+
+        std::string onOff = rendererSettings.debugDrawNavMesh ? "ON" : "OFF";
+        Debug::BlitQuickDebugMessage("Nav Mesh: " + onOff);
+    }
+
     void ToggleSphericalHarmonics() {
         Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();

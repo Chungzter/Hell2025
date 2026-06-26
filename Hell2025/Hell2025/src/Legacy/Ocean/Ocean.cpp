@@ -8,7 +8,7 @@
 
 #include "Game/Constants.h"
 #include "Hell/Logging.h"
-#include "Game/UniqueID.h"
+#include "Unloved/ObjectId.h"
 
 #include "Hell/Physics/Physics.h"
 #include "Util.h"
@@ -89,10 +89,10 @@ namespace Ocean {
         g_waterPlaneDownFacingPhysicsID = Hell::Physics::CreateRigidStaticPlane(planePosition, planeNormal * glm::vec3(-1.0f), filterData);
 
         PhysicsUserData physicsUserData;
-        physicsUserData.objectId = UniqueID::GetNextObjectId(ObjectType::WATER_PLANE_TOP);
+        physicsUserData.objectId = Unloved::GetNextObjectId(ObjectType::WATER_PLANE_TOP);
         Hell::Physics::SetRigidStaticUserData(g_waterPlaneUpFacingPhysicsID, physicsUserData);
 
-        physicsUserData.objectId = UniqueID::GetNextObjectId(ObjectType::WATER_PLANE_BOTTOM);
+        physicsUserData.objectId = Unloved::GetNextObjectId(ObjectType::WATER_PLANE_BOTTOM);
         Hell::Physics::SetRigidStaticUserData(g_waterPlaneDownFacingPhysicsID, physicsUserData);
     }
 

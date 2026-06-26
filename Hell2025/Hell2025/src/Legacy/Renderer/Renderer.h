@@ -24,6 +24,7 @@ namespace Renderer {
 	void NextProbeDebugState();
 
     // Debug toggles
+    void ToggleDebugDraw();
     void ToggleLighting();
     void ToggleOverrideState(RendererOverrideState state);
     void ToggleIrradianceProbeSampling();

@@ -1,7 +1,7 @@
 #include "Inventory.h"
 #include "Bible/Bible.h"
-#include "UI/TextBlitter.h"
-#include "UI/UiBackend.h"
+#include "Hell/UI/TextBlitter.h"
+#include "Hell/UI/UIBackEnd.h"
 
 #include "Hell/Logging.h"
 

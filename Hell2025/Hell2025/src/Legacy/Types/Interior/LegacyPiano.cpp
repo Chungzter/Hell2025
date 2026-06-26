@@ -9,7 +9,7 @@
 #include "Hell/Physics/Physics.h"
 #include "World/LegacyWorld.h"
 #include "Util.h"
-#include "Game/UniqueID.h"
+#include "Unloved/ObjectId.h"
 
 void Piano::Init(PianoCreateInfo& createInfo) {
     m_createInfo = createInfo;
@@ -18,7 +18,7 @@ void Piano::Init(PianoCreateInfo& createInfo) {
     m_transform.position = createInfo.position;
     m_transform.rotation = createInfo.rotation;
 
-    m_pianoObjectId = UniqueID::GetNextObjectId(ObjectType::PIANO);
+    m_pianoObjectId = Unloved::GetNextObjectId(ObjectType::PIANO);
 
     std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 
@@ -117,7 +117,7 @@ void Piano::Init(PianoCreateInfo& createInfo) {
         for (uint32_t meshId : model->GetMeshIndices()) {
             if (Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId)) {
                 if (mesh->name.find("Yamaha_Key_") != std::string::npos) {
-                    uint64_t keyId = UniqueID::GetNextCustomId();
+                    uint64_t keyId = Unloved::GetNextCustomId();
                     PianoKey& pianoKey = m_keys[keyId];
                     pianoKey.m_meshName = mesh->name;
                     pianoKey.m_note = MeshNameToNote(mesh->name);

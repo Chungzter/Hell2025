@@ -3,7 +3,7 @@
 namespace Unloved::SubSystems {
     void Init();
     void BeginFrame();
-    void Update();
-    void UpdatePostSession();
+    void PreWorldUpdate();
+    void PostWorldUpdate();
     void CleanUp();
 }

@@ -77,7 +77,7 @@ namespace LegacyWorld {
         //         uint64_t objectId = 0;
         //         Util::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
         // 
-        //         std::cout << objectId << " " << Util::EnumToString(UniqueID::GetType(objectId)) << " ";
+        //         std::cout << objectId << " " << Util::EnumToString(Unloved::GetObjectIdType(objectId)) << " ";
         // 
         //         Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
         //         if (!mesh) {

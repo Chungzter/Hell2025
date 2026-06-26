@@ -1,9 +1,10 @@
 #include "OpenableManager.h"
-#include "World/LegacyWorld.h"
+
 #include <atomic>
 #include <cstdint>
+#include <unordered_map>
 
-namespace OpenableManager {
+namespace Unloved::OpenableManager {
     std::unordered_map<uint32_t, Openable> g_openables;
     std::atomic<uint32_t> g_global = 1;
     
@@ -62,8 +63,6 @@ namespace OpenableManager {
         if (OpenableExists(openableId)) {
             return &g_openables[openableId];
         }
-        else {
-            return nullptr;
-        }
+        return nullptr;
     }
 }

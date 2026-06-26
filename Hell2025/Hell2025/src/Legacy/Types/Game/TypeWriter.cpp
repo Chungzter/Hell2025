@@ -1,6 +1,6 @@
 #include "TypeWriter.h"
-#include "UI/TextBlitter.h"
-#include "UI/UIBackEnd.h"
+#include "Hell/UI/TextBlitter.h"
+#include "Hell/UI/UIBackEnd.h"
 
 void TypeWriter::Update(float deltaTime) { 
 
