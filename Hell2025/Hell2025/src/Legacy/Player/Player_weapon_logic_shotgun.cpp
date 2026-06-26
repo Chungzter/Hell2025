@@ -1,7 +1,8 @@
 #include "Player.h"
 #include "Hell/Audio.h"
+#include "Hell/Time.h"
 namespace Audio = Hell::Audio;
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "World/LegacyWorld.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
@@ -49,7 +50,7 @@ void Player::UpdateShotgunGunLogic(float deltaTime) {
     // Green shell hack
     static float delayCounter = 0.0f;
     if (delayCounter > 0.0f) {
-        delayCounter -= GameOLD::GetDeltaTime();
+        delayCounter -= Hell::Time::DeltaTime();
     }
     if (delayCounter <= 0.0f && (Input::MouseWheelDown() || Input::MouseWheelUp())) {
         WeaponState* weaponState = GetCurrentWeaponState();

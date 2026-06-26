@@ -5,9 +5,10 @@
 #include "Game/UniqueID.h"
 #include "Timer.hpp"
 
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Renderer/Renderer.h"
 #include "Editor/Editor.h"
+#include "Hell/Time.h"
 
 Light::Light(uint64_t id, LightCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_createInfo = createInfo;
@@ -22,7 +23,7 @@ void Light::Update(float deltaTime) {
     UpdateMatricesAndFrustum();
 
     if (m_doFlicker) {
-        m_lightFlicker.Update(GameOLD::GetDeltaTime() * 10, GameOLD::GetTotalTime() * 10);
+        m_lightFlicker.Update(Hell::Time::DeltaTime() * 10, Unloved::Session::GetSessionTime() * 10);
         SetColor(m_lightFlicker.m_currentColor * 1.5f);
     }
 

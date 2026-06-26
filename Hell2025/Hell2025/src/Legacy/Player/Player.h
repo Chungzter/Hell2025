@@ -37,7 +37,7 @@ private:
 
 public:
 
-    void Init(const glm::vec3& position, const glm::vec3& rotation, int32_t viewportIndex);
+    void Init(uint64_t playerId, const glm::vec3& position, const glm::vec3& rotation, int32_t viewportIndex);
     void BeginFrame();
     void Update(float deltaTime);
     void UpdateCharacterModelHacks();

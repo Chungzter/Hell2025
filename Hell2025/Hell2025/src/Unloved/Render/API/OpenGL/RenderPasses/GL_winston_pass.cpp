@@ -1,12 +1,13 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
 #include "Game/UniqueID.h"
 #include "Config/Config.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/Time.h"
 
 namespace OpenGLRenderer {
 
@@ -19,7 +20,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
 
         static float time = 0.0f;
-        time += GameOLD::GetDeltaTime();
+        time += Hell::Time::DeltaTime();
 
         OpenGL::BindShader("Winston");
         OpenGL::SetUniformVec3("color", { 0, 0.9f, 1 });
@@ -53,7 +54,7 @@ namespace OpenGLRenderer {
             OpenGL::SetUniformMat4("view", viewMatrix);
             OpenGL::SetUniformBool("useUniformColor", false);
 
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
             if (player->InteractFound()) {

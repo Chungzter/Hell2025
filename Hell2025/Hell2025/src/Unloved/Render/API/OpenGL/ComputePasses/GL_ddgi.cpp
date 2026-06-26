@@ -13,7 +13,8 @@
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "Core/GameOLD.h" // For Game::GetTotalTime(). It's a hack to prevent colorful probe glitch at start
+#include "Unloved/Session/Session.h" // For Session::GetSessionTime(). It's a hack to prevent colorful probe glitch at start
+#include "Hell/Time.h"
 
 namespace OpenGLRenderer {
 
@@ -188,7 +189,7 @@ namespace OpenGLRenderer {
     void UpdateProbeStates(DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
-        g_time += GameOLD::GetDeltaTime(); // Hack to prevent colorful probe glitch at start
+        g_time += Hell::Time::DeltaTime(); // Hack to prevent colorful probe glitch at start
 
         OpenGL::BindSSBO(4, "DDGIVolume");
         OpenGL::BindSSBO(5, "ProbeStates");

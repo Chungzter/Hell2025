@@ -2,7 +2,7 @@
 #include "Hell/Physics/Physics.h"
 #include "Pathfinding/AStarMap.h"
 #include "World/LegacyWorld.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Renderer/Renderer.h"
 #include "Hell/Logging.h"
 #include "Game/UniqueID.h"
@@ -117,7 +117,7 @@ void Kangaroo::Kill() {
 
 void Kangaroo::GiveDamage(int damage) {
     m_health -= damage;
-    Player* player = GameOLD::GetLocalPlayerByIndex(0);
+    Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
     glm::vec3 playerPosition = player->GetCameraPosition();
     GoToTarget(playerPosition);
     PlayFleshAudio();

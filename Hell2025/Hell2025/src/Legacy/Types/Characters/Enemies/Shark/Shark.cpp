@@ -1,5 +1,5 @@
 #include "Shark.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Debug/DebugDraw.h"
 #include "Math/LineMath.hpp"
 #include "World/LegacyWorld.h"
@@ -323,7 +323,7 @@ void Shark::Update(float deltaTime) {
 
     // Did the player enter the water again while the shark is still angry from being like shot before
     if (m_movementState == SharkMovementState::FOLLOWING_PATH_ANGRY) {
-        Player* player = GameOLD::GetPlayerByPlayerId(m_huntedPlayerId);
+        Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId);
         if (player && player->FeetBelowWater()) {
             // TO DO: Only activate hunt state again if she shark has line of sight to the player
             m_movementState = SharkMovementState::HUNT_PLAYER;
@@ -377,7 +377,7 @@ void Shark::Update(float deltaTime) {
 
             // But if hunting a player overwrite it with their height
             if (m_movementState == SharkMovementState::HUNT_PLAYER) {
-                if (Player* player = GameOLD::GetPlayerByPlayerId(m_huntedPlayerId)) {
+                if (Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId)) {
                     targetHeight = std::min(targetHeight, player->GetCameraPosition().y) - (magicNumber * 0.0f);
                 }
             }
@@ -511,7 +511,7 @@ void Shark::Update(float deltaTime) {
    //// If shark ain't biting, then find next closest target if any
    //if (m_huntingState != SharkHuntingState::BITING_PLAYER && m_movementState == SharkMovementState::FOLLOWING_PATH) {
    //    for (int i = 0; i < Game::GetLocalPlayerCount(); i++) {
-   //        Player* player = Game::GetLocalPlayerByIndex(i);
+   //        Player* player = Game::GetLocalPlayerByViewportIndex(i);
    //        if (!player) continue;
    //
    //        AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
@@ -623,7 +623,7 @@ void Shark::SetPosition(const glm::vec3& position) {
 
 void Shark::CalculateTargetFromPlayer() {
     if (m_huntedPlayerId != 0) {
-        Player* player = GameOLD::GetPlayerByPlayerId(m_huntedPlayerId);
+        Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId);
         m_targetPosition = player->GetCameraPosition() - glm::vec3(0.0, 0.1f, 0.0f);
         //std::cout << Util::Vec3ToString(m_targetPosition) << "\n";
 

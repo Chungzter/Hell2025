@@ -1,6 +1,6 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Editor/Editor.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Ocean/Ocean.h"
 #include "World/LegacyWorld.h"
 
@@ -127,7 +127,7 @@ namespace OpenGLRenderer {
             OpenGL::SetUniformBool("u_wireframe", wireframe);
             OpenGL::SetUniformFloat("u_meshSubdivisionFactor", Ocean::GetMeshSubdivisionFactor());
             OpenGL::SetUniformFloat("u_oceanOriginY", Ocean::GetOceanOriginY());
-            OpenGL::SetUniformFloat("u_time", GameOLD::GetTotalTime());
+            OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
 
             glGenerateTextureMipmap(fftFrameBuffer_band0->GetColorAttachmentHandleByName("Normals"));
             glGenerateTextureMipmap(fftFrameBuffer_band1->GetColorAttachmentHandleByName("Normals"));
@@ -206,7 +206,7 @@ namespace OpenGLRenderer {
 
         OpenGL::BindShader("OceanSurfaceComposite");
 
-        OpenGL::SetUniformFloat("u_time", GameOLD::GetTotalTime());
+        OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
         OpenGL::SetUniformFloat("u_oceanYOrigin", Ocean::GetOceanOriginY());
         OpenGL::SetUniformVec2("u_resolution", glm::vec2(gBuffer.GetWidth(), gBuffer.GetHeight()));
 
@@ -256,7 +256,7 @@ namespace OpenGLRenderer {
 
         OpenGL::BindShader("OceanUnderwaterComposite");
 
-        OpenGL::SetUniformFloat("u_time", GameOLD::GetTotalTime());
+        OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
         OpenGL::SetUniformVec2("u_resolution", glm::vec2(gBuffer.GetWidth(), gBuffer.GetHeight()));
 
         OpenGL::BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
@@ -340,8 +340,8 @@ namespace OpenGLRenderer {
 
         for (int i = 0; i < 4; ++i) {
             glm::vec3 position = glm::vec3(0.0f);
-            if (GameOLD::GetLocalPlayerCount() > i) {
-                position = GameOLD::GetLocalPlayerByIndex(i)->GetFootPosition();
+            if (Unloved::Session::GetLocalPlayerCount() > i) {
+                position = Unloved::Session::GetLocalPlayerByViewportIndex(i)->GetFootPosition();
             }
             OpenGL::SetUniformVec3("positionPlayer" + std::to_string(i), position);
         }

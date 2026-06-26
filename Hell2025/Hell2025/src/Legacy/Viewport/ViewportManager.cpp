@@ -4,7 +4,7 @@
 #include "Util.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Config/Config.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Imgui/ImguiBackEnd.h"
 #include "Editor/Editor.h"
 #include "Managers/MirrorManager.h"
@@ -85,7 +85,7 @@ namespace ViewportManager {
             for (int i = 0; i < 4; i++) {
                 g_viewports[i].SetViewportMode(ShadingMode::SHADED);
             }
-            if (GameOLD::GetSplitscreenMode() == SplitscreenMode::FULLSCREEN) {
+            if (Unloved::Session::GetSplitscreenMode() == SplitscreenMode::FULLSCREEN) {
                 g_viewports[0].SetPosition(glm::vec2(0.0f, 0.0f));  // Fullscreen
                 g_viewports[0].SetSize(glm::vec2(1.0f, 1.0f));
                 g_viewports[0].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
@@ -94,7 +94,7 @@ namespace ViewportManager {
                 g_viewports[2].Hide();
                 g_viewports[3].Hide();
             }
-            else if (GameOLD::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER) {
+            else if (Unloved::Session::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER) {
                 g_viewports[0].SetPosition(glm::vec2(0.0f, 0.5f));  // Top
                 g_viewports[1].SetPosition(glm::vec2(0.0f, 0.0f));  // Bottom
                 g_viewports[0].SetSize(glm::vec2(1.0f, 0.5f));
@@ -106,7 +106,7 @@ namespace ViewportManager {
                 g_viewports[2].Hide();
                 g_viewports[3].Hide();
             }
-            else if (GameOLD::GetSplitscreenMode() == SplitscreenMode::FOUR_PLAYER) {
+            else if (Unloved::Session::GetSplitscreenMode() == SplitscreenMode::FOUR_PLAYER) {
                 g_viewports[0].SetPosition(glm::vec2(0.0f, 0.5f));  // Top-left
                 g_viewports[1].SetPosition(glm::vec2(0.5f, 0.5f));  // Top-right
                 g_viewports[2].SetPosition(glm::vec2(0.0f, 0.0f));  // Bottom-left
@@ -141,8 +141,8 @@ namespace ViewportManager {
 
         // If editor is closed, then set each viewport mirror id to the corresponding players closest valid mirror
         if (Editor::IsClosed()) {
-            for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
-                Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
+                Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
                 if (!player) continue;
 
                 Viewport* viewport = GetViewportByIndex(player->GetViewportIndex());

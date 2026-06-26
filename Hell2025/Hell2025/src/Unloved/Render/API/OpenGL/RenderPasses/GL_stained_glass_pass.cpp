@@ -1,6 +1,6 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
@@ -46,7 +46,7 @@ namespace OpenGLRenderer {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
             OpenGLRenderer::SetViewport(&gBuffer, viewport);

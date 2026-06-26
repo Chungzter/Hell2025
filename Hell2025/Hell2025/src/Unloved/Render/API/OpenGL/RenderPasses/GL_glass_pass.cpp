@@ -1,6 +1,6 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
@@ -49,7 +49,7 @@ namespace OpenGLRenderer {
             OpenGLRenderer::SetViewport(gBuffer, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
 
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
 
             for (const RenderItem& renderItem : drawInfoSet.glass[i]) {
                 OpenGL::SetUniformMat4("u_modelMatrix", renderItem.modelMatrix);

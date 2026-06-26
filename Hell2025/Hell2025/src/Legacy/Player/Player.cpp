@@ -8,20 +8,19 @@
 namespace Audio = Hell::Audio;
 #include "Hell/Backend/BackEnd.h"
 #include "Bible/Bible.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Editor/Editor.h"
 #include "Hell/Logging.h"
 #include "Ocean/Ocean.h"
 #include "Viewport/ViewportManager.h"
-#include <Game/UniqueID.h>
 
 // Get me out of here
 #include "Renderer/Renderer.h"
 #include "World/LegacyWorld.h"
 // Get me out of here
 
-void Player::Init(const glm::vec3& position, const glm::vec3& rotation, int32_t viewportIndex) {
-    m_playerId = UniqueID::GetNextObjectId(ObjectType::PLAYER);
+void Player::Init(uint64_t playerId, const glm::vec3& position, const glm::vec3& rotation, int32_t viewportIndex) {
+    m_playerId = playerId;
 
     m_camera.SetPosition(position + glm::vec3(0.0f, m_viewHeightStanding, 0.0f));
     m_camera.SetEulerRotation(rotation);
@@ -94,7 +93,7 @@ void Player::UpdateShop(float deltaTime) {
     glm::vec3 targetPosition = glm::vec3(13.06f, 28.68f, 36.78);
     glm::vec3 targetCamEuler = glm::vec3(-0.08f, -1.65f, 0.0f);
 
-    if (GameOLD::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER) {
+    if (Unloved::Session::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER) {
         targetPosition = glm::vec3(12.93f, 28.61f, 36.80);
         targetCamEuler = glm::vec3(-0.00f, -2.05f, 0.0f);
     }
@@ -455,9 +454,9 @@ void Player::Kill(bool wasHeadShot) {
         m_cash /= 2;
 
         // HACK
-        for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
+        for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
             if (i != m_viewportIndex) {
-                if (Player* player = GameOLD::GetLocalPlayerByIndex(i)) {
+                if (Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i)) {
                     player->m_killCount++;
                     if (wasHeadShot) {
                         player->GiveCash(Bible::GetPlayerHeadShotCashReward());

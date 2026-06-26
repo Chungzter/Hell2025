@@ -3,7 +3,6 @@
 namespace Unloved {
     bool Init();
 
-    void UpdateSubSystems();
     void BeginFrame();
 
     void UpdateLoadingScreen();

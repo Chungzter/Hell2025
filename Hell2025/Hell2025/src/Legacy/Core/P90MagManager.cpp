@@ -1,5 +1,5 @@
 #include "P90MagManager.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Renderer/Renderer.h"
 
 #include "Hell/Math/GLM.h"
@@ -11,8 +11,8 @@ namespace P90MagManager {
     }
     
     void SubmitRenderItems() {
-        for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+        for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
             if (player->GetSelectedWeaponName() == "P90") {

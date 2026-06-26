@@ -5,7 +5,8 @@
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
+#include "Hell/Time.h"
 
 namespace OpenGLRenderer {
 
@@ -49,7 +50,7 @@ namespace OpenGLRenderer {
         if (!perlinNoiseTexture) return;
 
         static float time = 0.0f;
-        time += GameOLD::GetDeltaTime();
+        time += Hell::Time::DeltaTime();
 
         static int noiseSeed = 0;
         noiseSeed++;

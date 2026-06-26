@@ -5,7 +5,7 @@
 #include "Hell/Math/Math.h"
 #include "Hell/Logging.h"
 
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Debug/DebugDraw.h"
 #include "Types/Renderer/MeshNodes.h"
 #include "World/LegacyWorld.h"
@@ -996,7 +996,7 @@ namespace NavMeshManager {
     }
 
     void NavMesh::DebugDrawAdjacentTris() {
-        glm::vec3 viewPos = GameOLD::GetLocalPlayerByIndex(0)->GetCameraPosition();
+        glm::vec3 viewPos = Unloved::Session::GetLocalPlayerByViewportIndex(0)->GetCameraPosition();
         for (NavTri& tri : m_tris) {
             if (PointInNavTriXZ(tri, viewPos)) {
 
@@ -1056,7 +1056,7 @@ namespace NavMeshManager {
         //    }
         //}
         //
-        //glm::vec3 viewPos = Game::GetLocalPlayerByIndex(0)->GetCameraPosition();
+        //glm::vec3 viewPos = Game::GetLocalPlayerByViewportIndex(0)->GetCameraPosition();
         //
         //// Place destination
         //if (Input::KeyPressed(HELL_KEY_P)) {

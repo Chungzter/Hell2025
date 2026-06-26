@@ -2,7 +2,7 @@
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
 #include "Bible/Bible.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Hell/Physics/Physics.h"
 #include "Util/Util.h"
 #include "Managers/OpenableManager.h"
@@ -33,9 +33,9 @@ void Player::UpdateCursorRays() {
     glm::vec3 cameraRayDirection = GetCameraForward();
 
     std::vector<PxRigidActor*> ignoredActors;
-    int playerCount = GameOLD::GetLocalPlayerCount();
+    int playerCount = Unloved::Session::GetLocalPlayerCount();
     for (int i = 0; i < playerCount; i++) {
-        if (Player* player = GameOLD::GetLocalPlayerByIndex(i)) {
+        if (Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i)) {
             if (PxRigidDynamic* characterControllerActor = player->GetCharacterControllerActor()) {
                 ignoredActors.push_back(characterControllerActor);
             }

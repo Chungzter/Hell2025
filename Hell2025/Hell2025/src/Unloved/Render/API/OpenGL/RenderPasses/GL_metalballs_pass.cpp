@@ -7,10 +7,11 @@
 
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/Time.h"
 
 
 // remove me
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Hell/Physics/Physics.h"
 #include "Util/Util.h"
 #include <glm/gtc/quaternion.hpp>
@@ -165,7 +166,7 @@ namespace OpenGLRenderer {
 
         // Simulation constants
         float gravity = -9.8f;
-        float deltaTime = GameOLD::GetDeltaTime();
+        float deltaTime = Hell::Time::DeltaTime();
         float radius = 0.12f;            // Slightly larger radius helps clumping
         float restDensity = 2.0f;
         float stiffness = 0.05f;
@@ -174,8 +175,8 @@ namespace OpenGLRenderer {
 
         glm::vec3 origin = glm::vec3(36.0f, 32.5f, 36.0f);
 
-        //glm::vec3 rayOrigin = Game::GetLocalPlayerByIndex(0)->GetCameraPosition();
-        //glm::vec3 rayDirection = Game::GetLocalPlayerByIndex(0)->GetCameraForward();
+        //glm::vec3 rayOrigin = Game::GetLocalPlayerByViewportIndex(0)->GetCameraPosition();
+        //glm::vec3 rayDirection = Game::GetLocalPlayerByViewportIndex(0)->GetCameraForward();
         //float rayLength = 1.0f;;
         //PhysXRayResult rayResult = Hell::Physics::CastPhysXRayStaticEnvironment(rayOrigin, rayDirection, rayLength);
         //
@@ -193,7 +194,7 @@ namespace OpenGLRenderer {
 
             particles.clear();
 
-            glm::vec3 bulletForward = GameOLD::GetLocalPlayerByIndex(0)->GetCameraForward();
+            glm::vec3 bulletForward = Unloved::Session::GetLocalPlayerByViewportIndex(0)->GetCameraForward();
 
             float angle = atan2(bulletForward.z, bulletForward.x);
             float spacing = 0.005f;

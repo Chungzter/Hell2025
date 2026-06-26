@@ -1,7 +1,7 @@
 #include "Inventory.h"
 #include "Config/Config.h"
 #include "Bible/Bible.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Hell/Logging.h"
 #include "UI/TextBlitter.h"
 #include "UI/UiBackend.h"
@@ -23,7 +23,7 @@ void Inventory::SubmitRenderItems() {
         int width = GetItemGridSize().x + (m_style.gridMargin * 2);
         int height = 880;
 
-        if (GameOLD::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER) {
+        if (Unloved::Session::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER) {
             const Resolutions& resolutions = Config::GetResolutions();
             int halfScreenHeight = resolutions.ui.y * 0.5f;
 
@@ -80,7 +80,7 @@ void Inventory::SubmitRenderItems() {
         int newInvOriginY = screenHeight * 0.125f;
         newInvOriginY = screenHeight * 0.25f;
 
-        if (GameOLD::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER) {
+        if (Unloved::Session::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER) {
             newInvOriginX = screenWidth * 0.475f;
             newInvOriginY = (halfScreenHeight - height) * 0.5f;
         }

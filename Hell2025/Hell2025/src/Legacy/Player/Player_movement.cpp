@@ -6,7 +6,7 @@
 #include "World/LegacyWorld.h"
 #include "Util.h"
 
-#include "Core/GameOLD.h" // for total time
+#include "Unloved/Session/Session.h" // for total time
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
@@ -166,7 +166,7 @@ void Player::UpdateWalkingMovement(float deltaTime) {
 
     if (PressingWalkForward()) {
         std::cout << GetTargetWalkingSpeed() << " " << IsRunning() << "\n";
-        //std::cout << GetFootPosition() << " " << Game::GetTotalTime() << " " << m_acceleration << "\n";
+        //std::cout << GetFootPosition() << " " << Session::GetSessionTime() << " " << m_acceleration << "\n";
     }
 }
 

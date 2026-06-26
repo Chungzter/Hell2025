@@ -1,8 +1,9 @@
 #include "ParticleManager.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Ocean/Ocean.h"
 #include "Util/Util.h"
 #include "Hell/Input.h"
+#include "Hell/Time.h"
 namespace Input = Hell::Input;
 
 
@@ -13,7 +14,7 @@ namespace ParticleManager {
 
     void Update(float deltaTime) {
 
-        Player* player = GameOLD::GetLocalPlayerByIndex(0);
+        Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
         if (!player) return;
 
         const glm::vec3& cameraPosition = player->GetCameraPosition();
@@ -40,7 +41,7 @@ namespace ParticleManager {
         }
 
         if (g_bubbleSpawnCooldownTimer > 0) {
-            g_bubbleSpawnCooldownTimer -= GameOLD::GetDeltaTime();
+            g_bubbleSpawnCooldownTimer -= Hell::Time::DeltaTime();
 
             bool spawn = Util::RandomInt(0, 3) == 1;
 

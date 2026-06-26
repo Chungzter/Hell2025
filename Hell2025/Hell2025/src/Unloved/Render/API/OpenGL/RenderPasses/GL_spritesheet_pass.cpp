@@ -6,7 +6,7 @@
 #include "Util/Util.h"
 #include "World/LegacyWorld.h"
 
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Renderer/Renderer.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -42,7 +42,7 @@ namespace OpenGLRenderer {
 
             OpenGLRenderer::SetViewport(&gBuffer, viewport);
 
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
             const std::vector<SpriteSheetRenderItem>& renderItems = player->GetSpriteSheetRenderItems();

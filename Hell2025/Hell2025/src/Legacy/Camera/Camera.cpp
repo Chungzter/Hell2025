@@ -2,7 +2,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <algorithm>
 
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Util.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
@@ -16,8 +16,8 @@ void Camera::Update() {
 
     glm::mat4 animatedCameraMatrix = glm::mat4(1.0f);
 
-    for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
-        Player* player = GameOLD::GetLocalPlayerByIndex(i);
+    for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
+        Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
         if (&player->GetCamera() == this) {
             animatedCameraMatrix = player->GetAnimatedCameraMatrix();
             break;

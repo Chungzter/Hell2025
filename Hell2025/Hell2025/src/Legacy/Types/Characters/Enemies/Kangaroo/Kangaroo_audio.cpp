@@ -1,7 +1,7 @@
 #include "Kangaroo.h"
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 
 void Kangaroo::UpdateAudio() {
     AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
@@ -13,7 +13,7 @@ void Kangaroo::UpdateAudio() {
     }
 
     // Set ambient loop volume based on player proximity
-    Player* player = GameOLD::GetLocalPlayerByIndex(0);
+    Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
     float distanceToPlayer = glm::distance(m_position, player->GetCameraPosition());
     float minDistance = 10.0f;
     float maxDistance = 20.0f;

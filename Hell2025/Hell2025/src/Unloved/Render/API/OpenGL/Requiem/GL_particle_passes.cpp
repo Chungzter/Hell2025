@@ -1,5 +1,5 @@
 #include "../GL_renderer.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util/Util.h"
@@ -8,6 +8,7 @@
 
 #include "Game/GPUTypes.h"
 #include "Hell/Input.h"
+#include "Hell/Time.h"
 namespace Input = Hell::Input;
 
 
@@ -81,7 +82,7 @@ namespace OpenGLRenderer {
         OpenGL::BindSSBO(8, "ParticleDrawCommand");
 
         OpenGL::BindShader("ParticleUpdate");
-        OpenGL::SetUniformFloat("u_deltaTime", GameOLD::GetDeltaTime());
+        OpenGL::SetUniformFloat("u_deltaTime", Hell::Time::DeltaTime());
 
         //OpenGL::DispatchCompute(1, 1, 1);
 
@@ -121,7 +122,7 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::SetRasterizerState(state);
 
         OpenGL::BindShader("ParticleColor");
-        OpenGL::SetUniformFloat("u_time", GameOLD::GetTotalTime());
+        OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
 
         OpenGL::BindTextureUnit(0, GetTextureHandleByName("UnderwaterBulletBubble"));
 
@@ -204,7 +205,7 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::SetRasterizerState(state);
 
         OpenGL::BindShader("Bubbles");
-        OpenGL::SetUniformFloat("u_time", GameOLD::GetTotalTime());
+        OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
         OpenGL::BindTextureUnit(0, skyboxCubemapView.GetHandle());
 
         glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);

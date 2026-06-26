@@ -1,6 +1,6 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
@@ -45,11 +45,11 @@ namespace OpenGLRenderer {
 
         OpenGL::BindShader("ShadowMap");
 
-        for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
+        for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
             shadowMapsFBO->BindLayer(i);
             shadowMapsFBO->ClearLayer(i);
 
-            glm::mat4 lightProjectionView = GameOLD::GetLocalPlayerByIndex(i)->GetFlashlightProjectionView();
+            glm::mat4 lightProjectionView = Unloved::Session::GetLocalPlayerByViewportIndex(i)->GetFlashlightProjectionView();
             OpenGL::SetUniformMat4("u_projectionView", lightProjectionView);
 
             Frustum frustum;
@@ -300,10 +300,10 @@ namespace OpenGLRenderer {
         MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
         MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
 
-        int viewportCount = std::min(4, GameOLD::GetLocalPlayerCount());
+        int viewportCount = std::min(4, Unloved::Session::GetLocalPlayerCount());
 
         for (int j = 0; j < viewportCount; j++) {
-            Player* player = GameOLD::GetLocalPlayerByIndex(j);
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(j);
             if (!player || !player->ViewportIsVisible()) continue;
 
             const ViewportData& viewportData = RenderDataManager::GetViewportData()[j];

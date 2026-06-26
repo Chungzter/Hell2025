@@ -16,7 +16,10 @@
 
 #include "Hell/Audio.h"
 #include "Hell/Audio/Synth.h"
+#include "Hell/AssetCompiler/AssetCompiler.h"
+#include "Hell/AssetLoader/AssetLoader.h"
 #include "Hell/Input.h"
+#include "Hell/Physics/Physics.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/ResourceManagement/TextureUploader.h"
 #include "Hell/Time.h"
@@ -74,6 +77,9 @@ namespace Hell::BackEnd {
         Input::Init(GetWindowPointer());
         InputMulti::Init();
 
+        AssetCompiler::CompileOutOfDateAssets();
+        AssetLoader::Init();
+
         glfwShowWindow(static_cast<GLFWwindow*>(GetWindowPointer()));
         return true;
     }
@@ -89,6 +95,8 @@ namespace Hell::BackEnd {
         if (!WindowHasFocus()) {
             InputMulti::ResetState();
         }
+
+        Physics::BeginFrame();
 
         if (GetAPI() == API::OPENGL) {
             OpenGL::BackEnd::BeginFrame();

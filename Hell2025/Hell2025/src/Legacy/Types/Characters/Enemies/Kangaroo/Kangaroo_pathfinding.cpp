@@ -1,9 +1,9 @@
 #include "Kangaroo.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Pathfinding/AStarMap.h"
 
 void Kangaroo::FindPathToTarget() {
-    Player* player = GameOLD::GetLocalPlayerByIndex(0);;
+    Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);;
     glm::vec3 playerPosition = player->GetCameraPosition();
 
     glm::ivec2 start = AStarMap::GetCellCoordsFromWorldSpacePosition(m_position);

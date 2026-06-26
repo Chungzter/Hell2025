@@ -1,6 +1,6 @@
 /*#include "Modelling.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Editor/Editor.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
@@ -355,7 +355,7 @@ namespace Modelling {
             g_viewMatrix = viewportData[0].view;
             g_viewPos = viewportData[0].inverseView[3];
             g_rayOrigin = viewportData[0].inverseView[3];
-            g_rayDir = Game::GetLocalPlayerByIndex(0)->GetCameraForward();
+            g_rayDir = Unloved::Session::GetLocalPlayerByViewportIndex(0)->GetCameraForward();
             g_mouseX = gBufferSpaceCoords.width * 0.5f;
             g_mouseY = gBufferSpaceCoords.height * 0.5f;
         }

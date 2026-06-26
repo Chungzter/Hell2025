@@ -7,7 +7,7 @@
 #include "Util.h"
 #include "Hell/Audio.h"
 #include "Bible/Bible.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Editor/Editor.h"
 #include "Managers/HouseManager.h"
 #include "Managers/MapManager.h"
@@ -22,6 +22,7 @@
 #include "Pathfinding/AStarMap.h"
 
 #include "Hell/Containers/SlotMap.h"
+#include "Hell/Time.h"
 
 using namespace Hell;
 
@@ -347,9 +348,9 @@ namespace LegacyWorld {
     void BeginFrame() {
 
         // HACK!!!
-        g_runTime += GameOLD::GetDeltaTime();
+        g_runTime += Hell::Time::DeltaTime();
         if (g_runTime > 0.2f && g_playersAwaitingRespawn) {
-            GameOLD::RespawnPlayers();
+            Unloved::Session::RespawnPlayers();
             g_playersAwaitingRespawn = false;
         }
         // HACK!!!
@@ -1134,8 +1135,8 @@ namespace LegacyWorld {
         g_spawnCampaignPoints.push_back(SpawnPoint(glm::vec3(40.095, 32.4311, 31.6613), glm::vec3(-0.11, -14.256, 0)));
 
         // Check you didn't just spawn on another player
-        for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+        for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             float distanceToOtherPlayer = glm::distance(spawnPoint.GetPosition(), player->GetFootPosition());
             if (distanceToOtherPlayer < 1.0f) {
                 return GetRandomCampaignSpawnPoint();
@@ -1157,8 +1158,8 @@ namespace LegacyWorld {
         }
 
         // Check you didn't just spawn on another player
-        for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+        for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             float distanceToOtherPlayer = glm::distance(spawnPoint.GetPosition(), player->GetFootPosition());
             if (distanceToOtherPlayer < 1.0f) {
                 return GetRandomCampaignSpawnPoint();

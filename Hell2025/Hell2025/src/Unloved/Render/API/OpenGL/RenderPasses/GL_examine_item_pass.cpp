@@ -1,7 +1,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Viewport/ViewportManager.h"
 #include "Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
@@ -20,9 +20,9 @@ namespace OpenGLRenderer {
 
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
 
-        for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
+        for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
 
             if (!viewport->IsVisible()) continue;
             if (!player->InventoryIsOpen()) continue;
@@ -74,9 +74,9 @@ namespace OpenGLRenderer {
         glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         // Non blended
-        for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
+        for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
 
             if (!viewport->IsVisible()) continue;
             if (player->InventoryIsClosed()) continue;

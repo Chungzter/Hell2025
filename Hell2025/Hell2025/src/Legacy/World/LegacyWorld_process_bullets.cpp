@@ -1,5 +1,6 @@
 #include "LegacyWorld.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
+#include "Unloved/SubSystems/GameAudio.h"
 #include "Viewport/ViewportManager.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
@@ -7,18 +8,9 @@
 #include "Game/UniqueID.h"
 
 namespace LegacyWorld {
-    float g_fleshHitHitTimer = 0.0f; // sound can only play if this is less or equal to 0.0f
-    constexpr float g_flashHitAudioDelay = 0.2f; // sound can only play if this is less or equal to 0.0f
     bool g_awaitingFleshAudio = false;
 
     void SpawnBlood(const glm::vec3& position, const glm::vec3& direction);
-
-    void TriggerFleshImpactAudio() {
-        if (g_fleshHitHitTimer <= 0.0f) {
-            g_fleshHitHitTimer = g_flashHitAudioDelay;
-            GameOLD::PlayFleshImpactAudio();
-        }
-    }
 
     void ProcessDobermannHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
     void ProcessKangarooHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
@@ -26,9 +18,6 @@ namespace LegacyWorld {
     void ProcessSharkHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
 
     void ProcessBullets() {
-        g_fleshHitHitTimer -= GameOLD::GetDeltaTime();
-        g_fleshHitHitTimer = std::max(g_fleshHitHitTimer, 0.0f);
-
         std::vector<Bullet>& bullets = GetBullets();
         std::vector<Bullet> newBullets;
         bool glassWasHit = false;
@@ -42,16 +31,16 @@ namespace LegacyWorld {
 
             std::vector<PxRigidActor*> ignoredActors;
 
-            int playerCount = GameOLD::GetLocalPlayerCount();
+            int playerCount = Unloved::Session::GetLocalPlayerCount();
             for (int i = 0; i < playerCount; i++) {
-                if (Player* player = GameOLD::GetLocalPlayerByIndex(i)) {
+                if (Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i)) {
                     if (PxRigidDynamic* characterControllerActor = player->GetCharacterControllerActor()) {
                         ignoredActors.push_back(characterControllerActor);
                     }
                 }
             }
 
-            Player* player = GameOLD::GetPlayerByPlayerId(bullet.GetOwnerObjectId());
+            Player* player = Unloved::Session::GetPlayerById(bullet.GetOwnerObjectId());
             if (player) {
                 auto RagdollActors = Hell::Physics::GetRagdollPxRigidActors(player->GetRagdollId());
                 ignoredActors.insert(ignoredActors.end(), RagdollActors.begin(), RagdollActors.end());
@@ -108,7 +97,7 @@ namespace LegacyWorld {
                 Hell::Physics::PhysicsObjectType physicsObjectType = Hell::Physics::GetPhysicsObjectType(physicsId);
 
                 std::cout << "\n";
-                std::cout << "Hit found " << GameOLD::GetTotalTime() << "\n";
+                std::cout << "Hit found " << Unloved::Session::GetSessionTime() << "\n";
                 std::cout << " ObjectId          " << objectId << "\n";
                 std::cout << " PhysicsId         " << physicsId << "\n";
                 std::cout << " ObjectType        " << Util::EnumToString(hitObjectType) << "\n";
@@ -128,7 +117,7 @@ namespace LegacyWorld {
                 if (hitObjectType == ObjectType::SHARK)     ProcessSharkHit(objectId, physicsId, bullet, hitPosition);
               
                 if (hitObjectType == ObjectType::RAGDOLL_STANDALONE && physicsObjectType == Hell::Physics::PhysicsObjectType::RAGDOLL) {
-                    TriggerFleshImpactAudio();
+                    Unloved::GameAudio::TryPlayFleshImpactAudio();
                     SpawnBlood(hitPosition, rayDirection);
                 }
 
@@ -198,7 +187,7 @@ namespace LegacyWorld {
                             newBullets.emplace_back(Bullet(bulletCreateInfo));
                         }
 
-                        GameOLD::PlayGlassHitAudio();
+                        Unloved::GameAudio::PlayGlassHitAudio();
                     }
                 }
 
@@ -263,7 +252,7 @@ namespace LegacyWorld {
         dobermann->TakeDamage(bullet.GetDamage());
 
         SpawnBlood(hitPosition, -bullet.GetDirection());
-        TriggerFleshImpactAudio();
+        Unloved::GameAudio::TryPlayFleshImpactAudio();
     }
 
     // Shark hit
@@ -275,7 +264,7 @@ namespace LegacyWorld {
         shark->GiveDamage(bullet.GetOwnerObjectId(), bullet.GetDamage());
 
         SpawnBlood(hitPosition, -bullet.GetDirection());
-        TriggerFleshImpactAudio();
+        Unloved::GameAudio::TryPlayFleshImpactAudio();
     }
 
     // Kangaroo hit
@@ -287,13 +276,13 @@ namespace LegacyWorld {
         kangaroo->GiveDamage(bullet.GetDamage());
 
         SpawnBlood(hitPosition, -bullet.GetDirection());
-        TriggerFleshImpactAudio();
+        Unloved::GameAudio::TryPlayFleshImpactAudio();
     }
 
     // Player hit
 
     void ProcessPlayerHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
-        Player* player = GameOLD::GetPlayerByPlayerId(objectId);
+        Player* player = Unloved::Session::GetPlayerById(objectId);
         if (!player) return;
 
         Ragdoll* ragdoll = player->GetRagdoll();
@@ -310,7 +299,7 @@ namespace LegacyWorld {
             std::cout << "[Player body shot]\n";
         }
 
-        TriggerFleshImpactAudio();
+        Unloved::GameAudio::TryPlayFleshImpactAudio();
         SpawnBlood(hitPosition, -bullet.GetDirection());
     }
 }

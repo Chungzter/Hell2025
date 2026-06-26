@@ -2,7 +2,7 @@
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
 #include "Bible/Bible.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Renderer/Renderer.h"
 #include "Util.h"
@@ -32,7 +32,7 @@ void Inventory::Update(float deltaTime) {
 
 
 void Inventory::UpdateItemViewScreen(float deltaTime) {
-    Player* player = GameOLD::GetLocalPlayerByIndex(m_localPlayerIndex);
+    Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(m_localPlayerIndex);
     if (!player) return;
 
     // WASD cell input
@@ -113,7 +113,7 @@ void Inventory::InitMeshNodesFromSelectedItem() {
 
 void Inventory::UpdateExamineScreen(float deltaTime) {
     ItemInfo* itemInfo = Bible::GetItemInfoByName(GetSelectedItemName());
-    Player* player = GameOLD::GetLocalPlayerByIndex(m_localPlayerIndex);
+    Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(m_localPlayerIndex);
 
     if (!itemInfo) return;
     if (!player) return;

@@ -6,7 +6,7 @@
 
 #include "Hell/Backend/BackEnd.h"
 #include "Config/Config.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
 #include "Managers/MirrorManager.h"
@@ -19,7 +19,8 @@
 #include "UI/TextBlitter.h"
 #include "Util.h"
 
-#include "Unloved/World/Objects/Interior/Piano/PianoPlaybackManager.h"
+#include "Unloved/SubSystems/PianoPlaybackManager.h"
+
 #include <cstdint>
 #include <vector>
 #include <cmath>
@@ -28,6 +29,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include "Hell/Input.h"
 #include "Hell/Audio.h"
+#include "Hell/Time.h"
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
 
@@ -259,7 +261,7 @@ namespace Debug {
 
     void DisplayQuickMessage() {
         if (g_quickMessageTimer > 0) {
-            g_quickMessageTimer -= GameOLD::GetDeltaTime();
+            g_quickMessageTimer -= Hell::Time::DeltaTime();
             UIBackEnd::BlitText(g_quickMessage, "StandardFont", 0, Config::GetResolutions().gBuffer.y, Alignment::BOTTOM_LEFT, 2.0f);
         }
     }
@@ -285,8 +287,8 @@ namespace Debug {
             for (AnimatedGameObject& animatedGameObject : LegacyWorld::GetAnimatedGameObjects()) {
                 animatedGameObject.DrawBones();
             }
-            for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
-                Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
+                Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
                 //player->GetCharacterModelAnimatedGameObject()->DrawBones(RED, i);
                 player->GetViewWeaponAnimatedGameObject()->DrawBones(i);
                 //player->GetCharacterModelAnimatedGameObject()->DrawBones();
@@ -296,8 +298,8 @@ namespace Debug {
             for (AnimatedGameObject& animatedGameObject : LegacyWorld::GetAnimatedGameObjects()) {
                 //animatedGameObject.DrawBoneTangentVectors();
             }
-            for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
-                Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
+                Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
                 //player->GetCharacterModelAnimatedGameObject()->DrawBoneTangentVectors(0.001f, i);
                 player->GetViewWeaponAnimatedGameObject()->DrawBoneTangentVectors(0.0025f, i);
                 //player->GetCharacterModelAnimatedGameObject()->DrawBoneTangentVectors(0.001f, i);

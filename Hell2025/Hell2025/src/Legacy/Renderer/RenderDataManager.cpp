@@ -1,7 +1,7 @@
 #include "RenderDataManager.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Camera/Frustum.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Config/Config.h"
 #include "Editor/Editor.h"
 #include "Managers/MirrorManager.h"
@@ -9,6 +9,7 @@
 #include "Renderer/Renderer.h"
 #include "Viewport/ViewportManager.h"
 #include "UI/UIBackend.h"
+#include "Unloved/World/World.h"
 #include <span>
 #include <unordered_map>
 
@@ -203,9 +204,9 @@ namespace RenderDataManager {
             else {
                 g_viewportData[i].orthoSize = 0.0f;
                 g_viewportData[i].isOrtho = false;
-                g_viewportData[i].fov = GameOLD::GetLocalPlayerFovByIndex(i);
+                g_viewportData[i].fov = Unloved::Session::GetLocalPlayerFovByIndex(i);
 
-                Player* player = GameOLD::GetLocalPlayerByIndex(i);
+                Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
                 if (player) {
                     g_viewportData[i].colorTint = glm::vec4(player->GetViewportColorTint(), 1.0f);
                     g_viewportData[i].colorContrast = player->GetViewportContrast();
@@ -214,7 +215,7 @@ namespace RenderDataManager {
                         viewMatrix = player->m_deathCamViewMatrix;
                     }
                     else {
-                        viewMatrix = GameOLD::GetLocalPlayerCameraByIndex(i)->GetViewMatrix();
+                        viewMatrix = Unloved::Session::GetLocalPlayerCameraByIndex(i)->GetViewMatrix();
                     }
 
                     g_viewportData[i].isInShop = player->IsInShop();
@@ -287,7 +288,7 @@ namespace RenderDataManager {
                 g_viewportData[i].flashlightPosition = glm::vec4(0.0f);
             }
             else {
-                Player* player = GameOLD::GetLocalPlayerByIndex(i);
+                Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
                 if (player) {
                     g_viewportData[i].flashlightProjectionView = player->GetFlashlightProjectionView();
                     g_viewportData[i].flashlightDir = glm::vec4(player->GetFlashlightDirection(), 0.0f);
@@ -297,7 +298,7 @@ namespace RenderDataManager {
             }
 
             // CSM matrices
-            glm::vec3 lightDir = GameOLD::GetMoonlightDirection();
+            glm::vec3 lightDir = Unloved::World::GetMoonlightDirection();
             float viewportWidth = g_viewportData[i].width;
             float viewportHeight = g_viewportData[i].height;
             float fov = g_viewportData[i].fov;
@@ -319,14 +320,14 @@ namespace RenderDataManager {
         g_rendererData.gBufferHeight = (float)resolutions.gBuffer.y;
         g_rendererData.hairBufferWidth = (float)resolutions.hair.x;
         g_rendererData.hairBufferHeight = (float)resolutions.hair.y;
-        g_rendererData.splitscreenMode = (int)GameOLD::GetSplitscreenMode();
-        g_rendererData.time = GameOLD::GetTotalTime();
+        g_rendererData.splitscreenMode = (int)Unloved::Session::GetSplitscreenMode();
+        g_rendererData.time = Unloved::Session::GetSessionTime();
         g_rendererData.rendererOverrideState = (int)rendererSettings.rendererOverrideState;
         g_rendererData.normalizedMouseX = Util::MapRange(Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0.0f, 1.0f);
         g_rendererData.normalizedMouseY = Util::MapRange(Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), 0.0f, 1.0f);
         g_rendererData.tileCountX = resolutions.gBuffer.x / TILE_SIZE;
         g_rendererData.tileCountY = resolutions.gBuffer.y / TILE_SIZE;
-        g_rendererData.moonLightDir = glm::vec4(GameOLD::GetMoonlightDirection(), 0.0f);
+        g_rendererData.moonLightDir = glm::vec4(Unloved::World::GetMoonlightDirection(), 0.0f);
     }
 
 
@@ -448,7 +449,7 @@ namespace RenderDataManager {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
 
@@ -546,8 +547,8 @@ namespace RenderDataManager {
         CreateMoonLightShadowMapDrawCommands();
 
         // Flashlight stuff
-        for (int playerIndex = 0; playerIndex < GameOLD::GetLocalPlayerCount(); playerIndex++) {
-            Player* player = GameOLD::GetLocalPlayerByIndex(playerIndex);
+        for (int playerIndex = 0; playerIndex < Unloved::Session::GetLocalPlayerCount(); playerIndex++) {
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(playerIndex);
             if (!player) continue;
 
             Frustum flashLightFrustum = player->GetFlashlightFrustum();

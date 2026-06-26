@@ -8,13 +8,14 @@
 
 #include "Game/RendereringConstants.h"
 #include "Ocean/Ocean.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Core/ParticleManager.h"
 
 #include "Game/GPUTypes.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Input.h"
+#include "Hell/Time.h"
 namespace Input = Hell::Input;
 
 
@@ -282,13 +283,13 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::SetRasterizerState(state);
 
         OpenGL::BindShader("Bubbles2");
-        OpenGL::SetUniformFloat("u_time", GameOLD::GetTotalTime());
+        OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
         OpenGL::BindTextureUnit(0, skyboxCubemapView.GetHandle());
         OpenGL::BindTextureUnit(1, GetTextureHandleByName("Bubbles_10x10"));
 
         BindEmptyVAO();
 
-        ParticleManager::Update(GameOLD::GetDeltaTime());
+        ParticleManager::Update(Hell::Time::DeltaTime());
 
         for (int i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -336,7 +337,7 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::SetRasterizerState(state);
 
         OpenGL::BindShader("Bubbles3");
-        OpenGL::SetUniformFloat("u_time", GameOLD::GetTotalTime());
+        OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
         OpenGL::BindTextureUnit(0, GetTextureHandleByName("UnderwaterBulletBubble"));
 
         BindEmptyVAO();
@@ -496,7 +497,7 @@ namespace OpenGLRenderer {
         OpenGL::BindShader("OceanLighting");
         OpenGL::SetUniformInt("u_gridWidth", gridSize);
         OpenGL::SetUniformFloat("u_oceanOriginY", Ocean::GetOceanOriginY());
-        OpenGL::SetUniformFloat("u_time", GameOLD::GetTotalTime());
+        OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
 
         OpenGL::BindTextureUnit(0, fftBand0Fbo.GetColorAttachmentHandleByName("Displacement"));
         OpenGL::BindTextureUnit(1, fftBand0Fbo.GetColorAttachmentHandleByName("Normals"));

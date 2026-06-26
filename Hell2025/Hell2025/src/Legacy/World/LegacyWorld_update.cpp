@@ -1,6 +1,6 @@
 #include "LegacyWorld.h"
 #include "Hell/Audio.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Core/P90MagManager.h"
 #include "Hell/Logging.h"
 #include "Pathfinding/AStarMap.h"
@@ -66,7 +66,7 @@ namespace LegacyWorld {
     void Update(float deltaTime) {
 
         if (Input::KeyPressed(HELL_KEY_4)) {
-            Player* player = GameOLD::GetLocalPlayerByIndex(0);
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
             player->SetFootPosition(glm::vec3(34.49f, 31.0f, 37.48f));
             player->GetCamera().SetEulerRotation(glm::vec3(-0.15f, 1.58f, 0.0f));
         }
@@ -80,7 +80,7 @@ namespace LegacyWorld {
         //}
         //
         //if (rotate) {
-        //    Player* player = Game::GetLocalPlayerByIndex(0);
+        //    Player* player = Game::GetLocalPlayerByViewportIndex(0);
         //    AnimatedGameObject* ratKidAO = GetRadKidAO();
         //
         //    static float time = 0;
@@ -180,7 +180,7 @@ namespace LegacyWorld {
         //
         //if (Input::KeyPressed(HELL_KEY_NUMPAD_3)) {
         //
-        //    GetGameObjects()[0].SetPosition(Game::GetLocalPlayerByIndex(0)->GetFootPosition());
+        //    GetGameObjects()[0].SetPosition(Game::GetLocalPlayerByViewportIndex(0)->GetFootPosition());
         //    for (Light& light : GetLights()) {
         //        light.ForceDirty();
         //    }
@@ -190,8 +190,8 @@ namespace LegacyWorld {
         //    PrintObjectCounts();
         //}
 
-        //glm::vec3 rayOrigin = Game::GetLocalPlayerByIndex(0)->GetCameraPosition();
-        //glm::vec3 rayDir = Game::GetLocalPlayerByIndex(0)->GetCameraForward();
+        //glm::vec3 rayOrigin = Game::GetLocalPlayerByViewportIndex(0)->GetCameraPosition();
+        //glm::vec3 rayDir = Game::GetLocalPlayerByViewportIndex(0)->GetCameraForward();
         //glm::vec3 position = glm::vec3(1.0f);
         //float radius = 0.5f;
         //
@@ -210,7 +210,7 @@ namespace LegacyWorld {
         //for (GenericObject& genericObject : GetGenericObjects()) {
         //    for (const MeshNode& meshNode : genericObject.GetMeshNodes().GetNodes()) {
         //        const AABB& aabb = meshNode.worldspaceAabb;
-        //        glm::vec3 closestPoint = aabb.NearestPointTo(Game::GetLocalPlayerByIndex(0)->GetCameraPosition());
+        //        glm::vec3 closestPoint = aabb.NearestPointTo(Game::GetLocalPlayerByViewportIndex(0)->GetCameraPosition());
         //        DebugDraw::DrawAABB(aabb, PINK);
         //        DebugDraw::DrawPoint(closestPoint, YELLOW);
         //    }
@@ -382,8 +382,8 @@ namespace LegacyWorld {
         for (Decal& object : GetDecals())                           object.Update();
 
         // Update player weapon attachments. Must happen after AnimatedGameObject updates so that animated transforms are correct
-        for (int i = 0; i < GameOLD::GetLocalPlayerCount(); i++) {
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+        for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
             player->UpdateWeaponAttachments();
@@ -426,8 +426,8 @@ namespace LegacyWorld {
         // AKs
         //if (Input::KeyPressed(HELL_KEY_BACKSPACE)) {
         //    PickUpCreateInfo createInfo;
-        //    createInfo.position = Game::GetLocalPlayerByIndex(0)->GetCameraPosition();
-        //    createInfo.position += Game::GetLocalPlayerByIndex(0)->GetCameraForward();
+        //    createInfo.position = Game::GetLocalPlayerByViewportIndex(0)->GetCameraPosition();
+        //    createInfo.position += Game::GetLocalPlayerByViewportIndex(0)->GetCameraForward();
         //    createInfo.rotation.x = Util::RandomFloat(-HELL_PI, HELL_PI);
         //    createInfo.rotation.y = Util::RandomFloat(-HELL_PI, HELL_PI);
         //    createInfo.rotation.z = Util::RandomFloat(-HELL_PI, HELL_PI);
@@ -438,8 +438,8 @@ namespace LegacyWorld {
         // Remingtons
         //if (Input::KeyPressed(HELL_KEY_INSERT)) {
         //    PickUpCreateInfo createInfo;
-        //    createInfo.position = Game::GetLocalPlayerByIndex(0)->GetCameraPosition();
-        //    createInfo.position += Game::GetLocalPlayerByIndex(0)->GetCameraForward();
+        //    createInfo.position = Game::GetLocalPlayerByViewportIndex(0)->GetCameraPosition();
+        //    createInfo.position += Game::GetLocalPlayerByViewportIndex(0)->GetCameraForward();
         //    createInfo.rotation.x = Util::RandomFloat(-HELL_PI, HELL_PI);
         //    createInfo.rotation.y = Util::RandomFloat(-HELL_PI, HELL_PI);
         //    createInfo.rotation.z = Util::RandomFloat(-HELL_PI, HELL_PI);

@@ -1,7 +1,7 @@
 #pragma once
 #include "Mirror.h"
 #include "Config/Config.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Debug/DebugDraw.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
@@ -95,7 +95,7 @@ void Mirror::Update(const glm::mat4& worldMatrix) {
         if (Viewport* viewport = ViewportManager::GetViewportByIndex(i)) {
             if (!viewport->IsVisible()) continue;
 
-            Player* player = GameOLD::GetLocalPlayerByIndex(i);
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
             
             const glm::vec3& cameraPosition = player->GetCameraPosition();

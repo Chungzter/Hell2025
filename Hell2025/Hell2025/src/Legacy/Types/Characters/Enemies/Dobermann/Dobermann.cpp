@@ -10,7 +10,7 @@ namespace Audio = Hell::Audio;
 
 
 // GET ME OUT OF HERE
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 // GET ME OUT OF HERE
@@ -119,7 +119,7 @@ void Dobermann::Update(float deltaTime) {
     }
 
     if (Input::KeyPressed(HELL_KEY_T)) {
-        if (Player* player = GameOLD::GetLocalPlayerByIndex(0)) {
+        if (Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0)) {
 
             m_target = player->GetInteractHitPosition();
 

@@ -1,9 +1,10 @@
 #include "LegacyWorld.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Renderer/Renderer.h"
 #include "Types/Game/BulletTrail.h"
 #include <cstdlib>
 #include "Hell/Input.h"
+#include "Hell/Time.h"
 namespace Input = Hell::Input;
 
 
@@ -20,7 +21,7 @@ namespace LegacyWorld {
             bulletTrailParticles.clear();
         }
 
-        float deltaTime = GameOLD::GetDeltaTime();
+        float deltaTime = Hell::Time::DeltaTime();
 
         UpdateBulletTrails(deltaTime);
         UpdateBulletTrailParticles(deltaTime);

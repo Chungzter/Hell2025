@@ -1,5 +1,5 @@
  #include "Kangaroo.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Util.h"
 
 #include <iostream> // TODO clean up logging
@@ -13,7 +13,7 @@ void Kangaroo::UpdateAnimationStateMachine() {
         }
     }
 
-    Player* player = GameOLD::GetLocalPlayerByIndex(0);
+    Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
     float distanceToPlayer = glm::distance(player->GetFootPosition(), m_position);
     float biteRange = 10.0f;
 
@@ -58,7 +58,7 @@ void Kangaroo::UpdateAnimationStateMachine() {
         m_agroState == KanagarooAgroState::ANGRY &&
         m_timeSinceIdleBegan > coolDownDuration) {
 
-        Player* player = GameOLD::GetLocalPlayerByIndex(0);
+        Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
         glm::vec3 playerPosition = player->GetCameraPosition();
         GoToTarget(playerPosition);
     }

@@ -1,11 +1,10 @@
 #include "Unloved.h"
 
 #include "Hell/Audio.h"
-namespace Audio = Hell::Audio;
 #include "Hell/Backend/BackEnd.h"
 #include "Bible/Bible.h"
 #include "Callbacks/Callbacks.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Debug/Debug.h"
 #include "Debug/DebugDraw.h"
 #include "Editor/Editor.h"
@@ -14,6 +13,7 @@ namespace Audio = Hell::Audio;
 #include "Managers/HouseManager.h"
 #include "Managers/MapManager.h"
 #include "Managers/MirrorManager.h"
+#include "Managers/OpenableManager.h"
 #include "Pathfinding/AStarMap.h"
 #include "Pathfinding/NavMesh.h"
 #include "Hell/Physics/Physics.h"
@@ -21,13 +21,16 @@ namespace Audio = Hell::Audio;
 #include "Renderer/RenderDataManager.h"
 #include "UI/UIBackEnd.h"
 #include "Viewport/ViewportManager.h"
-#include "Unloved/World/World.h"
 
-#include "Hell/AssetCompiler/AssetCompiler.h"
-#include "Hell/AssetLoader/AssetLoader.h"
+#include "Unloved/SubSystems/GameAudio.h"
+#include "Unloved/SubSystems/SubSystems.h"
+#include "Unloved/World/World.h"
+#include "World/LegacyWorld.h"
+
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Input.h"
 #include "Hell/Time.h"
+
 namespace Input = Hell::Input;
 namespace Time = Hell::Time;
 
@@ -45,23 +48,21 @@ namespace Unloved {
         Hell::Physics::Init();
         ImGuiBackEnd::Init();
         NavMeshManager::Init();
-        Hell::AssetCompiler::CompileOutOfDateAssets();
-        Hell::AssetLoader::Init();
+
+        SubSystems::Init();
 
         return true;
     }
 
     void UpdateSubSystems() {
-        //glfwSwapInterval(0);
-
-        World::Update();
+        SubSystems::Update();
     }
 
     void BeginFrame() {
         UpdateLazyKeypresses();
         DebugDraw::BeginFrame();
-        GameOLD::BeginFrame();
-        Hell::Physics::BeginFrame();
+        Unloved::Session::BeginFrame();
+        SubSystems::BeginFrame();
         RenderDataManager::BeginFrame();
         UIBackEnd::BeginFrame();
         World::BeginFrame();
@@ -77,6 +78,7 @@ namespace Unloved {
         HouseManager::Init();
         MapManager::Init();
         Renderer::InitWoundMaskArray();
+
         World::Init();
 
         // Free all cpu texture data
@@ -85,10 +87,13 @@ namespace Unloved {
         }
 
         Renderer::InitMain();
-        GameOLD::Create();
+        Unloved::Session::Create();
+        GameAudio::PlayGlockEquipAudio();
     }
 
     void Update() {
+        SubSystems::Update();
+
         Renderer::PreGameLogicComputePasses();
 
         float deltaTime = Time::DeltaTime();
@@ -100,7 +105,13 @@ namespace Unloved {
         }
 
         AStarMap::Update();
-        GameOLD::Update();
+        LegacyWorld::UpdateBvhs();
+        Unloved::Session::Update();
+        World::UpdatePlayers();
+        OpenableManager::Update(deltaTime);
+        LegacyWorld::Update(deltaTime);
+        World::Update();
+        SubSystems::UpdatePostSession();
 
         if (Editor::IsClosed()) {
             Hell::Physics::StepSimulation();
@@ -133,6 +144,7 @@ namespace Unloved {
     }
 
     void CleanUp() {
+        SubSystems::Update();
         World::CleanUp();
         Renderer::CleanUp();
     }
@@ -153,7 +165,7 @@ namespace Unloved {
         if (Input::KeyPressed(HELL_KEY_GRAVE_ACCENT)) Debug::NextDebugTextMode();
 
         // Game
-        if (Input::KeyPressed(HELL_KEY_K)) GameOLD::RespawnPlayers();
+        if (Input::KeyPressed(HELL_KEY_K)) Unloved::Session::RespawnPlayers();
 
         // Renderer
         if (Renderer::GameIsRendering()) {
@@ -178,34 +190,34 @@ namespace Unloved {
         // Editor only
         if (!Editor::IsOpen()) {
             if (Input::KeyPressed(HELL_KEY_C)) {
-                GameOLD::NextSplitScreenMode();
+                Unloved::Session::NextSplitScreenMode();
             }
-            if (Input::KeyPressed(HELL_KEY_1) && GameOLD::GetLocalPlayerCount() >= 1) {
-                GameOLD::SetPlayerKeyboardAndMouseIndex(0, 0, 0);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(1, 1, 1);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(2, 1, 1);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(3, 1, 1);
+            if (Input::KeyPressed(HELL_KEY_1) && Unloved::Session::GetLocalPlayerCount() >= 1) {
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(0, 0, 0);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(1, 1, 1);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(2, 1, 1);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(3, 1, 1);
             }
-            if (Input::KeyPressed(HELL_KEY_2) && GameOLD::GetLocalPlayerCount() >= 2) {
-                GameOLD::SetPlayerKeyboardAndMouseIndex(0, 1, 1);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(1, 0, 0);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(2, 1, 1);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(3, 1, 1);
+            if (Input::KeyPressed(HELL_KEY_2) && Unloved::Session::GetLocalPlayerCount() >= 2) {
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(0, 1, 1);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(1, 0, 0);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(2, 1, 1);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(3, 1, 1);
             }
-            if (Input::KeyPressed(HELL_KEY_3) && GameOLD::GetLocalPlayerCount() >= 3) {
-                GameOLD::SetPlayerKeyboardAndMouseIndex(0, 1, 1);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(1, 1, 1);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(2, 0, 0);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(3, 1, 1);
+            if (Input::KeyPressed(HELL_KEY_3) && Unloved::Session::GetLocalPlayerCount() >= 3) {
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(0, 1, 1);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(1, 1, 1);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(2, 0, 0);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(3, 1, 1);
             }
-            if (Input::KeyPressed(HELL_KEY_4) && GameOLD::GetLocalPlayerCount() >= 4) {
-                GameOLD::SetPlayerKeyboardAndMouseIndex(0, 1, 1);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(1, 1, 1);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(2, 1, 1);
-                GameOLD::SetPlayerKeyboardAndMouseIndex(3, 0, 0);
+            if (Input::KeyPressed(HELL_KEY_4) && Unloved::Session::GetLocalPlayerCount() >= 4) {
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(0, 1, 1);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(1, 1, 1);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(2, 1, 1);
+                Unloved::Session::SetPlayerKeyboardAndMouseIndex(3, 0, 0);
             }
             if (Input::KeyPressed(HELL_KEY_B)) {
-                Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+                Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
                 Debug::NextDebugRenderMode();
             }
         }

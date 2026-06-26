@@ -16,7 +16,7 @@
 #include "Managers/MirrorManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 
 // get me out of here
 
@@ -393,7 +393,7 @@ namespace OpenGLRenderer {
                     if (viewport->IsVisible()) {
                         OpenGLRenderer::SetViewport(gBuffer, viewport);
 
-                        Player* player = GameOLD::GetLocalPlayerByIndex(i);
+                        Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
                         if (!player) continue;
 
                         OpenGL::SetUniformInt("u_playerIndex", i);

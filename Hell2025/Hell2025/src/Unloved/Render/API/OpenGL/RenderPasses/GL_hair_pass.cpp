@@ -7,7 +7,7 @@
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
 #include "Renderer/Renderer.h"
-#include "Core/GameOLD.h"
+#include "Unloved/World/World.h"
 #include "Debug/Debug.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Util/Util.h"
@@ -150,7 +150,7 @@ namespace OpenGLRenderer {
             glDisablei(GL_BLEND, viewspaceDepthBufferIndex);
 
             OpenGL::BindShader("HairLighting");
-            OpenGL::SetUniformVec3("u_moonlightDir", GameOLD::GetMoonlightDirection());
+            OpenGL::SetUniformVec3("u_moonlightDir", Unloved::World::GetMoonlightDirection());
             glBindTextureUnit(4, GetTextureHandleByName("Flashlight2"));
 
             glActiveTexture(GL_TEXTURE9);

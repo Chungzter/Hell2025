@@ -1,7 +1,6 @@
 #include "Player.h"
 #include "Hell/Audio.h"
-namespace Audio = Hell::Audio;
-#include "Core/GameOLD.h"
+#include "Unloved/SubSystems/GameAudio.h"
 
 void Player::UpdateAudio(float deltaTime) {
 
@@ -53,7 +52,7 @@ void Player::UpdateAudio(float deltaTime) {
     if (m_ladderFootstepAudioTimer == 0) {
         if (IsOverlappingLadder() && PressingWalkForward()) {
             int random = rand() % ladderFootstepFilenames.size();
-            Audio::PlayAudio(ladderFootstepFilenames[random], 1.0f);
+            Hell::Audio::PlayAudio(ladderFootstepFilenames[random], 1.0f);
         }
     }
     m_ladderFootstepAudioTimer += deltaTime;
@@ -61,17 +60,17 @@ void Player::UpdateAudio(float deltaTime) {
     // Water
     if (StoppedWading() && false) {
         int random = rand() % 9;
-        Audio::PlayAudio(wadeEndFilenames[random], 1.0);
+        Hell::Audio::PlayAudio(wadeEndFilenames[random], 1.0);
     }
 
     if (FeetEnteredUnderwater()) {
         if (m_yVelocity < -5.0f) {
-            Audio::PlayAudio("Water_Impact0.wav", 1.0);
+            Hell::Audio::PlayAudio("Water_Impact0.wav", 1.0);
         }
     }
 
     if (CameraExitedUnderwater()) {
-        Audio::PlayAudio("Water_ExitAndPant0.wav", 1.0);
+        Hell::Audio::PlayAudio("Water_ExitAndPant0.wav", 1.0);
     }
     
     if (!IsWading()) {
@@ -91,14 +90,14 @@ void Player::UpdateAudio(float deltaTime) {
                     "Water_Wade_End_9.wav",
                 };
                 int random = rand() % filenames.size();
-                Audio::PlayAudio(filenames[random], 0.75f);
+                Hell::Audio::PlayAudio(filenames[random], 0.75f);
             }
             else {
                 if (AreFeetAboveHeightField()) {
-                    GameOLD::PlayFootstepOutdoorAudio();
+                    Unloved::GameAudio::PlayFootstepOutdoorAudio();
                 }
                 else {
-                    GameOLD::PlayFootstepIndoorAudio();
+                    Unloved::GameAudio::PlayFootstepIndoorAudio();
                 }
             }
 
@@ -112,9 +111,9 @@ void Player::UpdateAudio(float deltaTime) {
         if (m_grounded && !m_groundedLastFrame) {
 
             if (AreFeetAboveHeightField()) {
-                GameOLD::PlayFootstepOutdoorAudio();
+                Unloved::GameAudio::PlayFootstepOutdoorAudio();
             } else {
-                GameOLD::PlayFootstepIndoorAudio();
+                Unloved::GameAudio::PlayFootstepIndoorAudio();
             }
 
             m_headBobTime = 0.0f;

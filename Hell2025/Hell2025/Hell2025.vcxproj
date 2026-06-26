@@ -326,7 +326,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Legacy\Config\Config.cpp" />
     <ClCompile Include="src\Hell\Audio\Audio.cpp" />
     <ClCompile Include="src\Legacy\Callbacks\Callbacks.cpp" />
-    <ClCompile Include="src\Legacy\Core\GameOLD.cpp" />
+    <ClCompile Include="src\Unloved\Session\Session.cpp" />
+    <ClCompile Include="src\Unloved\Session\Session_players.cpp" />
+    <ClCompile Include="src\Unloved\Session\Session_update.cpp" />
     <ClCompile Include="src\Legacy\Core\P90MagManager.cpp" />
     <ClCompile Include="src\Legacy\Core\ParticleManager.cpp" />
     <ClCompile Include="src\Legacy\Debug\DebugDraw.cpp" />
@@ -544,14 +546,19 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Input\Input.cpp" />
     <ClCompile Include="src\Hell\Time\Time.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Unloved\SubSystems\GameAudio.cpp" />
+    <ClCompile Include="src\Unloved\SubSystems\SubSystems.cpp" />
     <ClCompile Include="src\Unloved\Unloved.cpp" />
+    <ClCompile Include="src\Unloved\World\Objects\Terrain\Terrain.cpp" />
     <ClCompile Include="src\Unloved\World\World.cpp">
       <ObjectFileName>$(IntDir)Unloved_World.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="src\Unloved\World\World_environment.cpp" />
+    <ClCompile Include="src\Unloved\World\World_update.cpp" />
     <ClCompile Include="src\Unloved\World\Objects\Interior\Piano\Piano.cpp">
       <ObjectFileName>$(IntDir)Unloved_Piano.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="src\Unloved\World\Objects\Interior\Piano\PianoPlaybackManager.cpp" />
+    <ClCompile Include="src\Unloved\SubSystems\PianoPlaybackManager.cpp" />
     <ClCompile Include="src\Legacy\Util\Util_animation.cpp" />
     <ClCompile Include="src\Legacy\Util\Util_file.cpp" />
     <ClCompile Include="src\Legacy\Util\Util_raycasting.cpp" />
@@ -567,16 +574,16 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Legacy\Util\Util_mesh.cpp" />
     <ClCompile Include="src\Legacy\Viewport\ViewportManager.cpp" />
     <ClCompile Include="src\Legacy\Managers\HouseManager.cpp" />
-    <ClCompile Include="src\Legacy\World\World.cpp" />
-    <ClCompile Include="src\Legacy\World\World_bvh.cpp" />
-    <ClCompile Include="src\Legacy\World\World_create_info.cpp" />
-    <ClCompile Include="src\Legacy\World\World_bullet_trails.cpp" />
-    <ClCompile Include="src\Legacy\World\World_house.cpp" />
-    <ClCompile Include="src\Legacy\World\World_dirty.cpp" />
-    <ClCompile Include="src\Legacy\World\World_process_bullets.cpp" />
-    <ClCompile Include="src\Legacy\World\World_render_submit.cpp" />
-    <ClCompile Include="src\Legacy\World\World_update.cpp" />
-    <ClCompile Include="src\Legacy\World\World_util.cpp" />
+    <ClCompile Include="src\Legacy\World\LegacyWorld.cpp" />
+    <ClCompile Include="src\Legacy\World\LegacyWorld_bvh.cpp" />
+    <ClCompile Include="src\Legacy\World\LegacyWorld_create_info.cpp" />
+    <ClCompile Include="src\Legacy\World\LegacyWorld_bullet_trails.cpp" />
+    <ClCompile Include="src\Legacy\World\LegacyWorld_house.cpp" />
+    <ClCompile Include="src\Legacy\World\LegacyWorld_dirty.cpp" />
+    <ClCompile Include="src\Legacy\World\LegacyWorld_process_bullets.cpp" />
+    <ClCompile Include="src\Legacy\World\LegacyWorld_render_submit.cpp" />
+    <ClCompile Include="src\Legacy\World\LegacyWorld_update.cpp" />
+    <ClCompile Include="src\Legacy\World\LegacyWorld_util.cpp" />
     <ClCompile Include="vendor\clipper\src\clipper.engine.cpp" />
     <ClCompile Include="vendor\clipper\src\clipper.offset.cpp" />
     <ClCompile Include="vendor\clipper\src\clipper.rectclip.cpp" />
@@ -650,7 +657,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Render\API\OpenGL\GL_texture_uploader.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_timer.h" />
     <ClInclude Include="src\Hell\Backend\Integration\SDL.h" />
-    <ClInclude Include="src\Legacy\Core\GameOLD.h" />
+    <ClInclude Include="src\Unloved\Session\Session.h" />
+    <ClInclude Include="src\Unloved\Session\Session_types.h" />
     <ClInclude Include="src\Legacy\Core\P90MagManager.h" />
     <ClInclude Include="src\Legacy\Core\ParticleManager.h" />
     <ClInclude Include="src\Legacy\Debug\DebugDraw.h" />
@@ -719,10 +727,13 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Audio\Synth.h" />
     <ClInclude Include="src\Hell\Backend\BackEnd.h" />
     <ClInclude Include="src\Hell\Backend\Integration\GLFW.h" />
+    <ClInclude Include="src\Unloved\SubSystems\GameAudio.h" />
+    <ClInclude Include="src\Unloved\SubSystems\SubSystems.h" />
     <ClInclude Include="src\Unloved\Unloved.h" />
+    <ClInclude Include="src\Unloved\World\Objects\Terrain\Terrain.h" />
     <ClInclude Include="src\Unloved\World\World.h" />
     <ClInclude Include="src\Unloved\World\Objects\Interior\Piano\Piano.h" />
-    <ClInclude Include="src\Unloved\World\Objects\Interior\Piano\PianoPlaybackManager.h" />
+    <ClInclude Include="src\Unloved\SubSystems\PianoPlaybackManager.h" />
     <ClInclude Include="src\Legacy\Camera\Frustum.h" />
     <ClInclude Include="src\Legacy\Game\CreateInfo.h" />
     <ClInclude Include="src\Legacy\Game\Constants.h" />

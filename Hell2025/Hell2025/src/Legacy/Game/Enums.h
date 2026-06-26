@@ -9,13 +9,6 @@ enum struct RendererMode {
     RENDERER_MODE_COUNT
 };
 
-enum class SplitscreenMode {
-    FULLSCREEN,
-    TWO_PLAYER,
-    FOUR_PLAYER,
-    SPLITSCREEN_MODE_COUNT
-};
-
 enum InputType {
     KEYBOARD_AND_MOUSE,
     CONTROLLER

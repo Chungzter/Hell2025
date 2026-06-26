@@ -4,7 +4,7 @@
 namespace Audio = Hell::Audio;
 #include "Hell/Backend/BackEnd.h"
 #include "Config/Config.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "ImGui/Types/Types.h"
 #include "Managers/HouseManager.h"
 #include "Renderer/Renderer.h"
@@ -72,7 +72,7 @@ namespace Editor {
         //ReconfigureHouseEditorImGuiElements();
 
         // Move player somewhere reasonable
-        if (Player* player = GameOLD::GetLocalPlayerByIndex(0)) {
+        if (Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0)) {
             if (player->GetFootPosition().y > 10) {
                 player->SetFootPosition(glm::vec3(2.25f, 0.0, 1.68f));
                 player->GetCamera().SetEulerRotation(glm::vec3(-0.2f, 0.0, 0.0f));

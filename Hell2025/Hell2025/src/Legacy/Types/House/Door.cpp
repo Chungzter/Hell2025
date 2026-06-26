@@ -10,7 +10,7 @@
 #include "Util.h"
 #include "World/LegacyWorld.h"
 
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 
 #include "Hell/Logging.h"
 
@@ -216,7 +216,7 @@ void Door::DebugDraw() {
 
     glm::vec4 color = GREEN;
 
-    Player* player = GameOLD::GetLocalPlayerByIndex(0);
+    Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
     if (!player) return;
 
     if (CameraFacingDoorWorldForward(player->GetCameraPosition(), player->GetCameraForward())) {

@@ -1,7 +1,7 @@
 #include "Shark.h"
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Math/LineMath.hpp"
 
 //#include "../Game/Scene.h"
@@ -13,7 +13,7 @@ void Shark::UpdateHuntingLogic(float deltaTime) {
     AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
     if (!animatedGameObject) return;
 
-    Player* player = GameOLD::GetPlayerByPlayerId(m_huntedPlayerId);
+    Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId);
 
     // Does the player not exist for some reason?
     if (!player) {
@@ -50,7 +50,7 @@ void Shark::UpdateHuntingLogic(float deltaTime) {
     if (m_huntingState == SharkHuntingState::BITING_PLAYER && !m_hasBitPlayer) {
 
         if (m_huntedPlayerId != 0) {
-            Player* player = GameOLD::GetPlayerByPlayerId(m_huntedPlayerId);
+            Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId);
             float killRange = 1.6f;
             float minimumkillAngle = std::cos(glm::radians(55.0));
 

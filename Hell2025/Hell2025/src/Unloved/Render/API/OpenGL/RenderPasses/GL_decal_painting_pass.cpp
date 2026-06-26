@@ -1,7 +1,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Core/GameOLD.h"
+#include "Unloved/Session/Session.h"
 #include "Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
 #include "Viewport/ViewportManager.h"
@@ -37,7 +37,7 @@ namespace OpenGLRenderer {
             decalPaintingFBO->Bind();
             decalPaintingFBO->SetViewport();
 
-            Player* player = GameOLD::GetLocalPlayerByIndex(0);
+            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
 
             const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
             glm::mat4 viewMatrix = viewportData[0].view;
