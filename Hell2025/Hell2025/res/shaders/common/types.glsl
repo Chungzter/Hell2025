@@ -113,7 +113,7 @@ struct RenderItem {
     uint baseVertex;
     uint baseIndex;
     uint baseVertexWeight;
-    int blockScreenSpaceBloodDecals;    // True or false
+    int blockBloodScreenSpaceDecals;    // True or false
 
     int additionalTextureIndex0;
     int additionalTextureIndex1;

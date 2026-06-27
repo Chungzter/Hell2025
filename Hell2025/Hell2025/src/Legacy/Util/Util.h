@@ -178,7 +178,7 @@ namespace Util {
     std::string IESProfileTypeToString(IESProfileType type);
     std::string LightTypeToString(LightType type);
     std::string ObjectTypeToString(ObjectType type);
-    std::string OpenStateToString(OpenState mode);
+    std::string OpenStateToString(Unloved::OpenState mode);
     std::string PickUpTypeToString(ItemType type);
     std::string PhysicsTypeToString(PhysicsType type);
     std::string PictureFrameTypeToString(PictureFrameType type);

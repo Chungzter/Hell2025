@@ -3,8 +3,8 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util/Util.h"
-#include "Viewport/ViewportManager.h"
-#include "World/LegacyWorld.h"
+#include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/Systems/Bullets/BulletSystem.h"
 
 #include "Game/GPUTypes.h"
 #include "Hell/Input.h"
@@ -34,7 +34,7 @@ namespace OpenGLRenderer {
     void UploadAnyNewParticles() {
         ProfilerOpenGLZoneFunction();
 
-        std::vector<BulletTrailParticle>& particles = LegacyWorld::GetBulletTrailParticles();
+        std::vector<BulletTrailParticle>& particles = Unloved::BulletSystem::GetBulletTrailParticles();
         if (particles.empty()) return;
 
         std::vector<GpuParticle> gpuParticles;
@@ -135,7 +135,7 @@ namespace OpenGLRenderer {
         OpenGL::BindDrawIndirectBuffer("ParticleDrawCommand");
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(&fbo, viewport);
@@ -216,7 +216,7 @@ namespace OpenGLRenderer {
         OpenGL::BindDrawIndirectBuffer("BubbleDrawCommand");
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(&fbo, viewport);

@@ -1,20 +1,21 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
-#include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Debug/DebugDraw.h""
-#include "Renderer/Renderer.h"
-#include "Renderer/RenderDataManager.h"
-#include "GlobalIllumination/GlobalIllumination.h"
-#include "Viewport/ViewportManager.h"
-#include "World/LegacyWorld.h"
-#include "Util/Util.h"
 
-#include <Game/Constants.h>
+#include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/BVH/BVH.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-
-#include "Unloved/Session/Session.h" // For Session::GetSessionTime(). It's a hack to prevent colorful probe glitch at start
 #include "Hell/Time.h"
+
+#include "Legacy/Game/Constants.h"
+#include "Legacy/Renderer/Renderer.h"
+#include "Legacy/Renderer/RenderDataManager.h"
+#include "Legacy/World/LegacyWorld.h"
+#include "Legacy/Util/Util.h"
+
+#include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Systems/DDGI/GlobalIllumination.h"
+#include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/Session/Session.h" // For Session::GetSessionTime(). It's a hack to prevent colorful probe glitch at start
 
 namespace OpenGLRenderer {
 
@@ -25,29 +26,29 @@ namespace OpenGLRenderer {
     OpenGLTextureArray g_probeDistanceTextureArray;
     OpenGLTextureArray g_probeIrradianceTextureArray;
 
-    void UploadPointCloud(DDGIVolume& ddgiVolume);
-    void ComputePointCloudBaseColor(DDGIVolume& ddgiVolume);
-    void ComputeProbePointIndices(DDGIVolume& ddgiVolume);
+    void UploadPointCloud(Unloved::DDGIVolume& ddgiVolume);
+    void ComputePointCloudBaseColor(Unloved::DDGIVolume& ddgiVolume);
+    void ComputeProbePointIndices(Unloved::DDGIVolume& ddgiVolume);
 
-    void ResetProbeStates(DDGIVolume& ddgiVolume);
-    void UpdateProbeStates(DDGIVolume& ddgiVolume);
-    void UpdateDistanceTexture(DDGIVolume& ddgiVolume);
-    void UpdateIrradianceTexture(DDGIVolume& ddgiVolume);
-    void ComputePointCloudLighting(DDGIVolume& ddgiVolume);
-    void ComputeProbeRelevance(DDGIVolume& ddgiVolume);
-    void ComputeProbeDistance(DDGIVolume& ddgiVolume);
-    void ComputeProbeDistanceBorder(DDGIVolume& ddgiVolume);
-    void ComputeIrradianceDirtyPointCheck(DDGIVolume& ddgiVolume);
-	void ComputeProbeIrradianceList(DDGIVolume& ddgiVolume);
+    void ResetProbeStates(Unloved::DDGIVolume& ddgiVolume);
+    void UpdateProbeStates(Unloved::DDGIVolume& ddgiVolume);
+    void UpdateDistanceTexture(Unloved::DDGIVolume& ddgiVolume);
+    void UpdateIrradianceTexture(Unloved::DDGIVolume& ddgiVolume);
+    void ComputePointCloudLighting(Unloved::DDGIVolume& ddgiVolume);
+    void ComputeProbeRelevance(Unloved::DDGIVolume& ddgiVolume);
+    void ComputeProbeDistance(Unloved::DDGIVolume& ddgiVolume);
+    void ComputeProbeDistanceBorder(Unloved::DDGIVolume& ddgiVolume);
+    void ComputeIrradianceDirtyPointCheck(Unloved::DDGIVolume& ddgiVolume);
+	void ComputeProbeIrradianceList(Unloved::DDGIVolume& ddgiVolume);
     void ComputeProbeIrradianceDispatchArgs();
-    void ComputeProbeIrradiance(DDGIVolume& ddgiVolume);
-    void ComputeProbeIrradianceBorder(DDGIVolume& ddgiVolume);
-    void ComputeIrradianceTexture(DDGIVolume& ddgiVolume);
+    void ComputeProbeIrradiance(Unloved::DDGIVolume& ddgiVolume);
+    void ComputeProbeIrradianceBorder(Unloved::DDGIVolume& ddgiVolume);
+    void ComputeIrradianceTexture(Unloved::DDGIVolume& ddgiVolume);
 
-    void ComputeProbePointIndices(DDGIVolume& ddgiVolume) {
+    void ComputeProbePointIndices(Unloved::DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
-        const PointCloud& pointCloud = ddgiVolume.GetPointClound();
+        const Unloved::PointCloud& pointCloud = ddgiVolume.GetPointClound();
         const DDGIVolumeGPU ddgiVolumeGPU = ddgiVolume.GetGPUData();
 
         OpenGL::ClearSSBO("ProbeIndexCounter");
@@ -85,19 +86,19 @@ namespace OpenGLRenderer {
     OpenGLTextureArray& GetProbeDistanceTextureArray();
     OpenGLTextureArray& GetProbeIrradianceTextureArray();
 
-    //void RenderSceneBvhTris(DDGIVolume& ddgiVolume);
+    //void RenderSceneBvhTris(Unloved::DDGIVolume& ddgiVolume);
 
     void UpdateGlobalIllumintation() {
-        if (LegacyWorld::GetDDGIVolumes().empty()) return;
+        if (Unloved::LegacyWorld::GetDDGIVolumes().empty()) return;
 
         uint64_t id = 0;
-        for (DDGIVolume& volume : LegacyWorld::GetDDGIVolumes()) {
+        for (Unloved::DDGIVolume& volume : Unloved::LegacyWorld::GetDDGIVolumes()) {
             id = volume.GetId();
             break;
         }
 
-        DDGIVolume& ddgiVolume = *LegacyWorld::GetDDGIVolumeByObjectId(id);
-        const PointCloud& pointCloud = ddgiVolume.GetPointClound();
+        Unloved::DDGIVolume& ddgiVolume = *Unloved::LegacyWorld::GetDDGIVolumeByObjectId(id);
+        const Unloved::PointCloud& pointCloud = ddgiVolume.GetPointClound();
 
         if (ddgiVolume.PointCloudNeedsGPUUpload()) {
             UploadPointCloud(ddgiVolume);
@@ -122,7 +123,7 @@ namespace OpenGLRenderer {
         const std::vector<BVHTriangle>& triangles = sceneBvh->m_triangles;
 
         const DDGIVolumeGPU ddgiVolumeGPU = ddgiVolume.GetGPUData();
-        const std::vector<GPUAABB>& dirtyDoorABBBs = LegacyWorld::GetDirtyDoorAABBS();
+        const std::vector<GPUAABB>& dirtyDoorABBBs = Unloved::LegacyWorld::GetDirtyDoorAABBS();
 
         // BVH data
         OpenGL::UpdateSSBO("SceneBvh", sceneNodes.size() * sizeof(BvhNode), sceneNodes.data());
@@ -168,7 +169,7 @@ namespace OpenGLRenderer {
         //DrawRaytracingBvh(ddgiVolume);
     }
 
-    void ResetProbeStates(DDGIVolume& ddgiVolume) {
+    void ResetProbeStates(Unloved::DDGIVolume& ddgiVolume) {
         std::vector<ProbeState> probeStates;
         probeStates.reserve(ddgiVolume.GetTotalProbeCount());
 
@@ -186,7 +187,7 @@ namespace OpenGLRenderer {
         g_time = 0.0f; // Hack to prevent colorful probe glitch at start
     }
 
-    void UpdateProbeStates(DDGIVolume& ddgiVolume) {
+    void UpdateProbeStates(Unloved::DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
         g_time += Hell::Time::DeltaTime(); // Hack to prevent colorful probe glitch at start
@@ -197,18 +198,18 @@ namespace OpenGLRenderer {
 
         OpenGL::BindShader("ProbeStateUpdate");
 
-        OpenGL::SetUniformInt("u_dirtyDoorAABBCount", (int)LegacyWorld::GetDirtyDoorAABBS().size());
+        OpenGL::SetUniformInt("u_dirtyDoorAABBCount", (int)Unloved::LegacyWorld::GetDirtyDoorAABBS().size());
         OpenGL::SetUniformFloat("u_time", g_time); // Hack to prevent colorful probe glitch at start
 
         OpenGL::DispatchCompute((ddgiVolume.GetTotalProbeCount() + 63) / 64, 1, 1);
     }
 
-    void ComputePointCloudLighting(DDGIVolume& ddgiVolume) {
+    void ComputePointCloudLighting(Unloved::DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("PointCloudLighting");
         OpenGL::BindShader("PointCloudLighting");
-        OpenGL::SetUniformInt("u_lightCount", LegacyWorld::GetLightCount());
+        OpenGL::SetUniformInt("u_lightCount", Unloved::LegacyWorld::GetLightCount());
 
         OpenGL::BindSSBO(4, "Lights");
         OpenGL::BindSSBO(5, "LightAABBs");
@@ -220,7 +221,7 @@ namespace OpenGLRenderer {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
 
-	void ComputeProbeRelevance(DDGIVolume& ddgiVolume) {
+	void ComputeProbeRelevance(Unloved::DDGIVolume& ddgiVolume) {
 		ProfilerOpenGLZoneFunctionLightGreen();
 
 		OpenGL::ClearSSBO("ProbeIrradianceCounter");
@@ -257,7 +258,7 @@ namespace OpenGLRenderer {
 		}
 	}
 
-    void ComputeProbeDistance(DDGIVolume& ddgiVolume) {
+    void ComputeProbeDistance(Unloved::DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
         OpenGLShader* distanceShader = OpenGL::ResourceManager::GetShaderPtr("ProbeDistance");
@@ -296,7 +297,7 @@ namespace OpenGLRenderer {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
 
-    void ComputeProbeDistanceBorder(DDGIVolume& ddgiVolume) {
+    void ComputeProbeDistanceBorder(Unloved::DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("ProbeDistanceBorder");
@@ -313,7 +314,7 @@ namespace OpenGLRenderer {
         glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
 
-    void ComputeIrradianceDirtyPointCheck(DDGIVolume& ddgiVolume) {
+    void ComputeIrradianceDirtyPointCheck(Unloved::DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
         OpenGL::BindShader("ProbeIrradianceDirtyPointCheck");
@@ -332,7 +333,7 @@ namespace OpenGLRenderer {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
 
-	void ComputeProbeIrradianceList(DDGIVolume& ddgiVolume) {
+	void ComputeProbeIrradianceList(Unloved::DDGIVolume& ddgiVolume) {
 		ProfilerOpenGLZoneFunctionLightGreen();
 
 		OpenGL::BindSSBO(4, "ProbeStates");
@@ -358,7 +359,7 @@ namespace OpenGLRenderer {
 		OpenGL::DispatchCompute(1, 1, 1);
     }
 
-    void ComputeProbeIrradiance(DDGIVolume& ddgiVolume) {
+    void ComputeProbeIrradiance(Unloved::DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("ProbeIrradiance");
@@ -384,7 +385,7 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformBool("u_useSH", Renderer::GetCurrentRendererSettings().irradianceUsesSH);
 
         // These can go soon:
-        const PointCloud& pointCloud = ddgiVolume.GetPointClound();
+        const Unloved::PointCloud& pointCloud = ddgiVolume.GetPointClound();
         OpenGL::SetUniformVec3("u_gridMin", ddgiVolume.GetBoundsMin());
         OpenGL::SetUniformIVec3("u_gridDimensions", pointCloud.GetGridDimensions());
         OpenGL::SetUniformFloat("u_gridCellSize", pointCloud.GetGridCellSize());
@@ -399,7 +400,7 @@ namespace OpenGLRenderer {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
 
-    void ComputeProbeIrradianceBorder(DDGIVolume& ddgiVolume) {
+    void ComputeProbeIrradianceBorder(Unloved::DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("ProbeIrradianceBorder");
@@ -416,7 +417,7 @@ namespace OpenGLRenderer {
         glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
 
-	void ComputePointCloudBaseColor(DDGIVolume& ddgiVolume) {
+	void ComputePointCloudBaseColor(Unloved::DDGIVolume& ddgiVolume) {
 		// TODO:
 		// If RenderDoc was detected then you gotta do this differently
 		if (Hell::BackEnd::RenderDocFound()) {
@@ -427,9 +428,9 @@ namespace OpenGLRenderer {
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("PointCloudBaseColor");
         if (!shader) return;
 
-        const std::vector<CloudPointTextureInfo>& pointCloundTextureInfo = ddgiVolume.GetPointCloudTextureInfo();
+        const std::vector<Unloved::CloudPointTextureInfo>& pointCloundTextureInfo = ddgiVolume.GetPointCloudTextureInfo();
 
-        OpenGL::UpdateSSBO("PointCloudTextureInfo", pointCloundTextureInfo.size() * sizeof(CloudPointTextureInfo), pointCloundTextureInfo.data());
+        OpenGL::UpdateSSBO("PointCloudTextureInfo", pointCloundTextureInfo.size() * sizeof(Unloved::CloudPointTextureInfo), pointCloundTextureInfo.data());
 
         // Ensure bindless texture IDs are in the Samplers ID, which is not the case if this runs the first frame of the renderer
         OpenGL::UpdateSSBO("Samplers", sizeof(GLuint64) * OpenGL::BackEnd::GetBindlessTextureIDs().size(), OpenGL::BackEnd::GetBindlessTextureIDs().data());
@@ -446,26 +447,26 @@ namespace OpenGLRenderer {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
     }
 
-    void UploadPointCloud(DDGIVolume& ddgiVolume) {
+    void UploadPointCloud(Unloved::DDGIVolume& ddgiVolume) {
         if (g_pointCloudVao == 0) {
             glGenVertexArrays(1, &g_pointCloudVao);
             glGenBuffers(1, &g_pointCloudVbo);
         }
 
-        const std::vector<CloudPoint>& pointCloud = ddgiVolume.GetPointCloundPoints();
+        const std::vector<Unloved::CloudPoint>& pointCloud = ddgiVolume.GetPointCloundPoints();
 
         // Point cloud
         glBindBuffer(GL_ARRAY_BUFFER, g_pointCloudVbo);
         glBindVertexArray(g_pointCloudVao);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(CloudPoint) * pointCloud.size(), pointCloud.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Unloved::CloudPoint) * pointCloud.size(), pointCloud.data(), GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(CloudPoint), (void*)offsetof(CloudPoint, position));
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Unloved::CloudPoint), (void*)offsetof(Unloved::CloudPoint, position));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(CloudPoint), (void*)offsetof(CloudPoint, normal));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Unloved::CloudPoint), (void*)offsetof(Unloved::CloudPoint, normal));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(CloudPoint), (void*)offsetof(CloudPoint, directLighting));
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Unloved::CloudPoint), (void*)offsetof(Unloved::CloudPoint, directLighting));
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(CloudPoint), (void*)offsetof(CloudPoint, baseColor));
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Unloved::CloudPoint), (void*)offsetof(Unloved::CloudPoint, baseColor));
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -474,7 +475,7 @@ namespace OpenGLRenderer {
         Logging::Debug() << "Uploaded point cloud to GPU (" << pointCloud.size() << " points)\n";
     }
 
-    void DrawPointCloud(DDGIVolume& ddgiVolume) {
+    void DrawPointCloud(Unloved::DDGIVolume& ddgiVolume) {
         if (g_pointCloudVao == 0) return;
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("DebugPointCloud");
@@ -485,7 +486,7 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
-        const PointCloud& pointCloud = ddgiVolume.GetPointClound();
+        const Unloved::PointCloud& pointCloud = ddgiVolume.GetPointClound();
 
         OpenGL::BindShader("DebugPointCloud");
         OpenGL::SetUniformIVec3("u_pointCloudGridDimensions", pointCloud.GetGridDimensions());
@@ -526,7 +527,7 @@ namespace OpenGLRenderer {
 		}
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(fbo, viewport);
@@ -539,11 +540,11 @@ namespace OpenGLRenderer {
         }
     }
 
-    void DrawPointCloudGrid(DDGIVolume& ddgiVolume) {
+    void DrawPointCloudGrid(Unloved::DDGIVolume& ddgiVolume) {
         ddgiVolume.GetPointClound().DebugDrawGrid();
     }
 
-    void DrawProbes(DDGIVolume& ddgiVolume) {
+    void DrawProbes(Unloved::DDGIVolume& ddgiVolume) {
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("DebugProbes");
 
         if (!shader) return;
@@ -600,7 +601,7 @@ namespace OpenGLRenderer {
         if (!mesh) return;
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
 			OpenGLRenderer::SetViewport(fbo, viewport);
@@ -636,7 +637,7 @@ namespace OpenGLRenderer {
         OpenGL::DispatchCompute(fbo->GetWidth() / 8, fbo->GetHeight() / 8, 1);
     }
 
-    void ComputeIrradianceTexture(DDGIVolume& ddgiVolume) {
+    void ComputeIrradianceTexture(Unloved::DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
@@ -694,7 +695,7 @@ namespace OpenGLRenderer {
         OpenGL::DispatchCompute(fbo->GetWidth() / TILE_SIZE, fbo->GetHeight() / TILE_SIZE, 1);
     }
 
-    void UpdateDistanceTexture(DDGIVolume& ddgiVolume) {
+    void UpdateDistanceTexture(Unloved::DDGIVolume& ddgiVolume) {
         uint32_t probeCountX = ddgiVolume.GetProbeCountX();
         uint32_t probeCountY = ddgiVolume.GetProbeCountY();
         uint32_t probeCountZ = ddgiVolume.GetProbeCountZ();
@@ -722,7 +723,7 @@ namespace OpenGLRenderer {
         glClearTexImage(g_probeDistanceTextureArray.GetHandle(), 0, GL_RG, GL_FLOAT, clearValues);
     }
 
-    void UpdateIrradianceTexture(DDGIVolume& ddgiVolume) {
+    void UpdateIrradianceTexture(Unloved::DDGIVolume& ddgiVolume) {
         uint32_t probeCountX = ddgiVolume.GetProbeCountX();
         uint32_t probeCountY = ddgiVolume.GetProbeCountY();
         uint32_t probeCountZ = ddgiVolume.GetProbeCountZ();
@@ -748,7 +749,7 @@ namespace OpenGLRenderer {
         glClearTexImage(g_probeIrradianceTextureArray.GetHandle(), 0, GL_RGBA, GL_FLOAT, clearValues);
     }
 
-    void DrawGPUBvhSceneNodes(DDGIVolume& volume, const glm::vec4& color) {
+    void DrawGPUBvhSceneNodes(Unloved::DDGIVolume& volume, const glm::vec4& color) {
         const std::vector<BvhNode>& sceneNodes = volume.GetSceneNodes();
 
         for (const BvhNode& node : sceneNodes) {
@@ -757,7 +758,7 @@ namespace OpenGLRenderer {
         }
     }
 
-    void DrawGPUBvhSceneLeafNodes(DDGIVolume& volume, const glm::vec4& color) {
+    void DrawGPUBvhSceneLeafNodes(Unloved::DDGIVolume& volume, const glm::vec4& color) {
         const std::vector<BvhNode>& sceneNodes = volume.GetSceneNodes();
 
         for (const BvhNode& node : sceneNodes) {
@@ -768,7 +769,7 @@ namespace OpenGLRenderer {
         }
     }
 
-    void DrawRaytracingBvh(DDGIVolume& volume) {
+    void DrawRaytracingBvh(Unloved::DDGIVolume& volume) {
         uint64_t sceneBvhId = volume.GetSceneBvhId();
         SceneBvh* sceneBvh = Hell::Bvh::GetSceneBvhById(sceneBvhId);
         if (!sceneBvh) return;

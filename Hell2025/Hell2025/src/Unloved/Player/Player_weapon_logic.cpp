@@ -1,0 +1,596 @@
+#include "Player.h"
+
+#include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/Audio.h"
+#include "Hell/Logging.h"
+
+#include "Legacy/Util/Util.h"
+#include "Legacy/World/LegacyWorld.h"
+#include "Legacy/Renderer/Renderer.h"
+
+#include "Unloved/Bible/Bible.h"
+#include "Unloved/Session/Session.h"
+#include "Unloved/Systems/Bullets/BulletSystem.h"
+
+namespace Audio = Hell::Audio;
+
+namespace Unloved {
+
+void Player::UpdateWeaponLogic(float deltaTime) {
+    if (IsDead()) return;
+
+    if (InventoryIsOpen()) {
+        if (m_weaponAction == ADS_IN ||
+            m_weaponAction == ADS_IDLE ||
+            m_weaponAction == ADS_FIRE) {
+            LeaveADS();
+        }
+    }
+    if (InventoryIsClosed()) {
+        if (PressedNextWeapon()) {
+            NextWeapon();
+        }
+    }
+
+    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+    WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+    WeaponState* weaponState = GetCurrentWeaponState();
+
+    if (!viewWeapon) return;
+    if (!weaponInfo) return;
+
+    switch (GetCurrentWeaponType()) {
+        case WeaponType::MELEE:     UpdateMeleeLogic(deltaTime);        break;
+        case WeaponType::PISTOL:    UpdateGunLogic(deltaTime);          break;
+        case WeaponType::AUTOMATIC: UpdateGunLogic(deltaTime);          break;
+        case WeaponType::SHOTGUN:   UpdateShotgunGunLogic(deltaTime);   break;
+    }
+
+    // Some flag used to prevent automatic fire on pistols
+    if (weaponInfo->type == WeaponType::PISTOL) {
+		if (!PressingFire()) {
+			m_pistolAwaitingFireReleased = false;
+		}
+		if (PressingFire() && !weaponInfo->pistolIsAuto) {
+			m_pistolAwaitingFireReleased = true;
+		}
+    }
+
+    // Need to initiate draw animation?
+    if (GetCurrentWeaponAction() == WeaponAction::DRAW_BEGIN) {
+
+        // Drawing a shotgun when it needs a pump
+        if (GetCurrentWeaponType() == WeaponType::SHOTGUN && !IsShellInShotgunChamber() && weaponState->ammoInMag > 0) {
+            viewWeapon->PlayAnimation("MainLayer", weaponInfo->animationNames.shotgunDrawPump, weaponInfo->animationSpeeds.shotgunDrawPump);
+            weaponState->shotgunAwaitingPumpAudio = true;
+            weaponState->shotgunRequiresPump = true;
+            m_weaponAction = DRAWING_WITH_SHOTGUN_PUMP;
+        }
+        // First draw
+        else if (weaponState->awaitingDrawFirst && weaponInfo->animationNames.drawFirst != "") {
+            viewWeapon->PlayAnimation("MainLayer", weaponInfo->animationNames.drawFirst, weaponInfo->animationSpeeds.drawFirst);
+            weaponState->awaitingDrawFirst = false;
+            m_weaponAction = DRAWING_FIRST;
+            Audio::PlayAudio(weaponInfo->audioFiles.drawFirst, 1.0f);
+        }
+        // Regular draw
+        else {
+            viewWeapon->PlayAnimation("MainLayer", weaponInfo->animationNames.draw, weaponInfo->animationSpeeds.draw);
+            m_weaponAction = DRAWING;
+        }
+    }
+
+    // Finished ADS in? Return to ADS idle
+    if (GetWeaponAction() == WeaponAction::ADS_IN && viewWeapon->AnimationByNameIsComplete(weaponInfo->animationNames.adsIn) ||
+        GetWeaponAction() == WeaponAction::ADS_FIRE && ViewModelAnimationsCompleted()) {
+        m_weaponAction = WeaponAction::ADS_IDLE;
+    }
+
+    // Finished drawing weapon? Return to idle
+    if (GetCurrentWeaponAction() == WeaponAction::DRAWING && viewWeapon->AnimationByNameIsComplete(weaponInfo->animationNames.draw) ||
+        GetCurrentWeaponAction() == WeaponAction::DRAWING_FIRST && viewWeapon->AnimationByNameIsComplete(weaponInfo->animationNames.drawFirst) ||
+        GetCurrentWeaponAction() == WeaponAction::DRAWING_WITH_SHOTGUN_PUMP && viewWeapon->AnimationByNameIsComplete(weaponInfo->animationNames.shotgunDrawPump)) {
+        m_weaponAction = WeaponAction::IDLE;
+    }
+
+    // In ADS idle?
+    if (GetCurrentWeaponAction() == WeaponAction::ADS_IDLE) {
+        if (IsMoving()) {
+            viewWeapon->PlayAndLoopAnimation("MainLayer", weaponInfo->animationNames.adsWalk, weaponInfo->animationSpeeds.adsWalk);
+        }
+        else {
+            viewWeapon->PlayAndLoopAnimation("MainLayer", weaponInfo->animationNames.adsIdle, weaponInfo->animationSpeeds.adsIdle);
+        }
+    }
+
+    // In idle? Then play idle or walk if moving
+    if (GetCurrentWeaponAction() == WeaponAction::IDLE) {
+        const std::string& animName = IsMoving() ? weaponInfo->animationNames.walk : weaponInfo->animationNames.idle;
+        viewWeapon->PlayAndLoopAnimation("MainLayer", animName, 1.0f);
+    }
+
+    // Everything done? Go to idle
+    if (ViewModelAnimationsCompleted()) {
+        m_weaponAction = WeaponAction::IDLE;
+    }
+
+    //viewWeapon->DisableDrawingForMeshByMeshName("Magazine_low");
+
+    return;
+}
+
+void Player::GiveDefaultLoadout() {
+    // Always give knife
+    m_inventory.GiveWeapon("Knife");
+
+    // Dev load out
+    m_inventory.GiveWeapon("Glock");
+    m_inventory.GiveWeapon("GoldenGlock");
+    m_inventory.GiveWeapon("SPAS");
+    m_inventory.GiveWeapon("P90");
+    m_inventory.GiveWeapon("AKS74U");
+    m_inventory.GiveWeapon("Remington870");
+
+    m_inventory.GiveAmmo("Glock", 800);
+    m_inventory.GiveAmmo("AKS74U", 20000);
+    m_inventory.GiveAmmo("Tokarev", 400);
+    m_inventory.GiveAmmo("P90", 420);
+
+	// hack fill the shop
+	m_shopInventory.GiveWeapon("GoldenGlock");
+	m_shopInventory.AddInventoryItem("AKS74U");
+	m_shopInventory.AddInventoryItem("SPAS");
+	m_shopInventory.AddInventoryItem("Pills");
+	m_shopInventory.AddInventoryItem("P90");
+    return;
+
+    m_inventory.GiveWeapon("GoldenGlock");
+    m_inventory.GiveWeapon("Tokarev");
+    //m_inventory.GiveWeapon("Remington870");
+    //m_inventory.GiveWeapon("SPAS");
+    //m_inventory.GiveWeapon("AKS74U");
+
+    //m_inventory.GiveAmmo("12GaugeBuckShot", 80);
+    m_inventory.GiveAmmo("Glock", 200);
+    m_inventory.GiveAmmo("Tokarev", 200);
+    //m_inventory.GiveAmmo("AKS74U", 200);
+
+    //m_inventory.AddInventoryItem("BlackSkull");
+    //m_inventory.AddInventoryItem("SmallKey");
+    //m_inventory.AddInventoryItem("SmallKeySilver");
+    //m_inventory.AddInventoryItem("Pills");
+    //m_inventory.AddInventoryItem("ShotgunAmmo");
+
+    //GiveSilencer("Glock");
+    //GiveSight("GoldenGlock");
+
+    //m_shopInventory.AddInventoryItem("SmallKey");
+    //m_shopInventory.AddInventoryItem("SmallKeySilver");
+    //m_shopInventory.AddInventoryItem("Pills");
+
+}
+
+void Player::NextWeapon() {
+    std::vector<WeaponState>& weaponStates = m_inventory.GetWeaponStates();
+
+    m_currentWeaponIndex++;
+    if (m_currentWeaponIndex == weaponStates.size()) {
+        m_currentWeaponIndex = 0;
+    }
+    while (!weaponStates[m_currentWeaponIndex].has) {
+        m_currentWeaponIndex++;
+        if (m_currentWeaponIndex == weaponStates.size()) {
+            m_currentWeaponIndex = 0;
+        }
+    }
+    Audio::PlayAudio("NextWeapon.wav", 0.5f);
+    SwitchWeapon(weaponStates[m_currentWeaponIndex].name, DRAW_BEGIN);
+
+    // Handle me better
+    if (weaponStates[m_currentWeaponIndex].name == "Glock") {
+        std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
+        m_redDot.Init(m_playerId, "RedDot", meshNodeCreateInfoSet);
+        m_redDot.DisableMarkingStaticSceneBvhAsDirty();
+        m_redDot.DisableCSMShadows();
+        m_redDot.DisablePointLightShadows();
+
+        m_supressor.Init(m_playerId, "Suppressor", meshNodeCreateInfoSet);
+        m_supressor.DisableMarkingStaticSceneBvhAsDirty();
+        m_supressor.DisableCSMShadows();
+        m_supressor.DisablePointLightShadows();
+    }
+    else {
+        m_redDot.CleanUp();
+        m_supressor.CleanUp();
+    }
+
+
+    Bible::ConfigureP90MagazineMeshNodes(m_playerId, &m_p90MagMeshNodes);
+
+
+}
+
+void Player::SwitchWeapon(const std::string& name, WeaponAction weaponAction) {
+    std::vector<WeaponState>& weaponStates = m_inventory.GetWeaponStates();
+    WeaponState* state = GetWeaponStateByName(name);
+    WeaponInfo* weaponInfo = Bible::GetWeaponInfoByName(name);
+    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+
+    if (!state) return;
+    if (!weaponInfo) return;
+    if (!viewWeapon) return;
+
+    for (int i = 0; i < weaponStates.size(); i++) {
+        if (weaponStates[i].name == name) {
+            m_currentWeaponIndex = i;
+        }
+    }
+    viewWeapon->SetName(weaponInfo->itemInfoName);
+    viewWeapon->SetSkinnedModel(weaponInfo->modelName);
+    viewWeapon->EnableRendering();
+
+    // Set materials
+    for (auto& it : weaponInfo->meshMaterials) {
+        viewWeapon->SetMeshMaterialByMeshName(it.first, it.second);
+    }
+    // Set materials by index
+    for (auto& it : weaponInfo->meshMaterialsByIndex) {
+        viewWeapon->SetMeshMaterialByMeshIndex(it.first, it.second);
+    }
+    // Hide mesh
+    for (auto& meshName : weaponInfo->hiddenMeshAtStart) {
+        viewWeapon->SetBlendingModeByMeshName(meshName, BlendingMode::DO_NOT_RENDER);
+    }
+    m_weaponAction = weaponAction;
+
+    Audio::PlayAudio("NextWeapon.wav", 0.5f);
+
+	//viewWeapon->PrintMeshNames();
+	//viewWeapon->PrintNodeNames();
+}
+
+WeaponType Player::GetCurrentWeaponType() {
+    WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+    if (weaponInfo) {
+        return weaponInfo->type;
+    }
+    else {
+        return WeaponType::UNDEFINED;
+    }
+}
+
+WeaponAction Player::GetCurrentWeaponAction() {
+    return m_weaponAction;
+}
+
+WeaponAction& Player::GetWeaponAction() {
+    return m_weaponAction;
+}
+
+WeaponInfo* Player::GetCurrentWeaponInfo() {
+    std::vector<WeaponState>& weaponStates = m_inventory.GetWeaponStates();
+    return Bible::GetWeaponInfoByName(weaponStates[m_currentWeaponIndex].name);;
+}
+
+const std::string& Player::GetSelectedWeaponName() {
+    static const std::string invalid = UNDEFINED_STRING;
+
+    std::vector<WeaponState>& weaponStates = m_inventory.GetWeaponStates();
+    if (m_currentWeaponIndex < 0 || m_currentWeaponIndex >= weaponStates.size()) return invalid;
+
+    return weaponStates[m_currentWeaponIndex].name;
+}
+
+void Player::GiveWeapon(const std::string& name) {
+    WeaponState* state = GetWeaponStateByName(name);
+    WeaponInfo* weaponInfo = Bible::GetWeaponInfoByName(name);
+    if (state && weaponInfo) {
+        state->has = true;
+        state->ammoInMag = weaponInfo->magSize;
+    }
+    else {
+        std::cout << "FAILED TO GIVE PLAYER: " << name << "\n";
+    }
+}
+
+void Player::GiveAmmo(const std::string& name, int amount) {
+    AmmoState* state = GetAmmoStateByName(name);
+    if (state) {
+        state->ammoOnHand += amount;
+    }
+}
+
+void Player::GiveSight(const std::string& weaponName) {
+    WeaponInfo* weaponInfo = Bible::GetWeaponInfoByName(weaponName);
+    WeaponState* state = GetWeaponStateByName(weaponName);
+    if (state && weaponInfo) {
+        state->hasSight = true;
+    }
+}
+
+void Player::GiveSilencer(const std::string& weaponName) {
+    WeaponInfo* weaponInfo = Bible::GetWeaponInfoByName(weaponName);
+    WeaponState* state = GetWeaponStateByName(weaponName);
+    if (state && weaponInfo) {
+        state->hasSilencer = true;
+    }
+}
+
+WeaponState* Player::GetWeaponStateByName(const std::string& name) {
+    return m_inventory.GetWeaponStateByName(name);
+}
+
+AmmoState* Player::GetAmmoStateByName(const std::string& name) {
+    return m_inventory.GetAmmoStateByName(name);
+}
+
+AmmoState* Player::GetCurrentAmmoState() {
+    WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+    if (!weaponInfo) return nullptr;
+
+    return GetAmmoStateByName(weaponInfo->ammoInfoName);
+}
+
+AmmoInfo* Player::GetCurrentAmmoInfo() {
+    WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+    if (!weaponInfo) return nullptr;
+
+    return Bible::GetAmmoInfoByName(weaponInfo->ammoInfoName);
+}
+
+WeaponState* Player::GetCurrentWeaponState() {
+    WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+    if (!weaponInfo) return nullptr;
+
+    return GetWeaponStateByName(weaponInfo->itemInfoName);
+}
+
+int Player::GetCurrentWeaponMagAmmo() {
+    WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+    if (weaponInfo) {
+        WeaponState* weaponState = GetWeaponStateByName(weaponInfo->itemInfoName);
+        if (weaponState) {
+            return weaponState->ammoInMag;
+        }
+    }
+    return 0;
+}
+
+int Player::GetCurrentWeaponTotalAmmo() {
+    AmmoState* ammoState = GetCurrentAmmoState();
+    if (!ammoState) return 0;
+
+    return ammoState->ammoOnHand;
+}
+
+void Player::SpawnMuzzleFlash(float speed, float scale) {
+    m_muzzleFlash.SetSpeed(speed);
+    m_muzzleFlash.SetScale(glm::vec3(scale));
+    m_muzzleFlash.SetTime(0.0f);
+    m_muzzleFlash.EnableRendering();
+    m_muzzleFlash.SetRotation(glm::vec3(0.0f, 0.0f, Util::RandomFloat(0, HELL_PI * 2)));
+}
+
+void Player::SpawnCasing() {
+    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+
+    AmmoInfo* ammoInfo = GetCurrentAmmoInfo();
+    WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+
+    if (!ammoInfo) return;
+    if (!weaponInfo) return;
+
+    if (!Util::StrCmp(ammoInfo->casingModelName, UNDEFINED_STRING)) {
+        BulletCasingCreateInfo createInfo;
+        createInfo.modelId = Hell::ResourceManager::GetModelIdByName(ammoInfo->casingModelName);
+        createInfo.materialIndex = Hell::ResourceManager::GetMaterialIndexByName(ammoInfo->casingMaterialName);
+        createInfo.position = viewWeapon->GetBoneWorldPosition(weaponInfo->casingEjectionBoneName);
+        createInfo.rotation.y = m_camera.GetYaw() + (HELL_PI * 0.5f);
+        createInfo.force = glm::normalize(GetCameraRight() + glm::vec3(0.0f, Util::RandomFloat(0.7f, 0.9f), 0.0f)) * glm::vec3(weaponInfo->casingEjectionImpulse);
+    // createInfo.force = glm::normalize(GetCameraRight() + glm::vec3(0.0f, Util::RandomFloat(0.7f, 0.9f), 0.0f)) * glm::vec3(0.0175);
+    // std::cout << "warning: you have hardcoded casing ejection impulse!\n";
+
+        createInfo.position += GetCameraForward() * glm::vec3(0.15f);
+        createInfo.position += GetCameraRight() * glm::vec3(0.05f);
+        createInfo.position += GetCameraUp() * glm::vec3(-0.025f);
+
+        //if (alternateAmmo) {
+        //    createInfo.materialIndex = Hell::ResourceManager::GetMaterialIndexByName("ShellGreen");
+        //}
+
+        createInfo.mass = 0.008f;
+
+        LegacyWorld::AddBulletCasing(createInfo);
+
+
+    }
+    else {
+        std::cout << "Player::SpawnCasing(AmmoInfo* ammoInfo) failed to spawn a casing coz invalid casing model name in weapon info\n";
+    }
+}
+
+void Player::SpawnBullet(float variance) {
+    // Spawn an underwater bullet if camera is underwater
+    if (CameraIsUnderwater()) {
+        SpawnUnderWaterBullet(variance);
+        return;
+    }
+
+    // Otherwise spawn a regular bullet
+    else {
+        WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+
+        glm::vec3 bulletDirection = GetCameraForward();
+        bulletDirection.x += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
+        bulletDirection.y += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
+        bulletDirection.z += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
+        bulletDirection = glm::normalize(bulletDirection);
+
+        BulletCreateInfo createInfo;
+        createInfo.origin = GetCameraPosition();
+        createInfo.direction = bulletDirection;
+        createInfo.damage = weaponInfo->damage;
+        createInfo.weaponIndex = Bible::GetWeaponIndexFromWeaponName(weaponInfo->itemInfoName);
+        createInfo.ownerObjectId = m_playerId;
+
+        Unloved::BulletSystem::AddBullet(createInfo);
+    }
+}
+
+void Player::SpawnUnderWaterBullet(float variance) {
+    WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+
+    glm::vec3 vanishingPoint = GetCameraPosition() + (GetCameraForward() * 1000.0f);
+    glm::vec3 origin = GetMuzzleFlashSpawnPosition() + GetCameraForward() * 0.05f;
+    glm::vec3 bulletDirection = glm::normalize(vanishingPoint - GetCameraPosition());
+
+    bulletDirection.x += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
+    bulletDirection.y += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
+    bulletDirection.z += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
+    bulletDirection = glm::normalize(bulletDirection);
+
+    BulletCreateInfo createInfo;
+    createInfo.origin = origin;
+    createInfo.direction = bulletDirection;
+    createInfo.damage = weaponInfo->damage;
+    createInfo.weaponIndex = Bible::GetWeaponIndexFromWeaponName(weaponInfo->itemInfoName);
+    createInfo.ownerObjectId = m_playerId;
+
+    Unloved::BulletSystem::AddBulletTrail(createInfo);
+
+
+    const std::vector<const char*> filenames = {
+            "UnderwaterTrail0.wav",
+            "UnderwaterTrail1.wav"
+    };
+    int random = rand() % filenames.size();
+    Audio::PlayAudio(filenames[random], 5.0f);
+}
+
+void Player::UpdateWeaponSlide() {
+    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+    WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+    WeaponState* weaponState = GetCurrentWeaponState();
+
+    std::string& boneName = weaponInfo->pistolSlideBoneName;
+
+    if (weaponState->requiresSlideOffset) {
+        Transform transform;
+        transform.position.z = -weaponInfo->pistolSlideOffset;
+        viewWeapon->SetAdditiveTransform(boneName, transform.to_mat4());
+    }
+    else {
+        viewWeapon->SetAdditiveTransform(boneName, glm::mat4(1.0f));
+    }
+}
+
+void Player::DropItems() {
+    for (const Unloved::InventoryItem& item : m_inventory.GetItems()) {
+        ItemType itemType = Bible::GetItemType(m_name);
+        if (itemType == ItemType::HEAL) {
+            DiscardItem(item.m_name);
+        }
+    }
+}
+
+void Player::DropWeapons() {
+    for (WeaponState& weaponState : m_inventory.GetWeaponStates()) {
+        // Skip the knife
+        if (weaponState.name == "Knife")
+            continue;
+
+        if (weaponState.has) {
+
+            WeaponInfo* weaponInfo = Bible::GetWeaponInfoByName(weaponState.name);
+            if (!weaponInfo) {
+                std::cout << "You tried to drop a weapon with an invalid name somehow...\n";
+                continue;
+            }
+
+            if (weaponInfo->itemInfoName != "") {
+                PickUpCreateInfo createInfo;
+                createInfo.position = GetCameraPosition();
+                createInfo.rotation.x = Util::RandomFloat(-HELL_PI, HELL_PI);
+                createInfo.rotation.y = Util::RandomFloat(-HELL_PI, HELL_PI);
+                createInfo.rotation.z = Util::RandomFloat(-HELL_PI, HELL_PI);
+                createInfo.name = weaponInfo->itemInfoName;
+                createInfo.saveToFile = false;
+                createInfo.disablePhysicsAtSpawn = false;
+                createInfo.respawn = false;
+                createInfo.type = Bible::GetItemType(weaponInfo->itemInfoName);
+
+                glm::vec3 force = glm::vec3(0.0f);
+                force.x = Util::RandomFloat(-HELL_PI * 0.5f, HELL_PI * 0.5f);
+                force.y = 1.0f;
+                force.z = Util::RandomFloat(-HELL_PI * 0.5f, HELL_PI * 0.5f);
+                force = glm::normalize(force);
+                force *= 200.0f;
+
+                uint64_t id = LegacyWorld::AddPickUp(createInfo);
+                if (PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(id)) {
+                    pickUp->GetMeshNodes().AddForceToPhsyics(force);
+                    //std::cout << "Tried to add force to " << weaponInfo->itemInfoName << "\n";
+                }
+            }
+        }
+    }
+}
+
+void Player::UpdateMelleBulletWave(float deltaTime) {
+    if (!m_meleeBulletWaveState.active) return;
+
+    //std::cout << "Time: " << m_meleeBulletWaveState.time << "\n";
+
+    m_meleeBulletWaveState.time += deltaTime;
+
+    // Have we started yet? Then increment the internal counter
+    if (m_meleeBulletWaveState.time > m_meleeBulletWaveState.startTime) {
+        m_meleeBulletWaveState.intervalCounter += deltaTime;
+    }
+
+    // Are we done?
+    if (m_meleeBulletWaveState.time >= m_meleeBulletWaveState.maxTime) {
+        m_meleeBulletWaveState.active = false;
+    }
+
+    // Time to spawn a bullet?
+    if (m_meleeBulletWaveState.intervalCounter >= m_meleeBulletWaveState.intervalDuration) {
+        m_meleeBulletWaveState.intervalCounter = 0.0f;
+        m_meleeBulletWaveState.spawnCountThisWave++;
+
+        for (int i = -2; i < 3; i++) {
+
+            glm::vec3 bulletOrigin = GetCameraPosition() + (GetCameraRight() * 0.1f);
+            bulletOrigin -= (GetCameraRight() * 0.05f) * glm::vec3(m_meleeBulletWaveState.spawnCountThisWave);
+            bulletOrigin += (GetCameraUp() * 0.05f) * glm::vec3(i);
+
+            BulletCreateInfo createInfo;
+            createInfo.origin = bulletOrigin;
+            createInfo.direction = GetCameraForward();
+            createInfo.weaponIndex = -1;
+            createInfo.damage = 1;
+            createInfo.ownerObjectId = m_playerId;
+            createInfo.rayLength = 1.5f;
+            createInfo.createsDecals = false;
+            createInfo.createsFollowThroughBulletOnGlassHit = false;
+            createInfo.playsPiano = false;
+            createInfo.createsDecalTexturePaintedWounds = false;
+
+            Unloved::BulletSystem::AddBullet(createInfo);
+            //DebugDraw::DrawLine(createInfo.origin, createInfo.origin + createInfo.direction * 0.5f, GREEN);
+        }
+    }
+}
+
+void Player::BeginMeleeBulletWave() {
+    std::cout << "Begin Melee Bullet Wave\n";
+    m_meleeBulletWaveState.active = true;
+    m_meleeBulletWaveState.time = 0.0f;
+    m_meleeBulletWaveState.intervalDuration = 0.01f;
+    m_meleeBulletWaveState.startTime = 0.05;
+    m_meleeBulletWaveState.maxTime = 0.2f;
+    m_meleeBulletWaveState.intervalCounter = 0.0f;
+    m_meleeBulletWaveState.spawnCountThisWave = 0;
+}
+
+} // namespace Unloved

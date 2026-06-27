@@ -2,14 +2,16 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Unloved/Session/Session.h"
-#include "Editor/Editor.h"
+#include "Unloved/Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 
 namespace OpenGLRenderer {
+    using namespace Unloved;
+
 
     void DecalPaintingPass() {
         ProfilerOpenGLZoneFunction();
@@ -23,7 +25,7 @@ namespace OpenGLRenderer {
             OpenGLFrameBuffer* decalMasksFBO = OpenGL::ResourceManager::GetFrameBufferPtr("DecalMasks");
             OpenGLShader* uvShader = OpenGL::ResourceManager::GetShaderPtr("DecalPaintUVs");
             OpenGLShader* maskShader = OpenGL::ResourceManager::GetShaderPtr("DecalPaintMask");
-            OpenGLTextureArray* woundMaskArray = OpenGL::ResourceManager::GetTextureArrayPtr("WoundMasks");
+            Hell::TextureArray* woundMaskArray = Hell::ResourceManager::GetTextureArrayPtr("WoundMasks");
 
             if (!decalPaintingFBO) return;
             if (!decalMasksFBO) return;
@@ -37,7 +39,7 @@ namespace OpenGLRenderer {
             decalPaintingFBO->Bind();
             decalPaintingFBO->SetViewport();
 
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
 
             const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
             glm::mat4 viewMatrix = viewportData[0].view;

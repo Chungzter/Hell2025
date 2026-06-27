@@ -8,6 +8,7 @@
 #include "Hell/ResourceManagement/Types/MidiFile.h"
 #include "Hell/ResourceManagement/Types/SoundFont.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
+#include "Hell/ResourceManagement/Types/TextureArray.h"
 #include "Hell/ResourceManagement/Types/Model.h"
 #include "Hell/ResourceManagement/Types/SkinnedModel.h"
 #include "Hell/ResourceManagement/Types/SpriteSheetTexture.h"
@@ -95,4 +96,8 @@ namespace Hell::ResourceManager {
     Texture* GetTextureByBindlessIndex(int32_t bindlessIndex);
     int32_t GetTextureBindlessIndexByName(const std::string& name, bool ignoreWarning = true);
     void ReserveTextureStorage(size_t textureCount);
+
+    TextureArray& CreateTextureArray(const std::string& name);
+    TextureArray& GetTextureArray(const std::string& name);
+    TextureArray* GetTextureArrayPtr(const std::string& name);
 }

@@ -1,19 +1,19 @@
 #include "LegacyWorld.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Session/Session.h"
-#include "Editor/Editor.h"
+#include "Unloved/Editor/Editor.h"
 #include "Hell/Logging.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Hell/Time.h"
 
 
-namespace LegacyWorld {
+namespace Unloved::LegacyWorld {
 
     void SubmitRenderItems() {
 
         for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
             player->SubmitP90MagsRenderItems();
@@ -61,7 +61,7 @@ namespace LegacyWorld {
 
         // Update UI after all else
         for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
             player->UpdateUI(Hell::Time::DeltaTime());

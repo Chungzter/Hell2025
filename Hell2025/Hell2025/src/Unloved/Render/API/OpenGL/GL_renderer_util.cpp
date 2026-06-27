@@ -5,7 +5,7 @@
 
 namespace OpenGLRenderer {
 
-    void BlitFrameBufferDepth(OpenGLFrameBuffer* srcFrameBuffer, OpenGLFrameBuffer* dstFrameBuffer, const Viewport* viewport) {
+    void BlitFrameBufferDepth(OpenGLFrameBuffer* srcFrameBuffer, OpenGLFrameBuffer* dstFrameBuffer, const Unloved::Viewport* viewport) {
         glm::vec2 position = viewport->GetPosition();
         glm::vec2 size = viewport->GetSize();
         BlitRect srcRect{ position.x * srcFrameBuffer->GetWidth(), position.y * srcFrameBuffer->GetHeight(), (position.x + size.x) * srcFrameBuffer->GetWidth(), (position.y + size.y) * srcFrameBuffer->GetHeight() };
@@ -95,7 +95,7 @@ namespace OpenGLRenderer {
         return vao;
     }
 
-    BlitRect BlitRectFromFrameBufferViewport(OpenGLFrameBuffer* framebuffer, Viewport* viewport) {
+    BlitRect BlitRectFromFrameBufferViewport(OpenGLFrameBuffer* framebuffer, Unloved::Viewport* viewport) {
         GLuint fbWidth = framebuffer->GetWidth();
         GLuint fbHeight = framebuffer->GetHeight();
         glm::vec2 pos = viewport->GetPosition();
@@ -112,7 +112,7 @@ namespace OpenGLRenderer {
         return blitRect;
     }
 
-    void SetViewport(OpenGLFrameBuffer* framebuffer, Viewport* viewport) {
+    void SetViewport(OpenGLFrameBuffer* framebuffer, Unloved::Viewport* viewport) {
         GLuint fbWidth = framebuffer->GetWidth();
         GLuint fbHeight = framebuffer->GetHeight();
         glm::vec2 pos = viewport->GetPosition();
@@ -124,7 +124,7 @@ namespace OpenGLRenderer {
         glViewport(x, y, w, h);
     }
 
-    void ClearFrameBufferByViewport(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Viewport* viewport, GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
+    void ClearFrameBufferByViewport(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Unloved::Viewport* viewport, GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
         int xOffset = viewport->GetPosition().x * framebuffer->GetWidth();
         int yOffset = viewport->GetPosition().y * framebuffer->GetHeight();
         int width = viewport->GetSize().x * framebuffer->GetWidth();
@@ -132,7 +132,7 @@ namespace OpenGLRenderer {
         framebuffer->ClearAttachmenSubRegion(attachmentName, xOffset, yOffset, width, height, r, g, b, a);
     }
 
-    void ClearFrameBufferByViewportInt(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Viewport* viewport, GLint r, GLint g, GLint b, GLint a) {
+    void ClearFrameBufferByViewportInt(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Unloved::Viewport* viewport, GLint r, GLint g, GLint b, GLint a) {
         int xOffset = viewport->GetPosition().x * framebuffer->GetWidth();
         int yOffset = viewport->GetPosition().y * framebuffer->GetHeight();
         int width = viewport->GetSize().x * framebuffer->GetWidth();
@@ -140,7 +140,7 @@ namespace OpenGLRenderer {
         framebuffer->ClearAttachmenSubRegionInt(attachmentName, xOffset, yOffset, width, height, r, g, b, a);
     }
 
-    void ClearFrameBufferByViewportUInt(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Viewport* viewport, GLuint r, GLuint g, GLuint b, GLuint a) {
+    void ClearFrameBufferByViewportUInt(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Unloved::Viewport* viewport, GLuint r, GLuint g, GLuint b, GLuint a) {
         int xOffset = viewport->GetPosition().x * framebuffer->GetWidth();
         int yOffset = viewport->GetPosition().y * framebuffer->GetHeight();
         int width = viewport->GetSize().x * framebuffer->GetWidth();

@@ -1,19 +1,18 @@
 #include "../GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Viewport/ViewportManager.h"
-#include "Editor/Editor.h"
+#include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/Editor/Editor.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
-#include "Modelling/Clipping.h"
-#include "Modelling/Unused/Modelling.h"
+#include "Unloved/Objects/House/Clipping/Clipping.h"
 #include "World/LegacyWorld.h"
 
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
 
 #include "Types/Mirror.h"
-#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
+#include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Unloved/Session/Session.h"
@@ -23,6 +22,8 @@
 using namespace Hell;
 
 namespace OpenGLRenderer {
+    using namespace Unloved;
+
     void RenderNonDeformingAnimatedGameObjects();
 
 	void HouseGeometryPass() {
@@ -56,7 +57,7 @@ namespace OpenGLRenderer {
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
@@ -100,7 +101,7 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
@@ -118,7 +119,7 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_AlphaDiscard");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
@@ -147,7 +148,7 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Blended");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
@@ -171,7 +172,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("GBuffer");
         OpenGLShader* editorMeshShader = OpenGL::ResourceManager::GetShaderPtr("EditorMesh");
-        OpenGLTextureArray* woundMaskArray = OpenGL::ResourceManager::GetTextureArrayPtr("WoundMasks");
+        Hell::TextureArray* woundMaskArray = Hell::ResourceManager::GetTextureArrayPtr("WoundMasks");
 
         if (!gBuffer) return;
         if (!shader) return;
@@ -201,7 +202,7 @@ namespace OpenGLRenderer {
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
                 if (Hell::BackEnd::RenderDocFound()) {
@@ -219,7 +220,7 @@ namespace OpenGLRenderer {
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
                 if (Hell::BackEnd::RenderDocFound()) {
@@ -248,7 +249,7 @@ namespace OpenGLRenderer {
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
                 if (Hell::BackEnd::RenderDocFound()) {
@@ -278,7 +279,7 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
@@ -296,7 +297,7 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_AlphaDiscard");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
@@ -325,7 +326,7 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Blended");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
@@ -348,7 +349,7 @@ namespace OpenGLRenderer {
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
 
@@ -389,11 +390,11 @@ namespace OpenGLRenderer {
             MeshBuffer& physicsDebugGeometry = ResourceManager::GetMeshBuffer("PhysicsDebugGeometry");
             if (physicsDebugGeometry.GetMeshCount() > 0) {
                 for (int i = 0; i < 4; i++) {
-                    Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+                    Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
                     if (viewport->IsVisible()) {
                         OpenGLRenderer::SetViewport(gBuffer, viewport);
 
-                        Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+                        Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
                         if (!player) continue;
 
                         OpenGL::SetUniformInt("u_playerIndex", i);
@@ -490,7 +491,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(meshBufferAssets.GetVAO());
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
 
@@ -537,7 +538,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(meshBufferAssets.GetVAO());
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
 
@@ -567,7 +568,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(meshBufferProcedural.GetVAO());
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             Mirror* mirror = Unloved::MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());

@@ -1,12 +1,12 @@
 #include "../GL_renderer.h"
-#include "Editor/Editor.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Hell/Physics/Physics.h"
 #include "World/LegacyWorld.h"
 
-#include "Debug/DebugDraw.h"
+#include "Unloved/Debug/DebugDraw.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 using namespace Hell;
@@ -47,7 +47,7 @@ namespace OpenGLRenderer {
         gBuffer->DrawBuffer("Lighting");
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
@@ -166,8 +166,8 @@ namespace OpenGLRenderer {
 				OpenGLShader& shader = OpenGL::ResourceManager::GetShader("DebugViewRE");
 
 				OpenGL::BindShader("DebugViewRE");
-				OpenGL::SetUniformFloat("u_brushSize", Editor::GetMapHeightBrushSize());
-				OpenGL::SetUniformBool("u_heightMapEditor", (Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Editor::IsOpen());
+				OpenGL::SetUniformFloat("u_brushSize", Unloved::Editor::GetMapHeightBrushSize());
+				OpenGL::SetUniformBool("u_heightMapEditor", (Unloved::Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Unloved::Editor::IsOpen());
 
 				OpenGL::BindImageTexture(0, gBufferRE.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
 				OpenGL::BindTextureUnit(1, gBufferRE.GetColorAttachmentHandleByName("BaseColorMetallic"));
@@ -186,8 +186,8 @@ namespace OpenGLRenderer {
 				if (!shader) return;
 
 				OpenGL::BindShader("DebugView");
-				OpenGL::SetUniformFloat("u_brushSize", Editor::GetMapHeightBrushSize());
-				OpenGL::SetUniformBool("u_heightMapEditor", (Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Editor::IsOpen());
+				OpenGL::SetUniformFloat("u_brushSize", Unloved::Editor::GetMapHeightBrushSize());
+				OpenGL::SetUniformBool("u_heightMapEditor", (Unloved::Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Unloved::Editor::IsOpen());
 
                 OpenGL::BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
                 OpenGL::BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColorMetallic"));

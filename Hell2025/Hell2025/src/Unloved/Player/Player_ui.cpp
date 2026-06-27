@@ -1,0 +1,384 @@
+#include "Player.h"
+
+#include "Hell/UI/TextBlitter.h"
+#include "Hell/UI/UIBackEnd.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+
+#include "Legacy/Util/Util.h"
+#include "Legacy/World/LegacyWorld.h"
+#include "Legacy/Renderer/RenderDataManager.h"
+#include "Legacy/Renderer/Renderer.h"
+
+#include "Unloved/Config/Config.h"
+#include "Unloved/Debug/Debug.h"
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/Render/API/OpenGL/GL_renderer.h"
+#include "Unloved/Systems/Openables/OpenableManager.h"
+#include "Unloved/ObjectId.h"
+
+namespace Unloved {
+
+void Player::UpdateUI(float deltaTime) {
+    if (Editor::IsOpen()) return;
+
+    Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(m_viewportIndex);
+    if (!viewport->IsVisible()) return;
+
+
+    const Resolutions& resolutions = Config::GetResolutions();
+    int width = resolutions.ui.x * viewport->GetSize().x;
+    int height = resolutions.ui.y * viewport->GetSize().y;
+    int xLeft = resolutions.ui.x * viewport->GetPosition().x;
+    int xRight = xLeft + width;
+    int yTop = resolutions.ui.y * (1.0f - viewport->GetPosition().y - viewport->GetSize().y);
+    int yBottom = yTop + height;
+    int centerX = xLeft + (width / 2);
+    int centerY = yTop + (height / 2);
+    int ammoX = xRight - (width * 0.17f);
+    int ammoY = yBottom - (height * 0.145f) - TextBlitter::GetFontSpriteSheet("AmmoFont")->m_charHeight - -TextBlitter::GetFontSpriteSheet("AmmoFont")->m_lineSpacing;
+
+    // Set type writer position based on viewport coords
+    int margin = 100;
+    glm::ivec2 typeWriteLocation;
+    typeWriteLocation.x = viewport->GetLeftPixel() + margin;
+    typeWriteLocation.y = ammoY + 40;
+    m_typeWriter.SetLocation(typeWriteLocation);
+
+   //if (Input::KeyPressed(HELL_KEY_Q)) {
+   //    std::string text = "SHIT PISS FUCK CUNT COCK SUCKER MOTHER FUCKER TITS FART TURD AND TWAT";
+   //    m_typeWriter.DisplayText(text, 3);
+   //}
+
+    m_typeWriter.Update(deltaTime);
+
+   //if (Debug::IsDebugTextVisible()) {
+   //    return;
+   //}
+
+    // Info text
+    int infoTextX = xLeft + (width * 0.1f);
+    int infoTextY = ammoY;
+
+    if (m_inventory.IsOpen()) {
+        m_inventory.SubmitRenderItems();
+    }
+    if (m_shopInventory.IsOpen()) {
+        m_shopInventory.SubmitRenderItems();
+    }
+
+
+    //std::string text = "Locked...";
+    //UIBackEnd::BlitText("[COL=0.839,0.784,0.635]" + text, "RobotoCondensed", 150, 1080 - 150, Alignment::TOP_LEFT, 2.0f, TextureFilter::LINEAR);
+
+
+//   glm::ivec2 location = glm::ivec2(centerX, centerY);
+//   location = glm::ivec2(64, yTop + 64);
+//   //glm::ivec2 size = glm::ivec2(-1, -1);
+//
+//   std::string texName = "inv10";
+//   if (Input::KeyDown(HELL_KEY_Y)) {
+//       texName = "inv11";
+//   }
+//   Texture* texture = Hell::ResourceManager::GetTextureByName(texName);
+//   //glm::ivec2 size = glm::ivec2(-1, -1);
+//   glm::ivec2 size = glm::ivec2(texture->GetWidth(0), texture->GetHeight(0));
+//
+//   UIBackEnd::BlitTexture(texName, location, Alignment::TOP_LEFT, WHITE, size, TextureFilter::NEAREST);
+//
+//   location = glm::ivec2(750, yTop + 64);
+//   //UIBackEnd::BlitTexture("inv2", location, Alignment::TOP_LEFT, WHITE, size, TextureFilter::LINEAR);
+//
+
+
+    // Multiplayer Mode Text
+    if (IsAlive() && Debug::GetDebugTextMode() == DebugTextMode::NONE) {
+        std::string text = "Health: " + std::to_string(m_health) + "\n";
+        text += "Cash: $" + std::to_string(m_cash) + "\n";
+        text += "Kills: " + std::to_string(m_killCount) + "\n";
+        text += "\n";
+
+        UIBackEnd::BlitText(text, "StandardFont", xLeft, yTop, Alignment::TOP_LEFT, 2.0f);
+    }
+
+
+    // HUD
+    if (IsAlive() && !IsInShop()) {
+        // Cross hair texture
+        std::string crosshairTexture = "CrosshairDot";
+        if (m_interactFound) {
+            crosshairTexture = "CrosshairSquare";
+        }
+
+        UIBackEnd::BlitText(m_infoText, "StandardFont", infoTextX, infoTextY, Alignment::TOP_LEFT, 2.0f);
+        UIBackEnd::BlitTexture(crosshairTexture, glm::ivec2(centerX, centerY), Alignment::CENTERED, WHITE, glm::ivec2(128, 128));
+
+        // Ammo
+        if (GetCurrentWeaponType() != WeaponType::MELEE) {
+            float scale = 1.3f;
+            float smallScale = scale * 0.8f;
+
+            int slashPadding = 10;
+            std::string clipText = std::to_string(GetCurrentWeaponMagAmmo());
+            std::string totalText = std::to_string(GetCurrentWeaponTotalAmmo());
+
+            // Mag ammo color
+            if (GetCurrentWeaponMagAmmo() == 0) {
+                clipText = "[COL=0.8,0.05,0.05,1]" + clipText;
+            }
+            else {
+                clipText = "[COL=0.16,0.78,0.23,1]" + clipText;
+            }
+
+            UIBackEnd::BlitText(clipText, "AmmoFont", ammoX - slashPadding, ammoY, Alignment::TOP_RIGHT, scale, TextureFilter::LINEAR);
+            UIBackEnd::BlitText("/", "AmmoFont", ammoX, ammoY, Alignment::CENTERED_HORIZONTAL, scale, TextureFilter::LINEAR);
+            UIBackEnd::BlitText(totalText, "AmmoFont", ammoX + slashPadding, ammoY, Alignment::TOP_LEFT, smallScale, TextureFilter::LINEAR);
+
+            // SPAS AUTO
+            WeaponState* weaponState = GetCurrentWeaponState();
+            WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+            if (weaponInfo->hasAutoSwitch) {
+                Texture* texture = Hell::ResourceManager::GetTextureByName("Weapon_Auto");
+                if (GetCurrentWeaponType() == WeaponType::SHOTGUN && texture) {
+                    int modifierPadding = 29;
+                    int modifierX = TextBlitter::GetTextSize(totalText, "AmmoFont", smallScale).x + modifierPadding;
+                    int gridSize = 10;
+                    modifierX = (modifierX / 10) * 10;
+                    int modifierScaleX = texture->GetWidth() * smallScale;
+                    int modifierScaleY = texture->GetHeight() * smallScale;
+                    glm::vec4 unselectedColor = glm::vec4(0.541, 0.51, 0.392, 0.5f);
+                    glm::vec4 colorAuto = weaponState->shotgunInAutoMode ? WHITE : unselectedColor;
+                    glm::vec4 colorPump = weaponState->shotgunInAutoMode ? unselectedColor : WHITE;
+                    float padding = 4;
+                    float autoY = ammoY;
+                    float pumpY = autoY + ((texture->GetHeight() + padding) * smallScale);
+
+                    int negHack = -9 + 9;
+                    int hack = 7 + 9;
+
+                    std::string shellTextureName = "ShotgunShellRed";
+                    if (weaponState->shotgunSlug) {
+                        shellTextureName = "ShotgunShellGreen";
+                    }
+                    Texture* texture = Hell::ResourceManager::GetTextureByName(shellTextureName);
+                    int shellScaleX = texture->GetWidth() * smallScale;
+                    int shellScaleY = texture->GetHeight() * smallScale * 1.1f;
+
+                    UIBackEnd::BlitTexture(shellTextureName, glm::ivec2(ammoX + modifierX + negHack, autoY), Alignment::TOP_LEFT, WHITE, glm::ivec2(shellScaleX, shellScaleY), TextureFilter::LINEAR);
+                    UIBackEnd::BlitTexture("Weapon_Auto", glm::ivec2(ammoX + modifierX + hack, autoY), Alignment::TOP_LEFT, colorAuto, glm::ivec2(modifierScaleX, modifierScaleY), TextureFilter::LINEAR);
+                    UIBackEnd::BlitTexture("Weapon_Pump", glm::ivec2(ammoX + modifierX + hack, pumpY), Alignment::TOP_LEFT, colorPump, glm::ivec2(modifierScaleX, modifierScaleY), TextureFilter::LINEAR);
+                }
+            }
+        }
+
+
+        if (Debug::GetDebugTextMode() == DebugTextMode::PER_PLAYER || Debug::GetDebugRenderMode() == DebugRenderMode::BVH_CPU_PLAYER_RAYS) {
+
+            std::string text = "";
+            text += "Feet Pos: " + Util::Vec3ToString(GetFootPosition()) + "\n";
+            text += "Cam Pos: " + Util::Vec3ToString(GetCameraPosition()) + "\n";
+            text += "Cam Euler: " + Util::Vec3ToString(GetCameraRotation()) + "\n";
+
+            text += "\n";
+
+            AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+            SkinnedModel* model = viewWeapon->GetSkinnedModel();
+
+
+			// Some matrices
+			if (false) {
+				const ViewportData& viewportData = RenderDataManager::GetViewportData()[0];
+				text += "Projection Matrix:\n";
+				text += Util::Mat4ToString10(viewportData.projection) + "\n\n";;
+				text += "Projection Matrix Reverse Z:\n";
+				text += Util::Mat4ToString10(viewportData.projectionReverseZ) + "\n\n";;
+				text += "View Matrix:\n";
+				text += Util::Mat4ToString10(viewportData.view) + "\n\n";
+			}
+
+            // Magazine matrices
+            if (false) {
+                text += "Magazine Inverse Bind Transform:\n";
+                text += Util::Mat4ToString10(viewWeapon->GetInverseBindTransformByBoneName("Magazine")) + "\n\n";
+                text += "Magazine Animated Transform:\n";
+                text += Util::Mat4ToString10(viewWeapon->GetAnimatedTransformByBoneName("Magazine")) + "\n\n";
+            }
+
+            // Camera matrices
+            if (false) {
+                text += "Camera Inverse Bind Transform:\n";
+                text += Util::Mat4ToString10(viewWeapon->GetInverseBindTransformByBoneName("camera")) + "\n\n";
+                text += "Camera Animated Transform:\n";
+                text += Util::Mat4ToString10(viewWeapon->GetAnimatedTransformByBoneName("camera")) + "\n\n";
+            }
+
+            // Kangaroos
+            if (false) {
+                if (LegacyWorld::GetKangaroos().size()) {
+                    Kangaroo& kangaroo = LegacyWorld::GetKangaroos()[0];
+                    text += kangaroo.GetDebugInfoString();
+                }
+            }
+
+            // Inventory
+            if (false) {
+                text += "Unloved::Inventory State: " + Util::InventoryStateToString(m_inventory.GetInventoryState()) + "\n";
+                for (auto item : m_inventory.GetItems()) {
+                    text += "- " + item.m_name;
+                    text += " [" + std::to_string(item.m_gridLocation.x) +"][" + std::to_string(item.m_gridLocation.y) + "]";
+                    text += "\n";
+                }
+            }
+
+            // Movement
+            if (false) {
+                text += "IsMoving: " + Util::BoolToString(IsMoving()) + "\n";
+            }
+
+            // Weapons
+            if (false) {
+                text += "Weapon Action: " + Util::WeaponActionToString(GetCurrentWeaponAction()) + "\n";
+            }
+
+            // Interact
+            //if (false) {
+            //    text += "Interact object: " + Util::ObjectTypeToString(m_interactObjectId) + " " + std::to_string(m_interactObjectId) + "\n";
+            //}
+
+            // Rays
+            //if (true) {
+            //    text += "BVH ray: " + Util::ObjectTypeToString(Unloved::GetObjectIdType(m_bvhRayResult.objectId)) + " " + std::to_string(m_bvhRayResult.objectId) + "\n";
+            //    text += "PhysX ray: " + Util::ObjectTypeToString(m_physXRayResult.userData.objectType) + " " + std::to_string(m_physXRayResult.userData.objectId) + " " + Util::PhysicsTypeToString(m_physXRayResult.userData.physicsType) + " " + std::to_string(m_physXRayResult.userData.physicsId) + "\n";
+            //    text += "Ray hit found: " + Util::BoolToString(m_rayHitFound) + " " + Util::ObjectTypeToString(m_rayHitObjectType) + " " + std::to_string(m_rayhitObjectId) + "\n";
+            //    text += "Feet above height field: " + Util::BoolToString(m_feetAboveHeightField) + "\n";
+            //}
+
+
+            // Render items
+            if (true) {
+                text += "RenderItems ALPHA_DISCARD: " + std::to_string(RenderDataManager::GetRenderItemsAlphaDiscard().size()) + "\n";
+                text += "RenderItems BLENDED: " + std::to_string(RenderDataManager::GetRenderItemsBlended().size()) + "\n";
+                text += "RenderItems DEFAULT: " + std::to_string(RenderDataManager::GetRenderItems().size()) + "\n";
+                text += "RenderItems GLASS: " + std::to_string(RenderDataManager::GetRenderItemsGlass().size()) + "\n";
+                text += "RenderItems HAIR: " + std::to_string(RenderDataManager::GetRenderItemsHair().size()) + "\n";
+                text += "RenderItems MIRROR: " + std::to_string(RenderDataManager::GetRenderItemsMirror().size()) + "\n";
+                text += "RenderItems TOILET_WATER: " + std::to_string(RenderDataManager::GetRenderItemsToiletWater().size()) + "\n";
+                text += "RenderItems PLASTIC: " + std::to_string(RenderDataManager::GetRenderItemsPlastic().size()) + "\n";
+                text += "RenderItems STAINED_GLASS: " + std::to_string(RenderDataManager::GetRenderItemsStainedGlass().size()) + "\n";
+                text += "\n";
+                text += "RenderItems Skinned ALPHA_DISCARD: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsAlphaDiscard().size()) + "\n";
+                text += "RenderItems Skinned BLENDED: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsBlended().size()) + "\n";
+                text += "RenderItems Skinned DEFAULT: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsDefault().size()) + "\n";
+                text += "RenderItems Skinned HAIR: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsHair().size()) + "\n";
+                text += "\n";
+                text += "RenderItems PRODEDURAL: " + std::to_string(RenderDataManager::GetRenderItemsProcedural().size()) + "\n";
+            }
+
+            // Movement
+            if (false) {
+                text += "Movement Dir: " + Util::Vec3ToString(m_movementDirection) + "\n";
+                text += "Acceleration: " + std::to_string(m_acceleration) + "\n";
+                text += "Y Velocity: " + std::to_string(m_yVelocity) + "\n";
+            }
+
+            // Lights
+            if (false) {
+                for (Light& Light : LegacyWorld::GetLights()) {
+                    text += "Light: " + Util::BoolToString(Light.IsDirtyForShadowMaps()) + "\n";
+                }
+            }
+
+            // Physx Object Count
+            if (false) {
+                text += "\n";
+                text += Hell::Physics::GetObjectCountsAsString();
+                text += "\n";
+            }
+
+            // Shark
+            if (false) {
+                for (Shark& shark : LegacyWorld::GetSharks()) {
+                    text += shark.GetDebugInfoAsString();
+                }
+            }
+
+            glm::vec3 rayOrigin = GetCameraPosition();
+            glm::vec3 rayDir = GetCameraForward();
+            float maxRayDistance = 100.0f;
+
+            if (false) {
+                text += "\n";
+                text += "Flip normal map Y: " + Util::BoolToString(OpenGLRenderer::ShouldFlipNormalMapY()) + "\n";
+            }
+
+            // Override with BVH CPU RAYS if that render mode is set
+            if (Debug::GetDebugRenderMode() == DebugRenderMode::BVH_CPU_PLAYER_RAYS) {
+                text += "\nBVH ray hit: " + Util::BoolToString(m_bvhRayResult.hitFound) + "\n";
+
+                if (m_bvhRayResult.hitFound) {
+                    MeshNode* meshNode = LegacyWorld::GetMeshNodeByObjectIdAndLocalNodeIndex(m_bvhRayResult.objectId, m_bvhRayResult.localMeshNodeIndex);
+
+                    uint64_t hitId = m_bvhRayResult.objectId;
+                    ObjectType hitType = Unloved::GetObjectIdType(hitId);
+                    text += "- Hit pos: " + Util::Vec3ToString(m_bvhRayResult.hitPosition) + "\n";
+                    text += "- Parent type: " + Util::ObjectTypeToString(hitType) + "\n";
+                    text += "- Mesh name: " + Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshNameByMeshId(m_bvhRayResult.globalMeshIndex) + "\n";
+                    text += "- Parent Id: " + std::to_string(Unloved::GetObjectIdLocal(m_bvhRayResult.objectId)) + "\n";
+                    text += "- Openable Id: " + std::to_string(m_bvhRayResult.openableId) + "\n";
+                    text += "- Custom Id: " + std::to_string(m_bvhRayResult.customId) + "\n";
+                    text += "- Mesh node index: " + std::to_string(m_bvhRayResult.localMeshNodeIndex) + "\n";
+                    text += "- Global mesh index: " + std::to_string(m_bvhRayResult.globalMeshIndex) + "\n";
+
+                    if (meshNode) {
+                        text += "- BlendingMode: " + Util::BlendingModeToString(meshNode->blendingMode) + "\n";
+                        text += "- World AABB min: " + Util::Vec3ToString(meshNode->worldspaceAabb.GetBoundsMin()) + "\n";
+                        text += "- World AABB max: " + Util::Vec3ToString(meshNode->worldspaceAabb.GetBoundsMax()) + "\n";
+                    }
+
+                    if (Openable* openable = Unloved::OpenableManager::GetOpenableByOpenableId(m_bvhRayResult.openableId)) {
+                        text += "\n";
+                        text += "Open state: " + Util::OpenStateToString(openable->m_currentOpenState) + "\n";
+                        text += "Value: " + std::to_string(openable->m_currentOpenValue) + "\n";
+                        text += "Min: " + std::to_string(openable->m_minOpenValue) + "\n";
+                        text += "Max: " + std::to_string(openable->m_maxOpenValue) + "\n";
+                        text += "Dirty: " + Util::BoolToString(openable->m_dirty) + "\n";
+                        text += "Transform pos: " + Util::Vec3ToString(openable->m_transform.position) + "\n";
+                        text += "Transform rot: " + Util::Vec3ToString(openable->m_transform.rotation) + "\n";
+
+                    }
+                }
+            }
+
+            UIBackEnd::BlitText(text, "StandardFont", xLeft, yTop, Alignment::TOP_LEFT, 2.0f);
+        }
+
+    }
+
+    // Press Start
+    if (RespawnAllowed()) {
+        static Texture* texture = Hell::ResourceManager::GetTextureByName("PressStart");
+        if (texture) {
+            static int width = texture->GetWidth() * 2;
+            static int height = texture->GetHeight() * 2;
+            glm::ivec2 location = glm::ivec2(centerX, centerY);
+            glm::ivec2 size = glm::ivec2(width, height);
+            UIBackEnd::BlitTexture("PressStart", location, Alignment::CENTERED, WHITE, size, TextureFilter::LINEAR);
+        }
+    }
+
+    //std::string name = "FontTest_LockedFromTheOtherSide";
+    ////name = "FontTest_LockedWithAKey";
+    ////name = "FontTest_YouUnlockedIt";
+    //
+    //if (Texture* texture = Hell::ResourceManager::GetTextureByName(name)) {
+    //    int width = texture->GetWidth() * 2;
+    //    int height = texture->GetHeight() * 2;
+    //    int marginX = 100;
+    //    int marginY = 120;
+    //    glm::ivec2 location = glm::ivec2(marginX, yBottom - marginY);
+    //    glm::ivec2 size = glm::ivec2(width, height);
+    //    UIBackEnd::BlitTexture(name, location, Alignment::BOTTOM_LEFT, WHITE, size, TextureFilter::NEAREST);
+    //}
+}
+
+} // namespace Unloved

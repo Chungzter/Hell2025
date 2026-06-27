@@ -1,8 +1,10 @@
 #pragma once
 //#include <Game/CreateInfo.h>
-#include "Types/House/House.h"
+#include "Unloved/Objects/House/House.h"
 
 namespace HouseManager {
+    using namespace Unloved;
+
     void Init();
     void LoadHouse(const std::string& filename);
     void SaveHouse(const std::string& filename);

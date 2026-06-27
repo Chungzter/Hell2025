@@ -1,7 +1,7 @@
 #pragma once
 #include "Hell/Math/AABB.h"
 #include "Hell/Math/OBB.h"
-#include "Types/Map/Map.h"
+#include "Unloved/Maps/Map.h"
 
 #include <Game/Types.h>
 
@@ -42,7 +42,7 @@ namespace Renderer {
     void MarkWoundMaskIndexAsAvailable(int32_t index);
 
     void RecalculateAllHeightMapData(bool blitWorldMap);
-    void ReadBackHeightMapData(Map* map);
+    void ReadBackHeightMapData(Unloved::Map* map);
 
 	uint32_t GetTileCount();
 	uint32_t GetTileCountX();

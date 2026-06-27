@@ -1,6 +1,6 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Renderer/RenderDataManager.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
 
 
@@ -30,7 +30,7 @@ namespace OpenGLRenderer {
 
         miscFullSizeFBO->Bind();
         miscFullSizeFBO->SetViewport();
-        miscFullSizeFBO->DrawBuffers({ "ScreenSpaceBloodDecalMask" });
+        miscFullSizeFBO->DrawBuffers({ "BloodScreenSpaceDecalMask" });
 
         OpenGL::BindShader("BloodDecalsDraw");
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
@@ -72,7 +72,7 @@ namespace OpenGLRenderer {
 
         glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("BaseColorMetallic"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
         glBindImageTexture(1, gBuffer->GetColorAttachmentHandleByName("RMA"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
-        glBindTextureUnit(2, miscFullSizeFBO->GetColorAttachmentHandleByName("ScreenSpaceBloodDecalMask"));
+        glBindTextureUnit(2, miscFullSizeFBO->GetColorAttachmentHandleByName("BloodScreenSpaceDecalMask"));
         OpenGL::DispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);
     }
 }

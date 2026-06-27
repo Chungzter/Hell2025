@@ -3,7 +3,7 @@
 #include "Hell/Render/API/OpenGL/Types/GL_texture_readback.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Unloved/Session/Session.h"
-#include "Editor/Editor.h"
+#include "Unloved/Editor/Editor.h"
 #include "Util/Util.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
@@ -27,7 +27,7 @@ namespace OpenGLRenderer {
     void TextureReadBackPass() {
         //ProfilerOpenGLZoneFunction();
 
-        if (Editor::IsClosed() && Editor::GetEditorMode() != EditorMode::MAP_HEIGHT_EDITOR) return;
+        if (Unloved::Editor::IsClosed() && Unloved::Editor::GetEditorMode() != EditorMode::MAP_HEIGHT_EDITOR) return;
 
         // Get mouse hit position
         if (!g_mouseRayReadBack.IsRequestInProgress()) {

@@ -1,11 +1,11 @@
 #include "../GL_renderer.h"
 #include "Unloved/Session/Session.h"
-#include "GlobalIllumination/GlobalIllumination.h"
+#include "Unloved/Systems/DDGI/GlobalIllumination.h"
 #include "World/LegacyWorld.h"
 #include "Renderer/Renderer.h"
-#include "Ocean/Ocean.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
 
-#include "Config/Config.h"
+#include "Unloved/Config/Config.h"
 
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -57,7 +57,7 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformInt("u_tileYCount", gBuffer->GetHeight() / TILE_SIZE);
         OpenGL::SetUniformBool("u_sampleProbes", Renderer::GetCurrentRendererSettings().enableIrradianceProbeSampling);
 
-        if (LegacyWorld::HasOcean()) {
+        if (Unloved::LegacyWorld::HasOcean()) {
             OpenGL::SetUniformFloat("u_oceanHeight", Ocean::GetOceanOriginY());
         }
         else {

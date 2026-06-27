@@ -11,20 +11,20 @@
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
 #include "Unloved/Session/Session.h"
-#include "Config/Config.h"
-#include "Ocean/Ocean.h"
-#include "Player/Player.h"
+#include "Unloved/Config/Config.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
+#include "Unloved/Player/Player.h"
 #include "Renderer/RenderDataManager.h"
 #include "Util/Util.h"
 #include "Hell/UI/UIBackEnd.h"
 #include "Hell/UI/TextBlitter.h"
-#include "Types/Game/GameObject.h"
+#include "Unloved/Objects/Props/GameObject.h"
 #include "../Timer.hpp"
 #include <glm/gtx/matrix_decompose.hpp>
 
-#include "Editor/Editor.h"
-#include "Editor/Gizmo.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Editor/Gizmo.h"
+#include "Unloved/Viewport/ViewportManager.h"
 
 #include "Hell/Render/API/OpenGL/Types/GL_texture_readback.h"
 
@@ -42,6 +42,8 @@ namespace Input = Hell::Input;
 #define NONE_BIT 0
 
 namespace OpenGLRenderer {
+    using namespace Unloved;
+
 
     OpenGLMeshPatch g_tesselationPatch;
 
@@ -291,8 +293,7 @@ namespace OpenGLRenderer {
         decalPaintingFbo.CreateAttachment("UVMap", GL_RGBA8, GL_LINEAR, GL_LINEAR);
         decalPaintingFbo.CreateDepthAttachment(GL_DEPTH_COMPONENT24);
 
-        uint64_t woundMasksId = OpenGL::ResourceManager::CreateTextureArray("WoundMasks");
-        OpenGLTextureArray& woundMasks = OpenGL::ResourceManager::GetTextureArrayById(woundMasksId);
+        Hell::TextureArray& woundMasks = Hell::ResourceManager::CreateTextureArray("WoundMasks");
         woundMasks.CleanUp();
         woundMasks.AllocateMemory(WOUND_MASK_TEXTURE_SIZE, WOUND_MASK_TEXTURE_SIZE, GL_R8, 1, WOUND_MASK_TEXTURE_ARRAY_SIZE); // consider adding mipmaps
 
@@ -325,7 +326,7 @@ namespace OpenGLRenderer {
         miscFullSizeFbo.Create(resolutions.gBuffer);
         miscFullSizeFbo.CreateAttachment("GaussianFinalLightingIntermediate", GL_RGBA16F);
         miscFullSizeFbo.CreateAttachment("GaussianFinalLighting", GL_RGBA16F);
-        miscFullSizeFbo.CreateAttachment("ScreenSpaceBloodDecalMask", GL_R8);
+        miscFullSizeFbo.CreateAttachment("BloodScreenSpaceDecalMask", GL_R8);
         miscFullSizeFbo.CreateAttachment("ViewspaceDepth", GL_R32F, GL_NEAREST, GL_NEAREST);
         miscFullSizeFbo.CreateAttachment("FinalLightingCopy", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
 
@@ -623,7 +624,7 @@ namespace OpenGLRenderer {
         OpenGL::UpdateSSBO("Samplers", sizeof(GLuint64) * OpenGL::BackEnd::GetBindlessTextureIDs().size(), OpenGL::BackEnd::GetBindlessTextureIDs().data());
 
         const RendererData& rendererData = RenderDataManager::GetRendererData();
-        const std::vector<BloodDecalInstanceData>& screenSpaceBloodDecalInstances = RenderDataManager::GetScreenSpaceBloodDecalInstanceData();
+        const std::vector<BloodDecalInstanceData>& bloodScreenSpaceDecalInstances = RenderDataManager::GetBloodScreenSpaceDecalInstanceData();
         const std::vector<GPULight>& gpuLightsHighRes = RenderDataManager::GetGPULightsHighRes();
         const std::vector<RenderItem>& instanceData = RenderDataManager::GetInstanceData();
         const std::vector<ViewportData>& playerData = RenderDataManager::GetViewportData();
@@ -632,7 +633,7 @@ namespace OpenGLRenderer {
         GLuint zero = 0;
 
         OpenGL::UpdateSSBO("BloodDecalCounter", sizeof(uint32_t), &zero);
-        OpenGL::UpdateSSBO("BloodDecalInstances", screenSpaceBloodDecalInstances.size() * sizeof(BloodDecalInstanceData), screenSpaceBloodDecalInstances.data());
+        OpenGL::UpdateSSBO("BloodDecalInstances", bloodScreenSpaceDecalInstances.size() * sizeof(BloodDecalInstanceData), bloodScreenSpaceDecalInstances.data());
         OpenGL::UpdateSSBO("ChristmasLightCounter", sizeof(uint32_t), &zero);
         OpenGL::UpdateSSBO("InstanceData", instanceData.size() * sizeof(RenderItem), instanceData.data());
         OpenGL::UpdateSSBO("Lights", gpuLightsHighRes.size() * sizeof(GPULight), gpuLightsHighRes.data());
@@ -672,7 +673,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(vao);
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
                 OpenGL::SetUniformMat4("u_projectionView", RenderDataManager::GetViewportData()[i].projectionView);
@@ -695,7 +696,7 @@ namespace OpenGLRenderer {
         OceanHeightReadback();
 
         OpenGLFrameBuffer& hairFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Hair");
-        DDGIVolume& ddgiVolume = LegacyWorld::GetTestDDGIVolume();
+        Unloved::DDGIVolume& ddgiVolume = LegacyWorld::GetTestDDGIVolume();
 
         glDisable(GL_DITHER);
 
@@ -861,7 +862,7 @@ namespace OpenGLRenderer {
         // Decal mask
         OpenGLFrameBuffer& miscFullSizeFBO = OpenGL::ResourceManager::GetFrameBuffer("MiscFullSize");
         miscFullSizeFBO.Bind();
-        miscFullSizeFBO.ClearTexImage("ScreenSpaceBloodDecalMask", 0, 0, 0, 0);
+        miscFullSizeFBO.ClearTexImage("BloodScreenSpaceDecalMask", 0, 0, 0, 0);
     }
 
     void MultiDrawIndirect(const std::vector<DrawIndexedIndirectCommand>& commands) {
@@ -941,10 +942,10 @@ namespace OpenGLRenderer {
 
         // Iterate each viewport
         for (int x = 0; x < 4; x++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(x);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(x);
 
             // Start the first blur buffer at the full viewport dimensions
-            SpaceCoords spaceCoords = viewport->GetGBufferSpaceCoords();
+            Unloved::SpaceCoords spaceCoords = viewport->GetGBufferSpaceCoords();
             float width = spaceCoords.width;
             float height = spaceCoords.height;
 
@@ -971,7 +972,7 @@ namespace OpenGLRenderer {
 		OpenGLRasterizerStateManager::SetRasterizerState(rasterizerState);
 
 		for (int i = 0; i < 4; i++) {
-			Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (viewport->IsVisible()) {
 				OpenGLRenderer::SetViewport(fbo, viewport);
 				if (Hell::BackEnd::RenderDocFound()) {
@@ -988,7 +989,7 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::SetRasterizerState(rasterizerState);
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(&fbo, viewport);
                 MultiDrawIndirect(drawCommands[i]);
@@ -1000,7 +1001,7 @@ namespace OpenGLRenderer {
 		OpenGLRasterizerStateManager::SetRasterizerState(rasterizerState);
 
 		for (int i = 0; i < 4; i++) {
-			Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (viewport->IsVisible()) {
 				OpenGLRenderer::SetViewport(&fbo, viewport);
 				if (Hell::BackEnd::RenderDocFound()) {

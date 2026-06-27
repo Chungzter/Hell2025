@@ -1,18 +1,17 @@
 #include "../GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Viewport/ViewportManager.h"
-#include "Editor/Editor.h"
+#include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
-#include "Modelling/Clipping.h"
-#include "Modelling/Unused/Modelling.h"
+#include "Unloved/Objects/House/Clipping/Clipping.h"
 #include "World/LegacyWorld.h"
 
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
 
 #include "Types/Mirror.h"
-#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
+#include "Unloved/Systems/Mirrors/MirrorManager.h"
 
 #include "Unloved/Session/Session.h"\
 
@@ -58,7 +57,7 @@ namespace OpenGLRenderer {
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
 		for (int i = 0; i < 4; i++) {
-			Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (!viewport->IsVisible()) continue;
 
 			OpenGLRenderer::SetViewport(gBuffer, viewport);
@@ -102,7 +101,7 @@ namespace OpenGLRenderer {
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
 		for (int i = 0; i < 4; i++) {
-			Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (!viewport->IsVisible()) continue;
 
 			OpenGLRenderer::SetViewport(gBuffer, viewport);
@@ -167,7 +166,7 @@ namespace OpenGLRenderer {
 
 		// PLASTIC TEMPORARYILY RENDERER HERE FOR TESTING
 		for (int i = 0; i < 4; i++) {
-			Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (viewport->IsVisible()) {
 				OpenGLRenderer::SetViewport(gBuffer, viewport);
 				if (Hell::BackEnd::RenderDocFound()) {

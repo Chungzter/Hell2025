@@ -1,9 +1,12 @@
 #pragma once
-#include <Game/Types.h>
-#include <vector>
+
+#include "Legacy/Game/Types.h"
+
 #include "Unloved/Session/Session_types.h"
-#include "Camera/Camera.h"
-#include "Player/Player.h"
+#include "Unloved/Camera/Camera.h"
+#include "Unloved/Player/Player.h"
+
+#include <vector>
 
 namespace Unloved::Session {
     void BeginFrame();
@@ -16,14 +19,14 @@ namespace Unloved::Session {
     void AddRemotePlayer(const glm::vec3& position, const glm::vec3& rotation);
     void RespawnPlayers();
     const std::vector<uint64_t>& GetLocalPlayerIds();
-    Player* GetPlayerById(uint64_t playerId);
-    Player* GetLocalPlayerByViewportIndex(uint32_t index);
+    Unloved::Player* GetPlayerById(uint64_t playerId);
+    Unloved::Player* GetLocalPlayerByViewportIndex(uint32_t index);
     void SetPlayerKeyboardAndMouseIndex(int playerIndex, int keyboardIndex, int mouseIndex);
     int32_t GetPlayerCount();
     int32_t GetLocalPlayerCount();
     int32_t GetRemotePlayerCount();
     int32_t GetOnlinePlayerCount();
-    Camera* GetLocalPlayerCameraByIndex(uint32_t index);
+    Unloved::Camera* GetLocalPlayerCameraByIndex(uint32_t index);
     float GetLocalPlayerFovByIndex(uint32_t index);
 
     void NextSplitScreenMode();

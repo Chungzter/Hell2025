@@ -1,6 +1,6 @@
 #include "ParticleManager.h"
 #include "Unloved/Session/Session.h"
-#include "Ocean/Ocean.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
 #include "Util/Util.h"
 #include "Hell/Input.h"
 #include "Hell/Time.h"
@@ -14,7 +14,7 @@ namespace ParticleManager {
 
     void Update(float deltaTime) {
 
-        Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
+        Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
         if (!player) return;
 
         const glm::vec3& cameraPosition = player->GetCameraPosition();

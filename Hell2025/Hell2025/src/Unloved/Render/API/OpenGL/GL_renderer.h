@@ -20,10 +20,10 @@
 #include "Hell/Math/OBB.h"
 #include "Hell/Render/VertexAttributes.h"
 
-#include "GlobalIllumination/DDGIVolume.h"
+#include "Unloved/Systems/DDGI/DDGIVolume.h"
 
-#include "Types/Map/Map.h"
-#include "Viewport/Viewport.h"
+#include "Unloved/Maps/Map.h"
+#include "Unloved/Viewport/Viewport.h"
 
 #include <string>
 
@@ -129,12 +129,12 @@ namespace OpenGLRenderer {
 
     // Debug passes
     void RaytracedSceneDebug();
-    void DrawPointCloud(DDGIVolume& ddgiVolume);
-    void DrawPointCloudGrid(DDGIVolume& ddgiVolume);
-    void DrawProbes(DDGIVolume& ddgiVolume);
-    void DrawGPUBvhSceneNodes(DDGIVolume& volume, const glm::vec4& color);
-    void DrawGPUBvhSceneLeafNodes(DDGIVolume& volume, const glm::vec4& color);
-    void DrawRaytracingBvh(DDGIVolume& volume);
+    void DrawPointCloud(Unloved::DDGIVolume& ddgiVolume);
+    void DrawPointCloudGrid(Unloved::DDGIVolume& ddgiVolume);
+    void DrawProbes(Unloved::DDGIVolume& ddgiVolume);
+    void DrawGPUBvhSceneNodes(Unloved::DDGIVolume& volume, const glm::vec4& color);
+    void DrawGPUBvhSceneLeafNodes(Unloved::DDGIVolume& volume, const glm::vec4& color);
+    void DrawRaytracingBvh(Unloved::DDGIVolume& volume);
 
     // Global illumination
     void UpdateGlobalIllumintation();
@@ -142,7 +142,7 @@ namespace OpenGLRenderer {
 
     // Utility passes
     void RecalculateAllHeightMapData(bool blitWorldMap);
-    void ReadBackHeightMapData(Map* map);
+    void ReadBackHeightMapData(Unloved::Map* map);
     void ClearAllWoundMasks();
 
     // Render tasks
@@ -188,14 +188,14 @@ namespace OpenGLRenderer {
     void SplitMultiDrawIndirect(OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand>& commands, bool bindMaterial, bool bindWoundMaterial);
 
     // Util
-    void SetViewport(OpenGLFrameBuffer* framebuffer, Viewport* viewport);
-    void ClearFrameBufferByViewport(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Viewport* viewport, GLfloat r, GLfloat g = 0.0f, GLfloat b = 0.0f, GLfloat a = 0.0f);
-    void ClearFrameBufferByViewportInt(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Viewport* viewport, GLint r, GLint g = 0.0f, GLint b = 0.0f, GLint a = 0.0f);
-    void ClearFrameBufferByViewportUInt(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Viewport* viewport, GLuint r, GLuint g = 0.0f, GLuint b = 0.0f, GLuint a = 0.0f);
-    void BlitFrameBufferDepth(OpenGLFrameBuffer* srcFrameBuffer, OpenGLFrameBuffer* dstFrameBuffer, const Viewport* viewport);
+    void SetViewport(OpenGLFrameBuffer* framebuffer, Unloved::Viewport* viewport);
+    void ClearFrameBufferByViewport(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Unloved::Viewport* viewport, GLfloat r, GLfloat g = 0.0f, GLfloat b = 0.0f, GLfloat a = 0.0f);
+    void ClearFrameBufferByViewportInt(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Unloved::Viewport* viewport, GLint r, GLint g = 0.0f, GLint b = 0.0f, GLint a = 0.0f);
+    void ClearFrameBufferByViewportUInt(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Unloved::Viewport* viewport, GLuint r, GLuint g = 0.0f, GLuint b = 0.0f, GLuint a = 0.0f);
+    void BlitFrameBufferDepth(OpenGLFrameBuffer* srcFrameBuffer, OpenGLFrameBuffer* dstFrameBuffer, const Unloved::Viewport* viewport);
 
     RenderItem2D CreateRenderItem2D(const std::string& textureName, glm::ivec2 location, glm::ivec2 viewportSize, Alignment alignment, glm::vec3 colorTint = WHITE, glm::ivec2 size = glm::ivec2(-1, -1));
-    BlitRect BlitRectFromFrameBufferViewport(OpenGLFrameBuffer* framebuffer, Viewport* viewport);
+    BlitRect BlitRectFromFrameBufferViewport(OpenGLFrameBuffer* framebuffer, Unloved::Viewport* viewport);
     GLint CreateQuadVAO();
     void GaussianBlur(OpenGLFrameBuffer& srcFrameBuffer, OpenGLFrameBuffer& dstFrameBuffer, const std::string& srcAttachmentName, const std::string& dstAttachmentName, BlitRect srcRect, BlitRect dstRect, int blurRadius, int passCount);
     int GetFftDisplayMode();

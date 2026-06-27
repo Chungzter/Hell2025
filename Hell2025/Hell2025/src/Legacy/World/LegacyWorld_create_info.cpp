@@ -1,6 +1,6 @@
 #include "LegacyWorld.h"
 
-namespace LegacyWorld {
+namespace Unloved::LegacyWorld {
 
     void AddCreateInfoCollection(CreateInfoCollection& createInfoCollection, SpawnOffset spawnOffset) {
         for (ChristmasLightsCreateInfo& createInfo : createInfoCollection.christmasLights)  AddChristmasLights(createInfo, spawnOffset);
@@ -41,7 +41,7 @@ namespace LegacyWorld {
         for (Window& object : LegacyWorld::GetWindows())                       createInfoCollection.windows.push_back(object.GetCreateInfo());
 
         // Conditionals
-        for (DDGIVolume& object : LegacyWorld::GetDDGIVolumes()) {
+        for (Unloved::DDGIVolume& object : LegacyWorld::GetDDGIVolumes()) {
             if (object.GetCreateInfo().saveToFile) {
                 createInfoCollection.ddgiVolumes.push_back(object.GetCreateInfo());
             }

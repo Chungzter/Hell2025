@@ -1,37 +1,42 @@
 #include "RenderDataManager.h"
+
 #include "Hell/Backend/BackEnd.h"
-#include "Camera/Frustum.h"
-#include "Unloved/Session/Session.h"
-#include "Config/Config.h"
-#include "Editor/Editor.h"
-#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
-#include "Ocean/Ocean.h"
-#include "Renderer/Renderer.h"
-#include "Viewport/ViewportManager.h"
+#include "Hell/Logging.h"
+#include "Hell/Math/Transform.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/UI/UIBackEnd.h"
+
+#include "Unloved/Camera/Frustum.h"
+#include "Unloved/Session/Session.h"
+#include "Unloved/Config/Config.h"
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Systems/Mirrors/MirrorManager.h"
+#include "Unloved/Systems/Blood/BloodSystem.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/World/World.h"
+
 #include <span>
 #include <unordered_map>
-
-#include <Game/Constants.h>
-#include "Hell/Logging.h"
-#include <Game/RendereringConstants.h>
-
-#include "Timer.hpp"
-
-#include "Hell/ResourceManagement/ResourceManager.h"
-
 
 // Get me out of here
 #include "World/LegacyWorld.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include <vector>
 #include "Hell/Input.h"
+#include <Game/RendereringConstants.h>
+#include "Timer.hpp"
+#include <Game/Constants.h>
+#include "Renderer/Renderer.h"
+//
+
 namespace Input = Hell::Input;
 
 using namespace Hell;
 
 namespace RenderDataManager {
+    using namespace Unloved;
+
     DrawCommandsSet g_drawCommandsSet;
     FlashLightShadowMapDrawInfo g_flashLightShadowMapDrawInfo;
     RendererData g_rendererData;
@@ -66,7 +71,7 @@ namespace RenderDataManager {
 
     std::vector<DecalPaintingInfo> g_decalPaintingInfo;
 
-    std::vector<BloodDecalInstanceData> g_screenSpaceBloodDecalInstances;
+    std::vector<BloodDecalInstanceData> g_bloodScreenSpaceDecalInstances;
 
     std::vector<glm::mat4> g_skinningTransforms;
     std::vector<RenderItem> g_combinedSkinnedRenderItems;
@@ -95,7 +100,7 @@ namespace RenderDataManager {
     void UpdateRendererData();
     void UpdateDrawCommandsSet();
     void CreateSkinningData();
-    void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters = false);
+    void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters = false);
     void CreateDrawCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex);
     void CreateDrawCommandsNonDeformingSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex);
 
@@ -103,7 +108,7 @@ namespace RenderDataManager {
     void CreateMultiDrawIndirectCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
     void CreateMultiDrawIndirectCommandsSkinnedNonDeforming(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
 
-    void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex);
+    void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex);
 	void CreateHouseMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
 
     void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, uint32_t faceIndex, GPULight& gpuLight);
@@ -184,7 +189,7 @@ namespace RenderDataManager {
         const Resolutions& resolutions = Config::GetResolutions();
         g_viewportData.resize(4);
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             g_viewportData[i].colorTint = WHITE;
@@ -206,7 +211,7 @@ namespace RenderDataManager {
                 g_viewportData[i].isOrtho = false;
                 g_viewportData[i].fov = Unloved::Session::GetLocalPlayerFovByIndex(i);
 
-                Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+                Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
                 if (player) {
                     g_viewportData[i].colorTint = glm::vec4(player->GetViewportColorTint(), 1.0f);
                     g_viewportData[i].colorContrast = player->GetViewportContrast();
@@ -288,7 +293,7 @@ namespace RenderDataManager {
                 g_viewportData[i].flashlightPosition = glm::vec4(0.0f);
             }
             else {
-                Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+                Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
                 if (player) {
                     g_viewportData[i].flashlightProjectionView = player->GetFlashlightProjectionView();
                     g_viewportData[i].flashlightDir = glm::vec4(player->GetFlashlightDirection(), 0.0f);
@@ -400,10 +405,10 @@ namespace RenderDataManager {
         //std::vector<RenderItem> potentialRenderItems = g_renderItems; // First start with everything in the scene
         //potentialRenderItems.insert(potentialRenderItems.end(), g_shadowCasterRenderItems.begin(), g_shadowCasterRenderItems.end());
 
-        Frustum frustum;
+        Unloved::Frustum frustum;
 
         for (int i = 0; i < viewportCount; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport || !viewport->IsVisible()) continue;
 
             for (int j = 0; j < cascadeCount; j++) {
@@ -446,14 +451,14 @@ namespace RenderDataManager {
             std::vector<RenderItem>& renderItems = set.glass[i];
             renderItems.clear();
 
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
 
-            Frustum& frustum = viewport->GetFrustum();
+            Unloved::Frustum& frustum = viewport->GetFrustum();
 
             // First frustum cull
             for (RenderItem& renderItem : g_renderItemsGlass) {
@@ -516,10 +521,10 @@ namespace RenderDataManager {
 
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            Frustum& frustum = viewport->GetFrustum();
+            Unloved::Frustum& frustum = viewport->GetFrustum();
             CreateDrawCommands(set.standard[i], g_renderItems, &frustum, i);
             CreateDrawCommands(set.blended[i], g_renderItemsBlended, &frustum, i);
             CreateDrawCommands(set.alphaDiscard[i], g_renderItemsAlphaDiscarded, &frustum, i);
@@ -548,10 +553,10 @@ namespace RenderDataManager {
 
         // Flashlight stuff
         for (int playerIndex = 0; playerIndex < Unloved::Session::GetLocalPlayerCount(); playerIndex++) {
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(playerIndex);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(playerIndex);
             if (!player) continue;
 
-            Frustum flashLightFrustum = player->GetFlashlightFrustum();
+            Unloved::Frustum flashLightFrustum = player->GetFlashlightFrustum();
 
             // Build multi draw commands for regular geometry
             CreateDrawCommands(g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[playerIndex], g_renderItems, &flashLightFrustum, playerIndex, true);
@@ -576,24 +581,25 @@ namespace RenderDataManager {
         }
 
         // Screenspace blood decals
-        std::sort(LegacyWorld::GetScreenSpaceBloodDecals().begin(), LegacyWorld::GetScreenSpaceBloodDecals().end(), [](const ScreenSpaceBloodDecal& a, const ScreenSpaceBloodDecal& b) {
+        std::vector<BloodScreenSpaceDecal>& bloodScreenSpaceDecals = Unloved::BloodSystem::GetBloodScreenSpaceDecals();
+        std::sort(bloodScreenSpaceDecals.begin(), bloodScreenSpaceDecals.end(), [](const BloodScreenSpaceDecal& a, const BloodScreenSpaceDecal& b) {
             return a.m_type < b.m_type;
         });
 
-        int instanceCount = LegacyWorld::GetScreenSpaceBloodDecals().size();
-        g_screenSpaceBloodDecalInstances.resize(instanceCount);
+        int instanceCount = static_cast<int>(bloodScreenSpaceDecals.size());
+        g_bloodScreenSpaceDecalInstances.resize(instanceCount);
 
         for (int i = 0; i < instanceCount; i++) {
-            ScreenSpaceBloodDecal& decal = LegacyWorld::GetScreenSpaceBloodDecals()[i];
-            g_screenSpaceBloodDecalInstances[i].modelMatrix = decal.GetModelMatrix();
-            g_screenSpaceBloodDecalInstances[i].inverseModelMatrix = decal.GetInverseModelMatrix();
-            g_screenSpaceBloodDecalInstances[i].type = decal.GetType();
+            BloodScreenSpaceDecal& decal = bloodScreenSpaceDecals[i];
+            g_bloodScreenSpaceDecalInstances[i].modelMatrix = decal.GetModelMatrix();
+            g_bloodScreenSpaceDecalInstances[i].inverseModelMatrix = decal.GetInverseModelMatrix();
+            g_bloodScreenSpaceDecalInstances[i].type = decal.GetType();
 
             switch (decal.GetType()) {
-                case 0: g_screenSpaceBloodDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal4"); break;
-                case 1: g_screenSpaceBloodDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal6"); break;
-                case 2: g_screenSpaceBloodDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal7"); break;
-                case 3: g_screenSpaceBloodDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal9"); break;
+                case 0: g_bloodScreenSpaceDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal4"); break;
+                case 1: g_bloodScreenSpaceDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal6"); break;
+                case 2: g_bloodScreenSpaceDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal7"); break;
+                case 3: g_bloodScreenSpaceDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal9"); break;
                 default: continue;
             }
         }
@@ -601,7 +607,7 @@ namespace RenderDataManager {
     }
 
 
-    void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex) {
+    void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex) {
 		// Store the instance offset for this list of commands
 		int instanceStart = g_instanceData.size();
 
@@ -655,7 +661,7 @@ namespace RenderDataManager {
     }
 
 
-    void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters) {
+    void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters) {
         // Store the instance offset for this list of commands
         int instanceStart = g_instanceData.size();
 
@@ -740,7 +746,7 @@ namespace RenderDataManager {
         Light* light = LegacyWorld::GetLightByIndex(gpuLight.lightIndex);
         if (!light) return;
 
-        Frustum* frustum = light->GetFrustumByFaceIndex(faceIndex);
+        Unloved::Frustum* frustum = light->GetFrustumByFaceIndex(faceIndex);
         if (!frustum) return;
 
         // Store the instance offset for this player
@@ -911,7 +917,7 @@ namespace RenderDataManager {
 
         // Create the per viewport draw commands
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             CreateDrawCommandsSkinned(set.skinnedStandard[i], g_skinnedRenderItemsDefault, i);
@@ -938,7 +944,7 @@ namespace RenderDataManager {
         // Sort by mesh index
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             CreateDrawCommandsNonDeformingSkinned(set.skinnedNonDeformingAlphaDiscard[i], g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard, i);
@@ -970,7 +976,7 @@ namespace RenderDataManager {
 
         float patchOffset = Ocean::GetBaseFFTResolution().y * scale;
 
-        Transform tesseleationTransform;
+        Hell::Transform tesseleationTransform;
         tesseleationTransform.scale = glm::vec3(scale);
 
         int min = -20;
@@ -985,10 +991,10 @@ namespace RenderDataManager {
 
 
         for (int i = 0; i < 1; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            Frustum& frustum = viewport->GetFrustum();
+            Unloved::Frustum& frustum = viewport->GetFrustum();
 
             for (int x = min; x < max; x++) {
                 for (int z = min; z < max; z++) {
@@ -1147,8 +1153,8 @@ namespace RenderDataManager {
         return g_decalPaintingInfo;
     }
 
-    const std::vector<BloodDecalInstanceData>& GetScreenSpaceBloodDecalInstanceData() {
-        return g_screenSpaceBloodDecalInstances;
+    const std::vector<BloodDecalInstanceData>& GetBloodScreenSpaceDecalInstanceData() {
+        return g_bloodScreenSpaceDecalInstances;
     }
 
     // Submissions

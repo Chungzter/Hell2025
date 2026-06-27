@@ -2,6 +2,8 @@
 #include "World/LegacyWorld.h"
 
 namespace OpenGLRenderer {
+    using namespace Unloved;
+
 
     void BlitRoads() {
         OpenGLFrameBuffer* roadFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("Road");

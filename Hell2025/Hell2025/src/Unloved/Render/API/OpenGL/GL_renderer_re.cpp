@@ -1,13 +1,13 @@
 #include "GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Editor/Editor.h"
+#include "Unloved/Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "World/LegacyWorld.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 
 #include "Game/RendereringConstants.h"
-#include "Ocean/Ocean.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Session/Session.h"
 #include "Core/ParticleManager.h"
 
@@ -114,7 +114,7 @@ namespace OpenGLRenderer {
         ParticlePass();
 
         // DDGI Debug
-        DDGIVolume& ddgiVolume = LegacyWorld::GetTestDDGIVolume();
+        Unloved::DDGIVolume& ddgiVolume = Unloved::LegacyWorld::GetTestDDGIVolume();
         if (Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
         if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
         if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
@@ -292,7 +292,7 @@ namespace OpenGLRenderer {
         ParticleManager::Update(Hell::Time::DeltaTime());
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(&fbo, viewport);
@@ -343,7 +343,7 @@ namespace OpenGLRenderer {
         BindEmptyVAO();
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(&fbo, viewport);
@@ -440,7 +440,7 @@ namespace OpenGLRenderer {
 	}
 
     void SkyboxPassRE() {
-        if (Editor::IsOpen()) return;
+        if (Unloved::Editor::IsOpen()) return;
 
         ProfilerOpenGLZoneFunction();
 
@@ -480,7 +480,7 @@ namespace OpenGLRenderer {
 
     void OceanRE() {
         ProfilerOpenGLZoneFunction();
-        if (!LegacyWorld::HasOcean()) return;
+        if (!Unloved::LegacyWorld::HasOcean()) return;
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 
@@ -528,7 +528,7 @@ namespace OpenGLRenderer {
         waterFbo.DrawBuffers({ "Lighting", "OceanMask" });
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(&waterFbo, viewport);
@@ -586,7 +586,7 @@ namespace OpenGLRenderer {
 
         // Forward render each glass render item into each viewport
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);

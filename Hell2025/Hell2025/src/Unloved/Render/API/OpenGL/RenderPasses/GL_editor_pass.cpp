@@ -1,12 +1,14 @@
 #include "../GL_renderer.h"
-#include "Editor/Editor.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 
-#include "Editor/Gizmo.h"
+#include "Unloved/Editor/Gizmo.h"
 
 namespace OpenGLRenderer {
+    using namespace Unloved;
+
 
     void EditorPass() {
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
@@ -32,7 +34,7 @@ namespace OpenGLRenderer {
         gBuffer.ClearDepthAttachment(0.0f);
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
 
                 OpenGLRenderer::SetViewport(&gBuffer, viewport);

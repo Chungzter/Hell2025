@@ -1,11 +1,13 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
-#include "Types/House/WeatherBoards.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Objects/House/WeatherBoards.h"
+#include "Unloved/Viewport/ViewportManager.h"
 
 #include "World/LegacyWorld.h"
 #include "Util/Util.h"
 
 namespace OpenGLRenderer {
+    using namespace Unloved;
+
 
     void WeatherBoardsPass() {
 

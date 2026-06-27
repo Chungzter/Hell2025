@@ -1,0 +1,34 @@
+#include "Player.h"
+
+#include "Legacy/Util/Util.h"
+#include "Legacy/Renderer/Renderer.h"
+
+#include <iostream> // TODO: cleanup logging
+
+namespace Unloved {
+
+void Player::UpdateSpriteSheets(float deltaTime) {
+    // Clear any render items from previous frame
+    m_spriteSheetRenderItems.clear();
+
+    // Muzzle flash
+    if (ViewportIsVisible() && GetCurrentWeaponType() != WeaponType::MELEE) {
+        AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+        WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+        if (!weaponInfo) {
+            std::cout << "Player::UpdateSpriteSheets(float deltaTime) failed: weaponInfo was nullptr!\n";
+            return;
+        }
+
+        m_muzzleFlash.SetPosition(m_muzzleFlashSpawnPosition);
+        m_muzzleFlash.Update(deltaTime);
+
+        //DebugDraw::DrawPoint(boneWorldPosition, YELLOW);
+
+        if (m_muzzleFlash.IsRenderingEnabled() && m_muzzleFlash.GetTimeAsPercentage() < 0.1325f) {
+            m_spriteSheetRenderItems.push_back(m_muzzleFlash.GetRenderItem());
+        }
+    }
+}
+
+} // namespace Unloved

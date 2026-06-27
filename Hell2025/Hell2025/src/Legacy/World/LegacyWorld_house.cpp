@@ -2,13 +2,13 @@
 #include "File/JSON.h"
 #include "Managers/HouseManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "GlobalIllumination/GlobalIllumination.h"
+#include "Unloved/Systems/DDGI/GlobalIllumination.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 
 using namespace Hell;
 
-namespace LegacyWorld {
+namespace Unloved::LegacyWorld {
 
     void RecreateAllHouseGeometry() {
         RecreateAllProceduralWallMesh();

@@ -1,9 +1,9 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Debug/DebugDraw.h"
+#include "Unloved/Debug/DebugDraw.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -130,7 +130,7 @@ namespace OpenGLRenderer {
         //glDisable(GL_CULL_FACE);
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);
@@ -451,7 +451,7 @@ namespace OpenGLRenderer {
         glEnable(GL_CULL_FACE);
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(bloodFluidFbo, viewport);
@@ -475,7 +475,7 @@ namespace OpenGLRenderer {
         glDisable(GL_CULL_FACE);
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(bloodFluidFbo, viewport);

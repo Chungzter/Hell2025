@@ -1,10 +1,10 @@
 #pragma once
 #include "Mirror.h"
-#include "Config/Config.h"
+#include "Unloved/Config/Config.h"
 #include "Unloved/Session/Session.h"
-#include "Debug/DebugDraw.h"
+#include "Unloved/Debug/DebugDraw.h"
 #include "Renderer/RenderDataManager.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Util.h"
@@ -92,10 +92,10 @@ void Mirror::Update(const glm::mat4& worldMatrix) {
         m_viewMatrices[i] = glm::mat4(1.0f);
         m_facingViewportCamera[i] = false;
 
-        if (Viewport* viewport = ViewportManager::GetViewportByIndex(i)) {
+        if (Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i)) {
             if (!viewport->IsVisible()) continue;
 
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
             
             const glm::vec3& cameraPosition = player->GetCameraPosition();
@@ -219,7 +219,7 @@ const glm::mat4& Mirror::GetViewMatrix(int viewportIndex) const {
     return m_viewMatrices[viewportIndex];
 }
 
-Frustum* Mirror::GetFrustum(int viewportIndex) {
+Unloved::Frustum* Mirror::GetFrustum(int viewportIndex) {
     if (viewportIndex < 0 || viewportIndex >= 4) return nullptr;
     return &m_frustums[viewportIndex];
 }

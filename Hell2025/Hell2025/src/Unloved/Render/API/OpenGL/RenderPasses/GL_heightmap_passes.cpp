@@ -4,23 +4,23 @@
 #include "Hell/Render/API/OpenGL/Types/GL_heightmap_mesh.h"
 #include "Hell/Render/API/OpenGL/Types/GL_texture_readback.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Config/Config.h"
+#include "Unloved/Config/Config.h"
 #include "Unloved/Session/Session.h"
-#include "Editor/Editor.h"
-#include "Editor/Gizmo.h"
-#include "Imgui/ImguiBackEnd.h"
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Editor/Gizmo.h"
+#include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Util/Util.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
 
-#include "Pathfinding/AStarMap.h"
+#include "Unloved/Systems/Pathfinding/AStarMap.h"
 #include "lodepng/lodepng.h"
 
 #include "Hell/Audio.h"
 
 #include "Hell/Physics/Physics.h"
 
-#include "Managers/MapManager.h"
+#include "Unloved/Maps/MapManager.h"
 #include "World/LegacyWorld.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -29,6 +29,8 @@ namespace Input = Hell::Input;
 
 
 namespace OpenGLRenderer {
+    using namespace Unloved;
+
     void BlitWorldMap();
     void GenerateHeightMapVertexData();
     void GeneratePhysXTextures();
@@ -312,8 +314,8 @@ namespace OpenGLRenderer {
         int culled = 0;
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            Frustum& frustum = viewport->GetFrustum();
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
+            Unloved::Frustum& frustum = viewport->GetFrustum();
 
             int test = 0;
             if (viewport->IsVisible()) {
@@ -346,7 +348,7 @@ namespace OpenGLRenderer {
     }
 
 
-    void ReadBackHeightMapData(Map* map) {
+    void ReadBackHeightMapData(Unloved::Map* map) {
         if (!map) {
             Logging::Error() << "OpenGLRenderer::ReadBackHeightMapData() failed coz map was nullptr";
             return;

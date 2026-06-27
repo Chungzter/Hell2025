@@ -3,13 +3,15 @@
 #include "Unloved/Session/Session.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "World/LegacyWorld.h"
 
 using namespace Hell;
 
 namespace OpenGLRenderer {
+    using namespace Unloved;
+
 
     void RenderFlashLightShadowMaps();
     void RenderPointLightShadowMaps();
@@ -52,7 +54,7 @@ namespace OpenGLRenderer {
             glm::mat4 lightProjectionView = Unloved::Session::GetLocalPlayerByViewportIndex(i)->GetFlashlightProjectionView();
             OpenGL::SetUniformMat4("u_projectionView", lightProjectionView);
 
-            Frustum frustum;
+            Unloved::Frustum frustum;
             frustum.Update(lightProjectionView);
 
             // Scene geometry
@@ -265,7 +267,7 @@ namespace OpenGLRenderer {
 
                 glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, hiResShadowMaps->GetDepthTexture(), 0, layer);
 
-                Frustum* frustum = light->GetFrustumByFaceIndex(face);
+                Unloved::Frustum* frustum = light->GetFrustumByFaceIndex(face);
                 if (!frustum) return;
 
                 const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
@@ -303,7 +305,7 @@ namespace OpenGLRenderer {
         int viewportCount = std::min(4, Unloved::Session::GetLocalPlayerCount());
 
         for (int j = 0; j < viewportCount; j++) {
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(j);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(j);
             if (!player || !player->ViewportIsVisible()) continue;
 
             const ViewportData& viewportData = RenderDataManager::GetViewportData()[j];

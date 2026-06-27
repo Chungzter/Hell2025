@@ -79,41 +79,7 @@ struct DrawArraysIndirectCommand {
     uint32_t baseInstance = 0;
 };
 
-struct GPULight {
-    float posX;
-    float posY;
-    float posZ;
-    float colorR;
 
-    float colorG;
-    float colorB;
-    float strength;
-    float radius;
-
-    int lightIndex;
-    int shadowMapDirty = 1; // true or false
-    int useIes = 0;         // true or false
-    int iesIndex;
-
-    float iesVScale;
-    float iesVBias;
-    float iesHScale;
-    float iesHBias;
-
-    glm::vec3 forward;
-    float iesMaxIntensity;
-
-    glm::vec3 right;
-    float iesExposure;
-
-    glm::vec3 up;
-    int padding0;
-
-    int iesTextureIndex;
-    int isDirtyForRaytracing = 0; // true or false
-    int padding1;
-    int padding2;
-};
 
 struct TileLights {
     int lightCount;
@@ -218,7 +184,7 @@ struct RenderItem {
     uint32_t baseVertex = 0;
     uint32_t baseIndex = 0;
     uint32_t baseVertexWeight = 0;
-    int blockScreenSpaceBloodDecals = 0;
+    int blockBloodScreenSpaceDecals = 0;
 
     int32_t additionalTextureIndex0 = 0;
     int32_t additionalTextureIndex1 = 0;

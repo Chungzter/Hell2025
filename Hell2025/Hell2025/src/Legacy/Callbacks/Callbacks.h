@@ -1,7 +1,7 @@
 #pragma once
 #include "HellFunctionTypes.h"
 
-namespace Callbacks {
+namespace Unloved::Callbacks {
     void NewMap(const std::string& filename);
     void OpenMap(const std::string& filename);
 

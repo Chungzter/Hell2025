@@ -6,7 +6,7 @@
 #include "Unloved/ObjectId.h"
 
 namespace Unloved::Session {
-    Hell::SlotMap<Player> g_players(8);
+    Hell::SlotMap<Unloved::Player> g_players(8);
     std::vector<uint64_t> g_playerIds;
     std::vector<uint64_t> g_localPlayerIds;
     std::vector<uint64_t> g_remotePlayerIds;
@@ -22,7 +22,7 @@ namespace Unloved::Session {
             return;
         }
 
-        Player* player = g_players.get(playerId);
+        Unloved::Player* player = g_players.get(playerId);
         if (!player) {
             return;
         }
@@ -38,7 +38,7 @@ namespace Unloved::Session {
             return;
         }
 
-        Player* player = g_players.get(playerId);
+        Unloved::Player* player = g_players.get(playerId);
         if (!player) {
             return;
         }
@@ -50,7 +50,7 @@ namespace Unloved::Session {
 
     void BeginFrame() {
         for (uint64_t playerId : g_localPlayerIds) {
-            if (Player* player = GetPlayerById(playerId)) {
+            if (Unloved::Player* player = GetPlayerById(playerId)) {
                 player->BeginFrame();
             }
         }
@@ -58,7 +58,7 @@ namespace Unloved::Session {
 
     void RespawnPlayers() {
         for (uint64_t playerId : g_localPlayerIds) {
-            if (Player* player = GetPlayerById(playerId)) {
+            if (Unloved::Player* player = GetPlayerById(playerId)) {
                 player->Respawn();
             }
         }
@@ -68,13 +68,13 @@ namespace Unloved::Session {
         return g_localPlayerIds;
     }
 
-    Player* GetPlayerById(uint64_t playerId) {
+    Unloved::Player* GetPlayerById(uint64_t playerId) {
         return g_players.get(playerId);
     }
 
-    Player* GetLocalPlayerByViewportIndex(uint32_t index) {
+    Unloved::Player* GetLocalPlayerByViewportIndex(uint32_t index) {
         for (uint64_t playerId : g_localPlayerIds) {
-            Player* player = GetPlayerById(playerId);
+            Unloved::Player* player = GetPlayerById(playerId);
             if (player && player->GetViewportIndex() == static_cast<int32_t>(index)) {
                 return player;
             }
@@ -82,8 +82,8 @@ namespace Unloved::Session {
         return nullptr;
     }
 
-    Camera* GetLocalPlayerCameraByIndex(uint32_t index) {
-        if (Player* player = GetLocalPlayerByViewportIndex(index)) {
+    Unloved::Camera* GetLocalPlayerCameraByIndex(uint32_t index) {
+        if (Unloved::Player* player = GetLocalPlayerByViewportIndex(index)) {
             return &player->GetCamera();
         }
         else {
@@ -93,7 +93,7 @@ namespace Unloved::Session {
     }
 
     float GetLocalPlayerFovByIndex(uint32_t index) {
-        if (Player* player = GetLocalPlayerByViewportIndex(index)) {
+        if (Unloved::Player* player = GetLocalPlayerByViewportIndex(index)) {
             return player->GetFov();
         }
         else {
@@ -123,7 +123,7 @@ namespace Unloved::Session {
             return;
         }
 
-        if (Player* player = GetLocalPlayerByViewportIndex(static_cast<uint32_t>(playerIndex))) {
+        if (Unloved::Player* player = GetLocalPlayerByViewportIndex(static_cast<uint32_t>(playerIndex))) {
             player->SetKeyboardIndex(keyboardIndex);
             player->SetMouseIndex(mouseIndex);
         }

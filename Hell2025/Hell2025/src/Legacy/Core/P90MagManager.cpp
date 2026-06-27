@@ -12,7 +12,7 @@ namespace P90MagManager {
     
     void SubmitRenderItems() {
         for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
             if (player->GetSelectedWeaponName() == "P90") {

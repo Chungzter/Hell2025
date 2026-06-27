@@ -1,11 +1,12 @@
 #include "LegacyWorld.h"
 
-#include "Legacy/Debug/DebugDraw.h"
+#include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/ObjectId.h"
 
 #include "Hell/Logging.h"
 
-namespace LegacyWorld {
+namespace Unloved::LegacyWorld {
+
     void DebugDrawLightShadowMapDirtyFlags();
     bool IntersectAABB(const RenderItem& renderItemA, const glm::vec3& boundsMinB, const glm::vec3& boundsMaxB);
     bool IntersectAABB(const glm::vec3& boundsMinA, const glm::vec3& boundsMaxA, const RenderItem& renderItemB);

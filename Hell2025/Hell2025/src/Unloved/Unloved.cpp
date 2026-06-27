@@ -8,24 +8,25 @@
 #include "Hell/Input.h"
 #include "Hell/Time.h"
 
-#include "Legacy/Bible/Bible.h"
+#include "Unloved/Bible/Bible.h"
 #include "Legacy/Callbacks/Callbacks.h"
-#include "Legacy/Config/Config.h"
-#include "Legacy/Debug/Debug.h"
-#include "Legacy/Debug/DebugDraw.h"
-#include "Legacy/Editor/Editor.h"
-#include "Legacy/Editor/Gizmo.h"
-#include "Legacy/Imgui/ImguiBackEnd.h"
+#include "Unloved/Config/Config.h"
+#include "Unloved/Debug/Debug.h"
+#include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Editor/Gizmo.h"
+#include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Legacy/Managers/HouseManager.h"
-#include "Legacy/Managers/MapManager.h"
-#include "Legacy/Pathfinding/AStarMap.h"
+#include "Unloved/Maps/MapManager.h"
+#include "Unloved/Systems/Pathfinding/AStarMap.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Renderer/RenderDataManager.h"
-#include "Legacy/Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 
 #include "Unloved/Session/Session.h"
-#include "Unloved/SubSystems/GameAudio/GameAudio.h"
-#include "Unloved/SubSystems/SubSystems.h"
+#include "Unloved/Systems/Bullets/BulletSystem.h"
+#include "Unloved/Systems/GameAudio/GameAudio.h"
+#include "Unloved/Systems/Systems.h"
 #include "Unloved/World/World.h"
 
 namespace Input = Hell::Input;
@@ -42,12 +43,12 @@ namespace Unloved {
         UIBackEnd::Init();
         Bible::Init();
         Gizmo::Init();
-        ViewportManager::Init();
+        Unloved::ViewportManager::Init();
         Editor::Init();
         Hell::Physics::Init();
         ImGuiBackEnd::Init();
 
-        SubSystems::Init();
+        Systems::Init();
 
         return true;
     }
@@ -56,7 +57,7 @@ namespace Unloved {
         UpdateLazyKeypresses();
         DebugDraw::BeginFrame();
         Unloved::Session::BeginFrame();
-        SubSystems::BeginFrame();
+        Systems::BeginFrame();
         RenderDataManager::BeginFrame();
         UIBackEnd::BeginFrame();
         World::BeginFrame();
@@ -86,13 +87,13 @@ namespace Unloved {
     }
 
     void Update() {
-        SubSystems::PreWorldUpdate();
+        Systems::PreWorldUpdate();
 
         Renderer::PreGameLogicComputePasses();
 
         float deltaTime = Time::DeltaTime();
 
-        ViewportManager::Update();
+        Unloved::ViewportManager::Update();
 
         if (Editor::IsOpen()) {
             Editor::Update(deltaTime);
@@ -102,7 +103,7 @@ namespace Unloved {
         World::UpdateBvhs();
         Unloved::Session::Update();
         World::UpdatePlayers();
-        World::ProcessBullets();
+        BulletSystem::Update();
         World::UpdateLegacyObjects();
         World::Update();
 
@@ -117,7 +118,7 @@ namespace Unloved {
             Hell::Physics::ActivateAllHeightFields();
         }
 
-        SubSystems::PostWorldUpdate();
+        Systems::PostWorldUpdate();
 
         World::SubmitRenderItems();
 
@@ -137,7 +138,7 @@ namespace Unloved {
     }
 
     void CleanUp() {
-        SubSystems::CleanUp();
+        Systems::CleanUp();
         World::CleanUp();
         Renderer::CleanUp();
     }

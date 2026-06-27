@@ -25,6 +25,7 @@ namespace Hell::ResourceManager {
         std::unordered_map<std::string, SoundFont> g_soundFonts;
         std::unordered_map<std::string, SpriteSheetTexture> g_spriteSheetTextures;
         std::unordered_map<std::string, Texture> g_textures;
+        std::unordered_map<std::string, TextureArray> g_textureArrays;
 
         std::vector<Material> g_materials;
         std::vector<std::string> g_materialNamesByIndex;
@@ -67,6 +68,7 @@ namespace Hell::ResourceManager {
         for (auto& object : g_genericMeshes) { object.second.CleanUp(); } g_genericMeshes.clear();
         for (auto& object : g_meshBuffers)   { object.second.CleanUp(); } g_meshBuffers.clear();
         for (auto& object : g_textures)      { object.second.CleanUp(); } g_textures.clear();
+        for (auto& object : g_textureArrays) { object.second.CleanUp(); } g_textureArrays.clear();
 
         g_animations.clear();
         g_iesProfiles.clear();
@@ -706,6 +708,44 @@ namespace Hell::ResourceManager {
         return -1;
     }
 
+    // Texture Array
+
+    TextureArray& CreateTextureArray(const std::string& name) {
+        auto it = g_textureArrays.find(name);
+
+        if (it != g_textureArrays.end()) {
+            Logging::Fatal() << "ResourceManager::CreateTextureArray(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_textureArrays.emplace(name, TextureArray(name));
+        return result.first->second;
+    }
+
+    TextureArray& GetTextureArray(const std::string& name) {
+        auto it = g_textureArrays.find(name);
+
+        if (it == g_textureArrays.end()) {
+            Logging::Error() << "ResourceManager::GetTextureArray(..) failed: '" << name << "' does not exist\n";
+
+            static TextureArray invalid;
+            return invalid;
+        }
+
+        return it->second;
+    }
+
+    TextureArray* GetTextureArrayPtr(const std::string& name) {
+        auto it = g_textureArrays.find(name);
+
+        if (it == g_textureArrays.end()) {
+            Logging::Error() << "ResourceManager::GetTextureArrayPtr(..) failed: '" << name << "' does not exist\n";
+            return nullptr;
+        }
+
+        return &it->second;
+    }
+
     // Memory Report
 
     void AppendMemoryReport(MemoryTracker::MemoryReport& report) {
@@ -833,6 +873,23 @@ namespace Hell::ResourceManager {
                 entry.name = name;
                 entry.cpuBytes = texture.GetCPUAllocatedByteCount();
                 entry.gpuBytes = texture.GetGPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
+
+        if (!g_textureArrays.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "Texture Arrays";
+            category.entries.reserve(g_textureArrays.size());
+
+            for (const auto& [name, textureArray] : g_textureArrays) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = 0;
+                entry.gpuBytes = textureArray.GetGPUAllocatedByteCount();
             }
 
             std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {

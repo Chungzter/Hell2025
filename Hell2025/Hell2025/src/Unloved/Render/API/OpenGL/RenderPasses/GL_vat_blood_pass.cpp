@@ -1,8 +1,9 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Session/Session.h"
+#include "Unloved/Systems/Blood/BloodSystem.h"
 #include "Renderer/RenderDataManager.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -54,33 +55,33 @@ namespace OpenGLRenderer {
         static uint32_t meshId7 = getFirstMeshId("blood_mesh7");
         static uint32_t meshId9 = getFirstMeshId("blood_mesh9");
 
-        std::vector<VolumetricBloodSplatter>& volumetricBloodSplatters = LegacyWorld::GetVolumetricBloodSplatters();
+        std::vector<BloodVAT>& bloodVATItems = Unloved::BloodSystem::GetBloodVAT();
 
         static std::vector<RenderItem> renderItems;
         renderItems.clear();
 
-        for (VolumetricBloodSplatter& vatBlood : volumetricBloodSplatters) {
+        for (BloodVAT& bloodVAT : bloodVATItems) {
             RenderItem& renderItem = renderItems.emplace_back();
-            renderItem.modelMatrix = vatBlood.GetModelMatrix();
+            renderItem.modelMatrix = bloodVAT.GetModelMatrix();
             renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-            renderItem.emissiveR = vatBlood.GetLifeTime();
+            renderItem.emissiveR = bloodVAT.GetLifeTime();
 
-            if (vatBlood.GetType() == 4) {
+            if (bloodVAT.GetType() == 4) {
                 renderItem.baseColorTextureIndex = textureIndexBloodPos4;
                 renderItem.normalMapTextureIndex = textureIndexBloodNorm4;
                 renderItem.meshId = meshId4;
             }
-            else if (vatBlood.GetType() == 6) {
+            else if (bloodVAT.GetType() == 6) {
                 renderItem.baseColorTextureIndex = textureIndexBloodPos6;
                 renderItem.normalMapTextureIndex = textureIndexBloodNorm6;
                 renderItem.meshId = meshId6;
             }
-            else if (vatBlood.GetType() == 7) {
+            else if (bloodVAT.GetType() == 7) {
                 renderItem.baseColorTextureIndex = textureIndexBloodPos7;
                 renderItem.normalMapTextureIndex = textureIndexBloodNorm7;
                 renderItem.meshId = meshId7;
             }
-            else if (vatBlood.GetType() == 9) {
+            else if (bloodVAT.GetType() == 9) {
                 renderItem.baseColorTextureIndex = textureIndexBloodPos9;
                 renderItem.normalMapTextureIndex = textureIndexBloodNorm9;
                 renderItem.meshId = meshId9;
@@ -90,7 +91,7 @@ namespace OpenGLRenderer {
         glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(gBuffer, viewport);

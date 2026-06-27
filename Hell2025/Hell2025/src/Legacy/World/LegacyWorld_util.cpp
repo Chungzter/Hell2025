@@ -1,6 +1,8 @@
 #include "LegacyWorld.h"
 
 namespace LegacyWorld {
+    using namespace Unloved;
+
 
     // this whole is fucked and wastes you so much time in confusion,
     // abstract it all away with your new manager thing, and most importantly always return true

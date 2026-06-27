@@ -2,11 +2,10 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Unloved/Session/Session.h"
-#include "Viewport/ViewportManager.h"
-#include "Editor/Editor.h"
+#include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
-#include "Modelling/Clipping.h"
-#include "Modelling/Unused/Modelling.h"
+#include "Unloved/Objects/House/Clipping/Clipping.h"
 #include "World/LegacyWorld.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -16,18 +15,18 @@ namespace OpenGLRenderer {
     void InventoryGaussianPass() {
         ProfilerOpenGLZoneFunction();
 
-        if (Editor::IsOpen()) return;
+        if (Unloved::Editor::IsOpen()) return;
 
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
 
         for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
 
             if (!viewport->IsVisible()) continue;
             if (!player->InventoryIsOpen()) continue;
 
-            SpaceCoords gBufferSpaceCooords = viewport->GetGBufferSpaceCoords();
+            Unloved::SpaceCoords gBufferSpaceCooords = viewport->GetGBufferSpaceCoords();
 
             BlitRect blitRect;
             blitRect.x0 = gBufferSpaceCooords.gpuLeftPixel;
@@ -75,8 +74,8 @@ namespace OpenGLRenderer {
 
         // Non blended
         for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
 
             if (!viewport->IsVisible()) continue;
             if (player->InventoryIsClosed()) continue;
@@ -92,7 +91,7 @@ namespace OpenGLRenderer {
 
                 OpenGL::SetUniformInt("u_viewportIndex", 0);
 
-                Inventory& inventory = player->GetInventory();
+                Unloved::Inventory& inventory = player->GetInventory();
                 std::vector<RenderItem> m_renderItems = inventory.GetRenderItems();
 
                 for (RenderItem& renderItem : m_renderItems) {

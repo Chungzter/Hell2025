@@ -1,13 +1,14 @@
 #include "LegacyWorld.h"
 
 #include "Legacy/Core/P90MagManager.h"
-#include "Legacy/Pathfinding/AStarMap.h"
+#include "Unloved/Systems/Pathfinding/AStarMap.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Legacy/Renderer/Renderer.h"
-#include "Legacy/Viewport/ViewportManager.h"
-#include "Legacy/Bible/Bible.h"
-#include "Legacy/Types/Misc/DoorChain.h"
+#include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/Bible/Bible.h"
+#include "Unloved/Objects/House/DoorChain.h"
 #include "Unloved/ObjectId.h"
+#include "Unloved/Systems/Blood/BloodSystem.h"
 
 #include "Hell/Audio.h"
 #include "Hell/Containers/SlotMap.h"
@@ -19,7 +20,7 @@
 namespace Input = Hell::Input;
 
 
-namespace LegacyWorld {
+namespace Unloved::LegacyWorld {
 
     void CalculateGPULights();
     void CalculateDirtyAABBs();
@@ -66,12 +67,10 @@ namespace LegacyWorld {
     void Update(float deltaTime) {
 
         if (Input::KeyPressed(HELL_KEY_4)) {
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
             player->SetFootPosition(glm::vec3(34.49f, 31.0f, 37.48f));
             player->GetCamera().SetEulerRotation(glm::vec3(-0.15f, 1.58f, 0.0f));
         }
-
-        HackTest();
 
         if (Input::KeyPressed(HELL_KEY_NUMPAD_1)) {
             AnimatedGameObject* ratKidAO = GetRadKidAO();
@@ -224,13 +223,13 @@ namespace LegacyWorld {
         for (Window& object : GetWindows())                         object.Update(deltaTime);
 
         // These must run in this order otherwise various dirty flags are stale
-        for (DDGIVolume& object : GetDDGIVolumes())                 object.Update();
+        for (Unloved::DDGIVolume& object : GetDDGIVolumes())                 object.Update();
         for (Light& object : GetLights())                           object.Update(deltaTime);
         for (Decal& object : GetDecals())                           object.Update();
 
         // Update player weapon attachments. Must happen after AnimatedGameObject updates so that animated transforms are correct
         for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
             player->UpdateWeaponAttachments();
@@ -243,7 +242,7 @@ namespace LegacyWorld {
             }
 
             GetDecals().clear();
-            GetScreenSpaceBloodDecals().clear();
+            Unloved::BloodSystem::GetBloodScreenSpaceDecals().clear();
             GetBulletCasings().clear();
         }
 
@@ -254,19 +253,7 @@ namespace LegacyWorld {
 
         P90MagManager::SubmitRenderItems();
 
-        // Volumetric blood
-        std::vector<VolumetricBloodSplatter>& volumetricBloodSplatters = GetVolumetricBloodSplatters();
-        for (int i = 0; i < volumetricBloodSplatters.size(); i++) {
-            VolumetricBloodSplatter& volumetricBloodSplatter = volumetricBloodSplatters[i];
-
-            if (volumetricBloodSplatter.GetLifeTime() < 0.9f) {
-                volumetricBloodSplatter.Update(deltaTime);
-            }
-            else {
-                volumetricBloodSplatters.erase(volumetricBloodSplatters.begin() + i);
-                i--;
-            }
-        }
+        Unloved::BloodSystem::Update(deltaTime);
     }
 
     void RecreateAllDoorAndWindowCubeTransforms() {

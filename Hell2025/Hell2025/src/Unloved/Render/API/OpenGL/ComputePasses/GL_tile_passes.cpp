@@ -1,7 +1,10 @@
 #include "../GL_renderer.h"
 #include "Renderer/Renderer.h"
+#include "Unloved/Systems/Blood/BloodSystem.h"
 #include "World/LegacyWorld.h"
 namespace OpenGLRenderer {
+    using namespace Unloved;
+
     std::vector<GPUChristmasLight> g_gpuLights;
 
     void ComputeTileWorldBounds() {
@@ -94,7 +97,7 @@ namespace OpenGLRenderer {
         if (!shader) return;
 
         OpenGL::BindShader("BloodDecalsCulling");
-        OpenGL::SetUniformInt("u_decalCount", LegacyWorld::GetScreenSpaceBloodDecals().size());
+        OpenGL::SetUniformInt("u_decalCount", static_cast<int>(Unloved::BloodSystem::GetBloodScreenSpaceDecals().size()));
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
         OpenGL::SetUniformInt("u_tileYCount", GetTileCountY());
 
@@ -107,7 +110,7 @@ namespace OpenGLRenderer {
         OpenGL::DispatchCompute(GetTileCountX(), GetTileCountY(), 1);
 
         //if (Input::KeyPressed(HELL_KEY_SPACE)) {
-        //    std::cout << "Blood count: " << LegacyWorld::GetScreenSpaceBloodDecals().size() << "\n";
+        //    std::cout << "Blood count: " << Unloved::BloodSystem::GetBloodScreenSpaceDecals().size() << "\n";
         //}
     }
 }

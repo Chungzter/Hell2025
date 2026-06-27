@@ -47,7 +47,7 @@ in vec4 v_currPos;
 in vec4 v_prevPos;
 
 in flat int WoundMaskTextureIndex;
-in flat int BlockScreenSpaceBloodDecalsFlag;
+in flat int BlockBloodScreenSpaceDecalsFlag;
 in flat int EmissiveTextureIndex;
 
 uniform bool u_alphaDiscard;
@@ -148,7 +148,7 @@ void main() {
     NormalXYRoughnessMiscOut.a = 0.0; // Misc 4 bit value
 
     //RMAOut.rgb = rmat.rgb;
-    //RMAOut.a = BlockScreenSpaceBloodDecalsFlag;
+    //RMAOut.a = BlockBloodScreenSpaceDecalsFlag;
 
     // Thickness
     float thickness = rmat.a;

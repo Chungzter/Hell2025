@@ -1,11 +1,11 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
-#include "Editor/Editor.h"
+#include "Unloved/Editor/Editor.h"
 #include "Unloved/Session/Session.h"
-#include "Ocean/Ocean.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
 #include "World/LegacyWorld.h"
 
 #include "Renderer/RenderDataManager.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 
 #include "Renderer/Renderer.h"
 #include "Hell/Input.h"
@@ -21,7 +21,7 @@ namespace OpenGLRenderer {
     void OceanGeometryPass() {
         ProfilerOpenGLZoneFunction();
 
-        if (!LegacyWorld::HasOcean()) return;
+        if (!Unloved::LegacyWorld::HasOcean()) return;
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         OpenGLFrameBuffer* waterFrameBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("Water");
@@ -75,7 +75,7 @@ namespace OpenGLRenderer {
         waterFrameBuffer->DrawBuffers({ "Lighting", "OceanMask" });
 
         for (int i = 0; i < 4; i++) {
-            Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             OpenGLRenderer::SetViewport(waterFrameBuffer, viewport);
@@ -135,7 +135,7 @@ namespace OpenGLRenderer {
             glBindVertexArray(oceanMeshPatch->GetVAO());
             glPatchParameteri(GL_PATCH_VERTICES, 4);
 
-            Frustum frustum;
+            Unloved::Frustum frustum;
             frustum.Update(projectionView);
 
             // Surface
@@ -170,7 +170,7 @@ namespace OpenGLRenderer {
 
     void OceanUnderWaterFlags() {
         ProfilerOpenGLZoneFunction();
-        if (!LegacyWorld::HasOcean()) return;
+        if (!Unloved::LegacyWorld::HasOcean()) return;
 
         OpenGLFrameBuffer& fftFrameBuffer_band0 = OpenGL::ResourceManager::GetFrameBuffer("FFT_band0");
         OpenGLFrameBuffer& fftFrameBuffer_band1 = OpenGL::ResourceManager::GetFrameBuffer("FFT_band1");
@@ -192,7 +192,7 @@ namespace OpenGLRenderer {
 
     void OceanSurfaceCompositePass() {
         ProfilerOpenGLZoneFunction();
-        if (!LegacyWorld::HasOcean()) return;
+        if (!Unloved::LegacyWorld::HasOcean()) return;
 
         std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
@@ -246,7 +246,7 @@ namespace OpenGLRenderer {
 
     void OceanUnderwaterCompositePass() {
         ProfilerOpenGLZoneFunction();
-        if (!LegacyWorld::HasOcean()) return;
+        if (!Unloved::LegacyWorld::HasOcean()) return;
 
         OpenGLFrameBuffer& miscFullSizeFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("MiscFullSize");
         OpenGLFrameBuffer& waterFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Water");
@@ -282,7 +282,7 @@ namespace OpenGLRenderer {
     }
 
     void OceanHeightReadback() {
-        if (!LegacyWorld::HasOcean()) return;
+        if (!Unloved::LegacyWorld::HasOcean()) return;
 
         OpenGLFrameBuffer* fftFrameBuffer_band0 = OpenGL::ResourceManager::GetFrameBufferPtr("FFT_band0");
         OpenGLFrameBuffer* fftFrameBuffer_band1 = OpenGL::ResourceManager::GetFrameBufferPtr("FFT_band1");

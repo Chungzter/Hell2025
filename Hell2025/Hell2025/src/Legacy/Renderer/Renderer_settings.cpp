@@ -1,8 +1,8 @@
 #include "Renderer.h"
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
-#include "Debug/Debug.h"
-#include "Editor/Editor.h"
+#include "Unloved/Debug/Debug.h"
+#include "Unloved/Editor/Editor.h"
 #include "Util/Util.h"
 
 namespace Renderer {
@@ -16,8 +16,8 @@ namespace Renderer {
     RendererMode g_rendererMode = RendererMode::RE_STYLE;
 
     RendererSettings& GetCurrentRendererSettings() {
-        if (Editor::IsOpen()) {
-            switch (Editor::GetEditorMode()) {
+        if (Unloved::Editor::IsOpen()) {
+            switch (Unloved::Editor::GetEditorMode()) {
             case EditorMode::HOUSE_EDITOR:      return g_rendererSettingsSet.houseEditor;
             case EditorMode::MAP_HEIGHT_EDITOR: return g_rendererSettingsSet.mapHeightEditor;
             case EditorMode::MAP_OBJECT_EDITOR: return g_rendererSettingsSet.mapObjectEditor;

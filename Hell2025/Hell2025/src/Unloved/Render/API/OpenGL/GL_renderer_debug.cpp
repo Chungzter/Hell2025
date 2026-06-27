@@ -1,10 +1,12 @@
 #include "GL_renderer.h"
 #include "Hell/Render/API/OpenGL/Types/GL_texture.h"
-#include "Managers/MapManager.h"
+#include "Unloved/Maps/MapManager.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 namespace OpenGLRenderer {
+    using namespace Unloved;
+
 
     void BlitDebugTextures() {
         // Render decal painting shit

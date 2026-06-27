@@ -1,10 +1,10 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 
 
 // todo remove
-#include "Debug/Debug.h"
+#include "Unloved/Debug/Debug.h"
 #include "Renderer/Renderer.h"
 #include "Util/Util.h"
 #include "Hell/Input.h"
@@ -54,7 +54,7 @@ namespace OpenGLRenderer {
             glDepthMask(GL_FALSE);
 
             for (int i = 0; i < 4; i++) {
-                Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+                Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
                 if (!viewport->IsVisible()) continue;
 
                 OpenGLFrameBuffer* blurBuffer = OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, 0));
@@ -217,7 +217,7 @@ namespace OpenGLRenderer {
 
             // reset viewports for composite
             for (int i = 0; i < 4; i++) {
-                Viewport* viewport = ViewportManager::GetViewportByIndex(i);
+                Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
                 if (!viewport->IsVisible()) continue;
 
                 float vW = viewport->GetSize().x * fullWidth;

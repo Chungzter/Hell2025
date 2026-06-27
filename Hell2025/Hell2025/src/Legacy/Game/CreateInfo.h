@@ -2,10 +2,11 @@
 #include <Game/Enums.h>
 #include <Game/Types.h>
 #include <Game/Constants.h>
-#include "Unloved/SubSystems/Openables/Openable_types.h"
-#include "Types/Game/SpawnPoint.h"
+#include "Unloved/Systems/Openables/Openable_types.h"
+#include "Unloved/Objects/Spawns/SpawnPoint.h"
 #include <map>
 
+#include "Hell/Math/Transform.h"
 #include "Hell/Math/VecXZ.h"
 
 struct FenceCreateInfo {
@@ -59,7 +60,7 @@ struct RigidDynamicCreateInfo {
     bool createObject = false;
     bool kinematic = true;
     float mass = 1.0f;
-    Transform offsetTransform;
+    Hell::Transform offsetTransform;
     PhysicsFilterData filterData;
     PhysicsShapeType shapeType = PhysicsShapeType::BOX;
     std::string convexMeshModelName = UNDEFINED_STRING;
@@ -74,7 +75,7 @@ struct MeshNodeCreateInfo {
     std::string materialName = UNDEFINED_STRING;
     std::string baseColorOverrideTextureName = UNDEFINED_STRING;
     BlendingMode blendingMode = BlendingMode::DEFAULT;
-    OpenableCreateInfo openable;
+    Unloved::OpenableCreateInfo openable;
     RigidDynamicCreateInfo rigidDynamic;
     RigidDynamicCreateInfo rigidDynamicConvexHull; // needs implementing
     RigidStaticCreateInfo rigidStatic;
@@ -124,12 +125,6 @@ struct DecalCreateInfo {
     uint64_t parentObjectId = 0;
     glm::vec3 surfaceHitPosition = glm::vec3(0.0f);
     glm::vec3 surfaceHitNormal = glm::vec3(0.0f);
-};
-
-struct ScreenSpaceBloodDecalCreateInfo {
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 direction = glm::vec3(0.0f);
-    int type = 0;
 };
 
 struct DobermannCreateInfo {
@@ -222,20 +217,6 @@ struct LightCreateInfo {
     IESProfileType iesProfileType = IESProfileType::NONE;
     LightType type = LightType::HANGING_LIGHT;
 };
-
-struct BulletCreateInfo {
-    glm::vec3 origin = glm::vec3(0);
-    glm::vec3 direction = glm::vec3(0);
-    int32_t weaponIndex = 0;
-    uint32_t damage = 0;
-    uint64_t ownerObjectId = 0;
-    float rayLength = 1000.0f;
-    bool createsDecals = true;
-    bool createsFollowThroughBulletOnGlassHit = true;
-    bool playsPiano = true;
-    bool createsDecalTexturePaintedWounds = true;
-};
-
 
 struct BasicDoorCreateInfo {
     glm::mat4 parentMatrix = glm::mat4(1.0f);
@@ -335,6 +316,6 @@ struct CreateInfoCollection {
 
 struct AdditionalMapData {
     std::vector<HouseLocation> houseLocations;
-    std::vector<SpawnPoint> playerCampaignSpawns;
-    std::vector<SpawnPoint> playerDeathmatchSpawns;
+    std::vector<Unloved::SpawnPoint> playerCampaignSpawns;
+    std::vector<Unloved::SpawnPoint> playerDeathmatchSpawns;
 };

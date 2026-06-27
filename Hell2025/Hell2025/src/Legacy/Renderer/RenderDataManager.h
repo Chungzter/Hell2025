@@ -1,9 +1,12 @@
 #pragma once
 #include <Game/Types.h>
-#include "Types/Renderer/AnimatedMeshNodes.h"
-#include "Types/Renderer/MeshNodes.h"
-#include "Types/Game/AnimatedGameObject.h"
-#include "Types/Game/Bullet.h"
+#include "Unloved/Objects/Renderables/AnimatedMeshNodes.h"
+#include "Unloved/Objects/Renderables/MeshNodes.h"
+#include "Unloved/Objects/Renderables/AnimatedGameObject.h"
+#include "Unloved/Systems/Bullets/Bullet.h"
+
+#include "Unloved/Render/RendererTypes.h"
+
 #include <vector>
 
 struct DecalPaintingInfo {
@@ -13,6 +16,8 @@ struct DecalPaintingInfo {
 };
 
 namespace RenderDataManager {
+    using namespace Unloved;
+
     void BeginFrame();
     void Update();
     void UpdateDrawCommandsUI();
@@ -67,7 +72,7 @@ namespace RenderDataManager {
     const std::vector<RenderItem>& GetSkinnedRenderItemsDefault();
     const std::vector<RenderItem>& GetSkinnedRenderItemsHair();
 
-    const std::vector<BloodDecalInstanceData>& GetScreenSpaceBloodDecalInstanceData();
+    const std::vector<BloodDecalInstanceData>& GetBloodScreenSpaceDecalInstanceData();
     const std::vector<ViewportData>& GetViewportData();
     const DrawCommandsSet& GetDrawInfoSet();
     const FlashLightShadowMapDrawInfo& GetFlashLightShadowMapDrawInfo();

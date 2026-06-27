@@ -1,10 +1,10 @@
 #include "Hell/Logging.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Editor/Editor.h"
+#include "Unloved/Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Session/Session.h"
 #include "Hell/Time.h"
 
@@ -36,7 +36,7 @@ namespace OpenGLRenderer {
     void RayMarchFog() {
         ProfilerOpenGLZoneFunction();
 
-        if (Editor::IsOpen()) return;
+        if (Unloved::Editor::IsOpen()) return;
 
         const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
 

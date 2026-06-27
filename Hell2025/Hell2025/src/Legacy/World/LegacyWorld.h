@@ -1,52 +1,53 @@
 #pragma once
 #include <Game/Types.h>
+
 #include "Hell/Containers/SlotMap.h"
+#include "Hell/Math/Transform.h"
 
-#include "Debug/Debug.h"
-#include "Types/Characters/Allies/Mermaid/Mermaid.h"
-#include "Types/Characters/Enemies/Dobermann/Dobermann.h"
-#include "Types/Characters/Enemies/Kangaroo/Kangaroo.h"
-#include "Types/Characters/Enemies/Shark/Shark.h"
-#include "Types/Christmas/ChristmasLights.h"
-#include "Types/Christmas/ChristmasTree.h"
-#include "Types/Core/GenericObject.h"
-#include "Types/Effects/VolumetricBloodSplatter.h"
-#include "Types/Effects/ScreenSpaceBloodDecal.h"
-#include "Types/Exterior/Fence.h"
-#include "Types/Exterior/Road.h"
-#include "Types/Exterior/PowerPoleSet.h"
-#include "Types/Exterior/Tree.h"
-#include "Types/Game/AnimatedGameObject.h"
-#include "Types/Game/Bullet.h"
-#include "Types/Game/BulletCasing.h"
-#include "Types/Game/BulletTrail.h"
-#include "Types/Game/Decal.h"
-#include "Types/Game/GameObject.h"
-#include "Types/Game/Ladder.h"
-#include "Types/Game/Light.h"
-#include "Types/Game/PickUp.h"
-#include "Types/Game/Staircase.h"
-#include "Types/Generics/GenericBouncable.h"
-#include "Types/Generics/GenericStatic.h"
-#include "Types/Interior/PictureFrame.h"
-#include "Types/Interior/LegacyPiano.h"
-#include "Types/House/Door.h"
-#include "Types/House/Fireplace.h"
-#include "Types/House/HouseInstance.h"
-#include "Types/House/HousePlane.h"
-#include "Types/House/TrimSet.h"
-#include "Types/House/Wall.h"
-#include "Types/House/Window.h"
-#include "Types/Map/Map.h"
-#include "Types/Map/MapInstance.h"
-#include "Util/Util.h"
+#include "Unloved/Debug/Debug.h"
+#include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
+#include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"
+#include "Unloved/Characters/Enemies/Kangaroo/Kangaroo.h"
+#include "Unloved/Characters/Enemies/Shark/Shark.h"
+#include "Unloved/Objects/Props/Christmas/ChristmasLights.h"
+#include "Unloved/Objects/Props/Christmas/ChristmasTree.h"
+#include "Unloved/Objects/Props/GenericObject.h"
+#include "Unloved/Objects/Exterior/Fence.h"
+#include "Unloved/Objects/Exterior/Road.h"
+#include "Unloved/Objects/Exterior/PowerPoleSet.h"
+#include "Unloved/Objects/Exterior/Tree.h"
+#include "Unloved/Objects/Renderables/AnimatedGameObject.h"
+#include "Unloved/Objects/Props/BulletCasing.h"
+#include "Unloved/Objects/Effects/Decal.h"
+#include "Unloved/Objects/Props/GameObject.h"
+#include "Unloved/Objects/Traversal/Ladder.h"
+#include "Unloved/Objects/Lighting/Light.h"
+#include "Unloved/Objects/Props/PickUp.h"
+#include "Unloved/Objects/Traversal/Staircase.h"
+#include "Unloved/Objects/Props/GenericBouncable.h"
+#include "Unloved/Objects/Props/GenericStatic.h"
+#include "Unloved/Objects/Interior/PictureFrame.h"
+#include "Unloved/Objects/Interior/Piano.h"
+#include "Unloved/Objects/House/Door.h"
+#include "Unloved/Objects/House/Fireplace.h"
+#include "Unloved/Objects/House/HouseInstance.h"
+#include "Unloved/Objects/House/HousePlane.h"
+#include "Unloved/Objects/House/TrimSet.h"
+#include "Unloved/Objects/House/Wall.h"
+#include "Unloved/Objects/House/Window.h"
+#include "Unloved/Objects/Renderables/MeshBufferOLD.h"
+#include "Unloved/Systems/DDGI/DDGIVolume.h"
+
 #include "glm/gtx/intersect.hpp"
+
 #include <vector>
-#include "Modelling/Clipping.h"
 
-#include "Types/Renderer/MeshBufferOLD.h"
-
-#include "GlobalIllumination/DDGIVolume.h" // move me to Types dir
+// get me out of here
+#include "Unloved/Maps/Map.h"
+#include "Unloved/Maps/MapInstance.h"
+#include "Util/Util.h"
+#include "Unloved/Objects/House/Clipping/Clipping.h"
+//
 
 struct MapInstanceCreateInfo {
     std::string mapName;
@@ -66,7 +67,8 @@ struct HouseOccluderTriangle {
     int rmaTextureIndex = -1;
 };
 
-namespace LegacyWorld {
+namespace Unloved::LegacyWorld {
+
     std::vector<SpriteSheetObject>& GetBubbleSpriteSheetObjects();
 
     void Init();
@@ -110,8 +112,6 @@ namespace LegacyWorld {
     uint64_t AddTrimSet(TrimSetCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddWall(WallCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
 
-    void AddBullet(BulletCreateInfo createInfo, uint64_t parentBulletTrailId = 0);
-    void AddBulletTrail(BulletCreateInfo createInfo);
     void AddDDGIVolume(DDGIVolumeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddDoor(DoorCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddBulletCasing(BulletCasingCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
@@ -125,9 +125,7 @@ namespace LegacyWorld {
     void AddKangaroo(const KangarooCreateInfo& createInfo);
     uint64_t AddLight(LightCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     void AddMermaid(MermaidCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    void AddScreenSpaceBloodDecal(ScreenSpaceBloodDecalCreateInfo createInfo);
     void AddPiano(PianoCreateInfo createInfo, SpawnOffset spawnOffset);
-    void AddVATBlood(glm::vec3 position, glm::vec3 front);
     void AddWindow(WindowCreateInfo createInfo, SpawnOffset spawnOffset);
 
     void PrintObjectCounts();
@@ -137,10 +135,6 @@ namespace LegacyWorld {
     bool HasOcean();
 
     void UpdateDirtyFlags();
-
-    // Logic
-    void ProcessBullets();
-    void HackTest();
 
     // Creation
     void CreateGameObject();
@@ -196,7 +190,7 @@ namespace LegacyWorld {
     MeshNode* GetMeshNodeByObjectIdAndLocalNodeIndex(uint64_t id, int32_t meshNodeLocalIndex);
 
     ChristmasLightSet* GetChristmasLightsByObjectId(uint64_t objectId);
-    DDGIVolume* GetDDGIVolumeByObjectId(uint64_t objectId);
+    Unloved::DDGIVolume* GetDDGIVolumeByObjectId(uint64_t objectId);
     Door* GetDoorByObjectId(uint64_t objectId);
     Fence* GetFenceByObjectId(uint64_t objectId);
     Fireplace* GetFireplaceById(uint64_t objectId);
@@ -225,9 +219,8 @@ namespace LegacyWorld {
     uint32_t GetLightCount();
 
     Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects();
-    Hell::SlotMap<BulletTrail>& GetBulletTrails();
     Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets();
-    Hell::SlotMap<DDGIVolume>& GetDDGIVolumes();
+    Hell::SlotMap<Unloved::DDGIVolume>& GetDDGIVolumes();
     Hell::SlotMap<Door>& GetDoors();
     Hell::SlotMap<Fence>& GetFences();
     Hell::SlotMap<Fireplace>& GetFireplaces();
@@ -242,9 +235,6 @@ namespace LegacyWorld {
     Hell::SlotMap<Wall>& GetWalls();
     Hell::SlotMap<Window>& GetWindows();
 
-    std::vector<ScreenSpaceBloodDecal>& GetScreenSpaceBloodDecals();
-    std::vector<Bullet>& GetBullets();
-    std::vector<BulletTrailParticle>& GetBulletTrailParticles();
     std::vector<BulletCasing>& GetBulletCasings();
     std::vector<ChristmasTree>& GetChristmasTrees();
     std::vector<ClippingCube>& GetClippingCubes();
@@ -259,11 +249,9 @@ namespace LegacyWorld {
     std::vector<Piano>& GetPianos();
     std::vector<SpawnPoint>& GetCampaignSpawnPoints();
     std::vector<SpawnPoint>& GetDeathmatchSpawnPoints();
-    std::vector<Transform>& GetDoorAndWindowCubeTransforms();
+    std::vector<Hell::Transform>& GetDoorAndWindowCubeTransforms();
     std::vector<Road>& GetRoads();
     std::vector<Shark>& GetSharks();
-    std::vector<VolumetricBloodSplatter>& GetVolumetricBloodSplatters();
-
     std::vector<uint64_t> GetLightIds();
     std::vector<GPUAABB>& GetDirtyDoorAABBS();
 }

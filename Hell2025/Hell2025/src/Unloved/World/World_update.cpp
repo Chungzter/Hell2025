@@ -2,8 +2,8 @@
 
 #include "Hell/Time.h"
 
-#include "Legacy/Editor/Editor.h"
-#include "Legacy/Imgui/ImguiBackEnd.h"
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Session/Session.h"
@@ -18,7 +18,7 @@ namespace Unloved::World {
         const bool disableControl = Editor::IsOpen() || ImGuiBackEnd::OwnsMouse();
 
         for (uint64_t playerId : Session::GetLocalPlayerIds()) {
-            Player* player = Session::GetPlayerById(playerId);
+            Unloved::Player* player = Session::GetPlayerById(playerId);
             if (!player) continue;
 
             if (disableControl) {
@@ -30,15 +30,11 @@ namespace Unloved::World {
         }
 
         for (uint64_t playerId : Session::GetLocalPlayerIds()) {
-            Player* player = Session::GetPlayerById(playerId);
+            Unloved::Player* player = Session::GetPlayerById(playerId);
             if (!player) continue;
 
             player->Update(deltaTime);
         }
-    }
-
-    void ProcessBullets() {
-        LegacyWorld::ProcessBullets();
     }
 
     void UpdateLegacyObjects() {

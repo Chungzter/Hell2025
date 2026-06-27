@@ -9,10 +9,7 @@
 
 namespace Unloved {
     struct AnimatedGameObject;
-    struct Bullet;
     struct BulletCasing;
-    struct BulletTrail;
-    struct BulletTrailParticle;
     struct ChristmasLightSet;
     struct ChristmasTree;
     struct ClippingCube;
@@ -37,7 +34,6 @@ namespace Unloved {
     struct PictureFrame;
     struct PowerPoleSet;
     struct Road;
-    struct ScreenSpaceBloodDecal;
     struct Shark;
     struct SpawnPoint;
     struct SpriteSheetObject;
@@ -46,7 +42,6 @@ namespace Unloved {
     struct TerrainChunk;
     struct Transform;
     struct TrimSet;
-    struct VolumetricBloodSplatter;
     struct Wall;
     struct Window;
 
@@ -64,7 +59,6 @@ namespace Unloved::World {
     void UpdateBvhs();
     void Update();
     void UpdatePlayers();
-    void ProcessBullets();
     void UpdateLegacyObjects();
     void SubmitRenderItems();
     void EndFrame();
@@ -77,14 +71,11 @@ namespace Unloved::World {
     const glm::vec3& GetMoonlightDirection();
 
     Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects();
-    Hell::SlotMap<Bullet>& GetBullets();
     Hell::SlotMap<BulletCasing>& GetBulletCasings();
-    Hell::SlotMap<BulletTrail>& GetBulletTrails();
-    Hell::SlotMap<BulletTrailParticle>& GetBulletTrailParticles();
     Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets();
     Hell::SlotMap<ChristmasTree>& GetChristmasTrees();
     Hell::SlotMap<ClippingCube>& GetClippingCubes();
-    Hell::SlotMap<DDGIVolume>& GetDDGIVolumes();
+    Hell::SlotMap<Unloved::DDGIVolume>& GetDDGIVolumes();
     Hell::SlotMap<Decal>& GetDecals();
     Hell::SlotMap<Dobermann>& GetDobermanns();
     Hell::SlotMap<Door>& GetDoors();
@@ -107,7 +98,6 @@ namespace Unloved::World {
     Hell::SlotMap<PictureFrame>& GetPictureFrames();
     Hell::SlotMap<PowerPoleSet>& GetPowerPoleSets();
     Hell::SlotMap<Road>& GetRoads();
-    Hell::SlotMap<ScreenSpaceBloodDecal>& GetScreenSpaceBloodDecals();
     Hell::SlotMap<Shark>& GetSharks();
     Hell::SlotMap<SpawnPoint>& GetCampaignSpawnPoints();
     Hell::SlotMap<SpawnPoint>& GetDeathmatchSpawnPoints();
@@ -116,7 +106,6 @@ namespace Unloved::World {
     Hell::SlotMap<TerrainChunk>& GetTerrainChunks();
     Hell::SlotMap<Transform>& GetDoorAndWindowCubeTransforms();
     Hell::SlotMap<TrimSet>& GetTrimSets();
-    Hell::SlotMap<VolumetricBloodSplatter>& GetVolumetricBloodSplatters();
     Hell::SlotMap<Wall>& GetWalls();
     Hell::SlotMap<Window>& GetWindows();
 }

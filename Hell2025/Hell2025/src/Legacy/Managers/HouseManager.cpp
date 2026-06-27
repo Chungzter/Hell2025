@@ -6,6 +6,8 @@
 #include "Util.h"
 
 namespace HouseManager {
+    using namespace Unloved;
+
     std::vector<House> g_houses;
 
     void Init() {

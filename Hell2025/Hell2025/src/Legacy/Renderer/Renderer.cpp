@@ -6,9 +6,9 @@ namespace Audio = Hell::Audio;
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "API/Vulkan/Renderer/VK_renderer.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Config/Config.h"
-#include "Debug/Debug.h"
-#include "Editor/Editor.h"
+#include "Unloved/Config/Config.h"
+#include "Unloved/Debug/Debug.h"
+#include "Unloved/Editor/Editor.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Timer.hpp"
 
@@ -106,7 +106,7 @@ namespace Renderer {
         }
     }
 
-    void ReadBackHeightMapData(Map* map) {
+    void ReadBackHeightMapData(Unloved::Map* map) {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
             OpenGLRenderer::ReadBackHeightMapData(map);
         }

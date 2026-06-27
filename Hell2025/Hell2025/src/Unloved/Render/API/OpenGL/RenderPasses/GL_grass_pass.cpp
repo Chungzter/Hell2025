@@ -5,14 +5,14 @@
 #include "Types/Renderer/GrassMesh.h"
 
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Config/Config.h"
-#include "Editor/Editor.h"
-#include "Viewport/ViewportManager.h"
+#include "Unloved/Config/Config.h"
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Unloved/Session/Session.h"
 #include "Util/Util.h"
-#include "Ocean/Ocean.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
 
 #include "World/LegacyWorld.h"
 
@@ -84,6 +84,8 @@ public:
 };
 
 namespace OpenGLRenderer {
+    using namespace Unloved;
+
 
     OpenGLGrassMesh g_grassGeometryMesh;
     GLuint g_indirectBuffer = 0;
@@ -166,10 +168,10 @@ namespace OpenGLRenderer {
 
             int viewportIndex = i;
 
-            Viewport* viewport = ViewportManager::GetViewportByIndex(viewportIndex);
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(viewportIndex);
             if (!viewport->IsVisible()) continue;
 
-            Frustum& frustum = viewport->GetFrustum();
+            Unloved::Frustum& frustum = viewport->GetFrustum();
 
             const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
             glm::vec3 viewPos = viewportData[viewportIndex].inverseView[3];
@@ -297,7 +299,7 @@ namespace OpenGLRenderer {
         OpenGLShader* geometryShader = OpenGL::ResourceManager::GetShaderPtr("Grass");
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
 
-        Viewport* viewport = ViewportManager::GetViewportByIndex(viewportIndex);
+        Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(viewportIndex);
         if (!viewport->IsVisible()) return;
 
         OpenGLRenderer::SetViewport(gBuffer, viewport);

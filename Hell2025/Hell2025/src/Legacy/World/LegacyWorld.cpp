@@ -6,30 +6,33 @@
 #include "Unloved/ObjectId.h"
 #include "Util.h"
 #include "Hell/Audio.h"
-#include "Bible/Bible.h"
+#include "Unloved/Bible/Bible.h"
 #include "Unloved/Session/Session.h"
-#include "Editor/Editor.h"
+#include "Unloved/Editor/Editor.h"
 #include "Managers/HouseManager.h"
-#include "Managers/MapManager.h"
-#include "Unloved/SubSystems/Mirrors/MirrorManager.h"
+#include "Unloved/Maps/MapManager.h"
+#include "Unloved/Systems/Mirrors/MirrorManager.h"
+#include "Unloved/Systems/Bullets/BulletSystem.h"
+#include "Unloved/Systems/Blood/BloodSystem.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "GlobalIllumination/GlobalIllumination.h"
-#include "Ocean/Ocean.h"
+#include "Unloved/Systems/DDGI/GlobalIllumination.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Hell/Physics/Physics.h"
 
-#include "Pathfinding/AStarMap.h"
+#include "Unloved/Systems/Pathfinding/AStarMap.h"
 
 #include "Hell/Containers/SlotMap.h"
 #include "Hell/Time.h"
 
 using namespace Hell;
 
-namespace LegacyWorld {
+namespace Unloved::LegacyWorld {
+
     Hell::SlotMap<AnimatedGameObject> g_animatedGameObjects;
     Hell::SlotMap<ChristmasLightSet> g_christmasLightSets;
-    Hell::SlotMap<DDGIVolume> g_ddgiVolumes;
+    Hell::SlotMap<Unloved::DDGIVolume> g_ddgiVolumes;
     Hell::SlotMap<Door> g_doors;
     Hell::SlotMap<Fence> g_fences;
     Hell::SlotMap<Fireplace> g_fireplaces;
@@ -44,10 +47,6 @@ namespace LegacyWorld {
     Hell::SlotMap<Wall> g_walls;
     Hell::SlotMap<Window> g_windows;
 
-    std::vector<ScreenSpaceBloodDecal> g_screenSpaceBloodDecals;
-    std::vector<Bullet> g_bullets;
-    Hell::SlotMap<BulletTrail> g_bulletTrails;
-    std::vector<BulletTrailParticle> g_bulletTrailParticles;
     std::vector<BulletCasing> g_bulletCasings;
     std::vector<ChristmasTree> g_christmasTrees;
     std::vector<ClippingCube> g_clippingCubes;
@@ -66,7 +65,6 @@ namespace LegacyWorld {
     std::vector<SpawnPoint> g_spawnDeathmatchPoints;
     std::vector<Transform> g_doorAndWindowCubeTransforms;
     //std::vector<Tree> g_trees;
-    std::vector<VolumetricBloodSplatter> g_volumetricBloodSplatters;
 
     std::vector<GPUAABB> g_dirtyDoorAABBS;
 
@@ -376,7 +374,7 @@ namespace LegacyWorld {
     const glm::vec3& GetObjectPosition(uint64_t objectId) {
         const static glm::vec3 invalid = glm::vec3(0.0f);
 
-        if (DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetOrigin();
+        if (Unloved::DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetOrigin();
         // etc
 
         Logging::Warning() << "LegacyWorld::GetObjectPosition(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(Unloved::GetObjectIdType(objectId)) << "\n";
@@ -386,7 +384,7 @@ namespace LegacyWorld {
     const glm::vec3& GetObjectRotation(uint64_t objectId) {
         const static glm::vec3 invalid = glm::vec3(0.0f);
 
-        if (DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetRotation();
+        if (Unloved::DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetRotation();
         // etc
 
         Logging::Warning() << "LegacyWorld::GetObjectRotation(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(Unloved::GetObjectIdType(objectId)) << "\n";
@@ -396,7 +394,7 @@ namespace LegacyWorld {
     const std::string& GetObjectEditorName(uint64_t objectId) {
         const static std::string invalid = UNDEFINED_STRING;
 
-        if (DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetEditorName();
+        if (Unloved::DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetEditorName();
         if (Door* object = GetDoorByObjectId(objectId))             return object->GetEditorName();
         // etc
 
@@ -417,7 +415,7 @@ namespace LegacyWorld {
         return g_christmasLightSets.get(objectId);
     }
 
-    DDGIVolume* GetDDGIVolumeByObjectId(uint64_t id) {
+    Unloved::DDGIVolume* GetDDGIVolumeByObjectId(uint64_t id) {
         return g_ddgiVolumes.get(id);
     }
 
@@ -549,7 +547,7 @@ namespace LegacyWorld {
 
     void SetObjectPosition(uint64_t objectId, const glm::vec3& position) {
 
-        if (DDGIVolume* object = LegacyWorld::GetDDGIVolumeByObjectId(objectId)) object->SetOrigin(position);
+        if (Unloved::DDGIVolume* object = LegacyWorld::GetDDGIVolumeByObjectId(objectId)) object->SetOrigin(position);
 
         if (Door* door = LegacyWorld::GetDoorByObjectId(objectId)) {
             door->SetPosition(position);
@@ -613,7 +611,7 @@ namespace LegacyWorld {
     }
 
     void SetObjectRotation(uint64_t objectId, const glm::vec3& rotation) {
-        if (DDGIVolume* object = LegacyWorld::GetDDGIVolumeByObjectId(objectId)) object->SetRotation(rotation);
+        if (Unloved::DDGIVolume* object = LegacyWorld::GetDDGIVolumeByObjectId(objectId)) object->SetRotation(rotation);
 
         if (Fireplace* object = LegacyWorld::GetFireplaceById(objectId)) {
             object->SetRotation(rotation);
@@ -649,9 +647,7 @@ namespace LegacyWorld {
             return true;
         }
 
-        if (g_bulletTrails.contains(objectId)) {
-            g_bulletTrails.get(objectId)->CleanUp();
-            g_bulletTrails.erase(objectId);
+        if (Unloved::BulletSystem::RemoveBulletTrail(objectId)) {
             return true;
         }
 
@@ -826,12 +822,14 @@ namespace LegacyWorld {
     void ClearAllObjects() {
         RemoveAllWeatherBoards();
         Unloved::MirrorManager::CleanUp();
+        Unloved::BulletSystem::CleanUp();
+        Unloved::BloodSystem::CleanUp();
         Ocean::DestroyPhysicsPlane();
 
         for (BulletCasing& bulletCasing : g_bulletCasings)              bulletCasing.CleanUp();
         for (ChristmasLightSet& christmasLights : g_christmasLightSets) christmasLights.CleanUp();
         for (ChristmasTree& christmasTree : g_christmasTrees)           christmasTree.CleanUp();
-        for (DDGIVolume& object : g_ddgiVolumes)                        object.CleanUp();
+        for (Unloved::DDGIVolume& object : g_ddgiVolumes)                        object.CleanUp();
         for (Door& door : g_doors)                                      door.CleanUp();
         for (Fireplace& fireplace : g_fireplaces)                       fireplace.CleanUp();
         for (GenericObject& drawer : g_genericObjects)                  drawer.CleanUp();
@@ -857,7 +855,6 @@ namespace LegacyWorld {
 
         // Clear all containers
         g_bulletCasings.clear();
-        g_screenSpaceBloodDecals.clear();
         g_christmasLightSets.clear();
         g_christmasTrees.clear();
         g_ddgiVolumes.clear();
@@ -1029,15 +1026,6 @@ namespace LegacyWorld {
         g_fireplaces.emplace_with_id(id, id, createInfo, spawnOffset);
     }
 
-    void AddBullet(BulletCreateInfo createInfo, uint64_t parentBulletTrailId) {
-        g_bullets.push_back(Bullet(createInfo, parentBulletTrailId));
-    }
-
-    void AddBulletTrail(BulletCreateInfo createInfo) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::BULLET_TRAIL);
-        g_bulletTrails.emplace_with_id(id, id, createInfo);
-    }
-
     void AddBulletCasing(BulletCasingCreateInfo createInfo, SpawnOffset spawnOffset) {
         createInfo.position += spawnOffset.translation;
         g_bulletCasings.push_back(BulletCasing(createInfo));
@@ -1080,11 +1068,6 @@ namespace LegacyWorld {
         mermaid.Init(createInfo, spawnOffset);
     }
 
-    void AddScreenSpaceBloodDecal(ScreenSpaceBloodDecalCreateInfo createInfo) {
-        ScreenSpaceBloodDecal& screenSpaceBloodDecal = g_screenSpaceBloodDecals.emplace_back();
-        screenSpaceBloodDecal.Init(createInfo);
-    }
-
     void AddPiano(PianoCreateInfo createInfo, SpawnOffset spawnOffset) {
         createInfo.position += spawnOffset.translation;
         if (createInfo.soundFontName == UNDEFINED_STRING) {
@@ -1104,13 +1087,6 @@ namespace LegacyWorld {
     //    }
     //    g_trees.push_back(Tree(createInfo));
     //}
-
-    void AddVATBlood(glm::vec3 position, glm::vec3 front) {
-        int maxAllowed = 4;
-        if (g_volumetricBloodSplatters.size() < maxAllowed) {
-            g_volumetricBloodSplatters.push_back(VolumetricBloodSplatter(position, front));
-        }
-    }
 
     SpawnPoint GetRandomCampaignSpawnPoint() {
         SpawnPoint spawnPoint;
@@ -1136,7 +1112,7 @@ namespace LegacyWorld {
 
         // Check you didn't just spawn on another player
         for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             float distanceToOtherPlayer = glm::distance(spawnPoint.GetPosition(), player->GetFootPosition());
             if (distanceToOtherPlayer < 1.0f) {
                 return GetRandomCampaignSpawnPoint();
@@ -1159,7 +1135,7 @@ namespace LegacyWorld {
 
         // Check you didn't just spawn on another player
         for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
-            Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
+            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             float distanceToOtherPlayer = glm::distance(spawnPoint.GetPosition(), player->GetFootPosition());
             if (distanceToOtherPlayer < 1.0f) {
                 return GetRandomCampaignSpawnPoint();
@@ -1179,15 +1155,15 @@ namespace LegacyWorld {
     }
 
 
-    DDGIVolume& GetTestDDGIVolume() {
-        static DDGIVolume invalid;
+    Unloved::DDGIVolume& GetTestDDGIVolume() {
+        static Unloved::DDGIVolume invalid;
 
         if (LegacyWorld::GetDDGIVolumes().size() > 1) {
             Logging::Fatal() << "LegacyWorld::GetTestDDGIVolume() fucked up, you have more than one LightVolume and ALL your code assumes you only have one\n";
             return invalid;
         }
         if (LegacyWorld::GetDDGIVolumes().size() == 1) {
-            for (DDGIVolume& ddgiVolume : LegacyWorld::GetDDGIVolumes()) {
+            for (Unloved::DDGIVolume& ddgiVolume : LegacyWorld::GetDDGIVolumes()) {
                 return ddgiVolume;
             }
         }
@@ -1389,7 +1365,7 @@ namespace LegacyWorld {
 
     Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects() { return g_animatedGameObjects; }
     Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets()   { return g_christmasLightSets; }
-    Hell::SlotMap<DDGIVolume>& GetDDGIVolumes()                 { return g_ddgiVolumes; }
+    Hell::SlotMap<Unloved::DDGIVolume>& GetDDGIVolumes()                 { return g_ddgiVolumes; }
     Hell::SlotMap<Door>& GetDoors()                             { return g_doors; }
     Hell::SlotMap<GenericObject>& GetGenericObjects()           { return g_genericObjects; }
     Hell::SlotMap<Fence>& GetFences()                           { return g_fences; }
@@ -1404,10 +1380,6 @@ namespace LegacyWorld {
     Hell::SlotMap<Wall>& GetWalls()                             { return g_walls; }
     Hell::SlotMap<Window>& GetWindows()                         { return g_windows; }
 
-    std::vector<ScreenSpaceBloodDecal>& GetScreenSpaceBloodDecals()     { return g_screenSpaceBloodDecals; }
-    std::vector<Bullet>& GetBullets()                                   { return g_bullets; }
-    Hell::SlotMap<BulletTrail>& GetBulletTrails()                       { return g_bulletTrails; }
-    std::vector<BulletTrailParticle>& GetBulletTrailParticles()         { return g_bulletTrailParticles; }
     std::vector<BulletCasing>& GetBulletCasings()                       { return g_bulletCasings; }
     std::vector<ChristmasTree>& GetChristmasTrees()                     { return g_christmasTrees; }
     std::vector<ClippingCube>& GetClippingCubes()                       { return g_clippingCubes; }
@@ -1425,8 +1397,6 @@ namespace LegacyWorld {
     std::vector<Road>& GetRoads()                                       { return g_roads; }
     std::vector<Shark>& GetSharks()                                     { return g_sharks; }
     //std::vector<Tree>& GetTrees()                                       { return g_trees; }
-    std::vector<VolumetricBloodSplatter>& GetVolumetricBloodSplatters() { return g_volumetricBloodSplatters; }
-
     std::vector<GPULight>& GetGPULightsLowRes()                 { return g_gpuLightsLowRes; }
     std::vector<GPULight>& GetGPULightsMidRes()                 { return g_gpuLightsMidRes; }
     std::vector<GPULight>& GetGPULightsHighRes()                { return g_gpuLightsHighRes; }

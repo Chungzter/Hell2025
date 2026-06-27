@@ -1,5 +1,5 @@
 #pragma once
-#include "Camera/Frustum.h"
+#include "Unloved/Camera/Frustum.h"
 
 struct Mirror {
     Mirror() = default;
@@ -13,7 +13,7 @@ struct Mirror {
     void Update(const glm::mat4& worldMatrix);
     void DebugDraw();
 
-    Frustum* GetFrustum(int viewportIndex);
+    Unloved::Frustum* GetFrustum(int viewportIndex);
 
     bool IsFacingViewportCamera(int viewportIndex) const;
     const glm::vec4& GetClipPlane(int viewportIndex) const;
@@ -37,7 +37,7 @@ struct Mirror {
     bool m_facingViewportCamera[4] = {};
     float m_farDistance = 5.0f;
     AABB m_localAabb;
-    Frustum m_frustums[4] = {};
+    Unloved::Frustum m_frustums[4] = {};
     glm::mat4 m_projectionMatrices[4] = {};
     glm::mat4 m_viewMatrices[4] = {};
     glm::vec3 m_reflectVectors[4] = {};

@@ -2,7 +2,7 @@
 #include "Hell/Math/VecXZ.h"
 
 #include <Game/Types.h>
-#include "Types/Game/SpawnPoint.h"
+#include "Unloved/Objects/Spawns/SpawnPoint.h"
 #include <Game/CreateInfo.h>
 #include <nlohmann/json.hpp>
 #include <glm/glm.hpp>
@@ -23,7 +23,7 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const PickUpCreateInfo& info);
     void to_json(nlohmann::json& j, const PictureFrameCreateInfo& info);
     void to_json(nlohmann::json& j, const PowerPoleSetCreateInfo& info);
-    void to_json(nlohmann::json& j, const SpawnPoint& spawnPoint);
+    void to_json(nlohmann::json& j, const Unloved::SpawnPoint& spawnPoint);
     void to_json(nlohmann::json& j, const StaircaseCreateInfo& info);
     void to_json(nlohmann::json& j, const TreeCreateInfo& info);
     void to_json(nlohmann::json& j, const WallCreateInfo& info);
@@ -44,7 +44,7 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, PickUpCreateInfo& info);
     void from_json(const nlohmann::json& j, PictureFrameCreateInfo& info);
     void from_json(const nlohmann::json& j, PowerPoleSetCreateInfo& info);
-    void from_json(const nlohmann::json& j, SpawnPoint& info);
+    void from_json(const nlohmann::json& j, Unloved::SpawnPoint& info);
     void from_json(const nlohmann::json& j, StaircaseCreateInfo& info);
     void from_json(const nlohmann::json& j, TreeCreateInfo& info);
     void from_json(const nlohmann::json& j, WallCreateInfo& info);
