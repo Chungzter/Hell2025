@@ -1,5 +1,5 @@
 #pragma once
-#include <Game/Types.h>
+#include "Unloved/Common/Types.h"
 
 #include "Hell/Containers/SlotMap.h"
 #include "Hell/Math/Transform.h"
@@ -38,15 +38,12 @@
 #include "Unloved/Objects/Renderables/MeshBufferOLD.h"
 #include "Unloved/Systems/DDGI/DDGIVolume.h"
 
-#include "glm/gtx/intersect.hpp"
-
 #include <vector>
 
 // get me out of here
 #include "Unloved/Maps/Map.h"
 #include "Unloved/Maps/MapInstance.h"
 #include "Util/Util.h"
-#include "Unloved/Objects/House/Clipping/Clipping.h"
 //
 
 struct MapInstanceCreateInfo {
@@ -165,7 +162,6 @@ namespace Unloved::LegacyWorld {
     const std::string& GetCurrentMapName();
 
     // House
-    void RecreateClippingCubes();                     // you have this and the other one, they achieve the same thing, merge this logic
     void RecreateAllDoorAndWindowCubeTransforms();    // you have this and the other one, they achieve the same thing, merge this logic
 
     void RecreateAllHouseGeometry();
@@ -237,7 +233,6 @@ namespace Unloved::LegacyWorld {
 
     std::vector<BulletCasing>& GetBulletCasings();
     std::vector<ChristmasTree>& GetChristmasTrees();
-    std::vector<ClippingCube>& GetClippingCubes();
     std::vector<Decal>& GetDecals();
     std::vector<Dobermann>& GetDobermanns();
     std::vector<GameObject>& GetGameObjects();

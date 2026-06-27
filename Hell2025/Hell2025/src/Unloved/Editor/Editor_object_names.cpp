@@ -1,5 +1,6 @@
 #include "Editor.h"
 
+#include "Hell/Common/Enum.h"
 #include "Hell/Logging.h"
 
 #include "Legacy/World/LegacyWorld.h"
@@ -44,7 +45,7 @@ namespace Unloved::Editor {
             }
         }
         else {
-            Logging::Warning() << "Editor::NameAvailable() is missing implementation for object type '" << Util::ObjectTypeToString(objectType) << "'";
+            Logging::Warning() << "Editor::NameAvailable() is missing implementation for object type '" << Hell::Enum::ToString(objectType) << "'";
         }
 
         return true;

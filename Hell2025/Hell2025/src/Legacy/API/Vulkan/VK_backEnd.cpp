@@ -52,15 +52,6 @@ namespace VulkanBackEnd {
         VulkanTextureManager::AllocateTexture(texture);
     }
 
-    void VulkanBackEnd::ImmediateBake(QueuedTextureBake& queuedTextureBake) {
-        
-    }
-
-
-    void AsyncBakeQueuedTextureBake(QueuedTextureBake& queuedTextureBake) {
-
-    }
-
     UploadContext& GetUploadContext() {
         return g_uploadContext;
     }

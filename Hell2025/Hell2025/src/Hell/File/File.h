@@ -17,6 +17,7 @@ namespace Hell::File {
 
     std::string GetName(const std::string& path);
     std::string GetExtension(const std::string& path);
+    std::string RemoveExtension(const std::string& path);
     FileInfo GetInfo(const std::string& path);
     std::vector<FileInfo> IterateDirectory(const std::string& directory, std::vector<std::string> extensions = {});
 }

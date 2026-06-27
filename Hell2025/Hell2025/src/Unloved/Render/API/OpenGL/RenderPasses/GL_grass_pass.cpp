@@ -2,20 +2,19 @@
 
 #include "Hell/Logging.h"
 #include "Hell/Math/VecXZ.h"
-#include "Types/Renderer/GrassMesh.h"
-
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
+
 #include "Unloved/Config/Config.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/Objects/Exterior/GrassMesh.h"
+#include "Unloved/Session/Session.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Viewport/ViewportManager.h"
+
+#include "Util/Util.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
-#include "Unloved/Session/Session.h"
-#include "Util/Util.h"
-#include "Unloved/Systems/Ocean/Ocean.h"
-
 #include "World/LegacyWorld.h"
-
 
 struct GrassVertex {
     glm::vec3 position;
@@ -99,7 +98,7 @@ namespace OpenGLRenderer {
     void InitGrass() {
         int bladesPerHeightMapAxis = HEIGHT_MAP_SIZE * HEIGHTMAP_SCALE_XZ / BLADE_SPACING;
         int bufferSize = bladesPerHeightMapAxis * bladesPerHeightMapAxis * sizeof(glm::vec4);
-        //std::cout << "Grass SSBO allocated: " << Util::BytesToMBString(bufferSize) << "\n";
+        //std::cout << "Grass SSBO allocated: " << Hell::String::FormatBytesMB(bufferSize) << "\n";
         OpenGL::ResourceManager::CreateSSBO("BladePositions").Create(bufferSize, GL_DYNAMIC_STORAGE_BIT);
         CreateGrassGeometry();
 

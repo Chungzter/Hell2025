@@ -2,6 +2,9 @@
 #include "Hell/Audio.h"
 #include "Renderer/Renderer.h"
 
+#include "Unloved/Common/Constants.h"
+#include "Unloved/Render/RendererConstants.h"
+
 namespace OpenGLRenderer {
     void ScreenspaceReflectionsPass() {
         if (!Renderer::GetCurrentRendererSettings().screenspaceReflections)

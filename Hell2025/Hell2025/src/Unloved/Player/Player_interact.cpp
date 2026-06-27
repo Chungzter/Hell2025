@@ -1,11 +1,11 @@
 #include "Player.h"
 
 #include "Hell/Audio.h"
+#include "Hell/Common/Enum.h"
 #include "Hell/Physics/Physics.h"
 #include "Hell/Logging.h"
 #include "Hell/Input.h"
 
-#include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
 #include "Legacy/Renderer/Renderer.h"
 
@@ -155,13 +155,13 @@ void Player::UpdateInteract() {
                     m_inventory.GiveAmmo(pickUp->GetName(), Bible::GetAmmoPickUpAmount(pickUp->GetName()));
                 }
                 else if (pickUp->GetType() == ItemType::UNDEFINED) {
-                    Logging::Warning() << "Player " << m_viewportIndex << " tried to pick up a PickUp with name '" << pickUp->GetName() << "' but type '" << Util::PickUpTypeToString(pickUp->GetType()) << "'";
+                    Logging::Warning() << "Player " << m_viewportIndex << " tried to pick up a PickUp with name '" << pickUp->GetName() << "' but type '" << Hell::Enum::ToString(pickUp->GetType()) << "'";
                 }
                 else if (pickUp->GetType() == ItemType::HEAL) {
                     m_inventory.AddInventoryItem(pickUp->GetName());
                 }
                 else {
-                    Logging::Error() << "You picked up a Pickup of type " << Util::ItemTypeToString(pickUp->GetType()) << " which you haven't written a code path for within Player::UpdateInteract()\n";
+                    Logging::Error() << "You picked up a Pickup of type " << Hell::Enum::ToString(pickUp->GetType()) << " which you haven't written a code path for within Player::UpdateInteract()\n";
                 }
 
                 if (pickUp->GetCreateInfo().respawn) {

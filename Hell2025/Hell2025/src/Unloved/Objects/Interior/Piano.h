@@ -1,7 +1,7 @@
 #pragma once
-#include <Game/Enums.h>
-#include <Game/Types.h>
-#include <Game/CreateInfo.h>
+#include "Unloved/Common/Enums.h"
+#include "Unloved/Common/Types.h"
+#include "Unloved/Common/CreateInfo.h"
 
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 

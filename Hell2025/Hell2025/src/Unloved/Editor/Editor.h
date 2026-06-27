@@ -2,9 +2,11 @@
 
 #include "Legacy/Callbacks/Callbacks.h"
 #include "Unloved/Camera/Camera.h"
-#include "Legacy/Game/CreateInfo.h"
-#include "Legacy/Game/Types.h"
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Common/Types.h"
 #include "Unloved/Viewport/Viewport.h"
+
+#include "Unloved/ObjectId/ObjectId_types.h"
 
 #include <string>
 

@@ -3,6 +3,7 @@
 #include "Hell/Audio.h"
 #include "Hell/Input.h"
 #include "Hell/Logging.h"
+#include "Hell/Math/Ray.h"
 #include "Hell/Physics/Physics.h"
 
 #include "Legacy/Renderer/Renderer.h"
@@ -48,7 +49,7 @@ namespace Unloved::Editor {
             //std::cout << "phyx hit: " << physxRayResult.userData.objectId << "\n";
 
             //std::cout << "physx hit: " << physxRayResult.userData.objectId << " ";
-            //std::cout << Util::EnumToString(Unloved::GetObjectIdType(GetSelectedObjectId())) << " ";
+            //std::cout << Hell::Enum::ToString(Unloved::GetObjectIdType(GetSelectedObjectId())) << " ";
             //std::cout << physxRayResult.hitPosition << " " << glm::distance(physxRayResult.hitPosition, rayOrigin) << "\n";
         }
 
@@ -62,7 +63,7 @@ namespace Unloved::Editor {
                 SetHoveredObjectId(bvhRayResult.objectId);
             }
             //std::cout << "bvhRayResult hit: " << bvhRayResult.objectId << " ";
-            //std::cout << Util::EnumToString(Unloved::GetObjectIdType(GetSelectedObjectId())) << " ";
+            //std::cout << Hell::Enum::ToString(Unloved::GetObjectIdType(GetSelectedObjectId())) << " ";
             //std::cout << bvhRayResult.hitPosition << " " << bvhDistance << "\n";
         }
 
@@ -83,15 +84,15 @@ namespace Unloved::Editor {
 
     void UpdateObjectSelection() {
 
-        //std::cout << "Selected object: " << GetSelectedObjectId() << " " << Util::EnumToString(Unloved::GetObjectIdType(GetSelectedObjectId())) << "\n";
+        //std::cout << "Selected object: " << GetSelectedObjectId() << " " << Hell::Enum::ToString(Unloved::GetObjectIdType(GetSelectedObjectId())) << "\n";
 
         //switch (Unloved::GetObjectIdType(objectId)) {
         //case ObjectType::DDGI_VOLUME: SetEditorSelectionMode(EditorSelectionMode::OBJECT); break;
-        //default: Logging::Warning() << "Editor::SelectObject(..) is missing selection mode implementation for " << Util::ObjectTypeToString(Unloved::GetObjectIdType(objectId)) << "\n"; break;
+        //default: Logging::Warning() << "Editor::SelectObject(..) is missing selection mode implementation for " << Hell::Enum::ToString(Unloved::GetObjectIdType(objectId)) << "\n"; break;
         //}
 
 
-        //std::cout << Util::EditorSelectionModeToString(GetEditorSelectionMode()) << "\n";
+        //std::cout << Hell::Enum::ToString(GetEditorSelectionMode()) << "\n";
 
 
         // Vertex interaction HACK. Find a better place for me
@@ -117,7 +118,7 @@ namespace Unloved::Editor {
                     glm::vec3 position = wallSegment.GetStart();
                     float radius = Editor::GetScalingFactor(10);
 
-                    bool rayHit = Util::RayIntersectsSphere(rayOrigin, rayDir, position, radius);
+                    bool rayHit = Hell::Ray::IntersectSphere(rayOrigin, rayDir, position, radius);
 
                     if (rayHit) {
                         DebugDraw::DrawPoint(position, WHITE);
@@ -159,7 +160,7 @@ namespace Unloved::Editor {
                 glm::vec3 position = plane->GetVertices()[i].position;
                 float radius = Editor::GetScalingFactor(10);
 
-                bool rayHit = Util::RayIntersectsSphere(rayOrigin, rayDir, position, radius);
+                bool rayHit = Hell::Ray::IntersectSphere(rayOrigin, rayDir, position, radius);
 
                 if (rayHit) {
                     DebugDraw::DrawPoint(position, WHITE);

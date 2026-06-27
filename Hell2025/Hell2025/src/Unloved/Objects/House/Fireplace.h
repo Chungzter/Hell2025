@@ -1,11 +1,12 @@
 #pragma once
-#include <Game/Types.h>
-#include <Game/CreateInfo.h>
+#include "Unloved/Common/Types.h"
+#include "Unloved/Common/CreateInfo.h"
 
 #include "Hell/Math/Transform.h"
 
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Objects/Renderables/SpriteSheetObject.h"
+#include "Unloved/Systems/House/BlockingVolume.h"
 
 namespace Unloved {
 
@@ -41,10 +42,12 @@ struct Fireplace {
     float GetWallWidth() const                                  { return m_wallWidth; }
     const glm::vec3 GetWorldForward() const                     { return m_worldForward; }
     const glm::vec3 GetWorldRight() const                       { return m_worldRight; }
+    const HouseBuilder::BlockingVolume& GetBlockingVolume() const { return m_blockingVolume; }
     const SpriteSheetRenderItem GetFireSpriteSheetRenderItem()  { return m_fireSpriteSheetObject.GetRenderItem(); }
 
 private:
     void ConfigureFire();
+    void UpdateBlockingVolume();
     void UpdateWorldMatrix();
     uint64_t m_id = 0;
     FireplaceCreateInfo m_createInfo;
@@ -54,6 +57,7 @@ private:
     glm::vec3 m_worldForward = glm::vec3(0.0f);
     glm::vec3 m_worldRight = glm::vec3(0.0f);
     AABB m_wallsAabb;
+    HouseBuilder::BlockingVolume m_blockingVolume;
     float m_wallDepth = 0.0f;
     float m_wallWidth = 0.0f;
 

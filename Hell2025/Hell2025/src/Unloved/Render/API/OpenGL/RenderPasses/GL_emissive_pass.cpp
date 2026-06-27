@@ -1,4 +1,5 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
+#include "Hell/Common/String.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
@@ -6,7 +7,6 @@
 // todo remove
 #include "Unloved/Debug/Debug.h"
 #include "Renderer/Renderer.h"
-#include "Util/Util.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
@@ -38,7 +38,7 @@ namespace OpenGLRenderer {
 
         if (Input::KeyPressed(HELL_KEY_NUMPAD_4)) {
             old = !old;
-            Debug::BlitQuickDebugMessage("OLD: " + Util::BoolToString(old));
+            Debug::BlitQuickDebugMessage("OLD: " + Hell::String::FormatBool(old));
         }
 
         if (old) {

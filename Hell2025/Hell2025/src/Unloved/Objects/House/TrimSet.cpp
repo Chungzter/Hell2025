@@ -1,7 +1,7 @@
 #include "TrimSet.h"
+#include "Hell/Common/Bit.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Legacy/Renderer/Renderer.h"
-#include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
 
 namespace Unloved {
@@ -19,7 +19,7 @@ void TrimSet::CreateRenderItems() {
     m_internalCorners.clear();
     m_renderItems.clear();
 
-    // Find corners, by walking around the wall segment points, and check for raycast hits on all fireplace wall aabbs
+    // Find corners, by walking around the wall segment points, and check for raycast hits on all fireplace blocking volumes
     for (int i = 0; i < m_createInfo.points.size(); i++) {
         const glm::vec3& point = m_createInfo.points[i];
         const glm::vec3& nextPoint = m_createInfo.points[i + 1];
@@ -33,17 +33,15 @@ void TrimSet::CreateRenderItems() {
         // Add the current point
         m_corners.push_back(TrimCorner(point));
 
-        // WARNING! This only works for one fireplace, because future ray casts overwrite any previous one
-        AABBRayResult rayResult;
         for (Fireplace& fireplace : LegacyWorld::GetFireplaces()) {
-            rayResult = Util::RayIntersectAABB(rayOrigin, rayDir, maxDistance, fireplace.GetWallsAABB(), fireplace.GetWorldMatrix());
+            const auto rayHit = fireplace.GetBlockingVolume().Raycast(rayOrigin, rayDir, maxDistance);
 
             // Hit fireplace?
-            if (rayResult.hitFound && rayResult.hitNormalLocal == glm::vec3(0.0f, 0.0f, 1.0f)) {
-                glm::vec3 pointA = rayResult.hitPositionWorld;
+            if (rayHit.hitFound && rayHit.hitNormalLocal == glm::vec3(0.0f, 0.0f, 1.0f)) {
+                glm::vec3 pointA = rayHit.hitPositionWorld;
                 m_corners.push_back(TrimCorner(pointA));
 
-                // Because you always walk clockwise around the room, you can safely hack in the extra fireplace points with the following             
+                // Because you always walk clockwise around the room, you can safely hack in the extra fireplace points with the following
                 glm::vec3 pointB = pointA + (fireplace.GetWorldForward() * fireplace.GetWallDepth());
                 m_corners.push_back(TrimCorner(pointB));
 
@@ -229,7 +227,7 @@ void TrimSet::CreateRenderItems() {
         renderItem.prevModelMatrix = renderItem.modelMatrix; // These never move, so use current model matrix
 
         Util::UpdateRenderItemAABB(renderItem);
-        Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+        Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }
 }
 

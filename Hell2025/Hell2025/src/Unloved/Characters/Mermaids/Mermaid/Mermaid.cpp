@@ -1,10 +1,13 @@
 #include "Mermaid.h"
-#include "Hell/Audio.h"
-namespace Audio = Hell::Audio;
-#include "Unloved/Debug/DebugDraw.h"
-#include "Hell/Input.h"
-namespace Input = Hell::Input;
 
+#include "Hell/Audio.h"
+#include "Hell/Input.h"
+
+#include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Render/RendererEnums.h"
+
+namespace Audio = Hell::Audio;
+namespace Input = Hell::Input;
 
 void Mermaid::Init(MermaidCreateInfo createInfo, SpawnOffset spawnOffset) {
     m_createInfo = createInfo;

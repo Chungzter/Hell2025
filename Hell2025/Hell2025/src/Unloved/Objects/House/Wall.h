@@ -1,12 +1,15 @@
 #pragma once
-#include <Game/Types.h>
-#include <Game/CreateInfo.h>
 #include "Trim.h"
 #include "WallSegment.h"
-#include <glm/glm.hpp>
-#include <vector>
 
 #include "Hell/ResourceManagement/Types/Material.h"
+
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Render/RendererTypes.h"
+
+#include <glm/glm.hpp>
+
+#include <vector>
 
 namespace Unloved {
 

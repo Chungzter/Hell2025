@@ -95,13 +95,13 @@ namespace Unloved::Editor {
         //// Object settings
         //if (elements.objectSettingsHeader.CreateImGuiElement()) {         
         //    if (elements.objectPositon.CreateImGuiElements()) {
-        //        std::cout << Util::Vec3ToString(elements.objectPositon.GetValue()) << "\n";;
+        //        std::cout << Hell::String::FormatVec3(elements.objectPositon.GetValue()) << "\n";;
         //    }
         //    if (elements.objectRotation.CreateImGuiElements()) {
-        //        std::cout << Util::Vec3ToString(elements.objectRotation.GetValue()) << "\n";;
+        //        std::cout << Hell::String::FormatVec3(elements.objectRotation.GetValue()) << "\n";;
         //    }
         //    if (elements.objectScale.CreateImGuiElements()) {
-        //        std::cout << Util::Vec3ToString(elements.objectScale.GetValue()) << "\n";;
+        //        std::cout << Hell::String::FormatVec3(elements.objectScale.GetValue()) << "\n";;
         //    }
         //    ImGui::Dummy(ImVec2(0.0f, 20.0f));
         //}

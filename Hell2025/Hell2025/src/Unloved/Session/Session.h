@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Legacy/Game/Types.h"
+#include "Unloved/Common/Types.h"
 
 #include "Unloved/Session/Session_types.h"
 #include "Unloved/Camera/Camera.h"

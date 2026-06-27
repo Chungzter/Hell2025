@@ -1,6 +1,8 @@
 #pragma once
-#include <Game/Types.h>
-#include <Game/CreateInfo.h>
+
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Render/RendererTypes.h"
+
 #include <vector>
 
 namespace Unloved {

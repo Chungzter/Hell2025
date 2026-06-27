@@ -1,5 +1,5 @@
 #pragma once
-#include "Legacy/Game/Types.h"
+#include "Unloved/Common/Types.h"
 #include <vector>
 
 namespace Unloved {

@@ -4,7 +4,7 @@
 #include "Hell/Render/VertexAttributes.h"
 
 #include "Hell/Render/API/OpenGL/Types/GL_heightmap_mesh.h"
-#include "Game/Types.h"
+#include "Unloved/Common/Types.h"
 #include "Types/GL_texture.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
 #include <glad/gl.h>

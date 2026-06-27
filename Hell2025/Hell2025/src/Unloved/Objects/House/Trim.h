@@ -1,10 +1,11 @@
 #pragma once
-#include <Game/Types.h>
 
 #include "Hell/Math/Transform.h"
-
 #include "Hell/ResourceManagement/Types/Model.h"
 #include "Hell/ResourceManagement/Types/Material.h"
+
+#include "Unloved/Common/Types.h"
+#include "Unloved/Render/RendererTypes.h"
 
 namespace Unloved {
 

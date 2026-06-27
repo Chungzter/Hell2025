@@ -1,9 +1,12 @@
 #pragma once
 #include "Hell/Math/AABB.h"
 #include "Hell/Math/OBB.h"
+
+#include "Unloved/Render/RendererEnums.h"
+#include "Unloved/Render/RendererSettings.h"
 #include "Unloved/Maps/Map.h"
 
-#include <Game/Types.h>
+#include "Unloved/Common/Types.h"
 
 namespace Renderer {
     void Init();

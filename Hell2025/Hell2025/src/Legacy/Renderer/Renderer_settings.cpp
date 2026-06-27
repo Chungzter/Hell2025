@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "Hell/Audio.h"
+#include "Hell/Common/Enum.h"
 namespace Audio = Hell::Audio;
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Editor/Editor.h"
@@ -122,7 +123,7 @@ namespace Renderer {
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
         rendererSettings.rendererOverrideState = state;
 
-        Debug::BlitQuickDebugMessage("Renderer Override State: " + Util::EnumToString(state));
+        Debug::BlitQuickDebugMessage("Renderer Override State: " + Hell::Enum::ToString(state));
         Audio::PlayAudio(AUDIO_SELECT, 1.00f);
     }
 
@@ -151,7 +152,7 @@ namespace Renderer {
     void SetRendererMode(RendererMode rendererMode) {
         g_rendererMode = rendererMode;
 
-		Debug::BlitQuickDebugMessage("Renderer Mode: " + Util::EnumToString(rendererMode));
+		Debug::BlitQuickDebugMessage("Renderer Mode: " + Hell::Enum::ToString(rendererMode));
 		Audio::PlayAudio(AUDIO_SELECT, 1.00f);
 	}
 
@@ -165,7 +166,7 @@ namespace Renderer {
 
         rendererSettings.debugDrawIrradianceProbes = rendererSettings.probeDebugState != ProbeDebugState::HIDDEN;
 
-		Debug::BlitQuickDebugMessage("Irradiance Probes: " + Util::EnumToString(state));
+		Debug::BlitQuickDebugMessage("Irradiance Probes: " + Hell::Enum::ToString(state));
 		Audio::PlayAudio(AUDIO_SELECT, 1.00f);
 	}
 }

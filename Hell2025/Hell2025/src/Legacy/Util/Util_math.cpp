@@ -1,7 +1,10 @@
 #include "Util.h"
-#include <Game/Constants.h>
+#include "Unloved/Common/Constants.h"
 #include <numeric>
 #include <random>
+#ifndef GLM_ENABLE_EXPERIMENTAL
+    #define GLM_ENABLE_EXPERIMENTAL
+#endif
 #include <glm/gtx/quaternion.hpp>
 
 namespace Util {

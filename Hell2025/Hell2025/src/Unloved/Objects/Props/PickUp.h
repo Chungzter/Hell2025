@@ -1,10 +1,11 @@
 #pragma once
-#include <Game/Types.h>
-#include <Game/Enums.h>
-#include <Game/CreateInfo.h>
+#include "Unloved/Common/Types.h"
+#include "Unloved/Common/Enums.h"
+#include "Unloved/Common/CreateInfo.h"
 
 #include "Hell/Math/Transform.h"
 
+#include "Unloved/Bible/Info/ItemInfo.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 
 namespace Unloved {

@@ -1,8 +1,10 @@
 #include "SpawnPoint.h"
 
 #include "Hell/Math/AABB.h"
+#include "Hell/Math/Transform.h"
 #include "Hell/Physics/Physics.h"
 
+#include "Unloved/Common/Constants.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/ObjectId.h"
 
@@ -17,7 +19,7 @@ void SpawnPoint::Init() {
     m_objectId = Unloved::GetNextObjectId(ObjectType::SPAWN_POINT);
 
     // Create physics shape
-    Transform transform;
+    Hell::Transform transform;
     transform.position = m_position;
 
     float mass = 1.0f;
@@ -47,7 +49,7 @@ void SpawnPoint::DrawDebugCube() {
     glm::vec3 aabbMin = glm::vec3(-0.5f);
     glm::vec3 aabbMax = glm::vec3(0.5f);
 
-    Transform transform;
+    Hell::Transform transform;
     transform.position = m_position;
 
     AABB aabb = AABB(aabbMin, aabbMax);

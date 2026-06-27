@@ -1,19 +1,13 @@
 #include "MeshBuffer.h"
 
+#include "Hell/Common/String.h"
 #include "Hell/Render/API/OpenGL/GL_resource_manager.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 
 #include <algorithm>
-#include <format>
 #include <limits>
 #include <utility>
-
-namespace {
-    std::string Vec3ToString(glm::vec3 v) {
-        return std::format("({:.2f}, {:.2f}, {:.2f})", v.x, v.y, v.z);
-    }
-}
 
 namespace Hell {
 
@@ -691,9 +685,9 @@ void MeshBuffer::PrintDebugInfo() {
         message += "    Vertex count: " + std::to_string(mesh.vertexCount) + "\n";
         message += "    Base index: " + std::to_string(mesh.baseIndex) + "\n";
         message += "    Index count: " + std::to_string(mesh.indexCount) + "\n";
-        message += "    AABB min: " + Vec3ToString(mesh.aabbMin) + "\n";
-        message += "    AABB max: " + Vec3ToString(mesh.aabbMax) + "\n";
-        message += "    Extents: " + Vec3ToString(mesh.extents) + "\n";
+        message += "    AABB min: " + String::FormatVec3(mesh.aabbMin) + "\n";
+        message += "    AABB max: " + String::FormatVec3(mesh.aabbMax) + "\n";
+        message += "    Extents: " + String::FormatVec3(mesh.extents) + "\n";
 
         if (auto metadataIt = m_skinnedMeshMetadata.find(meshId); metadataIt != m_skinnedMeshMetadata.end()) {
             const SkinnedMeshMetadata& metadata = metadataIt->second;

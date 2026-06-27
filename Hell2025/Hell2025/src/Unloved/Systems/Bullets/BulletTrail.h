@@ -1,7 +1,7 @@
 #pragma once
 #include "Unloved/Systems/Bullets/BulletTypes.h"
 
-#include "Game/Types.h"
+#include "Unloved/Common/Types.h"
 
 struct BulletTrailParticle {
     glm::vec3 position;

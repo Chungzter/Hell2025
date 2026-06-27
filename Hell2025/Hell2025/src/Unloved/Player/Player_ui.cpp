@@ -1,10 +1,11 @@
 #include "Player.h"
 
+#include "Hell/Common/Enum.h"
+#include "Hell/Common/String.h"
 #include "Hell/UI/TextBlitter.h"
 #include "Hell/UI/UIBackEnd.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Legacy/Renderer/Renderer.h"
@@ -175,9 +176,9 @@ void Player::UpdateUI(float deltaTime) {
         if (Debug::GetDebugTextMode() == DebugTextMode::PER_PLAYER || Debug::GetDebugRenderMode() == DebugRenderMode::BVH_CPU_PLAYER_RAYS) {
 
             std::string text = "";
-            text += "Feet Pos: " + Util::Vec3ToString(GetFootPosition()) + "\n";
-            text += "Cam Pos: " + Util::Vec3ToString(GetCameraPosition()) + "\n";
-            text += "Cam Euler: " + Util::Vec3ToString(GetCameraRotation()) + "\n";
+            text += "Feet Pos: " + Hell::String::FormatVec3(GetFootPosition()) + "\n";
+            text += "Cam Pos: " + Hell::String::FormatVec3(GetCameraPosition()) + "\n";
+            text += "Cam Euler: " + Hell::String::FormatVec3(GetCameraRotation()) + "\n";
 
             text += "\n";
 
@@ -189,27 +190,27 @@ void Player::UpdateUI(float deltaTime) {
 			if (false) {
 				const ViewportData& viewportData = RenderDataManager::GetViewportData()[0];
 				text += "Projection Matrix:\n";
-				text += Util::Mat4ToString10(viewportData.projection) + "\n\n";;
+				text += Hell::String::FormatMat4(viewportData.projection, 10) + "\n\n";;
 				text += "Projection Matrix Reverse Z:\n";
-				text += Util::Mat4ToString10(viewportData.projectionReverseZ) + "\n\n";;
+				text += Hell::String::FormatMat4(viewportData.projectionReverseZ, 10) + "\n\n";;
 				text += "View Matrix:\n";
-				text += Util::Mat4ToString10(viewportData.view) + "\n\n";
+				text += Hell::String::FormatMat4(viewportData.view, 10) + "\n\n";
 			}
 
             // Magazine matrices
             if (false) {
                 text += "Magazine Inverse Bind Transform:\n";
-                text += Util::Mat4ToString10(viewWeapon->GetInverseBindTransformByBoneName("Magazine")) + "\n\n";
+                text += Hell::String::FormatMat4(viewWeapon->GetInverseBindTransformByBoneName("Magazine"), 10) + "\n\n";
                 text += "Magazine Animated Transform:\n";
-                text += Util::Mat4ToString10(viewWeapon->GetAnimatedTransformByBoneName("Magazine")) + "\n\n";
+                text += Hell::String::FormatMat4(viewWeapon->GetAnimatedTransformByBoneName("Magazine"), 10) + "\n\n";
             }
 
             // Camera matrices
             if (false) {
                 text += "Camera Inverse Bind Transform:\n";
-                text += Util::Mat4ToString10(viewWeapon->GetInverseBindTransformByBoneName("camera")) + "\n\n";
+                text += Hell::String::FormatMat4(viewWeapon->GetInverseBindTransformByBoneName("camera"), 10) + "\n\n";
                 text += "Camera Animated Transform:\n";
-                text += Util::Mat4ToString10(viewWeapon->GetAnimatedTransformByBoneName("camera")) + "\n\n";
+                text += Hell::String::FormatMat4(viewWeapon->GetAnimatedTransformByBoneName("camera"), 10) + "\n\n";
             }
 
             // Kangaroos
@@ -222,7 +223,7 @@ void Player::UpdateUI(float deltaTime) {
 
             // Inventory
             if (false) {
-                text += "Unloved::Inventory State: " + Util::InventoryStateToString(m_inventory.GetInventoryState()) + "\n";
+                text += "Unloved::Inventory State: " + Hell::Enum::ToString(m_inventory.GetInventoryState()) + "\n";
                 for (auto item : m_inventory.GetItems()) {
                     text += "- " + item.m_name;
                     text += " [" + std::to_string(item.m_gridLocation.x) +"][" + std::to_string(item.m_gridLocation.y) + "]";
@@ -232,25 +233,25 @@ void Player::UpdateUI(float deltaTime) {
 
             // Movement
             if (false) {
-                text += "IsMoving: " + Util::BoolToString(IsMoving()) + "\n";
+                text += "IsMoving: " + Hell::String::FormatBool(IsMoving()) + "\n";
             }
 
             // Weapons
             if (false) {
-                text += "Weapon Action: " + Util::WeaponActionToString(GetCurrentWeaponAction()) + "\n";
+                text += "Weapon Action: " + Hell::Enum::ToString(GetCurrentWeaponAction()) + "\n";
             }
 
             // Interact
             //if (false) {
-            //    text += "Interact object: " + Util::ObjectTypeToString(m_interactObjectId) + " " + std::to_string(m_interactObjectId) + "\n";
+            //    text += "Interact object: " + Hell::Enum::ToString(m_interactObjectId) + " " + std::to_string(m_interactObjectId) + "\n";
             //}
 
             // Rays
             //if (true) {
-            //    text += "BVH ray: " + Util::ObjectTypeToString(Unloved::GetObjectIdType(m_bvhRayResult.objectId)) + " " + std::to_string(m_bvhRayResult.objectId) + "\n";
-            //    text += "PhysX ray: " + Util::ObjectTypeToString(m_physXRayResult.userData.objectType) + " " + std::to_string(m_physXRayResult.userData.objectId) + " " + Util::PhysicsTypeToString(m_physXRayResult.userData.physicsType) + " " + std::to_string(m_physXRayResult.userData.physicsId) + "\n";
-            //    text += "Ray hit found: " + Util::BoolToString(m_rayHitFound) + " " + Util::ObjectTypeToString(m_rayHitObjectType) + " " + std::to_string(m_rayhitObjectId) + "\n";
-            //    text += "Feet above height field: " + Util::BoolToString(m_feetAboveHeightField) + "\n";
+            //    text += "BVH ray: " + Hell::Enum::ToString(Unloved::GetObjectIdType(m_bvhRayResult.objectId)) + " " + std::to_string(m_bvhRayResult.objectId) + "\n";
+            //    text += "PhysX ray: " + Hell::Enum::ToString(m_physXRayResult.userData.objectType) + " " + std::to_string(m_physXRayResult.userData.objectId) + " " + Hell::Enum::ToString(m_physXRayResult.userData.physicsType) + " " + std::to_string(m_physXRayResult.userData.physicsId) + "\n";
+            //    text += "Ray hit found: " + Hell::String::FormatBool(m_rayHitFound) + " " + Hell::Enum::ToString(m_rayHitObjectType) + " " + std::to_string(m_rayhitObjectId) + "\n";
+            //    text += "Feet above height field: " + Hell::String::FormatBool(m_feetAboveHeightField) + "\n";
             //}
 
 
@@ -276,7 +277,7 @@ void Player::UpdateUI(float deltaTime) {
 
             // Movement
             if (false) {
-                text += "Movement Dir: " + Util::Vec3ToString(m_movementDirection) + "\n";
+                text += "Movement Dir: " + Hell::String::FormatVec3(m_movementDirection) + "\n";
                 text += "Acceleration: " + std::to_string(m_acceleration) + "\n";
                 text += "Y Velocity: " + std::to_string(m_yVelocity) + "\n";
             }
@@ -284,7 +285,7 @@ void Player::UpdateUI(float deltaTime) {
             // Lights
             if (false) {
                 for (Light& Light : LegacyWorld::GetLights()) {
-                    text += "Light: " + Util::BoolToString(Light.IsDirtyForShadowMaps()) + "\n";
+                    text += "Light: " + Hell::String::FormatBool(Light.IsDirtyForShadowMaps()) + "\n";
                 }
             }
 
@@ -308,20 +309,20 @@ void Player::UpdateUI(float deltaTime) {
 
             if (false) {
                 text += "\n";
-                text += "Flip normal map Y: " + Util::BoolToString(OpenGLRenderer::ShouldFlipNormalMapY()) + "\n";
+                text += "Flip normal map Y: " + Hell::String::FormatBool(OpenGLRenderer::ShouldFlipNormalMapY()) + "\n";
             }
 
             // Override with BVH CPU RAYS if that render mode is set
             if (Debug::GetDebugRenderMode() == DebugRenderMode::BVH_CPU_PLAYER_RAYS) {
-                text += "\nBVH ray hit: " + Util::BoolToString(m_bvhRayResult.hitFound) + "\n";
+                text += "\nBVH ray hit: " + Hell::String::FormatBool(m_bvhRayResult.hitFound) + "\n";
 
                 if (m_bvhRayResult.hitFound) {
                     MeshNode* meshNode = LegacyWorld::GetMeshNodeByObjectIdAndLocalNodeIndex(m_bvhRayResult.objectId, m_bvhRayResult.localMeshNodeIndex);
 
                     uint64_t hitId = m_bvhRayResult.objectId;
                     ObjectType hitType = Unloved::GetObjectIdType(hitId);
-                    text += "- Hit pos: " + Util::Vec3ToString(m_bvhRayResult.hitPosition) + "\n";
-                    text += "- Parent type: " + Util::ObjectTypeToString(hitType) + "\n";
+                    text += "- Hit pos: " + Hell::String::FormatVec3(m_bvhRayResult.hitPosition) + "\n";
+                    text += "- Parent type: " + Hell::Enum::ToString(hitType) + "\n";
                     text += "- Mesh name: " + Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshNameByMeshId(m_bvhRayResult.globalMeshIndex) + "\n";
                     text += "- Parent Id: " + std::to_string(Unloved::GetObjectIdLocal(m_bvhRayResult.objectId)) + "\n";
                     text += "- Openable Id: " + std::to_string(m_bvhRayResult.openableId) + "\n";
@@ -330,20 +331,20 @@ void Player::UpdateUI(float deltaTime) {
                     text += "- Global mesh index: " + std::to_string(m_bvhRayResult.globalMeshIndex) + "\n";
 
                     if (meshNode) {
-                        text += "- BlendingMode: " + Util::BlendingModeToString(meshNode->blendingMode) + "\n";
-                        text += "- World AABB min: " + Util::Vec3ToString(meshNode->worldspaceAabb.GetBoundsMin()) + "\n";
-                        text += "- World AABB max: " + Util::Vec3ToString(meshNode->worldspaceAabb.GetBoundsMax()) + "\n";
+                        text += "- BlendingMode: " + Hell::Enum::ToString(meshNode->blendingMode) + "\n";
+                        text += "- World AABB min: " + Hell::String::FormatVec3(meshNode->worldspaceAabb.GetBoundsMin()) + "\n";
+                        text += "- World AABB max: " + Hell::String::FormatVec3(meshNode->worldspaceAabb.GetBoundsMax()) + "\n";
                     }
 
                     if (Openable* openable = Unloved::OpenableManager::GetOpenableByOpenableId(m_bvhRayResult.openableId)) {
                         text += "\n";
-                        text += "Open state: " + Util::OpenStateToString(openable->m_currentOpenState) + "\n";
+                        text += "Open state: " + Hell::Enum::ToString(openable->m_currentOpenState) + "\n";
                         text += "Value: " + std::to_string(openable->m_currentOpenValue) + "\n";
                         text += "Min: " + std::to_string(openable->m_minOpenValue) + "\n";
                         text += "Max: " + std::to_string(openable->m_maxOpenValue) + "\n";
-                        text += "Dirty: " + Util::BoolToString(openable->m_dirty) + "\n";
-                        text += "Transform pos: " + Util::Vec3ToString(openable->m_transform.position) + "\n";
-                        text += "Transform rot: " + Util::Vec3ToString(openable->m_transform.rotation) + "\n";
+                        text += "Dirty: " + Hell::String::FormatBool(openable->m_dirty) + "\n";
+                        text += "Transform pos: " + Hell::String::FormatVec3(openable->m_transform.position) + "\n";
+                        text += "Transform rot: " + Hell::String::FormatVec3(openable->m_transform.rotation) + "\n";
 
                     }
                 }

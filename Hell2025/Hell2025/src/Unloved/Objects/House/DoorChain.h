@@ -1,6 +1,9 @@
 #pragma once
-#include <Game/CreateInfo.h>
+
 #include "Hell/Physics/Physics.h"
+
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Common/Types.h"
 
 namespace Unloved {
 

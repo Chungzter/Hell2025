@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Legacy/Game/Constants.h"
-#include "Legacy/Game/Enums.h"
-#include "Legacy/Game/Types.h"
-#include "Legacy/Types/Core/ItemInfo.h"
+#include "Unloved/Common/Constants.h"
+#include "Unloved/Common/Enums.h"
+#include "Unloved/Common/Types.h"
+
+#include "Unloved/Bible/Info/ItemInfo.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Weapons/WeaponCommon.h"
 

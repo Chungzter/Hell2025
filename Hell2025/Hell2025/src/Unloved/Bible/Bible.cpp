@@ -1,7 +1,9 @@
 #include "Bible.h"
+#include "Hell/Common/Enum.h"
 #include "Hell/Logging.h"
+
+#include <algorithm>
 #include <unordered_map>
-#include "Util.h">
 
 #include <iostream> // TODO: cleanup logging
 
@@ -70,7 +72,7 @@ namespace Bible {
             case GenericObjectType::TEST_MODEL3:                return ConfigureTestModel3(id, meshNodes);
             case GenericObjectType::TEST_MODEL4:                return ConfigureTestModel4(id, meshNodes);
 
-            default: Logging::Error() << "Bible::ConfigureMeshNodes(...) failed: non-implemented GenericObjectType: '" << Util::GenericObjectTypeToString(type) << "'";
+            default: Logging::Error() << "Bible::ConfigureMeshNodes(...) failed: non-implemented GenericObjectType: '" << Hell::Enum::ToString(type) << "'";
         }
     }
 

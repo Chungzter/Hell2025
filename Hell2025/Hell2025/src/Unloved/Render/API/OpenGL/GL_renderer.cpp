@@ -20,7 +20,6 @@ namespace Audio = Hell::Audio;
 #include "Hell/UI/TextBlitter.h"
 #include "Unloved/Objects/Props/GameObject.h"
 #include "../Timer.hpp"
-#include <glm/gtx/matrix_decompose.hpp>
 
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Editor/Gizmo.h"
@@ -31,7 +30,6 @@ namespace Audio = Hell::Audio;
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include <Game/GPUTypes.h>
 #include "World/LegacyWorld.h"
 #include "Renderer/Renderer.h"
 #include <unordered_map>

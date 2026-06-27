@@ -3,17 +3,20 @@
 #include "Hell/Audio.h"
 #include "Hell/Input.h"
 #include "Hell/Logging.h"
+#include "Hell/Math/Ray.h"
 
-#include "Legacy/Game/Constants.h"
-#include "Legacy/Game/Enums.h"
+#include "Unloved/Common/Constants.h"
+#include "Unloved/Common/Enums.h"
 #include "Legacy/Util/Util.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "Unloved/Config/Config.h"
 #include "Unloved/Editor/Editor.h"
 
+#ifndef GLM_ENABLE_EXPERIMENTAL
+    #define GLM_ENABLE_EXPERIMENTAL
+#endif
 #include <glm/gtx/intersect.hpp>
-#include <glm/gtx/norm.hpp>
 
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
@@ -45,7 +48,7 @@ namespace Gizmo {
 
     inline void BuildPlaneBasis(const glm::vec3& planeNormal, const glm::vec3& cameraRight, glm::vec3& outU, glm::vec3& outV) {
         glm::vec3 u = ProjectOntoPlane(cameraRight, planeNormal);
-        if (glm::length2(u) < 1e-6f) {
+        if (glm::dot(u, u) < 1e-6f) {
             // Fallback if cameraRight is nearly parallel to normal
             u = ProjectOntoPlane(glm::abs(planeNormal.y) > 0.5f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0), planeNormal);
         }
@@ -227,7 +230,7 @@ namespace Gizmo {
 
                     float t = 0;
 
-                    if (Util::RayIntersectsTriangle(rayOrigin, rayDir, pos0, pos1, pos2, t)) {
+                    if (Hell::Ray::IntersectTriangle(rayOrigin, rayDir, pos0, pos1, pos2, t)) {
                         if (t < closestDistance) {
                             closestDistance = t;
                             g_hoverFlag = renderItem.flag;

@@ -1,6 +1,6 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Game/RendereringConstants.h"
+#include "Unloved/Render/RendererConstants.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Hell/Audio.h"

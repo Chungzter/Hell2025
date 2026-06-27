@@ -1,9 +1,10 @@
 #include "LegacyWorld.h"
 
+#include "Hell/Common/Enum.h"
+#include "Hell/Logging.h"
+
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/ObjectId.h"
-
-#include "Hell/Logging.h"
 
 namespace Unloved::LegacyWorld {
 
@@ -110,7 +111,7 @@ namespace Unloved::LegacyWorld {
     }
 
     void PrintDirtyLightDebugMessage(const Light& light, uint64_t intersectingObjectId) {
-        Logging::Debug() << "LIGHT " << light.GetObjectId() << " triggered dirty by " << Util::EnumToString(Unloved::GetObjectIdType(intersectingObjectId)) << " " << intersectingObjectId << "\n";
+        Logging::Debug() << "LIGHT " << light.GetObjectId() << " triggered dirty by " << Hell::Enum::ToString(Unloved::GetObjectIdType(intersectingObjectId)) << " " << intersectingObjectId << "\n";
     }
 
     bool IntersectAABB(const RenderItem& renderItemA, const glm::vec3& boundsMinB, const glm::vec3& boundsMaxB) {

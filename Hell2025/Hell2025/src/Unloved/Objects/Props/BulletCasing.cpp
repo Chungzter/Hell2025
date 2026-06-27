@@ -3,7 +3,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Audio.h"
 #include "Hell/Physics/Physics.h"
-#include "Legacy/Game/RendereringConstants.h"
+#include "Unloved/Render/RendererConstants.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 
 namespace Unloved {

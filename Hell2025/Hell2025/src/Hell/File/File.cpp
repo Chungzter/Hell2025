@@ -78,6 +78,12 @@ namespace Hell::File {
         return extension.starts_with('.') ? extension.substr(1) : extension;
     }
 
+    std::string RemoveExtension(const std::string& path) {
+        std::filesystem::path filesystemPath(path);
+        filesystemPath.replace_extension();
+        return filesystemPath.string();
+    }
+
     FileInfo GetInfo(const std::string& path) {
         if (!Exists(path)) {
             Logging::Error() << "File::GetInfo() failed because '" << path << "' does not exist\n";

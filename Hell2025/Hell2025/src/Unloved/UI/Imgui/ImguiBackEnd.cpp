@@ -4,8 +4,7 @@
 #include "Hell/Backend/Integration/GLFW.h"
 #include "Hell/Input.h"
 #include "Hell/Logging.h"
-
-#include "Legacy/Util/Util.h"
+#include "Hell/Time/Time.h"
 
 #include "Unloved/Config/Config.h"
 
@@ -128,7 +127,7 @@ namespace ImGuiBackEnd {
             KeyState& state = keyStates[hellKey];
 
             // Get the current time in seconds.
-            double currentTime = Util::GetCurrentTime();
+            double currentTime = Hell::Time::NowSeconds();
             bool sendEvent = false;
 
             if (isDown && !state.pressed) {

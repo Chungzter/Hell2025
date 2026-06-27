@@ -1,15 +1,10 @@
 #include "RagdollData.h"
 
+#include "Hell/Common/String.h"
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
 
 #include <iostream>
-
-namespace {
-    std::string BoolToString(bool b) {
-        return b ? "TRUE" : "FALSE";
-    }
-}
 
 RagdollData::RagdollData(const std::string& name) {
     m_name = name;
@@ -51,7 +46,7 @@ void RagdollData::PrintMarkerInfo() {
         std::cout << "Mass:                          " << marker.mass << "\n";
         std::cout << "Contact stiffness:             " << marker.contactStiffness << "\n";
         std::cout << "Contact damping ratio:         " << marker.contactDampingRatio << "\n";
-        std::cout << "Drive slerp:                   " << BoolToString(marker.driveSlerp) << "\n";
+        std::cout << "Drive slerp:                   " << Hell::String::FormatBool(marker.driveSlerp) << "\n";
         std::cout << "Drive spring type:             " << marker.driveSpringType << "\n";
         std::cout << "Linear stiffness:              " << marker.linearStiffness << "\n";
         std::cout << "Linear dampingRatio:           " << marker.linearDampingRatio << "\n";
@@ -59,15 +54,15 @@ void RagdollData::PrintMarkerInfo() {
         std::cout << "Angular dampingRatio:          " << marker.angularDampingRatio << "\n";
         std::cout << "Input type:                    " << marker.inputType << "\n";
         std::cout << "Collision group:               " << marker.collisionGroup << "\n";
-        std::cout << "Use root stiffness:            " << BoolToString(marker.useRootStiffness) << "\n";
-        std::cout << "Use linear angular stiffness:  " << BoolToString(marker.useLinearAngularStiffness) << "\n";
+        std::cout << "Use root stiffness:            " << Hell::String::FormatBool(marker.useRootStiffness) << "\n";
+        std::cout << "Use linear angular stiffness:  " << Hell::String::FormatBool(marker.useLinearAngularStiffness) << "\n";
         std::cout << "Limit range (twist,s1,s2):     " << marker.limitRange << "\n";
         std::cout << "Mesh vertex count:             " << static_cast<unsigned>(marker.convexMeshVertices.size()) << "\n";
         std::cout << "Mesh index count:              " << static_cast<unsigned>(marker.convexMeshIndices.size()) << "\n";
         std::cout << "linearDamping:                 " << marker.linearDamping << "\n";
         std::cout << "angularDamping:                " << marker.angularDamping << "\n";
-        std::cout << "Is kinematic:                  " << BoolToString(marker.isKinematic) << "\n";
-        std::cout << "EnableCCD                      " << BoolToString(marker.enableCCD) << "\n";
+        std::cout << "Is kinematic:                  " << Hell::String::FormatBool(marker.isKinematic) << "\n";
+        std::cout << "EnableCCD                      " << Hell::String::FormatBool(marker.enableCCD) << "\n";
         std::cout << "Input matrix:\n" << marker.inputMatrix << "\n";
         std::cout << "Origin matrix:\n" << marker.originMatrix << "\n";
         std::cout << "Parent frame:\n" << marker.parentFrame << "\n";
@@ -88,8 +83,8 @@ void RagdollData::PrintJointInfo() {
         std::cout << "Limit range (twist,s1,s2):     " << joint.limitRange << "\n";
         std::cout << "Limit stiffness:               " << joint.limitStiffness << "\n";
         std::cout << "Limit dampingRatio:            " << joint.limitDampingRatio << "\n";
-        std::cout << "Limit auto-orient:             " << BoolToString(joint.limitAutoOrient) << "\n";
-        std::cout << "Drive slerp:                   " << BoolToString(joint.driveSlerp) << "\n";
+        std::cout << "Limit auto-orient:             " << Hell::String::FormatBool(joint.limitAutoOrient) << "\n";
+        std::cout << "Drive slerp:                   " << Hell::String::FormatBool(joint.driveSlerp) << "\n";
         std::cout << "Drive spring type:             " << joint.driveSpringType << "\n";
         std::cout << "Drive linear stiffness:        " << joint.driveLinearStiffness << "\n";
         std::cout << "Drive linear damping:          " << joint.driveLinearDamping << "\n";
@@ -100,8 +95,8 @@ void RagdollData::PrintJointInfo() {
         std::cout << "Drive angular amt (swing):     " << joint.driveAngularAmountSwing << "\n";
         std::cout << "Drive max linear force:        " << joint.driveMaxLinearForce << "\n";
         std::cout << "Drive max angular force:       " << joint.driveMaxAngularForce << "\n";
-        std::cout << "Drive worldspace:              " << BoolToString(joint.driveWorldspace) << "\n";
-        std::cout << "Ignore mass:                   " << BoolToString(joint.ignoreMass) << "\n";
+        std::cout << "Drive worldspace:              " << Hell::String::FormatBool(joint.driveWorldspace) << "\n";
+        std::cout << "Ignore mass:                   " << Hell::String::FormatBool(joint.ignoreMass) << "\n";
         std::cout << "Parent frame:\n" << joint.parentFrame << "\n";
         std::cout << "Child frame:\n" << joint.childFrame << "\n";
         std::cout << "Drive target:\n" << joint.driveTarget << "\n";

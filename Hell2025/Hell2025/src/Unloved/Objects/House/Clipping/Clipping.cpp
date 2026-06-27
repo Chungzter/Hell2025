@@ -1,17 +1,17 @@
 #include "Clipping.h"
 
-#include "Hell/Math/GLM.h"
-#include "Hell/Math/OBB.h"
-
 #include "Legacy/Util/Util.h"
+
+#include "Unloved/Systems/House/ClippingVolume.h"
 
 #include "clipper2/clipper.h"
 #include "earcut/earcut.hpp"
-#include <glm/gtx/intersect.hpp>
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
+#include <glm/geometric.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 namespace mapbox {
     namespace util {
@@ -30,29 +30,30 @@ namespace Unloved {
 
     double ComputeSignedArea(const std::vector<glm::vec2>& points);
     std::vector<glm::vec2> ProjectWallSegmentTo2D(WallSegment& wallSegment);
-    std::vector<glm::vec2> ProjectCubeSliceTo2D(const ClippingCube& cube, const WallSegment& refWallSegment);
+    std::vector<glm::vec2> ProjectClippingVolumeSliceTo2D(const HouseBuilder::ClippingVolume& clippingVolume, const WallSegment& refWallSegment);
+    std::vector<glm::vec2> ProjectVolumeCornersSliceTo2D(const std::vector<glm::vec3>& volumeCorners, const WallSegment& refWallSegment);
     std::vector<glm::vec2> FlattenEarcutInput(const std::vector<std::vector<glm::vec2>>& earcutInput);
     std::vector<std::vector<glm::vec2>> ConvertClipperToEarcut(const Clipper2Lib::PathsD& solution);
     std::vector<Vertex> ProjectBackTo3D(const std::vector<glm::vec2>& vertices2D, const WallSegment& refWallSegment);
     Clipper2Lib::PathD ConvertToClipperPath(const std::vector<glm::vec2>& points);
-    
-    void SubtractCubesFromWallSegment(WallSegment& wallSegment, std::vector<ClippingCube>& clippingCubes, std::vector<Vertex>& verticesOut, std::vector<uint32_t>& indicesOut) {
+
+    void SubtractClippingVolumesFromWallSegment(WallSegment& wallSegment, const std::vector<const HouseBuilder::ClippingVolume*>& clippingVolumes, std::vector<Vertex>& verticesOut, std::vector<uint32_t>& indicesOut) {
         const AABB& wallAABB = wallSegment.GetAABB();
-        const glm::vec3 wallNormal = wallSegment.GetNormal();
-        const std::vector<glm::vec3>& corners = wallSegment.GetCorners();
-        
+
         // Create wall path
         std::vector<glm::vec2> projectedWall = ProjectWallSegmentTo2D(wallSegment);
         Clipper2Lib::PathsD wallPath = { ConvertToClipperPath(projectedWall) };
 
-        // Create cube paths
+        // Create clipping volume paths
         Clipper2Lib::PathsD clippingPaths;
-        for (ClippingCube& clippingCube : clippingCubes) {
-            const AABB& cubeAABB = clippingCube.GetAABB();
-            if (!wallAABB.IntersectsAABB(cubeAABB)) continue;
+        for (const HouseBuilder::ClippingVolume* clippingVolume : clippingVolumes) {
+            if (!clippingVolume) continue;
+            if (!wallAABB.IntersectsAABB(clippingVolume->GetWorldAABB())) continue;
 
-            std::vector<glm::vec2> projectedCube = ProjectCubeSliceTo2D(clippingCube, wallSegment);
-            Clipper2Lib::PathD clipPath = ConvertToClipperPath(projectedCube);
+            std::vector<glm::vec2> projectedVolume = ProjectClippingVolumeSliceTo2D(*clippingVolume, wallSegment);
+            if (projectedVolume.size() < 3) continue;
+
+            Clipper2Lib::PathD clipPath = ConvertToClipperPath(projectedVolume);
             clippingPaths.push_back(clipPath);
         }
 
@@ -78,18 +79,12 @@ namespace Unloved {
         return projectedPoints;
     }
 
-    std::vector<glm::vec2> ProjectCubeSliceTo2D(const ClippingCube& cube, const WallSegment& refWallSegment) {
-        glm::mat4 model = cube.GetModelMatrix();
-        glm::vec3 localHalfExtents(0.5f, 0.5f, 0.5f);
-        std::vector<glm::vec3> cubeVertices;
-        cubeVertices.reserve(8);
-        for (int i = 0; i < 8; ++i) {
-            float x = (i & 1) ? localHalfExtents.x : -localHalfExtents.x;
-            float y = (i & 2) ? localHalfExtents.y : -localHalfExtents.y;
-            float z = (i & 4) ? localHalfExtents.z : -localHalfExtents.z;
-            glm::vec4 localPos(x, y, z, 1.0f);
-            cubeVertices.push_back(glm::vec3(model * localPos));
-        }
+    std::vector<glm::vec2> ProjectClippingVolumeSliceTo2D(const HouseBuilder::ClippingVolume& clippingVolume, const WallSegment& refWallSegment) {
+        return ProjectVolumeCornersSliceTo2D(clippingVolume.GetCorners(), refWallSegment);
+    }
+
+    std::vector<glm::vec2> ProjectVolumeCornersSliceTo2D(const std::vector<glm::vec3>& volumeCorners, const WallSegment& refWallSegment) {
+        if (volumeCorners.size() < 8) return {};
 
         const int edgeIndices[12][2] = {
             {0, 1}, {1, 3}, {3, 2}, {2, 0},
@@ -106,7 +101,7 @@ namespace Unloved {
         const float tolerance = 0.0001f;
         for (int i = 0; i < 12; ++i) {
             int idx0 = edgeIndices[i][0], idx1 = edgeIndices[i][1];
-            const glm::vec3& p0 = cubeVertices[idx0], & p1 = cubeVertices[idx1];
+            const glm::vec3& p0 = volumeCorners[idx0], & p1 = volumeCorners[idx1];
 
             float d0 = glm::dot(p0 - planeOrigin, wallNormal);
             float d1 = glm::dot(p1 - planeOrigin, wallNormal);
@@ -123,8 +118,7 @@ namespace Unloved {
         const float dupEpsilon = 0.001f;
         std::vector<glm::vec3> uniquePoints;
         for (const auto& pt : intersectionPoints) {
-            if (std::none_of(uniquePoints.begin(), uniquePoints.end(),
-                [&](const glm::vec3& upt) { return glm::length(pt - upt) < dupEpsilon; })) {
+            if (std::none_of(uniquePoints.begin(), uniquePoints.end(), [&](const glm::vec3& upt) { return glm::length(pt - upt) < dupEpsilon; })) {
                 uniquePoints.push_back(pt);
             }
         }
@@ -209,25 +203,5 @@ namespace Unloved {
             path.push_back(Clipper2Lib::PointD(pt.x, pt.y));
         }
         return path;
-    }
-
-    ClippingCubeRayResult CastClippingCubeRay(const glm::vec3& rayOrigin, const glm::vec3 rayDir, std::vector<ClippingCube>& clippingCubes) {
-        ClippingCubeRayResult rayResult;
-        rayResult.distanceToHit = std::numeric_limits<float>::max();
-        const AABB localCubeBounds(glm::vec3(-0.5f), glm::vec3(0.5f));
-
-        for (ClippingCube& clippingCube : clippingCubes) {
-            OBB obb(localCubeBounds, clippingCube.GetModelMatrix());
-            OBBRayResult obbRayResult = obb.Raycast(rayOrigin, rayDir, rayResult.distanceToHit);
-
-            if (obbRayResult.hitFound) {
-                rayResult.distanceToHit = obbRayResult.distanceToHit;
-                rayResult.hitFound = true;
-                rayResult.hitPosition = obbRayResult.hitPositionWorld;
-                rayResult.hitClippingCube = &clippingCube;
-            }
-        }
-
-        return rayResult;
     }
 }

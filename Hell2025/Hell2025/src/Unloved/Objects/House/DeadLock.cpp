@@ -40,7 +40,7 @@ void DeadLock::Update(float deltaTime) {
 
     const glm::mat4& parentDoorModelMatrix = parentDoor->GetDoorModelMatrix();
 
-  // std::cout << m_parentDoorId << ": " << Util::Mat4ToString(parentDoorModelMatrix) << "\n";
+  // std::cout << m_parentDoorId << ": " << Hell::String::FormatMat4(parentDoorModelMatrix) << "\n";
 
     Transform localTransform;
     localTransform.position = m_localOffset;
@@ -52,7 +52,7 @@ void DeadLock::Update(float deltaTime) {
            
             glm::mat4 openableMatrix = openable->m_transform.to_mat4();
 
-            //std::cout << m_parentDoorId << ":" << Util::Mat4ToString(openable->m_transform.to_mat4()) << "\n";
+            //std::cout << m_parentDoorId << ":" << Hell::String::FormatMat4(openable->m_transform.to_mat4()) << "\n";
 
             m_meshNodes.Update(parentDoorModelMatrix * openableMatrix * localTransform.to_mat4());
 

@@ -1,6 +1,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/Backend/BackEnd.h"
+#include "Hell/Common/String.h"
 #include "Unloved/Config/Config.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Renderer/RenderDataManager.h"
@@ -10,7 +11,6 @@ namespace Audio = Hell::Audio;
 #include "Unloved/World/World.h"
 #include "Unloved/Debug/Debug.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Util/Util.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
@@ -38,7 +38,7 @@ namespace OpenGLRenderer {
         if (Input::KeyPressed(HELL_KEY_Z)) {
             Audio::PlayAudio("UI_Select.wav", 1.0f);
             g_cullFace = !g_cullFace;
-            Debug::BlitQuickDebugMessage("Hair cull face enabled: " + Util::BoolToString(g_cullFace));
+            Debug::BlitQuickDebugMessage("Hair cull face enabled: " + Hell::String::FormatBool(g_cullFace));
         }
     }
 

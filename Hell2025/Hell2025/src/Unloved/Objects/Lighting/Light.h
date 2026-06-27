@@ -2,8 +2,8 @@
 #include "Unloved/Camera/Frustum.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Hell/ResourceManagement/Types/Model.h"
-#include <Game/CreateInfo.h>
-#include <Game/Types.h>
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Common/Types.h"
 
 namespace Unloved {
 

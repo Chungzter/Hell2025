@@ -626,7 +626,7 @@ namespace Unloved {
         if (m_huntedPlayerId != 0) {
             Unloved::Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId);
             m_targetPosition = player->GetCameraPosition() - glm::vec3(0.0, 0.1f, 0.0f);
-            //std::cout << Util::Vec3ToString(m_targetPosition) << "\n";
+            //std::cout << Hell::String::FormatVec3(m_targetPosition) << "\n";
 
             static bool attackLeft = true;
             if (GetDistanceToTarget2D() < 6.5f) {

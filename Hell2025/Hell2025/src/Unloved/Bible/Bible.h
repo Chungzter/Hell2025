@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Legacy/Types/Core/ItemInfo.h"
-
+#include "Unloved/Bible/Info/ItemInfo.h"
 #include "Unloved/Inventory/Inventory.h"
 #include "Unloved/Objects/Renderables/AnimatedMeshNodes.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"

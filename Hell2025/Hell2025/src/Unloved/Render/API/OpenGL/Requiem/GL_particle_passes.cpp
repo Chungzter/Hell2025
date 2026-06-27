@@ -6,9 +6,9 @@
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 
-#include "Game/GPUTypes.h"
 #include "Hell/Input.h"
 #include "Hell/Time.h"
+
 namespace Input = Hell::Input;
 
 

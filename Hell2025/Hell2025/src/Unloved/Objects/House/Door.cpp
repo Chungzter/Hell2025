@@ -22,6 +22,8 @@ Door::Door(uint64_t id, DoorCreateInfo& createInfo, SpawnOffset& spawnOffset) {
 
     m_position = createInfo.position + spawnOffset.translation;
     m_rotation = createInfo.rotation + glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+    m_clippingVolume.SetOwner(ObjectType::DOOR, m_objectId);
+    UpdateClippingVolume();
 
     // Sensible defaults if for whatever reason your map file was missing this field
     if (m_createInfo.type == DoorType::UNDEFINED)                           m_createInfo.type = DoorType::STANDARD_A;
@@ -197,6 +199,18 @@ void Door::CreateRaytracingVertices() {
     m_raytracingDoorMesh.UpdateBuffers();
 }
 
+void Door::UpdateClippingVolume() {
+    float padding = 0.02f;
+
+    Hell::Transform transform;
+    transform.position = m_position;
+    transform.position.y += DOOR_HEIGHT * 0.5f;
+    transform.rotation = m_rotation;
+    transform.scale = glm::vec3(0.2f, DOOR_HEIGHT + padding, DOOR_WIDTH + padding);
+
+    m_clippingVolume.Update(transform);
+}
+
 void Door::UpdateWorldForward() {
     Transform transform;
     transform.rotation = m_rotation;
@@ -238,11 +252,13 @@ void Door::DebugDraw() {
 void Door::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
     m_position = position;
+    UpdateClippingVolume();
 }
 
 void Door::SetRotationY(float value) {
     m_createInfo.rotation.y = value;
     m_rotation.y = value;
+    UpdateClippingVolume();
 }
 
 void Door::SetEditorName(const std::string& name) {

@@ -1,6 +1,6 @@
 #include "AnimatedMeshNodes.h"
-#include "Legacy/Util/Util.h"
 
+#include "Hell/Common/Bit.h"
 #include "Hell/Logging.h"
 
 #include <iostream> // TODO clean up logging
@@ -84,7 +84,7 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         renderItem.baseVertex = mesh->baseVertex;
         renderItem.baseIndex = mesh->baseIndex;
 
-        Util::PackUint64(m_parentId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+        Hell::Bit::PackUint64(m_parentId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
 
         // Additional textures (hair)
 		if (m_nodes[i].blendingMode == BlendingMode::HAIR) {

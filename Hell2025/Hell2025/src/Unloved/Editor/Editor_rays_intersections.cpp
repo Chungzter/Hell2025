@@ -4,6 +4,9 @@
 
 #include "Unloved/Viewport/ViewportManager.h"
 
+#ifndef GLM_ENABLE_EXPERIMENTAL
+    #define GLM_ENABLE_EXPERIMENTAL
+#endif
 #include <glm/gtx/intersect.hpp>
 
 namespace Unloved::Editor {

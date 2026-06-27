@@ -1,8 +1,10 @@
 #include "Fence.h"
+#include "Hell/Common/Bit.h"
+#include "Hell/Common/Random.h"
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
 #include "Legacy/Renderer/Renderer.h"
-#include "Util.h"
+#include "Legacy/Util/Util.h"
 
 namespace Unloved {
 
@@ -97,9 +99,9 @@ void Fence::Init() {
         Transform transform;
         transform.position = m_finalPositions[i];
         transform.rotation.y = Util::EulerYRotationBetweenTwoPoints(position, nextPosition);
-        transform.rotation.x += Util::RandomFloat(-maxWonkiness, maxWonkiness);
-        transform.rotation.y += Util::RandomFloat(-maxWonkiness, maxWonkiness);
-        transform.rotation.z += Util::RandomFloat(-maxWonkiness, maxWonkiness);
+        transform.rotation.x += Hell::Random::Float(-maxWonkiness, maxWonkiness);
+        transform.rotation.y += Hell::Random::Float(-maxWonkiness, maxWonkiness);
+        transform.rotation.z += Hell::Random::Float(-maxWonkiness, maxWonkiness);
 
         if (counter == 0) {
             for (RenderItem& renderItem : meshNodeRenderItemsFat) {
@@ -151,7 +153,7 @@ void Fence::Init() {
     }
 
     for (RenderItem& renderItem : m_renderItems) {
-        Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+        Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
         Util::UpdateRenderItemAABB(renderItem);
     }
 }

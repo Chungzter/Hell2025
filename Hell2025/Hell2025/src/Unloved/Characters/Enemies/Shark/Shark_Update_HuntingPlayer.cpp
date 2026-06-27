@@ -128,7 +128,7 @@ namespace Unloved {
                 //if (m_drawDebug) {
                 //    std::cout << "\n";
                 //    std::cout << "GetAnimationFrameNumber(): " << GetAnimationFrameNumber() << "\n";
-                //    std::cout << "IsBehindEvadePoint(playerPos): " << Util::BoolToString(IsBehindEvadePoint(playerPos)) << "\n";
+                //    std::cout << "IsBehindEvadePoint(playerPos): " << Hell::String::FormatBool(IsBehindEvadePoint(playerPos)) << "\n";
                 //    std::cout << "distanceFromHead2D:  " << distanceFromHead2D << "\n";
                 //    std::cout << "dotToPlayer:  " << dotToPlayer << "\n";
                 //    std::cout << "perpendicularDistance:  " << perpendicularDistance << "\n";
@@ -138,7 +138,7 @@ namespace Unloved {
                 if (!m_playerSafe) {
 
                     //std::cout << "\nKILLED on anim frame " << GetAnimationFrameNumber() << "\n";
-                    //std::cout << "IsBehindEvadePoint(playerPos): " << Util::BoolToString(IsBehindEvadePoint(playerPos)) << "\n";
+                    //std::cout << "IsBehindEvadePoint(playerPos): " << Hell::String::FormatBool(IsBehindEvadePoint(playerPos)) << "\n";
                     //std::cout << "distanceFromHead2D:  " << distanceFromHead2D << "\n";
                     //std::cout << "dotToPlayer:  " << dotToPlayer << "\n";
                     //std::cout << "perpendicularDistance:  " << perpendicularDistance << "\n";

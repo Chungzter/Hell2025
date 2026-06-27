@@ -1,7 +1,8 @@
 #pragma once
 #include "JSON.h"
-#include "Util.h"
 
+#include "Hell/Common/Constants.h"
+#include "Hell/Common/Enum.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include <fstream>
@@ -46,11 +47,11 @@ namespace nlohmann {
             {"Position", createInfo.position},
             {"Rotation", createInfo.rotation},
             {"EditorName", createInfo.editorName},
-            {"Type", Util::DoorTypeToString(createInfo.type) },
-            {"MaterialTypeFront", Util::DoorMaterialTypeToString(createInfo.materialTypeFront) },
-            {"MaterialTypeBack", Util::DoorMaterialTypeToString(createInfo.materialTypeBack) },
-            {"MaterialTypeFrameFront", Util::DoorMaterialTypeToString(createInfo.materialTypeFrameFront) },
-            {"MaterialTypeFrameBack", Util::DoorMaterialTypeToString(createInfo.materialTypeFrameBack) },
+            {"Type", Hell::Enum::ToString(createInfo.type) },
+            {"MaterialTypeFront", Hell::Enum::ToString(createInfo.materialTypeFront) },
+            {"MaterialTypeBack", Hell::Enum::ToString(createInfo.materialTypeBack) },
+            {"MaterialTypeFrameFront", Hell::Enum::ToString(createInfo.materialTypeFrameFront) },
+            {"MaterialTypeFrameBack", Hell::Enum::ToString(createInfo.materialTypeFrameBack) },
             {"MaxOpenValue", createInfo.maxOpenValue},
             {"HasDeadLock", createInfo.hasDeadLock},
             {"DeadLockedAtStart", createInfo.deadLockedAtInit}
@@ -68,7 +69,7 @@ namespace nlohmann {
         j = nlohmann::json{
             {"Position", createInfo.position},
             {"Rotation", createInfo.rotation},
-            {"Type", Util::FireplaceTypeToString(createInfo.type)},
+            {"Type", Hell::Enum::ToString(createInfo.type)},
             {"EditorName", createInfo.editorName}
         };
     }
@@ -79,7 +80,7 @@ namespace nlohmann {
             {"Rotation", createInfo.rotation},
             {"Scale", createInfo.scale},
             {"EditorName", createInfo.editorName},
-            {"Type", Util::GenericObjectTypeToString(createInfo.type)}
+            {"Type", Hell::Enum::ToString(createInfo.type)}
         };
     }
 
@@ -87,7 +88,7 @@ namespace nlohmann {
         j = nlohmann::json{
             {"Position", houseLocation.position},
             {"Rotation", houseLocation.rotation},
-            {"Type", Util::HouseTypeToString(houseLocation.type)}
+            {"Type", Hell::Enum::ToString(houseLocation.type)}
         };
     }
 
@@ -102,7 +103,7 @@ namespace nlohmann {
             {"TextureOffsetV", createInfo.textureOffsetV},
             {"TextureRotation", createInfo.textureRotation},
             {"Material", createInfo.materialName},
-            {"Type", Util::HousePlaneTypeToString(createInfo.type)},
+            {"Type", Hell::Enum::ToString(createInfo.type)},
             {"EditorName", createInfo.editorName}
         };
     }
@@ -125,10 +126,10 @@ namespace nlohmann {
             {"Radius", createInfo.radius},
             {"Twist", createInfo.twist},
             {"SaveToFile", createInfo.saveToFile},
-            {"IESProfileType", Util::IESProfileTypeToString(createInfo.iesProfileType)},
+            {"IESProfileType", Hell::Enum::ToString(createInfo.iesProfileType)},
             {"IESExposure", createInfo.iesExposure},
             {"Strength", createInfo.strength},
-            {"Type", Util::LightTypeToString(createInfo.type)},
+            {"Type", Hell::Enum::ToString(createInfo.type)},
         };
     }
 
@@ -148,7 +149,7 @@ namespace nlohmann {
             {"Respawn", createInfo.respawn},
             {"DisablePhysicsAtSpawn", createInfo.disablePhysicsAtSpawn},
             {"Name", createInfo.name},
-            {"Type", Util::PickUpTypeToString(createInfo.type)},
+            {"Type", Hell::Enum::ToString(createInfo.type)},
             {"EditorName", createInfo.editorName}
         };
     }
@@ -158,7 +159,7 @@ namespace nlohmann {
             {"Position", createInfo.position},
             {"Rotation", createInfo.rotation},
             {"Scale", createInfo.scale},
-            {"Type", Util::PictureFrameTypeToString(createInfo.type)},
+            {"Type", Hell::Enum::ToString(createInfo.type)},
         };
     }
 
@@ -190,7 +191,7 @@ namespace nlohmann {
             {"Position", createInfo.position},
             {"Rotation", createInfo.rotation},
             {"Scale", createInfo.scale},
-            {"Type", Util::TreeTypeToString(createInfo.type)},
+            {"Type", Hell::Enum::ToString(createInfo.type)},
             {"EditorName", createInfo.editorName}
         };
     }
@@ -206,10 +207,10 @@ namespace nlohmann {
             {"TextureOffsetU", createInfo.textureOffsetU},
             {"TextureOffsetV", createInfo.textureOffsetV},
             {"TextureRotation", createInfo.textureRotation},
-            {"TrimTypeCeiling", Util::TrimTypeToString(createInfo.ceilingTrimType)},
-            {"TrimTypeFloor",  Util::TrimTypeToString(createInfo.floorTrimType)},
+            {"TrimTypeCeiling", Hell::Enum::ToString(createInfo.ceilingTrimType)},
+            {"TrimTypeFloor",  Hell::Enum::ToString(createInfo.floorTrimType)},
             {"UseReversePointOrder", createInfo.useReversePointOrder},
-            {"WallType",  Util::WallTypeToString(createInfo.wallType)}
+            {"WallType",  Hell::Enum::ToString(createInfo.wallType)}
         };
     }
 
@@ -217,20 +218,6 @@ namespace nlohmann {
         j = nlohmann::json{
             {"Position", createInfo.position},
             {"Rotation", createInfo.rotation}
-        };
-    }
-
-    void to_json(nlohmann::json& j, const MeshRenderingInfo& info) {
-        Material* material = Hell::ResourceManager::GetMaterialByIndex(info.materialIndex);
-        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(info.meshId);
-
-        if (!material) return;
-        if (!mesh) return;
-
-        j = nlohmann::json{
-            {"meshName", mesh->name},
-            {"materialName", material ? Hell::ResourceManager::GetMaterialNameByIndex(info.materialIndex) : DEFAULT_MATERIAL_NAME },
-            {"blendingMode", Util::BlendingModeToString(info.blendingMode)}
         };
     }
 
@@ -271,11 +258,11 @@ namespace nlohmann {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
-        info.type = Util::StringToDoorType(j.value("Type", UNDEFINED_STRING));
-        info.materialTypeFront = Util::StringToDoorMaterialType(j.value("MaterialTypeFront", UNDEFINED_STRING));
-        info.materialTypeBack = Util::StringToDoorMaterialType(j.value("MaterialTypeBack", UNDEFINED_STRING));
-        info.materialTypeFrameFront = Util::StringToDoorMaterialType(j.value("MaterialTypeFrameFront", UNDEFINED_STRING));
-        info.materialTypeFrameBack = Util::StringToDoorMaterialType(j.value("MaterialTypeFrameBack", UNDEFINED_STRING));
+        info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), DoorType::UNDEFINED);
+        info.materialTypeFront = Hell::Enum::FromString(j.value("MaterialTypeFront", UNDEFINED_STRING), DoorMaterialType::UNDEFINED);
+        info.materialTypeBack = Hell::Enum::FromString(j.value("MaterialTypeBack", UNDEFINED_STRING), DoorMaterialType::UNDEFINED);
+        info.materialTypeFrameFront = Hell::Enum::FromString(j.value("MaterialTypeFrameFront", UNDEFINED_STRING), DoorMaterialType::UNDEFINED);
+        info.materialTypeFrameBack = Hell::Enum::FromString(j.value("MaterialTypeFrameBack", UNDEFINED_STRING), DoorMaterialType::UNDEFINED);
         info.hasDeadLock = j.value("HasDeadLock", false);
         info.deadLockedAtInit = j.value("DeadLockedAtStart", false);
         info.maxOpenValue = j.value("MaxOpenValue", 2.1f);
@@ -290,7 +277,7 @@ namespace nlohmann {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
-        info.type = Util::StringToFireplaceType(j.value("Type", UNDEFINED_STRING));
+        info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), FireplaceType::UNDEFINED);
     }
 
     void from_json(const nlohmann::json& j, GenericObjectCreateInfo& info) {
@@ -298,13 +285,13 @@ namespace nlohmann {
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
         info.scale = j.value("Scale", glm::vec3(1.0f));
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
-        info.type = Util::StringToGenericObjectType(j.value("Type", UNDEFINED_STRING));
+        info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), GenericObjectType::UNDEFINED);
     }
 
     void from_json(const nlohmann::json& j, HouseLocation& houseLocation) {
         houseLocation.position = j.value("Position", glm::vec3(0.0f));
         houseLocation.rotation = j.value("Rotation", 0.0f);
-        houseLocation.type = Util::StringToHouseType(j.value("Type", UNDEFINED_STRING));
+        houseLocation.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), HouseType::UNDEFINED);
     }
 
     void from_json(const nlohmann::json& j, HousePlaneCreateInfo& info) {
@@ -317,7 +304,7 @@ namespace nlohmann {
         info.textureOffsetV = j.value("TextureOffsetV", 0.0f);
         info.textureRotation = j.value("TextureRotation", 0.0f);
         info.materialName = j.value("Material", "CheckerBoard");
-        info.type = Util::StringToHousePlaneType(j.value("Type", UNDEFINED_STRING));
+        info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), HousePlaneType::UNDEFINED);
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -337,8 +324,8 @@ namespace nlohmann {
         info.saveToFile = j.value("SaveToFile", true);
         info.strength = j.value("Strength", 1.0f);
         info.twist = j.value("Twist", 0.0f);
-        info.type = Util::StringToLightType(j.value("Type", "HANGING_LIGHT"));
-        info.iesProfileType = Util::StringToIESProfileType(j.value("IESProfileType", "NONE"));
+        info.type = Hell::Enum::FromString(j.value("Type", "HANGING_LIGHT"), LightType::UNDEFINED);
+        info.iesProfileType = Hell::Enum::FromString(j.value("IESProfileType", "NONE"), IESProfileType::NONE);
         info.iesExposure = j.value("IESExposure", 1.0f);
     }
 
@@ -351,7 +338,7 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, PickUpCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
-        info.type = Util::StringToPickUpType(j.value("Type", "UNDEFINED_STRING"));
+        info.type = Hell::Enum::FromString(j.value("Type", "UNDEFINED_STRING"), ItemType::UNDEFINED);
         info.respawn = j.value("Respawn", true);
         info.saveToFile = j.value("SaveToFile", true);
         info.disablePhysicsAtSpawn = j.value("DisablePhysicsAtSpawn", true);
@@ -363,7 +350,7 @@ namespace nlohmann {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
         info.scale = j.value("Scale", glm::vec3(0.0f));
-        info.type = Util::StringToPictureFrameType(j.value("Type", UNDEFINED_STRING));
+        info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), PictureFrameType::UNDEFINED);
     }
 
     void from_json(const nlohmann::json& j, PowerPoleSetCreateInfo& info) {
@@ -382,7 +369,7 @@ namespace nlohmann {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
         info.rotation = j.value("Scale", glm::vec3(1.0f));
-        info.type = Util::StringToTreeType(j.value("Type", UNDEFINED_STRING));
+        info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), TreeType::UNDEFINED);
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -395,9 +382,9 @@ namespace nlohmann {
         info.textureOffsetU = j.value("TextureOffsetU", 0.0f);
         info.textureOffsetV = j.value("TextureOffsetV", 0.0f);
         info.textureRotation = j.value("TextureRotation", 0.0f);
-        info.ceilingTrimType = Util::StringToTrimType(j.value("TrimTypeCeiling", "NONE"));
-        info.floorTrimType = Util::StringToTrimType(j.value("TrimTypeFloor", "NONE"));
-        info.wallType = Util::StringToWallType(j.value("WallType", "NONE"));
+        info.ceilingTrimType = Hell::Enum::FromString(j.value("TrimTypeCeiling", "NONE"), TrimType::UNDEFINED);
+        info.floorTrimType = Hell::Enum::FromString(j.value("TrimTypeFloor", "NONE"), TrimType::UNDEFINED);
+        info.wallType = Hell::Enum::FromString(j.value("WallType", "NONE"), WallType::UNDEFINED);
         info.useReversePointOrder = j.value("UseReversePointOrder", false);
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
@@ -431,20 +418,6 @@ namespace nlohmann {
         catch (const nlohmann::json::exception& e) {
             v = glm::vec3(0.0f, 0.0f, 0.0f);
         }
-    }
-
-    void from_json(const nlohmann::json& j, MeshRenderingInfo& info) {
-        std::string meshName;
-        std::string materialName;
-        std::string blendingModeString;
-
-        j.at("meshName").get_to(meshName);
-        j.at("materialName").get_to(materialName);
-        j.at("blendingMode").get_to(blendingModeString);
-
-        info.meshId = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshIdByName(meshName);
-        info.materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
-        info.blendingMode = Util::StringToBlendingMode(blendingModeString);
     }
 
     void from_json(const nlohmann::json& j, std::map<Hell::ivecXZ, std::string>& mapData) {

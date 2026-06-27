@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Legacy/Game/CreateInfo.h"
-#include "Legacy/Game/Types.h"
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Common/Types.h"
 #include "Hell/Render/VertexAttributes.h"
 
 #include "Hell/ResourceManagement/Types/Material.h"

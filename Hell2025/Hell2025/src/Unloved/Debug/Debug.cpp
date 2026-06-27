@@ -1,5 +1,7 @@
 #include "Debug.h"
 
+#include "Hell/Common/Enum.h"
+#include "Hell/Common/String.h"
 #include "Hell/Logging.h"
 #include "Hell/MemoryTracker/MemoryTracker.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -26,7 +28,6 @@
 #include <cmath>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
 #include "Hell/Input.h"
 #include "Hell/Audio.h"
 #include "Hell/Time.h"
@@ -98,7 +99,7 @@ namespace Debug {
             for (Mirror& mirror : Unloved::MirrorManager::GetMirrors()) {
                 text += "- ";
                 text += std::to_string(mirror.GetObjectId()) + " ";
-                text += Util::Vec3ToString(mirror.GetWorldCenter()) + "\n";
+                text += Hell::String::FormatVec3(mirror.GetWorldCenter()) + "\n";
             }
 
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(0);
@@ -116,7 +117,7 @@ namespace Debug {
 
         const DebugRenderMode& debugRenderMode = Debug::GetDebugRenderMode();
         if (debugRenderMode != DebugRenderMode::NONE) {
-            AddText("Line Mode: " + Util::DebugRenderModeToString(debugRenderMode));
+            AddText("Line Mode: " + Hell::Enum::ToString(debugRenderMode));
         }
 
         std::string text2 = "SHIT\n";
@@ -182,8 +183,8 @@ namespace Debug {
         AddText("normalizedMouseX: " + std::to_string(normalizedMouseX));
         AddText("normalizedMouseY: " + std::to_string(normalizedMouseY));
         AddText("Hovered Unloved::Viewport Index: " + std::to_string(hoveredViewportIndex));
-        AddText("Mouse ray origin: " + Util::Vec3ToString(Editor::GetMouseRayOriginByViewportIndex(hoveredViewportIndex)));
-        AddText("Mouse ray direction: " + Util::Vec3ToString(Editor::GetMouseRayDirectionByViewportIndex(hoveredViewportIndex)));
+        AddText("Mouse ray origin: " + Hell::String::FormatVec3(Editor::GetMouseRayOriginByViewportIndex(hoveredViewportIndex)));
+        AddText("Mouse ray direction: " + Hell::String::FormatVec3(Editor::GetMouseRayDirectionByViewportIndex(hoveredViewportIndex)));
     }
 
     void BlitQuickDebugMessage(const std::string& message) {
@@ -307,10 +308,20 @@ namespace Debug {
                 //player->GetCharacterModelAnimatedGameObject()->DrawBoneTangentVectors(0.001f, i);
             }
         }
-        if (g_debugRenderMode == DebugRenderMode::CLIPPING_CUBES) {
-            for (ClippingCube& clippingCube : LegacyWorld::GetClippingCubes()) {
-                clippingCube.DrawDebugCorners(OUTLINE_COLOR);
-                clippingCube.DrawDebugEdges(WHITE);
+        if (g_debugRenderMode == DebugRenderMode::CLIPPING_VOLUMES) {
+            for (const Door& door : LegacyWorld::GetDoors()) {
+                door.GetClippingVolume().DrawDebugCorners(OUTLINE_COLOR);
+                door.GetClippingVolume().DrawDebugEdges(WHITE);
+            }
+            for (const Window& window : LegacyWorld::GetWindows()) {
+                window.GetClippingVolume().DrawDebugCorners(OUTLINE_COLOR);
+                window.GetClippingVolume().DrawDebugEdges(WHITE);
+            }
+        }
+        if (g_debugRenderMode == DebugRenderMode::BLOCKING_VOLUMES) {
+            for (const Fireplace& fireplace : LegacyWorld::GetFireplaces()) {
+                fireplace.GetBlockingVolume().DrawDebugCorners(OUTLINE_COLOR);
+                fireplace.GetBlockingVolume().DrawDebugEdges(WHITE);
             }
         }
         if (g_debugRenderMode == DebugRenderMode::DECALS) {
@@ -347,7 +358,7 @@ namespace Debug {
         if (g_debugTextMode == DebugTextMode::DEBUG_TEXT_MODE_COUNT) {
             g_debugTextMode = (DebugTextMode)0;
         }
-        std::cout << "Debug text mode: " << Util::DebugTextModeToString(g_debugTextMode) << "\n";
+        std::cout << "Debug text mode: " << Hell::Enum::ToString(g_debugTextMode) << "\n";
 
         if (g_debugTextMode == DebugTextMode::GLOBAL) {
             std::cout << ".. skipping DebugTextMode::GLOBAL\n";
@@ -364,7 +375,8 @@ namespace Debug {
             NONE,
             PHYSX_ALL,
             RAGDOLLS,
-            CLIPPING_CUBES,
+            CLIPPING_VOLUMES,
+            BLOCKING_VOLUMES,
             //HOUSE_GEOMETRY,
             DECALS,
             BONES,
@@ -394,6 +406,9 @@ namespace Debug {
         if (!allowed && g_debugRenderMode != DebugRenderMode::NONE) {
             NextDebugRenderMode();
         }
+
+        Debug::BlitQuickDebugMessage("Debug Render Mode: " + Hell::Enum::ToString(g_debugRenderMode));
+        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
     }
 
     void PrintModelMeshNames(const std::string& name) {

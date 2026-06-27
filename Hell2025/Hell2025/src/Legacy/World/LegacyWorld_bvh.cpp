@@ -2,6 +2,7 @@
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor.h"
 #include "Hell/BVH/BVH.h"
+#include "Hell/Common/Bit.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Timer.hpp"
 
@@ -44,7 +45,7 @@ namespace Unloved::LegacyWorld {
         instance.globalMeshIndex = renderItem.meshId;
         instance.customId = renderItem.customId;
         instance.localMeshNodeIndex = renderItem.localMeshNodeIndex;
-        Util::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, instance.objectId);
+        Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, instance.objectId);
     }
 
 	void CreateObjectInstanceDataFromRenderItems(const std::vector<RenderItem>& renderItems, std::vector<PrimitiveInstance>& container) {

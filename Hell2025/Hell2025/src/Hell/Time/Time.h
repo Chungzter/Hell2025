@@ -1,9 +1,13 @@
 #pragma once
 
+#include <cstdint>
+#include <string>
+
 namespace Hell::Time {
     void Init();
     void Update();
 
+    double NowSeconds();
     float RawDeltaTime();
     float DeltaTime();
     float MaxDeltaTime();
@@ -14,4 +18,6 @@ namespace Hell::Time {
     int FixedStepsConsumedThisFrame();
     int MaxFixedStepsPerFrame();
     bool ConsumeFixedStep();
+
+    std::string FormatTimestamp(uint64_t timestamp);
 }

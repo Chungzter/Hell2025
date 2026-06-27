@@ -1,5 +1,5 @@
 #pragma once
-#include <Game/CreateInfo.h>
+#include "Unloved/Common/CreateInfo.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 
 struct Mermaid {

@@ -1,6 +1,7 @@
 #include "BulletSystem.h"
 
 #include "Hell/Input.h"
+#include "Hell/Common/Enum.h"
 #include "Hell/Time.h"
 
 #include "Legacy/Renderer/RenderDataManager.h"
@@ -143,8 +144,8 @@ namespace Unloved::BulletSystem {
                 std::cout << "Hit found " << Unloved::Session::GetSessionTime() << "\n";
                 std::cout << " ObjectId          " << objectId << "\n";
                 std::cout << " PhysicsId         " << physicsId << "\n";
-                std::cout << " ObjectType        " << Util::EnumToString(hitObjectType) << "\n";
-                std::cout << " PhysicsObjectType " << Util::EnumToString(physicsObjectType) << "\n";
+                std::cout << " ObjectType        " << Hell::Enum::ToString(hitObjectType) << "\n";
+                std::cout << " PhysicsObjectType " << Hell::Enum::ToString(physicsObjectType) << "\n";
 
                 glm::vec3 appliedForce = rayDirection * glm::vec3(5.0f);
                 if (physicsObjectType == Hell::Physics::PhysicsObjectType::RAGDOLL) {

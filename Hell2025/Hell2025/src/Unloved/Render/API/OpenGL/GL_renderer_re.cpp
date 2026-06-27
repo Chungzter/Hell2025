@@ -1,23 +1,23 @@
 #include "GL_renderer.h"
+
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Unloved/Editor/Editor.h"
-#include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
-#include "World/LegacyWorld.h"
-#include "Unloved/Viewport/ViewportManager.h"
-
-#include "Game/RendereringConstants.h"
-#include "Unloved/Systems/Ocean/Ocean.h"
-#include "Unloved/Session/Session.h"
-#include "Core/ParticleManager.h"
-
-#include "Game/GPUTypes.h"
-
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Input.h"
 #include "Hell/Time.h"
-namespace Input = Hell::Input;
 
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Render/RendererConstants.h"
+#include "Unloved/Render/RendererTypes.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
+#include "Unloved/Systems/Particles/ParticleManager.h"
+#include "Unloved/Session/Session.h"
+#include "Unloved/Viewport/ViewportManager.h"
+
+#include "World/LegacyWorld.h"
+#include "Renderer/RenderDataManager.h"
+#include "Renderer/Renderer.h"
+
+namespace Input = Hell::Input;
 
 namespace OpenGLRenderer {
     struct RESettings {

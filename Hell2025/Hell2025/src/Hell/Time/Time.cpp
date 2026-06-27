@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <chrono>
+#include <exception>
+#include <format>
 
 namespace Hell::Time {
     namespace {
@@ -19,6 +21,12 @@ namespace Hell::Time {
         int g_fixedStepsConsumedThisFrame = 0;
         bool g_initialized = false;
         bool g_hasUpdated = false;
+    }
+
+    double NowSeconds() {
+        return std::chrono::duration_cast<std::chrono::duration<double>>(
+            Clock::now().time_since_epoch()
+        ).count();
     }
 
     void Init() {
@@ -107,5 +115,16 @@ namespace Hell::Time {
         }
 
         return true;
+    }
+
+    std::string FormatTimestamp(uint64_t timestamp) {
+        try {
+            std::chrono::sys_time<std::chrono::seconds> timePoint{ std::chrono::seconds{timestamp} };
+            std::chrono::zoned_time zonedTime{ std::chrono::current_zone(), timePoint };
+            return std::format("{:%Y-%m-%d %H:%M:%S %Z}", zonedTime);
+        }
+        catch (const std::exception&) {
+            return "Invalid Timestamp";
+        }
     }
 }

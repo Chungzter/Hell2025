@@ -3,7 +3,7 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Input.h"
 
-#include "Legacy/Game/Constants.h"
+#include "Unloved/Common/Constants.h"
 #include "Legacy/Util/Util.h"
 
 #include "Unloved/Config/Config.h"

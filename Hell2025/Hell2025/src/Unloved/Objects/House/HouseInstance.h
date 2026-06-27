@@ -1,5 +1,5 @@
 #pragma once
-#include <Game/Types.h>
+#include "Unloved/Common/Types.h"
 
 namespace Unloved {
 

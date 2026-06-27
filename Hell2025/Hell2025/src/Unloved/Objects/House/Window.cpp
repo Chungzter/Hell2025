@@ -1,7 +1,12 @@
 #include "Window.h"
-#include "Unloved/Editor/Editor.h"
+
 #include "Hell/Physics/Physics.h"
+
 #include "Legacy/Renderer/RenderDataManager.h"
+
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Render/RendererEnums.h"
+
 #include "Util.h"
 
 namespace Unloved {
@@ -12,6 +17,8 @@ Window::Window(uint64_t id, const WindowCreateInfo& createInfo, const SpawnOffse
 
     m_transform.position = m_createInfo.position + spawnOffset.translation;
     m_transform.rotation = m_createInfo.rotation + glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+    m_clippingVolume.SetOwner(ObjectType::WINDOW, m_objectId);
+    UpdateClippingVolume();
 
     std::string interiorMaterial = "T_TrimInteriorRE";
     std::string exteriorMaterial = "T_TrimExteriorWP";
@@ -88,15 +95,26 @@ void Window::CleanUp() {
     Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
 }
 
+void Window::UpdateClippingVolume() {
+    Hell::Transform transform = m_transform;
+    transform.position.y += 1.48f;
+    transform.scale = glm::vec3(0.2f, 1.185074f, 0.85f);
+
+    m_clippingVolume.Update(transform);
+}
+
 void Window::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
     m_transform.position = position;
+    UpdateClippingVolume();
     m_meshNodes.Update(m_transform.to_mat4());
     Hell::Physics::SetRigidStaticWorldTransform(m_physicsId, m_transform.to_mat4());
 }
 
 void Window::SetRotationY(float value) {
     m_createInfo.rotation.y = value;
+    m_transform.rotation.y = value;
+    UpdateClippingVolume();
     m_meshNodes.Update(m_transform.to_mat4());
 }
 

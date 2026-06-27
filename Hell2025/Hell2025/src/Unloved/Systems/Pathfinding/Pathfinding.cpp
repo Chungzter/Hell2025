@@ -108,7 +108,7 @@ namespace Pathfinding {
     void LoadMap() {
         ClearMap();
         std::string fullPath = "res/maps/mappp.txt";
-        if (Util::FileExists(fullPath)) {
+        if (Hell::File::Exists(fullPath)) {
             std::cout << "Loading map '" << fullPath << "'\n";
             std::ifstream file(fullPath);
             std::stringstream buffer;

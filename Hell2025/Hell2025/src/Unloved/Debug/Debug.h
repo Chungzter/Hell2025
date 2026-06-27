@@ -1,5 +1,7 @@
 #pragma once
-#include <Game/Enums.h>
+#include "DebugTypes.h"
+#include <Unloved/Render/RendererEnums.h>
+
 #include <string>
 
 namespace Debug {

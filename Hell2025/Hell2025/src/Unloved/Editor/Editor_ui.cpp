@@ -6,6 +6,7 @@
 #include "Legacy/Util/Util.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
+#include "Unloved/Common/Constants.h"
 #include "Unloved/Config/Config.h"
 
 namespace Unloved::Editor {

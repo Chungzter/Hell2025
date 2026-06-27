@@ -1,10 +1,18 @@
 #pragma once
 
 #include "Legacy/Common/HellFunctionTypes.h"
-#include "Legacy/Game/Types.h"
+#include "Unloved/Common/Enums.h"
 
+#include <glm/vec3.hpp>
+
+#include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <map>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace Unloved::EditorUI {

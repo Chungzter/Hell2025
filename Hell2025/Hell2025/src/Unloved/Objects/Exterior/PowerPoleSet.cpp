@@ -1,8 +1,9 @@
 #include "PowerPoleSet.h"
+#include "Hell/Common/Bit.h"
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
 #include "Legacy/Renderer/Renderer.h"
-#include "Util.h"
+#include "Legacy/Util/Util.h"
 
 namespace Unloved {
 
@@ -98,7 +99,7 @@ void PowerPoleSet::Init() {
     }
 
     for (RenderItem& renderItem : m_renderItems) {
-        Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+        Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
         Util::UpdateRenderItemAABB(renderItem);
     }
 }

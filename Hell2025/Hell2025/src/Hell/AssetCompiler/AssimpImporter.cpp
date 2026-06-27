@@ -1,13 +1,13 @@
 #include "AssimpImporter.h"
 
+#include "Hell/Common/String.h"
 #include "Hell/File.h"
+#include "Hell/Math/Sanitize.h"
 
-#include <assimp/matrix3x3.h>
 #include <assimp/matrix4x4.h>
 #include <assimp/Importer.hpp>
 #include <assimp/Scene.h>
 #include <assimp/PostProcess.h>
-#include <cmath>
 #include <numeric>
 
 #include <map>
@@ -18,34 +18,16 @@
 
 namespace {
 
-    float Sanitize(float val) {
-        const float threshold = 1e-5f;
-
-        if (std::abs(val) < threshold) {
-            return 0.0f;
-        }
-        if (std::abs(val - 1.0f) < threshold) {
-            return 1.0f;
-        }
-        if (std::abs(val + 1.0f) < threshold) {
-            return -1.0f;
-        }
-
-        return val;
-    }
-
     glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
+        constexpr float threshold = 1e-5f;
         glm::mat4 to;
-        to[0][0] = Sanitize(from.a1); to[1][0] = Sanitize(from.a2); to[2][0] = Sanitize(from.a3); to[3][0] = Sanitize(from.a4);
-        to[0][1] = Sanitize(from.b1); to[1][1] = Sanitize(from.b2); to[2][1] = Sanitize(from.b3); to[3][1] = Sanitize(from.b4);
-        to[0][2] = Sanitize(from.c1); to[1][2] = Sanitize(from.c2); to[2][2] = Sanitize(from.c3); to[3][2] = Sanitize(from.c4);
-        to[0][3] = Sanitize(from.d1); to[1][3] = Sanitize(from.d2); to[2][3] = Sanitize(from.d3); to[3][3] = Sanitize(from.d4);
+        to[0][0] = Hell::Sanitize(from.a1, threshold); to[1][0] = Hell::Sanitize(from.a2, threshold); to[2][0] = Hell::Sanitize(from.a3, threshold); to[3][0] = Hell::Sanitize(from.a4, threshold);
+        to[0][1] = Hell::Sanitize(from.b1, threshold); to[1][1] = Hell::Sanitize(from.b2, threshold); to[2][1] = Hell::Sanitize(from.b3, threshold); to[3][1] = Hell::Sanitize(from.b4, threshold);
+        to[0][2] = Hell::Sanitize(from.c1, threshold); to[1][2] = Hell::Sanitize(from.c2, threshold); to[2][2] = Hell::Sanitize(from.c3, threshold); to[3][2] = Hell::Sanitize(from.c4, threshold);
+        to[0][3] = Hell::Sanitize(from.d1, threshold); to[1][3] = Hell::Sanitize(from.d2, threshold); to[2][3] = Hell::Sanitize(from.d3, threshold); to[3][3] = Hell::Sanitize(from.d4, threshold);
         return to;
     }
 
-    const char* BoolToString(bool b) {
-        return b ? "TRUE" : "FALSE";
-    }
 }
 
 namespace Hell::AssetCompiler {
@@ -420,7 +402,7 @@ namespace Hell::AssetCompiler {
                 meshData.nonDeformingBoneIndex = -1;
             }
 
-            std::cout << modelData.name << " [" << meshData.name << "]: " << BoolToString(meshData.requiresSkinning) << " " << foundBoneIndex << " nonDeformingBoneIndex " << meshData.vertexCount << " verts \n";
+            std::cout << modelData.name << " [" << meshData.name << "]: " << Hell::String::FormatBool(meshData.requiresSkinning) << " " << foundBoneIndex << " nonDeformingBoneIndex " << meshData.vertexCount << " verts \n";
 
             modelData.vertexCount += (uint32_t)meshData.vertices.size();
             modelData.indexCount += (uint32_t)meshData.indices.size();

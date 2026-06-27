@@ -1,5 +1,7 @@
 #include "Player.h"
 
+#include "Hell/Common/Random.h"
+#include "Hell/Common/String.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Audio.h"
 #include "Hell/Logging.h"
@@ -368,7 +370,7 @@ void Player::SpawnMuzzleFlash(float speed, float scale) {
     m_muzzleFlash.SetScale(glm::vec3(scale));
     m_muzzleFlash.SetTime(0.0f);
     m_muzzleFlash.EnableRendering();
-    m_muzzleFlash.SetRotation(glm::vec3(0.0f, 0.0f, Util::RandomFloat(0, HELL_PI * 2)));
+    m_muzzleFlash.SetRotation(glm::vec3(0.0f, 0.0f, Hell::Random::Float(0.0f, HELL_PI * 2)));
 }
 
 void Player::SpawnCasing() {
@@ -380,14 +382,14 @@ void Player::SpawnCasing() {
     if (!ammoInfo) return;
     if (!weaponInfo) return;
 
-    if (!Util::StrCmp(ammoInfo->casingModelName, UNDEFINED_STRING)) {
+    if (!Hell::String::Equals(ammoInfo->casingModelName, UNDEFINED_STRING)) {
         BulletCasingCreateInfo createInfo;
         createInfo.modelId = Hell::ResourceManager::GetModelIdByName(ammoInfo->casingModelName);
         createInfo.materialIndex = Hell::ResourceManager::GetMaterialIndexByName(ammoInfo->casingMaterialName);
         createInfo.position = viewWeapon->GetBoneWorldPosition(weaponInfo->casingEjectionBoneName);
         createInfo.rotation.y = m_camera.GetYaw() + (HELL_PI * 0.5f);
-        createInfo.force = glm::normalize(GetCameraRight() + glm::vec3(0.0f, Util::RandomFloat(0.7f, 0.9f), 0.0f)) * glm::vec3(weaponInfo->casingEjectionImpulse);
-    // createInfo.force = glm::normalize(GetCameraRight() + glm::vec3(0.0f, Util::RandomFloat(0.7f, 0.9f), 0.0f)) * glm::vec3(0.0175);
+        createInfo.force = glm::normalize(GetCameraRight() + glm::vec3(0.0f, Hell::Random::Float(0.7f, 0.9f), 0.0f)) * glm::vec3(weaponInfo->casingEjectionImpulse);
+    // createInfo.force = glm::normalize(GetCameraRight() + glm::vec3(0.0f, Hell::Random::Float(0.7f, 0.9f), 0.0f)) * glm::vec3(0.0175);
     // std::cout << "warning: you have hardcoded casing ejection impulse!\n";
 
         createInfo.position += GetCameraForward() * glm::vec3(0.15f);
@@ -421,9 +423,9 @@ void Player::SpawnBullet(float variance) {
         WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
 
         glm::vec3 bulletDirection = GetCameraForward();
-        bulletDirection.x += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
-        bulletDirection.y += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
-        bulletDirection.z += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
+        bulletDirection.x += Hell::Random::Float(-(variance * 0.5f), variance * 0.5f);
+        bulletDirection.y += Hell::Random::Float(-(variance * 0.5f), variance * 0.5f);
+        bulletDirection.z += Hell::Random::Float(-(variance * 0.5f), variance * 0.5f);
         bulletDirection = glm::normalize(bulletDirection);
 
         BulletCreateInfo createInfo;
@@ -444,9 +446,9 @@ void Player::SpawnUnderWaterBullet(float variance) {
     glm::vec3 origin = GetMuzzleFlashSpawnPosition() + GetCameraForward() * 0.05f;
     glm::vec3 bulletDirection = glm::normalize(vanishingPoint - GetCameraPosition());
 
-    bulletDirection.x += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
-    bulletDirection.y += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
-    bulletDirection.z += Util::RandomFloat(-(variance * 0.5f), variance * 0.5f);
+    bulletDirection.x += Hell::Random::Float(-(variance * 0.5f), variance * 0.5f);
+    bulletDirection.y += Hell::Random::Float(-(variance * 0.5f), variance * 0.5f);
+    bulletDirection.z += Hell::Random::Float(-(variance * 0.5f), variance * 0.5f);
     bulletDirection = glm::normalize(bulletDirection);
 
     BulletCreateInfo createInfo;
@@ -510,9 +512,9 @@ void Player::DropWeapons() {
             if (weaponInfo->itemInfoName != "") {
                 PickUpCreateInfo createInfo;
                 createInfo.position = GetCameraPosition();
-                createInfo.rotation.x = Util::RandomFloat(-HELL_PI, HELL_PI);
-                createInfo.rotation.y = Util::RandomFloat(-HELL_PI, HELL_PI);
-                createInfo.rotation.z = Util::RandomFloat(-HELL_PI, HELL_PI);
+                createInfo.rotation.x = Hell::Random::Float(-HELL_PI, HELL_PI);
+                createInfo.rotation.y = Hell::Random::Float(-HELL_PI, HELL_PI);
+                createInfo.rotation.z = Hell::Random::Float(-HELL_PI, HELL_PI);
                 createInfo.name = weaponInfo->itemInfoName;
                 createInfo.saveToFile = false;
                 createInfo.disablePhysicsAtSpawn = false;
@@ -520,9 +522,9 @@ void Player::DropWeapons() {
                 createInfo.type = Bible::GetItemType(weaponInfo->itemInfoName);
 
                 glm::vec3 force = glm::vec3(0.0f);
-                force.x = Util::RandomFloat(-HELL_PI * 0.5f, HELL_PI * 0.5f);
+                force.x = Hell::Random::Float(-HELL_PI * 0.5f, HELL_PI * 0.5f);
                 force.y = 1.0f;
-                force.z = Util::RandomFloat(-HELL_PI * 0.5f, HELL_PI * 0.5f);
+                force.z = Hell::Random::Float(-HELL_PI * 0.5f, HELL_PI * 0.5f);
                 force = glm::normalize(force);
                 force *= 200.0f;
 

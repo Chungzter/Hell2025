@@ -1,5 +1,7 @@
 #include "ImageTools.h"
 
+#include "Hell/Common/Enum.h"
+
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -9,6 +11,19 @@
 #include <vector>
 
 namespace Hell::ImageTools {
+
+    void PrintDebugInfo(const ImageData& imageData) {
+        std::cout << "Format: " << ImageFormatToString(imageData.format) << "\n";
+        std::cout << "Image Data Type: " << Hell::Enum::ToString(imageData.type) << "\n";
+        std::cout << "Channel Count: " << GetImageFormatChannelCount(imageData.format) << "\n";
+        std::cout << "Mip Count: " << imageData.mips.size() << "\n";
+
+        for (size_t i = 0; i < imageData.mips.size(); ++i) {
+            const TextureMip& mip = imageData.mips[i];
+            std::cout << "Mip " << i << ": " << mip.width << "x" << mip.height
+                << ", " << mip.data.size() << " bytes\n";
+        }
+    }
 
     void ConvertRGBA8ToR16SFloat(ImageData& imageData) {
         if (imageData.format != ImageFormat::RGBA8_UNORM) {

@@ -1,5 +1,9 @@
 #include "Wire.h"
+
+#include "Unloved/Common/Constants.h"
+#include "Unloved/Common/Types.h"
 #include "Unloved/Debug/DebugDraw.h"
+
 #include "Util.h"
 
 namespace Unloved {

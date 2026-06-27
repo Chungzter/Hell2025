@@ -15,7 +15,6 @@
 #include "Hell/Physics/Physics.h"
 #include "Util/Util.h"
 #include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
 #include <algorithm>
 #include <execution>
 #include "Hell/Input.h"

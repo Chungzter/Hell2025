@@ -27,6 +27,7 @@ namespace Hell::ImageTools {
     void ConvertRGBA8ToR16SFloat(ImageData& imageData);
     
     // Util
+    void PrintDebugInfo(const ImageData& imageData);
     bool IsEightBitImageFormat(ImageFormat format);
     bool IsHalfFloatImageFormat(ImageFormat format);
     bool IsFullFloatImageFormat(ImageFormat format);

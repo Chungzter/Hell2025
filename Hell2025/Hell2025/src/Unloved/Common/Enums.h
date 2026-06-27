@@ -1,0 +1,175 @@
+#pragma once
+
+enum class ShadingMode {
+    SHADED,
+    WIREFRAME,
+    WIREFRAME_OVERLAY,
+    SHADING_MODE_COUNT
+};
+
+enum struct IESProfileType {
+    NONE = 0,
+    LAMP_0,
+    LAMP_1,
+    LAMP_2,
+    LAMP_3,
+    LAMP_4,
+    LAMP_5,
+    LAMP_6,
+    LAMP_7,
+    LAMP_8,
+    LAMP_9,
+    LAMP_10,
+    LAMP_11,
+};
+
+enum struct ItemType {
+    HEAL,
+    WEAPON,
+    KEY,
+    AMMO,
+    USELESS,
+    UNDEFINED
+};
+
+
+enum InputType {
+    KEYBOARD_AND_MOUSE,
+    CONTROLLER
+};
+
+
+
+enum struct CollisionShapeType {
+    BOX,
+    CAPSULE,
+    CONVEX_MESH,
+    UNDEFINED
+};
+
+
+
+enum struct Shortcut {
+    F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+    CTRL_A, CTRL_B, CTRL_C, CTRL_D, CTRL_E, CTRL_F, CTRL_G, CTRL_H, CTRL_I, CTRL_J,
+    CTRL_K, CTRL_L, CTRL_M, CTRL_N, CTRL_O, CTRL_P, CTRL_Q, CTRL_R, CTRL_S, CTRL_T,
+    CTRL_U, CTRL_V, CTRL_W, CTRL_X, CTRL_Y, CTRL_Z,
+    ESC, NONE
+};
+
+
+
+enum struct EditorSelectionMode {
+    OBJECT,
+    VERTEX
+};
+
+enum struct EditorState {
+    IDLE,
+    RESIZING_HORIZONTAL,
+    RESIZING_VERTICAL,
+    RESIZING_HORIZONTAL_VERTICAL,
+    GIZMO_TRANSLATING,
+    GIZMO_SCALING,
+    GIZMO_ROTATING,
+    DRAGGING_SELECT_RECT,
+
+    PLACE_CHRISTMAS_LIGHTS,
+    PLACE_DDGI_VOLUME,
+    PLACE_FENCE,
+    PLACE_OBJECT,
+    PLACE_POWER_POLES,
+    PLACE_WALL,
+
+    // Object placement REMOVEEEEEEE MEEEEEEEE
+    PLACE_DOOR,
+    PLACE_DRAWERS,
+    PLACE_FLOOR,
+    PLACE_HOUSE,
+    PLACE_PICTURE_FRAME,
+    PLACE_TREE,
+    PLACE_WINDOW,
+    PLACE_PLAYER_CAMPAIGN_SPAWN,
+    PLACE_PLAYER_DEATHMATCH_SPAWN
+};
+
+enum WeaponAction {
+    IDLE = 0,
+    FIRE,
+    DRY_FIRE,
+    RELOAD,
+    RELOAD_FROM_EMPTY,
+    DRAW_BEGIN,
+    DRAWING,
+    DRAWING_FIRST,
+    DRAWING_WITH_SHOTGUN_PUMP,
+    SPAWNING,
+    SHOTGUN_UNLOAD_BEGIN,
+    SHOTGUN_UNLOAD_SINGLE_SHELL,
+    SHOTGUN_UNLOAD_DOUBLE_SHELL,
+    SHOTGUN_UNLOAD_END,
+    SHOTGUN_RELOAD_BEGIN,
+    SHOTGUN_RELOAD_SINGLE_SHELL,
+    SHOTGUN_RELOAD_DOUBLE_SHELL,
+    SHOTGUN_RELOAD_END,
+    SHOTGUN_RELOAD_END_WITH_PUMP,
+    SHOTGUN_MELEE,
+    ADS_IN,
+    ADS_OUT,
+    ADS_IDLE,
+    ADS_FIRE,
+    MELEE,
+    TOGGLING_AUTO,
+    UNDEFINED
+};
+
+enum class ShellEjectionState {
+    IDLE, AWAITING_SHELL_EJECTION
+};
+
+
+
+enum struct EditorViewportSplitMode {
+    SINGLE,
+    FOUR_WAY_SPLIT,
+    UNDEFINED
+};
+
+
+//enum struct PickUpTypeOld {
+//    SHOTGUN_AMMO_BUCKSHOT,
+//    SHOTGUN_AMMO_SLUG,
+//    GLOCK,
+//    GOLDEN_GLOCK,
+//    AKS74U,
+//    SPAS,
+//    REMINGTON_870,
+//    TOKAREV,
+//    UNDEFINED
+//};
+
+enum struct EditorMode {
+    HOUSE_EDITOR,
+    MAP_HEIGHT_EDITOR,
+    MAP_OBJECT_EDITOR,
+    UNDEFINED,
+};
+
+enum struct OpeningState {
+    CLOSED,
+    CLOSING,
+    OPEN,
+    OPENING,
+    UNDEFINED
+};
+
+
+enum struct InventoryState {
+    CLOSED,
+    MAIN_SCREEN,
+    EXAMINE_ITEM,
+    MOVING_ITEM,
+    ROTATING_ITEM,
+    SHOP,
+    UNDEFINED
+};

@@ -1,8 +1,10 @@
 #pragma once
-#include <Game/Types.h>
-#include <Game/CreateInfo.h>
+
+#include "Unloved/Common/CreateInfo.h"
 #include "Unloved/Objects/Renderables/MeshBufferOLD.h"
 #include "Unloved/Objects/Exterior/Wire.h"
+
+#include "Unloved/Render/RendererTypes.h"
 
 namespace Unloved {
 

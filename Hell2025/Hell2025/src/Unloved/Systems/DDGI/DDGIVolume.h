@@ -2,11 +2,12 @@
 
 #include "Hell/BVH/Types.h"
 
-#include "Legacy/Game/CreateInfo.h"
-#include "Legacy/Game/Types.h"
+#include "Unloved/Common/Types.h"
 
-#include "Unloved/Systems/DDGI/PointCloud.h"
+#include "Unloved/Common/CreateInfo.h"
 #include "Unloved/Objects/Renderables/MeshBufferOLD.h"
+#include "Unloved/Systems/DDGI/DDGITypes.h"
+#include "Unloved/Systems/DDGI/PointCloud.h"
 
 namespace Unloved {
 

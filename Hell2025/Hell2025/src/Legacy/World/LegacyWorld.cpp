@@ -1,30 +1,32 @@
 #include "LegacyWorld.h"
-#include <Game/CreateInfo.h>
-#include <Game/Constants.h>
-#include "Hell/Logging.h"
-#include <Game/Types.h>
-#include "Unloved/ObjectId.h"
-#include "Util.h"
+
 #include "Hell/Audio.h"
+#include "Hell/Common/Enum.h"
+#include "Hell/Containers/SlotMap.h"
+#include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/Physics/Physics.h"
+#include "Hell/Time.h"
+
 #include "Unloved/Bible/Bible.h"
-#include "Unloved/Session/Session.h"
 #include "Unloved/Editor/Editor.h"
-#include "Managers/HouseManager.h"
 #include "Unloved/Maps/MapManager.h"
+#include "Unloved/ObjectId.h"
+#include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 #include "Unloved/Systems/Blood/BloodSystem.h"
-#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Systems/DDGI/GlobalIllumination.h"
+#include "Unloved/Systems/House/HouseManager.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
-#include "Renderer/Renderer.h"
-#include "Renderer/RenderDataManager.h"
-#include "Hell/Physics/Physics.h"
-
 #include "Unloved/Systems/Pathfinding/AStarMap.h"
 
-#include "Hell/Containers/SlotMap.h"
-#include "Hell/Time.h"
+#include "Renderer/Renderer.h"
+#include "Renderer/RenderDataManager.h"
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Common/Constants.h"
+#include "Unloved/Common/Types.h"
+#include "Util.h"
 
 using namespace Hell;
 
@@ -49,7 +51,6 @@ namespace Unloved::LegacyWorld {
 
     std::vector<BulletCasing> g_bulletCasings;
     std::vector<ChristmasTree> g_christmasTrees;
-    std::vector<ClippingCube> g_clippingCubes;
     std::vector<Decal> g_newDecals;
     std::vector<Dobermann> g_dobermanns;
     std::vector<GameObject> g_gameObjects;
@@ -377,7 +378,7 @@ namespace Unloved::LegacyWorld {
         if (Unloved::DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetOrigin();
         // etc
 
-        Logging::Warning() << "LegacyWorld::GetObjectPosition(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(Unloved::GetObjectIdType(objectId)) << "\n";
+        Logging::Warning() << "LegacyWorld::GetObjectPosition(..) failed for ID " << objectId << ". You haven't implemented " << Hell::Enum::ToString(Unloved::GetObjectIdType(objectId)) << "\n";
         return invalid;
     }
 
@@ -387,7 +388,7 @@ namespace Unloved::LegacyWorld {
         if (Unloved::DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetRotation();
         // etc
 
-        Logging::Warning() << "LegacyWorld::GetObjectRotation(..) failed for ID " << objectId << ". You haven't implemented " << Util::ObjectTypeToString(Unloved::GetObjectIdType(objectId)) << "\n";
+        Logging::Warning() << "LegacyWorld::GetObjectRotation(..) failed for ID " << objectId << ". You haven't implemented " << Hell::Enum::ToString(Unloved::GetObjectIdType(objectId)) << "\n";
         return invalid;
     }
 
@@ -761,7 +762,7 @@ namespace Unloved::LegacyWorld {
         //    }
         //}
 
-        Logging::Error() << "LegacyWorld::RemoveObject() Failed to remove object " << objectId << ", check you have implemented type " << Util::EnumToString(Unloved::GetObjectIdType(objectId)) << "\n";
+        Logging::Error() << "LegacyWorld::RemoveObject() Failed to remove object " << objectId << ", check you have implemented type " << Hell::Enum::ToString(Unloved::GetObjectIdType(objectId)) << "\n";
         return false;
     }
 
@@ -880,33 +881,6 @@ namespace Unloved::LegacyWorld {
         g_walls.clear();
         g_windows.clear();
         g_staircases.clear();
-    }
-
-    void RecreateClippingCubes() {
-        g_clippingCubes.clear();
-        float padding = 0.02f;
-
-        for (Door& door : g_doors) {
-            Transform transform;
-            transform.position = door.GetPosition();
-            transform.position.y += DOOR_HEIGHT * 0.5f;
-            transform.rotation = door.GetRotation();
-            transform.scale = glm::vec3(0.2f, DOOR_HEIGHT + padding, DOOR_WIDTH + padding);
-
-            ClippingCube& cube = g_clippingCubes.emplace_back();
-            cube.Update(transform);
-        }
-
-        for (Window& window : g_windows) {
-            Transform transform;
-            transform.position = window.GetPosition();
-            transform.position.y += 1.48f;
-            transform.rotation = window.GetRotation();
-            transform.scale = glm::vec3(0.2f, 1.185074f, 0.85f);
-
-            ClippingCube& cube = g_clippingCubes.emplace_back();
-            cube.Update(transform);
-        }
     }
 
     void AddDDGIVolume(DDGIVolumeCreateInfo createInfo, SpawnOffset spawnOffset) {
@@ -1382,7 +1356,6 @@ namespace Unloved::LegacyWorld {
 
     std::vector<BulletCasing>& GetBulletCasings()                       { return g_bulletCasings; }
     std::vector<ChristmasTree>& GetChristmasTrees()                     { return g_christmasTrees; }
-    std::vector<ClippingCube>& GetClippingCubes()                       { return g_clippingCubes; }
     std::vector<Decal>& GetDecals()                                     { return g_newDecals; }
     std::vector<Dobermann>& GetDobermanns()                             { return g_dobermanns; }
     std::vector<GameObject>& GetGameObjects()                           { return g_gameObjects; }

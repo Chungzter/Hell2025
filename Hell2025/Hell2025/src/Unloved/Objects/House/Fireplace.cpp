@@ -11,6 +11,9 @@ Fireplace::Fireplace(uint64_t id, const FireplaceCreateInfo& createInfo, const S
     m_createInfo = createInfo;
     m_transform.position = m_createInfo.position + spawnOffset.translation;
     m_transform.rotation = m_createInfo.rotation + glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+    m_blockingVolume.SetOwner(m_id);
+    m_wallWidth = 0.766488f * 2.0f;
+    m_wallDepth = 0.450083f;
 
     //m_transform.rotation.y = HELL_PI;
 
@@ -114,13 +117,25 @@ Fireplace::Fireplace(uint64_t id, const FireplaceCreateInfo& createInfo, const S
         m_useFireClipHeight = true;
 	}
 
-    m_wallWidth = 0.766488f * 2.0f;
-    m_wallDepth = 0.425;
-    m_wallDepth = 0.450083f;
+}
 
-    glm::vec3 boundsMin = glm::vec3(-0.1f, 0.0f, -m_wallWidth * 0.5f);
-    glm::vec3 boundsMax = glm::vec3(m_wallDepth, 2.7f, m_wallWidth * 0.5f);
+void Fireplace::UpdateBlockingVolume() {
+    const glm::vec3 boundsMin = glm::vec3(-0.1f, 0.0f, -m_wallWidth * 0.5f);
+    const glm::vec3 boundsMax = glm::vec3(m_wallDepth, 2.7f, m_wallWidth * 0.5f);
+    const glm::vec3 localCenter = (boundsMin + boundsMax) * 0.5f;
+    const glm::vec3 size = boundsMax - boundsMin;
+
     m_wallsAabb = AABB(boundsMin, boundsMax);
+
+    Hell::Transform transform;
+    transform.position = m_transform.position;
+    transform.position += m_worldForward * localCenter.x;
+    transform.position += m_worldRight * localCenter.z;
+    transform.position.y += localCenter.y;
+    transform.rotation = m_transform.rotation;
+    transform.scale = size;
+
+    m_blockingVolume.Update(transform);
 }
 
 void Fireplace::UpdateWorldMatrix() {
@@ -131,6 +146,8 @@ void Fireplace::UpdateWorldMatrix() {
 
     m_worldForward = m_worldMatrix * glm::vec4(localForward, 0.0f);
     m_worldRight = m_worldMatrix * glm::vec4(localRight, 0.0f);
+
+    UpdateBlockingVolume();
 
     // Fire
     m_firePosition = m_transform.position;

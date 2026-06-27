@@ -4,7 +4,31 @@
 
 #include "Unloved/Objects/Renderables/AnimatedGameObject.h"
 
+#include <cstdint>
+#include <string>
 #include <vector>
+
+enum class SharkMovementState {
+    STOPPED,
+    FOLLOWING_PATH,
+    FOLLOWING_PATH_ANGRY,
+    ARROW_KEYS,
+    HUNT_PLAYER,
+    UNDEFINED
+};
+
+enum class SharkHuntingState {
+    CHARGE_PLAYER,
+    BITING_PLAYER,
+    UNDEFINED
+};
+
+enum class SharkMovementDirection {
+    STRAIGHT,
+    LEFT,
+    RIGHT,
+    UNDEFINED
+};
 
 namespace Unloved {
 

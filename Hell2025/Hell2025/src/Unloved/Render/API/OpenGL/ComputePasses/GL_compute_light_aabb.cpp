@@ -1,18 +1,15 @@
-#include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Unloved/Debug/DebugDraw.h"
-#include "Renderer/RenderDataManager.h"
-#include "Unloved/Viewport/ViewportManager.h"
-#include "World/LegacyWorld.h"
-
 #include "Hell/Logging.h"
 
-// Pretty sure this whole file is unused
-// Pretty sure this whole file is unused
-// Pretty sure this whole file is unused
-// Pretty sure this whole file is unused
-// Pretty sure this whole file is unused
+#include "Unloved/Render/API/OpenGL/GL_renderer.h"
+#include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Render/RendererConstants.h"
+#include "Unloved/Render/RendererTypes.h"
+#include "Unloved/Viewport/ViewportManager.h"
+
+#include "Renderer/RenderDataManager.h"
+#include "World/LegacyWorld.h"
 
 namespace OpenGLRenderer {
     using namespace Unloved;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Legacy/Game/Constants.h"
+#include "Unloved/Common/Constants.h"
 
 #include <glm/glm.hpp>
 

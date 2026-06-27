@@ -1,11 +1,14 @@
 #include "ChristmasLights.h"
+#include "Hell/Common/Bit.h"
+#include "Hell/Common/Random.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Util.h"
 #include "Legacy/Renderer/Renderer.h"
+#include "Legacy/Util/Util.h"
 #include <array>
 
 #include "Hell/Logging.h"
-#include <Game/RendereringConstants.h>
+
+#include "Unloved/Render/RendererConstants.h"
 
 namespace Unloved {
 
@@ -70,7 +73,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         for (const glm::vec3& position : wire.GetSegmentPoints()) {
             Transform transform;
             transform.position = position;
-            transform.rotation = glm::vec3(Util::RandomFloat(-1, 1), Util::RandomFloat(-1, 1), Util::RandomFloat(-1, 1));
+            transform.rotation = glm::vec3(Hell::Random::Float(-1.0f, 1.0f), Hell::Random::Float(-1.0f, 1.0f), Hell::Random::Float(-1.0f, 1.0f));
             transform.rotation.x += HELL_PI * -0.5f;
             transform.scale = glm::vec3(0.325f);
             modelMatrices.push_back(transform.to_mat4());
@@ -91,7 +94,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         renderItem.emissiveR = 1.0f;
         renderItem.emissiveG = 0.0f;
         renderItem.emissiveB = 0.0f;
-        Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+        Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
         Util::UpdateRenderItemAABB(renderItem);
         m_renderItems.push_back(renderItem);
     }
@@ -107,7 +110,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         renderItem.rmaTextureIndex = material->m_rma;
         renderItem.normalMapTextureIndex = material->m_normal;
         renderItem.shadowBit = SHADOW_BIT_NONE;
-        Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+        Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
         Util::UpdateRenderItemAABB(renderItem);
         m_renderItems.push_back(renderItem);
     }
@@ -174,7 +177,7 @@ void ChristmasLightSet::Update(float deltaTime) {
     };
 
     if (m_time == 0) {
-        m_time = Util::RandomFloat(0.0, 5.0f);
+        m_time = Hell::Random::Float(0.0f, 5.0f);
     }
 
     m_time += deltaTime;

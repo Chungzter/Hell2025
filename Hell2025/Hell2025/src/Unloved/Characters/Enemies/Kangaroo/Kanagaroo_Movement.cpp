@@ -1,9 +1,8 @@
 #include "Kangaroo.h"
-#include "Util.h"
+#include "Hell/Math/Easing.h"
 #include "Unloved/Session/Session.h"
 #include "Hell/Physics/Physics.h"
 #include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/euler_angles.hpp>
 #include "Unloved/Systems/Pathfinding/AStarMap.h"
 #include "Renderer/Renderer.h"
 
@@ -65,7 +64,7 @@ namespace Unloved {
                 if (m_animationState == KanagarooAnimationState::BITE) {
                     // Reduce speed as bite ends
                     float t = m_timeSinceBiteBegan / 1.5f;
-                    float easedT = Util::EaseOut(t, 3.0f);
+                    float easedT = Hell::Easing::EaseOut(t, 3.0f);
                     easedT = glm::clamp(easedT, 0.0f, 1.0f);
                     float newSpeed = glm::mix(speed, 0.0f, easedT);
                     speed = newSpeed;

@@ -3,7 +3,7 @@
 #include "Hell/Math/AABB.h"
 #include "Hell/Math/GLM.h"
 
-#include "Legacy/Game/Types.h"
+#include "Unloved/Render/RendererTypes.h"
 
 #include <vector>
 

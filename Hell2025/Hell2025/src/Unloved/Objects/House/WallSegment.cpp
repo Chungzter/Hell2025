@@ -5,14 +5,11 @@
 
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Util/Util.h"
-#include "Legacy/Game/Types.h"
+#include "Unloved/Common/Types.h"
 
 #include "Unloved/ObjectId.h"
 #include "Unloved/Objects/House/Clipping/Clipping.h"
-
 namespace Unloved {
-
-using namespace Hell;
 
 void WallSegment::Init(glm::vec3 start, glm::vec3 end, float height, uint64_t parentObjectId, const SpawnOffset& spawnOffset) {
     m_start = start;
@@ -47,16 +44,16 @@ void WallSegment::SetMeshId(uint32_t meshId) {
 void WallSegment::CleanUp() {
     Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
 
-    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
     meshBuffer.RemoveMesh(m_meshId);
 }
 
-void WallSegment::CreateVertexData(std::vector<ClippingCube>& clippingCubes, float texOffsetX, float texOffsetY, float texScale) {
+void WallSegment::CreateVertexData(const std::vector<const HouseBuilder::ClippingVolume*>& clippingVolumes, float texOffsetX, float texOffsetY, float texScale) {
     m_vertices.clear();
     m_indices.clear();
 
-    // Clip the cubes from the wall
-    SubtractCubesFromWallSegment(*this, clippingCubes, m_vertices, m_indices);
+    // Clip the volumes from the wall
+    SubtractClippingVolumesFromWallSegment(*this, clippingVolumes, m_vertices, m_indices);
 
     for (Vertex& vertex : m_vertices) {
         glm::vec3 origin = glm::vec3(0, 0, 0);

@@ -1,6 +1,8 @@
 #pragma once
-#include <Game/Types.h>
+#include "Unloved/Common/Types.h"
+
 #include <complex>
+#include <vector>
 
 struct FFTBand {
     glm::uvec2 fftResolution = {};   // Grid resolution for this band (number of FFT cells per side)

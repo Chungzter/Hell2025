@@ -4,13 +4,16 @@
 
 #include "Hell/Input.h"
 
-#include "Legacy/Game/Constants.h"
+#include "Unloved/Common/Constants.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "Unloved/Editor/Gizmo.h"
 
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/quaternion.hpp>
+#ifndef GLM_ENABLE_EXPERIMENTAL
+    #define GLM_ENABLE_EXPERIMENTAL
+#endif
 #include <glm/gtx/quaternion.hpp>
 
 #include <iostream> // TODO: cleanup logging
@@ -124,11 +127,11 @@ namespace Unloved::Editor {
        //    glm::vec3 cameraUpCurrent = g_orthographicCameras[3].m_cameraUpCurrent;
        //    glm::vec3 cameraUpTarget = g_orthographicCameras[3].m_cameraUpTarget;
        //    glm::vec3 orbitPosition = g_orthographicCameras[3].m_orbitPosition;
-       //    std::cout << "g_orthographicCameras[" << i << "].m_positionCurrent = glm::vec3" << Util::Vec3ToString(cameraPosition) << ";\n";
-       //    std::cout << "g_orthographicCameras[" << i << "].m_positionTarget = glm::vec3" << Util::Vec3ToString(positionTarget) << ";\n";
-       //    std::cout << "g_orthographicCameras[" << i << "].m_cameraUpCurrent = glm::vec3" << Util::Vec3ToString(cameraUpCurrent) << ";\n";
-       //    std::cout << "g_orthographicCameras[" << i << "].m_cameraUpTarget = glm::vec3" << Util::Vec3ToString(cameraUpTarget) << ";\n";
-       //    std::cout << "g_orthographicCameras[" << i << "].m_orbitPosition = glm::vec3" << Util::Vec3ToString(orbitPosition) << ";\n";
+       //    std::cout << "g_orthographicCameras[" << i << "].m_positionCurrent = glm::vec3" << Hell::String::FormatVec3(cameraPosition) << ";\n";
+       //    std::cout << "g_orthographicCameras[" << i << "].m_positionTarget = glm::vec3" << Hell::String::FormatVec3(positionTarget) << ";\n";
+       //    std::cout << "g_orthographicCameras[" << i << "].m_cameraUpCurrent = glm::vec3" << Hell::String::FormatVec3(cameraUpCurrent) << ";\n";
+       //    std::cout << "g_orthographicCameras[" << i << "].m_cameraUpTarget = glm::vec3" << Hell::String::FormatVec3(cameraUpTarget) << ";\n";
+       //    std::cout << "g_orthographicCameras[" << i << "].m_orbitPosition = glm::vec3" << Hell::String::FormatVec3(orbitPosition) << ";\n";
        //    std::cout << "\n";
        //}
 

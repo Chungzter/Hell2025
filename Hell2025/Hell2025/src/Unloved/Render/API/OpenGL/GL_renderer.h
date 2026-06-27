@@ -18,6 +18,7 @@
 
 #include "Hell/Math/AABB.h"
 #include "Hell/Math/OBB.h"
+#include "Hell/Render/DrawCommandTypes.h"
 #include "Hell/Render/VertexAttributes.h"
 
 #include "Unloved/Systems/DDGI/DDGIVolume.h"
@@ -194,7 +195,6 @@ namespace OpenGLRenderer {
     void ClearFrameBufferByViewportUInt(OpenGLFrameBuffer* framebuffer, const char* attachmentName, Unloved::Viewport* viewport, GLuint r, GLuint g = 0.0f, GLuint b = 0.0f, GLuint a = 0.0f);
     void BlitFrameBufferDepth(OpenGLFrameBuffer* srcFrameBuffer, OpenGLFrameBuffer* dstFrameBuffer, const Unloved::Viewport* viewport);
 
-    RenderItem2D CreateRenderItem2D(const std::string& textureName, glm::ivec2 location, glm::ivec2 viewportSize, Alignment alignment, glm::vec3 colorTint = WHITE, glm::ivec2 size = glm::ivec2(-1, -1));
     BlitRect BlitRectFromFrameBufferViewport(OpenGLFrameBuffer* framebuffer, Unloved::Viewport* viewport);
     GLint CreateQuadVAO();
     void GaussianBlur(OpenGLFrameBuffer& srcFrameBuffer, OpenGLFrameBuffer& dstFrameBuffer, const std::string& srcAttachmentName, const std::string& dstAttachmentName, BlitRect srcRect, BlitRect dstRect, int blurRadius, int passCount);

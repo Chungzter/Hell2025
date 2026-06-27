@@ -37,13 +37,6 @@ enum class Axis {
     NONE,
 };
 
-enum class ShadingMode {
-    SHADED,
-    WIREFRAME,
-    WIREFRAME_OVERLAY,
-    SHADING_MODE_COUNT
-};
-
 enum class CameraView {
     PERSPECTIVE,
     ORTHO,

@@ -1,4 +1,5 @@
 #include "Hell/Logging.h"
+#include "Hell/Common/Enum.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Unloved/Maps/MapManager.h"
@@ -245,19 +246,19 @@ namespace Unloved::Editor {
 
                     EditorUI::DropDown type;
                     type.SetText("Type");
-                    type.SetOptions(Util::GetEnumNamesAsVector<LightType>());
-                    type.SetCurrentOption(Util::EnumToString(light->GetType()));
+                    type.SetOptions(Hell::Enum::GetNames<LightType>());
+                    type.SetCurrentOption(Hell::Enum::ToString(light->GetType()));
                     if (type.CreateImGuiElements()) {
-                        LightType newType = Util::StringToEnum(type.GetSelectedOptionText(), LightType::HANGING_LIGHT);
+                        LightType newType = Hell::Enum::FromString(type.GetSelectedOptionText(), LightType::HANGING_LIGHT);
                         light->SetType(newType);
                     }
 
                     EditorUI::DropDown iesType;
                     iesType.SetText("IES Profile");
-                    iesType.SetOptions(Util::GetEnumNamesAsVector<IESProfileType>());
-                    iesType.SetCurrentOption(Util::EnumToString(light->GetIESProfileType()));
+                    iesType.SetOptions(Hell::Enum::GetNames<IESProfileType>());
+                    iesType.SetCurrentOption(Hell::Enum::ToString(light->GetIESProfileType()));
                     if (iesType.CreateImGuiElements()) {
-                        IESProfileType newType = Util::StringToEnum(iesType.GetSelectedOptionText(), IESProfileType::NONE);
+                        IESProfileType newType = Hell::Enum::FromString(iesType.GetSelectedOptionText(), IESProfileType::NONE);
                         light->SetIESProfileType(newType);
                     }
 
@@ -315,14 +316,14 @@ namespace Unloved::Editor {
                     g_rotationY.SetValue(door->GetRotation().y);
 
                     std::vector<std::string> types;
-                    types.push_back(Util::DoorTypeToString(DoorType::STANDARD_A));
-                    types.push_back(Util::DoorTypeToString(DoorType::STANDARD_B));
-                    types.push_back(Util::DoorTypeToString(DoorType::STAINED_GLASS));
-                    types.push_back(Util::DoorTypeToString(DoorType::STAINED_GLASS2));
+                    types.push_back(Hell::Enum::ToString(DoorType::STANDARD_A));
+                    types.push_back(Hell::Enum::ToString(DoorType::STANDARD_B));
+                    types.push_back(Hell::Enum::ToString(DoorType::STAINED_GLASS));
+                    types.push_back(Hell::Enum::ToString(DoorType::STAINED_GLASS2));
 
                     std::vector<std::string> materialTypes;
-                    materialTypes.push_back(Util::DoorMaterialTypeToString(DoorMaterialType::RESIDENT_EVIL));
-                    materialTypes.push_back(Util::DoorMaterialTypeToString(DoorMaterialType::WHITE_PAINT));
+                    materialTypes.push_back(Hell::Enum::ToString(DoorMaterialType::RESIDENT_EVIL));
+                    materialTypes.push_back(Hell::Enum::ToString(DoorMaterialType::WHITE_PAINT));
 
                     g_doorType.SetOptions(types);
                     g_doorFrontMaterial.SetOptions(materialTypes);
@@ -330,11 +331,11 @@ namespace Unloved::Editor {
                     g_doorFrameFrontMaterial.SetOptions(materialTypes);
                     g_doorFrameBackMaterial.SetOptions(materialTypes);
 
-                    g_doorType.SetCurrentOption(Util::DoorTypeToString(door->GetType()));
-                    g_doorFrontMaterial.SetCurrentOption(Util::DoorMaterialTypeToString(door->GetMaterialTypeFront()));
-                    g_doorBackMaterial.SetCurrentOption(Util::DoorMaterialTypeToString(door->GetMaterialTypeBack()));
-                    g_doorFrameFrontMaterial.SetCurrentOption(Util::DoorMaterialTypeToString(door->GetMaterialTypeFrameFront()));
-                    g_doorFrameBackMaterial.SetCurrentOption(Util::DoorMaterialTypeToString(door->GetMaterialTypeFrameBack()));
+                    g_doorType.SetCurrentOption(Hell::Enum::ToString(door->GetType()));
+                    g_doorFrontMaterial.SetCurrentOption(Hell::Enum::ToString(door->GetMaterialTypeFront()));
+                    g_doorBackMaterial.SetCurrentOption(Hell::Enum::ToString(door->GetMaterialTypeBack()));
+                    g_doorFrameFrontMaterial.SetCurrentOption(Hell::Enum::ToString(door->GetMaterialTypeFrameFront()));
+                    g_doorFrameBackMaterial.SetCurrentOption(Hell::Enum::ToString(door->GetMaterialTypeFrameBack()));
 
                     g_doorHasDeadLock.SetState(door->GetDeadLockState());
                     g_doorDeadLockedAtStart.SetState(door->GetDeadLockedAtInitState());
@@ -345,19 +346,19 @@ namespace Unloved::Editor {
                     if (g_rotationY.CreateImGuiElements())  door->SetRotationY(g_rotationY.GetValue());
 
                     if (g_doorType.CreateImGuiElements()) {
-                        door->SetType(Util::StringToDoorType(g_doorType.GetSelectedOptionText()));
+                        door->SetType(Hell::Enum::FromString(g_doorType.GetSelectedOptionText(), DoorType::UNDEFINED));
                     }
                     if (g_doorFrontMaterial.CreateImGuiElements()) {
-                        door->SetFrontMaterial(Util::StringToDoorMaterialType(g_doorFrontMaterial.GetSelectedOptionText()));
+                        door->SetFrontMaterial(Hell::Enum::FromString(g_doorFrontMaterial.GetSelectedOptionText(), DoorMaterialType::UNDEFINED));
                     }
                     if (g_doorBackMaterial.CreateImGuiElements()) {
-                        door->SetBackMaterial(Util::StringToDoorMaterialType(g_doorBackMaterial.GetSelectedOptionText()));
+                        door->SetBackMaterial(Hell::Enum::FromString(g_doorBackMaterial.GetSelectedOptionText(), DoorMaterialType::UNDEFINED));
                     }
                     if (g_doorFrameFrontMaterial.CreateImGuiElements()) {
-                        door->SetFrameFrontMaterial(Util::StringToDoorMaterialType(g_doorFrameFrontMaterial.GetSelectedOptionText()));
+                        door->SetFrameFrontMaterial(Hell::Enum::FromString(g_doorFrameFrontMaterial.GetSelectedOptionText(), DoorMaterialType::UNDEFINED));
                     }
                     if (g_doorFrameBackMaterial.CreateImGuiElements()) {
-                        door->SetFrameBackMaterial(Util::StringToDoorMaterialType(g_doorFrameBackMaterial.GetSelectedOptionText()));
+                        door->SetFrameBackMaterial(Hell::Enum::FromString(g_doorFrameBackMaterial.GetSelectedOptionText(), DoorMaterialType::UNDEFINED));
                     }
                     if (g_doorHasDeadLock.CreateImGuiElements()) {
                         door->SetDeadLockState(g_doorHasDeadLock.GetState());

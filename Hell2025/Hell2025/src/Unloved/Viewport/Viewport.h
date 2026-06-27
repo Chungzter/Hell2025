@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Legacy/Game/Enums.h"
+#include "Unloved/Common/Enums.h"
 
 #include "Unloved/Camera/Frustum.h"
 

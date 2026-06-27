@@ -1,9 +1,10 @@
 #pragma once
-#include <Game/Types.h>
-#include <Game/CreateInfo.h>
+#include "Unloved/Common/Types.h"
+#include "Unloved/Common/CreateInfo.h"
 #include "DeadLock.h"
 #include "Unloved/Objects/Renderables/MeshBufferOLD.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
+#include "Unloved/Systems/House/ClippingVolume.h"
 #include "Hell/ResourceManagement/Types/Model.h"
 
 namespace Unloved {
@@ -56,6 +57,7 @@ struct Door {
     const bool GetDeadLockState() const                                 { return m_createInfo.hasDeadLock; }
     const bool GetDeadLockedAtInitState() const                         { return m_createInfo.deadLockedAtInit; }
     const AABB& GetPhsyicsAABB() const                                  { return m_physicsAABB; }
+    const HouseBuilder::ClippingVolume& GetClippingVolume() const       { return m_clippingVolume; }
 
     MeshBufferOLD m_raytracingDoorMesh;
     MeshBufferOLD m_raytracingFrameMesh;
@@ -63,10 +65,12 @@ struct Door {
 private:
     void UpdateWorldForward();
     void CreateRaytracingVertices();
+    void UpdateClippingVolume();
 
 	DoorCreateInfo m_createInfo;
 	MeshNodes m_meshNodes;
     SpawnOffset m_spawnOffset;
+    HouseBuilder::ClippingVolume m_clippingVolume;
 
     AABB m_physicsAABB;
 

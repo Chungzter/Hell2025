@@ -1,7 +1,7 @@
 #pragma once
 #include "Unloved/Systems/Blood/Blood_types.h"
 
-#include <Game/Types.h>
+#include "Unloved/Common/Types.h"
 
 struct BloodScreenSpaceDecal {
     void Init(BloodScreenSpaceDecalCreateInfo createInfo);

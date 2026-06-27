@@ -4,7 +4,7 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 
-#include "Legacy/Game/Constants.h"
+#include "Unloved/Common/Constants.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
 

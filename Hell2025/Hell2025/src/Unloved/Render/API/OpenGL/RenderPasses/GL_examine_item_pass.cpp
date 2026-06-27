@@ -5,7 +5,6 @@
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
-#include "Unloved/Objects/House/Clipping/Clipping.h"
 #include "World/LegacyWorld.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -108,7 +107,7 @@ namespace OpenGLRenderer {
                     glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertex);
 
                    //std::cout << mesh->name << "\n";
-                   //std::cout << Util::Mat4ToString(renderItem.modelMatrix) << "\n\n";
+                   //std::cout << Hell::String::FormatMat4(renderItem.modelMatrix) << "\n\n";
                 }
         }
 

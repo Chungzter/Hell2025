@@ -13,64 +13,6 @@ namespace OpenGLRenderer {
         OpenGL::BlitFrameBufferDepth(srcFrameBuffer, dstFrameBuffer, srcRect, dstRect);
     }
 
-    RenderItem2D CreateRenderItem2D(const std::string& textureName, glm::ivec2 location, glm::ivec2 viewportSize, Alignment alignment, glm::vec3 colorTint, glm::ivec2 size) {
-        // Get texture index and dimensions
-        Texture* texture = Hell::ResourceManager::GetTextureByName(textureName);
-        if (!texture) {
-            std::cout << "RendererUtil::CreateRenderItem2D() failed coz texture is nullptr\n";
-            return RenderItem2D();
-        }
-        float texWidth = (size.x != -1) ? size.x : texture->GetWidth();
-        float texHeight = (size.y != -1) ? size.y : texture->GetHeight();
-
-        // Alignment
-        switch (alignment) {
-        case Alignment::TOP_LEFT:
-            location.x += int(texWidth * 0.5f);
-            location.y += int(texHeight * 0.5f);
-            break;
-        case Alignment::TOP_RIGHT:
-            location.x -= int(texWidth * 0.5f);
-            location.y += int(texHeight * 0.5f);
-            break;
-        case Alignment::BOTTOM_LEFT:
-            location.x += int(texWidth * 0.5f);
-            location.y -= int(texHeight * 0.5f);
-            break;
-        case Alignment::BOTTOM_RIGHT:
-            location.x -= int(texWidth * 0.5f);
-            location.y -= int(texHeight * 0.5f);
-            break;
-        case Alignment::CENTERED_HORIZONTAL:
-            location.x -= int(texWidth * 0.5f);
-            break;
-        case Alignment::CENTERED_VERTICAL:
-            location.y -= int(texHeight * 0.5f);
-            break;
-        }
-
-        // Scale quad to match 1:1 pixel ratio (independent of viewport size)
-        float width = texWidth / static_cast<float>(viewportSize.x);
-        float height = texHeight / static_cast<float>(viewportSize.y);
-
-        // Calculate final position in normalized device coordinates
-        float finalX = (location.x / static_cast<float>(viewportSize.x)) * 2.0f - 1.0f;
-        float finalY = 1.0f - (location.y / static_cast<float>(viewportSize.y)) * 2.0f;
-
-        Transform transform;
-        transform.position.x = finalX;
-        transform.position.y = finalY;
-        transform.scale = glm::vec3(width, -height, 1.0f);
-
-        RenderItem2D renderItem;
-        renderItem.modelMatrix = transform.to_mat4();
-        renderItem.textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName(textureName);
-        renderItem.colorTintR = colorTint.r;
-        renderItem.colorTintG = colorTint.g;
-        renderItem.colorTintB = colorTint.b;
-        return renderItem;
-    }
-
     GLint CreateQuadVAO() {
         GLuint vao = 0;
         GLuint vbo = 0;

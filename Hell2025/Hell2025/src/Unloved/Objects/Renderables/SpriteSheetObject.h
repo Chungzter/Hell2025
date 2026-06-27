@@ -1,9 +1,9 @@
 #pragma once
-#include <Game/Types.h>
-#include <Game/CreateInfo.h>
+#include "Hell/Math/AABB.h"
 #include "Hell/ResourceManagement/Types/SpriteSheetTexture.h"
 
-#include "Hell/Math/AABB.h"
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Render/RendererTypes.h"
 
 #include <string>
 

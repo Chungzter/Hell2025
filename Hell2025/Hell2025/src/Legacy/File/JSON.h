@@ -1,9 +1,11 @@
 #pragma once
 #include "Hell/Math/VecXZ.h"
 
-#include <Game/Types.h>
 #include "Unloved/Objects/Spawns/SpawnPoint.h"
-#include <Game/CreateInfo.h>
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Common/Enums.h"
+#include "Unloved/Common/Types.h"
+
 #include <nlohmann/json.hpp>
 #include <glm/glm.hpp>
 
@@ -17,8 +19,7 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const HouseLocation& houseLocation);
     void to_json(nlohmann::json& j, const HousePlaneCreateInfo& info);
     void to_json(nlohmann::json& j, const LadderCreateInfo& info);
-    void to_json(nlohmann::json& j, const LightCreateInfo& info);
-    void to_json(nlohmann::json& j, const MeshRenderingInfo& info);
+    void to_json(nlohmann::json& j, const LightCreateInfo& info);   
     void to_json(nlohmann::json& j, const PianoCreateInfo& info);
     void to_json(nlohmann::json& j, const PickUpCreateInfo& info);
     void to_json(nlohmann::json& j, const PictureFrameCreateInfo& info);
@@ -39,7 +40,6 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, HousePlaneCreateInfo& info);
     void from_json(const nlohmann::json& j, LadderCreateInfo& info);
     void from_json(const nlohmann::json& j, LightCreateInfo& info);
-    void from_json(const nlohmann::json& j, MeshRenderingInfo& info);
     void from_json(const nlohmann::json& j, PianoCreateInfo& info);
     void from_json(const nlohmann::json& j, PickUpCreateInfo& info);
     void from_json(const nlohmann::json& j, PictureFrameCreateInfo& info);
@@ -59,7 +59,6 @@ namespace nlohmann {
 
     void from_json(const nlohmann::json& j, glm::vec2& v);
     void from_json(const nlohmann::json& j, glm::vec3& v);
-    void from_json(const nlohmann::json& j, MeshRenderingInfo& info);
 }
 
 namespace JSON {

@@ -5,7 +5,10 @@
 #include "../vk_util.h"
 #include "Hell/Backend/BackEnd.h"
 
-#include "Game/Types.h"
+#include "Hell/Render/RendererTypes.h"
+
+#include "Unloved/Common/Types.h"
+#include "Unloved/Render/RendererTypes.h"
 
 namespace VulkanRenderer {
 

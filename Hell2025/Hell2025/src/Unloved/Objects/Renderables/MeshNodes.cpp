@@ -1,6 +1,7 @@
 #include "MeshNodes.h"
+#include "Hell/Common/Bit.h"
 #include "Unloved/Debug/DebugDraw.h"
-#include <Game/RendereringConstants.h>
+#include "Unloved/Render/RendererConstants.h"
 #include "Hell/Logging.h"
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
@@ -563,7 +564,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
             meshNode.renderItem.prevModelMatrix = meshNode.worldMatrix;
         }
 
-        Util::PackUint64(meshNode.parentObjectId, meshNode.renderItem.objectIdLowerBit, meshNode.renderItem.objectIdUpperBit);
+        Hell::Bit::PackUint64(meshNode.parentObjectId, meshNode.renderItem.objectIdLowerBit, meshNode.renderItem.objectIdUpperBit);
 
         //switch (meshNode.blendingMode) {
         //case BlendingMode::DEFAULT:       m_renderItems.push_back(meshNode.renderItem);                 break;

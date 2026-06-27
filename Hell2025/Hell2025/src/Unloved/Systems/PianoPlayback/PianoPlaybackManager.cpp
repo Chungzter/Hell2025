@@ -4,12 +4,11 @@
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/ResourceManagement/Types/MidiFile.h"
+#include "Hell/Common/String.h"
 #include "Hell/Time.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include <array>
-#include <iomanip>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -36,12 +35,6 @@ namespace Unloved::PianoPlaybackManager {
         std::vector<std::string> g_debugTextEvents;
         std::vector<std::string> g_debugTextTimeDurations;
         std::vector<std::string> g_debugTextTimeVelocities;
-
-        std::string DoubleToString(double value) {
-            std::ostringstream stream;
-            stream << std::fixed << std::setprecision(3) << value;
-            return stream.str();
-        }
 
         void ClearDebugText() {
             g_debugTextTime.clear();
@@ -120,9 +113,9 @@ namespace Unloved::PianoPlaybackManager {
 
             switch (currentEvent.type) {
                 case Hell::MidiEventType::NOTE_ON: {
-                    AddDebugTextTimes("Time: " + DoubleToString(g_playbackTime) + "s");
+                    AddDebugTextTimes("Time: " + Hell::String::FormatDouble(g_playbackTime) + "s");
                     AddDebugTextEvent("Note On: " + std::to_string(currentEvent.note));
-                    AddDebugTextDurations("Dur: " + DoubleToString(currentEvent.duration) + "s");
+                    AddDebugTextDurations("Dur: " + Hell::String::FormatDouble(currentEvent.duration) + "s");
                     AddDebugTextVelocity("Vel: " + std::to_string(currentEvent.velocity));
 
                     piano->PlayKey(currentEvent.note, currentEvent.velocity, static_cast<float>(currentEvent.duration));
@@ -130,7 +123,7 @@ namespace Unloved::PianoPlaybackManager {
                 }
 
                 case Hell::MidiEventType::SUSTAIN: {
-                    AddDebugTextTimes("Time: " + DoubleToString(g_playbackTime) + "s");
+                    AddDebugTextTimes("Time: " + Hell::String::FormatDouble(g_playbackTime) + "s");
                     AddDebugTextEvent(currentEvent.sustainValue ? "Sustain pedal on" : "Sustain pedal off");
                     AddDebugTextDurations("  ");
                     AddDebugTextVelocity(" ");

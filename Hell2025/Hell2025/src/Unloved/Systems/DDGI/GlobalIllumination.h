@@ -1,6 +1,6 @@
 #pragma once
-#include "Legacy/Game/Types.h"
-#include "Legacy/Game/CreateInfo.h"
+#include "Unloved/Common/Types.h"
+#include "Unloved/Common/CreateInfo.h"
 /*#include <vector>
 #include <glad/gl.h>
 

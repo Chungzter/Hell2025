@@ -7,12 +7,13 @@
 #include <string>
 #include <vector>
 
+struct GPULight;
+
 namespace Unloved {
     struct AnimatedGameObject;
     struct BulletCasing;
     struct ChristmasLightSet;
     struct ChristmasTree;
-    struct ClippingCube;
     struct DDGIVolume;
     struct Decal;
     struct Dobermann;
@@ -21,7 +22,6 @@ namespace Unloved {
     struct Fireplace;
     struct GameObject;
     struct GenericObject;
-    struct GPULight;
     struct GPUAABB;
     struct HousePlane;
     struct Kangaroo;
@@ -74,7 +74,6 @@ namespace Unloved::World {
     Hell::SlotMap<BulletCasing>& GetBulletCasings();
     Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets();
     Hell::SlotMap<ChristmasTree>& GetChristmasTrees();
-    Hell::SlotMap<ClippingCube>& GetClippingCubes();
     Hell::SlotMap<Unloved::DDGIVolume>& GetDDGIVolumes();
     Hell::SlotMap<Decal>& GetDecals();
     Hell::SlotMap<Dobermann>& GetDobermanns();

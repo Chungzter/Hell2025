@@ -1,6 +1,6 @@
 #include "Kangaroo.h"
+#include "Hell/Common/String.h"
 #include "Hell/Physics/Physics.h"
-#include "Util/Util.h"
 
 namespace Unloved {
 
@@ -38,15 +38,15 @@ namespace Unloved {
 
         result += " - Health: " + std::to_string(GetHealth()) + "\n";
         result += " - AnimationState: " + GetAnimationStateAsString() + "\n";
-        result += " - m_position: " + Util::Vec3ToString(m_position) + "\n";
-        result += " - m_rotation: " + Util::Vec3ToString(m_rotation) + "\n";
-        result += " - m_forward: " + Util::Vec3ToString(m_forward) + "\n";
+        result += " - m_position: " + Hell::String::FormatVec3(m_position) + "\n";
+        result += " - m_rotation: " + Hell::String::FormatVec3(m_rotation) + "\n";
+        result += " - m_forward: " + Hell::String::FormatVec3(m_forward) + "\n";
         result += " - m_yVelocity: " + std::to_string(m_yVelocity) + "\n";
-        result += " - m_grounded: " + Util::BoolToString(m_grounded) + "\n";
+        result += " - m_grounded: " + Hell::String::FormatBool(m_grounded) + "\n";
 
         CharacterController* characterController = GetCharacterController();
         if (characterController) {
-            result += " - Character Controller Position: " + Util::Vec3ToString(characterController->GetFootPosition()) + "\n";
+            result += " - Character Controller Position: " + Hell::String::FormatVec3(characterController->GetFootPosition()) + "\n";
         }
 
         return result + "\n";

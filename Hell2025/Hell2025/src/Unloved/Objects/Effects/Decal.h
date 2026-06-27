@@ -1,8 +1,10 @@
 #pragma once
-#include <Game/Types.h>
-#include <Game/CreateInfo.h>
 
 #include "Hell/ResourceManagement/Types/Material.h"
+
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Render/RendererConstants.h"
+#include "Unloved/Render/RendererTypes.h"
 
 namespace Unloved {
 

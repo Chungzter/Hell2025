@@ -1,7 +1,6 @@
 #pragma once
 #include "Hell/Common.h"
 
-#include "Game/Types.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
 
 struct UploadContext {
@@ -19,6 +18,4 @@ namespace VulkanBackEnd{
     // Textures
     void UpdateTextureBaking();
     void AllocateTextureMemory(Texture& texture);
-    void ImmediateBake(QueuedTextureBake& queuedTextureBake);
-    void AsyncBakeQueuedTextureBake(QueuedTextureBake& queuedTextureBake);
 }

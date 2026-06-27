@@ -6,7 +6,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Time.h"
 
-#include "Legacy/Game/Constants.h"
+#include "Unloved/Common/Constants.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Legacy/World/LegacyWorld.h"

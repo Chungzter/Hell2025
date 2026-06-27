@@ -1,9 +1,7 @@
 #pragma once
+#include "Mirror.h"
 
 #include "Hell/Containers/SlotMap.h"
-
-#include "Legacy/Game/Types.h"
-#include "Legacy/Types/Mirror.h"
 
 #include <cstdint>
 

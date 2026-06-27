@@ -1,17 +1,20 @@
 #include "Wall.h"
+#include "Hell/Common/Bit.h"
+#include "Hell/Common/Random.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Unloved/Objects/House/Clipping/Clipping.h"
+#include "Unloved/Systems/House/HouseBuilder.h"
 #include "Legacy/Renderer/RenderDataManager.h"
+#include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Hell/Logging.h"
-#include <Game/RendereringConstants.h>
+#include "Unloved/Render/RendererConstants.h"
+
+#include "Unloved/Common/CreateInfo.h"
 
 namespace Unloved {
-
-using namespace Hell;
 
 Wall::Wall(uint64_t id, const WallCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_objectId = id;
@@ -38,7 +41,7 @@ void Wall::UpdateSegmentsTrimsAndVertexData() {
     //m_textureOffsetU = m_createInfo.textureOffsetU;
     //m_textureOffsetV = m_createInfo.textureOffsetV;
     //m_textureScale = m_createInfo.textureScale;
-    m_materialIndex = ResourceManager::GetMaterialIndexByName(m_createInfo.materialName);
+    m_materialIndex = Hell::ResourceManager::GetMaterialIndexByName(m_createInfo.materialName);
     m_ceilingTrimType = m_createInfo.ceilingTrimType;
     m_floorTrimType = m_createInfo.floorTrimType;
 
@@ -128,7 +131,7 @@ bool Wall::UpdatePointPosition(int pointIndex, glm::vec3 position, bool supressW
 }
 
 void Wall::SetMaterial(const std::string& materialName) {
-    const int32_t materialIndex = ResourceManager::GetMaterialIndexByName(materialName);
+    const int32_t materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
     if (materialIndex != -1) {
         m_createInfo.materialName = materialName;
         m_materialIndex = materialIndex;
@@ -137,7 +140,7 @@ void Wall::SetMaterial(const std::string& materialName) {
 }
 
 Material* Wall::GetMaterial() {
-    return ResourceManager::GetMaterialByIndex(m_materialIndex);
+    return Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
 }
 
 void Wall::SetHeight(float value) {
@@ -189,7 +192,6 @@ void Wall::CleanUp() {
 
 void Wall::CreateTrims() {
     m_trims.clear();
-	LegacyWorld::RecreateAllDoorAndWindowCubeTransforms();
 	return;
 
     // Ceiling
@@ -198,7 +200,7 @@ void Wall::CreateTrims() {
             const glm::vec3& start = m_createInfo.points[i];
             const glm::vec3& end = m_createInfo.points[i + 1];
 
-            Transform t;
+            Hell::Transform t;
             t.position = start;
             t.position.y += m_createInfo.height;
             t.rotation.y = Util::EulerYRotationBetweenTwoPoints(start, end);
@@ -222,12 +224,12 @@ void Wall::CreateTrims() {
             const float eps = 1e-3f;
 
             while (remaining > eps) {
-                CubeRayResult r = Util::CastCubeRay(rayOrigin, rayDir, LegacyWorld::GetDoorAndWindowCubeTransforms(), remaining);
+                HouseBuilder::ClipRayResult r = HouseBuilder::RaycastClippingVolumes(rayOrigin, rayDir, remaining);
                 if (!r.hitFound) break;
 
                 // Only add a trim up to a NEAR face (entering the cube)
                 if (glm::dot(r.hitNormal, rayDir) < 0.0f) {
-                    Transform t;
+                    Hell::Transform t;
                     t.position = rayOrigin;
                     t.rotation.y = Util::EulerYRotationBetweenTwoPoints(start, end);
                     t.scale.x = r.distanceToHit;
@@ -243,7 +245,7 @@ void Wall::CreateTrims() {
             }
 
             if (remaining > eps) {
-                Transform t;
+                Hell::Transform t;
                 t.position = rayOrigin;
                 t.rotation.y = Util::EulerYRotationBetweenTwoPoints(rayOrigin, end);
                 t.scale.x = remaining;
@@ -255,13 +257,15 @@ void Wall::CreateTrims() {
 }
 
 void Wall::CreateCSGVertexData() {
+    const std::vector<const HouseBuilder::ClippingVolume*> clippingVolumes = HouseBuilder::GetClippingVolumes();
+
     for (WallSegment& wallSegment : m_wallSegments) {
-        wallSegment.CreateVertexData(LegacyWorld::GetClippingCubes(), m_createInfo.textureOffsetU, m_createInfo.textureOffsetV, m_createInfo.textureScale);
+        wallSegment.CreateVertexData(clippingVolumes, m_createInfo.textureOffsetU, m_createInfo.textureOffsetV, m_createInfo.textureScale);
     }
 }
 
 void Wall::SubmitRenderItems() {
-    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
 
     // If this wall is exterior, then don't render the CSG geometry, or any trims if you accidentally set it to have trims
     if (m_createInfo.wallType == WallType::WEATHER_BOARDS) {
@@ -271,7 +275,7 @@ void Wall::SubmitRenderItems() {
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
             if (!mesh) continue;
 
-            Material* material = ResourceManager::GetMaterialByName("WeatherBoards0");
+            Material* material = Hell::ResourceManager::GetMaterialByName("WeatherBoards0");
             if (!material) continue;
 
             RenderItem renderItem;
@@ -296,7 +300,7 @@ void Wall::SubmitRenderItems() {
         Mesh* mesh = meshBuffer.GetMeshById(wallSegment.GetMeshId());
         if (!mesh) return;
 
-        Material* material = ResourceManager::GetMaterialByIndex(m_materialIndex);
+        Material* material = Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
         if (!material) return;
 
 		RenderItem renderItem;
@@ -354,15 +358,15 @@ void Wall::DrawSegmentLines(glm::vec4 color) {
 
 
 void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, int boardY, float boardWidth, std::vector<Vertex>& verticesOut, std::vector<uint32_t>& indicesOut) {
-    Model* weatherBoardModel = ResourceManager::GetModelByName("WeatherBoard");
+    Model* weatherBoardModel = Hell::ResourceManager::GetModelByName("WeatherBoard");
     if (!weatherBoardModel || weatherBoardModel->GetMeshIndices().empty()) return;
     if (weatherBoardModel->GetMeshCount() == 0) return;
 
     uint32_t meshId = weatherBoardModel->GetMeshIndices()[0];
-    Mesh* mesh = ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
+    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
     if (!mesh) return;
 
-    MeshBuffer& assetGeometry = ResourceManager::GetMeshBuffer("AssetGeometry");
+    Hell::MeshBuffer& assetGeometry = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
     std::span<Vertex> verticesSpan(assetGeometry.GetVertices().data() + mesh->baseVertex, mesh->vertexCount);
     std::span<uint32_t> indicesSpan(assetGeometry.GetIndices().data() + mesh->baseIndex, mesh->indexCount);
 
@@ -377,8 +381,8 @@ void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, int boardY, fl
     // If the board is above 15 then make it use board 12 and have a random x uv
     float randomOffsetX = 0.0f;
     if (boardY > 15) {
-        boardY = 12 + Util::RandomInt(0, 3);
-        randomOffsetX = Util::RandomFloat(0.0f, 1.0f);
+        boardY = 12 + Hell::Random::Int(0, 3);
+        randomOffsetX = Hell::Random::Float(0.0f, 1.0f);
     }
 
     // This is the vertical uv distance between boards in the texture
@@ -410,7 +414,7 @@ void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, int boardY, fl
 }
 
 void Wall::CleanUpWeatherBoardMesh() {
-    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
 
     // Clear any old mesh segments
     for (uint32_t meshId : m_weatherBoardSegmentMeshIds) {
@@ -421,14 +425,14 @@ void Wall::CleanUpWeatherBoardMesh() {
 }
 
 void Wall::RecreateWeatherBoardMesh() {
-    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
 
     CleanUpWeatherBoardMesh();
     m_weatherBoardstopRenderItems.clear();
 
     if (m_createInfo.wallType != WallType::WEATHER_BOARDS) return;
 
-    Material* material = ResourceManager::GetMaterialByName("WeatherBoards0");
+    Material* material = Hell::ResourceManager::GetMaterialByName("WeatherBoards0");
     Model* model = Hell::ResourceManager::GetModelByName("WeatherBoard_Stop");
 
     if (!model) {
@@ -446,7 +450,7 @@ void Wall::RecreateWeatherBoardMesh() {
         glm::vec3 start = wallSegemet.GetStart();
         glm::vec3 end = wallSegemet.GetEnd();
 
-        Transform transform;
+        Hell::Transform transform;
         transform.position = start;
         transform.scale.y = actualFinalWallHeight;
         transform.rotation.y = Util::EulerYRotationBetweenTwoPoints(start, end);
@@ -466,11 +470,8 @@ void Wall::RecreateWeatherBoardMesh() {
         renderItem.shadowBit |= (SHADOW_BIT_CAST_SHADOW | SHADOW_BIT_CAST_CSM_SHADOW | SHADOW_BIT_STATIC);
 
         Util::UpdateRenderItemAABB(renderItem);
-        Util::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+        Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }
-
-    LegacyWorld::RecreateAllDoorAndWindowCubeTransforms();
-
 
     // Create new mesh segments
     std::vector<Vertex> vertices;
@@ -493,7 +494,7 @@ void Wall::RecreateWeatherBoardMesh() {
             const float eps = 1e-3f;
 
             while (remaining > eps) {
-                CubeRayResult rayResult = Util::CastCubeRay(rayOrigin, rayDir, LegacyWorld::GetDoorAndWindowCubeTransforms(), remaining);
+                HouseBuilder::ClipRayResult rayResult = HouseBuilder::RaycastClippingVolumes(rayOrigin, rayDir, remaining);
                 if (!rayResult.hitFound) break;
 
                 if (glm::dot(rayResult.hitNormal, rayDir) < 0.0f && rayResult.distanceToHit > eps) {

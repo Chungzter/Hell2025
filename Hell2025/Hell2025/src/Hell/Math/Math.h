@@ -1,6 +1,9 @@
 #pragma once
 
+#include "Easing.h"
 #include "GLM.h"
+#include "Ray.h"
+#include "Sanitize.h"
 
 namespace Hell::Math {
 

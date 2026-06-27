@@ -75,9 +75,9 @@ namespace Unloved::LegacyWorld {
         // 
         //     for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsAlphaDiscard()) {
         //         uint64_t objectId = 0;
-        //         Util::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+        //         Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
         // 
-        //         std::cout << objectId << " " << Util::EnumToString(Unloved::GetObjectIdType(objectId)) << " ";
+        //         std::cout << objectId << " " << Hell::Enum::ToString(Unloved::GetObjectIdType(objectId)) << " ";
         // 
         //         Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
         //         if (!mesh) {

@@ -2,7 +2,8 @@
 
 #include "Hell/ResourceManagement/Types/Texture.h"
 
-#include "Legacy/Game/CreateInfo.h"
+#include "Unloved/Common/Constants.h"
+#include "Unloved/Common/CreateInfo.h"
 
 #include <cstdint>
 #include <string>
@@ -46,4 +47,4 @@ namespace Unloved {
         AdditionalMapData m_additionalMapData;
     };
 
-} // namespace Unloved
+}

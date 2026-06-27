@@ -1,6 +1,6 @@
 #pragma once
-#include <Game/CreateInfo.h>
-#include <Game/Types.h>
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Common/Types.h"
 #include "Unloved/Objects/Exterior/Wire.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 

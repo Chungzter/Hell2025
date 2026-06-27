@@ -1,12 +1,13 @@
 #include "LegacyWorld.h"
-#include "File/JSON.h"
-#include "Managers/HouseManager.h"
+
 #include "Hell/ResourceManagement/ResourceManager.h"
+
 #include "Unloved/Systems/DDGI/GlobalIllumination.h"
+#include "Unloved/Systems/House/HouseManager.h"
+
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
-
-using namespace Hell;
+#include "File/JSON.h"
 
 namespace Unloved::LegacyWorld {
 
@@ -48,10 +49,9 @@ namespace Unloved::LegacyWorld {
     }
 
     void RecreateAllProceduralWallMesh() {
-        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
 
-        // Update clipping cubes first, so that CSG is correct
-        RecreateClippingCubes();
+        // Door/window clipping volumes are owned by those objects, so CSG can use them directly
 
         for (Wall& wall : GetWalls()) {
 
@@ -72,7 +72,7 @@ namespace Unloved::LegacyWorld {
     }
 
     void RecreateAllProcedularHousePlaneMesh() {
-        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
 
         for (HousePlane& housePlane : GetHousePlanes()) {
             // Remove old mesh

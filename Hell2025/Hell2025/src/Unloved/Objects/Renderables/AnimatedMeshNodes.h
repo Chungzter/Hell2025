@@ -1,14 +1,15 @@
 #pragma once
-#include <Game/Constants.h>
-#include <Game/CreateInfo.h>
-#include <Game/Enums.h>
-#include <Game/Types.h>
+#include "Hell/ResourceManagement/Types/SkinnedModel.h"
+
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Common/Constants.h"
+#include "Unloved/Common/Enums.h"
+#include "Unloved/Common/Types.h"
+#include "Unloved/Render/RendererTypes.h"
 
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#include "Hell/ResourceManagement/Types/SkinnedModel.h"
 
 namespace Unloved {
 

@@ -1,13 +1,15 @@
 #include "../GL_renderer.h"
-#include "Unloved/Editor/Editor.h"
-#include "Unloved/Viewport/ViewportManager.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 #include "Hell/Physics/Physics.h"
 #include "World/LegacyWorld.h"
 
-#include "Unloved/Debug/DebugDraw.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+
+#include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Render/RendererTypes.h"
+#include "Unloved/Viewport/ViewportManager.h"
 
 using namespace Hell;
 

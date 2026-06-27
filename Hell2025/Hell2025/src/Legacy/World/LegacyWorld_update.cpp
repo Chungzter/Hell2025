@@ -1,9 +1,6 @@
 #include "LegacyWorld.h"
 
-#include "Legacy/Core/P90MagManager.h"
 #include "Unloved/Systems/Pathfinding/AStarMap.h"
-#include "Legacy/Renderer/RenderDataManager.h"
-#include "Legacy/Renderer/Renderer.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Objects/House/DoorChain.h"
@@ -15,10 +12,13 @@
 #include "Hell/Logging.h"
 #include "Hell/Input.h"
 
+#include "Unloved/Systems/P90Mag/P90MagManager.h"
 #include "Unloved/Session/Session.h"
 
-namespace Input = Hell::Input;
+#include "Legacy/Renderer/RenderDataManager.h"
+#include "Legacy/Renderer/Renderer.h"
 
+namespace Input = Hell::Input;
 
 namespace Unloved::LegacyWorld {
 
@@ -261,27 +261,22 @@ namespace Unloved::LegacyWorld {
 
         transforms.clear();
         transforms.reserve(LegacyWorld::GetDoors().size() + GetWindows().size());
+        float padding = 0.02f;
 
         for (Door& door : LegacyWorld::GetDoors()) {
             Transform& transform = transforms.emplace_back();
             transform.position = door.GetPosition();
-            transform.position.y += DOOR_HEIGHT / 2;
-            transform.rotation.y = door.GetRotation().y;
-            transform.scale.x = 0.2f;
-            transform.scale.y = DOOR_HEIGHT * 1.0f;
-            transform.scale.z = 1.02f;
+            transform.position.y += DOOR_HEIGHT * 0.5f;
+            transform.rotation = door.GetRotation();
+            transform.scale = glm::vec3(0.2f, DOOR_HEIGHT + padding, DOOR_WIDTH + padding);
         }
 
         for (Window& window : GetWindows()) {
-            float windowMidPointFromGround = 1.4f;
-
             Transform& transform = transforms.emplace_back();
             transform.position = window.GetPosition();
-            transform.position.y += windowMidPointFromGround;
-            transform.rotation.y = window.GetRotation().y;
-            transform.scale.x = 0.2f;
-            transform.scale.y = 1.2f;
-            transform.scale.z = 0.846f;
+            transform.position.y += 1.48f;
+            transform.rotation = window.GetRotation();
+            transform.scale = glm::vec3(0.2f, 1.185074f, 0.85f);
         }
     }
 

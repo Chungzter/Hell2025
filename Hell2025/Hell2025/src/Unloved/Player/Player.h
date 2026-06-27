@@ -1,18 +1,19 @@
 #pragma once
+#include "PlayerTypes.h"
 
 #include "Hell/Math/AABB.h"
 #include "Hell/Math/Transform.h"
 #include "Hell/Math/VecXZ.h"
 #include "Hell/Physics/Physics.h"
 
-#include "Legacy/Game/Types.h"
-#include "Legacy/Types/Game/TypeWriter.h"
+#include "Unloved/Common/Types.h"
 
 #include "Unloved/Camera/Camera.h"
 #include "Unloved/Camera/Frustum.h"
 #include "Unloved/Inventory/Inventory.h"
 #include "Unloved/Objects/Renderables/AnimatedGameObject.h"
 #include "Unloved/Objects/Renderables/SpriteSheetObject.h"
+#include "Unloved/Systems/TypeWriter/TypeWriter.h"
 
 namespace Unloved {
 

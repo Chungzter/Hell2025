@@ -1,8 +1,8 @@
 #include "Editor.h"
 
+#include "Hell/Common/Enum.h"
 #include "Hell/UI/UIBackEnd.h"
 
-#include "Legacy/Util/Util.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "Unloved/Config/Config.h"
@@ -31,16 +31,16 @@ namespace Unloved::Editor {
 
             if (!Debug::IsDebugTextVisible() && viewport->GetSize().x > 0.15f && viewport->GetSize().y > 0.2f) {
                 std::string text = "";
-                //text += "ProjectionMatrix: \n" + Util::Mat4ToString(viewport->GetProjectionMatrix()) + "\n\n";
-                //text += "ViewMatrix: \n" + Util::Mat4ToString(camera->GetViewMatrix()) + "\n";
-                //text += "ViewportMode: " + Util::ViewportModeToString(viewport->GetViewportMode()) + "\n";
-                text += Util::CameraViewToString(Editor::GetCameraViewByIndex(i)) + "\n";
+                //text += "ProjectionMatrix: \n" + Hell::String::FormatMat4(viewport->GetProjectionMatrix()) + "\n\n";
+                //text += "ViewMatrix: \n" + Hell::String::FormatMat4(camera->GetViewMatrix()) + "\n";
+                //text += "ViewportMode: " + Hell::Enum::ToString(viewport->GetViewportMode()) + "\n";
+                text += Hell::Enum::ToString(Editor::GetCameraViewByIndex(i)) + "\n";
                 text += "\n";
             
-               // text += "IsActive: " + Util::BoolToString(i == Editor::GetActiveViewportIndex()) + "\n";
+               // text += "IsActive: " + Hell::String::FormatBool(i == Editor::GetActiveViewportIndex()) + "\n";
 
 
-               // text += "Gizmo Position: " + Util::Vec3ToString(Gizmo::GetPosition()) + "\n";
+               // text += "Gizmo Position: " + Hell::String::FormatVec3(Gizmo::GetPosition()) + "\n";
 
                // SpaceCoords windowSpaceCoords = viewport->GetWindowSpaceCoords();
                // SpaceCoords gBufferSpaceCoords = viewport->GetGBufferSpaceCoords();

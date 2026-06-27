@@ -1,23 +1,17 @@
 #include "../GL_renderer.h"
-#include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Hell/Backend/BackEnd.h"
-#include "Unloved/Viewport/ViewportManager.h"
-#include "Unloved/Editor/Editor.h"
 #include "Renderer/RenderDataManager.h"
-#include "Unloved/Objects/House/Clipping/Clipping.h"
 #include "World/LegacyWorld.h"
 
+#include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
-
-#include "Types/Mirror.h"
-#include "Unloved/Systems/Mirrors/MirrorManager.h"
-
-#include "Unloved/Session/Session.h"\
-
-// get me out of here
+#include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-// get me out of here
+
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Session/Session.h"
+#include "Unloved/Systems/Mirrors/MirrorManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
 
 namespace OpenGLRenderer {
 

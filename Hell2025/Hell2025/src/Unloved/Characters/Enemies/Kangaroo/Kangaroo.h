@@ -1,7 +1,7 @@
 #pragma once
-#include <Game/Types.h>
-#include <Game/CreateInfo.h>
-#include <Game/Constants.h>
+#include "Unloved/Common/Types.h"
+#include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Common/Constants.h"
 
 #include "Hell/Physics/Types/CharacterController.h"
 #include "Hell/Physics/Ragdoll/Ragdoll.h"

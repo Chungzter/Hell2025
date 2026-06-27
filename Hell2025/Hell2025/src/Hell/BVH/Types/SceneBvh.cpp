@@ -1,6 +1,7 @@
 #include "SceneBvh.h"
 
 #include "Hell/BVH/Types/MeshBvh.h"
+#include "Hell/Common/Bit.h"
 #include "Hell/Logging.h"
 
 #include "bvh/v2/bbox.h"
@@ -28,15 +29,6 @@ namespace {
 
     MadmannVec3 GlmVec3ToMadmannVec3(const glm::vec3& vec) {
         return MadmannVec3(vec.x, vec.y, vec.z);
-    }
-
-    void PackUint64(uint64_t value, uint32_t& xOut, uint32_t& yOut) {
-        xOut = static_cast<uint32_t>((value & 0xffffffff00000000ull) >> 32);
-        yOut = static_cast<uint32_t>(value & 0xffffffffull);
-    }
-
-    void UnpackUint64(uint32_t xValue, uint32_t yValue, uint64_t& out) {
-        out = (static_cast<uint64_t>(xValue) << 32) | yValue;
     }
 
     bool IsNan(const glm::vec3& value) {
@@ -180,7 +172,7 @@ namespace {
                     rayResult.globalMeshIndex = instance.globalMeshIndex;
                     rayResult.localMeshNodeIndex = instance.localMeshNodeIndex;
                     rayResult.hitNormal = -glm::vec3(instance.worldTransform * glm::vec4(normal, 0.0f));
-                    UnpackUint64(instance.objectIdLowerBit, instance.objectIdUpperBit, rayResult.objectId);
+                    Hell::Bit::UnpackUint64(instance.objectIdLowerBit, instance.objectIdUpperBit, rayResult.objectId);
                     return rayResult;
                 }
             }
@@ -259,7 +251,7 @@ namespace {
                         closestRayResult.globalMeshIndex = instance.globalMeshIndex;
                         closestRayResult.localMeshNodeIndex = instance.localMeshNodeIndex;
                         closestRayResult.hitNormal = -glm::vec3(instance.worldTransform * glm::vec4(normal, 0.0f));
-                        UnpackUint64(instance.objectIdLowerBit, instance.objectIdUpperBit, closestRayResult.objectId);
+                        Hell::Bit::UnpackUint64(instance.objectIdLowerBit, instance.objectIdUpperBit, closestRayResult.objectId);
 
                         rayData.maxDistance = localT;
                     }
@@ -427,7 +419,7 @@ bool SceneBvh::UpdateInstances(const std::vector<PrimitiveInstance>& instances) 
                 gpuInstance.globalMeshIndex = instance.globalMeshIndex;
                 gpuInstance.localMeshNodeIndex = instance.localMeshNodeIndex;
                 gpuInstance.padding2 = 0;
-                PackUint64(instance.objectId, gpuInstance.objectIdLowerBit, gpuInstance.objectIdUpperBit);
+                Hell::Bit::PackUint64(instance.objectId, gpuInstance.objectIdLowerBit, gpuInstance.objectIdUpperBit);
 
                 m_leafInstanceIndices.push_back(instanceIndex);
             }

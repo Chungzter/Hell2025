@@ -1,7 +1,8 @@
 #include "Trim.h"
+#include "Hell/Common/Bit.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Legacy/Renderer/RenderDataManager.h"
-#include "Util.h"
+#include "Legacy/Util/Util.h"
 #include "Unloved/ObjectId.h"
 
 #include <iostream> // TODO clean up logging
@@ -28,7 +29,7 @@ void Trim::Init(Transform transform, const std::string& modelName, const std::st
     m_renderItem.rmaTextureIndex = material->m_rma;
     m_renderItem.normalMapTextureIndex = material->m_normal;
     Util::UpdateRenderItemAABB(m_renderItem);
-    Util::PackUint64(m_objectId, m_renderItem.objectIdLowerBit, m_renderItem.objectIdUpperBit);
+    Hell::Bit::PackUint64(m_objectId, m_renderItem.objectIdLowerBit, m_renderItem.objectIdUpperBit);
 }
 
 void Trim::SubmitRenderItem() {

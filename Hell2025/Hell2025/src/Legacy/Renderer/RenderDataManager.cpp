@@ -1,6 +1,7 @@
 #include "RenderDataManager.h"
 
 #include "Hell/Backend/BackEnd.h"
+#include "Hell/Common/Bit.h"
 #include "Hell/Logging.h"
 #include "Hell/Math/Transform.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -24,9 +25,9 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include <vector>
 #include "Hell/Input.h"
-#include <Game/RendereringConstants.h>
+#include "Unloved/Render/RendererConstants.h"
 #include "Timer.hpp"
-#include <Game/Constants.h>
+#include "Unloved/Common/Constants.h"
 #include "Renderer/Renderer.h"
 //
 
@@ -865,7 +866,7 @@ namespace RenderDataManager {
     void SetRenderItemsBaseTransformIndex(std::vector<RenderItem>& renderItems) {
         for (RenderItem& renderItem : renderItems) {
             uint64_t id = 0;
-            Util::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, id);
+            Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, id);
 
             AnimatedGameObject* animatedGameObject = LegacyWorld::GetAnimatedGameObjectByObjectId(id);
             if (!animatedGameObject) continue;
@@ -1313,7 +1314,7 @@ namespace RenderDataManager {
 
         if (blendingMode != BlendingMode::DO_NOT_RENDER) {
             uint64_t objectId = 0;
-            Util::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+            Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
 
             if (objectId != 0 && objectId == Editor::GetSelectedObjectId()) g_renderItemsOutline.push_back(renderItem);
 

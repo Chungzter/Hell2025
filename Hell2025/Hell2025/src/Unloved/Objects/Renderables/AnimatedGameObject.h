@@ -1,7 +1,9 @@
 #pragma once
-#include "Legacy/Types/Animation/Animator.h"
 #include "Hell/ResourceManagement/Types/SkinnedModel.h"
+
 #include "Unloved/Objects/Renderables/AnimatedMeshNodes.h"
+#include "Unloved/Systems/Animator/Animator.h"
+
 #include <unordered_map>
 
 namespace Unloved {
