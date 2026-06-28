@@ -3,6 +3,7 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Common/Bit.h"
 #include "Hell/Logging.h"
+#include "Hell/Math/Math.h"
 #include "Hell/Math/Transform.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/UI/UIBackEnd.h"
@@ -237,7 +238,7 @@ namespace RenderDataManager {
             glm::vec3 cameraForward = -glm::vec3(inverseView[2]);
 
             // Is there any previous data?
-            bool previousDataExists = !Util::Mat4NearlyEqual(g_viewportData[i].previousProjectionView, glm::mat4(1.0f));
+            bool previousDataExists = !Hell::Math::NearlyEqual(g_viewportData[i].previousProjectionView, glm::mat4(1.0f));
 
             // Previous
             if (previousDataExists) {

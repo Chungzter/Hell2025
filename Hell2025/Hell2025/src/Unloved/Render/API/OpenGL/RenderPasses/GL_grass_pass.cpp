@@ -1,6 +1,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 
 #include "Hell/Logging.h"
+#include "Hell/Math/Math.h"
 #include "Hell/Math/VecXZ.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 
@@ -217,7 +218,7 @@ namespace OpenGLRenderer {
                     //glm::vec3 viewPosNormalized = viewPos * glm::vec3(1.0f, 0.0f, 1.0f);
                     //glm::vec3 aabbCenterNormalized = chunkAABB.GetCenter() * glm::vec3(1.0f, 0.0f, 1.0f);
 
-                    //float distance = Util::ManhattanDistance(viewPosNormalized, aabbCenterNormalized);
+                    //float distance = Hell::Math::ManhattanDistance(viewPosNormalized, aabbCenterNormalized);
                     //if (distance >= threshold) {
                     //    continue;
                     //}
@@ -240,7 +241,7 @@ namespace OpenGLRenderer {
                 glm::vec3 viewPosNormalized = viewPos * glm::vec3(1.0f, 0.0f, 1.0f);
                 glm::vec3 aabbCenterNormalized = chunkAABB.GetCenter() * glm::vec3(1.0f, 0.0f, 1.0f);
 
-                float distance = Util::ManhattanDistance(viewPosNormalized, aabbCenterNormalized);
+                float distance = Hell::Math::ManhattanDistance(viewPosNormalized, aabbCenterNormalized);
                 if (distance >= threshold) {
                     //std::cout << "skipping " << chunk.coord.x << ", " << chunk.coord.z << "\n";
                     continue;

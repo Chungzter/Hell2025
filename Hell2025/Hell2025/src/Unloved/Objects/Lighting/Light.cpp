@@ -1,4 +1,5 @@
 #include "Light.h"
+#include "Hell/Math/Ray.h"
 #include "Hell/Physics/Physics.h"
 #include "Legacy/World/LegacyWorld.h"
 #include "Util.h"
@@ -69,7 +70,7 @@ void Light::RaycastWorldBounds() {
     float rayLength = GetRadius() * 2.0f;
     int numRays =  500;
 
-    std::vector<glm::vec3> rayDirs = Util::GenerateRayDirections(numRays);
+    std::vector<glm::vec3> rayDirs = Hell::Ray::GenerateSphereDirections(numRays);
 
     glm::vec3 minFound = rayOrigin;
     glm::vec3 maxFound = rayOrigin;

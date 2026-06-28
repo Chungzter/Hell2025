@@ -1,10 +1,10 @@
 #include "WallSegment.h"
 
+#include "Hell/Geometry/Geometry.h"
 #include "Hell/Physics/Physics.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Legacy/Renderer/Renderer.h"
-#include "Legacy/Util/Util.h"
 #include "Unloved/Common/Types.h"
 
 #include "Unloved/ObjectId.h"
@@ -31,7 +31,7 @@ void WallSegment::Init(glm::vec3 start, glm::vec3 end, float height, uint64_t pa
     };
 
     // AABB
-    m_aabb = Util::GetAABBFromPoints(m_corners);
+    m_aabb = AABB(m_corners);
 
     // Store parent id
     m_parentObjectId = parentObjectId;
@@ -74,7 +74,7 @@ void WallSegment::CreateVertexData(const std::vector<const HouseBuilder::Clippin
 
         // Update UVs
         origin = glm::vec3(0);
-        vertex.uv = Util::CalculateUV(vertex.position - m_spawnOffset.translation, m_normal);
+        vertex.uv = Hell::Geometry::CalculateUV(vertex.position - m_spawnOffset.translation, m_normal);
         vertex.uv *= texScale;
         vertex.uv.x += texOffsetX;
         vertex.uv.y += texOffsetY;
@@ -85,7 +85,7 @@ void WallSegment::CreateVertexData(const std::vector<const HouseBuilder::Clippin
         Vertex& v0 = m_vertices[m_indices[i + 0]];
         Vertex& v1 = m_vertices[m_indices[i + 1]];
         Vertex& v2 = m_vertices[m_indices[i + 2]];
-        Util::SetNormalsAndTangentsFromVertices(v0, v1, v2);
+        Hell::Geometry::SetNormalsAndTangentsFromVertices(v0, v1, v2);
     }
 
     CreatePhysicsObject();

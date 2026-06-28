@@ -1,14 +1,13 @@
 #include "HousePlane.h"
+#include "Hell/Geometry/Geometry.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Physics/Physics.h"
+#include "Hell/Transform.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Legacy/World/LegacyWorld.h"
-#include "Util.h"
 
 namespace Unloved {
-
-using namespace Hell;
 
 HousePlane::HousePlane(uint64_t id, const HousePlaneCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_objectId = id;
@@ -20,7 +19,7 @@ HousePlane::HousePlane(uint64_t id, const HousePlaneCreateInfo& createInfo, cons
     m_createInfo.p2 += spawnOffset.translation; // is this correct/safe?
     m_createInfo.p3 += spawnOffset.translation; // is this correct/safe?
 
-    m_materialIndex = ResourceManager::GetMaterialIndexByName(m_createInfo.materialName);
+    m_materialIndex = Hell::ResourceManager::GetMaterialIndexByName(m_createInfo.materialName);
 
     UpdateVertexDataFromCreateInfo();
 }
@@ -45,7 +44,7 @@ void HousePlane::UpdateVertexDataFromCreateInfo() {
     for (Vertex& vertex : m_vertices) {
         glm::vec3 origin = glm::vec3(0, 0, 0);
         origin = glm::vec3(0);
-        vertex.uv = Util::CalculateUV(vertex.position, glm::vec3(0.0f, 1.0f, 0.0f));
+        vertex.uv = Hell::Geometry::CalculateUV(vertex.position, glm::vec3(0.0f, 1.0f, 0.0f));
         vertex.uv *= m_createInfo.textureScale;
         vertex.uv.x += m_createInfo.textureOffsetU;
         vertex.uv.y += m_createInfo.textureOffsetV;
@@ -56,7 +55,7 @@ void HousePlane::UpdateVertexDataFromCreateInfo() {
         Vertex& v0 = m_vertices[m_indices[i + 0]];
         Vertex& v1 = m_vertices[m_indices[i + 1]];
         Vertex& v2 = m_vertices[m_indices[i + 2]];
-        Util::SetNormalsAndTangentsFromVertices(v0, v1, v2);
+        Hell::Geometry::SetNormalsAndTangentsFromVertices(v0, v1, v2);
     }
 
     Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
@@ -86,7 +85,7 @@ void HousePlane::CleanUp() {
     m_p3 = glm::vec3(0.0f);
     m_materialIndex = -1;
 
-    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
     meshBuffer.RemoveMesh(m_meshId);
 }
 
@@ -101,11 +100,11 @@ void HousePlane::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {
 
 void HousePlane::SetMaterial(const std::string& materialName) {
     m_createInfo.materialName = materialName;
-    m_materialIndex = ResourceManager::GetMaterialIndexByName(materialName);
+    m_materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
 }
 
 Material* HousePlane::GetMaterial() {
-    return ResourceManager::GetMaterialByIndex(m_materialIndex);
+    return Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
 }
 
 void HousePlane::SetMeshId(uint32_t meshId) {
@@ -135,7 +134,7 @@ void HousePlane::CreatePhysicsObject() {
     filterData.collisionGroup = CollisionGroup::ENVIROMENT_OBSTACLE;
     filterData.collidesWith = (CollisionGroup)(GENERIC_BOUNCEABLE | BULLET_CASING | RAGDOLL_PLAYER | RAGDOLL_ENEMY | CHARACTER_CONTROLLER | ITEM_PICK_UP);
 
-    m_physicsId = Hell::Physics::CreateRigidStaticTriangleMeshFromVertexData(Transform(), m_vertices, m_indices, filterData);
+    m_physicsId = Hell::Physics::CreateRigidStaticTriangleMeshFromVertexData(Hell::Transform(), m_vertices, m_indices, filterData);
 
     // Set PhysX user data
     PhysicsUserData userData;
@@ -147,12 +146,12 @@ void HousePlane::CreatePhysicsObject() {
 }
 
 void HousePlane::SubmitRenderItem() {
-    MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
 
     Mesh* mesh = meshBuffer.GetMeshById(m_meshId);
     if (!mesh) return;
 
-    Material* material = ResourceManager::GetMaterialByIndex(m_materialIndex);
+    Material* material = Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
     if (!material) return;
 
 	RenderItem renderItem;

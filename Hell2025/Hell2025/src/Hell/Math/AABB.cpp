@@ -1,19 +1,26 @@
 #include "AABB.h"
-#include "Util.h"
-#include <algorithm>
 
-namespace {
-    float DistanceSquared(const glm::vec3& a, const glm::vec3& b) {
-        glm::vec3 diff = a - b;
-        return diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
-    }
-}
+#include <algorithm>
+#include <glm/common.hpp>
+#include <glm/geometric.hpp>
 
 AABB::AABB(const glm::vec3& min, const glm::vec3& max) {
     boundsMin = min;
     boundsMax = max;
     CalculateCenterAndExtents();
 }
+
+AABB::AABB(const std::vector<glm::vec3>& points) {
+    for (const glm::vec3& point : points) {
+        boundsMin = glm::min(boundsMin, point);
+        boundsMax = glm::max(boundsMax, point);
+    }
+
+    if (!points.empty()) {
+        CalculateCenterAndExtents();
+    }
+}
+
 void AABB::Grow(AABB& b) {
     if (b.boundsMin.x != 1e30f && b.boundsMin.x != -1e30f) {
         Grow(b.boundsMin); Grow(b.boundsMax);
@@ -43,7 +50,8 @@ bool AABB::ContainsPoint(const glm::vec3& point) const {
 
 bool AABB::IntersectsSphere(const glm::vec3& sphereCenter, float radius) const {
     glm::vec3 closestPoint = glm::clamp(sphereCenter, boundsMin, boundsMax);
-    float distSq = DistanceSquared(closestPoint, sphereCenter);
+    glm::vec3 diff = closestPoint - sphereCenter;
+    float distSq = glm::dot(diff, diff);
     return distSq <= (radius * radius);
 }
 

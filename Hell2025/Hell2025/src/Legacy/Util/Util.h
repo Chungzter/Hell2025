@@ -26,7 +26,6 @@ namespace Util {
     glm::vec3 EulerRotationFromNormal(glm::vec3 normal, glm::vec3 forward = glm::vec3(0.0f, 0.0f, 1.0f));
     float YRotationBetweenTwoPoints(glm::vec3 a, glm::vec3 b);
     glm::mat4 GetRotationMat4FromForwardVector(glm::vec3 forward);
-    glm::vec3 GetMidPoint(const glm::vec3& a, const glm::vec3& b);
     float EulerYRotationBetweenTwoPoints(glm::vec3 a, glm::vec3 b);
     glm::mat4 RotationMatrixFromForwardVector(glm::vec3 forward, glm::vec3 worldForward, glm::vec3 worldUp);
     glm::vec2 ComputeCentroid2D(const std::vector<glm::vec2>& points);
@@ -34,15 +33,11 @@ namespace Util {
     std::vector<glm::vec2> ComputeConvexHull2D(std::vector<glm::vec2> points);
     float Cross2D(const glm::vec2& O, const glm::vec2& A, const glm::vec2& B);
     glm::vec3 ClosestPointOnSegmentToRay(const glm::vec3& A, const glm::vec3& B, const glm::vec3& rayOrigin, const glm::vec3& rayDir);
-    float DistanceSquared(const glm::vec3& a, const glm::vec3& b);
-    float ManhattanDistance(const glm::vec3& a, const glm::vec3& b);
     int RandomInt(int min, int max);
-    void NormalizeWeights(std::vector<float>& weights);
     void InterpolateQuaternion(glm::quat& Out, const glm::quat& Start, const glm::quat& End, float pFactor);
     float FInterpTo(float current, float target, float deltaTime, float interpSpeed);
     glm::vec3 LerpVec3(glm::vec3 current, glm::vec3 target, float deltaTime, float interpSpeed);
     float RandomFloat(float min, float max);
-    bool IsWithinThreshold(const glm::ivec2& pointA, const glm::ivec2& pointB, float threshold);
     glm::ivec2 WorldToScreenCoords(const glm::vec3& worldPos, const glm::mat4& viewProjection, int screenWidth, int screenHeight, bool flipY = false);
     //glm::ivec2 WorldToScreenCoordsOrtho(const glm::vec3& worldPos, const glm::mat4& orthoMatrix, int screenWidth, int screenHeight, bool flipY = false);
     bool IsNan(float value);
@@ -50,9 +45,6 @@ namespace Util {
     bool IsNan(const glm::vec3& value);
     bool IsNan(const glm::vec4& value);
     bool IsNaN(const glm::mat4& matrix);
-    AABB GetAABBFromPoints(std::vector<glm::vec3>& points);
-    bool Mat4NearlyEqual(const glm::mat4& a, const glm::mat4& b);
-    bool NearlyEqualTransform(const Transform& a, const Transform& b);
     bool IsPointInTriangle2D(const glm::vec2& pt, const glm::vec2& v0, const glm::vec2& v1, const glm::vec2& v2);
     std::vector<glm::vec3> GetBeizerPointsFromControlPoints(const std::vector<glm::vec3>& controlPoints, float spacing);
     bool HoveredLine(glm::ivec2 mouseCoords, glm::ivec2 p1, glm::ivec2 p2, float threshold);
@@ -62,26 +54,6 @@ namespace Util {
     float FractalNoise1D(float x, int32_t seed);
     inline float DegToRad(float degrees) { return degrees * (HELL_PI / 180.0f); }
     glm::mat4 CreateObliqueProjection(const glm::mat4& projection, const glm::mat4& view, const glm::vec4& plane);
-    glm::vec3 GetBarycentric(const glm::vec2& targetPoint, const glm::vec2& v0, const glm::vec2& v1, const glm::vec2& v2);
-    std::vector<glm::vec3> GenerateRayDirections(int numRays);
-    std::vector<glm::vec3> GenerateFibonacciCone(int numRays, float spreadAngleRadians, glm::vec3 targetDir);
-    std::vector<glm::vec3> GenerateBiasedFibonacciSphere(int numRays, float bias, glm::vec3 targetDir);
-
-    // Mesh
-    std::vector<Vertex> GenerateSphereVertices(float radius, int segments);
-    std::vector<Vertex> GenerateRingVertices(float sphereRadius, float ringThickness, int ringSegments, int thicknessSegments);
-    std::vector<Vertex> GenerateConeVertices(float radius, float height, int segments);
-    std::vector<Vertex> GenerateCylinderVertices(float radius, float height, int subdivisions);
-    std::vector<Vertex> GenerateCubeVertices();
-    std::vector<uint32_t> GenerateRingIndices(int segments, int thicknessSegments);
-    std::vector<uint32_t> GenerateSphereIndices(int segments);
-    std::vector<uint32_t> GenerateConeIndices(int segments);
-    std::vector<uint32_t> GenerateCylinderIndices(int subdivisions);
-    std::vector<uint32_t> GenerateCubeIndices();
-    std::vector<uint32_t> GenerateSequentialIndices(int vertexCount);
-    glm::vec3 ComputeFaceNormal(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2);
-    glm::vec2 CalculateUV(const glm::vec3& vertexPosition, const glm::vec3& vertexNormal);
-    void SetNormalsAndTangentsFromVertices(Vertex& vert0, Vertex& vert1, Vertex& vert2);
 
     // Rendering
     void UpdateRenderItemAABB(RenderItem& renderItem);

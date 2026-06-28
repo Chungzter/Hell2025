@@ -1,6 +1,7 @@
 #include "Wall.h"
 #include "Hell/Common/Bit.h"
 #include "Hell/Common/Random.h"
+#include "Hell/Math/Math.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -347,7 +348,7 @@ void Wall::DrawSegmentLines(glm::vec4 color) {
         DebugDraw::DrawLine(p1, p3, color);
         DebugDraw::DrawLine(p2, p4, color);
 
-        glm::vec3 midPoint = Util::GetMidPoint(wallSegment.GetStart(), wallSegment.GetEnd());
+        glm::vec3 midPoint = Hell::Math::MidPoint(wallSegment.GetStart(), wallSegment.GetEnd());
         glm::vec3 normal = wallSegment.GetNormal();
         glm::vec3 projectedMidPoint = midPoint + (normal * 0.2f);
         DebugDraw::DrawLine(midPoint, projectedMidPoint, color);

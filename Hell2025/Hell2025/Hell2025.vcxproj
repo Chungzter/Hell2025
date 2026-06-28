@@ -558,8 +558,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\UI\TextBlitter.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\Texture.cpp" />
     <ClCompile Include="src\Hell\UI\UIBackEnd.cpp" />
+    <ClCompile Include="src\Hell\Geometry\Geometry.cpp" />
+    <ClCompile Include="src\Hell\Geometry\PrimitiveMesh.cpp" />
     <ClCompile Include="src\Legacy\Util\Util_math.cpp" />
-    <ClCompile Include="src\Legacy\Util\Util_mesh.cpp" />
     <ClCompile Include="src\Unloved\Viewport\ViewportManager.cpp" />
     <ClCompile Include="src\Unloved\Systems\House\BlockingVolume.cpp" />
     <ClCompile Include="src\Unloved\Systems\House\ClippingVolume.cpp" />
@@ -760,12 +761,13 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Systems\Mirrors\MirrorManager.h" />
     <ClInclude Include="src\Unloved\Systems\Openables\Openable_types.h" />
     <ClInclude Include="src\Unloved\Systems\Openables\OpenableManager.h" />
+    <ClInclude Include="src\Hell\Geometry\Geometry.h" />
+    <ClInclude Include="src\Hell\Geometry\PrimitiveMesh.h" />
     <ClInclude Include="src\Hell\Math\Math.h" />
     <ClInclude Include="src\Hell\Math\Easing.h" />
     <ClInclude Include="src\Hell\Math\Transform.h" />
     <ClInclude Include="src\Hell\Math\OBB.h" />
     <ClInclude Include="src\Hell\Math\Ray.h" />
-    <ClInclude Include="src\Hell\Math\Sanitize.h" />
     <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollUtil.h" />
     <ClInclude Include="src\Unloved\Characters\Enemies\CharacterSpine.h" />
     <ClInclude Include="src\Unloved\Characters\Enemies\Dobermann\Dobermann.h" />

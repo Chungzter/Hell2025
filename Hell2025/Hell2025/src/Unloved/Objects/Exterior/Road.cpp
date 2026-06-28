@@ -1,5 +1,6 @@
 #include "Road.h"
 #include "Unloved/Debug/DebugDraw.h"
+#include "Hell/Math/Math.h"
 #include "Hell/Physics/Physics.h"
 #include "Util.h"
 
@@ -76,7 +77,7 @@ void Road::DrawPoints() {
     glm::ivec2 mouseCoords2 = viewport->GetLocalMouseCoords();
     glm::ivec2 viewportCoords = viewport->WorldToScreen(viewportData[0].view, m_worldPoints[0]);
 
-    bool hover = Util::IsWithinThreshold(mouseCoords2, pointCoords, 10);
+    bool hover = Hell::Math::WithinDistance(mouseCoords2, pointCoords, 10);
     if (hover) {
         DebugDraw::DrawPoint(m_worldPoints[0], YELLOW);
     }

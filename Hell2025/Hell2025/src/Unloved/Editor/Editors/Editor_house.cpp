@@ -224,7 +224,7 @@ namespace Unloved::Editor {
         //glm::ivec2 testPosScreenSpace = Util::WorldToScreenCoords(testPoint, projectionView, screenWidth, screenHeight, true);
         //glm::ivec2 mousePos = glm::ivec2(mouseX, mouseY);
         //int threshold = 20;
-        //if (Util::IsWithinThreshold(mousePos, testPosScreenSpace, threshold)) {
+        //if (Hell::Math::WithinDistance(mousePos, testPosScreenSpace, threshold)) {
         //    color = OUTLINE_COLOR;
         //}
         //DebugDraw::DrawPoint(testPoint, color);

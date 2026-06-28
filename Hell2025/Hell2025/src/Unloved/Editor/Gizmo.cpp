@@ -1,6 +1,7 @@
 ﻿#include "Gizmo.h"
 
 #include "Hell/Audio.h"
+#include "Hell/Geometry/PrimitiveMesh.h"
 #include "Hell/Input.h"
 #include "Hell/Logging.h"
 #include "Hell/Math/Ray.h"
@@ -103,16 +104,16 @@ namespace Gizmo {
         float ringThickness = 0.03f;
         int ringSegments = 32;
         int ringThicknessSegments = 5;
-        std::vector<Vertex> ringVertices = Util::GenerateRingVertices(g_gizmoSize, ringThickness, ringSegments, ringThicknessSegments);
-        std::vector<uint32_t> ringIndices = Util::GenerateRingIndices(ringSegments, ringThicknessSegments);
+        std::vector<Vertex> ringVertices = Hell::PrimitiveMesh::GenerateRingVertices(g_gizmoSize, ringThickness, ringSegments, ringThicknessSegments);
+        std::vector<uint32_t> ringIndices = Hell::PrimitiveMesh::GenerateRingIndices(ringSegments, ringThicknessSegments);
         g_meshBuffers[RING].AddMesh(ringVertices, ringIndices);
         g_meshBuffers[RING].UpdateBuffers();
 
         // Generate sphere mesh
         float sphereRadius = g_gizmoSize - (ringThickness * 2);
         int sphereSegments = 32;
-        std::vector<Vertex> sphereVerices = Util::GenerateSphereVertices(sphereRadius, sphereSegments);
-        std::vector<uint32_t> sphereIndices = Util::GenerateSphereIndices(sphereSegments);
+        std::vector<Vertex> sphereVerices = Hell::PrimitiveMesh::GenerateSphereVertices(sphereRadius, sphereSegments);
+        std::vector<uint32_t> sphereIndices = Hell::PrimitiveMesh::GenerateSphereIndices(sphereSegments);
         g_meshBuffers[SPHERE].AddMesh(sphereVerices, sphereIndices);
         g_meshBuffers[SPHERE].UpdateBuffers();
 
@@ -120,8 +121,8 @@ namespace Gizmo {
         int coneSegments = 12;
         float coneRadius = 0.125f;
         float coneHeight = 0.6f;
-        std::vector<Vertex> coneVertices = Util::GenerateConeVertices(coneRadius, coneHeight, coneSegments);
-        std::vector<uint32_t> coneIndices = Util::GenerateConeIndices(coneSegments);
+        std::vector<Vertex> coneVertices = Hell::PrimitiveMesh::GenerateConeVertices(coneRadius, coneHeight, coneSegments);
+        std::vector<uint32_t> coneIndices = Hell::PrimitiveMesh::GenerateConeIndices(coneSegments);
         g_meshBuffers[CONE].AddMesh(coneVertices, coneIndices);
         g_meshBuffers[CONE].UpdateBuffers();
 
@@ -129,14 +130,14 @@ namespace Gizmo {
         float cylinderRadius = 0.015f;
         float cylinderHeight = 1.0f;
         int cylinderSegments = 5;
-        std::vector<Vertex> cylinderVertices = Util::GenerateCylinderVertices(cylinderRadius, cylinderHeight, cylinderSegments);
-        std::vector<uint32_t> cylinderIndices = Util::GenerateCylinderIndices(cylinderSegments);
+        std::vector<Vertex> cylinderVertices = Hell::PrimitiveMesh::GenerateCylinderVertices(cylinderRadius, cylinderHeight, cylinderSegments);
+        std::vector<uint32_t> cylinderIndices = Hell::PrimitiveMesh::GenerateCylinderIndices(cylinderSegments);
         g_meshBuffers[CYLINDER].AddMesh(cylinderVertices, cylinderIndices);
         g_meshBuffers[CYLINDER].UpdateBuffers();
 
         // Generate cube one mesh
-        std::vector<Vertex> cubeVertices = Util::GenerateCubeVertices();
-        std::vector<uint32_t> cubeIndices = Util::GenerateCubeIndices();
+        std::vector<Vertex> cubeVertices = Hell::PrimitiveMesh::GenerateCubeVertices();
+        std::vector<uint32_t> cubeIndices = Hell::PrimitiveMesh::GenerateCubeIndices();
         g_meshBuffers[CUBE].AddMesh(cubeVertices, cubeIndices);
         g_meshBuffers[CUBE].UpdateBuffers();
     }

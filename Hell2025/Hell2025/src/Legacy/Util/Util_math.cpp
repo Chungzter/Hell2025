@@ -1,6 +1,5 @@
 #include "Util.h"
 #include "Unloved/Common/Constants.h"
-#include <numeric>
 #include <random>
 #ifndef GLM_ENABLE_EXPERIMENTAL
     #define GLM_ENABLE_EXPERIMENTAL
@@ -52,10 +51,6 @@ namespace Util {
         return rotation;
     }
 
-    glm::vec3 GetMidPoint(const glm::vec3& a, const glm::vec3& b) {
-        return (a + b) * 0.5f;
-    }
-
     float EulerYRotationBetweenTwoPoints(glm::vec3 a, glm::vec3 b) {
         float delta_x = b.x - a.x;
         float delta_y = b.z - a.z;
@@ -93,18 +88,6 @@ namespace Util {
         //glm::quat qWorld = glm::quatLookAt(worldForward, worldUp);
         //
         //return glm::mat4_cast(q * glm::inverse(qWorld));
-    }
-
-    AABB GetAABBFromPoints(std::vector<glm::vec3>& points) {
-        glm::vec3 aabbMin(std::numeric_limits<float>::max());
-        glm::vec3 aabbMax(std::numeric_limits<float>::lowest());
-
-        for (const glm::vec3& point : points) {
-            aabbMin = glm::min(aabbMin, point);
-            aabbMax = glm::max(aabbMax, point);
-        }
-
-        return AABB(aabbMin, aabbMax);
     }
 
     glm::vec2 ComputeCentroid2D(const std::vector<glm::vec2>& points) {
@@ -198,15 +181,6 @@ namespace Util {
         return A + t * u;
     }
 
-    float DistanceSquared(const glm::vec3& a, const glm::vec3& b) {
-        glm::vec3 diff = a - b;
-        return diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
-    }
-
-    float ManhattanDistance(const glm::vec3& a, const glm::vec3& b) {
-        return std::abs(a.x - b.x) + std::abs(a.y - b.y) + std::abs(a.z - b.z);
-    }
-
     glm::ivec2 WorldToScreenCoords(const glm::vec3& worldPos, const glm::mat4& viewProjection, int screenWidth, int screenHeight, bool flipY) {
         glm::vec4 clipCoords = viewProjection * glm::vec4(worldPos, 1.0f);
         glm::vec3 ndcCoords = glm::vec3(clipCoords) / clipCoords.w;
@@ -216,17 +190,6 @@ namespace Util {
             ? screenHeight - (ndcCoords.y + 1.0f) * 0.5f * screenHeight
             : (1.0f - ndcCoords.y) * 0.5f * screenHeight;
         return screenCoords;
-    }
-
-    bool IsWithinThreshold(const glm::ivec2& a, const glm::ivec2& b, float threshold) {
-        if (threshold < 0.0f) return false;
-
-        // Calculate the difference in x and y coordinates
-        float dx = float(a.x) - float(b.x);
-        float dy = float(a.y) - float(b.y);
-
-        // Check if the Euclidean distance is within the threshold
-        return dx * dx + dy * dy <= threshold * threshold;
     }
 
     //glm::ivec2 WorldToScreenCoordsOrtho(const glm::vec3& worldPos, const glm::mat4& orthoMatrix, int screenWidth, int screenHeight, bool flipY) {
@@ -303,19 +266,6 @@ namespace Util {
         Out.y = sclp * Start.y + sclq * end.y;
         Out.z = sclp * Start.z + sclq * end.z;
         Out.w = sclp * Start.w + sclq * end.w;
-    }
-
-    void NormalizeWeights(std::vector<float>& weights) {
-        // Calculate the sum of all weights
-        float sum = std::accumulate(weights.begin(), weights.end(), 0.0f);
-        // Check if the sum is non-zero to avoid division by zero
-        if (sum == 0.0f) {
-            throw std::invalid_argument("Sum of weights cannot be zero.");
-        }
-        // Normalize each weight
-        for (float& weight : weights) {
-            weight /= sum;
-        }
     }
 
     bool IsNan(float value) {
@@ -487,44 +437,6 @@ namespace Util {
         return points;
     }
 
-    bool Mat4NearlyEqual(const glm::mat4& a, const glm::mat4& b) {
-        //constexpr float eps = 1e-4f;
-        //
-        //for (int c = 0; c < 4; ++c)
-        //    for (int r = 0; r < 4; ++r)
-        //        if (glm::abs(a[c][r] - b[c][r]) > eps) return false;
-        //return true;
-
-		constexpr float absEps = 1e-8f;
-		constexpr float relEps = 1e-5f;
-
-		for (int c = 0; c < 4; ++c) {
-			for (int r = 0; r < 4; ++r) {
-				const float av = a[c][r];
-				const float bv = b[c][r];
-				const float diff = glm::abs(av - bv);
-				const float largest = glm::max(glm::abs(av), glm::abs(bv));
-				const float tolerance = glm::max(absEps, relEps * largest);
-
-				if (diff > tolerance) {
-					return false;
-				}
-			}
-		}
-
-		return true;
-    }
-
-    bool NearlyEqualTransform(const Transform& a, const Transform& b) {
-        constexpr float kPosEps = 1e-4f;   // meters
-        constexpr float kAngEps = 1e-3f;   // radians (0.057 deg)
-        constexpr float kScaleEps = 1e-4f;
-
-        return glm::all(glm::lessThanEqual(glm::abs(a.position - b.position), glm::vec3(kPosEps))) &&
-            glm::all(glm::lessThanEqual(glm::abs(a.rotation - b.rotation), glm::vec3(kAngEps))) &&
-            glm::all(glm::lessThanEqual(glm::abs(a.scale - b.scale), glm::vec3(kScaleEps)));
-    }
-    
     float Smoothstep01(float t) {
         t = glm::clamp(t, 0.0f, 1.0f);
         return t * t * (3.0f - 2.0f * t);
@@ -592,115 +504,4 @@ namespace Util {
         return obliqueProjection;
     }
 
-    glm::vec3 GetBarycentric(const glm::vec2& targetPoint, const glm::vec2& v0, const glm::vec2& v1, const glm::vec2& v2) {
-        glm::vec2 edge0 = v1 - v0;
-        glm::vec2 edge1 = v2 - v0;
-        glm::vec2 edgeTarget = targetPoint - v0;
-
-        float d00 = glm::dot(edge0, edge0);
-        float d01 = glm::dot(edge0, edge1);
-        float d11 = glm::dot(edge1, edge1);
-        float d20 = glm::dot(edgeTarget, edge0);
-        float d21 = glm::dot(edgeTarget, edge1);
-
-        float denom = d00 * d11 - d01 * d01;
-
-        float v = (d11 * d20 - d01 * d21) / denom;
-        float w = (d00 * d21 - d01 * d20) / denom;
-        float u = 1.0f - v - w;
-
-        return glm::vec3(u, v, w);
-    }
-
-    std::vector<glm::vec3> GenerateRayDirections(int numRays) {
-        std::vector<glm::vec3> rays;
-        rays.reserve(numRays);
-
-        // Golden angle in radians
-        const float phi = glm::pi<float>() * (3.0f - std::sqrt(5.0f));
-
-        for (int i = 0; i < numRays; ++i) {
-            // Map y coordinate from top to bottom of sphere
-            float y = 1.0f - (i / float(numRays - 1)) * 2.0f;
-            float radius = std::sqrt(1.0f - y * y);
-
-            float theta = phi * i;
-
-            float x = std::cos(theta) * radius;
-            float z = std::sin(theta) * radius;
-
-            rays.push_back(glm::vec3(x, y, z));
-        }
-
-        return rays;
-    }
-
-    std::vector<glm::vec3> GenerateFibonacciCone(int numRays, float spreadAngleRadians, glm::vec3 targetDir) {
-        std::vector<glm::vec3> rays;
-        rays.reserve(numRays);
-
-        const float phi = glm::pi<float>() * (3.0f - std::sqrt(5.0f));
-
-        // Lowest y value on the unit sphere for the given angle
-        float cosAlpha = std::cos(spreadAngleRadians);
-
-        // Align the base +Y rays to my target direction
-        glm::vec3 up(0.0f, 1.0f, 0.0f);
-        glm::vec3 dir = glm::normalize(targetDir);
-        glm::quat alignmentRot = glm::rotation(up, dir);
-
-        for (int i = 0; i < numRays; ++i) {
-            // Map y from 1.0 down to the edge of the cone
-            float y = 1.0f - (i / float(numRays - 1)) * (1.0f - cosAlpha);
-            float radius = std::sqrt(1.0f - y * y);
-
-            float theta = phi * i;
-
-            float x = std::cos(theta) * radius;
-            float z = std::sin(theta) * radius;
-
-            glm::vec3 localRay(x, y, z);
-
-            // Rotate ray to point along target direction
-            rays.push_back(alignmentRot * localRay);
-        }
-
-        return rays;
-    }
-
-    std::vector<glm::vec3> GenerateBiasedFibonacciSphere(int numRays, float bias, glm::vec3 targetDir) {
-        std::vector<glm::vec3> rays;
-        rays.reserve(numRays);
-
-        // Golden angle in radians
-        const float phi = glm::pi<float>() * (3.0f - std::sqrt(5.0f));
-
-        // Align the base +Y rays to our target direction
-        glm::vec3 up(0.0f, 1.0f, 0.0f);
-        glm::vec3 dir = glm::normalize(targetDir);
-        glm::quat alignmentRot = glm::rotation(up, dir);
-
-        for (int i = 0; i < numRays; ++i) {
-            // Normalized progress through the sequence
-            float t = i / float(numRays - 1);
-
-            // Curve the distribution to favor the top of the sphere
-            float tBiased = std::pow(t, bias);
-
-            // Map y from 1.0 down to -1.0
-            float y = 1.0f - 2.0f * tBiased;
-            float radius = std::sqrt(1.0f - y * y);
-
-            float theta = phi * i;
-
-            float x = std::cos(theta) * radius;
-            float z = std::sin(theta) * radius;
-
-            glm::vec3 localRay(x, y, z);
-
-            rays.push_back(alignmentRot * localRay);
-        }
-
-        return rays;
-    }
 }

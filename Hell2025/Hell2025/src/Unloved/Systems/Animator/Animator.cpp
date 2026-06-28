@@ -1,6 +1,6 @@
 #include "Animator.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Hell/Math/Sanitize.h"
+#include "Hell/Math/Math.h"
 #include "Util.h"
 
 void Animator::SetSkinnedModel(const std::string& skinnedModelName) {
@@ -226,7 +226,7 @@ void Animator::UpdateAnimations(float deltaTime) {
 
     // Nuke any rounding errors
     for (glm::mat4& m : m_globalBlendedNodeTransforms) {
-        Hell::Sanitize(m);
+        Hell::Math::Sanitize(m);
     }
 }
 

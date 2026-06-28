@@ -8,6 +8,7 @@
 #include "Unloved/Systems/Openables/OpenableManager.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Legacy/World/LegacyWorld.h"
+#include "Hell/Math/Math.h"
 #include "Hell/Physics/Physics.h"
 #include "Unloved/ObjectId.h"
 #include "Util.h"
@@ -299,7 +300,7 @@ void MeshNodes::CleanUp() {
 
 void MeshNodes::SetTransformByMeshName(const std::string& meshName, Transform transform) {
     if (MeshNode* meshNode = GetMeshNodeByMeshName(meshName)) {
-        if (!Util::NearlyEqualTransform(transform, meshNode->transform)) {
+        if (!Hell::Math::NearlyEqual(transform, meshNode->transform)) {
             meshNode->transform = transform;
             ForceDirty();
         }
@@ -453,7 +454,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
     //}
 
     // Check if the world matrix changed this frame
-    const bool worldMatrixDirty = (m_firstFrame || !Util::Mat4NearlyEqual(worldMatrix, m_worldMatrixPreviousFrame));
+    const bool worldMatrixDirty = (m_firstFrame || !Hell::Math::NearlyEqual(worldMatrix, m_worldMatrixPreviousFrame));
 
     // Is the hierarchy dirty?
     bool hierarchyDirty = false;
@@ -585,7 +586,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         //RenderDataManager::SubmitRenderItem(meshNode.renderItem);
 
         // If this is a static node and its transform is different than the previous frame, mark the World's static scene as dirty
-        if (m_marksStaticSceneBvhAsDirty && MeshNodeIsStatic(i) && !Util::Mat4NearlyEqual(meshNode.worldMatrix, meshNode.prevWorldMatrix)) {
+        if (m_marksStaticSceneBvhAsDirty && MeshNodeIsStatic(i) && !Hell::Math::NearlyEqual(meshNode.worldMatrix, meshNode.prevWorldMatrix)) {
             LegacyWorld::MarkStaticSceneBvhDirty();
 
             if (Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode.globalMeshIndex)) {
@@ -599,7 +600,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.prevWorldMatrix = meshNode.worldMatrix;
 
         //if (!m_firstFrame) {
-        //    meshNode.movedThisFrame = !Util::Mat4NearlyEqual(meshNode.worldMatrix, meshNode.worldModelMatrixPreviousFrame);
+        //    meshNode.movedThisFrame = !Hell::Math::NearlyEqual(meshNode.worldMatrix, meshNode.worldModelMatrixPreviousFrame);
         //}
         //else {
         //    meshNode.movedThisFrame = true;

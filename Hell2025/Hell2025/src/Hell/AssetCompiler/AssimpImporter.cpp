@@ -2,7 +2,7 @@
 
 #include "Hell/Common/String.h"
 #include "Hell/File.h"
-#include "Hell/Math/Sanitize.h"
+#include "Hell/Math/Math.h"
 
 #include <assimp/matrix4x4.h>
 #include <assimp/Importer.hpp>
@@ -21,10 +21,10 @@ namespace {
     glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
         constexpr float threshold = 1e-5f;
         glm::mat4 to;
-        to[0][0] = Hell::Sanitize(from.a1, threshold); to[1][0] = Hell::Sanitize(from.a2, threshold); to[2][0] = Hell::Sanitize(from.a3, threshold); to[3][0] = Hell::Sanitize(from.a4, threshold);
-        to[0][1] = Hell::Sanitize(from.b1, threshold); to[1][1] = Hell::Sanitize(from.b2, threshold); to[2][1] = Hell::Sanitize(from.b3, threshold); to[3][1] = Hell::Sanitize(from.b4, threshold);
-        to[0][2] = Hell::Sanitize(from.c1, threshold); to[1][2] = Hell::Sanitize(from.c2, threshold); to[2][2] = Hell::Sanitize(from.c3, threshold); to[3][2] = Hell::Sanitize(from.c4, threshold);
-        to[0][3] = Hell::Sanitize(from.d1, threshold); to[1][3] = Hell::Sanitize(from.d2, threshold); to[2][3] = Hell::Sanitize(from.d3, threshold); to[3][3] = Hell::Sanitize(from.d4, threshold);
+        to[0][0] = Hell::Math::Sanitize(from.a1, threshold); to[1][0] = Hell::Math::Sanitize(from.a2, threshold); to[2][0] = Hell::Math::Sanitize(from.a3, threshold); to[3][0] = Hell::Math::Sanitize(from.a4, threshold);
+        to[0][1] = Hell::Math::Sanitize(from.b1, threshold); to[1][1] = Hell::Math::Sanitize(from.b2, threshold); to[2][1] = Hell::Math::Sanitize(from.b3, threshold); to[3][1] = Hell::Math::Sanitize(from.b4, threshold);
+        to[0][2] = Hell::Math::Sanitize(from.c1, threshold); to[1][2] = Hell::Math::Sanitize(from.c2, threshold); to[2][2] = Hell::Math::Sanitize(from.c3, threshold); to[3][2] = Hell::Math::Sanitize(from.c4, threshold);
+        to[0][3] = Hell::Math::Sanitize(from.d1, threshold); to[1][3] = Hell::Math::Sanitize(from.d2, threshold); to[2][3] = Hell::Math::Sanitize(from.d3, threshold); to[3][3] = Hell::Math::Sanitize(from.d4, threshold);
         return to;
     }
 

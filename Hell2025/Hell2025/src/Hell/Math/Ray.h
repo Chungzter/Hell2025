@@ -3,6 +3,7 @@
 #include "AABB.h"
 
 #include <glm/geometric.hpp>
+#include <glm/gtc/constants.hpp>
 #include <glm/mat3x3.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/matrix.hpp>
@@ -12,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <vector>
 
 namespace Hell::Ray {
 
@@ -23,6 +25,26 @@ namespace Hell::Ray {
         glm::vec3 hitNormalWorld = glm::vec3(0.0f);
         glm::vec3 hitNormalLocal = glm::vec3(0.0f);
     };
+
+    inline std::vector<glm::vec3> GenerateSphereDirections(int count) {
+        std::vector<glm::vec3> directions;
+        directions.reserve(count);
+
+        const float phi = glm::pi<float>() * (3.0f - std::sqrt(5.0f));
+
+        for (int i = 0; i < count; ++i) {
+            float y = 1.0f - (i / float(count - 1)) * 2.0f;
+            float radius = std::sqrt(1.0f - y * y);
+            float theta = phi * i;
+
+            float x = std::cos(theta) * radius;
+            float z = std::sin(theta) * radius;
+
+            directions.push_back(glm::vec3(x, y, z));
+        }
+
+        return directions;
+    }
 
     inline bool IntersectTriangle(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, float& distanceToHit) {
         constexpr float EPSILON = 1e-8f;

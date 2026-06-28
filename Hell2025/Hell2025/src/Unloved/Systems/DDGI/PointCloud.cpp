@@ -1,5 +1,6 @@
 #include "PointCloud.h"
 
+#include "Hell/Geometry/Geometry.h"
 #include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
 
@@ -66,7 +67,7 @@ void PointCloud::Create(const std::vector<Triangle>& triangles, const glm::vec3&
                     cloudPoint.normal = glm::vec4(triangle.normal, 0.0f);
 
                     // Calculate uv via barycentrics
-                    glm::vec3 bary = Util::GetBarycentric(pt, v0_2d, v1_2d, v2_2d);
+                    glm::vec3 bary = Hell::Geometry::Barycentric2D(pt, v0_2d, v1_2d, v2_2d);
                     glm::vec2 uv = bary.x * triangle.uv0 + bary.y * triangle.uv1 + bary.z * triangle.uv2;
 
                     CloudPointTextureInfo& cloudPointTextureInfo = m_textureInfo.emplace_back();

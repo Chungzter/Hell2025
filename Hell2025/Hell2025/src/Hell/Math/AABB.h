@@ -1,9 +1,12 @@
 #pragma once
 #include <glm/vec3.hpp>
 
+#include <vector>
+
 struct AABB {
     AABB() = default;
     AABB(const glm::vec3& min, const glm::vec3& max);
+    explicit AABB(const std::vector<glm::vec3>& points);
     void Grow(AABB& b);
     void Grow(const glm::vec3& p);
     float Area();
