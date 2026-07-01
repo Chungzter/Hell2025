@@ -1,9 +1,9 @@
 #include "Player.h"
 
 #include "Hell/Input.h"
+#include "Hell/Math/Math.h"
 
 #include "Legacy/World/LegacyWorld.h"
-#include "Legacy/Util/Util.h"
 
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
@@ -64,10 +64,6 @@ void Player::UpdateWalkingMovement(float deltaTime) {
         float decelerationSpeed = 4.0f;
         float airbornDamping = 2.5f;
 
-        m_walkingSpeed = 4.25f;
-        m_runningSpeed = 3.0f;
-        m_crouchingSpeed = 2.325f;
-
         glm::vec3 inputDirection = glm::vec3(0.0f);
 
         // WSAD input
@@ -110,7 +106,7 @@ void Player::UpdateWalkingMovement(float deltaTime) {
             targetSpeed = 0.0f;
             interpolationSpeed = 22.0f;
         }
-        m_currentSpeed = Util::FInterpTo(m_currentSpeed, targetSpeed, deltaTime, interpolationSpeed);
+        m_currentSpeed = Hell::Math::InterpTo(m_currentSpeed, targetSpeed, deltaTime, interpolationSpeed);
 
         // Jump
         if (PressingJump() && HasControl() && m_grounded) {
@@ -231,7 +227,7 @@ void Player::UpdateSwimmingMovement(float deltaTime) {
         targetSpeed = 0.0f;
         interpolationSpeed = 22.0f;
     }
-    m_currentSpeed = Util::FInterpTo(m_currentSpeed, targetSpeed, deltaTime, interpolationSpeed);
+    m_currentSpeed = Hell::Math::InterpTo(m_currentSpeed, targetSpeed, deltaTime, interpolationSpeed);
 
 
     // Move character controller
@@ -242,20 +238,20 @@ void Player::UpdateSwimmingMovement(float deltaTime) {
     //float yDisplacement = m_yVelocity * deltaTime;
     //displacement.y += m_yVelocity * deltaTime;;
     float yVelocityCancelationInterpolationSpeed = 15;
-    m_yVelocity = Util::FInterpTo(m_yVelocity, 0, deltaTime, yVelocityCancelationInterpolationSpeed);
+    m_yVelocity = Hell::Math::InterpTo(m_yVelocity, 0.0f, deltaTime, yVelocityCancelationInterpolationSpeed);
 
     float m_swimVerticalInterpolationSpeed = 15.0f;
     float m_swimMaxVerticalAcceleration = 0.05f;
 
     // Vertical movement
     if (PressingCrouch()) {
-        m_swimVerticalAcceleration = Util::FInterpTo(m_swimVerticalAcceleration, -m_swimMaxVerticalAcceleration, deltaTime, m_swimVerticalInterpolationSpeed);
+        m_swimVerticalAcceleration = Hell::Math::InterpTo(m_swimVerticalAcceleration, -m_swimMaxVerticalAcceleration, deltaTime, m_swimVerticalInterpolationSpeed);
     }
     else if (PressingJump()) {
-        m_swimVerticalAcceleration = Util::FInterpTo(m_swimVerticalAcceleration, m_swimMaxVerticalAcceleration, deltaTime, m_swimVerticalInterpolationSpeed);
+        m_swimVerticalAcceleration = Hell::Math::InterpTo(m_swimVerticalAcceleration, m_swimMaxVerticalAcceleration, deltaTime, m_swimVerticalInterpolationSpeed);
     }
     else {
-        m_swimVerticalAcceleration = Util::FInterpTo(m_swimVerticalAcceleration, 0.0f, deltaTime, 20.0f);
+        m_swimVerticalAcceleration = Hell::Math::InterpTo(m_swimVerticalAcceleration, 0.0f, deltaTime, 20.0f);
     }
     displacement.y += m_swimVerticalAcceleration;
 
@@ -319,7 +315,7 @@ void Player::UpdateSwimmingMovement(float deltaTime) {
    //    targetSpeed = 0.0f;
    //    interpolationSpeed = 22.0f;
    //}
-   //m_currentSpeed = Util::FInterpTo(m_currentSpeed, targetSpeed, deltaTime, interpolationSpeed);
+   //m_currentSpeed = Hell::Math::InterpTo(m_currentSpeed, targetSpeed, deltaTime, interpolationSpeed);
    //
    //// Normalize displacement vector and include player speed
    //float len = length(displacement);
@@ -329,20 +325,20 @@ void Player::UpdateSwimmingMovement(float deltaTime) {
    //float yDisplacement = m_yVelocity * deltaTime;
    //displacement.y += yDisplacement;
    //float yVelocityCancelationInterpolationSpeed = 15;
-   //m_yVelocity = Util::FInterpTo(m_yVelocity, 0, deltaTime, yVelocityCancelationInterpolationSpeed);
+   //m_yVelocity = Hell::Math::InterpTo(m_yVelocity, 0, deltaTime, yVelocityCancelationInterpolationSpeed);
    //
    //float m_swimVerticalInterpolationSpeed = 15.0f;
    //float m_swimMaxVerticalAcceleration = 0.05f;
    //
    //// Vertical movement
    //if (PressingCrouch()) {
-   //    m_swimVerticalAcceleration = Util::FInterpTo(m_swimVerticalAcceleration, -m_swimMaxVerticalAcceleration, deltaTime, m_swimVerticalInterpolationSpeed);
+   //    m_swimVerticalAcceleration = Hell::Math::InterpTo(m_swimVerticalAcceleration, -m_swimMaxVerticalAcceleration, deltaTime, m_swimVerticalInterpolationSpeed);
    //}
    //else if (PresingJump()) {
-   //    m_swimVerticalAcceleration = Util::FInterpTo(m_swimVerticalAcceleration, m_swimMaxVerticalAcceleration, deltaTime, m_swimVerticalInterpolationSpeed);
+   //    m_swimVerticalAcceleration = Hell::Math::InterpTo(m_swimVerticalAcceleration, m_swimMaxVerticalAcceleration, deltaTime, m_swimVerticalInterpolationSpeed);
    //}
    //else {
-   //    m_swimVerticalAcceleration = Util::FInterpTo(m_swimVerticalAcceleration, 0.0f, deltaTime, 20.0f);
+   //    m_swimVerticalAcceleration = Hell::Math::InterpTo(m_swimVerticalAcceleration, 0.0f, deltaTime, 20.0f);
    //}
    //displacement.y += m_swimVerticalAcceleration;
    //

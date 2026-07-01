@@ -134,6 +134,8 @@ namespace Hell::Physics {
             //    DebugDraw::DrawPoint(aabb.GetCenter(), YELLOW);
             //}
         }
+
+        // DebugDrawRigidDynamicStateAABBs();
     }
 }
 }

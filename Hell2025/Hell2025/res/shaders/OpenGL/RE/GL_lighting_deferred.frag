@@ -2,6 +2,7 @@
 
 #extension GL_ARB_bindless_texture : enable
 
+#include "../../common/gl_fixed_bindings.glsl"
 #include "../../common/constants.glsl"
 #include "../../common/lighting.glsl"
 #include "../../common/distance_fog.glsl"
@@ -12,16 +13,17 @@
 
 layout (location = 0) out vec4 LightingOut;
 
-layout (binding = 1) uniform sampler2D u_baseColorMetallicTexture;
-layout (binding = 2) uniform sampler2D u_normalXYRoughnessMiscTexture;
-layout (binding = 3) uniform sampler2D u_velocityXYOcclusionSubSurfaceTexture;
-layout (binding = 4) uniform sampler2D u_depthTexture;
-layout (binding = 5) uniform sampler2D u_indirectDiffuseTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray u_flashlighShadowMapArrayTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow u_hiResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow u_lowResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_CSM)        uniform sampler2DArray u_shadowMapCascadeArray;
 
-layout (binding = 7) uniform sampler2D u_flashlightCookieTexture;
-layout (binding = 8) uniform sampler2DArray u_flashlighShadowMapArrayTexture;
-layout (binding = 9) uniform samplerCubeArrayShadow u_shadowMapArray;
-layout (binding = 10) uniform sampler2DArray u_shadowMapCascadeArray;
+layout (binding = 4) uniform sampler2D u_baseColorMetallicTexture;
+layout (binding = 5) uniform sampler2D u_normalXYRoughnessMiscTexture;
+layout (binding = 6) uniform sampler2D u_velocityXYOcclusionSubSurfaceTexture;
+layout (binding = 7) uniform sampler2D u_depthTexture;
+layout (binding = 8) uniform sampler2D u_indirectDiffuseTexture;
+layout (binding = 9) uniform sampler2D u_flashlightCookieTexture;
 
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
@@ -95,7 +97,14 @@ void main() {
         float lightStrength = light.strength;
         float lightRadius = light.radius;
 
-        float shadow = ShadowCalculationSkin(lightIndex, lightPosition, lightRadius, worldPos.xyz, viewPos, normal.xyz, u_shadowMapArray);
+        float shadow = 1.0;
+        if (light.hiResShadowMapIndex != -1) {
+            shadow = ShadowCalculationSkin(light.hiResShadowMapIndex, lightPosition, lightRadius, worldPos.xyz, viewPos, normal.xyz, u_hiResShadowMapArray);
+        }
+        else if (light.lowResShadowMapIndex != -1) {
+            shadow = ShadowCalculationSkin(light.lowResShadowMapIndex, lightPosition, lightRadius, worldPos.xyz, viewPos, normal.xyz, u_lowResShadowMapArray);
+        }
+
         vec3 directLight = GetDirectLighting(lightPosition, lightColor, lightRadius, lightStrength, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, viewPos) * shadow;
 
         if (light.iesTextureIndex != 0) {

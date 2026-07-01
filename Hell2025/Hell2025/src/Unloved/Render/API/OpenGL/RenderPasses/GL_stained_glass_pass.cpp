@@ -8,6 +8,8 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
+#include "../../../../../../res/shaders/common/gl_fixed_bindings.glsl"
+
 namespace OpenGLRenderer {
 
     void StainedGlassPass() {
@@ -36,10 +38,9 @@ namespace OpenGLRenderer {
         gBuffer.DrawBuffer("Lighting");
 
         glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
-        glBindTextureUnit(0, gBuffer.GetDepthAttachmentHandle());
         glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
-        glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
-        glBindTextureUnit(9, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"));
+        glBindTextureUnit(TEX_IDX_SHADOW_MAP_FLASHLIGHT, flashLightShadowMapsFBO->GetDepthTextureHandle());
+        glBindTextureUnit(8, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"));
 
         // Forward render each glass render item into each viewport
         for (int i = 0; i < 4; i++) {
@@ -72,11 +73,11 @@ namespace OpenGLRenderer {
                 Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
                 if (!mesh) continue;
 
-                glActiveTexture(GL_TEXTURE0);
+                glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
-                glActiveTexture(GL_TEXTURE1);
+                glActiveTexture(GL_TEXTURE5);
                 glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
-                glActiveTexture(GL_TEXTURE2);
+                glActiveTexture(GL_TEXTURE6);
                 glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);

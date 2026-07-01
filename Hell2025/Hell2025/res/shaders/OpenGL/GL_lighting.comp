@@ -6,6 +6,7 @@
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 //#endif
 
+#include "../common/gl_fixed_bindings.glsl"
 #include "../common/lighting.glsl"
 #include "../common/distance_fog.glsl"
 #include "../common/normal_encoding.glsl"
@@ -16,21 +17,23 @@ readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uve
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
-layout (binding = 0) uniform sampler2D u_baseColorMetallicTexture;
-layout (binding = 1) uniform sampler2D u_normalXYRoughnessMiscTexture;
-layout (binding = 2) uniform sampler2D u_velocityXYOcclusionSubSurfaceTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray FlashlighShadowMapArrayTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_CSM)        uniform sampler2DArray u_shadowMapCascadeArray;
+
+layout (binding = 4) uniform sampler2D u_baseColorMetallicTexture;
+layout (binding = 5) uniform sampler2D u_normalXYRoughnessMiscTexture;
+layout (binding = 6) uniform sampler2D u_velocityXYOcclusionSubSurfaceTexture;
 
 //layout (binding = 0) uniform sampler2D BaseColorTexture;
 //layout (binding = 1) uniform sampler2D NormalTexture;
 //layout (binding = 2) uniform sampler2D RMATexture;
 
-layout (binding = 3) uniform sampler2D u_depthTexture;
-layout (binding = 6) uniform sampler2D EmissiveTexture;
-layout (binding = 7) uniform sampler2D FlashlightCookieTexture;
-layout (binding = 8) uniform sampler2DArray FlashlighShadowMapArrayTexture;
-layout (binding = 9) uniform samplerCubeArrayShadow shadowMapArray;
-layout (binding = 10) uniform sampler2DArray u_shadowMapCascadeArray;
-layout (binding = 11) uniform sampler2D IndirectDiffuseTexture;
+layout (binding = 7) uniform sampler2D u_depthTexture;
+layout (binding = 8) uniform sampler2D EmissiveTexture;
+layout (binding = 9) uniform sampler2D FlashlightCookieTexture;
+layout (binding = 10) uniform sampler2D IndirectDiffuseTexture;
 
 uniform float u_viewportWidth;
 uniform float u_viewportHeight;
@@ -186,7 +189,14 @@ void main() {
         float lightStrength = light.strength;
         float lightRadius = light.radius;
 
-        float shadow = ShadowCalculationNEW(lightIndex, lightPosition, lightRadius, worldPos, viewPos, normal.xyz, shadowMapArray);
+        float shadow = 1.0;
+        if (light.hiResShadowMapIndex != -1) {
+            shadow = ShadowCalculationNEW(light.hiResShadowMapIndex, lightPosition, lightRadius, worldPos, viewPos, normal.xyz, hiResShadowMapArray);
+        }
+        else if (light.lowResShadowMapIndex != -1) {
+            shadow = ShadowCalculationNEW(light.lowResShadowMapIndex, lightPosition, lightRadius, worldPos, viewPos, normal.xyz, lowResShadowMapArray);
+        }
+
         vec3 directLight = GetDirectLighting(lightPosition, lightColor, lightRadius, lightStrength, normal.xyz, worldPos, gammaBaseColor.rgb, roughness, metallic, viewPos) * shadow;
 
         if (light.iesTextureIndex != 0) {

@@ -1,5 +1,5 @@
 #pragma once
-#include "Unloved/Common/Types.h"'
+#include "Unloved/Common/Types.h"
 #include "Unloved/Common/CreateInfo.h"
 #include "Unloved/Objects/Renderables/AnimatedGameObject.h"
 #include "Hell/Physics/Types/CharacterController.h"
@@ -14,8 +14,12 @@ namespace Unloved {
     };
 
     struct Dobermann {
-	    void Init(DobermannCreateInfo createInfo);
+        Dobermann() = default;
+        Dobermann(uint64_t id, DobermannCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+
+	    void Init(uint64_t id, DobermannCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
 	    void Update(float deltaTime);
+        void CleanUp();
 
         void ResetToInitialState();
         void SetPosition(const glm::vec3& position);
@@ -29,8 +33,11 @@ namespace Unloved {
         glm::vec3 GetPosition();
 
         const glm::vec3& GetForward() const             { return m_forward; }
+        uint64_t GetObjectId() const                    { return m_objectId; }
 	    uint64_t GetRagdollId()                       { return m_RagdollId; }
         const DobermannState GetDobermannState() const  { return m_state; }
+        const DobermannCreateInfo& GetCreateInfo() const { return m_createInfo; }
+        const std::string& GetEditorName() const        { return m_createInfo.editorName; }
 
     private:
         void CreateCharacterController(const glm::vec3& position);

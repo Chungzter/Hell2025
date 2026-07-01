@@ -1,15 +1,18 @@
 #version 450 core
 out vec4 FragColor;
 
+#include "../common/gl_fixed_bindings.glsl"
+
 in VS_OUT {
     vec3 FragPos;
     vec3 Normal;
     vec2 TexCoords;
 } fs_in;
 
-layout(binding = 0) uniform sampler2D diffuseTexture;
-layout(binding = 1) uniform sampler2DArray shadowMap;
-layout(binding = 2) uniform sampler2D noiseTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_CSM)        uniform sampler2DArray shadowMap;
+
+layout (binding = 4) uniform sampler2D diffuseTexture;
+layout (binding = 5) uniform sampler2D noiseTexture;
 
 uniform vec3 lightDir;
 uniform vec3 viewPos;

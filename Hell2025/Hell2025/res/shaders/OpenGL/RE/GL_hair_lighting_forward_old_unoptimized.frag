@@ -1,11 +1,15 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : enable
+#include "../../common/gl_fixed_bindings.glsl"
+
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
-layout(binding = 5) uniform sampler2D u_indirectDiffuseTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowMapArray;
+
+layout (binding = 5) uniform sampler2D u_indirectDiffuseTexture;
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
-layout (binding = 9) uniform samplerCubeArray shadowMapArray;
 layout (binding = 11) uniform sampler2D hairFlowMap;
 layout (binding = 12) uniform sampler2D hairIdMap;
 layout (binding = 13) uniform sampler2D hairRootMap;
@@ -312,7 +316,13 @@ void main() {
         vec3 H = normalize(L + V);
         float attenuation = 1.0 / distanceSquared;
 
-        float shadow = ShadowCalculationMedium(lightIndex, lightPos, light.radius, v_worldPos.xyz, viewPos, finalNormal, shadowMapArray);
+        float shadow = 1.0;
+        if (light.hiResShadowMapIndex != -1) {
+            shadow = ShadowCalculationMedium(light.hiResShadowMapIndex, lightPos, light.radius, v_worldPos.xyz, viewPos, finalNormal, hiResShadowMapArray);
+        }
+        else if (light.lowResShadowMapIndex != -1) {
+            shadow = ShadowCalculationMedium(light.lowResShadowMapIndex, lightPos, light.radius, v_worldPos.xyz, viewPos, finalNormal, lowResShadowMapArray);
+        }
 
         float dotTL = dot(finalTangent, L);
         float sinTL = sqrt(max(0.0, 1.0 - dotTL * dotTL));

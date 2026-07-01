@@ -1,6 +1,11 @@
 #include "PickUp.h"
-#include "Unloved/Bible/Bible.h"
+
 #include "Hell/Physics/Physics.h"
+
+#include "Unloved/Bible/Bible.h"
+#include "Unloved/Systems/DirtyTracker/DirtyTracker.h"
+
+
 #include "Util.h"
 
 #include "Legacy/World/LegacyWorld.h"
@@ -10,13 +15,15 @@ namespace Unloved {
 
 PickUp::PickUp(uint64_t id, const PickUpCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_createInfo = createInfo;
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation.y += spawnOffset.yRotation;
     m_objectId = id;
 
     ItemInfo* inventoryItemInfo = Bible::GetItemInfoByName(createInfo.name);
     if (!inventoryItemInfo) return; // Should never happen
 
-    m_initialTransform.position = createInfo.position + spawnOffset.translation;
-    m_initialTransform.rotation = createInfo.rotation + glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+    m_initialTransform.position = m_createInfo.position;
+    m_initialTransform.rotation = m_createInfo.rotation;
 
     Bible::ConfigureMeshNodesByItemName(id, inventoryItemInfo->GetName(), &m_meshNodes, true);
 }
@@ -43,6 +50,8 @@ void PickUp::Respawn() {
 
     m_despawned = false;
     m_meshNodes.ForceDirty();
+
+    MarkDirtyInTracker();
 }
 
 void PickUp::Despawn() {
@@ -50,10 +59,24 @@ void PickUp::Despawn() {
 
     m_respawnCounter = -8.0f;
     m_despawned = true;
+
+    MarkDirtyInTracker();
 }
 
 void PickUp::CleanUp() {
     m_meshNodes.CleanUp();
+}
+
+void PickUp::MarkDirtyInTracker() {
+    AABB aabb = m_meshNodes.CalculateCurrentWorldspaceAABB(m_modelMatrix);
+
+    DirtyBounds dirtyBounds;
+    dirtyBounds.objectId = m_objectId;
+    dirtyBounds.boundsMin = aabb.GetBoundsMin();
+    dirtyBounds.boundsMax = aabb.GetBoundsMax();
+    dirtyBounds.castShadows = true;
+
+    DirtyTracker::AddDirtyBounds(dirtyBounds);
 }
 
 void PickUp::SetPosition(const glm::vec3& position) {

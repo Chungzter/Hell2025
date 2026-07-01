@@ -13,6 +13,7 @@
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/World/World.h"
 
 // get me out of here
 
@@ -354,7 +355,7 @@ namespace OpenGLRenderer {
                 OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 
                 // Draw Christmas light wires
-                for (ChristmasLightSet& lights : LegacyWorld::GetChristmasLightSets()) {
+                for (ChristmasLightSet& lights : Unloved::World::GetChristmasLightSets()) {
                     std::vector<Wire>& wires = lights.GetWires();
                     for (Wire& wire : wires) {
                         MeshBufferOLD& meshBuffer = wire.GetMeshBuffer();
@@ -365,7 +366,7 @@ namespace OpenGLRenderer {
                 }
 
                 // Draw power pole wires
-                for (PowerPoleSet& powerPoleSet : LegacyWorld::GetPowerPoleSets()) {
+                for (PowerPoleSet& powerPoleSet : Unloved::World::GetPowerPoleSets()) {
                     std::vector<Wire>& wires = powerPoleSet.GetWires();
                     for (Wire& wire : wires) {
                         MeshBufferOLD& meshBuffer = wire.GetMeshBuffer();

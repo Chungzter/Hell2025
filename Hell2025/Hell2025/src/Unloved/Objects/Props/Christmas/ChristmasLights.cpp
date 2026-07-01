@@ -12,28 +12,28 @@
 
 namespace Unloved {
 
-ChristmasLightSet::ChristmasLightSet(uint64_t id, ChristmasLightsCreateInfo& createInfo, SpawnOffset& spawnOffset) {
+ChristmasLightSet::ChristmasLightSet(uint64_t id, const ChristmasLightsCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_objectId = id;
     m_createInfo = createInfo;
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.sprialTopCenter += spawnOffset.translation;
+    for (glm::vec3& point : m_createInfo.points) {
+        point += spawnOffset.translation;
+    }
 
-    m_position = createInfo.position + spawnOffset.translation;
+    m_position = m_createInfo.position;
 
     if (m_createInfo.points.empty()) {
-        m_createInfo.points.push_back(createInfo.position); // store without spawn offset
+        m_createInfo.points.push_back(m_createInfo.position);
         m_createInfo.sagHeights.push_back(0);
         return;
     }
 
-    std::vector<glm::vec3> runtimePoints = m_createInfo.points;
-    for (glm::vec3& p : runtimePoints) {
-        p += spawnOffset.translation;
-    }
-
     m_wires.clear();
 
-    for (size_t i = 1; i < runtimePoints.size(); i++) {
-        const glm::vec3& begin = runtimePoints[i - 1];
-        const glm::vec3& end = runtimePoints[i];
+    for (size_t i = 1; i < m_createInfo.points.size(); i++) {
+        const glm::vec3& begin = m_createInfo.points[i - 1];
+        const glm::vec3& end = m_createInfo.points[i];
         const float& sag = m_createInfo.sagHeights[i];
         Wire& wire = m_wires.emplace_back();
         wire.Init(begin, end, sag, m_createInfo.wireRadius, m_createInfo.spacing);
@@ -85,6 +85,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         Material* material = Hell::ResourceManager::GetMaterialByIndex(whiteMaterialIndex);
         RenderItem renderItem;
         renderItem.modelMatrix = modelMatrix;
+        renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
         renderItem.meshId = model->GetMeshIndices()[1];;
         renderItem.baseColorTextureIndex = material->m_basecolor;
         renderItem.rmaTextureIndex = material->m_rma;

@@ -2,8 +2,10 @@
 #include "Unloved/Session/Session.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Hell/Math/LineMath.h"
+#include "Hell/Math/Math.h"
 #include "World/LegacyWorld.h"
 #include "Unloved/ObjectId.h"
+#include "Unloved/World/World.h"
 
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Hell/Input.h"
@@ -349,19 +351,19 @@ namespace Unloved {
         glm::mat4 rootTranslationMatrix = glm::translate(glm::mat4(1), m_spinePositions[3]);
 
         // Root to the end of the spine
-        float rot0 = Util::YRotationBetweenTwoPoints(m_spinePositions[3], m_spinePositions[2]) + HELL_PI * 0.5f;
-        float rot1 = Util::YRotationBetweenTwoPoints(m_spinePositions[4], m_spinePositions[3]) + HELL_PI * 0.5f;
-        float rot2 = Util::YRotationBetweenTwoPoints(m_spinePositions[5], m_spinePositions[4]) + HELL_PI * 0.5f;
-        float rot3 = Util::YRotationBetweenTwoPoints(m_spinePositions[6], m_spinePositions[5]) + HELL_PI * 0.5f;
-        float rot4 = Util::YRotationBetweenTwoPoints(m_spinePositions[7], m_spinePositions[6]) + HELL_PI * 0.5f;
-        float rot5 = Util::YRotationBetweenTwoPoints(m_spinePositions[8], m_spinePositions[7]) + HELL_PI * 0.5f;
-        float rot6 = Util::YRotationBetweenTwoPoints(m_spinePositions[9], m_spinePositions[8]) + HELL_PI * 0.5f;
-        float rot7 = Util::YRotationBetweenTwoPoints(m_spinePositions[10], m_spinePositions[9]) + HELL_PI * 0.5f;
+        float rot0 = Hell::Math::YawBetweenPoints(m_spinePositions[3], m_spinePositions[2]) + HELL_PI * 0.5f;
+        float rot1 = Hell::Math::YawBetweenPoints(m_spinePositions[4], m_spinePositions[3]) + HELL_PI * 0.5f;
+        float rot2 = Hell::Math::YawBetweenPoints(m_spinePositions[5], m_spinePositions[4]) + HELL_PI * 0.5f;
+        float rot3 = Hell::Math::YawBetweenPoints(m_spinePositions[6], m_spinePositions[5]) + HELL_PI * 0.5f;
+        float rot4 = Hell::Math::YawBetweenPoints(m_spinePositions[7], m_spinePositions[6]) + HELL_PI * 0.5f;
+        float rot5 = Hell::Math::YawBetweenPoints(m_spinePositions[8], m_spinePositions[7]) + HELL_PI * 0.5f;
+        float rot6 = Hell::Math::YawBetweenPoints(m_spinePositions[9], m_spinePositions[8]) + HELL_PI * 0.5f;
+        float rot7 = Hell::Math::YawBetweenPoints(m_spinePositions[10], m_spinePositions[9]) + HELL_PI * 0.5f;
 
         // From the neck to the head
-        float rot8 = Util::YRotationBetweenTwoPoints(m_spinePositions[3], m_spinePositions[2]) + HELL_PI * 0.5f;
-        float rot9 = Util::YRotationBetweenTwoPoints(m_spinePositions[2], m_spinePositions[1]) + HELL_PI * 0.5f;
-        float rot10 = Util::YRotationBetweenTwoPoints(m_spinePositions[1], m_spinePositions[0]) + HELL_PI * 0.5f;
+        float rot8 = Hell::Math::YawBetweenPoints(m_spinePositions[3], m_spinePositions[2]) + HELL_PI * 0.5f;
+        float rot9 = Hell::Math::YawBetweenPoints(m_spinePositions[2], m_spinePositions[1]) + HELL_PI * 0.5f;
+        float rot10 = Hell::Math::YawBetweenPoints(m_spinePositions[1], m_spinePositions[0]) + HELL_PI * 0.5f;
 
         // Update animation
         Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
@@ -384,7 +386,7 @@ namespace Unloved {
                 }
 
                 // Lerp to target
-                m_yHeight = Util::FInterpTo(m_yHeight, targetHeight, deltaTime, lerpSpeed);
+                m_yHeight = Hell::Math::InterpTo(m_yHeight, targetHeight, deltaTime, lerpSpeed);
 
                 // Calculate new position. Which is the spine pos plus the hacked in y height
                 glm::vec3 position = rootPosition;
@@ -927,7 +929,7 @@ namespace Unloved {
     */
 
     Unloved::AnimatedGameObject* Shark::GetAnimatedGameObject() {
-        return LegacyWorld::GetAnimatedGameObjectByObjectId(g_animatedGameObjectObjectId);
+        return Unloved::World::GetAnimatedGameObjectByObjectId(g_animatedGameObjectObjectId);
     }
 
     void Shark::DrawSpinePoints() {

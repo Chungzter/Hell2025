@@ -1,6 +1,9 @@
 #include "Player.h"
 
-#include "Legacy/World/LegacyWorld.h"
+#include "Unloved/Objects/Traversal/Ladder.h"
+#include "Unloved/World/World.h"
+
+#include <vector>
 
 namespace Unloved {
 
@@ -8,14 +11,22 @@ void Player::UpdateLadderIds() {
     m_ladderIdOverlapIndexFeet = 0;
     m_ladderIdOverlapIndexEyes = 0;
 
-    for (Ladder& ladder : LegacyWorld::GetLadders()) {
-        float sphereRadius = 0.25f;
+    const std::vector<uint64_t> ladderIds = Unloved::World::GetLadders().ids();
 
-        if (ladder.GetOverlapHitBoxAABB().IntersectsSphere(GetFootPosition(), sphereRadius)) {
-            m_ladderIdOverlapIndexFeet = ladder.GetObjectId();
+    for (uint64_t ladderId : ladderIds) {
+        Ladder* ladder = Unloved::World::GetLadderByObjectId(ladderId);
+        if (!ladder) {
+            continue;
         }
-        if (ladder.GetOverlapHitBoxAABB().IntersectsSphere(GetCameraPosition(), sphereRadius)) {
-            m_ladderIdOverlapIndexEyes = ladder.GetObjectId();
+
+        const float sphereRadius = 0.25f;
+        const AABB& overlapHitBox = ladder->GetOverlapHitBoxAABB();
+
+        if (overlapHitBox.IntersectsSphere(GetFootPosition(), sphereRadius)) {
+            m_ladderIdOverlapIndexFeet = ladder->GetObjectId();
+        }
+        if (overlapHitBox.IntersectsSphere(GetCameraPosition(), sphereRadius)) {
+            m_ladderIdOverlapIndexEyes = ladder->GetObjectId();
         }
     }
 }

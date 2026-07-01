@@ -669,16 +669,15 @@ namespace Unloved::EditorUI {
         return m_value;
     }
 
-    void Outliner::AddType(const std::string name) {
-        m_typesOLD[name] = std::vector<std::string>();
-    }
+    void Outliner::AddEditorObjectNameGroup(const Editor::EditorObjectNameGroup& group) {
+        for (Editor::EditorObjectNameGroup& existingGroup : m_editorObjectNameGroups) {
+            if (existingGroup.label == group.label) {
+                existingGroup = group;
+                return;
+            }
+        }
 
-    void Outliner::SetItems(const std::string name, const std::vector<std::string>& items) {
-        m_typesOLD[name] = items;
-    }
-
-    void Outliner::AddItems(const std::string name, const std::vector<std::uint64_t>& objectIds) {
-        m_objectIdMap[name] = objectIds;
+        m_editorObjectNameGroups.push_back(group);
     }
 
     bool Outliner::CreateImGuiElements(float height) {
@@ -688,25 +687,29 @@ namespace Unloved::EditorUI {
         ImGuiWindowFlags childFlags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened;
         ImGui::BeginChild("OutlinerScroll", ImVec2(0.0f, height), false, childFlags);
 
-        for (auto& kv : m_typesOLD) {
-            const std::string& type = kv.first;
-            const std::vector<std::string>& items = kv.second;
-            if (items.empty()) continue;
+        for (const Editor::EditorObjectNameGroup& group : m_editorObjectNameGroups) {
+            if (group.entries.empty()) continue;
 
-            if (ImGui::TreeNodeEx(type.c_str(), ImGuiTreeNodeFlags_SpanFullWidth)) {
+            if (ImGui::TreeNodeEx(group.label.c_str(), ImGuiTreeNodeFlags_SpanFullWidth)) {
                 ImGui::Indent(objectIndent);
 
-                // Optional: clip for large lists
                 ImGuiListClipper clipper;
-                clipper.Begin((int)items.size());
+                clipper.Begin((int)group.entries.size());
                 while (clipper.Step()) {
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i) {
-                        const std::string& item = items[i];
-                        bool isSelected = (m_selectedItem == item && m_selectedType == type);
-                        if (ImGui::Selectable(item.c_str(), isSelected)) {
-                            m_selectedItem = item;
-                            m_selectedType = type;
+                        const Editor::EditorObjectNameEntry& entry = group.entries[i];
+                        bool isSelected = (m_selectedObjectId == entry.objectId);
+
+                        std::string text = entry.name;
+                        if (text.empty() || text == UNDEFINED_STRING) {
+                            text = std::to_string(entry.objectId);
+                        }
+                        text += "##" + std::to_string(entry.objectId);
+
+                        if (ImGui::Selectable(text.c_str(), isSelected)) {
+                            Editor::SelectObject(entry.objectId);
                             ImGui::SetScrollHereY(0.25f);
+                            m_selectedObjectId = entry.objectId;
                         }
                     }
                 }
@@ -716,73 +719,7 @@ namespace Unloved::EditorUI {
             }
         }
 
-        for (auto& kv : m_objectIdMap) {
-            const std::string& type = kv.first;
-            const std::vector<uint64_t>& objectIds = kv.second;
-
-            if (objectIds.empty()) continue;
-
-            if (ImGui::TreeNodeEx(type.c_str(), ImGuiTreeNodeFlags_SpanFullWidth)) {
-                ImGui::Indent(objectIndent);
-
-                for (uint64_t objectId : objectIds) {
-                    const std::string& editorName = LegacyWorld::GetObjectEditorName(objectId);
-                    bool isSelected = (m_selectedObjectId == objectId);
-
-                    std::string text = editorName;
-                    if (text == UNDEFINED_STRING) {
-                        text = std::to_string(objectId);
-                    }
-
-                    if (ImGui::Selectable(text.c_str(), isSelected)) {
-                        Editor::SelectObject(objectId);
-                        ImGui::SetScrollHereY(0.25f);
-                        m_selectedObjectId = objectId;
-                    }
-                }
-
-                ImGui::Unindent(objectIndent);
-                ImGui::TreePop();
-            }
-        }
-
         ImGui::EndChild();
-        ImGui::PopStyleVar();
-        return true;
-    }
-
-    bool Outliner::CreateImGuiElements() {
-        float objectIndent = 60.0f;
-        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 0.0f);
-
-        for (auto& kv : m_typesOLD) {
-            const std::string& type = kv.first;
-            const std::vector<std::string>& items = kv.second;
-
-            // Skip if no items in this category
-            if (items.empty()) continue;
-
-            if (ImGui::TreeNodeEx(type.c_str(), ImGuiTreeNodeFlags_SpanFullWidth)) {
-                ImGui::Indent(objectIndent);
-
-                for (const std::string& item : items) {
-                    // Check if this item is currently selected
-                    bool isSelected = (m_selectedItem == item && m_selectedType == type);
-
-                    // Pass isSelected to ImGui::Selectable
-                    if (ImGui::Selectable(item.c_str(), isSelected)) {
-                        // On click, record the new selection
-                        m_selectedItem = item;
-                        m_selectedType = type;
-                      //  std::cout << "Selected: " << item << "\n";
-                    }
-                }
-
-                ImGui::Unindent(objectIndent);
-                ImGui::TreePop();
-            }
-        }
-
         ImGui::PopStyleVar();
         return true;
     }

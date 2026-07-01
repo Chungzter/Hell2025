@@ -13,8 +13,13 @@ namespace OpenGLRenderer {
 
     void BloodDecalsPass() {
         BloodDecalTileCulling();
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
         BloodDecalDraw();
+        glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
         BloodDecalComposite();
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
     }
 
     void BloodDecalDraw() {
@@ -36,6 +41,14 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
         OpenGL::SetUniformInt("u_tileYCount", GetTileCountY());
 
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.depthMask = false;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.colorMask = true;
+        OpenGLRasterizerStateManager::ForceRasterizerState(state);
+
         OpenGL::BindSSBO(7, "TileBloodDecals");
         OpenGL::BindSSBO(8, "BloodDecalInstances");
         OpenGL::BindSSBO(9, "BloodDecalIndices");
@@ -52,6 +65,7 @@ namespace OpenGLRenderer {
         }
 
         // Draw full screen triangle
+        BindEmptyVAO();
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 
@@ -66,13 +80,12 @@ namespace OpenGLRenderer {
         if (!shader) return;
         if (!gBuffer) return;
 
-        glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
         OpenGL::BindShader("BloodDecalsComposite");
 
         glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("BaseColorMetallic"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
-        glBindImageTexture(1, gBuffer->GetColorAttachmentHandleByName("RMA"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
-        glBindTextureUnit(2, miscFullSizeFBO->GetColorAttachmentHandleByName("BloodScreenSpaceDecalMask"));
+        glBindImageTexture(1, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGB10_A2);
+        glBindImageTexture(2, gBuffer->GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+        glBindTextureUnit(3, miscFullSizeFBO->GetColorAttachmentHandleByName("BloodScreenSpaceDecalMask"));
         OpenGL::DispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);
     }
 }

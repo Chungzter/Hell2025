@@ -1,6 +1,6 @@
 #include "Clipping.h"
 
-#include "Legacy/Util/Util.h"
+#include "Hell/Geometry/Geometry.h"
 
 #include "Unloved/Systems/House/ClippingVolume.h"
 
@@ -132,8 +132,8 @@ namespace Unloved {
             projectedPoints.emplace_back(glm::dot(offset, uDir), glm::dot(offset, vDir));
         }
 
-        std::vector<glm::vec2> convexHull = Util::ComputeConvexHull2D(projectedPoints);
-        return Util::SortConvexHullPoints2D(convexHull);
+        std::vector<glm::vec2> convexHull = Hell::Geometry::ComputeConvexHull2D(projectedPoints);
+        return Hell::Geometry::SortConvexHullPoints2D(convexHull);
     }
 
     std::vector<Vertex> ProjectBackTo3D(const std::vector<glm::vec2>& vertices2D, const WallSegment& refWallSegment) {

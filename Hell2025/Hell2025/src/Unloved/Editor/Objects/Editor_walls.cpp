@@ -5,6 +5,7 @@
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/World/World.h"
 
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
@@ -23,7 +24,7 @@ namespace Unloved::Editor {
             return;
         }
 
-        Wall* wall = LegacyWorld::GetWallByObjectId(GetPlacementObjectId());
+        Wall* wall = Unloved::World::GetWallByObjectId(GetPlacementObjectId());
         if (!wall) return;
 
         std::cout << "wall point count: " << wall->GetPointCount() << "\n";
@@ -114,7 +115,7 @@ namespace Unloved::Editor {
         createInfo.ceilingTrimType = TrimType::TIMBER;
         createInfo.floorTrimType = TrimType::TIMBER;
         createInfo.useReversePointOrder = false;
-        SetPlacementObjectId(LegacyWorld::AddWall(createInfo));
+        SetPlacementObjectId(Unloved::World::AddWall(createInfo));
         LegacyWorld::RecreateAllHouseGeometry();
         Audio::PlayAudio(AUDIO_SELECT, 1.0f);
         std::cout << "Beginning wall!\n";

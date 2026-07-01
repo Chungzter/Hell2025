@@ -1,6 +1,7 @@
 #include "Unloved/Bible/Bible.h"
+#include "Hell/Common/Constants.h"
+#include "Hell/Common/Random.h"
 #include "Hell/Logging.h"
-#include "Util.h"
 
 namespace Bible {
     using namespace Unloved;
@@ -10,7 +11,7 @@ namespace Bible {
 
         std::string materialName = UNDEFINED_STRING;
 
-        switch (Util::RandomInt(0, 3)) {
+        switch (Hell::Random::Int(0, 3)) {
             case 0: materialName = "PresentSmallRed"; break;
             case 1: materialName = "PresentSmallGreen"; break;
             case 2: materialName = "PresentSmallYellow"; break;
@@ -45,7 +46,7 @@ namespace Bible {
 
         std::string materialName = UNDEFINED_STRING;
 
-        switch (Util::RandomInt(0, 3)) {
+        switch (Hell::Random::Int(0, 3)) {
             case 0: materialName = "PresentLargeRed"; break;
             case 1: materialName = "PresentLargeGreen"; break;
             case 2: materialName = "PresentLargeYellow"; break;

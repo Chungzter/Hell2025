@@ -1,13 +1,14 @@
 #include "Player.h"
 
 #include "Hell/Audio.h"
+#include "Hell/Math/Math.h"
 
 #include "Legacy/Renderer/RenderDataManager.h"
-#include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Config/Config.h"
 #include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/World/World.h"
 
 namespace Audio = Hell::Audio;
 
@@ -24,7 +25,7 @@ void Player::UpdateFlashlight(float deltaTime) {
         m_flashLightModifier = 0.0f;
     }
     else {
-        m_flashLightModifier = Util::FInterpTo(m_flashLightModifier, 1.0f, deltaTime, 10.5f);
+        m_flashLightModifier = Hell::Math::InterpTo(m_flashLightModifier, 1.0f, deltaTime, 10.5f);
     }
 
     if (!ViewportIsVisible()) {
@@ -32,7 +33,7 @@ void Player::UpdateFlashlight(float deltaTime) {
     }
 
     // Prevent NAN direction, which is the case on first spawn
-    if (Util::IsNan(m_flashlightDirection)) {
+    if (Hell::Math::IsNan(m_flashlightDirection)) {
         m_flashlightDirection = GetCameraForward();
     }
 
@@ -73,8 +74,8 @@ void Player::UpdateFlashlight(float deltaTime) {
 
     // Lerp between last pos/dir to the new ones
     float interSpeed = 40;
-    m_flashlightPosition = Util::LerpVec3(m_flashlightPosition, flashlightPositionTarget, deltaTime, interSpeed);
-    m_flashlightDirection = Util::LerpVec3(m_flashlightDirection, flashlightDirectionTarget, deltaTime, interSpeed);
+    m_flashlightPosition = Hell::Math::InterpTo(m_flashlightPosition, flashlightPositionTarget, deltaTime, interSpeed);
+    m_flashlightDirection = Hell::Math::InterpTo(m_flashlightDirection, flashlightDirectionTarget, deltaTime, interSpeed);
 
     m_flashlightPosition = flashlightPositionTarget;
 
@@ -86,8 +87,8 @@ void Player::UpdateFlashlight(float deltaTime) {
     //}
 
     if (IsInShop()) {
-        if (LegacyWorld::GetMermaids().size()) {
-            Mermaid& mermaid = LegacyWorld::GetMermaids()[0];
+        if (Unloved::World::GetMermaids().size()) {
+            Mermaid& mermaid = Unloved::World::GetMermaids()[0];
             m_flashlightDirection = glm::normalize(mermaid.GetPosition() - GetFootPosition());
         }
     }
@@ -101,7 +102,7 @@ void Player::UpdateFlashlight(float deltaTime) {
     m_flashlightProjectionView = spotlightProjection * flashlightViewMatrix;
 
     // Prevent NAN bugs
-    if (Util::IsNan(m_flashlightPosition)) {
+    if (Hell::Math::IsNan(m_flashlightPosition)) {
         m_flashlightPosition = flashlightPositionTarget;
     }
 }

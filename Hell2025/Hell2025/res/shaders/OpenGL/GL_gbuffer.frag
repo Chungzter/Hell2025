@@ -29,6 +29,7 @@
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
 
 #include "../common/lighting.glsl"
+#include "../common/misc_flags.glsl"
 #include "../common/normal_encoding.glsl"
 #include "../common/post_processing.glsl"
 
@@ -47,7 +48,7 @@ in vec4 v_currPos;
 in vec4 v_prevPos;
 
 in flat int WoundMaskTextureIndex;
-in flat int BlockBloodScreenSpaceDecalsFlag;
+in flat uint MiscFlags;
 in flat int EmissiveTextureIndex;
 
 uniform bool u_alphaDiscard;
@@ -145,10 +146,9 @@ void main() {
     // NormalXY / Roughness out
     NormalXYRoughnessMiscOut.rg = EncodeNormal(normal);
     NormalXYRoughnessMiscOut.b = roughness;
-    NormalXYRoughnessMiscOut.a = 0.0; // Misc 4 bit value
+    NormalXYRoughnessMiscOut.a = EncodeMiscFlags(MiscFlags);
 
     //RMAOut.rgb = rmat.rgb;
-    //RMAOut.a = BlockBloodScreenSpaceDecalsFlag;
 
     // Thickness
     float thickness = rmat.a;

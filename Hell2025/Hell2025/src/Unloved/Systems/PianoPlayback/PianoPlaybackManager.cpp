@@ -6,7 +6,8 @@
 #include "Hell/ResourceManagement/Types/MidiFile.h"
 #include "Hell/Common/String.h"
 #include "Hell/Time.h"
-#include "Legacy/World/LegacyWorld.h"
+#include "Unloved/Objects/Interior/Piano.h"
+#include "Unloved/World/World.h"
 
 #include <array>
 #include <string>
@@ -59,7 +60,7 @@ namespace Unloved::PianoPlaybackManager {
         }
 
         Piano* GetPlaybackPiano() {
-            std::vector<Piano>& pianos = LegacyWorld::GetPianos();
+            auto& pianos = Unloved::World::GetPianos();
             if (pianos.empty()) {
                 return nullptr;
             }
@@ -68,7 +69,7 @@ namespace Unloved::PianoPlaybackManager {
                 return &pianos[MIDI_PLAYBACK_PIANO_INDEX];
             }
 
-            return &pianos.front();
+            return &pianos[0];
         }
     }
 

@@ -7,6 +7,24 @@
 
 #include <vector>
 
+#define MAX_SHADOW_MAP_ARRAY_LEVELS 20
+
+struct PointLightShadowMapDrawCommands {
+    std::vector<DrawIndexedIndirectCommand> assetGeometry[MAX_SHADOW_MAP_ARRAY_LEVELS][6];
+    std::vector<DrawIndexedIndirectCommand> assetGeometryAlphaDiscard[MAX_SHADOW_MAP_ARRAY_LEVELS][6];
+    std::vector<DrawIndexedIndirectCommand> assetGeometryHair[MAX_SHADOW_MAP_ARRAY_LEVELS][6];
+
+    std::vector<DrawIndexedIndirectCommand> assetGeometrySkinned[MAX_SHADOW_MAP_ARRAY_LEVELS][6];
+    std::vector<DrawIndexedIndirectCommand> assetGeometrySkinnedAlphaDiscard[MAX_SHADOW_MAP_ARRAY_LEVELS][6];
+    std::vector<DrawIndexedIndirectCommand> assetGeometrySkinnedHair[MAX_SHADOW_MAP_ARRAY_LEVELS][6];
+
+    std::vector<DrawIndexedIndirectCommand> assetGeometrySkinnedNonDeforming[MAX_SHADOW_MAP_ARRAY_LEVELS][6];
+    std::vector<DrawIndexedIndirectCommand> assetGeometrySkinnedNonDeformingAlphaDiscard[MAX_SHADOW_MAP_ARRAY_LEVELS][6];
+    std::vector<DrawIndexedIndirectCommand> assetGeometrySkinnedNonDeformingHair[MAX_SHADOW_MAP_ARRAY_LEVELS][6];
+
+    std::vector<DrawIndexedIndirectCommand> procedural[MAX_SHADOW_MAP_ARRAY_LEVELS][6];
+};
+
 struct DrawCommandsSet {
     std::vector<RenderItem> glass[4];
 
@@ -29,7 +47,9 @@ struct DrawCommandsSet {
     std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingHair[4];
     std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingStandard[4];
 
-    std::vector<DrawIndexedIndirectCommand> shadowMapHiRes[SHADOWMAP_HI_RES_COUNT][6];
+    PointLightShadowMapDrawCommands hiResShadowMapDrawCommands;
+    PointLightShadowMapDrawCommands lowResShadowMapDrawCommands;
+
     std::vector<DrawIndexedIndirectCommand> moonLightCascades[4][SHADOW_CASCADE_COUNT];
 };
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Unloved/Render/RendererEnums.h"
+
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
@@ -115,7 +117,7 @@ struct RenderItem {
     uint32_t baseVertex = 0;
     uint32_t baseIndex = 0;
     uint32_t baseVertexWeight = 0;
-    int blockBloodScreenSpaceDecals = 0;
+    uint32_t miscFlags = 0;
 
     int32_t additionalTextureIndex0 = 0;
     int32_t additionalTextureIndex1 = 0;
@@ -125,7 +127,7 @@ struct RenderItem {
     int32_t localMeshNodeIndex = 0;
     int32_t opacityTextureIndex = 0;
     uint32_t meshId = 0;
-    int32_t blendingMode = 0;
+    int32_t blendingMode = static_cast<int32_t>(BlendingMode::DEFAULT);
 
     float tintColorR = 1.0f;
     float tintColorG = 1.0f;
@@ -167,7 +169,7 @@ struct GPULight {
     float strength;
     float radius;
 
-    int lightIndex;
+    int lightIndex; // Legacy. Replacing soon
     int shadowMapDirty = 1; // true or false
     int useIes = 0;         // true or false
     int iesIndex;
@@ -188,8 +190,13 @@ struct GPULight {
 
     int iesTextureIndex;
     int isDirtyForRaytracing = 0; // true or false
-    int padding1;
-    int padding2;
+    int hiResShadowMapIndex;
+    int lowResShadowMapIndex;
+
+    uint32_t lightIdUpperBit = 0;
+    uint32_t lightIdLowerBit = 0;
+    uint32_t padding1;
+    uint32_t padding2;
 };
 
 struct GPUAABB {

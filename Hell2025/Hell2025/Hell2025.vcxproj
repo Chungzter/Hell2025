@@ -325,7 +325,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Camera\Frustum.cpp" />
     <ClCompile Include="src\Unloved\Config\Config.cpp" />
     <ClCompile Include="src\Hell\Audio\Audio.cpp" />
-    <ClCompile Include="src\Legacy\Callbacks\Callbacks.cpp" />
     <ClCompile Include="src\Unloved\Session\Session.cpp" />
     <ClCompile Include="src\Unloved\Session\Session_players.cpp" />
     <ClCompile Include="src\Unloved\Session\Session_update.cpp" />
@@ -354,6 +353,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Bible\Bible.cpp" />
     <ClCompile Include="src\Unloved\Systems\DDGI\DDGIVolume.cpp" />
     <ClCompile Include="src\Unloved\Systems\DDGI\PointCloud.cpp" />
+    <ClCompile Include="src\Unloved\Systems\DirtyTracker\DirtyTracker.cpp" />
     <ClCompile Include="src\Hell\Logging\Logging.cpp" />
     <ClCompile Include="src\Unloved\Editor\Editor_settings.cpp" />
     <ClCompile Include="src\Hell\ImageTools\ImageCompressor.cpp" />
@@ -369,7 +369,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Editor\Editors\Editor_house.cpp" />
     <ClCompile Include="src\Unloved\Editor\Editors\Editor_map_object.cpp" />
     <ClCompile Include="src\Unloved\Editor\Editor_file_menu.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_object_names.cpp" />
+    <ClCompile Include="src\Unloved\Editor\ObjectNames.cpp" />
     <ClCompile Include="src\Unloved\Editor\Editor_rays_intersections.cpp" />
     <ClCompile Include="src\Unloved\Editor\Editor_util.cpp" />
     <ClCompile Include="src\Unloved\Editor\Objects\Editor_picture_frame_placement.cpp" />
@@ -411,6 +411,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Objects\Effects\Decal.cpp" />
     <ClCompile Include="src\Unloved\Objects\Traversal\Ladder.cpp" />
     <ClCompile Include="src\Unloved\Objects\Traversal\Staircase.cpp" />
+    <ClCompile Include="src\Unloved\Systems\ShadowMaps\ShadowMapManager.cpp" />
     <ClCompile Include="src\Unloved\Systems\TypeWriter\TypeWriter.cpp" />
     <ClCompile Include="src\Unloved\Objects\House\DeadLock.cpp" />
     <ClCompile Include="src\Unloved\Objects\House\Fireplace.cpp" />
@@ -548,9 +549,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
       <ObjectFileName>$(IntDir)Unloved_World.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="src\Unloved\World\World_environment.cpp" />
+    <ClCompile Include="src\Unloved\World\World_objects.cpp" />
+    <ClCompile Include="src\Unloved\World\World_create_info_collection.cpp" />
     <ClCompile Include="src\Unloved\World\World_update.cpp" />
     <ClCompile Include="src\Unloved\Systems\PianoPlayback\PianoPlaybackManager.cpp" />
-    <ClCompile Include="src\Legacy\Util\Util_animation.cpp" />
     <ClCompile Include="src\Legacy\Util\Util_rendering.cpp" />
     <ClCompile Include="src\Unloved\Viewport\Viewport.cpp" />
     <ClCompile Include="src\Hell\UI\FontSpriteSheet.cpp" />
@@ -560,7 +562,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\UI\UIBackEnd.cpp" />
     <ClCompile Include="src\Hell\Geometry\Geometry.cpp" />
     <ClCompile Include="src\Hell\Geometry\PrimitiveMesh.cpp" />
-    <ClCompile Include="src\Legacy\Util\Util_math.cpp" />
     <ClCompile Include="src\Unloved\Viewport\ViewportManager.cpp" />
     <ClCompile Include="src\Unloved\Systems\House\BlockingVolume.cpp" />
     <ClCompile Include="src\Unloved\Systems\House\ClippingVolume.cpp" />
@@ -568,12 +569,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Systems\House\HouseManager.cpp" />
     <ClCompile Include="src\Legacy\World\LegacyWorld.cpp" />
     <ClCompile Include="src\Legacy\World\LegacyWorld_bvh.cpp" />
-    <ClCompile Include="src\Legacy\World\LegacyWorld_create_info.cpp" />
     <ClCompile Include="src\Legacy\World\LegacyWorld_house.cpp" />
-    <ClCompile Include="src\Legacy\World\LegacyWorld_dirty.cpp" />
     <ClCompile Include="src\Legacy\World\LegacyWorld_render_submit.cpp" />
     <ClCompile Include="src\Legacy\World\LegacyWorld_update.cpp" />
-    <ClCompile Include="src\Legacy\World\LegacyWorld_util.cpp" />
     <ClCompile Include="vendor\clipper\src\clipper.engine.cpp" />
     <ClCompile Include="vendor\clipper\src\clipper.offset.cpp" />
     <ClCompile Include="vendor\clipper\src\clipper.rectclip.cpp" />
@@ -598,6 +596,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\common\distance_fog.glsl" />
+    <None Include="res\shaders\common\gl_fixed_bindings.glsl" />
+    <None Include="res\shaders\common\misc_flags.glsl" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.frag" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.geom" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.vert" />
@@ -644,6 +644,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Common\Types.h" />
     <ClInclude Include="src\Unloved\Debug\DebugTypes.h" />
     <ClInclude Include="src\Unloved\Objects\ObjectEnums.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\BoneSegment.h" />
     <ClInclude Include="src\Unloved\Physics\PhysicsEnums.h" />
     <ClInclude Include="src\Unloved\Render\RendererEnums.h" />
     <ClInclude Include="src\Unloved\Render\RendererSettings.h" />
@@ -671,6 +672,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Systems\DDGI\DDGITypes.h" />
     <ClInclude Include="src\Unloved\Systems\DDGI\DDGIVolume.h" />
     <ClInclude Include="src\Unloved\Systems\DDGI\PointCloud.h" />
+    <ClInclude Include="src\Unloved\Systems\DirtyTracker\DirtyTracker.h" />
     <ClInclude Include="src\Hell\AssetCompiler\AssetCompiler.h" />
     <ClInclude Include="src\Hell\AssetCompiler\AssimpImporter.h" />
     <ClInclude Include="src\Hell\AssetCompiler\ObjExporter.h" />
@@ -734,6 +736,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Systems\Bullets\BulletSystem.h" />
     <ClInclude Include="src\Unloved\Systems\Bullets\BulletTypes.h" />
     <ClInclude Include="src\Unloved\Systems\GameAudio\GameAudio.h" />
+    <ClInclude Include="src\Unloved\Systems\ShadowMaps\ShadowMapManager.h" />
     <ClInclude Include="src\Unloved\Systems\Systems.h" />
     <ClInclude Include="src\Unloved\Unloved.h" />
     <ClInclude Include="src\Unloved\World\Objects\Terrain\Terrain.h" />
@@ -749,7 +752,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Audio\Audio.h" />
     <ClInclude Include="src\Hell\Time.h" />
     <ClInclude Include="src\Hell\Time\Time.h" />
-    <ClInclude Include="src\Legacy\Callbacks\Callbacks.h" />
     <ClInclude Include="src\Unloved\ObjectId.h" />
     <ClInclude Include="src\Unloved\ObjectId\ObjectId.h" />
     <ClInclude Include="src\Unloved\ObjectId\ObjectId_types.h" />
@@ -868,6 +870,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Player\Player.h" />
     <ClInclude Include="src\Unloved\Debug\Debug.h" />
     <ClInclude Include="src\Unloved\Editor\Editor.h" />
+    <ClInclude Include="src\Unloved\Editor\ObjectNames.h" />
     <ClInclude Include="src\Unloved\Editor\Gizmo.h" />
     <ClInclude Include="src\Unloved\Maps\MapFile.h" />
     <ClInclude Include="src\Unloved\Maps\MapFileFormat.h" />

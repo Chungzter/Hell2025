@@ -11,4 +11,5 @@ namespace Hell::Physics {
     void PrintSceneInfo();
     void PrintSceneRigidInfo();
     void PrintSceneRagdollInfo();
+    void DebugDrawRigidDynamicStateAABBs();
 }

@@ -47,6 +47,8 @@ enum class ObjectType : uint16_t {
     NAV_MESH,
     PLAYER,
     TRIM,
+    BULLET_CASING,
+    MERMAID,
 
     UNDEFINED
 };

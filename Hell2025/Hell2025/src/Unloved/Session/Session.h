@@ -26,8 +26,8 @@ namespace Unloved::Session {
     int32_t GetLocalPlayerCount();
     int32_t GetRemotePlayerCount();
     int32_t GetOnlinePlayerCount();
-    Unloved::Camera* GetLocalPlayerCameraByIndex(uint32_t index);
-    float GetLocalPlayerFovByIndex(uint32_t index);
+    Unloved::Camera* GetLocalPlayerCameraByViewportIndex(uint32_t index);
+    float GetLocalPlayerFovByViewportIndex(uint32_t index);
 
     void NextSplitScreenMode();
     void SetSplitscreenMode(SplitscreenMode mode);

@@ -2,6 +2,7 @@
 #include "Hell/Common/Bit.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Render/RendererConstants.h"
+#include "Unloved/Systems/DirtyTracker/DirtyTracker.h"
 #include "Hell/Logging.h"
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
@@ -11,9 +12,9 @@
 #include "Hell/Math/Math.h"
 #include "Hell/Physics/Physics.h"
 #include "Unloved/ObjectId.h"
-#include "Util.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "../../../../res/shaders/common/misc_flags.glsl"
 
 namespace Unloved {
 
@@ -264,14 +265,15 @@ bool MeshNodes::MeshNodeIsStatic(int localNodeIndex) {
     return true;
 }
 
-bool MeshNodes::MeshNodeIsNonKinematicRigidDynamic(int localNodeIndex) {
-    MeshNode* currentNode = GetMeshNodeByLocalIndex(localNodeIndex);
+bool MeshNodes::MeshNodeIsNonKinematicRigidDynamic(int localNodeIndex) const {
+    int32_t currentNodeIndex = localNodeIndex;
 
-    while (currentNode) {
-        if (currentNode->rigidDynamicId != 0 && !Hell::Physics::RigidDynamicIsKinematic(currentNode->rigidDynamicId)) return true;
+    while (currentNodeIndex >= 0 && currentNodeIndex < (int32_t)m_meshNodes.size()) {
+        const MeshNode& currentNode = m_meshNodes[currentNodeIndex];
+        if (currentNode.rigidDynamicId != 0 && !Hell::Physics::RigidDynamicIsKinematic(currentNode.rigidDynamicId)) return true;
 
         // Walk up the tree via parent index
-        currentNode = GetMeshNodeByLocalIndex(currentNode->localParentIndex);
+        currentNodeIndex = currentNode.localParentIndex;
     }
 
     return false;
@@ -421,24 +423,32 @@ Material* MeshNodes::GetMaterial(int nodeIndex) {
     return Hell::ResourceManager::GetMaterialByIndex(meshNode->materialIndex);
 }
 
+glm::mat4 MeshNodes::CalculateCurrentLocalMatrix(const MeshNode& meshNode, const glm::mat4* parentLocalMatrix) const {
+    glm::mat4 localMatrix = meshNode.localTransform * meshNode.transform.to_mat4() * meshNode.scaleMatrix;
+
+    // Apply parent matrix
+    if (parentLocalMatrix) {
+        return *parentLocalMatrix * localMatrix;
+    }
+
+    // Root rigid dynamics use PhysX transform
+    if (!m_firstFrame && meshNode.rigidDynamicId != 0 && !Hell::Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId) && Editor::IsClosed()) {
+        if (RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(meshNode.rigidDynamicId)) {
+            return rigidDynamic->GetWorldTransform() * meshNode.scaleMatrix;
+        }
+    }
+
+    return localMatrix;
+}
+
 void MeshNodes::UpdateHierarchy() {
     for (MeshNode& meshNode : m_meshNodes) {
         //meshNode.prevlocalMatrix = meshNode.localMatrix;
 
         MeshNode* parentMeshNode = GetMeshNodeByLocalIndex(meshNode.localParentIndex);
-        if (parentMeshNode) {
-            meshNode.localMatrix = parentMeshNode->localMatrix * meshNode.localTransform * meshNode.transform.to_mat4() * meshNode.scaleMatrix;
-        }
-        else {
-            meshNode.localMatrix = meshNode.localTransform * meshNode.transform.to_mat4() * meshNode.scaleMatrix;
+        const glm::mat4* parentLocalMatrix = parentMeshNode ? &parentMeshNode->localMatrix : nullptr;
 
-            // Overwrite with non-kinematic rigid transform if this node has one
-            if (!m_firstFrame && meshNode.rigidDynamicId != 0 && !Hell::Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId) && Editor::IsClosed()) {
-                if (RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(meshNode.rigidDynamicId)) {
-                    meshNode.localMatrix = rigidDynamic->GetWorldTransform() * meshNode.scaleMatrix;
-                }
-            }
-        }
+        meshNode.localMatrix = CalculateCurrentLocalMatrix(meshNode, parentLocalMatrix);
 
         meshNode.movedThisFrame = true;
     }
@@ -518,6 +528,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
 
     // Now compute AABBs from the final world matrices
     UpdateAABBsFromWorldMatrices();
+    AddDirtyBoundsToTracker();
 
     m_renderItems.clear();
 
@@ -553,9 +564,11 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.renderItem.baseVertex = meshNode.baseVertex;
         meshNode.renderItem.baseIndex = meshNode.baseIndex;
         meshNode.renderItem.blendingMode = (int)meshNode.blendingMode;
+        meshNode.renderItem.miscFlags = 0;
 
-        Util::SetBitState(meshNode.renderItem.shadowBit, SHADOW_BIT_CAST_SHADOW, meshNode.castShadows);
-        Util::SetBitState(meshNode.renderItem.shadowBit, SHADOW_BIT_CAST_CSM_SHADOW, meshNode.castCSMShadows);
+        Hell::Bit::SetState(meshNode.renderItem.miscFlags, MISC_FLAG_DYNAMIC_OBJECT, !MeshNodeIsStatic((int32_t)i));
+        Hell::Bit::SetState(meshNode.renderItem.shadowBit, SHADOW_BIT_CAST_SHADOW, meshNode.castShadows);
+        Hell::Bit::SetState(meshNode.renderItem.shadowBit, SHADOW_BIT_CAST_CSM_SHADOW, meshNode.castCSMShadows);
 
         if (meshNode.baseColorOverrideTextureIndex != -1) {
             meshNode.renderItem.baseColorTextureIndex = meshNode.baseColorOverrideTextureIndex;
@@ -759,6 +772,87 @@ void MeshNodes::UpdateAABBsFromWorldMatrices() {
     }
 
     m_worldspaceAABB = found ? AABB(minBounds, maxBounds) : AABB();
+}
+
+void MeshNodes::AddDirtyBoundsToTracker() {
+    for (const MeshNode& meshNode : m_meshNodes) {
+        if (!m_firstFrame && Hell::Math::NearlyEqual(meshNode.worldMatrix, meshNode.prevWorldMatrix)) {
+            continue;
+        }
+
+        if (!meshNode.castShadows) {
+            continue;
+        }
+
+        if (meshNode.blendingMode == BlendingMode::DO_NOT_RENDER) {
+            continue;
+        }
+
+        DirtyBounds dirtyBounds;
+        dirtyBounds.objectId = meshNode.parentObjectId;
+        dirtyBounds.boundsMin = meshNode.worldspaceAabb.GetBoundsMin();
+        dirtyBounds.boundsMax = meshNode.worldspaceAabb.GetBoundsMax();
+        dirtyBounds.castShadows = meshNode.castShadows;
+
+        DirtyTracker::AddDirtyBounds(dirtyBounds);
+    }
+}
+
+AABB MeshNodes::CalculateCurrentWorldspaceAABB(const glm::mat4& worldMatrix) const {
+    glm::vec3 minBounds(std::numeric_limits<float>::max());
+    glm::vec3 maxBounds(-std::numeric_limits<float>::max());
+
+    // Build local matrices without touching cached state
+    std::vector<glm::mat4> localMatrices(m_meshNodes.size(), glm::mat4(1.0f));
+
+    for (size_t i = 0; i < m_meshNodes.size(); i++) {
+        const MeshNode& meshNode = m_meshNodes[i];
+
+        const glm::mat4* parentLocalMatrix = nullptr;
+
+        if (meshNode.localParentIndex >= 0 && meshNode.localParentIndex < (int32_t)localMatrices.size()) {
+            parentLocalMatrix = &localMatrices[meshNode.localParentIndex];
+        }
+
+        // Same local matrix logic as UpdateHierarchy()
+        glm::mat4 localMatrix = CalculateCurrentLocalMatrix(meshNode, parentLocalMatrix);
+
+        localMatrices[i] = localMatrix;
+
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode.globalMeshIndex);
+        if (!mesh) {
+            continue;
+        }
+
+        // Mesh bounds start in local space
+        const bool physicsDrivesThis = !m_firstFrame && Editor::IsClosed() && MeshNodeIsNonKinematicRigidDynamic((int32_t)i);
+
+        // Physics driven nodes are already in world space
+        const glm::mat4 finalWorldMatrix = physicsDrivesThis ? localMatrix : worldMatrix * localMatrix;
+
+        const glm::vec3 localMin = mesh->aabbMin;
+        const glm::vec3 localMax = mesh->aabbMax;
+        const glm::vec3 localCenter = 0.5f * (localMin + localMax);
+        const glm::vec3 localExtents = 0.5f * (localMax - localMin);
+
+        // Move the center into world space
+        const glm::vec3 worldCenter = glm::vec3(finalWorldMatrix * glm::vec4(localCenter, 1.0f));
+
+        // Rotate and scale the extents into world space
+        const glm::vec3 col0 = glm::vec3(finalWorldMatrix[0]);
+        const glm::vec3 col1 = glm::vec3(finalWorldMatrix[1]);
+        const glm::vec3 col2 = glm::vec3(finalWorldMatrix[2]);
+
+        const glm::vec3 worldExtents = glm::abs(col0) * localExtents.x +
+                                       glm::abs(col1) * localExtents.y +
+                                       glm::abs(col2) * localExtents.z;
+
+        // Grow the final AABB
+        minBounds = glm::min(minBounds, worldCenter - worldExtents);
+        maxBounds = glm::max(maxBounds, worldCenter + worldExtents);
+    }
+
+    return { minBounds, maxBounds };
 }
 
 /*/void MeshNodes::UpdateAABBs(const glm::mat4& worldMatrix) {

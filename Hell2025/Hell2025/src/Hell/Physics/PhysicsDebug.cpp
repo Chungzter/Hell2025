@@ -1,6 +1,9 @@
 #include "PhysicsDebug.h"
 #include "Physics.h"
 
+#include "Unloved/Common/Constants.h"
+#include "Unloved/Debug/DebugDraw.h"
+
 #include <iostream>
 
 namespace {
@@ -43,6 +46,17 @@ namespace Hell::Physics {
 
         PrintSceneRigidInfo();
         PrintSceneRagdollInfo();
+    }
+
+    void DebugDrawRigidDynamicStateAABBs() {
+        for (auto& [id, rigidDynamic] : GetRigidDynamics()) {
+            switch (rigidDynamic.GetMotionState()) {
+                case RigidDynamicMotionState::KINEMATIC: DebugDraw::DrawAABB(rigidDynamic.GetAABB(), BLUE); break;
+                case RigidDynamicMotionState::AWAKE:     DebugDraw::DrawAABB(rigidDynamic.GetAABB(), GREEN); break;
+                case RigidDynamicMotionState::SETTLING:  DebugDraw::DrawAABB(rigidDynamic.GetAABB(), YELLOW); break;
+                case RigidDynamicMotionState::ASLEEP:    DebugDraw::DrawAABB(rigidDynamic.GetAABB(), RED); break;
+            }
+        }
     }
 
     std::vector<PhysicsDebugLine> GetPhysicsDebugLines(DebugMode debugMode) {

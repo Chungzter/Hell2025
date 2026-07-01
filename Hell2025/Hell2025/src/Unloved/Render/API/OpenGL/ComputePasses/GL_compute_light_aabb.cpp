@@ -7,6 +7,7 @@
 #include "Unloved/Render/RendererConstants.h"
 #include "Unloved/Render/RendererTypes.h"
 #include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/World/World.h"
 
 #include "Renderer/RenderDataManager.h"
 #include "World/LegacyWorld.h"
@@ -16,7 +17,7 @@ namespace OpenGLRenderer {
 
 
     void ReserveLightAABBSSBOStorage() {
-        uint32_t size = LegacyWorld::GetLightCount() * sizeof(glm::vec4) * 2;
+        uint32_t size = Unloved::World::GetLightCount() * sizeof(glm::vec4) * 2;
         OpenGL::ReserveSSBO("LightAABBs", size);
     }
 
@@ -36,7 +37,7 @@ namespace OpenGLRenderer {
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("LightAABBPosition");
         if (!shader) return;
 
-        Light* light = LegacyWorld::GetLightByIndex(lightIndex);
+        Light* light = Unloved::World::GetLightByIndex(lightIndex);
         if (!light) return;
 
         OpenGLCubemapFrameBuffer& fbo = OpenGL::ResourceManager::GetCubemapFrameBuffer("LightAABB");
@@ -146,7 +147,7 @@ namespace OpenGLRenderer {
     void ComputeMinMax(uint32_t lightIndex) {
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("LightAABBMinMax");
         OpenGLSSBO* ssbo = OpenGL::ResourceManager::GetSSBOPtr("LightAABBs");
-        Light* light = LegacyWorld::GetLightByIndex(lightIndex);
+        Light* light = Unloved::World::GetLightByIndex(lightIndex);
 
         if (!shader) return;
         if (!ssbo) return;
@@ -215,6 +216,6 @@ namespace OpenGLRenderer {
 			}
 		}
 
-        DebugDraw::DrawPoint(LegacyWorld::GetLightByIndex(lightIndex)->GetPosition(), YELLOW);
+        DebugDraw::DrawPoint(Unloved::World::GetLightByIndex(lightIndex)->GetPosition(), YELLOW);
 	}
 }

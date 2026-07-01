@@ -6,8 +6,8 @@
 #include "Renderer/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Hell/Logging.h"
+#include "Hell/Projection/Projection.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Util.h"
 
 Mirror::Mirror(uint64_t id, uint64_t parentId, uint32_t meshNodeIndex, uint32_t globalMeshIndex) {
     Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(globalMeshIndex);
@@ -149,7 +149,7 @@ void Mirror::Update(const glm::mat4& worldMatrix) {
             m_projectionMatrices[i] = glm::frustum(leftEdge, rightEdge, bottomEdge, topEdge, nearPlane, m_farDistance);
 
             // Now apply oblique clipping so objects behind the mirror surface are culled
-            m_projectionMatrices[i] = Util::CreateObliqueProjection(m_projectionMatrices[i], m_viewMatrices[i], planeWorld);
+            m_projectionMatrices[i] = Hell::Projection::Oblique(m_projectionMatrices[i], m_viewMatrices[i], planeWorld);
 
             // Update the frustum for culling
             m_frustums[i].Update(m_projectionMatrices[i] * m_viewMatrices[i]);

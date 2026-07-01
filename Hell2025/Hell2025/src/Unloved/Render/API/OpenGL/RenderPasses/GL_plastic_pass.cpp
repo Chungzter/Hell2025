@@ -13,6 +13,8 @@
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
+#include "../../../../../../res/shaders/common/gl_fixed_bindings.glsl"
+
 namespace OpenGLRenderer {
 
 
@@ -26,10 +28,12 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* miscFullSizeFbo = OpenGL::ResourceManager::GetFrameBufferPtr("MiscFullSize");
 		OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("Plastic");
         OpenGLShadowCubeMapArray* hiResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("HiRes");
+        OpenGLShadowCubeMapArray* lowResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("LowRes");
 
         if (!gBuffer) return;
         if (!shader) return;
         if (!hiResShadowMaps) return;
+        if (!lowResShadowMaps) return;
 
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		OpenGL::BlitFrameBuffer(gBuffer, miscFullSizeFbo, "Lighting", "FinalLightingCopy", GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -75,20 +79,20 @@ namespace OpenGLRenderer {
 		// It'd be great if you didn't have to blend in these hacky plastic material properties
 		// and could derive the result you want directly from the source material
 		Material* material = Hell::ResourceManager::GetMaterialByName("Plastic");
-		glActiveTexture(GL_TEXTURE3);
+		glActiveTexture(GL_TEXTURE7);
 		glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
-		glActiveTexture(GL_TEXTURE4);
+		glActiveTexture(GL_TEXTURE8);
 		glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
-		glActiveTexture(GL_TEXTURE5);
+		glActiveTexture(GL_TEXTURE9);
 		glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
 
-		glActiveTexture(GL_TEXTURE6);
+		glActiveTexture(GL_TEXTURE10);
 		glBindTexture(GL_TEXTURE_2D, miscFullSizeFbo->GetColorAttachmentHandleByName("FinalLightingCopy"));
-		glActiveTexture(GL_TEXTURE7);
+		glActiveTexture(GL_TEXTURE11);
 		glBindTexture(GL_TEXTURE_2D, gBuffer->GetDepthAttachmentHandle());
 
-        glActiveTexture(GL_TEXTURE8);
-        glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, hiResShadowMaps->GetDepthTexture());
+        glBindTextureUnit(TEX_IDX_SHADOW_MAP_HI_RES, hiResShadowMaps->GetDepthTexture());
+        glBindTextureUnit(TEX_IDX_SHADOW_MAP_LOW_RES, lowResShadowMaps->GetDepthTexture());
 
 		// Now render color
 		glEnable(GL_DEPTH_TEST);
@@ -111,11 +115,11 @@ namespace OpenGLRenderer {
 				Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
 				if (!mesh) continue;
 
-				glActiveTexture(GL_TEXTURE0);
+				glActiveTexture(GL_TEXTURE4);
 				glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
-				glActiveTexture(GL_TEXTURE1);
+				glActiveTexture(GL_TEXTURE5);
 				glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
-				glActiveTexture(GL_TEXTURE2);
+				glActiveTexture(GL_TEXTURE6);
 				glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
 
 				OpenGL::SetUniformMat4("u_model", renderItem.modelMatrix);

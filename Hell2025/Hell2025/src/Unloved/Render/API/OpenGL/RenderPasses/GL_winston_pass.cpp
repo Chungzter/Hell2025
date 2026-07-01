@@ -6,6 +6,7 @@
 #include "World/LegacyWorld.h"
 #include "Unloved/ObjectId.h"
 #include "Unloved/Config/Config.h"
+#include "Unloved/World/World.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Time.h"
 
@@ -65,7 +66,7 @@ namespace OpenGLRenderer {
                 ObjectType interactObjectType = Unloved::GetObjectIdType(interactObjectId);
 
                 if (interactObjectType == ObjectType::PICK_UP) {
-                    PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(interactObjectId);
+                    PickUp* pickUp = Unloved::World::GetPickUpByObjectId(interactObjectId);
                     if (pickUp) {
                         const std::vector<RenderItem>& renderItems = pickUp->GetRenderItems();
 

@@ -6,6 +6,7 @@
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/World/World.h"
 
 #include <iostream> // TODO: get me out of here
 
@@ -287,7 +288,7 @@ void DDGIVolume::UpdateSceneBvh() {
     instance.worldAabbCenter = (instance.worldAabbBoundsMin + instance.worldAabbBoundsMax) * 0.5f;
 
     // Add all the doors
-    for (Door& door : LegacyWorld::GetDoors()) {
+    for (Door& door : Unloved::World::GetDoors()) {
         // Bit of a hack but get the hinges matrix, then zero out the y translation to match the doors main model matrix
         MeshNode* meshNode = door.GetMeshNodes().GetMeshNodeByMeshName("Door_Hinges");
         glm::mat4 worldMatrix = meshNode->worldMatrix;

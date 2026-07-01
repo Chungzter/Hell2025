@@ -1,7 +1,6 @@
 #include "PointCloud.h"
 
 #include "Hell/Geometry/Geometry.h"
-#include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Debug/DebugDraw.h"
@@ -53,7 +52,7 @@ void PointCloud::Create(const std::vector<Triangle>& triangles, const glm::vec3&
         for (float x = min.x; x <= max.x; x += pointCloudSpacing) {
             for (float y = min.y; y <= max.y; y += pointCloudSpacing) {
                 glm::vec2 pt(x, y);
-                if (Util::IsPointInTriangle2D(pt, v0_2d, v1_2d, v2_2d)) {
+                if (Hell::Geometry::IsPointInTriangle2D(pt, v0_2d, v1_2d, v2_2d)) {
                     glm::vec3 pt3d = triangle.v0 + right * (pt.x - v0_2d.x) + up * (pt.y - v0_2d.y);
 
                     // Exclude points outside the volume bounds
@@ -162,7 +161,7 @@ void PointCloud::Update() {
     //std::fill(m_gridCellDirtyFlags.begin(), m_gridCellDirtyFlags.end(), 0);
     //
     //int i = 0;
-    //for (Light& light : LegacyWorld::GetLights()) {
+    //for (Light& light : Unloved::World::GetLights()) {
     //    if (i == 3) {
     //        DirtyCellsInSphere(light.GetPosition(), light.GetRadius());
     //        Renderer::DrawSphere(light.GetPosition(), light.GetRadius(), WHITE);

@@ -4,6 +4,8 @@
     #define ENABLE_BINDLESS 1
 #endif
 
+#include "../common/gl_fixed_bindings.glsl"
+
 #if ENABLE_BINDLESS
     #extension GL_ARB_bindless_texture : enable        
     readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer {
@@ -12,11 +14,15 @@
     in flat int BaseColorTextureIndex;
     in flat int NormalTextureIndex;
     in flat int RMATextureIndex;
+#endif
 
-#else
-    layout (binding = 0) uniform sampler2D baseColorTexture;
-    layout (binding = 1) uniform sampler2D normalTexture;
-    layout (binding = 2) uniform sampler2D rmaTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowMapArray;
+
+#if ENABLE_BINDLESS != 1
+    layout (binding = 4) uniform sampler2D baseColorTexture;
+    layout (binding = 5) uniform sampler2D normalTexture;
+    layout (binding = 6) uniform sampler2D rmaTexture;
 #endif
 
 #include "../common/lighting.glsl"
@@ -26,8 +32,7 @@
 
 layout (location = 0) out vec4 FragOut;
 layout (location = 1) out vec4 ViewSpaceDepthPreviousOut;
-layout (binding = 4) uniform sampler2D FlashlightCookieTexture;
-layout (binding = 9) uniform samplerCubeArrayShadow shadowMapArray;
+layout (binding = 7) uniform sampler2D FlashlightCookieTexture;
 
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData  rendererData;   };
 readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData  viewportData[]; };
@@ -91,7 +96,13 @@ void main() {
       Light light = lights[lightIndex];
       vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
       vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
-      float shadow = ShadowCalculationNEW(int(lightIndex), lightPosition, light.radius, WorldPos.xyz, ViewPos, normal, shadowMapArray);
+      float shadow = 1.0;
+      if (light.hiResShadowMapIndex != -1) {
+          shadow = ShadowCalculationNEW(light.hiResShadowMapIndex, lightPosition, light.radius, WorldPos.xyz, ViewPos, normal, hiResShadowMapArray);
+      }
+      else if (light.lowResShadowMapIndex != -1) {
+          shadow = ShadowCalculationNEW(light.lowResShadowMapIndex, lightPosition, light.radius, WorldPos.xyz, ViewPos, normal, lowResShadowMapArray);
+      }
       vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal, WorldPos.xyz, baseColor.rgb, roughness, metallic, ViewPos) * shadow;
       //vec3 directLight = GetDirectLightingHair(lightPosition, lightColor, light.radius, light.strength, normal, Tangent, WorldPos.xyz, baseColor.rgb, roughness, metallic, ViewPos) * shadow;
       

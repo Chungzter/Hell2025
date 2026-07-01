@@ -14,6 +14,8 @@
 
 #include "Unloved/Systems/P90Mag/P90MagManager.h"
 #include "Unloved/Session/Session.h"
+#include "Unloved/Systems/DirtyTracker/DirtyTracker.h"
+#include "Unloved/World/World.h"
 
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Legacy/Renderer/Renderer.h"
@@ -22,13 +24,9 @@ namespace Input = Hell::Input;
 
 namespace Unloved::LegacyWorld {
 
-    void CalculateGPULights();
-    void CalculateDirtyAABBs();
-
-    // REMOVE ME!
     uint64_t g_testAnimatedGameObject = 0;
     AnimatedGameObject* GetDobermannTest() {
-        return GetAnimatedGameObjectByObjectId(g_testAnimatedGameObject);
+        return Unloved::World::GetAnimatedGameObjectByObjectId(g_testAnimatedGameObject);
     }
 
     uint64_t g_trapKingID = 0;
@@ -41,10 +39,10 @@ namespace Unloved::LegacyWorld {
     }
 
     AnimatedGameObject* GetTrapKingAO() {
-        return GetAnimatedGameObjectByObjectId(g_trapKingID);
+        return Unloved::World::GetAnimatedGameObjectByObjectId(g_trapKingID);
     }
     AnimatedGameObject* GetRadKidAO() {
-        return GetAnimatedGameObjectByObjectId(g_ratKidAO);
+        return Unloved::World::GetAnimatedGameObjectByObjectId(g_ratKidAO);
     }
 
 
@@ -62,8 +60,6 @@ namespace Unloved::LegacyWorld {
 
     }
 
-    static float DegToRad(float degrees) { return degrees * (HELL_PI / 180.0f); }
-
     void Update(float deltaTime) {
 
         if (Input::KeyPressed(HELL_KEY_4)) {
@@ -75,14 +71,14 @@ namespace Unloved::LegacyWorld {
         if (Input::KeyPressed(HELL_KEY_NUMPAD_1)) {
             AnimatedGameObject* ratKidAO = GetRadKidAO();
             ratKidAO->SetAnimationModeToBindPose();
-            for (Light& light : LegacyWorld::GetLights()) {
+            for (Light& light : Unloved::World::GetLights()) {
                 light.ForceDirty();
             }
         }
         if (Input::KeyPressed(HELL_KEY_NUMPAD_2)) {
             AnimatedGameObject* ratKidAO = GetRadKidAO();
             ratKidAO->PlayAndLoopAnimation("Main", "RatKid_GlockIdle3", 1.0f);
-            for (Light& light : LegacyWorld::GetLights()) {
+            for (Light& light : Unloved::World::GetLights()) {
                 light.ForceDirty();
             }
         }
@@ -99,7 +95,7 @@ namespace Unloved::LegacyWorld {
             else {
                 ratKidAO->SetPosition(glm::vec3(35.6f, 31.0f, 36.83f));
             }
-            for (Light& light : LegacyWorld::GetLights()) {
+            for (Light& light : Unloved::World::GetLights()) {
                 light.ForceDirty();
             }
         }
@@ -155,9 +151,9 @@ namespace Unloved::LegacyWorld {
         }
 
         glm::vec3 bunnyPos = glm::vec3(41.05f, 31.0f, 40.25f);
-        GetGameObjects()[0].SetPosition(bunnyPos);
-        GetGameObjects()[0].SetRotationY(-2.2f);
-        GetGameObjects()[0].m_meshNodes.EnablePointLightShadows();
+        Unloved::World::GetGameObjects()[0].SetPosition(bunnyPos);
+        Unloved::World::GetGameObjects()[0].SetRotationY(-2.2f);
+        Unloved::World::GetGameObjects()[0].m_meshNodes.EnablePointLightShadows();
 
       if (g_ratKidAO == 0) {
           InitRatKing("RatKing");
@@ -176,7 +172,7 @@ namespace Unloved::LegacyWorld {
                 ragdoll.SetToInitialPose();
                 ragdoll.DisableSimulation();
 
-                for (Light& light : GetLights()) {
+                for (Light& light : Unloved::World::GetLights()) {
                     AABB aabb = ragdoll.GetWorldSpaceAABB();
                     if (aabb.IntersectsSphere(light.GetPosition(), light.GetRadius())) {
                         light.ForceDirty();
@@ -187,7 +183,7 @@ namespace Unloved::LegacyWorld {
             if (Input::KeyPressed(HELL_KEY_O)) {
                 ragdoll.EnableSimulation();
 
-                for (Light& light : GetLights()) {
+                for (Light& light : Unloved::World::GetLights()) {
                     AABB aabb = ragdoll.GetWorldSpaceAABB();
                     if (aabb.IntersectsSphere(light.GetPosition(), light.GetRadius())) {
                         light.ForceDirty();
@@ -197,34 +193,34 @@ namespace Unloved::LegacyWorld {
             ++it;
         }
 
-        for (AnimatedGameObject& object : GetAnimatedGameObjects()) object.Update(deltaTime);
-        for (BulletCasing& object : GetBulletCasings())             object.Update(deltaTime);
-        for (ChristmasLightSet& object : GetChristmasLightSets())   object.Update(deltaTime);
-        for (ChristmasTree& object : GetChristmasTrees())           object.Update(deltaTime);
-        for (Dobermann& object : GetDobermanns())                   object.Update(deltaTime);
-        for (Door& object : GetDoors())                             object.Update(deltaTime);
-        for (Fence& object : GetFences())                           object.Update();
-        for (Fireplace& object : GetFireplaces())                   object.Update(deltaTime);
-        for (GameObject& object : GetGameObjects())                 object.Update(deltaTime);
+        for (AnimatedGameObject& object : Unloved::World::GetAnimatedGameObjects()) object.Update(deltaTime);
+        for (BulletCasing& object : Unloved::World::GetBulletCasings())             object.Update(deltaTime);
+        for (ChristmasLightSet& object : Unloved::World::GetChristmasLightSets())   object.Update(deltaTime);
+        for (ChristmasTree& object : Unloved::World::GetChristmasTrees())        object.Update(deltaTime);
+        for (Dobermann& object : Unloved::World::GetDobermanns())                object.Update(deltaTime);
+        for (Door& object : Unloved::World::GetDoors())                             object.Update(deltaTime);
+        for (Fence& object : Unloved::World::GetFences())                           object.Update();
+        for (Fireplace& object : Unloved::World::GetFireplaces())                   object.Update(deltaTime);
+        for (GameObject& object : Unloved::World::GetGameObjects())              object.Update(deltaTime);
         //for (HousePlane& object : GetHousePlanes())               object.Update(deltaTime);
-        for (GenericObject& object : GetGenericObjects())           object.Update(deltaTime);
-        for (Kangaroo& object : GetKangaroos())                     object.Update(deltaTime);
-        for (Ladder& object : GetLadders())                         object.Update(deltaTime);
-        for (Mermaid& object : GetMermaids())                       object.Update(deltaTime);
-        for (Piano& object : GetPianos())                           object.Update(deltaTime);
-        for (PickUp& object : GetPickUps())                         object.Update(deltaTime);
-        for (PictureFrame& object : GetPictureFrames())             object.Update();
-        for (PowerPoleSet& object : GetPowerPoleSets())             object.Update();
+        for (GenericObject& object : Unloved::World::GetGenericObjects())           object.Update(deltaTime);
+        for (Kangaroo& object : Unloved::World::GetKangaroos())                  object.Update(deltaTime);
+        for (Ladder& object : Unloved::World::GetLadders())                         object.Update(deltaTime);
+        for (Mermaid& object : Unloved::World::GetMermaids())                    object.Update(deltaTime);
+        for (Piano& object : Unloved::World::GetPianos())                        object.Update(deltaTime);
+        for (PickUp& object : Unloved::World::GetPickUps())                         object.Update(deltaTime);
+        for (PictureFrame& object : Unloved::World::GetPictureFrames())             object.Update();
+        for (PowerPoleSet& object : Unloved::World::GetPowerPoleSets())             object.Update();
         for (Road& object : GetRoads())                             object.Update();
         for (Shark& object : GetSharks())                           object.Update(deltaTime);
-        for (Staircase& object : GetStaircases())                   object.Update(deltaTime);
+        for (Staircase& object : Unloved::World::GetStaircases())                   object.Update(deltaTime);
         //for (Tree& object : GetTrees())                             object.Update(deltaTime);
-        for (TrimSet& object : GetTrimSets())                       object.Update();
-        for (Window& object : GetWindows())                         object.Update(deltaTime);
+        for (TrimSet& object : Unloved::World::GetTrimSets())                       object.Update();
+        for (Window& object : Unloved::World::GetWindows())                         object.Update(deltaTime);
 
         // These must run in this order otherwise various dirty flags are stale
-        for (Unloved::DDGIVolume& object : GetDDGIVolumes())                 object.Update();
-        for (Light& object : GetLights())                           object.Update(deltaTime);
+        for (DDGIVolume& object : Unloved::World::GetDDGIVolumes())          object.Update();
+        for (Light& object : Unloved::World::GetLights())                        object.Update(deltaTime);
         for (Decal& object : GetDecals())                           object.Update();
 
         // Update player weapon attachments. Must happen after AnimatedGameObject updates so that animated transforms are correct
@@ -237,19 +233,14 @@ namespace Unloved::LegacyWorld {
         }
 
         if (Input::KeyPressed(HELL_KEY_BACKSPACE)) {
-            for (BulletCasing& bulletCasing : GetBulletCasings()) {
+            for (BulletCasing& bulletCasing : Unloved::World::GetBulletCasings()) {
                 bulletCasing.CleanUp();
             }
 
             GetDecals().clear();
             Unloved::BloodSystem::GetBloodScreenSpaceDecals().clear();
-            GetBulletCasings().clear();
+            Unloved::World::GetBulletCasings().clear();
         }
-
-        CalculateGPULights();
-        CalculateDirtyAABBs();
-
-        UpdateDirtyFlags();
 
         P90MagManager::SubmitRenderItems();
 
@@ -260,10 +251,10 @@ namespace Unloved::LegacyWorld {
         std::vector<Transform>& transforms = GetDoorAndWindowCubeTransforms();
 
         transforms.clear();
-        transforms.reserve(LegacyWorld::GetDoors().size() + GetWindows().size());
+        transforms.reserve(Unloved::World::GetDoors().size() + Unloved::World::GetWindows().size());
         float padding = 0.02f;
 
-        for (Door& door : LegacyWorld::GetDoors()) {
+        for (Door& door : Unloved::World::GetDoors()) {
             Transform& transform = transforms.emplace_back();
             transform.position = door.GetPosition();
             transform.position.y += DOOR_HEIGHT * 0.5f;
@@ -271,46 +262,12 @@ namespace Unloved::LegacyWorld {
             transform.scale = glm::vec3(0.2f, DOOR_HEIGHT + padding, DOOR_WIDTH + padding);
         }
 
-        for (Window& window : GetWindows()) {
+        for (Window& window : Unloved::World::GetWindows()) {
             Transform& transform = transforms.emplace_back();
             transform.position = window.GetPosition();
             transform.position.y += 1.48f;
             transform.rotation = window.GetRotation();
             transform.scale = glm::vec3(0.2f, 1.185074f, 0.85f);
-        }
-    }
-
-    void CalculateGPULights() {
-        for (int i = 0; i < GetLights().size(); i++) {
-            Light& light = GetLights()[i];
-            if (!light.GetCreateInfo().saveToFile) {
-                continue;
-            }
-            RenderDataManager::SubmitGPULightHighRes(i);
-        }
-
-        for (int i = 0; i < GetLights().size(); i++) {
-            Light& light = GetLights()[i];
-            if (light.GetCreateInfo().saveToFile) {
-                continue;
-            }
-            RenderDataManager::SubmitGPULightHighRes(i);
-        }
-    }
-
-    void CalculateDirtyAABBs() {
-        std::vector<GPUAABB>& aabbs = GetDirtyDoorAABBS();
-        aabbs.clear();
-
-        for (Door& door : GetDoors()) {
-            if (door.IsDirty()) {
-                GPUAABB aabb;
-                aabb.boundsMin = glm::vec4(door.GetPhsyicsAABB().GetBoundsMin(), 0.0f);
-                aabb.boundsMax = glm::vec4(door.GetPhsyicsAABB().GetBoundsMax(), 0.0f);
-                aabbs.push_back(aabb);
-
-                //DebugDraw::DrawAABB(door.GetPhsyicsAABB(), YELLOW);
-            }
         }
     }
 }

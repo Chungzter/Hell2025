@@ -2,6 +2,8 @@
 
 #include "Hell/Audio.h"
 #include "Hell/Backend/BackEnd.h"
+#include "Hell/Common/Constants.h"
+#include "Hell/Common/Random.h"
 #include "Hell/Logging.h"
 
 #include "Unloved/Common/Constants.h"
@@ -13,6 +15,7 @@
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/World/World.h"
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
@@ -38,6 +41,7 @@ void Player::Init(uint64_t playerId, const glm::vec3& position, const glm::vec3&
 
     AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
     viewWeapon->SetExclusiveViewportIndex(viewportIndex);
+    viewWeapon->DisableShadows();
 
     AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject();
 
@@ -134,16 +138,16 @@ void Player::DiscardItem(const std::string& itemName) {
 
 	PickUpCreateInfo createInfo;
 	createInfo.position = spawnPosition;
-	createInfo.rotation.x = Util::RandomFloat(-HELL_PI, HELL_PI);
-	createInfo.rotation.y = Util::RandomFloat(-HELL_PI, HELL_PI);
-	createInfo.rotation.z = Util::RandomFloat(-HELL_PI, HELL_PI);
+	createInfo.rotation.x = Hell::Random::Float(-HELL_PI, HELL_PI);
+	createInfo.rotation.y = Hell::Random::Float(-HELL_PI, HELL_PI);
+	createInfo.rotation.z = Hell::Random::Float(-HELL_PI, HELL_PI);
 	createInfo.name = itemName;
 	createInfo.saveToFile = false;
 	createInfo.disablePhysicsAtSpawn = false;
 	createInfo.respawn = false;
 	createInfo.type = Bible::GetItemType(itemName);
 
-	LegacyWorld::AddPickUp(createInfo);
+	Unloved::World::AddPickUp(createInfo);
 }
 
 bool Player::PurchaseItem(const std::string& itemName) {
@@ -342,11 +346,11 @@ Unloved::Camera& Player::GetCamera() {
 }
 
 AnimatedGameObject* Player::GetCharacterModelAnimatedGameObject() {
-    return LegacyWorld::GetAnimatedGameObjectByObjectId(m_characterModelAnimatedGameObjectId);
+    return Unloved::World::GetAnimatedGameObjectByObjectId(m_characterModelAnimatedGameObjectId);
 }
 
 AnimatedGameObject* Player::GetViewWeaponAnimatedGameObject() {
-    return LegacyWorld::GetAnimatedGameObjectByObjectId(m_viewWeaponAnimatedGameObjectId);
+    return Unloved::World::GetAnimatedGameObjectByObjectId(m_viewWeaponAnimatedGameObjectId);
 }
 
 bool Player::ViewportIsVisible() {
@@ -401,9 +405,9 @@ void Player::GiveDamage(int damage, uint64_t enemyId) {
 }
 
 float Player::DotToClosestToMermaid() {
-    if (LegacyWorld::GetMermaids().empty()) return 0;
+    if (Unloved::World::GetMermaids().empty()) return 0;
 
-    Mermaid& mermaid = LegacyWorld::GetMermaids()[0];
+    Mermaid& mermaid = Unloved::World::GetMermaids()[0];
     return glm::dot(mermaid.GetWorldForward(), GetCameraForward());
 }
 
@@ -416,9 +420,9 @@ void Player::SubtractCash(int amount) {
 }
 
 bool Player::IsFacingClosestMermaid() {
-    if (LegacyWorld::GetMermaids().empty()) return false;
+    if (Unloved::World::GetMermaids().empty()) return false;
 
-    Mermaid& mermaid = LegacyWorld::GetMermaids()[0];
+    Mermaid& mermaid = Unloved::World::GetMermaids()[0];
 
     const glm::vec3& cameraPositon = GetCameraPosition();
     const glm::vec3& cameraForward = GetCameraForward();

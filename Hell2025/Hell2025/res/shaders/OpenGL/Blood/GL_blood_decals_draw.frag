@@ -9,12 +9,14 @@
 #endif
 
 #include "../../common/constants.glsl"
+#include "../../common/misc_flags.glsl"
+#include "../../common/normal_encoding.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
 
 layout (location = 0) out vec4 DecalMaskOut;
 layout(binding = 0) uniform sampler2D GBufferRMATexture;
-layout(binding = 1) uniform sampler2D GBufferNormalTexture;
+layout(binding = 1) uniform sampler2D GBufferNormalXYRoughnessMiscTexture;
 layout(binding = 2) uniform sampler2D u_depthTexture;
 
 #if ENABLE_BINDLESS == 1
@@ -49,12 +51,14 @@ void main() {
     if (count == 0) discard;
 
     // Do nothing on walls (assuming Y is up)
-    vec3 normal = texelFetch(GBufferNormalTexture, px, 0).rgb;
+    vec3 normal = DecodeNormal(texelFetch(GBufferNormalXYRoughnessMiscTexture, px, 0).rg);
     if (abs(normal.y) < 0.5) discard;
 
+    uint miscFlags = DecodeMiscFlags(texelFetch(GBufferNormalXYRoughnessMiscTexture, px, 0).a);
+    if ((miscFlags & MISC_FLAG_DYNAMIC_OBJECT) != 0u) discard;
+
     // Skip if this tile is masked out
-    float blockedOut = texelFetch(GBufferRMATexture, px, 0).a;
-    if (blockedOut == 1.0) discard;
+    // if ((miscFlags & MISC_FLAG_RESERVED_0) != 0u) discard;
 
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);

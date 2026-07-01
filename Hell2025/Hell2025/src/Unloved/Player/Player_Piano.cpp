@@ -4,6 +4,7 @@
 #include "Hell/Logging.h"
 
 #include "Legacy/World/LegacyWorld.h"
+#include "Unloved/World/World.h"
 
 namespace Input = Hell::Input;
 
@@ -19,7 +20,7 @@ void Player::UpdatePlayingPiano(float deltaTime) {
     if (!m_isPlayingPiano) return;
         
     // Error check, in case your piano is nullptr somehow
-    Piano* piano = LegacyWorld::GetPianoByObjectId(m_pianoId);
+    Piano* piano = Unloved::World::GetPianoByObjectId(m_pianoId);
     if (!piano) {
         Logging::Error() << "UpdatePlayingPiano() failed: tried to play a nullptr piano! m_pianoId is " << m_pianoId << "\n";
         m_isPlayingPiano = false;

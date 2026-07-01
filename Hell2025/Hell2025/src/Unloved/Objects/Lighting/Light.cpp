@@ -1,18 +1,20 @@
 #include "Light.h"
 #include "Hell/Math/Ray.h"
+#include "Hell/Noise/Noise.h"
 #include "Hell/Physics/Physics.h"
+#include "Hell/Projection/Projection.h"
 #include "Legacy/World/LegacyWorld.h"
-#include "Util.h"
 #include "Timer.hpp"
 
 #include "Unloved/Session/Session.h"
+#include "Unloved/World/World.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Unloved/Editor/Editor.h"
 #include "Hell/Time.h"
 
 namespace Unloved {
 
-Light::Light(uint64_t id, LightCreateInfo& createInfo, SpawnOffset& spawnOffset) {
+Light::Light(uint64_t id, const LightCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_createInfo = createInfo;
     m_createInfo.position += spawnOffset.translation;
     m_createInfo.rotation.y += spawnOffset.yRotation;
@@ -28,41 +30,6 @@ void Light::Update(float deltaTime) {
         m_lightFlicker.Update(Hell::Time::DeltaTime() * 10, Unloved::Session::GetSessionTime() * 10);
         SetColor(m_lightFlicker.m_currentColor * 1.5f);
     }
-
-    m_dirtyForRaytracing = false;
-
-    // Bail if you are a fireplace light
-    if (!m_createInfo.saveToFile) return; // <------------------ VERY HACKY
-
-    for (GPUAABB& gpuAabb : LegacyWorld::GetDirtyDoorAABBS()) {
-        AABB doorAABB(gpuAabb.boundsMin, gpuAabb.boundsMax);
-        AABB lightCullingAABB(m_worldBoundsMin, m_worldBoundsMax);
-
-        if (doorAABB.IntersectsAABB(lightCullingAABB)) {
-            m_dirtyForRaytracing = true;
-            break;
-        }
-    }
-
-    //glm::vec4 color = RED;
-    //if (IsDirtyForRaytracing()) {
-    //    color = GREEN;
-    //}
-
-    //Renderer::DrawSphere(GetPosition(), GetRadius(), color);
-
-
-    //if (Editor::GetSelectedObjectId() == m_objectId) {
-        //AABB aabb(m_createInfo.cullBoundsMin, m_createInfo.cullBoundsMax);
-        //DebugDraw::DrawAABB(aabb, color);
-    //}
-
-
-   //if (m_doFlicker) {
-   //    SetColor(m_lightFlicker.m_currentColor);
-   //}
-   //SetColor(m_lightFlicker.m_currentColor);
-
 }
 
 void Light::RaycastWorldBounds() {
@@ -192,7 +159,7 @@ void Light::UpdateDirtyState() {
     m_dirtyForShadowMaps = false;
     bool printDebug = false;
 
-    for (Door& object : LegacyWorld::GetDoors()) {
+    for (Door& object : Unloved::World::GetDoors()) {
         if (object.IsDirty()) {
             for (const RenderItem& renderItem : object.GetRenderItems()) {
                 AABB aabb(renderItem.aabbMin, renderItem.aabbMax);
@@ -205,7 +172,7 @@ void Light::UpdateDirtyState() {
         }
     }
 
-    for (GenericObject& object : LegacyWorld::GetGenericObjects()) {
+    for (GenericObject& object : Unloved::World::GetGenericObjects()) {
         if (object.IsDirty()) {
             for (const RenderItem& renderItem : object.GetRenderItems()) {
                 AABB aabb(renderItem.aabbMin, renderItem.aabbMax);
@@ -217,7 +184,7 @@ void Light::UpdateDirtyState() {
             }
         }
     }
-    for (Piano& object : LegacyWorld::GetPianos()) {
+    for (Piano& object : Unloved::World::GetPianos()) {
         if (object.IsDirty()) {
             for (const RenderItem& renderItem : object.GetRenderItems()) {
                 AABB aabb(renderItem.aabbMin, renderItem.aabbMax);
@@ -231,7 +198,7 @@ void Light::UpdateDirtyState() {
     }
 
     if (false)
-    for (PickUp& object : LegacyWorld::GetPickUps()) {
+    for (PickUp& object : Unloved::World::GetPickUps()) {
         if (object.IsDirty()) {
             for (const RenderItem& renderItem : object.GetRenderItems()) {
                 AABB aabb(renderItem.aabbMin, renderItem.aabbMax);
@@ -391,7 +358,7 @@ void Light::UpdateMatricesAndFrustum() {
 	float aspectRatio = 1.0f; // Square
 
 	const glm::mat4 projectionMatrix = glm::perspective(fovRadians, aspectRatio, SHADOW_NEAR_PLANE, m_createInfo.radius);
-	const glm::mat4 projectionMatrixReverseZ = Util::CalculateProjectionReverseZ(fovRadians, aspectRatio, SHADOW_NEAR_PLANE);
+	const glm::mat4 projectionMatrixReverseZ = Hell::Projection::ReverseZPerspective(fovRadians, aspectRatio, SHADOW_NEAR_PLANE);
 
 	const glm::vec3 targets[6] = {
 		glm::vec3(1.0f, 0.0f, 0.0f),  glm::vec3(-1.0f, 0.0f, 0.0f),
@@ -423,9 +390,9 @@ void LightFlicker::Update(float deltaTime, float timeSeconds) {
     m_highColor = glm::vec3(1.00f, 0.75f, 0.35f) * 1.0f;
 
     int32_t seed = 0; // Random gen this if u want
-    float nSlow = Util::FractalNoise1D(tSlow, seed + 1);
-    float nMid = Util::FractalNoise1D(tMid, seed + 2);
-    float nFast = Util::FractalNoise1D(tFast, seed + 3);
+    float nSlow = Hell::Noise::FractalNoise1D(tSlow, seed + 1);
+    float nMid = Hell::Noise::FractalNoise1D(tMid, seed + 2);
+    float nFast = Hell::Noise::FractalNoise1D(tFast, seed + 3);
 
     float rawFlicker01 = nSlow * m_slowWeight + nMid * m_midWeight + nFast * m_fastWeight;
     rawFlicker01 = glm::clamp(rawFlicker01, 0.0f, 1.0f);
@@ -440,4 +407,5 @@ void LightFlicker::Update(float deltaTime, float timeSeconds) {
 
     m_currentColor = glm::mix(m_lowColor, m_highColor, m_currentFlicker);
 }
+
 }

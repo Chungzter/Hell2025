@@ -5,6 +5,7 @@ layout(early_fragment_tests) in;
 
 #include "../../common/constants.glsl"
 #include "../../common/lighting.glsl"
+#include "../../common/misc_flags.glsl"
 #include "../../common/normal_encoding.glsl"
 #include "../../common/post_processing.glsl"
 #include "../../common/types.glsl"
@@ -193,7 +194,7 @@ void main() {
 
     NormalXYRoughnessMiscOut.rg = EncodeNormal(normal);
     NormalXYRoughnessMiscOut.b = roughness;
-    NormalXYRoughnessMiscOut.a = 0.0;
+    NormalXYRoughnessMiscOut.a = EncodeMiscFlags(renderItem.miscFlags);
 
     VelocityXYOcclusionSubSurfaceOut.rg = velocity;
     VelocityXYOcclusionSubSurfaceOut.b = ao;

@@ -97,7 +97,7 @@ struct MeshNodes {
     bool MeshNodeIsOpen(const std::string& meshName);
     bool MeshNodeIsClosed(const std::string& meshName);
     bool MeshNodeIsStatic(int nodeIndex);
-    bool MeshNodeIsNonKinematicRigidDynamic(int nodeIndex);
+    bool MeshNodeIsNonKinematicRigidDynamic(int nodeIndex) const;
 
     int32_t GetGlobalMeshIndex(int nodeIndex);
     Material* GetMaterial(int nodeIndex);
@@ -113,6 +113,8 @@ struct MeshNodes {
     MeshNode* GetMeshNodeByMeshName(const std::string& meshName);
     int32_t GetMeshNodeIndexByMeshName(const std::string& meshName);
 
+    AABB CalculateCurrentWorldspaceAABB(const glm::mat4& worldMatrix) const;
+
     size_t GetNodeCount() const                                         { return m_nodeCount; }
     bool IsDirty() const                                                { return m_isDirty; }
     const ArmatureData& GetArmature() const                             { return m_armatureData; }
@@ -123,7 +125,9 @@ struct MeshNodes {
 private:
     void UpdateAABBsFromWorldMatrices();
     //void UpdateAABBs(const glm::mat4& worldMatrix);
+    void AddDirtyBoundsToTracker();
     void UpdateHierarchy();
+    glm::mat4 CalculateCurrentLocalMatrix(const MeshNode& meshNode, const glm::mat4* parentLocalMatrix) const;
     void InitPhysicsTransforms();
     void UpdateKinematicPhysicsTransforms();
 

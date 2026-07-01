@@ -16,14 +16,28 @@
 
 namespace Unloved {
 
-void Piano::Init(PianoCreateInfo& createInfo) {
+Piano::Piano(uint64_t id, PianoCreateInfo createInfo) {
+    Init(id, createInfo, SpawnOffset());
+}
+
+void Piano::Init(uint64_t id, PianoCreateInfo createInfo) {
+    Init(id, createInfo, SpawnOffset());
+}
+
+Piano::Piano(uint64_t id, PianoCreateInfo createInfo, SpawnOffset spawnOffset) {
+    Init(id, createInfo, spawnOffset);
+}
+
+void Piano::Init(uint64_t id, PianoCreateInfo createInfo, SpawnOffset spawnOffset) {
     m_createInfo = createInfo;
-    m_soundFontName = createInfo.soundFontName;
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation.y += spawnOffset.yRotation;
+    m_soundFontName = m_createInfo.soundFontName;
 
-    m_transform.position = createInfo.position;
-    m_transform.rotation = createInfo.rotation;
+    m_transform.position = m_createInfo.position;
+    m_transform.rotation = m_createInfo.rotation;
 
-    m_pianoObjectId = Unloved::GetNextObjectId(ObjectType::PIANO);
+    m_pianoObjectId = id;
 
     std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 

@@ -1,14 +1,17 @@
 #include "ChristmasTree.h"
 #include "Legacy/Renderer/Renderer.h"
-#include "Legacy/World/LegacyWorld.h"
 #include "Legacy/Util/Util.h"
+#include "Unloved/World/World.h"
 
 namespace Unloved {
 
-ChristmasTree::ChristmasTree(const ChristmasTreeCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
-    m_position = createInfo.position + spawnOffset.translation;
-    m_rotation = createInfo.rotation + glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+ChristmasTree::ChristmasTree(uint64_t id, const ChristmasTreeCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
+    m_objectId = id;
     m_createInfo = createInfo;
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation.y += spawnOffset.yRotation;
+    m_position = m_createInfo.position;
+    m_rotation = m_createInfo.rotation;
 
     Transform transform;
     transform.position = m_position;
@@ -21,7 +24,7 @@ ChristmasTree::ChristmasTree(const ChristmasTreeCreateInfo& createInfo, const Sp
     christmasLightsCreateInfo.sprialTopCenter = createInfo.position + glm::vec3(-0.08f, 1.7f, -0.03f);
     christmasLightsCreateInfo.spiral = true;
 
-    LegacyWorld::AddChristmasLights(christmasLightsCreateInfo, spawnOffset);
+    Unloved::World::AddChristmasLights(christmasLightsCreateInfo, spawnOffset);
 }
 
 void ChristmasTree::CreateRenderItems() {

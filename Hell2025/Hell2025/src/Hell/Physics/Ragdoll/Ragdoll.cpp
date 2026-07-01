@@ -6,6 +6,7 @@
 #include "Hell/Physics/PhysicsIds.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
+#include <cmath>
 #include <iostream>
 
 inline PxTransform PxTransformFromRest(const RdMatrix& restM, float sceneScale) {
@@ -436,6 +437,72 @@ AABB Ragdoll::GetWorldSpaceAABB() {
     }
 
     return AABB(min, max);
+}
+
+void Ragdoll::GetWorldSpaceAABBs(std::vector<AABB>& aabbs) {
+    aabbs.clear();
+
+    for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
+        if (!pxRigidDynamic) {
+            continue;
+        }
+
+        const PxU32 nbShapes = pxRigidDynamic->getNbShapes();
+        if (!nbShapes) {
+            continue;
+        }
+
+        glm::vec3 min = glm::vec3(std::numeric_limits<float>::max());
+        glm::vec3 max = glm::vec3(-std::numeric_limits<float>::max());
+
+        std::vector<PxShape*> shapes(nbShapes);
+        pxRigidDynamic->getShapes(shapes.data(), nbShapes);
+
+        for (PxShape* shape : shapes) {
+            const PxBounds3 bounds = PxShapeExt::getWorldBounds(*shape, *pxRigidDynamic, 1.0f);
+            const glm::vec3 boundsMin(bounds.minimum.x, bounds.minimum.y, bounds.minimum.z);
+            const glm::vec3 boundsMax(bounds.maximum.x, bounds.maximum.y, bounds.maximum.z);
+
+            min = glm::min(min, boundsMin);
+            max = glm::max(max, boundsMax);
+        }
+
+        aabbs.push_back(AABB(min, max));
+    }
+}
+
+void Ragdoll::UpdateWorldSpaceAABBs(float changeThreshold) {
+
+    std::vector<AABB> worldspaceAABBsPreviousFrame = m_worldSpaceAABBs;
+
+    GetWorldSpaceAABBs(m_worldSpaceAABBs);
+
+    if (m_worldSpaceAABBs.size() != worldspaceAABBsPreviousFrame.size()) {
+        m_dirty = true;
+    }
+    else {
+        m_dirty = false;
+
+        for (size_t i = 0; i < m_worldSpaceAABBs.size(); i++) {
+            const AABB& aabb = m_worldSpaceAABBs[i];
+            const AABB& aabbLastFrame = worldspaceAABBsPreviousFrame[i];
+
+            const glm::vec3& boundsMin = aabb.GetBoundsMin();
+            const glm::vec3& boundsMax = aabb.GetBoundsMax();
+            const glm::vec3& boundsMinLastFrame = aabbLastFrame.GetBoundsMin();
+            const glm::vec3& boundsMaxLastFrame = aabbLastFrame.GetBoundsMax();
+
+            if (std::abs(boundsMin.x - boundsMinLastFrame.x) > changeThreshold ||
+                std::abs(boundsMin.y - boundsMinLastFrame.y) > changeThreshold ||
+                std::abs(boundsMin.z - boundsMinLastFrame.z) > changeThreshold ||
+                std::abs(boundsMax.x - boundsMaxLastFrame.x) > changeThreshold ||
+                std::abs(boundsMax.y - boundsMaxLastFrame.y) > changeThreshold ||
+                std::abs(boundsMax.z - boundsMaxLastFrame.z) > changeThreshold) {
+                m_dirty = true;
+                return;
+            }
+        }
+    }
 }
 
 glm::vec3 Ragdoll::GetMarkerColorByRigidIndex(uint32_t index) const {

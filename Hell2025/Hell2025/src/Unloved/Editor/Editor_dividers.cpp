@@ -2,9 +2,9 @@
 
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Input.h"
+#include "Hell/Math/Range.h"
 
 #include "Legacy/Renderer/Renderer.h"
-#include "Legacy/Util/Util.h"
 
 #include "Unloved/Config/Config.h"
 
@@ -55,7 +55,7 @@ namespace Unloved::Editor {
         // Update horizontal divider
         if (GetEditorState() == EditorState::RESIZING_HORIZONTAL ||
             GetEditorState() == EditorState::RESIZING_HORIZONTAL_VERTICAL) {
-            float xPos = Util::MapRange(mouseX, 0.0f, windowWidth, 0.0f, 1.0f);
+            float xPos = Hell::Math::MapRange(mouseX, 0.0f, windowWidth, 0.0f, 1.0f);
             xPos = glm::clamp(xPos, 0.0f, 1.0f);
             Editor::SetSplitX(xPos);
         }
@@ -63,7 +63,7 @@ namespace Unloved::Editor {
         // Update vertical divider
         if (GetEditorState() == EditorState::RESIZING_VERTICAL ||
             GetEditorState() == EditorState::RESIZING_HORIZONTAL_VERTICAL) {
-            float yPos = Util::MapRange(mouseY, 0.0f, windowHeight, 0.0f, 1.0f);
+            float yPos = Hell::Math::MapRange(mouseY, 0.0f, windowHeight, 0.0f, 1.0f);
             yPos = glm::clamp(yPos, 0.0f, 1.0f);
             Editor::SetSplitY(yPos);
         }

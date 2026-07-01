@@ -9,6 +9,7 @@
 #include "Hell/Time.h"
 
 #include "Unloved/Bible/Bible.h"
+#include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Maps/MapManager.h"
 #include "Unloved/ObjectId.h"
@@ -20,6 +21,7 @@
 #include "Unloved/Systems/House/HouseManager.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Systems/Pathfinding/AStarMap.h"
+#include "Unloved/World/World.h"
 
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
@@ -32,42 +34,15 @@ using namespace Hell;
 
 namespace Unloved::LegacyWorld {
 
-    Hell::SlotMap<AnimatedGameObject> g_animatedGameObjects;
-    Hell::SlotMap<ChristmasLightSet> g_christmasLightSets;
-    Hell::SlotMap<Unloved::DDGIVolume> g_ddgiVolumes;
-    Hell::SlotMap<Door> g_doors;
-    Hell::SlotMap<Fence> g_fences;
-    Hell::SlotMap<Fireplace> g_fireplaces;
-    Hell::SlotMap<GenericObject> g_genericObjects;
-    Hell::SlotMap<HousePlane> g_housePlanes;
-    Hell::SlotMap<Ladder> g_ladders;
-    Hell::SlotMap<PickUp> g_pickUps;
-    Hell::SlotMap<PictureFrame> g_pictureFrames;
-    Hell::SlotMap<PowerPoleSet> g_powerPoleSets;
-    Hell::SlotMap<Staircase> g_staircases;
-    Hell::SlotMap<TrimSet> g_trimSets;
-    Hell::SlotMap<Wall> g_walls;
-    Hell::SlotMap<Window> g_windows;
-
-    std::vector<BulletCasing> g_bulletCasings;
-    std::vector<ChristmasTree> g_christmasTrees;
     std::vector<Decal> g_newDecals;
-    std::vector<Dobermann> g_dobermanns;
-    std::vector<GameObject> g_gameObjects;
-    std::vector<Kangaroo> g_kangaroos;
     std::vector<HeightMapChunk> g_heightMapChunks;
-    std::vector<Light> g_lights;
     std::vector<MapInstance> g_mapInstances;
-    std::vector<Mermaid> g_mermaids;
-    std::vector<Piano> g_pianos;
     std::vector<Road> g_roads;
     std::vector<Shark> g_sharks;
     std::vector<SpawnPoint> g_spawnCampaignPoints;
     std::vector<SpawnPoint> g_spawnDeathmatchPoints;
     std::vector<Transform> g_doorAndWindowCubeTransforms;
     //std::vector<Tree> g_trees;
-
-    std::vector<GPUAABB> g_dirtyDoorAABBS;
 
     // std::unordered_map<uint64_t, HouseInstance> g_houseInstances; // unused???
 
@@ -148,18 +123,18 @@ namespace Unloved::LegacyWorld {
         createInfo.rotation.y = -HELL_PI * 0.5f;
         createInfo.scale = glm::vec3(1.0f);
         createInfo.modelName = "Reflector";
-        AddGameObject(createInfo);
-        g_gameObjects[0].SetMeshMaterial("ReflectorPole", "Fence");
-        g_gameObjects[0].SetMeshMaterial("ReflectorRed", "Red");
+        Unloved::World::AddGameObject(createInfo);
+        Unloved::World::GetGameObjects()[0].SetMeshMaterial("ReflectorPole", "Fence");
+        Unloved::World::GetGameObjects()[0].SetMeshMaterial("ReflectorRed", "Red");
 
         DobermannCreateInfo dobermannCreateInfo;
         dobermannCreateInfo.position = glm::vec3(37.2f, 31.0f, 35.3f);
-        AddDobermann(dobermannCreateInfo);
+        Unloved::World::AddDobermann(dobermannCreateInfo);
 
         KangarooCreateInfo kangarooCreateInfo;
         kangarooCreateInfo.position = glm::vec3(48, 32.6, 39);
         kangarooCreateInfo.rotation = glm::vec3(0, HELL_PI * -0.5f, 0);
-        AddKangaroo(kangarooCreateInfo);
+        Unloved::World::AddKangaroo(kangarooCreateInfo);
 
         PhysicsFilterData filterData;
         filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
@@ -240,7 +215,7 @@ namespace Unloved::LegacyWorld {
         }
 
         CreateInfoCollection& createInfoCollection = house->GetCreateInfoCollection();
-        AddCreateInfoCollection(createInfoCollection, spawnOffset);
+        Unloved::World::AddCreateInfoCollection(createInfoCollection, spawnOffset);
 
 
         MermaidCreateInfo mermaidCreateInfo;
@@ -250,7 +225,7 @@ namespace Unloved::LegacyWorld {
         mermaidCreateInfo.position = glm::vec3(36.0f, 31.0f, 36.5f); // indoors
         mermaidCreateInfo.rotation.y = 0.05f;                        // indoors
 
-        AddMermaid(mermaidCreateInfo);
+        Unloved::World::AddMermaid(mermaidCreateInfo);
 
 
         // Add shark
@@ -273,7 +248,7 @@ namespace Unloved::LegacyWorld {
         }
 
         // Add EVERYTHING: doors, walls, draws, toilets, pianos, etc...
-        AddCreateInfoCollection(map->GetCreateInfoCollection(), spawnOffset);
+        Unloved::World::AddCreateInfoCollection(map->GetCreateInfoCollection(), spawnOffset);
 
         // Load campaign spawn points
         for (SpawnPoint& spawnPoint : map->GetAdditionalMapData().playerCampaignSpawns) {
@@ -308,7 +283,7 @@ namespace Unloved::LegacyWorld {
         ResetWorld();
 
         // Respawn roos
-        for (Kangaroo& kangaroo : g_kangaroos) {
+        for (Kangaroo& kangaroo : Unloved::World::GetKangaroos()) {
             kangaroo.Respawn();
         }
 
@@ -354,7 +329,7 @@ namespace Unloved::LegacyWorld {
         }
         // HACK!!!
 
-        for (GameObject& gameObject : g_gameObjects) {
+        for (GameObject& gameObject : Unloved::World::GetGameObjects()) {
             gameObject.BeginFrame();
         }
         //for (Tree& tree : g_trees) {
@@ -368,14 +343,14 @@ namespace Unloved::LegacyWorld {
 
 
     void CreateGameObject() {
-        g_gameObjects.emplace_back();
+        Unloved::World::AddGameObject(GameObjectCreateInfo());
     }
 
 
     const glm::vec3& GetObjectPosition(uint64_t objectId) {
         const static glm::vec3 invalid = glm::vec3(0.0f);
 
-        if (Unloved::DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetOrigin();
+        if (DDGIVolume* object = Unloved::World::GetDDGIVolumeByObjectId(objectId)) return object->GetOrigin();
         // etc
 
         Logging::Warning() << "LegacyWorld::GetObjectPosition(..) failed for ID " << objectId << ". You haven't implemented " << Hell::Enum::ToString(Unloved::GetObjectIdType(objectId)) << "\n";
@@ -385,7 +360,7 @@ namespace Unloved::LegacyWorld {
     const glm::vec3& GetObjectRotation(uint64_t objectId) {
         const static glm::vec3 invalid = glm::vec3(0.0f);
 
-        if (Unloved::DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetRotation();
+        if (DDGIVolume* object = Unloved::World::GetDDGIVolumeByObjectId(objectId)) return object->GetRotation();
         // etc
 
         Logging::Warning() << "LegacyWorld::GetObjectRotation(..) failed for ID " << objectId << ". You haven't implemented " << Hell::Enum::ToString(Unloved::GetObjectIdType(objectId)) << "\n";
@@ -395,8 +370,8 @@ namespace Unloved::LegacyWorld {
     const std::string& GetObjectEditorName(uint64_t objectId) {
         const static std::string invalid = UNDEFINED_STRING;
 
-        if (Unloved::DDGIVolume* object = GetDDGIVolumeByObjectId(objectId)) return object->GetEditorName();
-        if (Door* object = GetDoorByObjectId(objectId))             return object->GetEditorName();
+        if (DDGIVolume* object = Unloved::World::GetDDGIVolumeByObjectId(objectId)) return object->GetEditorName();
+        if (Door* object = Unloved::World::GetDoorByObjectId(objectId))             return object->GetEditorName();
         // etc
 
         return invalid;
@@ -404,97 +379,8 @@ namespace Unloved::LegacyWorld {
 
     uint64_t CreateAnimatedGameObject() {
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::ANIMATED_GAME_OBJECT);
-        g_animatedGameObjects.emplace_with_id(id, id);
+        Unloved::World::GetAnimatedGameObjects().emplace_with_id(id, id);
         return id;
-    }
-
-    AnimatedGameObject* GetAnimatedGameObjectByObjectId(uint64_t objectId) {
-        return g_animatedGameObjects.get(objectId);
-    }
-
-    ChristmasLightSet* GetChristmasLightsByObjectId(uint64_t objectId) {
-        return g_christmasLightSets.get(objectId);
-    }
-
-    Unloved::DDGIVolume* GetDDGIVolumeByObjectId(uint64_t id) {
-        return g_ddgiVolumes.get(id);
-    }
-
-    Door* GetDoorByObjectId(uint64_t objectId) {
-        return g_doors.get(objectId);
-    }
-
-    GenericObject* GetGenericObjectById(uint64_t objectId) {
-        return g_genericObjects.get(objectId);
-    }
-
-    Fence* GetFenceByObjectId(uint64_t objectId) {
-        return g_fences.get(objectId);
-    }
-
-    Fireplace* GetFireplaceById(uint64_t objectId) {
-        return g_fireplaces.get(objectId);
-    }
-
-    HousePlane* GetHousePlaneByObjectId(uint64_t objectId) {
-        return g_housePlanes.get(objectId);
-    }
-
-    Ladder* GetLadderByObjectId(uint64_t objectId) {
-        return g_ladders.get(objectId);
-    }
-
-    PickUp* GetPickUpByObjectId(uint64_t objectId) {
-        return g_pickUps.get(objectId);
-    }
-
-    PowerPoleSet* GetPowerPoleSetByObjectId(uint64_t objectId) {
-        return g_powerPoleSets.get(objectId);
-    }
-
-    Staircase* GetStaircaseByObjectId(uint64_t objectId) {
-        return g_staircases.get(objectId);
-    }
-
-    Wall* GetWallByObjectId(uint64_t objectId) {
-        return g_walls.get(objectId);
-    }
-
-    GameObject* GetGameObjectByName(const std::string& name) {
-        for (GameObject& gameObject : g_gameObjects) {
-            if (gameObject.m_name == name) {
-                return &gameObject;
-            }
-        }
-        return nullptr;
-    }
-
-    GameObject* GetGameObjectByIndex(int32_t index) {
-        if (index >= 0 && index < g_gameObjects.size()) {
-            return &g_gameObjects[index];
-        }
-        else {
-            return nullptr;
-        }
-    }
-
-    Light* GetLightByIndex(int32_t index) {
-        if (index >= 0 && index < g_lights.size()) {
-            return &g_lights[index];
-        }
-        else {
-            std::cout << "LegacyWorld::GetLightByIndex() failed: index " << index << " out of range of size " << g_lights.size() << "\n";
-            return nullptr;
-        }
-    }
-
-    Light* GetLightByObjectId(uint64_t objectId) {
-        for (Light& light : g_lights) {
-            if (light.GetObjectId() == objectId) {
-                return &light;
-            }
-        }
-        return nullptr;
     }
 
     //Tree* GetTreeByIndex(int32_t index) {
@@ -506,91 +392,51 @@ namespace Unloved::LegacyWorld {
     //    }
     //}
 
-    PianoKey* GetPianoKeyByObjectId(uint64_t objectId) {
-        for (Piano& piano : LegacyWorld::GetPianos()) {
-            if (piano.PianoKeyExists(objectId)) {
-                return piano.GetPianoKey(objectId);
-            }
-        }
-        return nullptr;
-    }
-
-    PictureFrame* GetPictureFrameByObjectId(uint64_t objectId) {
-        for (PictureFrame& pictureFrame : LegacyWorld::GetPictureFrames()) {
-            if (pictureFrame.GetObjectId() == objectId) {
-                return &pictureFrame;
-            }
-        }
-        return nullptr;
-    }
-
-    Wall* GetWallByWallSegmentObjectId(uint64_t objectId) {
-        for (Wall& wall : g_walls) {
-            for (WallSegment& wallSegment : wall.GetWallSegments()) {
-                if (wallSegment.GetObjectId() == objectId) {
-                    return &wall;
-                }
-            }
-        }
-        return nullptr;
-    }
-
-    Piano* GetPianoByMeshNodeObjectId(uint64_t objectId) {
-        for (Piano& piano : g_pianos) {
-
-            const MeshNodes& meshNodes = piano.GetMeshNodes();
-            if (meshNodes.HasNodeWithObjectId(objectId)) {
-                return &piano;
-            }
-        }
-        return nullptr;
-    }
-
     void SetObjectPosition(uint64_t objectId, const glm::vec3& position) {
 
-        if (Unloved::DDGIVolume* object = LegacyWorld::GetDDGIVolumeByObjectId(objectId)) object->SetOrigin(position);
+        if (DDGIVolume* object = Unloved::World::GetDDGIVolumeByObjectId(objectId)) object->SetOrigin(position);
 
-        if (Door* door = LegacyWorld::GetDoorByObjectId(objectId)) {
+        if (Door* door = Unloved::World::GetDoorByObjectId(objectId)) {
             door->SetPosition(position);
             RecreateAllHouseGeometry();
             Hell::Physics::ForceZeroStepUpdate();
         }
 
-        if (GenericObject* genericObject = LegacyWorld::GetGenericObjectById(objectId)) {
+        if (GenericObject* genericObject = Unloved::World::GetGenericObjectById(objectId)) {
             genericObject->SetPosition(position);
         }
 
-        if (Fireplace* fireplace= LegacyWorld::GetFireplaceById(objectId)) {
+        if (Fireplace* fireplace= Unloved::World::GetFireplaceById(objectId)) {
             fireplace->SetPosition(position);
         }
 
-        if (Piano* piano = LegacyWorld::GetPianoByObjectId(objectId)) {
+        if (Piano* piano = Unloved::World::GetPianoByObjectId(objectId)) {
             piano->SetPosition(position);
             Hell::Physics::ForceZeroStepUpdate();
         }
 
-        if (HousePlane* plane = LegacyWorld::GetHousePlaneByObjectId(objectId)) {
+        if (WorldPlane* plane = Unloved::World::GetHousePlaneByObjectId(objectId)) {
             plane->UpdateWorldSpaceCenter(position);
             RecreateAllHouseGeometry();
         }
 
-        if (Ladder* ladder = LegacyWorld::GetLadderByObjectId(objectId)) {
+        if (Ladder* ladder = Unloved::World::GetLadderByObjectId(objectId)) {
             ladder->SetPosition(position);
         }
 
-        if (Light* light = LegacyWorld::GetLightByObjectId(objectId)) {
+        if (Light* light = Unloved::World::GetLightByObjectId(objectId)) {
             light->SetPosition(position);
         }
 
-        if (PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(objectId)) {
+        if (PickUp* pickUp = Unloved::World::GetPickUpByObjectId(objectId)) {
             pickUp->SetPosition(position);
         }
 
-        if (PictureFrame* pictureFrame = LegacyWorld::GetPictureFrameByObjectId(objectId)) {
+        if (PictureFrame* pictureFrame = Unloved::World::GetPictureFrameByObjectId(objectId)) {
             pictureFrame->SetPosition(position);
         }
 
-        if (Staircase* staircase = LegacyWorld::GetStaircaseByObjectId(objectId)) {
+        if (Staircase* staircase = Unloved::World::GetStaircaseByObjectId(objectId)) {
             staircase->SetPosition(position);
         }
 
@@ -598,13 +444,13 @@ namespace Unloved::LegacyWorld {
         //    tree->SetPosition(position);
         //}
 
-        if (Wall* wall = LegacyWorld::GetWallByObjectId(objectId)) {
+        if (Wall* wall = Unloved::World::GetWallByObjectId(objectId)) {
             wall->UpdateWorldSpaceCenter(position);
             Hell::Physics::ForceZeroStepUpdate();
             RecreateAllHouseGeometry();
         }
 
-        if (Window* window = LegacyWorld::GetWindowByObjectId(objectId)) {
+        if (Window* window = Unloved::World::GetWindowByObjectId(objectId)) {
             window->SetPosition(position);
             RecreateAllHouseGeometry();
             Hell::Physics::ForceZeroStepUpdate();
@@ -612,27 +458,27 @@ namespace Unloved::LegacyWorld {
     }
 
     void SetObjectRotation(uint64_t objectId, const glm::vec3& rotation) {
-        if (Unloved::DDGIVolume* object = LegacyWorld::GetDDGIVolumeByObjectId(objectId)) object->SetRotation(rotation);
+        if (DDGIVolume* object = Unloved::World::GetDDGIVolumeByObjectId(objectId)) object->SetRotation(rotation);
 
-        if (Fireplace* object = LegacyWorld::GetFireplaceById(objectId)) {
+        if (Fireplace* object = Unloved::World::GetFireplaceById(objectId)) {
             object->SetRotation(rotation);
         }
-        if (GenericObject* object = LegacyWorld::GetGenericObjectById(objectId)) {
+        if (GenericObject* object = Unloved::World::GetGenericObjectById(objectId)) {
             object->SetRotation(rotation);
         }
-        if (Ladder* object = LegacyWorld::GetLadderByObjectId(objectId)) {
+        if (Ladder* object = Unloved::World::GetLadderByObjectId(objectId)) {
             object->SetRotation(rotation);
         }
-        if (PickUp* object = LegacyWorld::GetPickUpByObjectId(objectId)) {
+        if (PickUp* object = Unloved::World::GetPickUpByObjectId(objectId)) {
             object->SetRotation(rotation);
         }
-        if (Staircase* object = LegacyWorld::GetStaircaseByObjectId(objectId)) {
+        if (Staircase* object = Unloved::World::GetStaircaseByObjectId(objectId)) {
             object->SetRotation(rotation);
         }
     }
 
     glm::vec3 GetGizmoOffest(uint64_t objectId) {
-        GenericObject* drawers = LegacyWorld::GetGenericObjectById(objectId);
+        GenericObject* drawers = Unloved::World::GetGenericObjectById(objectId);
         if (drawers) {
             return drawers->GetGizmoOffset();
         }
@@ -642,9 +488,9 @@ namespace Unloved::LegacyWorld {
     bool RemoveObject(uint64_t objectId) {
         if (objectId == 0) return false;
 
-        if (g_animatedGameObjects.contains(objectId)) {
-            g_animatedGameObjects.get(objectId)->CleanUp();
-            g_animatedGameObjects.erase(objectId);
+        if (Unloved::World::GetAnimatedGameObjects().contains(objectId)) {
+            Unloved::World::GetAnimatedGameObjects().get(objectId)->CleanUp();
+            Unloved::World::GetAnimatedGameObjects().erase(objectId);
             return true;
         }
 
@@ -652,105 +498,138 @@ namespace Unloved::LegacyWorld {
             return true;
         }
 
-        if (g_christmasLightSets.contains(objectId)) {
-            g_christmasLightSets.get(objectId)->CleanUp();
-            g_christmasLightSets.erase(objectId);
+        if (Unloved::World::GetChristmasLightSets().contains(objectId)) {
+            Unloved::World::GetChristmasLightSets().get(objectId)->CleanUp();
+            Unloved::World::GetChristmasLightSets().erase(objectId);
             return true;
         }
 
-        if (g_doors.contains(objectId)) {
-            g_doors.get(objectId)->CleanUp();
-            g_doors.erase(objectId);
+        if (Unloved::World::GetChristmasTrees().contains(objectId)) {
+            Unloved::World::GetChristmasTrees().get(objectId)->CleanUp();
+            Unloved::World::GetChristmasTrees().erase(objectId);
             return true;
         }
 
-        if (g_fences.contains(objectId)) {
-            g_fences.get(objectId)->CleanUp();
-            g_fences.erase(objectId);
+        if (Unloved::World::GetDobermanns().contains(objectId)) {
+            Unloved::World::GetDobermanns().get(objectId)->CleanUp();
+            Unloved::World::GetDobermanns().erase(objectId);
             return true;
         }
 
-        if (g_fireplaces.contains(objectId)) {
-            g_fireplaces.get(objectId)->CleanUp();
-            g_fireplaces.erase(objectId);
+        if (Unloved::World::GetDoors().contains(objectId)) {
+            Unloved::World::GetDoors().get(objectId)->CleanUp();
+            Unloved::World::GetDoors().erase(objectId);
             return true;
         }
 
-        if (g_genericObjects.contains(objectId)) {
-            g_genericObjects.get(objectId)->CleanUp();
-            g_genericObjects.erase(objectId);
+        if (Unloved::World::GetFences().contains(objectId)) {
+            Unloved::World::GetFences().get(objectId)->CleanUp();
+            Unloved::World::GetFences().erase(objectId);
             return true;
         }
 
-        if (g_housePlanes.contains(objectId)) {
-            g_housePlanes.get(objectId)->CleanUp();
-            g_housePlanes.erase(objectId);
+        if (Unloved::World::GetFireplaces().contains(objectId)) {
+            Unloved::World::GetFireplaces().get(objectId)->CleanUp();
+            Unloved::World::GetFireplaces().erase(objectId);
             return true;
         }
 
-        if (g_powerPoleSets.contains(objectId)) {
-            g_powerPoleSets.get(objectId)->CleanUp();
-            g_powerPoleSets.erase(objectId);
+        if (Unloved::World::GetGenericObjects().contains(objectId)) {
+            Unloved::World::GetGenericObjects().get(objectId)->CleanUp();
+            Unloved::World::GetGenericObjects().erase(objectId);
             return true;
         }
 
-        if (g_staircases.contains(objectId)) {
-            g_staircases.get(objectId)->CleanUp();
-            g_staircases.erase(objectId);
+        if (Unloved::World::GetGameObjects().contains(objectId)) {
+            Unloved::World::GetGameObjects().get(objectId)->CleanUp();
+            Unloved::World::GetGameObjects().erase(objectId);
             return true;
         }
 
-        if (g_trimSets.contains(objectId)) {
-            g_trimSets.get(objectId)->CleanUp();
-            g_trimSets.erase(objectId);
+        if (Unloved::World::GetWorldPlanes().contains(objectId)) {
+            Unloved::World::GetWorldPlanes().get(objectId)->CleanUp();
+            Unloved::World::GetWorldPlanes().erase(objectId);
             return true;
         }
 
-        if (g_pickUps.contains(objectId)) {
+        if (Unloved::World::GetKangaroos().contains(objectId)) {
+            Unloved::World::GetKangaroos().get(objectId)->CleanUp();
+            Unloved::World::GetKangaroos().erase(objectId);
+            return true;
+        }
+
+        if (Unloved::World::GetLights().contains(objectId)) {
+            Unloved::World::GetLights().erase(objectId);
+            return true;
+        }
+
+        if (Unloved::World::GetMermaids().contains(objectId)) {
+            Unloved::World::GetMermaids().get(objectId)->CleanUp();
+            Unloved::World::GetMermaids().erase(objectId);
+            return true;
+        }
+
+        if (Unloved::World::GetPowerPoleSets().contains(objectId)) {
+            Unloved::World::GetPowerPoleSets().get(objectId)->CleanUp();
+            Unloved::World::GetPowerPoleSets().erase(objectId);
+            return true;
+        }
+
+        if (Unloved::World::GetStaircases().contains(objectId)) {
+            Unloved::World::GetStaircases().get(objectId)->CleanUp();
+            Unloved::World::GetStaircases().erase(objectId);
+            return true;
+        }
+
+        if (Unloved::World::GetTrimSets().contains(objectId)) {
+            Unloved::World::GetTrimSets().get(objectId)->CleanUp();
+            Unloved::World::GetTrimSets().erase(objectId);
+            return true;
+        }
+
+        if (Unloved::World::GetPickUps().contains(objectId)) {
             // Dirty any lights within range... maybe put this somewhere else
-            PickUp* pickUp = GetPickUpByObjectId(objectId);
+            PickUp* pickUp = Unloved::World::GetPickUpByObjectId(objectId);
 
-            for (Light& light : GetLights()) {
+            for (Light& light : Unloved::World::GetLights()) {
                 if (pickUp->GetMeshNodes().m_worldspaceAABB.IntersectsSphere(light.GetPosition(), light.GetRadius())) {
                     light.ForceDirty();
                 }
             }
 
-            g_pickUps.get(objectId)->CleanUp();
-            g_pickUps.erase(objectId);
+            Unloved::World::GetPickUps().get(objectId)->CleanUp();
+            Unloved::World::GetPickUps().erase(objectId);
             return true;
         }
 
-        if (g_pictureFrames.contains(objectId)) {
-            g_pictureFrames.get(objectId)->CleanUp();
-            g_pictureFrames.erase(objectId);
+        if (Unloved::World::GetPictureFrames().contains(objectId)) {
+            Unloved::World::GetPictureFrames().get(objectId)->CleanUp();
+            Unloved::World::GetPictureFrames().erase(objectId);
             return true;
         }
 
-        if (g_ladders.contains(objectId)) {
-            g_ladders.get(objectId)->CleanUp();
-            g_ladders.erase(objectId);
+        if (Unloved::World::GetLadders().contains(objectId)) {
+            Unloved::World::GetLadders().get(objectId)->CleanUp();
+            Unloved::World::GetLadders().erase(objectId);
             return true;
         }
 
-        if (g_walls.contains(objectId)) {
-            g_walls.get(objectId)->CleanUp();
-            g_walls.erase(objectId);
+        if (Unloved::World::GetWalls().contains(objectId)) {
+            Unloved::World::GetWalls().get(objectId)->CleanUp();
+            Unloved::World::GetWalls().erase(objectId);
             return true;
         }
 
-        if (g_windows.contains(objectId)) {
-            g_windows.get(objectId)->CleanUp();
-            g_windows.erase(objectId);
+        if (Unloved::World::GetWindows().contains(objectId)) {
+            Unloved::World::GetWindows().get(objectId)->CleanUp();
+            Unloved::World::GetWindows().erase(objectId);
             return true;
         }
 
-        for (int i = 0; i < g_pianos.size(); i++) {
-            if (g_pianos[i].GetObjectId() == objectId) {
-                g_pianos[i].CleanUp();
-                g_pianos.erase(g_pianos.begin() + i);
-                return true;
-            }
+        if (Unloved::World::GetPianos().contains(objectId)) {
+            Unloved::World::GetPianos().get(objectId)->CleanUp();
+            Unloved::World::GetPianos().erase(objectId);
+            return true;
         }
 
         //for (int i = 0; i < g_trees.size(); i++) {
@@ -809,15 +688,15 @@ namespace Unloved::LegacyWorld {
        //animatedGameObject->SetMeshMaterialByMeshName("ArmsMale", "Hands");
        //animatedGameObject->SetMeshMaterialByMeshName("ArmsFemale", "FemaleArms");
 
-        g_gameObjects.clear();
+        Unloved::World::GetGameObjects().clear();
 
         GameObjectCreateInfo createInfo2;
         createInfo2.position = glm::vec3(49.0f, 31.0f, 39.0f);
         createInfo2.scale = glm::vec3(1.0f);
         createInfo2.modelName = "Bunny";
-        AddGameObject(createInfo2);
-        g_gameObjects[0].m_meshNodes.SetMeshMaterials("Leopard");
-        g_gameObjects[0].SetPosition(glm::vec3(39.0f, 31.0f, 39.0f));
+        Unloved::World::AddGameObject(createInfo2);
+        Unloved::World::GetGameObjects()[0].m_meshNodes.SetMeshMaterials("Leopard");
+        Unloved::World::GetGameObjects()[0].SetPosition(glm::vec3(39.0f, 31.0f, 39.0f));
     }
 
     void ClearAllObjects() {
@@ -827,229 +706,64 @@ namespace Unloved::LegacyWorld {
         Unloved::BloodSystem::CleanUp();
         Ocean::DestroyPhysicsPlane();
 
-        for (BulletCasing& bulletCasing : g_bulletCasings)              bulletCasing.CleanUp();
-        for (ChristmasLightSet& christmasLights : g_christmasLightSets) christmasLights.CleanUp();
-        for (ChristmasTree& christmasTree : g_christmasTrees)           christmasTree.CleanUp();
-        for (Unloved::DDGIVolume& object : g_ddgiVolumes)                        object.CleanUp();
-        for (Door& door : g_doors)                                      door.CleanUp();
-        for (Fireplace& fireplace : g_fireplaces)                       fireplace.CleanUp();
-        for (GenericObject& drawer : g_genericObjects)                  drawer.CleanUp();
-        for (Fence& fence : g_fences)                                   fence.CleanUp();
-        for (GameObject& gameObject : g_gameObjects)                    gameObject.CleanUp();
-        //for (Kangaroo& kangaroo : g_kangaroos)                        kangaroo.CleanUp();
-        for (Ladder& ladder : g_ladders)                                ladder.CleanUp();
-        for (Mermaid& mermaid : g_mermaids)                             mermaid.CleanUp();
-        for (HousePlane& housePlane : g_housePlanes)                    housePlane.CleanUp();
-        for (Piano& piano : g_pianos)                                   piano.CleanUp();
-        for (PickUp& pickUp : g_pickUps)                                pickUp.CleanUp();
-        for (PowerPoleSet& powerPoleSet : g_powerPoleSets)               powerPoleSet.CleanUp();
+        for (BulletCasing& bulletCasing : Unloved::World::GetBulletCasings()) bulletCasing.CleanUp();
+        for (ChristmasLightSet& christmasLights : Unloved::World::GetChristmasLightSets()) christmasLights.CleanUp();
+        for (ChristmasTree& christmasTree : Unloved::World::GetChristmasTrees()) christmasTree.CleanUp();
+        for (DDGIVolume& object : Unloved::World::GetDDGIVolumes())             object.CleanUp();
+        for (Door& door : Unloved::World::GetDoors())                            door.CleanUp();
+        for (Fireplace& fireplace : Unloved::World::GetFireplaces())             fireplace.CleanUp();
+        for (GenericObject& drawer : Unloved::World::GetGenericObjects())        drawer.CleanUp();
+        for (Fence& fence : Unloved::World::GetFences())                         fence.CleanUp();
+        for (GameObject& gameObject : Unloved::World::GetGameObjects())          gameObject.CleanUp();
+        //for (Kangaroo& kangaroo : Unloved::World::GetKangaroos())              kangaroo.CleanUp();
+        for (Ladder& ladder : Unloved::World::GetLadders())                      ladder.CleanUp();
+        for (Mermaid& mermaid : Unloved::World::GetMermaids())                   mermaid.CleanUp();
+        for (WorldPlane& housePlane : Unloved::World::GetWorldPlanes())          housePlane.CleanUp();
+        for (Piano& piano : Unloved::World::GetPianos())                         piano.CleanUp();
+        for (PickUp& pickUp : Unloved::World::GetPickUps())                      pickUp.CleanUp();
+        for (PowerPoleSet& powerPoleSet : Unloved::World::GetPowerPoleSets())    powerPoleSet.CleanUp();
         for (Shark& shark : g_sharks)                                   shark.CleanUp();
-        for (Staircase& staircase: g_staircases)                        staircase.CleanUp();
+        for (Staircase& staircase: Unloved::World::GetStaircases())              staircase.CleanUp();
         for (SpawnPoint& spawnPoint : g_spawnCampaignPoints)            spawnPoint.CleanUp();
         for (SpawnPoint& spawnPoint : g_spawnDeathmatchPoints)          spawnPoint.CleanUp();
         //for (Tree& tree : g_trees)                                      tree.CleanUp();
-        for (TrimSet& trimSet : g_trimSets)                             trimSet.CleanUp();
-        for (Wall& wall : g_walls)                                      wall.CleanUp();
-        for (Window& window : g_windows)                                window.CleanUp();
+        for (TrimSet& trimSet : Unloved::World::GetTrimSets())                   trimSet.CleanUp();
+        for (Wall& wall : Unloved::World::GetWalls())                            wall.CleanUp();
+        for (Window& window : Unloved::World::GetWindows())                      window.CleanUp();
 
         //for (auto& [id, drawers] : g_drawers) drawers.CleanUp();
 
         // Clear all containers
-        g_bulletCasings.clear();
-        g_christmasLightSets.clear();
-        g_christmasTrees.clear();
-        g_ddgiVolumes.clear();
-        g_doors.clear();
-        g_fireplaces.clear();
-        g_genericObjects.clear();
-        g_fences.clear();
-        g_gameObjects.clear();
-        //g_kangaroos.clear();
-        g_ladders.clear();
-        g_lights.clear();
-        g_mermaids.clear();
-        g_pianos.clear();
-        g_pickUps.clear();
-        g_housePlanes.clear();
-        g_pictureFrames.clear();
-        g_powerPoleSets.clear();
+        Unloved::World::GetBulletCasings().clear();
+        Unloved::World::GetChristmasLightSets().clear();
+        Unloved::World::GetChristmasTrees().clear();
+        Unloved::World::GetDDGIVolumes().clear();
+        Unloved::World::GetDoors().clear();
+        Unloved::World::GetFireplaces().clear();
+        Unloved::World::GetGenericObjects().clear();
+        Unloved::World::GetFences().clear();
+        Unloved::World::GetGameObjects().clear();
+        //Unloved::World::GetKangaroos().clear();
+        Unloved::World::GetLadders().clear();
+        Unloved::World::GetLights().clear();
+        Unloved::World::GetMermaids().clear();
+        Unloved::World::GetPianos().clear();
+        Unloved::World::GetPickUps().clear();
+        Unloved::World::GetWorldPlanes().clear();
+        Unloved::World::GetPictureFrames().clear();
+        Unloved::World::GetPowerPoleSets().clear();
         g_sharks.clear();
         g_spawnCampaignPoints.clear();
         g_spawnDeathmatchPoints.clear();
         //g_trees.clear();
-        g_trimSets.clear();
-        g_walls.clear();
-        g_windows.clear();
-        g_staircases.clear();
-    }
-
-    void AddDDGIVolume(DDGIVolumeCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::DDGI_VOLUME);
-        g_ddgiVolumes.emplace_with_id(id, id, createInfo, spawnOffset);
-    }
-
-    void AddDoor(DoorCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::DOOR);
-        g_doors.emplace_with_id(id, id, createInfo, spawnOffset);
-    }
-
-    void AddGenericObject(GenericObjectCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::GENERIC_OBJECT);
-
-        // Assign editor name
-        if (createInfo.editorName == UNDEFINED_STRING) {
-            createInfo.editorName = Editor::GetNextAvailableGenericObjectName(createInfo.type);
-        }
-
-        g_genericObjects.emplace_with_id(id, id, createInfo, spawnOffset);
-    }
-
-    void AddWindow(WindowCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::WINDOW);
-        g_windows.emplace_with_id(id, id, createInfo, spawnOffset);
-    }
-
-    void AddHousePlane(HousePlaneCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::HOUSE_PLANE);
-
-        // Assign editor name
-        if (createInfo.editorName == UNDEFINED_STRING ||
-            createInfo.editorName == "Undefined") {
-            createInfo.editorName = Editor::GetNextAvailableHousePlaneName(createInfo.type);
-        }
-
-        g_housePlanes.emplace_with_id(id, id, createInfo, spawnOffset);
-    }
-
-
-    uint64_t AddChristmasLights(ChristmasLightsCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::CHRISTMAS_LIGHTS);
-        g_christmasLightSets.emplace_with_id(id, id, createInfo, spawnOffset);
-        return id;
-    }
-
-    uint64_t AddFence(FenceCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::FENCE);
-        g_fences.emplace_with_id(id, id, createInfo, spawnOffset);
-        return id;
-    }
-
-    uint64_t AddLadder(LadderCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::LADDER);
-        g_ladders.emplace_with_id(id, id, createInfo, spawnOffset);
-        return id;
-    }
-
-    uint64_t AddPickUp(PickUpCreateInfo createInfo, SpawnOffset spawnOffset) {
-        if (!Bible::GetItemInfoByName(createInfo.name)) {
-            Logging::Warning() << "LegacyWorld::AddPickUp(..) failed: '" << createInfo.name << "' ItemInfo not found in bible";
-            return 0;
-        }
-
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::PICK_UP);
-        g_pickUps.emplace_with_id(id, id, createInfo, spawnOffset);
-
-        return id;
-    }
-
-    uint64_t AddPictureFrame(PictureFrameCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::PICTURE_FRAME);
-        g_pictureFrames.emplace_with_id(id, id, createInfo, spawnOffset);
-        return id;
-    }
-
-    uint64_t AddPowerPoleSet(PowerPoleSetCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::POWER_POLE_SET);
-        g_powerPoleSets.emplace_with_id(id, id, createInfo, spawnOffset);
-        return id;
-    }
-
-    uint64_t AddStaircase(StaircaseCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::STAIRCASE);
-        g_staircases.emplace_with_id(id, id, createInfo, spawnOffset);
-        return id;
-    }
-
-    uint64_t AddTrimSet(TrimSetCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::TRIM_SET);
-        g_trimSets.emplace_with_id(id, id, createInfo, spawnOffset);
-        return id;
-    }
-
-    uint64_t AddWall(WallCreateInfo createInfo, SpawnOffset spawnOffset) {
-        if (createInfo.points.empty()) {
-            std::cout << "LegacyWorld::AddWall() failed: createInfo has zero points!\n";
-            return 0;
-        }
-
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::WALL);
-
-        // Assign editor name
-        if (createInfo.editorName == UNDEFINED_STRING) {
-            createInfo.editorName = Editor::GetNextAvailableWallName();
-        }
-
-        g_walls.emplace_with_id(id, id, createInfo, spawnOffset);
-
-        return id;
-    }
-
-
-    void AddFireplace(FireplaceCreateInfo createInfo, SpawnOffset spawnOffset) {
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::FIREPLACE);
-        g_fireplaces.emplace_with_id(id, id, createInfo, spawnOffset);
-    }
-
-    void AddBulletCasing(BulletCasingCreateInfo createInfo, SpawnOffset spawnOffset) {
-        createInfo.position += spawnOffset.translation;
-        g_bulletCasings.push_back(BulletCasing(createInfo));
+        Unloved::World::GetTrimSets().clear();
+        Unloved::World::GetWalls().clear();
+        Unloved::World::GetWindows().clear();
+        Unloved::World::GetStaircases().clear();
     }
 
     void AddDecal2(DecalCreateInfo createInfo) {
         g_newDecals.push_back(Decal(createInfo));
-    }
-
-    void AddDobermann(DobermannCreateInfo& createInfo) {
-        Dobermann& dobermann = g_dobermanns.emplace_back();
-        dobermann.Init(createInfo);
-    }
-
-    void AddKangaroo(const KangarooCreateInfo& createInfo) {
-        Kangaroo& kangaroo = g_kangaroos.emplace_back();
-        kangaroo.Init(createInfo);
-    }
-
-    void AddChristmasTree(ChristmasTreeCreateInfo createInfo, SpawnOffset spawnOffset) {
-        g_christmasTrees.push_back(ChristmasTree(createInfo, spawnOffset));
-    }
-
-    void AddGameObject(GameObjectCreateInfo createInfo, SpawnOffset spawnOffset) {
-        createInfo.position += spawnOffset.translation;
-        g_gameObjects.push_back(GameObject(createInfo));
-    }
-
-    uint64_t AddLight(LightCreateInfo createInfo, SpawnOffset spawnOffset) {
-        uint64_t id = Unloved::GetNextObjectId(ObjectType::LIGHT);
-
-        //createInfo.position += spawnOffset.translation;
-        g_lights.emplace_back(Light(id, createInfo, spawnOffset));
-
-        return id;
-    }
-
-    void AddMermaid(MermaidCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Mermaid& mermaid = g_mermaids.emplace_back();
-        mermaid.Init(createInfo, spawnOffset);
-    }
-
-    void AddPiano(PianoCreateInfo createInfo, SpawnOffset spawnOffset) {
-        createInfo.position += spawnOffset.translation;
-        if (createInfo.soundFontName == UNDEFINED_STRING) {
-            createInfo.soundFontName = "YamahaGrandLiteV2";
-        }
-
-        Piano& piano = g_pianos.emplace_back();
-        piano.Init(createInfo);
     }
 
     //void AddTree(TreeCreateInfo createInfo, SpawnOffset spawnOffset) {
@@ -1065,11 +779,11 @@ namespace Unloved::LegacyWorld {
     SpawnPoint GetRandomCampaignSpawnPoint() {
         SpawnPoint spawnPoint;
         if (g_spawnCampaignPoints.size()) {
-            int rand = Util::RandomInt(0, g_spawnCampaignPoints.size() - 1); g_spawnCampaignPoints[rand];
+            int rand = Hell::Random::Int(0, g_spawnCampaignPoints.size() - 1); g_spawnCampaignPoints[rand];
             spawnPoint = g_spawnCampaignPoints[rand];
         }
         else {
-            int rand = Util::RandomInt(0, g_fallbackSpawnPoints.size() - 1); g_fallbackSpawnPoints[rand];
+            int rand = Hell::Random::Int(0, g_fallbackSpawnPoints.size() - 1); g_fallbackSpawnPoints[rand];
             spawnPoint = g_fallbackSpawnPoints[rand];
         }
 
@@ -1099,11 +813,11 @@ namespace Unloved::LegacyWorld {
     SpawnPoint GetRandomDeathmanSpawnPoint() {
         SpawnPoint spawnPoint;
         if (g_spawnDeathmatchPoints.size()) {
-            int rand = Util::RandomInt(0, g_spawnDeathmatchPoints.size() - 1); g_spawnDeathmatchPoints[rand];
+            int rand = Hell::Random::Int(0, g_spawnDeathmatchPoints.size() - 1); g_spawnDeathmatchPoints[rand];
             spawnPoint = g_spawnDeathmatchPoints[rand];
         }
         else {
-            int rand = Util::RandomInt(0, g_fallbackSpawnPoints.size() - 1); g_fallbackSpawnPoints[rand];
+            int rand = Hell::Random::Int(0, g_fallbackSpawnPoints.size() - 1); g_fallbackSpawnPoints[rand];
             spawnPoint = g_fallbackSpawnPoints[rand];
         }
 
@@ -1129,15 +843,15 @@ namespace Unloved::LegacyWorld {
     }
 
 
-    Unloved::DDGIVolume& GetTestDDGIVolume() {
-        static Unloved::DDGIVolume invalid;
+    DDGIVolume& GetTestDDGIVolume() {
+        static DDGIVolume invalid;
 
-        if (LegacyWorld::GetDDGIVolumes().size() > 1) {
+        if (Unloved::World::GetDDGIVolumes().size() > 1) {
             Logging::Fatal() << "LegacyWorld::GetTestDDGIVolume() fucked up, you have more than one LightVolume and ALL your code assumes you only have one\n";
             return invalid;
         }
-        if (LegacyWorld::GetDDGIVolumes().size() == 1) {
-            for (Unloved::DDGIVolume& ddgiVolume : LegacyWorld::GetDDGIVolumes()) {
+        if (Unloved::World::GetDDGIVolumes().size() == 1) {
+            for (DDGIVolume& ddgiVolume : Unloved::World::GetDDGIVolumes()) {
                 return ddgiVolume;
             }
         }
@@ -1207,15 +921,15 @@ namespace Unloved::LegacyWorld {
 
     void PrintObjectCounts() {
         Logging::Debug()
-            << "Doors:          " << g_doors.size() << "\n"
-            << "Lights:         " << g_lights.size() << "\n"
-            << "Pickups:        " << g_pickUps.size() << "\n"
-            << "Pianos:         " << g_pianos.size() << "\n"
-            << "Picture Frames: " << g_pictureFrames.size() << "\n"
-            << "Planes:         " << g_housePlanes.size() << "\n"
+            << "Doors:          " << Unloved::World::GetDoors().size() << "\n"
+            << "Lights:         " << Unloved::World::GetLights().size() << "\n"
+            << "Pickups:        " << Unloved::World::GetPickUps().size() << "\n"
+            << "Pianos:         " << Unloved::World::GetPianos().size() << "\n"
+            << "Picture Frames: " << Unloved::World::GetPictureFrames().size() << "\n"
+            << "Planes:         " << Unloved::World::GetWorldPlanes().size() << "\n"
             //<< "Trees:          " << g_trees.size() << "\n"
-            << "Walls:          " << g_walls.size() << "\n"
-            << "Windows:        " << g_windows.size() << "\n"
+            << "Walls:          " << Unloved::World::GetWalls().size() << "\n"
+            << "Windows:        " << Unloved::World::GetWindows().size() << "\n"
             << "";
 
     }
@@ -1223,11 +937,11 @@ namespace Unloved::LegacyWorld {
     MeshNode* GetMeshNodeByObjectIdAndLocalNodeIndex(uint64_t id, int32_t meshNodeLocalIndex) {
         if (meshNodeLocalIndex < 0) return nullptr;
 
-        if (Door* object = GetDoorByObjectId(id))               return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-        if (Fireplace* object = GetFireplaceById(id))           return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-        if (GenericObject* object = GetGenericObjectById(id))   return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-        if (Piano* object = GetPianoByObjectId(id))             return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-        if (Window* object = GetWindowByObjectId(id))           return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+        if (Door* object = Unloved::World::GetDoorByObjectId(id))               return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+        if (Fireplace* object = Unloved::World::GetFireplaceById(id))           return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+        if (GenericObject* object = Unloved::World::GetGenericObjectById(id))   return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+        if (Piano* object = Unloved::World::GetPianoByObjectId(id))             return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+        if (Window* object = Unloved::World::GetWindowByObjectId(id))           return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
 
         return nullptr;
     }
@@ -1265,15 +979,6 @@ namespace Unloved::LegacyWorld {
     //    }
     //}
 
-    Piano* GetPianoByObjectId(uint64_t objectId) {
-        for (Piano& piano : g_pianos) {
-            if (piano.GetObjectId() == objectId) {
-                return &piano;
-            }
-        }
-        return nullptr;
-    }
-
     Shark* GetSharkByObjectId(uint64_t objectId) {
         for (Shark& shark: g_sharks) {
             if (shark.GetObjectId() == objectId) {
@@ -1283,87 +988,8 @@ namespace Unloved::LegacyWorld {
         return nullptr;
     }
 
-    Dobermann* GetDobermannByObjectId(uint64_t objectId) {
-        for (Dobermann& dobermann : g_dobermanns) {
-            CharacterController* characterController = dobermann.GetCharacterController();
-            if (!characterController) continue;
-
-            auto* pxController = characterController->GetPxController();
-            if (!pxController) continue;
-
-            auto* pxActor = pxController->getActor();
-            if (!pxActor) continue;
-
-            PhysicsUserData* userData = static_cast<PhysicsUserData*>(pxActor->userData);
-            if (userData && userData->objectId == objectId) {
-                return &dobermann;
-            }
-        }
-        return nullptr;
-    }
-
-    Kangaroo* GetKangarooByObjectId(uint64_t objectId) {
-        for (Kangaroo& kangaroo : g_kangaroos) {
-            if (kangaroo.GetObjectId() == objectId) {
-                return &kangaroo;
-            }
-        }
-        return nullptr;
-    }
-
-    Window* GetWindowByObjectId(uint64_t objectId) {
-        for (Window& window : g_windows) {
-            if (window.GetObjectId() == objectId) {
-                return &window;
-            }
-        }
-        return nullptr;
-    }
-
-    std::vector<uint64_t> GetLightIds() {
-        static std::vector<uint64_t> ids;
-        ids.clear();
-        ids.reserve(g_lights.size());
-
-        for (Light& light : LegacyWorld::GetLights()) {
-            if (light.GetType() != LightType::FIREPLACE_FIRE) {
-                ids.push_back(light.GetObjectId());
-            }
-        }
-
-        return ids;
-    }
-
-    uint32_t GetLightCount()                                     { return (uint32_t)g_lights.size(); }
-
-
-    Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects() { return g_animatedGameObjects; }
-    Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets()   { return g_christmasLightSets; }
-    Hell::SlotMap<Unloved::DDGIVolume>& GetDDGIVolumes()                 { return g_ddgiVolumes; }
-    Hell::SlotMap<Door>& GetDoors()                             { return g_doors; }
-    Hell::SlotMap<GenericObject>& GetGenericObjects()           { return g_genericObjects; }
-    Hell::SlotMap<Fence>& GetFences()                           { return g_fences; }
-    Hell::SlotMap<Fireplace>& GetFireplaces()                   { return g_fireplaces; }
-    Hell::SlotMap<HousePlane>& GetHousePlanes()                 { return g_housePlanes; }
-    Hell::SlotMap<Ladder>& GetLadders()                         { return g_ladders; }
-    Hell::SlotMap<PickUp>& GetPickUps()                         { return g_pickUps; }
-    Hell::SlotMap<PictureFrame>& GetPictureFrames()             { return g_pictureFrames; }
-    Hell::SlotMap<PowerPoleSet>& GetPowerPoleSets()             { return g_powerPoleSets; }
-    Hell::SlotMap<Staircase>& GetStaircases()                   { return g_staircases; }
-    Hell::SlotMap<TrimSet>& GetTrimSets()                       { return g_trimSets; }
-    Hell::SlotMap<Wall>& GetWalls()                             { return g_walls; }
-    Hell::SlotMap<Window>& GetWindows()                         { return g_windows; }
-
-    std::vector<BulletCasing>& GetBulletCasings()                       { return g_bulletCasings; }
-    std::vector<ChristmasTree>& GetChristmasTrees()                     { return g_christmasTrees; }
     std::vector<Decal>& GetDecals()                                     { return g_newDecals; }
-    std::vector<Dobermann>& GetDobermanns()                             { return g_dobermanns; }
-    std::vector<GameObject>& GetGameObjects()                           { return g_gameObjects; }
-    std::vector<Light>& GetLights()                                     { return g_lights; };
-    std::vector<Kangaroo>& GetKangaroos()                               { return g_kangaroos; }
     std::vector<MapInstance>& GetMapInstances()                         { return g_mapInstances; }
-    std::vector<Mermaid>& GetMermaids()                                 { return g_mermaids; }
-    std::vector<Piano>& GetPianos()                                     { return g_pianos; }
     std::vector<SpawnPoint>& GetCampaignSpawnPoints()                   { return g_spawnCampaignPoints; }
     std::vector<SpawnPoint>& GetDeathmatchSpawnPoints()                 { return g_spawnDeathmatchPoints; }
     std::vector<Transform>& GetDoorAndWindowCubeTransforms()            { return g_doorAndWindowCubeTransforms; }
@@ -1374,5 +1000,4 @@ namespace Unloved::LegacyWorld {
     std::vector<GPULight>& GetGPULightsMidRes()                 { return g_gpuLightsMidRes; }
     std::vector<GPULight>& GetGPULightsHighRes()                { return g_gpuLightsHighRes; }
 
-    std::vector<GPUAABB>& GetDirtyDoorAABBS()                   { return g_dirtyDoorAABBS; }
 }

@@ -33,7 +33,7 @@ enum struct LightType {
     UNDEFINED
 };
 
-enum struct HousePlaneType {
+enum struct WorldPlaneType {
     FLOOR,
     CEILING,
     UNDEFINED

@@ -14,6 +14,8 @@ namespace Unloved {
 struct GameObject {
     GameObject() = default;
     GameObject(GameObjectCreateInfo createInfo);
+    GameObject(uint64_t id, GameObjectCreateInfo createInfo);
+    GameObject(uint64_t id, GameObjectCreateInfo createInfo, SpawnOffset spawnOffset);
     GameObjectCreateInfo GetCreateInfo();
 
     std::string m_name;

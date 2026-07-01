@@ -2,19 +2,22 @@
 #extension GL_ARB_bindless_texture : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 
+#include "../common/gl_fixed_bindings.glsl"
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 
-layout (binding = 0) uniform sampler2D BaseColorTexture;
-layout (binding = 1) uniform sampler2D NormalTexture;
-layout (binding = 2) uniform sampler2D RMATexture;
-layout (binding = 3) uniform sampler2D BlueNoiseTexture;
-layout (binding = 4) uniform samplerCubeArray highResShadowCubeMapArray;
-layout (binding = 5) uniform sampler2D FlashlightCookieTexture;
-layout (binding = 6) uniform sampler2DArray FlashlighShadowMapArrayTexture;
-layout (binding = 7) uniform sampler2D FurMaskTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray FlashlighShadowMapArrayTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow highResShadowCubeMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowCubeMapArray;
+
+layout (binding = 4) uniform sampler2D BaseColorTexture;
+layout (binding = 5) uniform sampler2D NormalTexture;
+layout (binding = 6) uniform sampler2D RMATexture;
+layout (binding = 7) uniform sampler2D BlueNoiseTexture;
+layout (binding = 8) uniform sampler2D FlashlightCookieTexture;
+layout (binding = 9) uniform sampler2D FurMaskTexture;
 
 layout (location = 0) out vec4 FinalLightingOut;
 
@@ -98,7 +101,13 @@ void main() {
             if (nDotL > 0.0) { 
                 vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
                 
-                float shadow = ShadowCalculationFast(int(lightIndex), lightPosition, light.radius, WorldPos.xyz, viewPos, normal, highResShadowCubeMapArray);
+                float shadow = 1.0;
+                if (light.hiResShadowMapIndex != -1) {
+                    shadow = ShadowCalculationNEW(light.hiResShadowMapIndex, lightPosition, light.radius, WorldPos.xyz, viewPos, normal, highResShadowCubeMapArray);
+                }
+                else if (light.lowResShadowMapIndex != -1) {
+                    shadow = ShadowCalculationNEW(light.lowResShadowMapIndex, lightPosition, light.radius, WorldPos.xyz, viewPos, normal, lowResShadowCubeMapArray);
+                }
                 
                 if (shadow > 0.01) {
                     vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal, WorldPos.xyz, gammaBaseColor, roughness, metallic, viewPos) * shadow;

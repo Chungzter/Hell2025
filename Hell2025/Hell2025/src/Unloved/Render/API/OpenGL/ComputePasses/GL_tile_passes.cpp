@@ -2,6 +2,7 @@
 #include "Renderer/Renderer.h"
 #include "Unloved/Systems/Blood/BloodSystem.h"
 #include "World/LegacyWorld.h"
+#include "Unloved/World/World.h"
 namespace OpenGLRenderer {
     using namespace Unloved;
 
@@ -28,6 +29,7 @@ namespace OpenGLRenderer {
         OpenGL::BindTextureUnit(0, depthHandle);
 
         OpenGL::DispatchCompute(GetTileCountX(), GetTileCountY(), 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
 
     void LightCullingPass() {
@@ -38,7 +40,7 @@ namespace OpenGLRenderer {
         if (!shader) return;
 
         OpenGL::BindShader("LightCulling");
-        OpenGL::SetUniformInt("u_lightCount", LegacyWorld::GetLights().size());
+        OpenGL::SetUniformInt("u_lightCount", Unloved::World::GetLights().size());
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
         OpenGL::SetUniformInt("u_tileYCount", GetTileCountY());
 
@@ -49,6 +51,7 @@ namespace OpenGLRenderer {
         OpenGL::BindSSBO(6, "TileWorldBounds");
 
         OpenGL::DispatchCompute(GetTileCountX(), GetTileCountY(), 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
 
     void ChristmasLightCullingPass() {
@@ -58,7 +61,7 @@ namespace OpenGLRenderer {
         g_gpuLights.clear();
 
         // Gather all the Christmas lights from ALL the ChristmasLightSets
-        Hell::SlotMap<ChristmasLightSet>& christmasLightSets = LegacyWorld::GetChristmasLightSets();
+        Hell::SlotMap<ChristmasLightSet>& christmasLightSets = Unloved::World::GetChristmasLightSets();
 
         for (ChristmasLightSet& christmasLightSet : christmasLightSets) {
             const std::vector<GPUChristmasLight>& gpuLights = christmasLightSet.GetGPUChristmasLights();
@@ -88,6 +91,7 @@ namespace OpenGLRenderer {
         OpenGL::BindSSBO(10, "ChristmasLightCounter");
 
         OpenGL::DispatchCompute(GetTileCountX(), GetTileCountY(), 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
 
     void BloodDecalTileCulling() {
@@ -108,6 +112,7 @@ namespace OpenGLRenderer {
         OpenGL::BindSSBO(10, "BloodDecalCounter");
 
         OpenGL::DispatchCompute(GetTileCountX(), GetTileCountY(), 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         //if (Input::KeyPressed(HELL_KEY_SPACE)) {
         //    std::cout << "Blood count: " << Unloved::BloodSystem::GetBloodScreenSpaceDecals().size() << "\n";

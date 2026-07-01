@@ -82,22 +82,22 @@ namespace Unloved::Session {
         return nullptr;
     }
 
-    Unloved::Camera* GetLocalPlayerCameraByIndex(uint32_t index) {
+    Unloved::Camera* GetLocalPlayerCameraByViewportIndex(uint32_t index) {
         if (Unloved::Player* player = GetLocalPlayerByViewportIndex(index)) {
             return &player->GetCamera();
         }
         else {
-            Logging::Debug() << "Session::GetLocalPlayerCameraByIndex(..) failed. " << index << " out of range of local player count " << g_localPlayerIds.size() << "\n";
+            Logging::Debug() << "Session::GetLocalPlayerCameraByViewportIndex(..) failed. " << index << " out of range of local player count " << g_localPlayerIds.size() << "\n";
             return nullptr;
         }
     }
 
-    float GetLocalPlayerFovByIndex(uint32_t index) {
+    float GetLocalPlayerFovByViewportIndex(uint32_t index) {
         if (Unloved::Player* player = GetLocalPlayerByViewportIndex(index)) {
             return player->GetFov();
         }
         else {
-            Logging::Debug() << "Session::GetLocalPlayerFovByIndex(..) failed. " << index << " out of range of local player count " << g_localPlayerIds.size() << "\n";
+            Logging::Debug() << "Session::GetLocalPlayerFovByViewportIndex(..) failed. " << index << " out of range of local player count " << g_localPlayerIds.size() << "\n";
             return 1.0f;
         }
     }

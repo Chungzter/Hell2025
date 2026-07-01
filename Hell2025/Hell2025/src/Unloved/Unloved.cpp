@@ -1,8 +1,8 @@
 #include "Unloved.h"
 
-#include "Legacy/Callbacks/Callbacks.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Renderer/RenderDataManager.h"
+#include "Legacy/World/LegacyWorld.h"
 
 #include "Hell/Audio.h"
 #include "Hell/Backend/BackEnd.h"
@@ -148,10 +148,10 @@ namespace Unloved {
         if (ImGuiBackEnd::HasKeyboardFocus()) return;
 
         // Function keys
-        if (Input::KeyPressed(HELL_KEY_F1)) Callbacks::NewRun();
-        if (Input::KeyPressed(HELL_KEY_F4)) Callbacks::OpenHouseEditor();
-        if (Input::KeyPressed(HELL_KEY_F6)) Callbacks::OpenMapHeightEditor();
-        if (Input::KeyPressed(HELL_KEY_F5)) Callbacks::OpenMapObjectEditor();
+        if (Input::KeyPressed(HELL_KEY_F1)) LegacyWorld::NewRun();
+        if (Input::KeyPressed(HELL_KEY_F4)) Editor::OpenHouseEditor();
+        if (Input::KeyPressed(HELL_KEY_F6)) Editor::OpenMapHeightEditor();
+        if (Input::KeyPressed(HELL_KEY_F5)) Editor::OpenMapObjectEditor();
 
         // Core
         if (Input::KeyPressed(HELL_KEY_ESCAPE))       Hell::BackEnd::ForceCloseWindow();

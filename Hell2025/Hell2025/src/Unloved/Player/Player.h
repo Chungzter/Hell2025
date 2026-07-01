@@ -334,11 +334,10 @@ private:
     bool m_running = false;
 
     // Speed
-    //float m_walkSpeed = 5.0f;
     float m_currentSpeed = 0.0f;
-    float m_walkingSpeed = 4.4f;
-    float m_crouchingSpeed = 2.3f;
-    float m_runningSpeed = m_walkingSpeed * 1.1f;
+    float m_walkingSpeed = 4.25f;
+    float m_runningSpeed = 2.5f;
+    float m_crouchingSpeed = 2.325f;
     float m_swimmingSpeed = 3.25f;
     float m_crouchDownSpeed = 17.5f;
 

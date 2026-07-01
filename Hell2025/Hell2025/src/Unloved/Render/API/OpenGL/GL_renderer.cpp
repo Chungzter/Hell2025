@@ -23,6 +23,7 @@ namespace Audio = Hell::Audio;
 
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Editor/Gizmo.h"
+#include "Unloved/Systems/ShadowMaps/ShadowMapManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "Hell/Render/API/OpenGL/Types/GL_texture_readback.h"
@@ -173,12 +174,11 @@ namespace OpenGLRenderer {
         skybox->depthFunc = GL_GREATER;
 
         // Allocate shadow map array memory
-		uint64_t hiResShadowMapsId = OpenGL::ResourceManager::CreateShadowCubeMapArray("HiRes");
-		OpenGLShadowCubeMapArray& hiResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArrayById(hiResShadowMapsId);
-        if (hiResShadowMaps.GetHandle() != 0) {
-            hiResShadowMaps.CleanUp();
-        }
-		hiResShadowMaps.Init(SHADOWMAP_HI_RES_COUNT, 1024);
+        OpenGLShadowCubeMapArray& hiResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("HiRes");
+        hiResShadowMapArray.Init(ShadowMapManager::GetShadowMapHiResMaxCount(), 1024);
+
+        OpenGLShadowCubeMapArray& lowResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("LowRes");
+        lowResShadowMapArray.Init(ShadowMapManager::GetShadowMapLowResMaxCount(), 512);
 
         // Moon light shadow maps
         float depthMapResolution = SHADOW_MAP_CSM_SIZE;
@@ -623,7 +623,7 @@ namespace OpenGLRenderer {
 
         const RendererData& rendererData = RenderDataManager::GetRendererData();
         const std::vector<BloodDecalInstanceData>& bloodScreenSpaceDecalInstances = RenderDataManager::GetBloodScreenSpaceDecalInstanceData();
-        const std::vector<GPULight>& gpuLightsHighRes = RenderDataManager::GetGPULightsHighRes();
+        const std::vector<GPULight>& gpuLights = RenderDataManager::GetGPULights();
         const std::vector<RenderItem>& instanceData = RenderDataManager::GetInstanceData();
         const std::vector<ViewportData>& playerData = RenderDataManager::GetViewportData();
         const std::vector<glm::mat4>&oceanPatchTransforms = RenderDataManager::GetOceanPatchTransforms();
@@ -634,7 +634,7 @@ namespace OpenGLRenderer {
         OpenGL::UpdateSSBO("BloodDecalInstances", bloodScreenSpaceDecalInstances.size() * sizeof(BloodDecalInstanceData), bloodScreenSpaceDecalInstances.data());
         OpenGL::UpdateSSBO("ChristmasLightCounter", sizeof(uint32_t), &zero);
         OpenGL::UpdateSSBO("InstanceData", instanceData.size() * sizeof(RenderItem), instanceData.data());
-        OpenGL::UpdateSSBO("Lights", gpuLightsHighRes.size() * sizeof(GPULight), gpuLightsHighRes.data());
+        OpenGL::UpdateSSBO("Lights", gpuLights.size() * sizeof(GPULight), gpuLights.data());
         OpenGL::UpdateSSBO("RendererData", sizeof(RendererData), (void*)&rendererData);
         OpenGL::UpdateSSBO("ViewportData", playerData.size() * sizeof(ViewportData), playerData.data());
         OpenGL::UpdateSSBO("OceanPatchTransforms", oceanPatchTransforms.size() * sizeof(glm::mat4), oceanPatchTransforms.data());

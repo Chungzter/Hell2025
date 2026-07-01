@@ -14,6 +14,7 @@
 #include "Unloved/Systems/Openables/OpenableManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/ObjectId.h"
+#include "Unloved/World/World.h"
 
 #include <algorithm>
 
@@ -109,7 +110,7 @@ void Player::UpdateInteract() {
         if (overlapReport.hits.size()) {
             PhysicsUserData userData = overlapReport.hits[0].userData;
 
-            if (LegacyWorld::GetPickUpByObjectId(userData.objectId)) {
+            if (Unloved::World::GetPickUpByObjectId(userData.objectId)) {
                 m_interactObjectId = userData.objectId;
                 m_interactOpenableId = 0;
                 m_interactCustomId = 0;
@@ -144,7 +145,7 @@ void Player::UpdateInteract() {
         }
 
         // Pickups
-        if (PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(m_interactObjectId)) {
+        if (PickUp* pickUp = Unloved::World::GetPickUpByObjectId(m_interactObjectId)) {
 
             if (!pickUp->IsDespawned()) {
 
@@ -166,7 +167,7 @@ void Player::UpdateInteract() {
 
                 if (pickUp->GetCreateInfo().respawn) {
                     pickUp->Despawn();
-                    for (Light& light : LegacyWorld::GetLights()) {
+                    for (Light& light : Unloved::World::GetLights()) {
                         light.ForceDirty();
                     }
                 }
@@ -183,7 +184,7 @@ void Player::UpdateInteract() {
 
         // Piano keys
         if (interactObjectType == ObjectType::PIANO && m_interactCustomId != 0) {
-            if (Piano* piano = LegacyWorld::GetPianoByObjectId(m_interactObjectId)) {
+            if (Piano* piano = Unloved::World::GetPianoByObjectId(m_interactObjectId)) {
                 piano->PressKey(m_interactCustomId);
             }
         }
@@ -199,7 +200,7 @@ void Player::UpdateInteract() {
         if (result.hitFound) {
             // Sit at
             //if (result.objectType == ObjectType::PIANO) {
-            //    for (Piano& potentialPiano : LegacyWorld::GetPianos()) {
+            //    for (Piano& potentialPiano : Unloved::World::GetPianos()) {
             //        //if (potentialPiano.PianoBodyPartKeyExists(result.objectId)) {
             //        //    SitAtPiano(potentialPiano.GetObjectId());
             //        //}

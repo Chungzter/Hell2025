@@ -2,9 +2,10 @@
 
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Input.h"
+#include "Hell/Math/Range.h"
+#include "Hell/Projection/Projection.h"
 
 #include "Unloved/Common/Constants.h"
-#include "Legacy/Util/Util.h"
 
 #include "Unloved/Config/Config.h"
 
@@ -32,8 +33,8 @@ Viewport::Viewport(uint32_t viewportIndex, const glm::vec2& position, const glm:
 void Viewport::UpdateSpaceCoords(SpaceCoords& spaceCoords, uint32_t fullResolutionWidth, uint32_t fullResolutionHeight) {
     spaceCoords.width = fullResolutionWidth * m_size.x;
     spaceCoords.height = fullResolutionHeight * m_size.y;
-    spaceCoords.localMouseX = Util::MapRange(Input::GetMouseX(), m_leftPixel, m_rightPixel, 0, spaceCoords.width);
-    spaceCoords.localMouseY = Util::MapRange(Input::GetMouseY(), m_bottomPixel, m_topPixel, 0, spaceCoords.height);
+    spaceCoords.localMouseX = Hell::Math::MapRange(Input::GetMouseX(), m_leftPixel, m_rightPixel, 0, spaceCoords.width);
+    spaceCoords.localMouseY = Hell::Math::MapRange(Input::GetMouseY(), m_bottomPixel, m_topPixel, 0, spaceCoords.height);
 
     // Base coordinates y-down
     spaceCoords.leftPixel = m_position.x * fullResolutionWidth;
@@ -104,7 +105,7 @@ void Viewport::UpdateProjectionMatrices() {
     float viewportHeight = m_size.y * renderTargetHeight;
     m_aspect = viewportWidth / viewportHeight;
     m_perspectiveMatrix = glm::perspective(m_fov, m_aspect, m_nearPlane, m_farPlane);
-    m_perspectiveMatrixReverseZ = Util::CalculateProjectionReverseZ(m_fov, m_aspect, m_nearPlane);
+    m_perspectiveMatrixReverseZ = Hell::Projection::ReverseZPerspective(m_fov, m_aspect, m_nearPlane);
 
     float left = -m_orthoSize * m_aspect;
     float right = m_orthoSize * m_aspect;

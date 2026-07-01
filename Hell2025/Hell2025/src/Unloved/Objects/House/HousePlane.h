@@ -8,14 +8,14 @@
 
 namespace Unloved {
 
-struct HousePlane {
-    HousePlane() = default;
-    HousePlane(uint64_t id, const HousePlaneCreateInfo& createInfo, const SpawnOffset& spawnOffset);
-    HousePlane(const HousePlane&) = delete;
-    HousePlane& operator=(const HousePlane&) = delete;
-    HousePlane(HousePlane&&) noexcept = default;
-    HousePlane& operator=(HousePlane&&) noexcept = default;
-    ~HousePlane() = default;
+struct WorldPlane {
+    WorldPlane() = default;
+    WorldPlane(uint64_t id, const HousePlaneCreateInfo& createInfo, const SpawnOffset& spawnOffset);
+    WorldPlane(const WorldPlane&) = delete;
+    WorldPlane& operator=(const WorldPlane&) = delete;
+    WorldPlane(WorldPlane&&) noexcept = default;
+    WorldPlane& operator=(WorldPlane&&) noexcept = default;
+    ~WorldPlane() = default;
 
     void UpdateVertexDataFromCreateInfo();
     void UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter);
@@ -42,7 +42,7 @@ struct HousePlane {
     std::vector<uint32_t>& GetIndices()             { return m_indices; }
     std::vector<glm::vec2>& GetNavMeshPoly()        { return m_navMeshPoly; }
     HousePlaneCreateInfo& GetCreateInfo()           { return m_createInfo; }
-    HousePlaneType GetType() const                  { return m_createInfo.type; }
+    WorldPlaneType GetType() const                  { return m_createInfo.type; }
     uint32_t GetMeshId() const                      { return m_meshId; }
 
 private:

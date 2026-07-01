@@ -9,13 +9,14 @@
 #include "Unloved/Common/Constants.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Renderer/RenderDataManager.h"
-#include "Legacy/World/LegacyWorld.h"
 #include "Legacy/Util/Util.h"
 
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Systems/DDGI/GlobalIllumination.h"
+#include "Unloved/Systems/DirtyTracker/DirtyTracker.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Session/Session.h" // For Session::GetSessionTime(). It's a hack to prevent colorful probe glitch at start
+#include "Unloved/World/World.h"
 
 namespace OpenGLRenderer {
 
@@ -89,15 +90,15 @@ namespace OpenGLRenderer {
     //void RenderSceneBvhTris(Unloved::DDGIVolume& ddgiVolume);
 
     void UpdateGlobalIllumintation() {
-        if (Unloved::LegacyWorld::GetDDGIVolumes().empty()) return;
+        if (Unloved::World::GetDDGIVolumes().empty()) return;
 
         uint64_t id = 0;
-        for (Unloved::DDGIVolume& volume : Unloved::LegacyWorld::GetDDGIVolumes()) {
-            id = volume.GetId();
+        for (Unloved::DDGIVolume& volume : Unloved::World::GetDDGIVolumes()) {
+            id = volume.GetObjectId();
             break;
         }
 
-        Unloved::DDGIVolume& ddgiVolume = *Unloved::LegacyWorld::GetDDGIVolumeByObjectId(id);
+        Unloved::DDGIVolume& ddgiVolume = *Unloved::World::GetDDGIVolumeByObjectId(id);
         const Unloved::PointCloud& pointCloud = ddgiVolume.GetPointClound();
 
         if (ddgiVolume.PointCloudNeedsGPUUpload()) {
@@ -123,7 +124,7 @@ namespace OpenGLRenderer {
         const std::vector<BVHTriangle>& triangles = sceneBvh->m_triangles;
 
         const DDGIVolumeGPU ddgiVolumeGPU = ddgiVolume.GetGPUData();
-        const std::vector<GPUAABB>& dirtyDoorABBBs = Unloved::LegacyWorld::GetDirtyDoorAABBS();
+        const std::vector<GPUAABB>& dirtyDoorABBBs = Unloved::DirtyTracker::GetDirtyDoorAABBs();
 
         // BVH data
         OpenGL::UpdateSSBO("SceneBvh", sceneNodes.size() * sizeof(BvhNode), sceneNodes.data());
@@ -198,7 +199,7 @@ namespace OpenGLRenderer {
 
         OpenGL::BindShader("ProbeStateUpdate");
 
-        OpenGL::SetUniformInt("u_dirtyDoorAABBCount", (int)Unloved::LegacyWorld::GetDirtyDoorAABBS().size());
+        OpenGL::SetUniformInt("u_dirtyDoorAABBCount", (int)Unloved::DirtyTracker::GetDirtyDoorAABBs().size());
         OpenGL::SetUniformFloat("u_time", g_time); // Hack to prevent colorful probe glitch at start
 
         OpenGL::DispatchCompute((ddgiVolume.GetTotalProbeCount() + 63) / 64, 1, 1);
@@ -209,7 +210,7 @@ namespace OpenGLRenderer {
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("PointCloudLighting");
         OpenGL::BindShader("PointCloudLighting");
-        OpenGL::SetUniformInt("u_lightCount", Unloved::LegacyWorld::GetLightCount());
+        OpenGL::SetUniformInt("u_lightCount", Unloved::World::GetLightCount());
 
         OpenGL::BindSSBO(4, "Lights");
         OpenGL::BindSSBO(5, "LightAABBs");

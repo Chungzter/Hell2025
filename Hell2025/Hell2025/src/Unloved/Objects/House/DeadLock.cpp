@@ -1,6 +1,7 @@
 #include "DeadLock.h"
 #include "Legacy/World/LegacyWorld.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
+#include "Unloved/World/World.h"
 
 namespace Unloved {
 
@@ -35,7 +36,7 @@ void DeadLock::Init(uint64_t parentDoorId, const glm::vec3& localOffset, DeadLoc
 }
 
 void DeadLock::Update(float deltaTime) {
-    Door* parentDoor = LegacyWorld::GetDoorByObjectId(m_parentDoorId);
+    Door* parentDoor = Unloved::World::GetDoorByObjectId(m_parentDoorId);
     if (!parentDoor) return;
 
     const glm::mat4& parentDoorModelMatrix = parentDoor->GetDoorModelMatrix();

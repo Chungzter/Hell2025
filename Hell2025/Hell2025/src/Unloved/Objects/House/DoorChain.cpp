@@ -1,6 +1,7 @@
 #include "DoorChain.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Debug/DebugDraw.h"
+#include "Hell/Math/Math.h"
 #include "Hell/Physics/Physics.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Util.h"
@@ -173,14 +174,14 @@ DoorChain::DoorChain(uint64_t id, DoorChainCreateInfo& createInfo, SpawnOffset& 
         }
 
         physx::PxJointLimitCone swingLimit(
-            Util::DegToRad(45.0f), // swing1
-            Util::DegToRad(45.0f)  // swing2
+            Hell::Math::DegToRad(45.0f), // swing1
+            Hell::Math::DegToRad(45.0f)  // swing2
         );
         pxD6->setSwingLimit(swingLimit);
 
         physx::PxJointAngularLimitPair twistLimit(
-            Util::DegToRad(-00.0f), // lower limit
-            Util::DegToRad(180.0f)  // upper limit
+            Hell::Math::DegToRad(-00.0f), // lower limit
+            Hell::Math::DegToRad(180.0f)  // upper limit
         );
         pxD6->setTwistLimit(twistLimit);
     }

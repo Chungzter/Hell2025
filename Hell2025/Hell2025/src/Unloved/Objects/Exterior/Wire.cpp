@@ -1,10 +1,10 @@
 #include "Wire.h"
 
+#include "Hell/Curve/Curve.h"
+#include "Hell/Geometry/Geometry.h"
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Common/Types.h"
 #include "Unloved/Debug/DebugDraw.h"
-
-#include "Util.h"
 
 namespace Unloved {
 
@@ -31,7 +31,7 @@ void Wire::Init(glm::vec3 begin, glm::vec3 end, float sag, float radius, float s
     const int segmentCount = std::max(1, (int)std::ceil(span / spacing));
     const int numSagPoints = segmentCount + 1;
 
-    m_segmentPoints = Util::GenerateSagPoints(m_begin, m_end, numSagPoints, m_sag);
+    m_segmentPoints = Hell::Curve::GenerateSagPoints(m_begin, m_end, numSagPoints, m_sag);
     
     // If sag generation failed or returned too few points, fall back to a straight segment.
     if (m_segmentPoints.size() < 2) {
@@ -50,11 +50,11 @@ void Wire::Init(glm::vec3 begin, glm::vec3 end, float sag, float radius, float s
         glm::vec3& p1 = m_segmentPoints[j + 1];
         glm::vec3 forward = p0 - p1;
 
-        const std::vector<glm::vec3>& circle1 = Util::GenerateCirclePoints(p0, forward, m_radius, ringPointCount);
-        const std::vector<glm::vec3>& circle2 = Util::GenerateCirclePoints(p1, forward, m_radius, ringPointCount);
+        const std::vector<glm::vec3>& circle1 = Hell::Geometry::GenerateOrientedCirclePoints(p0, forward, m_radius, ringPointCount);
+        const std::vector<glm::vec3>& circle2 = Hell::Geometry::GenerateOrientedCirclePoints(p1, forward, m_radius, ringPointCount);
 
-        //const std::vector<glm::vec3>& circle1 = Util::GenerateCirclePoints(p0, forward, m_radius, numSagPoints);
-        //const std::vector<glm::vec3>& circle2 = Util::GenerateCirclePoints(p1, forward, m_radius, numSagPoints);
+        //const std::vector<glm::vec3>& circle1 = Hell::Geometry::GenerateOrientedCirclePoints(p0, forward, m_radius, numSagPoints);
+        //const std::vector<glm::vec3>& circle2 = Hell::Geometry::GenerateOrientedCirclePoints(p1, forward, m_radius, numSagPoints);
         size_t pointCount = circle1.size();
         glm::vec3 center1(0.0f), center2(0.0f);
         for (const auto& p : circle1) center1 += p;

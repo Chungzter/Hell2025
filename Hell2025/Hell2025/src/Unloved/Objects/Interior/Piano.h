@@ -40,7 +40,11 @@ private:
 
 struct Piano {
     Piano() = default;
-    void Init(PianoCreateInfo& createInfo);
+    Piano(uint64_t id, PianoCreateInfo createInfo);
+    Piano(uint64_t id, PianoCreateInfo createInfo, SpawnOffset spawnOffset);
+
+    void Init(uint64_t id, PianoCreateInfo createInfo);
+    void Init(uint64_t id, PianoCreateInfo createInfo, SpawnOffset spawnOffset);
     void SetPosition(glm::vec3 position);
     void SetSustain(bool value);
     void Update(float deltaTime);

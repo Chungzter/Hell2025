@@ -304,7 +304,7 @@ namespace nlohmann {
         info.textureOffsetV = j.value("TextureOffsetV", 0.0f);
         info.textureRotation = j.value("TextureRotation", 0.0f);
         info.materialName = j.value("Material", "CheckerBoard");
-        info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), HousePlaneType::UNDEFINED);
+        info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), WorldPlaneType::UNDEFINED);
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -496,7 +496,7 @@ namespace JSON {
         createInfoCollection.fences = json.value("Fences", std::vector<FenceCreateInfo>{});
         createInfoCollection.fireplaces = json.value("Fireplaces", std::vector<FireplaceCreateInfo>{});
         createInfoCollection.genericObjects = json.value("Drawers", std::vector<GenericObjectCreateInfo>{});
-        createInfoCollection.housePlanes = json.value("Planes", std::vector<HousePlaneCreateInfo>{});
+        createInfoCollection.worldPlanes = json.value("Planes", std::vector<HousePlaneCreateInfo>{});
         createInfoCollection.ladders = json.value("Ladders", std::vector<LadderCreateInfo>{});
         createInfoCollection.lights = json.value("Lights", std::vector<LightCreateInfo>{});
         createInfoCollection.pianos = json.value("Pianos", std::vector<PianoCreateInfo>{});
@@ -525,7 +525,7 @@ namespace JSON {
         json["PickUps"] = createInfoCollection.pickUps;
         json["PictureFrames"] = createInfoCollection.pictureFrames;
         json["PowerPoleSets"] = createInfoCollection.powerPoleSets;
-        json["Planes"] = createInfoCollection.housePlanes;
+        json["Planes"] = createInfoCollection.worldPlanes;
         json["Staircases"] = createInfoCollection.staircases;
         json["Trees"] = createInfoCollection.trees;
         json["Walls"] = createInfoCollection.walls;

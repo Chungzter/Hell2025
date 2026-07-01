@@ -5,9 +5,9 @@
 
 #include "Legacy/File/JSON.h"
 #include "Legacy/Renderer/Renderer.h"
-#include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Maps/MapFile.h"
+#include "Unloved/World/World.h"
 
 #include <cstring>
 #include <fstream>
@@ -54,7 +54,7 @@ namespace Unloved::MapManager {
         }
 
         // Construct the JSON string
-        CreateInfoCollection createInfoCollection = LegacyWorld::GetCreateInfoCollection();
+        CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
         map->SetCreateInfoCollection(createInfoCollection);
         
         std::string createInfoJson = JSON::CreateInfoCollectionToJSON(createInfoCollection);
@@ -181,7 +181,7 @@ namespace Unloved::MapManager {
             return;
         }
 
-        CreateInfoCollection createInfoCollection = LegacyWorld::GetCreateInfoCollection();
+        CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
         map->SetCreateInfoCollection(createInfoCollection);
     }
 

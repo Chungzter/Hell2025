@@ -9,12 +9,21 @@
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
 
-void Mermaid::Init(MermaidCreateInfo createInfo, SpawnOffset spawnOffset) {
-    m_createInfo = createInfo;
-    m_spawnOffset = spawnOffset;
+namespace Unloved {
 
-    m_transform.position = m_createInfo.position + m_spawnOffset.translation;
-    m_transform.rotation = m_createInfo.rotation + glm::vec3(0.0f, m_spawnOffset.yRotation, 0.0f);
+Mermaid::Mermaid(uint64_t id, MermaidCreateInfo createInfo, SpawnOffset spawnOffset) {
+    Init(id, createInfo, spawnOffset);
+}
+
+void Mermaid::Init(uint64_t id, MermaidCreateInfo createInfo, SpawnOffset spawnOffset) {
+    m_createInfo = createInfo;
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation.y += spawnOffset.yRotation;
+    m_spawnOffset = SpawnOffset();
+    m_objectId = id;
+
+    m_transform.position = m_createInfo.position;
+    m_transform.rotation = m_createInfo.rotation;
 
     std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 
@@ -30,7 +39,7 @@ void Mermaid::Init(MermaidCreateInfo createInfo, SpawnOffset spawnOffset) {
     //rock.rigidDynamic.convexMeshModelName = "CollisionMesh_MermaidRock";
     rock.materialName = "Rock";
 
-    m_meshNodes.Init(NO_ID, "Mermaid", meshNodeCreateInfoSet);
+    m_meshNodes.Init(m_objectId, "Mermaid", meshNodeCreateInfoSet);
     m_meshNodes.SetMaterialByMeshName("Arms", "MermaidArms");
     m_meshNodes.SetMaterialByMeshName("Body", "MermaidBody");
     m_meshNodes.SetMaterialByMeshName("BoobTube", "BoobTube");
@@ -52,10 +61,13 @@ void Mermaid::Init(MermaidCreateInfo createInfo, SpawnOffset spawnOffset) {
     m_meshNodes.SetBlendingModeByMeshName("HairScalp", BlendingMode::BLENDED);
     m_meshNodes.SetBlendingModeByMeshName("HairOutta", BlendingMode::HAIR);
     m_meshNodes.SetBlendingModeByMeshName("HairInner", BlendingMode::HAIR);
+
+    m_meshNodes.SetBlendingModeByMeshName("HairOutta", BlendingMode::ALPHA_DISCARD);
+    m_meshNodes.SetBlendingModeByMeshName("HairInner", BlendingMode::ALPHA_DISCARD);
 }
 
 void Mermaid::Update(float deltaTime) {
-    m_transform.rotation.y = HELL_PI * 0.5f;
+    m_transform.rotation.y = m_createInfo.rotation.y + HELL_PI * 0.5f;
     //m_transform.position.x = 36.6f;
     //m_transform.position.z = 36.4f;
     UpdateRenderItems();
@@ -91,4 +103,6 @@ void Mermaid::UpdateRenderItems() {
 
 void Mermaid::CleanUp() {
     // Nothing as of yet
+}
+
 }

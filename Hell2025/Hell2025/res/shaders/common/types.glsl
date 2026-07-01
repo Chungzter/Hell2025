@@ -113,7 +113,7 @@ struct RenderItem {
     uint baseVertex;
     uint baseIndex;
     uint baseVertexWeight;
-    int blockBloodScreenSpaceDecals;    // True or false
+    uint miscFlags;
 
     int additionalTextureIndex0;
     int additionalTextureIndex1;
@@ -142,7 +142,7 @@ struct Light {
     float strength;
     float radius;
 
-    int lightIndex;
+    int lightIndex; // Legacy. removing soon
     int shadowMapDirty; // true or false
     int useIes;         // true or false
     int iesIndex;
@@ -158,8 +158,13 @@ struct Light {
 
     int iesTextureIndex;
     int isDirtyForRaytracing; // true or false
-    int padding1;
-    int padding2;
+    int hiResShadowMapIndex;
+    int lowResShadowMapIndex;
+
+    uint lightIdUpperBit;
+    uint lightIdLowerBit;
+    uint padding1;
+    uint padding2;
 };
 
 struct TileLights {

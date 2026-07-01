@@ -17,7 +17,6 @@
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
-#include "Legacy/Callbacks/Callbacks.h"
 #include "Unloved/Common/Constants.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
@@ -321,10 +320,11 @@ namespace Unloved::Editor {
         g_placementObjectType = objectType;
     }
 
-    void PlaceFireplace(FireplaceType fireplaceType) {
+    void PlaceFireplace(FireplaceType fireplaceType, const std::string& defaultEditorName) {
         SetEditorState(EditorState::PLACE_OBJECT);
         g_placementObjectSubtype.Reset();
         g_placementObjectSubtype.fireplace = fireplaceType;
+        g_placementObjectSubtype.defaultEditorName = defaultEditorName;
         g_placementObjectType = ObjectType::FIREPLACE;
     }
 
@@ -332,20 +332,23 @@ namespace Unloved::Editor {
         SetEditorState(EditorState::PLACE_OBJECT);
         g_placementObjectSubtype.Reset();
         g_placementObjectSubtype.pickUpName = name;
+        g_placementObjectSubtype.defaultEditorName = name;
         g_placementObjectType = ObjectType::PICK_UP;
     }
 
-    void PlaceHousePlane(HousePlaneType housePlaneType) {
+    void PlaceHousePlane(WorldPlaneType housePlaneType, const std::string& defaultEditorName) {
         SetEditorState(EditorState::PLACE_OBJECT);
         g_placementObjectSubtype.Reset();
         g_placementObjectSubtype.housePlane = housePlaneType;
+        g_placementObjectSubtype.defaultEditorName = defaultEditorName;
         g_placementObjectType = ObjectType::HOUSE_PLANE;
     }
 
-    void PlaceGenericObject(GenericObjectType genericObjectType) {
+    void PlaceGenericObject(GenericObjectType genericObjectType, const std::string& defaultEditorName) {
         SetEditorState(EditorState::PLACE_OBJECT);
         g_placementObjectSubtype.Reset();
         g_placementObjectSubtype.genericObject = genericObjectType;
+        g_placementObjectSubtype.defaultEditorName = defaultEditorName;
         g_placementObjectType = ObjectType::GENERIC_OBJECT;
     }
 

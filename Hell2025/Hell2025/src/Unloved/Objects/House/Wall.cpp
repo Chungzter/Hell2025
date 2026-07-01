@@ -3,7 +3,6 @@
 #include "Hell/Common/Random.h"
 #include "Hell/Math/Math.h"
 #include "Unloved/Debug/DebugDraw.h"
-#include "Unloved/Editor/Editor.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
 #include "Legacy/Renderer/RenderDataManager.h"
@@ -204,7 +203,7 @@ void Wall::CreateTrims() {
             Hell::Transform t;
             t.position = start;
             t.position.y += m_createInfo.height;
-            t.rotation.y = Util::EulerYRotationBetweenTwoPoints(start, end);
+            t.rotation.y = Hell::Math::YawBetweenPoints(start, end);
             t.scale.x = glm::distance(start, end);
 
             Trim& trim = m_trims.emplace_back();
@@ -232,7 +231,7 @@ void Wall::CreateTrims() {
                 if (glm::dot(r.hitNormal, rayDir) < 0.0f) {
                     Hell::Transform t;
                     t.position = rayOrigin;
-                    t.rotation.y = Util::EulerYRotationBetweenTwoPoints(start, end);
+                    t.rotation.y = Hell::Math::YawBetweenPoints(start, end);
                     t.scale.x = r.distanceToHit;
                     if (t.scale.x > eps) {
                         Trim& trim = m_trims.emplace_back();
@@ -248,7 +247,7 @@ void Wall::CreateTrims() {
             if (remaining > eps) {
                 Hell::Transform t;
                 t.position = rayOrigin;
-                t.rotation.y = Util::EulerYRotationBetweenTwoPoints(rayOrigin, end);
+                t.rotation.y = Hell::Math::YawBetweenPoints(rayOrigin, end);
                 t.scale.x = remaining;
                 Trim& trim = m_trims.emplace_back();
                 trim.Init(t, "TrimFloor", "Trims");
@@ -454,7 +453,7 @@ void Wall::RecreateWeatherBoardMesh() {
         Hell::Transform transform;
         transform.position = start;
         transform.scale.y = actualFinalWallHeight;
-        transform.rotation.y = Util::EulerYRotationBetweenTwoPoints(start, end);
+        transform.rotation.y = Hell::Math::YawBetweenPoints(start, end);
 
         RenderItem& renderItem = m_weatherBoardstopRenderItems.emplace_back();
         renderItem.modelMatrix = transform.to_mat4();

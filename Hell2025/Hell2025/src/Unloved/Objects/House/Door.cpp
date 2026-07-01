@@ -2,7 +2,6 @@
 #include "Hell/Audio.h"
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Debug/DebugDraw.h"
-#include "Unloved/Editor/Editor.h"
 #include "Hell/Physics/Physics.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
@@ -10,6 +9,7 @@
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Session/Session.h"
+#include "Unloved/World/World.h"
 
 #include "Hell/Logging.h"
 
@@ -18,10 +18,12 @@ namespace Unloved {
 Door::Door(uint64_t id, DoorCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_objectId = id;
 	m_createInfo = createInfo;
-	m_spawnOffset = spawnOffset;
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation.y += spawnOffset.yRotation;
+	m_spawnOffset = SpawnOffset();
 
-    m_position = createInfo.position + spawnOffset.translation;
-    m_rotation = createInfo.rotation + glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+    m_position = m_createInfo.position;
+    m_rotation = m_createInfo.rotation;
     m_clippingVolume.SetOwner(ObjectType::DOOR, m_objectId);
     UpdateClippingVolume();
 
@@ -73,12 +75,12 @@ void Door::UpdateFloor() {
     createInfo.p2 = glm::vec3(transform.to_mat4() * glm::vec4(+half_w, 0.0f, +half_d, 1.0f));
     createInfo.p3 = glm::vec3(transform.to_mat4() * glm::vec4(+half_w, 0.0f, -half_d, 1.0f));
     createInfo.parentDoorId = GetObjectId();
-    createInfo.type = HousePlaneType::FLOOR;
+    createInfo.type = WorldPlaneType::FLOOR;
 
     createInfo.textureScale = 0.4f;
     createInfo.materialName = "FloorBoards";
 
-    LegacyWorld::AddHousePlane(createInfo, SpawnOffset());
+    Unloved::World::AddHousePlane(createInfo, SpawnOffset());
 }
 
 void Door::CleanUp() {

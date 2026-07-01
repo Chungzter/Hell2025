@@ -3,9 +3,9 @@
 #include "Hell/Common/Bit.h"
 #include "Hell/Logging.h"
 
-#include <iostream> // TODO clean up logging
-
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "../../../../res/shaders/common/misc_flags.glsl"
+#include "Util.h"
 
 namespace Unloved {
 
@@ -42,7 +42,7 @@ void AnimatedMeshNodes::SetSkinnedModel(uint64_t parentId, std::string name) {
         }
     }
     else {
-        std::cout << "Could not SetSkinnedModel(name) with name: \"" << name << "\", it does not exist\n";
+        Logging::Error() << "AnimatedMeshNodes::SetSkinnedModel(..) failed '" << name << "' does not exist\n";
     }
 }
 
@@ -80,9 +80,12 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         //renderItem.furUVScale = m_nodes[i].furUVScale;
         //renderItem.furShellDistanceAttenuation = m_nodes[i].furShellDistanceAttenuation;
         renderItem.woundMaskTexutreIndex = m_woundMaskTextureIndices[i];
-        renderItem.blockBloodScreenSpaceDecals = (int)true;
+        renderItem.miscFlags = MISC_FLAG_DYNAMIC_OBJECT;
         renderItem.baseVertex = mesh->baseVertex;
         renderItem.baseIndex = mesh->baseIndex;
+
+        renderItem.miscFlags = 0;
+        Hell::Bit::SetState(renderItem.miscFlags, MISC_FLAG_DYNAMIC_OBJECT, true);
 
         Hell::Bit::PackUint64(m_parentId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
 
@@ -114,6 +117,7 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
                 renderItem.prevModelMatrix = renderItem.modelMatrix * boneSkinningMatrices[boneIndex]; // Hack because you are compute skinning and can't rely on shit here. FIGURE THIS OUT
                 renderItem.modelMatrix = modelMatrix * boneSkinningMatrices[boneIndex];
                 renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
+                Util::UpdateRenderItemAABB(renderItem);
 
                 if (mesh->name == "P90_Magazine") {
                     m_nonDeformingRenderItemsDepthPeeledTransparent.push_back(renderItem);
@@ -244,10 +248,12 @@ void AnimatedMeshNodes::SetIgnoredViewportIndex(int index) {
 }
 
 void AnimatedMeshNodes::PrintMeshNames() {
-    std::cout << m_skinnedModel->GetName() << "\n";
+    std::string message = m_skinnedModel->GetName() + "\n";
     for (int i = 0; i < m_nodes.size(); i++) {
-        std::cout << "-" << i << " " << m_nodes[i].meshName << "\n";
+        message += "-" + std::to_string(i) + " " + m_nodes[i].meshName + "\n";
     }
+
+    Logging::Debug() << message;
 }
 
 void AnimatedMeshNodes::EnableRendering() {
@@ -257,4 +263,5 @@ void AnimatedMeshNodes::EnableRendering() {
 void AnimatedMeshNodes::DisableRendering() {
     m_renderingEnabled = false;
 }
+
 }

@@ -5,10 +5,10 @@
 #include "Hell/Input.h"
 #include "Hell/Logging.h"
 #include "Hell/Math/Ray.h"
+#include "Hell/Projection/Projection.h"
 
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Common/Enums.h"
-#include "Legacy/Util/Util.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "Unloved/Config/Config.h"
@@ -284,8 +284,8 @@ namespace Gizmo {
                         (g_actionFlag == GizmoFlag::SCALE_Z) ? g_armLength * GetGizmoScalingFactorByViewportIndex(viewportIndex) : 0.0f
                     );
                     glm::mat4 mvpArm = projectionMatrix * viewMatrix * Transform(g_gizmoPosition + armOffset).to_mat4();
-                    glm::ivec2 centerScreenCoords = Util::WorldToScreenCoords(g_gizmoPosition, projectionView, windowWidth, windowHeight, true);
-                    glm::ivec2 armScreenCoords = Util::WorldToScreenCoords(g_gizmoPosition + armOffset, projectionView, windowWidth, windowHeight, true);
+                    glm::ivec2 centerScreenCoords = Hell::Projection::WorldToScreen(g_gizmoPosition, projectionView, windowWidth, windowHeight, true);
+                    glm::ivec2 armScreenCoords = Hell::Projection::WorldToScreen(g_gizmoPosition + armOffset, projectionView, windowWidth, windowHeight, true);
                     g_scaleOffset = armScreenCoords - centerScreenCoords;
                     g_offsetNeedsUpdate = false;
 

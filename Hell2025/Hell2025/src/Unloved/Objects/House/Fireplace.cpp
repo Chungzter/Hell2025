@@ -3,14 +3,17 @@
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
+#include "Unloved/World/World.h"
 
 namespace Unloved {
 
 Fireplace::Fireplace(uint64_t id, const FireplaceCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_id = id;
     m_createInfo = createInfo;
-    m_transform.position = m_createInfo.position + spawnOffset.translation;
-    m_transform.rotation = m_createInfo.rotation + glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation.y += spawnOffset.yRotation;
+    m_transform.position = m_createInfo.position;
+    m_transform.rotation = m_createInfo.rotation;
     m_blockingVolume.SetOwner(m_id);
     m_wallWidth = 0.766488f * 2.0f;
     m_wallDepth = 0.450083f;
@@ -167,9 +170,9 @@ void Fireplace::UpdateWorldMatrix() {
     lightCreateInfo.saveToFile = false;
     lightCreateInfo.radius = 2.75f;
 
-    m_lightId = LegacyWorld::AddLight(lightCreateInfo, SpawnOffset());
+    m_lightId = Unloved::World::AddLight(lightCreateInfo, SpawnOffset());
 
-    if (Light* light = LegacyWorld::GetLightByObjectId(m_lightId)) {
+    if (Light* light = Unloved::World::GetLightByObjectId(m_lightId)) {
         light->m_doFlicker = true;
     }
 }

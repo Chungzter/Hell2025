@@ -13,10 +13,12 @@ namespace Unloved {
 
 Window::Window(uint64_t id, const WindowCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_createInfo = createInfo;
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation.y += spawnOffset.yRotation;
     m_objectId = id;
 
-    m_transform.position = m_createInfo.position + spawnOffset.translation;
-    m_transform.rotation = m_createInfo.rotation + glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+    m_transform.position = m_createInfo.position;
+    m_transform.rotation = m_createInfo.rotation;
     m_clippingVolume.SetOwner(ObjectType::WINDOW, m_objectId);
     UpdateClippingVolume();
 

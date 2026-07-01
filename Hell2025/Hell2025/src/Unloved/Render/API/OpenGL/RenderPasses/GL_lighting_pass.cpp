@@ -10,6 +10,8 @@
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
+#include "../../../../../../res/shaders/common/gl_fixed_bindings.glsl"
+
 namespace OpenGLRenderer {
 
     void ComputeViewspaceDepth() {
@@ -37,6 +39,7 @@ namespace OpenGLRenderer {
         OpenGLShadowMap* flashLightShadowMapsFBO = OpenGL::ResourceManager::GetShadowMapPtr("FlashlightShadowMaps");
         OpenGLFrameBuffer* indirectDiffuseFbo = OpenGL::ResourceManager::GetFrameBufferPtr("IndirectDiffuse");
         OpenGLShadowCubeMapArray* hiResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("HiRes");
+        OpenGLShadowCubeMapArray* lowResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("LowRes");
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("Lighting");
         OpenGLFrameBuffer* miscFullSizeFBO = OpenGL::ResourceManager::GetFrameBufferPtr("MiscFullSize");
 
@@ -78,22 +81,21 @@ namespace OpenGLRenderer {
 
         OpenGL::SetUniformVec2("u_viewportSize", glm::vec2(viewportWidth, viewportHeight));
 
-        glBindTextureUnit(0, gBuffer->GetColorAttachmentHandleByName("BaseColorMetallic"));
-        glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
-        glBindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
-        glBindTextureUnit(3, gBuffer->GetDepthAttachmentHandle());
-        glBindTextureUnit(6, gBuffer->GetColorAttachmentHandleByName("Emissive"));
-        glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
-        glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
+        glBindTextureUnit(4, gBuffer->GetColorAttachmentHandleByName("BaseColorMetallic"));
+        glBindTextureUnit(5, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
+        glBindTextureUnit(6, gBuffer->GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
+        glBindTextureUnit(7, gBuffer->GetDepthAttachmentHandle());
+        glBindTextureUnit(8, gBuffer->GetColorAttachmentHandleByName("Emissive"));
+        glBindTextureUnit(9, GetTextureHandleByName("Flashlight2"));
+        glBindTextureUnit(TEX_IDX_SHADOW_MAP_FLASHLIGHT, flashLightShadowMapsFBO->GetDepthTextureHandle());
 
-        glActiveTexture(GL_TEXTURE9);
-        glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, hiResShadowMaps->GetDepthTexture());
+        glBindTextureUnit(TEX_IDX_SHADOW_MAP_HI_RES, hiResShadowMaps->GetDepthTexture());
+        glBindTextureUnit(TEX_IDX_SHADOW_MAP_LOW_RES, lowResShadowMaps->GetDepthTexture());
 
         OpenGLShadowMapArray* shadowMapArray = OpenGL::ResourceManager::GetShadowMapArrayPtr("MoonlightCSM");
-        glActiveTexture(GL_TEXTURE10);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMapArray->GetDepthTexture());
+        glBindTextureUnit(TEX_IDX_SHADOW_MAP_CSM, shadowMapArray->GetDepthTexture());
 
-        glBindTextureUnit(11, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
+        glBindTextureUnit(10, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
 
         OpenGL::BindSSBO(7, "TileChristmasLights");
         OpenGL::BindSSBO(8, "ChristmasLightInstances");

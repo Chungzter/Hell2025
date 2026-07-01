@@ -1,6 +1,6 @@
 #include "Kangaroo.h"
+#include "Hell/Math/Rotation.h"
 #include "Unloved/Systems/Pathfinding/AStarMap.h"
-#include "Util.h"
 
 #include "Unloved/Session/Session.h"   // remove me
 #include "Renderer/Renderer.h" // TODO get me out of here
@@ -70,7 +70,7 @@ namespace Unloved {
         glm::vec3 start = m_position;
         glm::vec3 end = m_position + m_forward;
         m_rotation.x = 0.0f;
-        m_rotation.y = Util::EulerYRotationBetweenTwoPoints(start, end) + (HELL_PI * 0.5f);
+        m_rotation.y = Hell::Math::YawBetweenPoints(start, end) + (HELL_PI * 0.5f);
         m_rotation.z = 0.0f;
 
         animatedGameObject->SetPosition(m_position);

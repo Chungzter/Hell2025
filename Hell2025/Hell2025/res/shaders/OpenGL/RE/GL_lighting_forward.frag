@@ -1,5 +1,7 @@
 #version 460
 
+#include "../../common/gl_fixed_bindings.glsl"
+
 #ifndef ENABLE_BINDLESS
     #define ENABLE_BINDLESS 1
 #endif
@@ -7,7 +9,12 @@
 #if ENABLE_BINDLESS == 1
     #extension GL_ARB_bindless_texture : enable
     readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-#else
+#endif
+
+layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowMapArray;
+
+#if ENABLE_BINDLESS != 1
     layout (binding = 0) uniform sampler2D baseColorTexture;
     layout (binding = 1) uniform sampler2D normalTexture;
     layout (binding = 2) uniform sampler2D rmaTexture;
@@ -19,7 +26,6 @@
 
 layout (binding = 5) uniform sampler2D u_indirectDiffuseTexture;
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
-layout (binding = 9) uniform samplerCubeArrayShadow shadowMapArray;
 layout (binding = 11) uniform sampler2D hairFlowMap;
 layout (binding = 12) uniform sampler2D hairIDMap;
 layout (binding = 13) uniform sampler2D hairRootMap;
@@ -130,7 +136,14 @@ void main() {
         float lightStrength = light.strength;
         float lightRadius = light.radius;
 
-        float shadow = ShadowCalculationNEW(lightIndex, lightPosition, lightRadius, WorldPos.xyz, viewPos, normal.xyz, shadowMapArray);
+        float shadow = 1.0;
+        if (light.hiResShadowMapIndex != -1) {
+            shadow = ShadowCalculationNEW(light.hiResShadowMapIndex, lightPosition, lightRadius, WorldPos.xyz, viewPos, normal.xyz, hiResShadowMapArray);
+        }
+        else if (light.lowResShadowMapIndex != -1) {
+            shadow = ShadowCalculationNEW(light.lowResShadowMapIndex, lightPosition, lightRadius, WorldPos.xyz, viewPos, normal.xyz, lowResShadowMapArray);
+        }
+
         vec3 directLight = GetDirectLighting(lightPosition, lightColor, lightRadius, lightStrength, normal.xyz, WorldPos.xyz, gammaBaseColor.rgb, roughness, metallic, viewPos) * shadow;
 
         #if ENABLE_BINDLESS == 1

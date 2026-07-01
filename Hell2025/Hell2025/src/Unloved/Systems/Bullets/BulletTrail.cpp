@@ -1,6 +1,7 @@
 #include "BulletTrail.h"
 
-#include "Legacy/Util/Util.h"
+#include "Hell/Common/Constants.h"
+#include "Hell/Common/Random.h"
 
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 
@@ -68,19 +69,19 @@ void BulletTrail::Update(float deltaTime) {
         particle.position = interpolatingPos + offset;
 
         // Jitter particle spawn position
-        float jitterX = Util::RandomFloat(-1.0f, 1.0f);
-        float jitterY = Util::RandomFloat(-1.0f, 1.0f);
-        float jitterZ = Util::RandomFloat(-1.0f, 1.0f);
+        float jitterX = Hell::Random::Float(-1.0f, 1.0f);
+        float jitterY = Hell::Random::Float(-1.0f, 1.0f);
+        float jitterZ = Hell::Random::Float(-1.0f, 1.0f);
         particle.position += glm::vec3(jitterX, jitterY, jitterZ) * 0.0015f;
 
         // Particle velocity
-        float driftSpeed = Util::RandomFloat(0.05f, 0.2f);
-        float recoilSpeed = Util::RandomFloat(0.1f, 0.3f);
+        float driftSpeed = Hell::Random::Float(0.05f, 0.2f);
+        float recoilSpeed = Hell::Random::Float(0.1f, 0.3f);
         glm::vec3 drift = glm::normalize(offset) * driftSpeed;
         glm::vec3 recoil = -m_forward * recoilSpeed;
         particle.velocity = drift + recoil;
-        particle.rotation = Util::RandomFloat(0.0f, HELL_PI * 2.0f);
-        particle.rotationalVelocity = Util::RandomFloat(-25.0f, 25.0f);
+        particle.rotation = Hell::Random::Float(0.0f, HELL_PI * 2.0f);
+        particle.rotationalVelocity = Hell::Random::Float(-25.0f, 25.0f);
 
         std::vector<BulletTrailParticle>& bulletTrailParticles = Unloved::BulletSystem::GetBulletTrailParticles();
         bulletTrailParticles.emplace_back(particle);

@@ -15,7 +15,7 @@ struct GPUChristmasLight {
 
 struct ChristmasLightSet {
     ChristmasLightSet() = default;
-    ChristmasLightSet(uint64_t id, ChristmasLightsCreateInfo& createInfo, SpawnOffset& spawnOffset);
+    ChristmasLightSet(uint64_t id, const ChristmasLightsCreateInfo& createInfo, const SpawnOffset& spawnOffset);
     ChristmasLightSet(const ChristmasLightSet&) = delete;
     ChristmasLightSet& operator=(const ChristmasLightSet&) = delete;
     ChristmasLightSet(ChristmasLightSet&&) noexcept = default;

@@ -29,7 +29,7 @@ struct LightFlicker {
 
 struct Light {
     Light() = default;
-    Light(uint64_t id, LightCreateInfo& createInfo, SpawnOffset& spawnOffset);
+    Light(uint64_t id, const LightCreateInfo& createInfo, const SpawnOffset& spawnOffset);
     Light(const Light&) = delete;
     Light& operator=(const Light&) = delete;
     Light(Light&&) noexcept = default;
@@ -66,6 +66,8 @@ struct Light {
     void ConfigureMeshNodes();
 
     void SetShadowMapDirtyFlag(bool value) { m_dirtyForShadowMaps = value; }
+    void SetRaytracingDirtyFlag(bool value) { m_dirtyForRaytracing = value; }
+    bool ConsumeForcedDirtyFlag() { bool value = m_forcedDirty; m_forcedDirty = false; return value; }
 
     bool IsDirtyForShadowMaps() const      { return m_dirtyForShadowMaps; }
     bool IsForcedDirty() const             { return m_forcedDirty; }

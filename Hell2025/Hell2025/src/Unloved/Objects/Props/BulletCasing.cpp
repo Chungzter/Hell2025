@@ -2,17 +2,20 @@
 #include "Util.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Audio.h"
+#include "Hell/Common/Random.h"
 #include "Hell/Physics/Physics.h"
 #include "Unloved/Render/RendererConstants.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 
 namespace Unloved {
 
-BulletCasing::BulletCasing(BulletCasingCreateInfo createInfo) {
-    m_materialIndex = createInfo.materialIndex;
+BulletCasing::BulletCasing(uint64_t id, BulletCasingCreateInfo createInfo) {
+    m_createInfo = createInfo;
+    m_objectId = id;
+    m_materialIndex = m_createInfo.materialIndex;
 
     // Get model
-    Model* model = Hell::ResourceManager::GetModelById(createInfo.modelId);
+    Model* model = Hell::ResourceManager::GetModelById(m_createInfo.modelId);
     if (!model) {
         std::cout << "BulletCasing(BulletCasingCreateInfo createInfo) failed from invalid model\n";
         return;
@@ -29,18 +32,18 @@ BulletCasing::BulletCasing(BulletCasingCreateInfo createInfo) {
     }
 
     Transform transform;
-    transform.position = createInfo.position;
-    transform.rotation = createInfo.rotation;
+    transform.position = m_createInfo.position;
+    transform.rotation = m_createInfo.rotation;
 
     PhysicsFilterData filterData;
     filterData.raycastGroup = RaycastGroup::RAYCAST_DISABLED;
     filterData.collisionGroup = CollisionGroup::BULLET_CASING;
     filterData.collidesWith = CollisionGroup::ENVIROMENT_OBSTACLE;
 
-    glm::vec3 force = createInfo.force;
-    glm::vec3 torque = glm::vec3(Util::RandomFloat(-10.0f, 10.0f), Util::RandomFloat(-10.0f, 10.0f), Util::RandomFloat(-10.0f, 10.0f));
+    glm::vec3 force = m_createInfo.force;
+    glm::vec3 torque = glm::vec3(Hell::Random::Float(-10.0f, 10.0f), Hell::Random::Float(-10.0f, 10.0f), Hell::Random::Float(-10.0f, 10.0f));
 
-    m_rigidDynamicId = Hell::Physics::CreateRigidDynamicFromBoxExtents(transform, mesh->extents, createInfo.mass, filterData, force, torque);
+    m_rigidDynamicId = Hell::Physics::CreateRigidDynamicFromBoxExtents(transform, mesh->extents, m_createInfo.mass, filterData, force, torque);
 }
 
 void BulletCasing::CleanUp() {

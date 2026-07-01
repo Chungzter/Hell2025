@@ -12,9 +12,11 @@
 #include "Unloved/Session/Session.h"
 #include "Unloved/Config/Config.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/Objects/Renderables/AnimatedGameObject.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Systems/Blood/BloodSystem.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
+#include "Unloved/Systems/ShadowMaps/ShadowMapManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/World/World.h"
 
@@ -43,7 +45,7 @@ namespace RenderDataManager {
     FlashLightShadowMapDrawInfo g_flashLightShadowMapDrawInfo;
     RendererData g_rendererData;
     std::vector<DrawIndexedIndirectCommand> g_drawCommandsUI;
-    std::vector<GPULight> g_gpuLightsHighRes;
+    std::vector<GPULight> g_gpuLights;
 
 	std::vector<RenderItem> g_renderItemsProcedural;
     std::vector<RenderItem> g_renderItems;
@@ -96,15 +98,17 @@ namespace RenderDataManager {
     std::vector<glm::mat4> g_oceanPatchTransforms;
     std::vector<float> g_shadowCascadeLevels{ 5.0f, 10.0f, 20.0f, 40.0f }; // WARNING! YOU have a duplicate of this in GL_renderer.h
 
-
+    void CreateGPULights();
     void UpdateOceanPatchTransforms();
     void UpdateViewportData();
     void UpdateRendererData();
     void UpdateDrawCommandsSet();
+    void UpdatePointLightShadowMapDrawCommands();
+
     void CreateSkinningData();
     void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters = false);
-    void CreateDrawCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex);
-    void CreateDrawCommandsNonDeformingSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex);
+    void CreateDrawCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum = nullptr);
+    void CreateDrawCommandsNonDeformingSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum = nullptr);
 
     void CreateMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
     void CreateMultiDrawIndirectCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
@@ -113,7 +117,7 @@ namespace RenderDataManager {
     void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex);
 	void CreateHouseMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
 
-    void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, uint32_t faceIndex, GPULight& gpuLight);
+    void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, uint32_t faceIndex, Light* light, BlendingMode blendingModeFilter);
     void CreateMoonLightShadowMapDrawCommands();
 
 
@@ -152,7 +156,6 @@ namespace RenderDataManager {
 
         // Think about better names for these containers below
         g_renderItemsOutline.clear();
-        g_gpuLightsHighRes.clear();
         g_decalPaintingInfo.clear();
 		g_shadowCasterRenderItems.clear();
 		g_renderItemsStainedGlass.clear();
@@ -162,10 +165,13 @@ namespace RenderDataManager {
     }
 
     void Update() {
+        CreateGPULights();
+
         UpdateViewportData();
         UpdateRendererData();
         UpdateDrawCommandsSet();
         UpdateDrawCommandsUI();
+        UpdatePointLightShadowMapDrawCommands();
     }
 
     void UpdateDrawCommandsUI() {
@@ -211,7 +217,7 @@ namespace RenderDataManager {
             else {
                 g_viewportData[i].orthoSize = 0.0f;
                 g_viewportData[i].isOrtho = false;
-                g_viewportData[i].fov = Unloved::Session::GetLocalPlayerFovByIndex(i);
+                g_viewportData[i].fov = Unloved::Session::GetLocalPlayerFovByViewportIndex(i);
 
                 Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
                 if (player) {
@@ -222,7 +228,7 @@ namespace RenderDataManager {
                         viewMatrix = player->m_deathCamViewMatrix;
                     }
                     else {
-                        viewMatrix = Unloved::Session::GetLocalPlayerCameraByIndex(i)->GetViewMatrix();
+                        viewMatrix = Unloved::Session::GetLocalPlayerCameraByViewportIndex(i)->GetViewMatrix();
                     }
 
                     g_viewportData[i].isInShop = player->IsInShop();
@@ -330,8 +336,8 @@ namespace RenderDataManager {
         g_rendererData.splitscreenMode = (int)Unloved::Session::GetSplitscreenMode();
         g_rendererData.time = Unloved::Session::GetSessionTime();
         g_rendererData.rendererOverrideState = (int)rendererSettings.rendererOverrideState;
-        g_rendererData.normalizedMouseX = Util::MapRange(Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0.0f, 1.0f);
-        g_rendererData.normalizedMouseY = Util::MapRange(Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), 0.0f, 1.0f);
+        g_rendererData.normalizedMouseX = Hell::Math::MapRange(Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0.0f, 1.0f);
+        g_rendererData.normalizedMouseY = Hell::Math::MapRange(Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), 0.0f, 1.0f);
         g_rendererData.tileCountX = resolutions.gBuffer.x / TILE_SIZE;
         g_rendererData.tileCountY = resolutions.gBuffer.y / TILE_SIZE;
         g_rendererData.moonLightDir = glm::vec4(Unloved::World::GetMoonlightDirection(), 0.0f);
@@ -543,12 +549,6 @@ namespace RenderDataManager {
 
         CreateSkinningData();
 
-        for (int i = 0; i < g_gpuLightsHighRes.size(); i++) {
-            GPULight& gpuLight = g_gpuLightsHighRes[i];
-            for (uint32_t j = 0; j < 6; j++) {
-                CreateShadowCubeMapMultiDrawIndirectCommands(set.shadowMapHiRes[i][j], j, gpuLight);
-            }
-        }
 
         // CSM render items (moon light shadow maps)
         CreateMoonLightShadowMapDrawCommands();
@@ -608,6 +608,84 @@ namespace RenderDataManager {
         UpdateOceanPatchTransforms();
     }
 
+    void UpdatePointLightShadowMapDrawCommands() {
+        auto& set = g_drawCommandsSet;
+
+        // Clear all existing draw commands
+        for (int shadowMapIndex = 0; shadowMapIndex < MAX_SHADOW_MAP_ARRAY_LEVELS; shadowMapIndex++) {
+            for (int faceIndex = 0; faceIndex < 6; faceIndex++) {
+                set.hiResShadowMapDrawCommands.assetGeometry[shadowMapIndex][faceIndex].clear();
+                set.hiResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.hiResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][faceIndex].clear();
+                set.hiResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex].clear();
+                set.hiResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.hiResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex].clear();
+                set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex].clear();
+                set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex].clear();
+                set.hiResShadowMapDrawCommands.procedural[shadowMapIndex][faceIndex].clear();
+
+                set.lowResShadowMapDrawCommands.assetGeometry[shadowMapIndex][faceIndex].clear();
+                set.lowResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.lowResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][faceIndex].clear();
+                set.lowResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex].clear();
+                set.lowResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.lowResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex].clear();
+                set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex].clear();
+                set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex].clear();
+                set.lowResShadowMapDrawCommands.procedural[shadowMapIndex][faceIndex].clear();
+            }
+        }
+
+        // Create shadow map draw commands for dirty hi res shadow mapped lights
+        for (const ShadowMapInfo& shadowMapInfo : ShadowMapManager::GetDirtyHiResShadowMaps()) {
+            Light* light = Unloved::World::GetLightByObjectId(shadowMapInfo.lightId);
+            if (!light) continue;
+            int shadowMapIndex = shadowMapInfo.shadowMapIndex;
+            if (shadowMapIndex == -1) continue;
+
+            for (uint32_t i = 0; i < 6; i++) {
+                Unloved::Frustum* frustum = light->GetFrustumByFaceIndex(i);
+                if (!frustum) continue;
+
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.hiResShadowMapDrawCommands.assetGeometry[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::DEFAULT);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.hiResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::ALPHA_DISCARD);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.hiResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::HAIR);
+                CreateDrawCommandsSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][i], g_skinnedRenderItemsDefault, -1, frustum);
+                CreateDrawCommandsSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][i], g_skinnedRenderItemsAlphaDiscard, -1, frustum);
+                CreateDrawCommandsSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][i], g_skinnedRenderItemsHair, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItems, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsHair, -1, frustum);
+                CreateDrawCommandProcedural(set.hiResShadowMapDrawCommands.procedural[shadowMapIndex][i], g_renderItemsProcedural, frustum, -1);
+            }
+        }
+
+        // Create shadow map draw commands for dirty low res shadow mapped lights
+        for (const ShadowMapInfo& shadowMapInfo : ShadowMapManager::GetDirtyLowResShadowMaps()) {
+            Light* light = Unloved::World::GetLightByObjectId(shadowMapInfo.lightId);
+            if (!light) continue;
+            int shadowMapIndex = shadowMapInfo.shadowMapIndex;
+            if (shadowMapIndex == -1) continue;
+
+            for (uint32_t i = 0; i < 6; i++) {
+                Unloved::Frustum* frustum = light->GetFrustumByFaceIndex(i);
+                if (!frustum) continue;
+
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.lowResShadowMapDrawCommands.assetGeometry[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::DEFAULT);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.lowResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::ALPHA_DISCARD);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.lowResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::HAIR);
+                CreateDrawCommandsSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][i], g_skinnedRenderItemsDefault, -1, frustum);
+                CreateDrawCommandsSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][i], g_skinnedRenderItemsAlphaDiscard, -1, frustum);
+                CreateDrawCommandsSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][i], g_skinnedRenderItemsHair, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItems, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsHair, -1, frustum);
+                CreateDrawCommandProcedural(set.lowResShadowMapDrawCommands.procedural[shadowMapIndex][i], g_renderItemsProcedural, frustum, -1);
+            }
+        }
+    }
 
     void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex) {
 		// Store the instance offset for this list of commands
@@ -693,7 +771,7 @@ namespace RenderDataManager {
         CreateMultiDrawIndirectCommands(drawCommands, instanceView, viewportIndex, instanceStart);
     }
 
-    void CreateDrawCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex) {
+    void CreateDrawCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum) {
         // Clear any commands from last frame
         commands.clear();
 
@@ -707,6 +785,16 @@ namespace RenderDataManager {
         for (const RenderItem& renderItem : renderItems) {
             if (renderItem.ignoredViewportIndex != -1 && renderItem.ignoredViewportIndex == viewportIndex) continue;
             if (renderItem.exclusiveViewportIndex != -1 && renderItem.exclusiveViewportIndex != viewportIndex) continue;
+
+            // Cull the whole animated object for shadow maps
+            if (frustum) {
+                uint64_t objectId = 0;
+                Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+
+                AnimatedGameObject* animatedGameObject = World::GetAnimatedGameObjectByObjectId(objectId);
+                if (!animatedGameObject) continue;
+                if (!frustum->IntersectsAABBFast(animatedGameObject->GetSkinnedAABB())) continue;
+            }
 
             g_instanceData.push_back(renderItem);
         }
@@ -716,7 +804,7 @@ namespace RenderDataManager {
         CreateMultiDrawIndirectCommandsSkinned(commands, instanceView, viewportIndex, instanceStart);
     }
 
-    void CreateDrawCommandsNonDeformingSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex) {
+    void CreateDrawCommandsNonDeformingSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum) {
         // Clear any commands from last frame
         commands.clear();
 
@@ -731,6 +819,16 @@ namespace RenderDataManager {
             if (renderItem.ignoredViewportIndex != -1 && renderItem.ignoredViewportIndex == viewportIndex) continue;
             if (renderItem.exclusiveViewportIndex != -1 && renderItem.exclusiveViewportIndex != viewportIndex) continue;
 
+            // Cull the whole animated object for shadow maps
+            if (frustum) {
+                uint64_t objectId = 0;
+                Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+
+                AnimatedGameObject* animatedGameObject = World::GetAnimatedGameObjectByObjectId(objectId);
+                if (!animatedGameObject) continue;
+                if (!frustum->IntersectsAABBFast(animatedGameObject->GetSkinnedAABB())) continue;
+            }
+
             g_instanceData.push_back(renderItem);
         }
 
@@ -739,15 +837,12 @@ namespace RenderDataManager {
         CreateMultiDrawIndirectCommandsSkinnedNonDeforming(commands, instanceView, viewportIndex, instanceStart);
     }
 
-    void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, uint32_t faceIndex, GPULight& gpuLight) {
+    void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, uint32_t faceIndex, Light* light, BlendingMode blendingModeFilter) {
         drawCommands.clear();
 
-        //std::string name = "light " + std::to_string(gpuLight.lightIndex);
-        //Timer timer(name);
-
-        Light* light = LegacyWorld::GetLightByIndex(gpuLight.lightIndex);
         if (!light) return;
 
+        // Get face frustum, bail if invalid
         Unloved::Frustum* frustum = light->GetFrustumByFaceIndex(faceIndex);
         if (!frustum) return;
 
@@ -755,20 +850,20 @@ namespace RenderDataManager {
         int instanceStart = g_instanceData.size();
 
         // Preallocate an estimate
-        g_instanceData.reserve(g_instanceData.size() + g_renderItemsPointLightShadows.size());
+        g_instanceData.reserve(g_instanceData.size() + renderItems.size());
 
         // Append new render items to the global instance data if it's within light frustum
-        // g_renderItems is already sorted by this point
+        // renderItems is already sorted by this point
         // but if anything breaks, check here! (maybe you re-ordered things)
-        for (const RenderItem& renderItem : g_renderItemsPointLightShadows) {
+        for (const RenderItem& renderItem : renderItems) {
+            if ((renderItem.shadowBit & SHADOW_BIT_CAST_SHADOW) == 0u) continue;
 
-            //AABB aabb(renderItem.aabbMin, renderItem.aabbMax);
-            //if (frustum->IntersectsAABB(aabb)) {
+            if ((BlendingMode)renderItem.blendingMode != blendingModeFilter) {
+                continue;
+            }
 
             if (frustum->IntersectsAABBFast(renderItem)) {
                 g_instanceData.push_back(renderItem);
-
-                //std::cout << gpuLight.lightIndex << " " << Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId)->name << "\n";
             }
         }
 
@@ -869,7 +964,7 @@ namespace RenderDataManager {
             uint64_t id = 0;
             Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, id);
 
-            AnimatedGameObject* animatedGameObject = LegacyWorld::GetAnimatedGameObjectByObjectId(id);
+            AnimatedGameObject* animatedGameObject = Unloved::World::GetAnimatedGameObjectByObjectId(id);
             if (!animatedGameObject) continue;
 
             // Add the id if aint in the map yet
@@ -1063,11 +1158,6 @@ namespace RenderDataManager {
         //}
     }
 
-
-    void SubmitGPULightHighRes(Light& light) {
-
-    }
-
     int EncodeBaseInstance(int playerIndex, int instanceOffset) {
         return (playerIndex << VIEWPORT_INDEX_SHIFT) | instanceOffset;
     }
@@ -1139,8 +1229,8 @@ namespace RenderDataManager {
         return g_flashLightShadowMapDrawInfo;
     }
 
-    const std::vector<GPULight>& GetGPULightsHighRes() {
-        return g_gpuLightsHighRes;
+    const std::vector<GPULight>& GetGPULights() {
+        return g_gpuLights;
     }
 
     const std::vector<glm::mat4>& GetOceanPatchTransforms() {
@@ -1160,73 +1250,80 @@ namespace RenderDataManager {
     }
 
     // Submissions
-    void SubmitGPULightHighRes(uint32_t lightIndex) {
-        if (g_gpuLightsHighRes.size() >= SHADOWMAP_HI_RES_COUNT) return;
+    void CreateGPULights() {
+        g_gpuLights.clear();
 
-        Light* light = LegacyWorld::GetLightByIndex(lightIndex);
-        if (!light) return;
+        // todo: remove me when u can
+        int lightIndex = 0;
 
-        GPULight& gpuLight = g_gpuLightsHighRes.emplace_back();
-        gpuLight.colorR = light->GetColor().r;
-        gpuLight.colorG = light->GetColor().g;
-        gpuLight.colorB = light->GetColor().b;
-        gpuLight.posX = light->GetPosition().x;
-        gpuLight.posY = light->GetPosition().y;
-        gpuLight.posZ = light->GetPosition().z;
-        gpuLight.radius = light->GetRadius();
-        gpuLight.strength = light->GetStrength();
-        gpuLight.shadowMapDirty = true;
-        gpuLight.lightIndex = lightIndex;
-        gpuLight.isDirtyForRaytracing = light->IsDirtyForRaytracing();
+        for (Light& light : World::GetLights()) {
+            GPULight& gpuLight = g_gpuLights.emplace_back();
+            gpuLight.colorR = light.GetColor().r;
+            gpuLight.colorG = light.GetColor().g;
+            gpuLight.colorB = light.GetColor().b;
+            gpuLight.posX = light.GetPosition().x;
+            gpuLight.posY = light.GetPosition().y;
+            gpuLight.posZ = light.GetPosition().z;
+            gpuLight.radius = light.GetRadius();
+            gpuLight.strength = light.GetStrength();
+            gpuLight.shadowMapDirty = true;
+            gpuLight.lightIndex = lightIndex;
+            gpuLight.isDirtyForRaytracing = light.IsDirtyForRaytracing();
+            gpuLight.hiResShadowMapIndex = ShadowMapManager::GetHiResShadowMapIndex(light.GetObjectId());
+            gpuLight.lowResShadowMapIndex = ShadowMapManager::GetLowResShadowMapIndex(light.GetObjectId());
 
-        //if (gpuLight.isDirtyForRaytracing) {
-        //    DebugDraw::DrawPoint(light->GetPosition(), BLUE);
-        //}
+            // Pack in the light ID
+            Hell::Bit::PackUint64(light.GetObjectId(), gpuLight.lightIdLowerBit, gpuLight.lightIdUpperBit);
 
-        IESProfile* iesProfile = nullptr;
-        switch (light->GetIESProfileType()) {
-            case IESProfileType::LAMP_0: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp0"); break;
-            case IESProfileType::LAMP_1: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp1"); break;
-            case IESProfileType::LAMP_2: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp2"); break;
-            case IESProfileType::LAMP_3: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp3"); break;
-            case IESProfileType::LAMP_4: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp4"); break;
-            case IESProfileType::LAMP_5: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp5"); break;
-            case IESProfileType::LAMP_6: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp6"); break;
-            case IESProfileType::LAMP_7: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp7"); break;
-            case IESProfileType::LAMP_8: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp8"); break;
-            case IESProfileType::LAMP_9: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp9"); break;
-            case IESProfileType::LAMP_10: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp10"); break;
-            case IESProfileType::LAMP_11: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp11"); break;
-            default: break;
-        }
-        if (iesProfile) {
-            gpuLight.iesExposure = light->GetIESExposure();
-            gpuLight.iesTextureIndex = iesProfile->GetTextureIndex();
-            gpuLight.iesVScale = iesProfile->GetVScale();
-            gpuLight.iesVBias = iesProfile->GetVBias();
-            gpuLight.iesHScale = iesProfile->GetHScale();
-            gpuLight.iesHBias = iesProfile->GetHBias();
-            gpuLight.iesMaxIntensity = iesProfile->GetMaxIntensity();
+            // todo: remove me when u can
+            lightIndex++;
 
-            // TODO: move to light init and this WHOLE FUNCTION to Light::CreateGPULight()
-            glm::vec3 forward = light->GetForward();
-            if (glm::dot(forward, forward) < 0.0001f) {
-                forward = glm::vec3(0.0f, -1.0f, 0.0f); // Default to straight down
-            }
-            else {
-                forward = glm::normalize(forward);
+            IESProfile* iesProfile = nullptr;
+            switch (light.GetIESProfileType()) {
+                case IESProfileType::LAMP_0: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp0"); break;
+                case IESProfileType::LAMP_1: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp1"); break;
+                case IESProfileType::LAMP_2: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp2"); break;
+                case IESProfileType::LAMP_3: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp3"); break;
+                case IESProfileType::LAMP_4: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp4"); break;
+                case IESProfileType::LAMP_5: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp5"); break;
+                case IESProfileType::LAMP_6: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp6"); break;
+                case IESProfileType::LAMP_7: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp7"); break;
+                case IESProfileType::LAMP_8: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp8"); break;
+                case IESProfileType::LAMP_9: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp9"); break;
+                case IESProfileType::LAMP_10: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp10"); break;
+                case IESProfileType::LAMP_11: iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp11"); break;
+                default: break;
             }
 
-            float twist = glm::radians(light->GetTwist());
-            glm::vec3 tempUp = (std::abs(forward.y) > 0.999f) ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
-            glm::vec3 right = glm::normalize(glm::cross(tempUp, forward));
-            glm::vec3 up = glm::cross(forward, right);
-            glm::vec3 finalRight = right * std::cos(twist) + up * std::sin(twist);
-            glm::vec3 finalUp = glm::cross(forward, finalRight);
+            if (iesProfile) {
+                gpuLight.iesExposure = light.GetIESExposure();
+                gpuLight.iesTextureIndex = iesProfile->GetTextureIndex();
+                gpuLight.iesVScale = iesProfile->GetVScale();
+                gpuLight.iesVBias = iesProfile->GetVBias();
+                gpuLight.iesHScale = iesProfile->GetHScale();
+                gpuLight.iesHBias = iesProfile->GetHBias();
+                gpuLight.iesMaxIntensity = iesProfile->GetMaxIntensity();
 
-            gpuLight.forward = forward;
-            gpuLight.right = finalRight;
-            gpuLight.up = finalUp;
+                // TODO: move to light init and this WHOLE FUNCTION to Light::CreateGPULight()
+                glm::vec3 forward = light.GetForward();
+                if (glm::dot(forward, forward) < 0.0001f) {
+                    forward = glm::vec3(0.0f, -1.0f, 0.0f); // Default to straight down
+                }
+                else {
+                    forward = glm::normalize(forward);
+                }
+
+                float twist = glm::radians(light.GetTwist());
+                glm::vec3 tempUp = (std::abs(forward.y) > 0.999f) ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
+                glm::vec3 right = glm::normalize(glm::cross(tempUp, forward));
+                glm::vec3 up = glm::cross(forward, right);
+                glm::vec3 finalRight = right * std::cos(twist) + up * std::sin(twist);
+                glm::vec3 finalUp = glm::cross(forward, finalRight);
+
+                gpuLight.forward = forward;
+                gpuLight.right = finalRight;
+                gpuLight.up = finalUp;
+            }
         }
     }
 

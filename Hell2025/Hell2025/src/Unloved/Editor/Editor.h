@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Legacy/Callbacks/Callbacks.h"
+#include "Unloved/Editor/ObjectNames.h"
 #include "Unloved/Camera/Camera.h"
 #include "Unloved/Common/CreateInfo.h"
 #include "Unloved/Common/Types.h"
@@ -15,14 +15,16 @@ namespace Unloved::Editor {
     struct PlacementObjectSubtype {
         GenericObjectType genericObject = GenericObjectType::UNDEFINED;
         FireplaceType fireplace = FireplaceType::UNDEFINED;
-        HousePlaneType housePlane = HousePlaneType::UNDEFINED;
+        WorldPlaneType housePlane = WorldPlaneType::UNDEFINED;
         std::string pickUpName = UNDEFINED_STRING;
+        std::string defaultEditorName = UNDEFINED_STRING;
 
         void Reset() {
             genericObject = GenericObjectType::UNDEFINED;
             fireplace = FireplaceType::UNDEFINED;
-            housePlane = HousePlaneType::UNDEFINED;
+            housePlane = WorldPlaneType::UNDEFINED;
             pickUpName = UNDEFINED_STRING;
+            defaultEditorName = UNDEFINED_STRING;
 
         }
     };
@@ -139,23 +141,6 @@ namespace Unloved::Editor {
     float GetMapHeightMinPaintHeight();
     float GetMapHeightMaxPaintHeight();
 
-    std::string GetNextEditorName(const std::string& desiredName, ObjectType objectType);
-
-    std::string GetNextAvailableDDGIVolumeName();
-    std::string GetNextAvailableGenericObjectName(GenericObjectType type);
-    std::string GetNextAvailableHousePlaneName(HousePlaneType type);
-    std::string GetNextAvailableTreeName(TreeType type);
-    std::string GetNextAvailableDoorName(DoorType type);
-    std::string GetNextAvailableWallName();
-
-    const std::vector<std::string>& GetCeilingNames();
-    const std::vector<std::string>& GetDoorNames();
-    const std::vector<std::string>& GetGenericObjectNames();
-    const std::vector<std::string>& GetFloorNames();
-    const std::vector<std::string>& GetTreeNames();
-    const std::vector<std::string>& GetUndefinedHousePlaneNames();
-    const std::vector<std::string>& GetWallNames();
-
     void CloseAllEditorWindows();
 
     void Save();
@@ -163,9 +148,9 @@ namespace Unloved::Editor {
     void SelectObjectByObjectId(uint64_t objectId);
 
     // Object placement
-    void PlaceHousePlane(HousePlaneType housePlaneType);
-    void PlaceFireplace(FireplaceType fireplaceType);
-    void PlaceGenericObject(GenericObjectType objectType);
+    void PlaceHousePlane(WorldPlaneType housePlaneType, const std::string& defaultEditorName = "House Plane");
+    void PlaceFireplace(FireplaceType fireplaceType, const std::string& defaultEditorName = "Fireplace");
+    void PlaceGenericObject(GenericObjectType objectType, const std::string& defaultEditorName = "Generic Object");
     void PlacePickUp(const std::string& name);
     void PlaceObject(ObjectType objectType); // used for windows, doors, etc
 

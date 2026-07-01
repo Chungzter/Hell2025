@@ -33,6 +33,9 @@ struct TrimSet {
 
     std::vector<RenderItem>& GetRenderItems()   { return m_renderItems; }
     TrimSetType GetType() const                 { return m_createInfo.type; }
+    uint64_t GetObjectId() const                { return m_objectId; }
+    const TrimSetCreateInfo& GetCreateInfo() const { return m_createInfo; }
+    const std::string& GetEditorName() const    { return m_createInfo.editorName; }
 
 private:
     std::vector<TrimCorner> m_corners;

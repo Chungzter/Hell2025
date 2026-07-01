@@ -2,6 +2,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/World/World.h"
 #include "Hell/Logging.h"
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
@@ -19,42 +20,42 @@ namespace Unloved::LegacyWorld {
             player->SubmitP90MagsRenderItems();
         }
 
-        for (HousePlane& housePlane : GetHousePlanes()) {
+        for (WorldPlane& housePlane : Unloved::World::GetWorldPlanes()) {
             housePlane.SubmitRenderItem();
         }
 
         // Main mesh buffer
-        for (Door& object : GetDoors())                   RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
-        for (Fireplace& object : GetFireplaces())         RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
-        for (GameObject& object : GetGameObjects())       RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
-        for (GenericObject& object : GetGenericObjects()) RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
-        for (Mermaid& object : GetMermaids())             RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
-        for (Piano& object : GetPianos())                 RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
-        for (PickUp& object : GetPickUps())               RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
-        for (PictureFrame& object : GetPictureFrames())   RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
-        for (Window& object : GetWindows())               RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (Door& object : Unloved::World::GetDoors())                   RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (Fireplace& object : Unloved::World::GetFireplaces())         RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (GameObject& object : Unloved::World::GetGameObjects())     RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (GenericObject& object : Unloved::World::GetGenericObjects()) RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (Mermaid& object : Unloved::World::GetMermaids())           RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (Piano& object : Unloved::World::GetPianos())               RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (PickUp& object : Unloved::World::GetPickUps())               RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (PictureFrame& object : Unloved::World::GetPictureFrames())   RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+        for (Window& object : Unloved::World::GetWindows())               RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
 
         // Clean me up
-        for (ChristmasTree& object : GetChristmasTrees())          RenderDataManager::SubmitRenderItems(object.GetRenderItems());
-        for (ChristmasLightSet& object : GetChristmasLightSets())  RenderDataManager::SubmitRenderItems(object.GetRenderItems());
-        for (Fence& object : GetFences())                          RenderDataManager::SubmitRenderItems(object.GetRenderItems());
-        for (Ladder& object : GetLadders())                        RenderDataManager::SubmitRenderItems(object.GetRenderItems());
-        for (Light& object : GetLights())                          RenderDataManager::SubmitRenderItems(object.GetRenderItems());
-        for (Staircase& object : GetStaircases())                  RenderDataManager::SubmitRenderItems(object.GetRenderItems());
-        for (TrimSet& object : GetTrimSets())                      RenderDataManager::SubmitRenderItems(object.GetRenderItems());
-        for (PowerPoleSet& object : GetPowerPoleSets())            RenderDataManager::SubmitRenderItems(object.GetRenderItems());
-        for (Wall& object : GetWalls())                            RenderDataManager::SubmitRenderItems(object.GetWeatherBoardstopRenderItems());
+        for (ChristmasTree& object : Unloved::World::GetChristmasTrees())        RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (ChristmasLightSet& object : Unloved::World::GetChristmasLightSets())  RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (Fence& object : Unloved::World::GetFences())                          RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (Ladder& object : Unloved::World::GetLadders())                        RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (Light& object : Unloved::World::GetLights())                         RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (Staircase& object : Unloved::World::GetStaircases())                  RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (TrimSet& object : Unloved::World::GetTrimSets())                      RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (PowerPoleSet& object : Unloved::World::GetPowerPoleSets())            RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (Wall& object : Unloved::World::GetWalls())                            RenderDataManager::SubmitRenderItems(object.GetWeatherBoardstopRenderItems());
 
-        for (Wall& wall : GetWalls()) {
+        for (Wall& wall : Unloved::World::GetWalls()) {
             wall.SubmitRenderItems();
         }
 
-        for (BulletCasing& bulletCasing : GetBulletCasings()) {
+        for (BulletCasing& bulletCasing : Unloved::World::GetBulletCasings()) {
             bulletCasing.SubmitRenderItem();
         }
 
         // Animated mesh nodes
-        for (AnimatedGameObject& animatedGameObject : GetAnimatedGameObjects()) {
+        for (AnimatedGameObject& animatedGameObject : Unloved::World::GetAnimatedGameObjects()) {
             animatedGameObject.UpdateRenderItems();
             RenderDataManager::SubmitAnimatedMeshNodes(animatedGameObject.GetAnimatedMeshNodes());
         }

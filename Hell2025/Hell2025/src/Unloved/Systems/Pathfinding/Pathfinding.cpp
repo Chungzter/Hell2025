@@ -186,19 +186,19 @@ namespace Pathfinding {
 
     int GetMouseX() {
         float scalingRatio = Hell::BackEnd::GetCurrentWindowWidth() / PRESENT_WIDTH;
-        return Util::MapRange(Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0, PRESENT_WIDTH);
+        return Hell::Math::MapRange(Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0, PRESENT_WIDTH);
     }
 
     int GetMouseY() {
-        return Util::MapRange(Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), 0, PRESENT_HEIGHT);
+        return Hell::Math::MapRange(Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), 0, PRESENT_HEIGHT);
     }
 
     int GetMouseCellX() {
-        return Util::MapRange(Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0, PRESENT_WIDTH) / CELL_SIZE;
+        return Hell::Math::MapRange(Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0, PRESENT_WIDTH) / CELL_SIZE;
     }
 
     int GetMouseCellY() {
-        return Util::MapRange(Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), 0, PRESENT_HEIGHT) / CELL_SIZE;
+        return Hell::Math::MapRange(Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), 0, PRESENT_HEIGHT) / CELL_SIZE;
     }
 
     int GetMapWidth() {

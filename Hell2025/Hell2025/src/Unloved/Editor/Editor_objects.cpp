@@ -14,6 +14,7 @@
 #include "Unloved/Editor/Gizmo.h"
 #include "Unloved/ObjectId.h"
 #include "Unloved/Session/Session.h"
+#include "Unloved/World/World.h"
 
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
@@ -68,7 +69,7 @@ namespace Unloved::Editor {
         }
 
         if (GetHoveredObjectType() == ObjectType::WALL_SEGMENT) {
-            Wall* wall = LegacyWorld::GetWallByWallSegmentObjectId(GetHoveredObjectId());
+            Wall* wall = Unloved::World::GetWallByWallSegmentObjectId(GetHoveredObjectId());
             if (wall) {
                 SetHoveredObjectType(ObjectType::WALL);
                 SetHoveredObjectId(wall->GetObjectId());
@@ -106,7 +107,7 @@ namespace Unloved::Editor {
         }
 
         if (GetSelectedObjectType() == ObjectType::WALL) {
-            if (Wall* wall = LegacyWorld::GetWallByObjectId(GetSelectedObjectId())) {
+            if (Wall* wall = Unloved::World::GetWallByObjectId(GetSelectedObjectId())) {
 
                 wall->DrawSegmentVertices(OUTLINE_COLOR);
                 wall->DrawSegmentLines(OUTLINE_COLOR);
@@ -149,7 +150,7 @@ namespace Unloved::Editor {
 
 
         // HACKKK
-        if (HousePlane* plane = LegacyWorld::GetHousePlaneByObjectId(GetSelectedObjectId())) {
+        if (WorldPlane* plane = Unloved::World::GetHousePlaneByObjectId(GetSelectedObjectId())) {
 
             plane->DrawEdges(OUTLINE_COLOR);
             plane->DrawVertices(OUTLINE_COLOR);
@@ -197,38 +198,38 @@ namespace Unloved::Editor {
 
             Gizmo::SetSourceObjectOffeset(LegacyWorld::GetGizmoOffest(GetSelectedObjectId()));
 
-            if (GenericObject* genericObject = LegacyWorld::GetGenericObjectById(GetSelectedObjectId())) {
+            if (GenericObject* genericObject = Unloved::World::GetGenericObjectById(GetSelectedObjectId())) {
                 Gizmo::SetPosition(genericObject->GetPosition());
                 Gizmo::SetRotation(genericObject->GetRotation());
             }
 
-            if (Door* door = LegacyWorld::GetDoorByObjectId(GetSelectedObjectId())) {
+            if (Door* door = Unloved::World::GetDoorByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(door->GetPosition());
                 Gizmo::SetRotation(door->GetRotation());
             }
 
-            if (Piano* piano = LegacyWorld::GetPianoByObjectId(GetSelectedObjectId())) {
+            if (Piano* piano = Unloved::World::GetPianoByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(piano->GetPosition());
                 Gizmo::SetRotation(piano->GetPosition());
             }
 
-            if (PickUp* pickup = LegacyWorld::GetPickUpByObjectId(GetSelectedObjectId())) {
+            if (PickUp* pickup = Unloved::World::GetPickUpByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(pickup->GetPosition());
                 Gizmo::SetRotation(pickup->GetRotation());
             }
 
-            if (Fireplace* fireplace = LegacyWorld::GetFireplaceById(GetSelectedObjectId())) {
+            if (Fireplace* fireplace = Unloved::World::GetFireplaceById(GetSelectedObjectId())) {
                 Gizmo::SetPosition(fireplace->GetPosition());
                 Gizmo::SetRotation(fireplace->GetRotation());
             }
 
-            if (Staircase* staircase = LegacyWorld::GetStaircaseByObjectId(GetSelectedObjectId())) {
+            if (Staircase* staircase = Unloved::World::GetStaircaseByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(staircase->GetPosition());
                 Gizmo::SetRotation(staircase->GetRotation());
             }
 
             if (GetSelectedObjectType() == ObjectType::HOUSE_PLANE) {
-                HousePlane* plane = LegacyWorld::GetHousePlaneByObjectId(GetSelectedObjectId());
+                WorldPlane* plane = Unloved::World::GetHousePlaneByObjectId(GetSelectedObjectId());
                 if (plane) {
                     // is this IF neccesssary? write safer less confusing logic!!!
                     if (GetEditorSelectionMode() == EditorSelectionMode::OBJECT) {
@@ -237,24 +238,24 @@ namespace Unloved::Editor {
                 }
             }
 
-            if (Ladder* ladder = LegacyWorld::GetLadderByObjectId(GetSelectedObjectId())) {
+            if (Ladder* ladder = Unloved::World::GetLadderByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(ladder->GetPosition());
                 Gizmo::SetRotation(ladder->GetRotation());
             }
 
-            if (Light* light = LegacyWorld::GetLightByObjectId(GetSelectedObjectId())) {
+            if (Light* light = Unloved::World::GetLightByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(light->GetPosition());
             }
 
             if (GetSelectedObjectType() == ObjectType::PICTURE_FRAME) {
-                PictureFrame* pictureFrame = LegacyWorld::GetPictureFrameByObjectId(GetSelectedObjectId());
+                PictureFrame* pictureFrame = Unloved::World::GetPictureFrameByObjectId(GetSelectedObjectId());
                 if (pictureFrame) {
                     Gizmo::SetPosition(pictureFrame->GetPosition());
                 }
             }
 
             if (GetSelectedObjectType() == ObjectType::WALL) {
-                if (Wall* wall = LegacyWorld::GetWallByObjectId(GetSelectedObjectId())) {
+                if (Wall* wall = Unloved::World::GetWallByObjectId(GetSelectedObjectId())) {
 
                     // is this IF neccesssary? write safer less confusing logic!!!
                     if (GetEditorSelectionMode() == EditorSelectionMode::OBJECT) {
@@ -264,7 +265,7 @@ namespace Unloved::Editor {
             }
 
             if (GetSelectedObjectType() == ObjectType::WINDOW) {
-                Window* window = LegacyWorld::GetWindowByObjectId(GetSelectedObjectId());
+                Window* window = Unloved::World::GetWindowByObjectId(GetSelectedObjectId());
                 if (window) {
                     Gizmo::SetPosition(window->GetPosition());
                 }
@@ -299,7 +300,7 @@ namespace Unloved::Editor {
                 // HACK
                 // HACK
                 if (GetSelectedObjectType() == ObjectType::WALL) {
-                    if (Wall* wall = LegacyWorld::GetWallByObjectId(GetSelectedObjectId())) {
+                    if (Wall* wall = Unloved::World::GetWallByObjectId(GetSelectedObjectId())) {
                         if (wall->UpdatePointPosition(g_selectedVertexIndex, Gizmo::GetPosition())) {
                             LegacyWorld::RecreateAllHouseGeometry(); // this could be slow???????????????????????????????
                         }
@@ -314,7 +315,7 @@ namespace Unloved::Editor {
                 // HACK
                 // HACK
                 if (GetSelectedObjectType() == ObjectType::HOUSE_PLANE) {
-                    if (HousePlane* plane = LegacyWorld::GetHousePlaneByObjectId(GetSelectedObjectId())) {
+                    if (WorldPlane* plane = Unloved::World::GetHousePlaneByObjectId(GetSelectedObjectId())) {
 
                         HousePlaneCreateInfo& createInfo = plane->GetCreateInfo();
 

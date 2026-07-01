@@ -42,7 +42,7 @@ struct DDGIVolume {
     uint32_t m_pointcloudVAO = 0;
     uint32_t m_pointcloudVBO = 0;
 
-    uint64_t& GetId()                                                          { return m_id; }
+    uint64_t& GetObjectId()                                                    { return m_id; }
     DDGIVolumeCreateInfo& GetCreateInfo()                                      { return m_createInfo; }
     const PointCloud& GetPointClound() const                                   { return m_pointCloud; }
     const std::vector<CloudPoint>& GetPointCloundPoints() const                { return m_pointCloud.GetPoints(); }

@@ -13,6 +13,7 @@
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
+#include "Unloved/World/World.h"
 
 namespace Audio = Hell::Audio;
 
@@ -402,7 +403,7 @@ void Player::SpawnCasing() {
 
         createInfo.mass = 0.008f;
 
-        LegacyWorld::AddBulletCasing(createInfo);
+        Unloved::World::AddBulletCasing(createInfo);
 
 
     }
@@ -528,8 +529,8 @@ void Player::DropWeapons() {
                 force = glm::normalize(force);
                 force *= 200.0f;
 
-                uint64_t id = LegacyWorld::AddPickUp(createInfo);
-                if (PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(id)) {
+                uint64_t id = Unloved::World::AddPickUp(createInfo);
+                if (PickUp* pickUp = Unloved::World::GetPickUpByObjectId(id)) {
                     pickUp->GetMeshNodes().AddForceToPhsyics(force);
                     //std::cout << "Tried to add force to " << weaponInfo->itemInfoName << "\n";
                 }

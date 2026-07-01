@@ -14,6 +14,8 @@ namespace Audio = Hell::Audio;
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
+#include "../../../../../../res/shaders/common/gl_fixed_bindings.glsl"
+
 
 namespace OpenGLRenderer {
 
@@ -55,6 +57,7 @@ namespace OpenGLRenderer {
         OpenGLShader* hairLightingShader = OpenGL::ResourceManager::GetShaderPtr("HairLighting");
         OpenGLShader* finalCompositeShader = OpenGL::ResourceManager::GetShaderPtr("HairFinalComposite");
         OpenGLShadowCubeMapArray* hiResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("HiRes");
+        OpenGLShadowCubeMapArray* lowResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("LowRes");
 
         if (!finalCompositeShader) return;
         if (!gBuffer) return;
@@ -62,6 +65,7 @@ namespace OpenGLRenderer {
         if (!depthPeelShader) return;
         if (!hairLightingShader) return;
         if (!hiResShadowMaps) return;
+        if (!lowResShadowMaps) return;
 
         UpdateHairDebugInput();
 
@@ -151,10 +155,9 @@ namespace OpenGLRenderer {
 
             OpenGL::BindShader("HairLighting");
             OpenGL::SetUniformVec3("u_moonlightDir", Unloved::World::GetMoonlightDirection());
-            glBindTextureUnit(4, GetTextureHandleByName("Flashlight2"));
-
-            glActiveTexture(GL_TEXTURE9);
-            glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, hiResShadowMaps->GetDepthTexture());
+            glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
+            glBindTextureUnit(TEX_IDX_SHADOW_MAP_HI_RES, hiResShadowMaps->GetDepthTexture());
+            glBindTextureUnit(TEX_IDX_SHADOW_MAP_LOW_RES, lowResShadowMaps->GetDepthTexture());
 
             // Standard hair color
             glBindVertexArray(meshBuffer.GetVAO());

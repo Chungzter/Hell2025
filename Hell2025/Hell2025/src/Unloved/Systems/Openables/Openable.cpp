@@ -6,6 +6,7 @@
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Systems/Openables/OpenableManager.h"
+#include "Unloved/World/World.h"
 
 namespace Unloved {
 
@@ -69,7 +70,7 @@ bool Openable::IsInteractable(const glm::vec3& viewPos) {
     if (m_prerequisiteOpenMeshName != UNDEFINED_STRING || m_prerequisiteClosedMeshName != UNDEFINED_STRING) {
        
         // Parent is generic object
-        if (GenericObject* genericObject = LegacyWorld::GetGenericObjectById(m_parentObjectId)) {
+        if (GenericObject* genericObject = Unloved::World::GetGenericObjectById(m_parentObjectId)) {
             MeshNodes& meshNodes = genericObject->GetMeshNodes();
             if (m_currentOpenState == OpenState::OPEN) {
                 if (meshNodes.MeshNodeIsClosed(m_prerequisiteClosedMeshName)) return false;
@@ -86,7 +87,7 @@ bool Openable::IsInteractable(const glm::vec3& viewPos) {
 std::string Openable::Interact(const glm::vec3& cameraPosition, const glm::vec3& cameraForward) {
     // Unlock deadlock from "the other side"
     if (m_locked && m_isDeadLock) {
-        if (Door* door = LegacyWorld::GetDoorByObjectId(m_parentObjectId)) {
+        if (Door* door = Unloved::World::GetDoorByObjectId(m_parentObjectId)) {
             if (door->CameraFacingDoorWorldForward(cameraPosition, cameraForward)) {
                 m_locked = false;
                 m_isDeadLock = false;
@@ -99,7 +100,7 @@ std::string Openable::Interact(const glm::vec3& cameraPosition, const glm::vec3&
     if (m_locked && m_lockedAudio != UNDEFINED_STRING) {
         Hell::Audio::PlayAudio(m_lockedAudio, 0.75f);
 
-        if (Door* door = LegacyWorld::GetDoorByObjectId(m_parentObjectId)) {
+        if (Door* door = Unloved::World::GetDoorByObjectId(m_parentObjectId)) {
             if (door->GetDeadLockState()) {
                 return "It's locked from the other side.";
             }

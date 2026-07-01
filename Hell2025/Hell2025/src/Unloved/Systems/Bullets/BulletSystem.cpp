@@ -11,6 +11,7 @@
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Blood/BloodSystem.h"
 #include "Unloved/Systems/GameAudio/GameAudio.h"
+#include "Unloved/World/World.h"
 
 #include <iostream> // TODO: get me out of here
 
@@ -237,7 +238,7 @@ namespace Unloved::BulletSystem {
 
                 // Trigger the closest piano note on piano hit
                 if (bullet.PlaysPiano()) {
-                    if (Piano* piano = LegacyWorld::GetPianoByObjectId(objectId)) {
+                    if (Piano* piano = Unloved::World::GetPianoByObjectId(objectId)) {
                         piano->TriggerInternalNoteFromExternalBulletHit(hitPosition);
                     }
                 }
@@ -251,12 +252,12 @@ namespace Unloved::BulletSystem {
                 }
 
                 // This is probably sketchy...
-                if (PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(objectId)) {
+                if (PickUp* pickUp = Unloved::World::GetPickUpByObjectId(objectId)) {
                     float strength = 250.0f;
                     glm::vec3 force = bullet.GetDirection() * strength;
                     pickUp->GetMeshNodes().AddForceToPhsyics(force);
                 }
-                if (GenericObject* object = LegacyWorld::GetGenericObjectById(objectId)) {
+                if (GenericObject* object = Unloved::World::GetGenericObjectById(objectId)) {
                     float strength = 250.0f;
                     glm::vec3 force = bullet.GetDirection() * strength;
                     object->GetMeshNodes().AddForceToPhsyics(force);
@@ -331,7 +332,7 @@ namespace Unloved::BulletSystem {
     // Dobermann hit
 
     void ProcessDobermannHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
-        Dobermann* dobermann = LegacyWorld::GetDobermannByObjectId(objectId);
+        Dobermann* dobermann = Unloved::World::GetDobermannByObjectId(objectId);
         if (!dobermann) return;
 
         dobermann->TakeDamage(bullet.GetDamage());
@@ -355,7 +356,7 @@ namespace Unloved::BulletSystem {
     // Kangaroo hit
 
     void ProcessKangarooHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
-        Kangaroo* kangaroo = LegacyWorld::GetKangarooByObjectId(objectId);
+        Kangaroo* kangaroo = Unloved::World::GetKangarooByObjectId(objectId);
         if (!kangaroo) return;
 
         kangaroo->GiveDamage(bullet.GetDamage());

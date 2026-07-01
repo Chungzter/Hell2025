@@ -8,10 +8,16 @@
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Timer.hpp"
 #include "Legacy/Util/Util.h"
-#include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/ObjectId.h"
+#include "Unloved/Objects/House/Door.h"
+#include "Unloved/Objects/House/Fireplace.h"
+#include "Unloved/Objects/House/HousePlane.h"
+#include "Unloved/Objects/Interior/Piano.h"
+#include "Unloved/Objects/Props/GenericObject.h"
+#include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Session/Session.h"
+#include "Unloved/World/World.h"
 
 #include "clipper2/clipper.h"
 #include "earcut/earcut.hpp"
@@ -194,8 +200,8 @@ namespace Unloved::NavMeshManager {
         }
 
         // Gather floors
-        for (HousePlane& housePlane : LegacyWorld::GetHousePlanes()) {
-            if (housePlane.GetType() != HousePlaneType::FLOOR) continue;
+        for (WorldPlane& housePlane : Unloved::World::GetWorldPlanes()) {
+            if (housePlane.GetType() != WorldPlaneType::FLOOR) continue;
 
             // Use y height as key
             float height = housePlane.GetWorldSpaceCenter().y;
@@ -208,19 +214,19 @@ namespace Unloved::NavMeshManager {
         }
 
         // Gather obstacles
-        for (Piano& piano : LegacyWorld::GetPianos()) {
+        for (Piano& piano : Unloved::World::GetPianos()) {
             for (const MeshNode& meshNode : piano.GetMeshNodes().GetNodes()) {
                 AddMeshNodeToPath(meshNode, &LevelInfo::staticObstaclePaths);
             }
         }
-        for (Fireplace& fireplace : LegacyWorld::GetFireplaces()) {
+        for (Fireplace& fireplace : Unloved::World::GetFireplaces()) {
             for (const MeshNode& meshNode : fireplace.GetMeshNodes().GetNodes()) {
                 if (meshNode.addToNavMesh) {
                     AddMeshNodeToPath(meshNode, &LevelInfo::staticObstaclePaths);
                 }
             }
         }
-        for (GenericObject& genericObject: LegacyWorld::GetGenericObjects()) {
+        for (GenericObject& genericObject: Unloved::World::GetGenericObjects()) {
             for (const MeshNode& meshNode : genericObject.GetMeshNodes().GetNodes()) {
                 if (meshNode.addToNavMesh) {
                     AddMeshNodeToPath(meshNode, &LevelInfo::staticObstaclePaths);
@@ -258,7 +264,7 @@ namespace Unloved::NavMeshManager {
         }
 
         // Cut doors out of the nav mesh
-        for (Door& door : LegacyWorld::GetDoors()) {
+        for (Door& door : Unloved::World::GetDoors()) {
             for (const MeshNode& meshNode : door.GetMeshNodes().GetNodes()) {
                 if (meshNode.addToNavMesh) {
                     AddMeshNodeToPath(meshNode, &LevelInfo::dynamicObstaclePaths);

@@ -9,7 +9,7 @@
 
 namespace Unloved {
 
-HousePlane::HousePlane(uint64_t id, const HousePlaneCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
+WorldPlane::WorldPlane(uint64_t id, const HousePlaneCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_objectId = id;
 
     m_createInfo = createInfo;
@@ -24,7 +24,7 @@ HousePlane::HousePlane(uint64_t id, const HousePlaneCreateInfo& createInfo, cons
     UpdateVertexDataFromCreateInfo();
 }
 
-void HousePlane::UpdateVertexDataFromCreateInfo() {
+void WorldPlane::UpdateVertexDataFromCreateInfo() {
     m_p0 = m_createInfo.p0;
     m_p1 = m_createInfo.p1;
     m_p2 = m_createInfo.p2;
@@ -73,7 +73,7 @@ void HousePlane::UpdateVertexDataFromCreateInfo() {
     m_navMeshPoly.emplace_back(m_p3.x, m_p3.z);
 }
 
-void HousePlane::CleanUp() {
+void WorldPlane::CleanUp() {
     Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
     m_vertices.clear();
     m_indices.clear();
@@ -89,7 +89,7 @@ void HousePlane::CleanUp() {
     meshBuffer.RemoveMesh(m_meshId);
 }
 
-void HousePlane::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {
+void WorldPlane::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {
     glm::vec3 offset = worldSpaceCenter - m_worldSpaceCenter;
     m_createInfo.p0 += offset;
     m_createInfo.p1 += offset;
@@ -98,35 +98,35 @@ void HousePlane::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {
     UpdateVertexDataFromCreateInfo();
 }
 
-void HousePlane::SetMaterial(const std::string& materialName) {
+void WorldPlane::SetMaterial(const std::string& materialName) {
     m_createInfo.materialName = materialName;
     m_materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
 }
 
-Material* HousePlane::GetMaterial() {
+Material* WorldPlane::GetMaterial() {
     return Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
 }
 
-void HousePlane::SetMeshId(uint32_t meshId) {
+void WorldPlane::SetMeshId(uint32_t meshId) {
     m_meshId = meshId;
 }
 
-void HousePlane::SetTextureScale(float value) {
+void WorldPlane::SetTextureScale(float value) {
     m_createInfo.textureScale = value;
     UpdateVertexDataFromCreateInfo();
 }
 
-void HousePlane::SetTextureOffsetU(float value) {
+void WorldPlane::SetTextureOffsetU(float value) {
     m_createInfo.textureOffsetU = value;
     UpdateVertexDataFromCreateInfo();
 }
 
-void HousePlane::SetTextureOffsetV(float value) {
+void WorldPlane::SetTextureOffsetV(float value) {
     m_createInfo.textureOffsetV = value;
     UpdateVertexDataFromCreateInfo();
 }
 
-void HousePlane::CreatePhysicsObject() {
+void WorldPlane::CreatePhysicsObject() {
     Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
 
     PhysicsFilterData filterData;
@@ -145,7 +145,7 @@ void HousePlane::CreatePhysicsObject() {
     Hell::Physics::SetRigidStaticUserData(m_physicsId, userData);
 }
 
-void HousePlane::SubmitRenderItem() {
+void WorldPlane::SubmitRenderItem() {
     Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
 
     Mesh* mesh = meshBuffer.GetMeshById(m_meshId);
@@ -169,25 +169,25 @@ void HousePlane::SubmitRenderItem() {
 	RenderDataManager::SubmitRenderItemProcedural(renderItem);
 }
 
-void HousePlane::DrawVertices(glm::vec4 color) {
+void WorldPlane::DrawVertices(glm::vec4 color) {
     DebugDraw::DrawPoint(m_p0, color);
     DebugDraw::DrawPoint(m_p1, color);
     DebugDraw::DrawPoint(m_p2, color);
     DebugDraw::DrawPoint(m_p3, color);
 }
 
-void HousePlane::DrawEdges(glm::vec4 color) {
+void WorldPlane::DrawEdges(glm::vec4 color) {
     DebugDraw::DrawLine(m_p0, m_p1, color);
     DebugDraw::DrawLine(m_p1, m_p2, color);
     DebugDraw::DrawLine(m_p2, m_p3, color);
     DebugDraw::DrawLine(m_p3, m_p0, color);
 }
 
-void HousePlane::HideInEditor() {
+void WorldPlane::HideInEditor() {
     m_hiddenInEditor = true;
 }
 
-void HousePlane::UnhideInEditor() {
+void WorldPlane::UnhideInEditor() {
 	m_hiddenInEditor = false;
 }
 }

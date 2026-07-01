@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/vec3.hpp>
 
+#include <limits>
 #include <vector>
 
 struct AABB {
@@ -25,6 +26,6 @@ private:
     void CalculateCenterAndExtents();
     glm::vec3 extents = glm::vec3(0);
     glm::vec3 center = glm::vec3(0);
-    glm::vec3 boundsMin = glm::vec3(1e30f);
-    glm::vec3 boundsMax = glm::vec3(-1e30f);
+    glm::vec3 boundsMin = glm::vec3(std::numeric_limits<float>::max());
+    glm::vec3 boundsMax = glm::vec3(std::numeric_limits<float>::lowest());
 };

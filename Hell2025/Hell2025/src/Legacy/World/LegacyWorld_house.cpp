@@ -4,6 +4,7 @@
 
 #include "Unloved/Systems/DDGI/GlobalIllumination.h"
 #include "Unloved/Systems/House/HouseManager.h"
+#include "Unloved/World/World.h"
 
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
@@ -20,16 +21,16 @@ namespace Unloved::LegacyWorld {
 
         UpdateHouseLightOccluderBvh();
 
-        for (Light& light : GetLights()) {
+        for (Light& light : Unloved::World::GetLights()) {
             light.RaycastWorldBounds();
         }
     }
 
     void RecreateAllWallTrims() {
-        Hell::SlotMap<TrimSet>& trimSets = GetTrimSets();
+        Hell::SlotMap<TrimSet>& trimSets = Unloved::World::GetTrimSets();
         trimSets.clear();
 
-		for (Wall& wall : GetWalls()) {
+		for (Wall& wall : Unloved::World::GetWalls()) {
             if (wall.GetWallType() == WallType::WEATHER_BOARDS) continue;
 
 			const WallCreateInfo& createInfo = wall.GetCreateInfo();
@@ -44,7 +45,7 @@ namespace Unloved::LegacyWorld {
                 createInfoCeiling.trimScale = 0.95f;
 			}
 
-			LegacyWorld::AddTrimSet(createInfoCeiling, SpawnOffset());
+			Unloved::World::AddTrimSet(createInfoCeiling, SpawnOffset());
 		}
     }
 
@@ -53,7 +54,7 @@ namespace Unloved::LegacyWorld {
 
         // Door/window clipping volumes are owned by those objects, so CSG can use them directly
 
-        for (Wall& wall : GetWalls()) {
+        for (Wall& wall : Unloved::World::GetWalls()) {
 
             // Update CSG and trims
             wall.UpdateSegmentsTrimsAndVertexData();
@@ -74,7 +75,7 @@ namespace Unloved::LegacyWorld {
     void RecreateAllProcedularHousePlaneMesh() {
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
 
-        for (HousePlane& housePlane : GetHousePlanes()) {
+        for (WorldPlane& housePlane : Unloved::World::GetWorldPlanes()) {
             // Remove old mesh
             meshBuffer.RemoveMesh(housePlane.GetMeshId());
 
@@ -87,19 +88,19 @@ namespace Unloved::LegacyWorld {
     }
 
     void RecreateAllWeatherBoards() {
-        for (Wall& wall : GetWalls()) {
+        for (Wall& wall : Unloved::World::GetWalls()) {
             wall.RecreateWeatherBoardMesh();
         }
     }
 
     void RemoveAllWeatherBoards() {
-        for (Wall& wall : GetWalls()) {
+        for (Wall& wall : Unloved::World::GetWalls()) {
             wall.CleanUpWeatherBoardMesh();
         }
     }
 
     void RecreateAllHangingLightCords() {
-        for (Light& light : GetLights()) {
+        for (Light& light : Unloved::World::GetLights()) {
             light.ConfigureMeshNodes();
         }
     }

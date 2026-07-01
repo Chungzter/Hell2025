@@ -3,6 +3,7 @@
 #include "Hell/BVH/Types/MeshBvh.h"
 #include "Hell/Common/Bit.h"
 #include "Hell/Logging.h"
+#include "Hell/Math/Math.h"
 
 #include "bvh/v2/bbox.h"
 #include "bvh/v2/bvh.h"
@@ -29,10 +30,6 @@ namespace {
 
     MadmannVec3 GlmVec3ToMadmannVec3(const glm::vec3& vec) {
         return MadmannVec3(vec.x, vec.y, vec.z);
-    }
-
-    bool IsNan(const glm::vec3& value) {
-        return std::isnan(value.x) || std::isnan(value.y) || std::isnan(value.z);
     }
 
     RayData ComputeRayData(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float minDistance, float maxDistance) {
@@ -442,7 +439,7 @@ bool SceneBvh::HasMeshBvh(uint64_t meshBvhId) const {
 BvhRayResult SceneBvh::AnyHit(glm::vec3 rayOrigin, glm::vec3 rayDir, float maxDistance) const {
     BvhRayResult rayResult = CreateMissResult(maxDistance);
 
-    if (IsNan(rayOrigin) || IsNan(rayDir) || m_nodes.empty() || m_gpuInstances.empty()) {
+    if (Hell::Math::IsNan(rayOrigin) || Hell::Math::IsNan(rayDir) || m_nodes.empty() || m_gpuInstances.empty()) {
         return rayResult;
     }
 
@@ -490,7 +487,7 @@ BvhRayResult SceneBvh::AnyHit(glm::vec3 rayOrigin, glm::vec3 rayDir, float maxDi
 BvhRayResult SceneBvh::ClosestHit(glm::vec3 rayOrigin, glm::vec3 rayDir, float maxDistance) const {
     BvhRayResult rayResult = CreateMissResult(maxDistance);
 
-    if (IsNan(rayOrigin) || IsNan(rayDir) || m_nodes.empty() || m_gpuInstances.empty()) {
+    if (Hell::Math::IsNan(rayOrigin) || Hell::Math::IsNan(rayDir) || m_nodes.empty() || m_gpuInstances.empty()) {
         return rayResult;
     }
 

@@ -1,11 +1,12 @@
 #include "Unloved/Bible/Bible.h"
-#include "Util.h"
+#include "Hell/Common/Constants.h"
+#include "Hell/Common/Random.h"
 
 namespace Bible {
     const std::string& PickRandom(const std::vector<std::string>& vector) {
         if (vector.empty()) return UNDEFINED_STRING;
 
-        int rand = Util::RandomInt(0, vector.size() - 1);
+        int rand = Hell::Random::Int(0, vector.size() - 1);
         return vector[rand];
     }
 

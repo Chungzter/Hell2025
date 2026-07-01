@@ -8,9 +8,11 @@ namespace Unloved {
 Ladder::Ladder(uint64_t id, LadderCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_objectId = id;
     m_createInfo = createInfo;
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation.y += spawnOffset.yRotation;
 
-    m_position = createInfo.position + spawnOffset.translation;
-    m_rotation = createInfo.rotation + glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+    m_position = m_createInfo.position;
+    m_rotation = m_createInfo.rotation;
 
     std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 
@@ -29,30 +31,48 @@ Ladder::Ladder(uint64_t id, LadderCreateInfo& createInfo, SpawnOffset& spawnOffs
     m_meshNodes.EnableCSMShadows();
 
     RecomputeModelMatrix();
+    m_meshNodes.Update(m_modelMatrix);
+    UpdateOverlapHitBoxAABB();
 }
 
 void Ladder::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
     m_position = position;
     RecomputeModelMatrix();
+    m_meshNodes.Update(m_modelMatrix);
+    UpdateOverlapHitBoxAABB();
 }
 
 void Ladder::SetRotation(const glm::vec3& rotation) {
     m_createInfo.rotation = rotation;
     m_rotation = rotation;
     RecomputeModelMatrix();
+    m_meshNodes.Update(m_modelMatrix);
+    UpdateOverlapHitBoxAABB();
 }
 
 void Ladder::Update(float deltaTime) {
     m_meshNodes.Update(m_modelMatrix);
+    UpdateOverlapHitBoxAABB();
 
+    //RenderDebug();
+}
+
+void Ladder::UpdateOverlapHitBoxAABB() {
     // Clean me up
+    const std::vector<RenderItem>& renderItems = m_meshNodes.GetRenderItems();
+    if (renderItems.empty()) {
+        m_overlapHitAABB = AABB();
+        return;
+    }
+
     glm::vec3 boundsMin = glm::vec3(std::numeric_limits<float>::max());
     glm::vec3 boundsMax = glm::vec3(std::numeric_limits<float>::lowest());
-    for (const RenderItem& renderItem : m_meshNodes.GetRenderItems()) {
+    for (const RenderItem& renderItem : renderItems) {
         boundsMin = glm::min(boundsMin, glm::vec3(renderItem.aabbMin));
         boundsMax = glm::max(boundsMax, glm::vec3(renderItem.aabbMax));
     }
+
     float shrink = 0.125;
     boundsMin.x += shrink;
     boundsMin.z += shrink;
@@ -60,9 +80,6 @@ void Ladder::Update(float deltaTime) {
     boundsMax.z -= shrink;
     boundsMax.y += 1.1;
     m_overlapHitAABB = AABB(boundsMin, boundsMax);
-    // Clean me up
-
-    //RenderDebug();
 }
 
 void Ladder::RenderDebug() {

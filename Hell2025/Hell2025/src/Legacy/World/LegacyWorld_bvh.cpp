@@ -3,7 +3,9 @@
 #include "Unloved/Editor/Editor.h"
 #include "Hell/BVH/BVH.h"
 #include "Hell/Common/Bit.h"
+#include "Hell/Math/Math.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Unloved/World/World.h"
 #include "Timer.hpp"
 
 namespace Unloved::LegacyWorld {
@@ -90,7 +92,7 @@ namespace Unloved::LegacyWorld {
     }
 
     void AddHousePlaneOccluderTriangles(std::vector<HouseOccluderTriangle>& triangles, const glm::vec3& boundsMin, const glm::vec3& boundsMax) {
-        for (HousePlane& plane : GetHousePlanes()) {
+        for (WorldPlane& plane : Unloved::World::GetWorldPlanes()) {
             if (plane.GetParentDoorId() != 0) {
                 continue;
             }
@@ -116,7 +118,7 @@ namespace Unloved::LegacyWorld {
     }
 
     void AddWallOccluderTriangles(std::vector<HouseOccluderTriangle>& triangles, const glm::vec3& boundsMin, const glm::vec3& boundsMax) {
-        for (Wall& wall : GetWalls()) {
+        for (Wall& wall : Unloved::World::GetWalls()) {
             Material* material = wall.GetMaterial();
             const int baseColorTextureIndex = material ? material->m_basecolor : -1;
             const int rmaTextureIndex = material ? material->m_rma : -1;
@@ -145,7 +147,7 @@ namespace Unloved::LegacyWorld {
         const int baseColorTextureIndex = material ? material->m_basecolor : -1;
         const int rmaTextureIndex = material ? material->m_rma : -1;
 
-        for (Door& door : GetDoors()) {
+        for (Door& door : Unloved::World::GetDoors()) {
             const glm::mat4& modelMatrix = door.GetDoorModelMatrix();
 
             const float padding = 0.02f;
@@ -332,16 +334,16 @@ namespace Unloved::LegacyWorld {
 		g_dynamicSceneInstances.clear();
 
 		// Add any dynamic mesh nodes to the primitive instances vector
-		for (Door& door : GetDoors()) {
+		for (Door& door : Unloved::World::GetDoors()) {
 			CreateDynamicPrimtiveInstances(door.GetMeshNodes());
 		}
-		for (Fireplace& fireplace : GetFireplaces()) {
+		for (Fireplace& fireplace : Unloved::World::GetFireplaces()) {
             CreateDynamicPrimtiveInstances(fireplace.GetMeshNodes());
 		}
-		for (GenericObject& genericObject : GetGenericObjects()) {
+		for (GenericObject& genericObject : Unloved::World::GetGenericObjects()) {
 			CreateDynamicPrimtiveInstances(genericObject.GetMeshNodes());
         }
-        for (Piano& piano : GetPianos()) {
+        for (Piano& piano : Unloved::World::GetPianos()) {
             CreateDynamicPrimtiveInstances(piano.GetMeshNodes());
         }
 
@@ -352,13 +354,13 @@ namespace Unloved::LegacyWorld {
 		//		CreateObjectInstanceDataFromRenderItem(renderItem, g_dynamicSceneInstances);
 		//	}
 		//}
-		for (PictureFrame& pictureFrame : GetPictureFrames()) {
+		for (PictureFrame& pictureFrame : Unloved::World::GetPictureFrames()) {
 			const std::vector<RenderItem>& renderItems = pictureFrame.GetRenderItems();
 			for (const RenderItem& renderItem : renderItems) {
 				CreateObjectInstanceDataFromRenderItem(renderItem, g_dynamicSceneInstances);
 			}
 		}
-		for (PickUp& pickUp : GetPickUps()) {
+		for (PickUp& pickUp : Unloved::World::GetPickUps()) {
 			const std::vector<RenderItem>& renderItems = pickUp.GetRenderItems();
 			for (const RenderItem& renderItem : renderItems) {
 				CreateObjectInstanceDataFromRenderItem(renderItem, g_dynamicSceneInstances);
@@ -382,21 +384,21 @@ namespace Unloved::LegacyWorld {
 		g_staticSceneInstances.clear();
 
         // Render items
-        for (ChristmasLightSet& object : GetChristmasLightSets())	CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (Fence& object : GetFences())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (Ladder& object : GetLadders())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (Mermaid& object : GetMermaids())						CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (PowerPoleSet& object : GetPowerPoleSets())			    CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (Staircase& object : GetStaircases())					CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (ChristmasLightSet& object : Unloved::World::GetChristmasLightSets())	CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (Fence& object : Unloved::World::GetFences())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (Ladder& object : Unloved::World::GetLadders())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (Mermaid& object : Unloved::World::GetMermaids())						CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (PowerPoleSet& object : Unloved::World::GetPowerPoleSets())			    CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (Staircase& object : Unloved::World::GetStaircases())					CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
 
         // Add any static mesh nodes to the primitive instances vector
-        for (Door& object : GetDoors())                     CreateStaticPrimtiveInstances(object.GetMeshNodes());
-        for (Fireplace& object : GetFireplaces())           CreateStaticPrimtiveInstances(object.GetMeshNodes());
-        for (GenericObject& object : GetGenericObjects())   CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (Door& object : Unloved::World::GetDoors())                     CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (Fireplace& object : Unloved::World::GetFireplaces())           CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (GenericObject& object : Unloved::World::GetGenericObjects())   CreateStaticPrimtiveInstances(object.GetMeshNodes());
         //for (Ladder& object : GetLadders())                 CreateStaticPrimtiveInstances(object.GetMeshNodes()); why didn't this work? some bug
-        for (Light& object : GetLights())					CreateStaticPrimtiveInstances(object.GetMeshNodes());
-        for (Piano& object : GetPianos())                   CreateStaticPrimtiveInstances(object.GetMeshNodes());
-        for (Window& object : GetWindows())                 CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (Light& object : Unloved::World::GetLights())					CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (Piano& object : Unloved::World::GetPianos())                   CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (Window& object : Unloved::World::GetWindows())                 CreateStaticPrimtiveInstances(object.GetMeshNodes());
 
         // Recreate the TLAS
 		if (!Hell::Bvh::AddInstanceMeshBvhsToSceneBvh(g_staticSceneBvhId, g_staticSceneInstances)) return;
@@ -408,7 +410,7 @@ namespace Unloved::LegacyWorld {
 
 	BvhRayResult ClosestHit(glm::vec3 rayOrigin, glm::vec3 rayDir, float maxRayDistance) {
 		// Bail if invalid ray direction
-        if (Util::IsNan(rayDir)) {
+        if (Hell::Math::IsNan(rayDir)) {
 			return BvhRayResult();
         }
 
@@ -444,7 +446,7 @@ namespace Unloved::LegacyWorld {
         BvhRayResult rayResult;
         rayResult.distanceToHit = maxRayDistance;
 
-        if (Util::IsNan(rayDir)) {
+        if (Hell::Math::IsNan(rayDir)) {
             return rayResult;
         }
 

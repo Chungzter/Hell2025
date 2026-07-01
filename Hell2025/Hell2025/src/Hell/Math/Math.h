@@ -2,7 +2,11 @@
 
 #include "Easing.h"
 #include "GLM.h"
+#include "Interpolation.h"
+#include "Range.h"
 #include "Ray.h"
+#include "Rotation.h"
+#include "Hell/Common/Constants.h"
 #include "Hell/Transform.h"
 
 #include <cmath>
@@ -11,6 +15,10 @@
 #include <vector>
 
 namespace Hell::Math {
+
+    inline float DegToRad(float degrees) {
+        return degrees * (HELL_PI / 180.0f);
+    }
 
     inline glm::vec3 MidPoint(const glm::vec3& a, const glm::vec3& b) {
         return (a + b) * 0.5f;
@@ -74,6 +82,33 @@ namespace Hell::Math {
                 value[col][row] = Sanitize(value[col][row], threshold);
             }
         }
+    }
+
+    inline bool IsNan(float value) {
+        return glm::isnan(value);
+    }
+
+    inline bool IsNan(const glm::vec2& value) {
+        return glm::isnan(value.x) || glm::isnan(value.y);
+    }
+
+    inline bool IsNan(const glm::vec3& value) {
+        return glm::isnan(value.x) || glm::isnan(value.y) || glm::isnan(value.z);
+    }
+
+    inline bool IsNan(const glm::vec4& value) {
+        return glm::isnan(value.x) || glm::isnan(value.y) || glm::isnan(value.z) || glm::isnan(value.w);
+    }
+
+    inline bool IsNan(const glm::mat4& matrix) {
+        return glm::any(glm::isnan(matrix[0])) ||
+            glm::any(glm::isnan(matrix[1])) ||
+            glm::any(glm::isnan(matrix[2])) ||
+            glm::any(glm::isnan(matrix[3]));
+    }
+
+    inline bool IsNaN(const glm::mat4& matrix) {
+        return IsNan(matrix);
     }
 
     inline bool PointsEqual(const glm::vec3& a, const glm::vec3& b, float epsilon) {

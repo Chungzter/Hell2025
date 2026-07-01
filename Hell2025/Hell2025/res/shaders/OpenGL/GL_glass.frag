@@ -3,18 +3,19 @@
 #extension GL_ARB_bindless_texture : enable
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
+#include "../common/gl_fixed_bindings.glsl"
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"
 
 layout (location = 0) out vec4 FragOut;
 
-layout (binding = 0) uniform sampler2D baseColorTexture;
-layout (binding = 1) uniform sampler2D normalTexture;
-layout (binding = 2) uniform sampler2D rmaTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray FlashlighShadowMapTextureArray;
 
+layout (binding = 4) uniform sampler2D baseColorTexture;
+layout (binding = 5) uniform sampler2D normalTexture;
+layout (binding = 6) uniform sampler2D rmaTexture;
 layout (binding = 7) uniform sampler2D FlashlightCookieTexture;
-layout (binding = 8) uniform sampler2DArray FlashlighShadowMapTextureArray;
 
 readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData  rendererData;   };
 readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData  viewportData[]; };

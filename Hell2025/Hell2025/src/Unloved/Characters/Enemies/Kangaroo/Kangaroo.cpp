@@ -11,6 +11,7 @@
 #include "World/LegacyWorld.h"
 #include "Renderer/Renderer.h"
 #include "Unloved/ObjectId.h"
+#include "Unloved/World/World.h"
 #include "Timer.hpp"
 //
 
@@ -18,9 +19,15 @@ namespace Audio = Hell::Audio;
 
 namespace Unloved {
 
-    void Kangaroo::Init(KangarooCreateInfo createInfo) {
+    Kangaroo::Kangaroo(uint64_t id, KangarooCreateInfo createInfo, SpawnOffset spawnOffset) {
+        Init(id, createInfo, spawnOffset);
+    }
+
+    void Kangaroo::Init(uint64_t id, KangarooCreateInfo createInfo, SpawnOffset spawnOffset) {
         m_createInfo = createInfo;
-        m_objectId = Unloved::GetNextObjectId(ObjectType::KANGAROO);
+        m_createInfo.position += spawnOffset.translation;
+        m_createInfo.rotation.y += spawnOffset.yRotation;
+        m_objectId = id;
 
         Respawn();
     
@@ -96,7 +103,7 @@ namespace Unloved {
     }
 
     Unloved::AnimatedGameObject* Kangaroo::GetAnimatedGameObject(){
-        return LegacyWorld::GetAnimatedGameObjectByObjectId(m_animatedGameObjectId);
+        return Unloved::World::GetAnimatedGameObjectByObjectId(m_animatedGameObjectId);
     }
 
     Ragdoll* Kangaroo::GetRagdoll() {

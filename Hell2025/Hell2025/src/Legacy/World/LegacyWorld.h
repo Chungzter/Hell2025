@@ -99,39 +99,11 @@ namespace Unloved::LegacyWorld {
 
     void AddDecal2(DecalCreateInfo createInfo);
 
-    uint64_t AddChristmasLights(ChristmasLightsCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    uint64_t AddFence(FenceCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    uint64_t AddLadder(LadderCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    uint64_t AddPickUp(PickUpCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    uint64_t AddPictureFrame(PictureFrameCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    uint64_t AddPowerPoleSet(PowerPoleSetCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    uint64_t AddStaircase(StaircaseCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    uint64_t AddTrimSet(TrimSetCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    uint64_t AddWall(WallCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-
-    void AddDDGIVolume(DDGIVolumeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    void AddDoor(DoorCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    void AddBulletCasing(BulletCasingCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    void AddChristmasTree(ChristmasTreeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    void AddCreateInfoCollection(CreateInfoCollection& createInfoCollection, SpawnOffset spawnOffset);
-    void AddDobermann(DobermannCreateInfo& createInfo);
-    void AddFireplace(FireplaceCreateInfo createInfo, SpawnOffset spawnOffset);
-    void AddGenericObject(GenericObjectCreateInfo createInfo, SpawnOffset spawnOffset);
-    void AddGameObject(GameObjectCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    void AddHousePlane(HousePlaneCreateInfo createInfo, SpawnOffset spawnOffset);
-    void AddKangaroo(const KangarooCreateInfo& createInfo);
-    uint64_t AddLight(LightCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    void AddMermaid(MermaidCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    void AddPiano(PianoCreateInfo createInfo, SpawnOffset spawnOffset);
-    void AddWindow(WindowCreateInfo createInfo, SpawnOffset spawnOffset);
-
     void PrintObjectCounts();
 
     void EnableOcean();
     void DisableOcean();
     bool HasOcean();
-
-    void UpdateDirtyFlags();
 
     // Creation
     void CreateGameObject();
@@ -154,9 +126,6 @@ namespace Unloved::LegacyWorld {
 
     const float GetWorldSpaceWidth();
     const float GetWorldSpaceDepth();
-
-    // Util
-    bool ObjectTypeIsInteractable(ObjectType objectType, uint64_t objectId, glm::vec3 playerCameraPosition, glm::vec3 rayHitPosition);
 
     // Map
     const std::string& GetCurrentMapName();
@@ -181,72 +150,15 @@ namespace Unloved::LegacyWorld {
     const glm::vec3& GetObjectRotation(uint64_t objectId);
     const std::string& GetObjectEditorName(uint64_t objectId);
 
-    AnimatedGameObject* GetAnimatedGameObjectByObjectId(uint64_t objectId);
-    CreateInfoCollection GetCreateInfoCollection();
     MeshNode* GetMeshNodeByObjectIdAndLocalNodeIndex(uint64_t id, int32_t meshNodeLocalIndex);
 
-    ChristmasLightSet* GetChristmasLightsByObjectId(uint64_t objectId);
-    Unloved::DDGIVolume* GetDDGIVolumeByObjectId(uint64_t objectId);
-    Door* GetDoorByObjectId(uint64_t objectId);
-    Fence* GetFenceByObjectId(uint64_t objectId);
-    Fireplace* GetFireplaceById(uint64_t objectId);
-    GenericObject* GetGenericObjectById(uint64_t objectId);
-    HousePlane* GetHousePlaneByObjectId(uint64_t objectId);
-    Ladder* GetLadderByObjectId(uint64_t objectId);
-    Light* GetLightByObjectId(uint64_t objectId); // Does not use slot map
-    PowerPoleSet* GetPowerPoleSetByObjectId(uint64_t objectId);
-    Staircase* GetStaircaseByObjectId(uint64_t objectId);
-
-    Piano* GetPianoByObjectId(uint64_t objectId);
-    Piano* GetPianoByMeshNodeObjectId(uint64_t objectId);
-    PianoKey* GetPianoKeyByObjectId(uint64_t objectId);
-    PickUp* GetPickUpByObjectId(uint64_t objectID);
-    PictureFrame* GetPictureFrameByObjectId(uint64_t objectId);
-    Wall* GetWallByObjectId(uint64_t objectId);
-    Wall* GetWallByWallSegmentObjectId(uint64_t objectId);
-    Dobermann* GetDobermannByObjectId(uint64_t objectId);
-    Kangaroo* GetKangarooByObjectId(uint64_t objectId);
     Shark* GetSharkByObjectId(uint64_t objectId);
-    Window* GetWindowByObjectId(uint64_t objectId);
-    GameObject* GetGameObjectByIndex(int32_t index);
-    GameObject* GetGameObjectByName(const std::string& name);
-    Light* GetLightByIndex(int32_t index);
-
-    uint32_t GetLightCount();
-
-    Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects();
-    Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets();
-    Hell::SlotMap<Unloved::DDGIVolume>& GetDDGIVolumes();
-    Hell::SlotMap<Door>& GetDoors();
-    Hell::SlotMap<Fence>& GetFences();
-    Hell::SlotMap<Fireplace>& GetFireplaces();
-    Hell::SlotMap<GenericObject>& GetGenericObjects();
-    Hell::SlotMap<HousePlane>& GetHousePlanes();
-    Hell::SlotMap<Ladder>& GetLadders();
-    Hell::SlotMap<PickUp>& GetPickUps();
-    Hell::SlotMap<PictureFrame>& GetPictureFrames();
-    Hell::SlotMap<PowerPoleSet>& GetPowerPoleSets();
-    Hell::SlotMap<Staircase>& GetStaircases();
-    Hell::SlotMap<TrimSet>& GetTrimSets();
-    Hell::SlotMap<Wall>& GetWalls();
-    Hell::SlotMap<Window>& GetWindows();
-
-    std::vector<BulletCasing>& GetBulletCasings();
-    std::vector<ChristmasTree>& GetChristmasTrees();
     std::vector<Decal>& GetDecals();
-    std::vector<Dobermann>& GetDobermanns();
-    std::vector<GameObject>& GetGameObjects();
     std::vector<HeightMapChunk>& GetHeightMapChunks();
-    std::vector<Light>& GetLights();
-    std::vector<Kangaroo>& GetKangaroos();
     std::vector<MapInstance>& GetMapInstances();
-    std::vector<Mermaid>& GetMermaids();
-    std::vector<Piano>& GetPianos();
     std::vector<SpawnPoint>& GetCampaignSpawnPoints();
     std::vector<SpawnPoint>& GetDeathmatchSpawnPoints();
     std::vector<Hell::Transform>& GetDoorAndWindowCubeTransforms();
     std::vector<Road>& GetRoads();
     std::vector<Shark>& GetSharks();
-    std::vector<uint64_t> GetLightIds();
-    std::vector<GPUAABB>& GetDirtyDoorAABBS();
 }

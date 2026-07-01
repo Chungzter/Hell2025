@@ -3,6 +3,7 @@
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/ObjectId.h"
+#include "Unloved/World/World.h"
 
 namespace Unloved::MirrorManager {
     Hell::SlotMap<Mirror> g_mirrors;
@@ -14,7 +15,7 @@ namespace Unloved::MirrorManager {
 
     void Update() {
         for (Mirror& mirror : g_mirrors) {
-            if (GenericObject* genericObject = LegacyWorld::GetGenericObjectById(mirror.GetParentId())) {
+            if (GenericObject* genericObject = Unloved::World::GetGenericObjectById(mirror.GetParentId())) {
                 const MeshNodes& meshNodes = genericObject->GetMeshNodes();
                 const glm::mat4& worldMatrix = meshNodes.GetWorldModelMatrix(mirror.GetMeshNodeIndex());
                 mirror.Update(worldMatrix);

@@ -31,6 +31,7 @@ struct Ladder {
 
 private:
     void RecomputeModelMatrix();
+    void UpdateOverlapHitBoxAABB();
 
     LadderCreateInfo m_createInfo;
     MeshNodes m_meshNodes;

@@ -12,7 +12,7 @@
 #include <string>
 
 namespace Hell::Physics {
-    bool PxTransformNearlyEqual(const physx::PxTransform& a, const physx::PxTransform& b);
+    bool PxTransformNearlyEqual(const physx::PxTransform& a, const physx::PxTransform& b, float positionEps = 1e-4f, float rotationEps = 1e-4f);
     std::string GetPxShapeTypeAsString(physx::PxShape* pxShape);
     float ComputeShapeVolume(physx::PxShape* pxShape);
     glm::vec3 PxVec3toGlmVec3(physx::PxVec3 vec);

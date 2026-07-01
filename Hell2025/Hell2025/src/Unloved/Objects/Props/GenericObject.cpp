@@ -1,9 +1,10 @@
 #include "GenericObject.h"
 #include "Unloved/Bible/Bible.h"
+#include "Hell/Common/Constants.h"
+#include "Hell/Common/Random.h"
 #include "Hell/Logging.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
 #include "Legacy/Renderer/Renderer.h"
-#include "Legacy/Util/Util.h"
 
 namespace Unloved {
 
@@ -13,11 +14,14 @@ GenericObject::GenericObject(uint64_t id, const GenericObjectCreateInfo& createI
     // FOR THE LOVE OF SATAN REMOVE ME!!!!!!!!!
     if (m_createInfo.type == GenericObjectType::PLANT_BLACKBERRIES ||
         m_createInfo.type == GenericObjectType::PLANT_TREE) {
-        m_createInfo.rotation.y = Util::RandomFloat(-HELL_PI, HELL_PI);
+        m_createInfo.rotation.y = Hell::Random::Float(-HELL_PI, HELL_PI);
     }
 
-    m_transform.position = m_createInfo.position + spawnOffset.translation;
-    m_transform.rotation = m_createInfo.rotation + glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation.y += spawnOffset.yRotation;
+
+    m_transform.position = m_createInfo.position;
+    m_transform.rotation = m_createInfo.rotation;
     m_transform.scale = m_createInfo.scale;
     m_objectId = id;
 

@@ -17,6 +17,8 @@
 #include "Renderer/RenderDataManager.h"
 #include "Renderer/Renderer.h"
 
+#include "../../../../../res/shaders/common/gl_fixed_bindings.glsl"
+
 namespace Input = Hell::Input;
 
 namespace OpenGLRenderer {
@@ -249,12 +251,14 @@ namespace OpenGLRenderer {
 	void BindShadowMapsRE() {
 		OpenGLShadowMap& flashLightShadowMaps = OpenGL::ResourceManager::GetShadowMap("FlashlightShadowMaps");
 		OpenGLShadowCubeMapArray& hiResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArray("HiRes");
+		OpenGLShadowCubeMapArray& lowResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArray("LowRes");
 		OpenGLShadowMapArray& moonShadowCascades = OpenGL::ResourceManager::GetShadowMapArray("MoonlightCSM");
 
-		OpenGL::BindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
-		OpenGL::BindTextureUnit(8, flashLightShadowMaps.GetDepthTextureHandle());
-		OpenGL::BindTextureUnit(9, hiResShadowMaps.GetDepthTexture());
-		OpenGL::BindTextureUnit(10, moonShadowCascades.GetDepthTexture());
+		OpenGL::BindTextureUnit(9, GetTextureHandleByName("Flashlight2"));
+		OpenGL::BindTextureUnit(TEX_IDX_SHADOW_MAP_FLASHLIGHT, flashLightShadowMaps.GetDepthTextureHandle());
+		OpenGL::BindTextureUnit(TEX_IDX_SHADOW_MAP_HI_RES, hiResShadowMaps.GetDepthTexture());
+		OpenGL::BindTextureUnit(TEX_IDX_SHADOW_MAP_LOW_RES, lowResShadowMaps.GetDepthTexture());
+		OpenGL::BindTextureUnit(TEX_IDX_SHADOW_MAP_CSM, moonShadowCascades.GetDepthTexture());
 	}
 
     void BubblesPass2() {
@@ -375,11 +379,11 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformFloat("u_cascadePlaneDistances[2]", cascadeLevels[2]);
         OpenGL::SetUniformFloat("u_cascadePlaneDistances[3]", cascadeLevels[3]);
 
-        OpenGL::BindTextureUnit(1, gBuffer.GetColorAttachmentHandleByName("BaseColorMetallic"));
-        OpenGL::BindTextureUnit(2, gBuffer.GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
-        OpenGL::BindTextureUnit(3, gBuffer.GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
-        OpenGL::BindTextureUnit(4, gBuffer.GetDepthAttachmentHandle());
-        OpenGL::BindTextureUnit(5, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
+        OpenGL::BindTextureUnit(4, gBuffer.GetColorAttachmentHandleByName("BaseColorMetallic"));
+        OpenGL::BindTextureUnit(5, gBuffer.GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
+        OpenGL::BindTextureUnit(6, gBuffer.GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
+        OpenGL::BindTextureUnit(7, gBuffer.GetDepthAttachmentHandle());
+        OpenGL::BindTextureUnit(8, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
 
         OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
         fbo.Bind();
@@ -413,6 +417,7 @@ namespace OpenGLRenderer {
 		const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
 
 		OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& indirectDiffuseFbo = OpenGL::ResourceManager::GetFrameBuffer("IndirectDiffuse");
 		fbo.Bind();
 		fbo.DrawBuffers({ "Lighting" });
 
@@ -427,6 +432,7 @@ namespace OpenGLRenderer {
 		// Opaque
 		OpenGLShader& opaqueShader = OpenGL::ResourceManager::GetShader("LightingForward");
 		OpenGL::BindShader("LightingForward");
+        OpenGL::BindTextureUnit(5, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
 
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
 		glBindVertexArray(meshBuffer.GetVAO());
@@ -580,9 +586,8 @@ namespace OpenGLRenderer {
         OpenGLRasterizerStateManager::SetRasterizerState(state);
 
         glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
-        glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
         glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
-        glBindTextureUnit(8, flashLightShadowMapsFBO->GetDepthTextureHandle());
+        glBindTextureUnit(TEX_IDX_SHADOW_MAP_FLASHLIGHT, flashLightShadowMapsFBO->GetDepthTextureHandle());
 
         // Forward render each glass render item into each viewport
         for (int i = 0; i < 4; i++) {
@@ -598,11 +603,11 @@ namespace OpenGLRenderer {
                 Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
                 if (!mesh) continue;
 
-                glActiveTexture(GL_TEXTURE0);
+                glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
-                glActiveTexture(GL_TEXTURE1);
+                glActiveTexture(GL_TEXTURE5);
                 glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
-                glActiveTexture(GL_TEXTURE2);
+                glActiveTexture(GL_TEXTURE6);
                 glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);

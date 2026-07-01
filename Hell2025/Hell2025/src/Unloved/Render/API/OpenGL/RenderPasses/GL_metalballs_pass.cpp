@@ -1,6 +1,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Debug/DebugDraw.h"
+#include "Hell/Common/Random.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
@@ -13,7 +14,6 @@
 // remove me
 #include "Unloved/Session/Session.h"
 #include "Hell/Physics/Physics.h"
-#include "Util/Util.h"
 #include <glm/gtc/quaternion.hpp>
 #include <algorithm>
 #include <execution>
@@ -201,9 +201,9 @@ namespace OpenGLRenderer {
             for (float x = -2.0f; x < 2.0f; x++) {
                 for (float y = 0.0f; y < 8.0f; y++) {
                     for (float z = -2.0f; z < 2.0f; z++) {
-                        float localVelocityX = Util::RandomFloat(0.0f, 1.0f);
-                        float worldVelocityY = Util::RandomFloat(1.0f, 3.0f);
-                        float localVelocityY = Util::RandomFloat(-0.5f, 0.5f);
+                        float localVelocityX = Hell::Random::Float(0.0f, 1.0f);
+                        float worldVelocityY = Hell::Random::Float(1.0f, 3.0f);
+                        float localVelocityY = Hell::Random::Float(-0.5f, 0.5f);
 
                         float worldVelocityX = localVelocityX * cos(angle) - localVelocityY * sin(angle);
                         float worldVelocityZ = localVelocityX * sin(angle) + localVelocityY * cos(angle);
@@ -397,8 +397,8 @@ namespace OpenGLRenderer {
             //    color = RED;
             //}
             //metaBalls.emplace_back(MetaBall(particle.position, 0.005));
-            //metaBalls.emplace_back(MetaBall(particle.position + glm::vec3(Util::RandomFloat(-0.005, 0.005)), 0.01));
-            //metaBalls.emplace_back(MetaBall(particle.position + glm::vec3(Util::RandomFloat(-0.005, 0.005)), 0.01));
+            //metaBalls.emplace_back(MetaBall(particle.position + glm::vec3(Hell::Random::Float(-0.005, 0.005)), 0.01));
+            //metaBalls.emplace_back(MetaBall(particle.position + glm::vec3(Hell::Random::Float(-0.005, 0.005)), 0.01));
             DebugDraw::DrawPoint(particle.position, color);
 
             positions.push_back(particle.position);

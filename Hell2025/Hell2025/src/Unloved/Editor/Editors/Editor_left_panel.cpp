@@ -5,9 +5,11 @@
 #include "Unloved/Maps/MapManager.h"
 #include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
+#include "Unloved/World/World.h"
 
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/Editor/ObjectNames.h"
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Unloved/UI/Imgui/Types/Types.h"
 
@@ -119,7 +121,9 @@ namespace Unloved::Editor {
         g_pickUpRespawn.SetText("Respawn");
     }
 
+
     void UpdateOutliner() {
+
         if (GetEditorMode() == EditorMode::HOUSE_EDITOR ||
             GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
             Map* map = MapManager::GetMapByName(GetEditorMapName());
@@ -129,14 +133,9 @@ namespace Unloved::Editor {
 
                 g_outlinerHeader.SetTitle("Outliner");
 
-                g_outliner.SetItems("Ceilings", GetCeilingNames());
-                g_outliner.AddItems("DDGI Volumes", LegacyWorld::GetDDGIVolumes().ids());
-                g_outliner.AddItems("Lights", LegacyWorld::GetLightIds());
-                g_outliner.SetItems("Doors", GetDoorNames());
-                g_outliner.SetItems("Floors", GetFloorNames());
-                g_outliner.SetItems("Generic Objects", GetGenericObjectNames());
-                g_outliner.SetItems("House Planes", GetUndefinedHousePlaneNames());
-                g_outliner.SetItems("Walls", GetWallNames());
+                for (const EditorObjectNameGroup& group : GetEditorObjectNameGroups()) {
+                    g_outliner.AddEditorObjectNameGroup(group);
+                }
 
                 g_objectNameInput.SetLabel("Name");
 
@@ -160,22 +159,6 @@ namespace Unloved::Editor {
                 g_extentsZ.SetRange(-1000, 1000);
             }
         }
-
-        // move to UpdateObjectProperties()
-        //if (GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR || GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
-        //    if (GetSelectedObjectType() == ObjectType::TREE) {
-        //        Tree* tree = LegacyWorld::GetTreeByObjectId(GetSelectedObjectId());
-        //        if (tree) {
-        //            g_objectNameInput.SetText(tree->GetEditorName());
-        //            g_positionX.SetValue(tree->GetPosition().x);
-        //            g_positionY.SetValue(tree->GetPosition().y);
-        //            g_positionZ.SetValue(tree->GetPosition().z);
-        //            g_rotationX.SetValue(tree->GetRotation().x);
-        //            g_rotationY.SetValue(tree->GetRotation().y);
-        //            g_rotationZ.SetValue(tree->GetRotation().z);
-        //        }
-        //    }
-        //}
     }
 
     void BeginLeftPanel() {
@@ -220,7 +203,7 @@ namespace Unloved::Editor {
                 ImGui::BeginChild("ObjectPropertiesScrollRegion", ImVec2(0.0f, remainingHeight), false);
 
                 // DDGI Volume
-                if (Unloved::DDGIVolume* object = LegacyWorld::GetDDGIVolumeByObjectId(GetSelectedObjectId())) {
+                if (Unloved::DDGIVolume* object = Unloved::World::GetDDGIVolumeByObjectId(GetSelectedObjectId())) {
                     g_extentsX.SetValue(object->GetExtents().x);
                     g_extentsY.SetValue(object->GetExtents().y);
                     g_extentsZ.SetValue(object->GetExtents().z);
@@ -233,14 +216,14 @@ namespace Unloved::Editor {
                 }
 
                 // Fireplace
-                if (Fireplace* fireplace = LegacyWorld::GetFireplaceById(GetSelectedObjectId())) {
+                if (Fireplace* fireplace = Unloved::World::GetFireplaceById(GetSelectedObjectId())) {
                     EditorUI::FloatInput("Position X", fireplace->GetPosition().x, fireplace, &Fireplace::SetPositionX);
                     EditorUI::FloatInput("Position Y", fireplace->GetPosition().y, fireplace, &Fireplace::SetPositionY);
                     EditorUI::FloatInput("Position Z", fireplace->GetPosition().z, fireplace, &Fireplace::SetPositionZ);
                 }
 
                 // Lights
-                if (Light* light = LegacyWorld::GetLightByObjectId(GetSelectedObjectId())) {
+                if (Light* light = Unloved::World::GetLightByObjectId(GetSelectedObjectId())) {
                     AABB aabb(light->GetWorldBoundsMin(), light->GetWorldBoundsMax());
                     DebugDraw::DrawAABB(aabb, YELLOW);
 
@@ -296,7 +279,7 @@ namespace Unloved::Editor {
                 //}
 
                 // Windows (BARELY FUNCITONAL)
-                if (Window* window = LegacyWorld::GetWindowByObjectId(GetSelectedObjectId())) {
+                if (Window* window = Unloved::World::GetWindowByObjectId(GetSelectedObjectId())) {
                     g_positionX.SetValue(window->GetPosition().x);
                     g_positionY.SetValue(window->GetPosition().y);
                     g_positionZ.SetValue(window->GetPosition().z);
@@ -309,7 +292,7 @@ namespace Unloved::Editor {
                 }
 
                 // Doors (BARELY FUNCITONAL)
-                if (Door* door = LegacyWorld::GetDoorByObjectId(GetSelectedObjectId())) {
+                if (Door* door = Unloved::World::GetDoorByObjectId(GetSelectedObjectId())) {
                     g_positionX.SetValue(door->GetPosition().x);
                     g_positionY.SetValue(door->GetPosition().y);
                     g_positionZ.SetValue(door->GetPosition().z);
@@ -371,7 +354,7 @@ namespace Unloved::Editor {
 
                 // Pick Ups
                 if (GetSelectedObjectType() == ObjectType::PICK_UP) {
-                    if (PickUp* pickUp = LegacyWorld::GetPickUpByObjectId(GetSelectedObjectId())) {
+                    if (PickUp* pickUp = Unloved::World::GetPickUpByObjectId(GetSelectedObjectId())) {
                         // Retrieve state
                         g_positionX.SetValue(pickUp->GetPosition().x);
                         g_positionY.SetValue(pickUp->GetPosition().y);
@@ -396,7 +379,7 @@ namespace Unloved::Editor {
 
 
                 // House planes (aka floors and ceilings)
-                if (HousePlane* housePlane = LegacyWorld::GetHousePlaneByObjectId(GetSelectedObjectId())) {
+                if (WorldPlane* housePlane = Unloved::World::GetHousePlaneByObjectId(GetSelectedObjectId())) {
                     bool housePlaneUpdated = false;
 
                     g_materialDropDown.SetCurrentOption(housePlane->GetCreateInfo().materialName);
@@ -468,7 +451,7 @@ namespace Unloved::Editor {
                 }
 
                 // Walls
-                if (Wall* wall = LegacyWorld::GetWallByObjectId(GetSelectedObjectId())) {
+                if (Wall* wall = Unloved::World::GetWallByObjectId(GetSelectedObjectId())) {
                     g_materialDropDown.SetCurrentOption(wall->GetCreateInfo().materialName);
                     g_heightFloatInput.SetValue(wall->GetCreateInfo().height);
                     g_textureOffsetU.SetValue(wall->GetCreateInfo().textureOffsetU);

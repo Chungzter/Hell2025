@@ -458,16 +458,16 @@ namespace OpenGL::ResourceManager {
 
     // OpenGL Shadow Cube Map Array
 
-    uint64_t CreateShadowCubeMapArray(const std::string& name) {
-        auto it = g_shadowCubeMapArrayIdByName.find(name);
-        if (it != g_shadowCubeMapArrayIdByName.end()) {
-            return it->second;
+    OpenGLShadowCubeMapArray& CreateShadowCubeMapArray(const std::string& name) {
+        if (g_shadowCubeMapArrayIdByName.contains(name)) {
+            return GetShadowCubeMapArray(name);
         }
 
         uint64_t id = Hell::ResourceManagement::GetNextID(Hell::ResourceManagement::ResourceType::OPENGL_SHADOW_CUBE_MAP_ARRAY);
         g_shadowCubeMapArrays.emplace_with_id(id);
         g_shadowCubeMapArrayIdByName[name] = id;
-        return id;
+
+        return GetShadowCubeMapArray(name);
     }
 
     OpenGLShadowCubeMapArray& GetShadowCubeMapArray(const std::string& name) {

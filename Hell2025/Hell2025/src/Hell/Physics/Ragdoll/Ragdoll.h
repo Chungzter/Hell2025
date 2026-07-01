@@ -31,6 +31,9 @@ struct Ragdoll {
     bool IsInMotion();
     bool IsMarkedForRemoval() const;
     AABB GetWorldSpaceAABB();
+    void GetWorldSpaceAABBs(std::vector<AABB>& aabbs);
+    void UpdateWorldSpaceAABBs(float changeThreshold);
+    const std::vector<AABB>& GetWorldSpaceAABBs() const          { return m_worldSpaceAABBs; }
     glm::mat4 GetRigidWorldTransform(const std::string& boneName) const;
     uint64_t GetRagdollId()                     { return m_ragdollId; }
     const std::string& GetRagdollName() const   { return m_ragdollName; }
@@ -41,12 +44,15 @@ struct Ragdoll {
     std::vector<std::string> m_markerBoneNames;
     std::vector<physx::PxRigidDynamic*> m_pxRigidDynamics;
 
+    bool IsDirty() const { return m_dirty; }
+
 private:
     void AddMarkerMeshData(RagdollMarker& marker, RagdollSolver& solver);
 
     std::vector<physx::PxD6Joint*> m_pxD6Joints;
     std::vector<uint32_t> m_markerDebugMeshIds;
     std::vector<glm::vec3> m_markerColors;
+    std::vector<AABB> m_worldSpaceAABBs;
     std::string m_ragdollName;
     Hell::Transform m_spawnTransform;
     uint64_t m_ragdollId;
@@ -54,4 +60,5 @@ private:
     bool m_simulationEnabled = false;
     bool m_renderingEnabled = true;
     bool m_markedForRemoval = false;
+    bool m_dirty = false;
 };

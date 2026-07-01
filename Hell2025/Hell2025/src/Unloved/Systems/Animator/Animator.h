@@ -1,55 +1,30 @@
 #pragma once
-#include "Hell/ResourceManagement/Types/Animation.h"
-#include "Hell/ResourceManagement/Types/SkinnedModel.h"
-#include "Hell/Transform.h"
 
+#include "Unloved/Systems/Animator/AnimatorTypes.h"
+
+#include <cstdint>
 #include <string>
 #include <vector>
-#include <unordered_map>
 
-struct AnimationLayer {
-    Animation* m_animation;
-    std::vector<Hell::QuatTransform> m_globalNodeTransforms;
-    std::vector<Hell::QuatTransform> m_localNodeTransforms;
-    std::vector<float> m_boneWeights;
-    float m_AnimationWeight = 1.0f;
-    float m_currentTime = 0.0f;
-    float m_animationSpeed = 1.0f;
-    bool m_loop = true;
-    bool m_paused = false;
-    bool m_isComplete = false;
-};
+namespace Unloved::Animator {
+    void Clear(AnimationState& state);
+    void ClearAllAnimations(AnimationState& state);
+    void SetSkinnedModel(AnimationState& state, SkinnedModel* skinnedModel);
+    void PlayAnimation(AnimationState& state, const std::string& layerName, const std::string& animationName, float speed = 1.0f, bool loop = false);
+    void PlayAnimation(AnimationState& state, const std::string& layerName, const std::string& animationName, const AnimationPlayOptions& options);
+    void PlayAndLoopAnimation(AnimationState& state, const std::string& layerName, const std::string& animationName, float speed = 1.0f);
+    void CrossFade(AnimationState& state, const std::string& layerName, const std::string& animationName, float fadeDuration, float speed = 1.0f, bool loop = false);
+    void FadeOutLayer(AnimationState& state, const std::string& layerName, float fadeDuration);
+    void SetLayerWeight(AnimationState& state, const std::string& layerName, float weight);
+    void SetLayerBlendMode(AnimationState& state, const std::string& layerName, AnimationBlendMode blendMode);
+    void SetLayerNodeWeights(AnimationState& state, const std::string& layerName, const std::vector<float>& nodeWeights);
+    void Update(AnimationState& state, float deltaTime);
+    void UpdateBoneSkinningMatrices(AnimationState& state);
+    void PauseAllLayers(AnimationState& state);
+    void SetAdditiveTransform(AnimationState& state, const std::string& nodeName, const glm::mat4& matrix);
 
-struct Animator {
-    void SetSkinnedModel(const std::string& skinnedModelName);
-    void PlayAnimation(const std::string& layerName, const std::string& animationName, float speed = 1.0f, bool loop = false);
-    void PlayAndLoopAnimation(const std::string& layerName, const std::string& animationName, float speed = 1.0f);
-    void UpdateAnimations(float deltaTime);
-    void CreateAnimationLayer(const std::string& name);
-    void ClearAllAnimations();
-    void PauseAllLayers();
-    void SetAdditiveTransform(const std::string& nodeName, const glm::mat4& matrix);
-
-    uint32_t GetAnimationFrameNumber(const std::string& animationLayerName);
-    bool AnimationIsPastFrameNumber(const std::string& animationLayerName, int frameNumber);
-    bool AnimationLayerExists(const std::string& name) const;
-    bool AnimationIsCompleteAnyLayer(const std::string& animationName);
-    bool AllAnimationsComplete();
-    
-    AnimationLayer* GetAnimationLayerByName(const std::string& name);
-
-    std::vector<glm::mat4> m_LocalBlendedBoneTransforms;
-    std::vector<glm::mat4> m_globalBlendedNodeTransforms;
-
-    std::unordered_map<std::string, glm::mat4> m_additiveNodeTransforms; // Used for shark spine
-
-    std::unordered_map<std::string, AnimationLayer> m_animationLayers;
-    //std::vector<AnimationState> m_animationStates;
-
-private:
-    void UpdateAnimation(AnimationLayer& animationState, float deltaTime);
-    float GetAnimationTimeInTicks(AnimationLayer& animationState);
-    const AnimatedNode* FindAnimatedNode(Animation* animation, const char* NodeName);
-
-    SkinnedModel* m_skinnedModel = nullptr;
-};
+    uint32_t GetAnimationFrameNumber(const AnimationState& state, const std::string& animationLayerName);
+    bool AnimationIsPastFrameNumber(const AnimationState& state, const std::string& animationLayerName, int frameNumber);
+    bool AnimationIsCompleteAnyLayer(const AnimationState& state, const std::string& animationName);
+    bool AllAnimationsComplete(const AnimationState& state);
+}

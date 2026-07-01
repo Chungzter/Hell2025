@@ -11,15 +11,24 @@
 
 namespace Unloved {
 
-GameObject::GameObject(GameObjectCreateInfo createInfo) {
+GameObject::GameObject(GameObjectCreateInfo createInfo) : GameObject(Unloved::GetNextObjectId(ObjectType::GAME_OBJECT), createInfo) {
+}
+
+GameObject::GameObject(uint64_t id, GameObjectCreateInfo createInfo) : GameObject(id, createInfo, SpawnOffset()) {
+}
+
+GameObject::GameObject(uint64_t id, GameObjectCreateInfo createInfo, SpawnOffset spawnOffset) {
     m_createInfo = createInfo;
-    m_transform.position = createInfo.position;
-    m_transform.rotation = createInfo.rotation;
-    m_transform.scale = createInfo.scale;
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation.y += spawnOffset.yRotation;
+    m_transform.position = m_createInfo.position;
+    m_transform.rotation = m_createInfo.rotation;
+    m_transform.scale = m_createInfo.scale;
+    m_objectId = id;
 
-    SetModel(createInfo.modelName);
+    SetModel(m_createInfo.modelName);
 
-    if (createInfo.modelName == "Bench2") {
+    if (m_createInfo.modelName == "Bench2") {
         PhysicsFilterData filterData;
         filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
         filterData.collisionGroup = CollisionGroup::ENVIROMENT_OBSTACLE;
@@ -27,7 +36,6 @@ GameObject::GameObject(GameObjectCreateInfo createInfo) {
         m_physicsId = Hell::Physics::CreateRigidStaticConvexMeshFromModel(m_transform, "Bench_ConvexHulls", filterData);
     }
 
-    m_objectId = Unloved::GetNextObjectId(ObjectType::GAME_OBJECT);
 }
 
 GameObjectCreateInfo GameObject::GetCreateInfo() {

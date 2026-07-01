@@ -66,7 +66,7 @@ namespace OpenGL::ResourceManager {
     void HotloadShaders();
     void RemoveShader(uint64_t id);
 
-    uint64_t CreateShadowCubeMapArray(const std::string& name);
+    OpenGLShadowCubeMapArray& CreateShadowCubeMapArray(const std::string& name);
     OpenGLShadowCubeMapArray& GetShadowCubeMapArray(const std::string& name);
     OpenGLShadowCubeMapArray* GetShadowCubeMapArrayPtr(const std::string& name);
     OpenGLShadowCubeMapArray& GetShadowCubeMapArrayById(uint64_t id);

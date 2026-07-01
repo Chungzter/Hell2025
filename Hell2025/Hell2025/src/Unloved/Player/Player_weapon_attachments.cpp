@@ -1,8 +1,8 @@
 #include "Player.h"
 
+#include "Hell/Math/Math.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Renderer/RenderDataManager.h"
-#include "Legacy/Util/Util.h"
 
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Viewport/ViewportManager.h"
@@ -13,7 +13,7 @@ void Player::UpdateWeaponAttachments() {
 	AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
 	SkinnedModel* skinnedModel = viewWeapon->GetSkinnedModel();
 
-	if (!viewWeapon || Util::IsNaN(viewWeapon->GetModelMatrix())) {
+	if (!viewWeapon || Hell::Math::IsNan(viewWeapon->GetModelMatrix())) {
 		return;
 	}
 

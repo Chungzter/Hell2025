@@ -1,8 +1,21 @@
 #include "TrimSet.h"
 #include "Hell/Common/Bit.h"
+#include "Hell/Math/Rotation.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
+#include "Unloved/World/World.h"
+
+#include <cmath>
+
+namespace {
+    glm::vec3 ApplySpawnOffset(const glm::vec3& point, const SpawnOffset& spawnOffset) {
+        const float c = std::cos(spawnOffset.yRotation);
+        const float s = std::sin(spawnOffset.yRotation);
+        const glm::vec3 rotated(point.x * c + point.z * s, point.y, -point.x * s + point.z * c);
+        return rotated + spawnOffset.translation;
+    }
+}
 
 namespace Unloved {
 
@@ -10,6 +23,9 @@ namespace Unloved {
 TrimSet::TrimSet(uint64_t id, const TrimSetCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_objectId = id;
     m_createInfo = createInfo;
+    for (glm::vec3& point : m_createInfo.points) {
+        point = ApplySpawnOffset(point, spawnOffset);
+    }
     CreateRenderItems();
 }
 
@@ -33,7 +49,7 @@ void TrimSet::CreateRenderItems() {
         // Add the current point
         m_corners.push_back(TrimCorner(point));
 
-        for (Fireplace& fireplace : LegacyWorld::GetFireplaces()) {
+        for (Fireplace& fireplace : Unloved::World::GetFireplaces()) {
             const auto rayHit = fireplace.GetBlockingVolume().Raycast(rayOrigin, rayDir, maxDistance);
 
             // Hit fireplace?
@@ -135,7 +151,7 @@ void TrimSet::CreateRenderItems() {
         // Make the corner render items
         Transform cornerTransform;
         cornerTransform.position = m_corners[i].m_position;
-        cornerTransform.rotation.y = Util::YRotationBetweenTwoPoints(point, nextPoint);
+        cornerTransform.rotation.y = Hell::Math::YawBetweenPoints(point, nextPoint);
         cornerTransform.scale *= trimScale;
 
         // This "cursor" is the amount walked so far on this wall
@@ -177,7 +193,7 @@ void TrimSet::CreateRenderItems() {
         while (cursor < distanceToWalk) {
             Transform transform;
             transform.position = point + (directionToNextPoint * cursor);
-            transform.rotation.y = Util::YRotationBetweenTwoPoints(point, nextPoint);
+            transform.rotation.y = Hell::Math::YawBetweenPoints(point, nextPoint);
 			transform.scale = glm::vec3(trimScale);
 
             if (trimMeshId != -1) {
@@ -202,7 +218,7 @@ void TrimSet::CreateRenderItems() {
 
         Transform transform;
 		transform.position = point + (directionToNextPoint * cursor);
-		transform.rotation.y = Util::YRotationBetweenTwoPoints(point, nextPoint);
+		transform.rotation.y = Hell::Math::YawBetweenPoints(point, nextPoint);
 		transform.scale.x *= finalDistance;
 		transform.scale.y *= trimScale;
 		transform.scale.z *= trimScale;

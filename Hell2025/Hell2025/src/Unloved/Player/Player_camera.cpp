@@ -1,8 +1,7 @@
 #include "Player.h"
 
 #include "Hell/Input.h"
-
-#include "Legacy/Util/Util.h"
+#include "Hell/Math/Math.h"
 
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Session/Session.h"
@@ -42,17 +41,17 @@ void Player::UpdateHeadBob(float deltaTime) {
     }
     else {
         // TODO: find the values that make a footstep always play on the first step u take
-        m_headBobTime = Util::FInterpTo(m_headBobTime, 0.2f, deltaTime, 10);
-        m_headBob.x = Util::FInterpTo(m_headBob.x, 0.0f, deltaTime, 10);
-        m_headBob.y = Util::FInterpTo(m_headBob.y, 0.0f, deltaTime, 10);
-        m_headBob.z = Util::FInterpTo(m_headBob.z, 0.0f, deltaTime, 10);
-        m_bobOffsetX = Util::FInterpTo(m_bobOffsetX, 0.0f, deltaTime, 10);
-        m_bobOffsetY = Util::FInterpTo(m_bobOffsetY, 0.0f, deltaTime, 10);
+        m_headBobTime = Hell::Math::InterpTo(m_headBobTime, 0.2f, deltaTime, 10);
+        m_headBob.x = Hell::Math::InterpTo(m_headBob.x, 0.0f, deltaTime, 10);
+        m_headBob.y = Hell::Math::InterpTo(m_headBob.y, 0.0f, deltaTime, 10);
+        m_headBob.z = Hell::Math::InterpTo(m_headBob.z, 0.0f, deltaTime, 10);
+        m_bobOffsetX = Hell::Math::InterpTo(m_bobOffsetX, 0.0f, deltaTime, 10);
+        m_bobOffsetY = Hell::Math::InterpTo(m_bobOffsetY, 0.0f, deltaTime, 10);
     }
 }
 
 void Player::UpdateBreatheBob(float deltaTime) {
-    if (Util::IsNan(GetCameraUp()) || Util::IsNan(GetCameraRight())) return;
+    if (Hell::Math::IsNan(GetCameraUp()) || Hell::Math::IsNan(GetCameraRight())) return;
 
     m_breatheBobTime += deltaTime;
 
@@ -85,7 +84,7 @@ void Player::UpdateCamera(float deltaTime) {
     // Height
     float crouchDownSpeed = 17.5f;
     float viewHeightTarget = m_crouching ? m_viewHeightCrouching : m_viewHeightStanding;
-    m_currentViewHeight = Util::FInterpTo(m_currentViewHeight, viewHeightTarget, deltaTime, crouchDownSpeed);
+    m_currentViewHeight = Hell::Math::InterpTo(m_currentViewHeight, viewHeightTarget, deltaTime, crouchDownSpeed);
 
     static float viewHeightModifer = 0.0f;
     if (!IsPlayingPiano()) {

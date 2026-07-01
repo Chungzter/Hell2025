@@ -7,9 +7,11 @@ namespace Unloved {
 Staircase::Staircase(uint64_t id, StaircaseCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_objectId = id;
     m_createInfo = createInfo;
+    m_createInfo.position += spawnOffset.translation;
+    m_createInfo.rotation.y += spawnOffset.yRotation;
 
-    m_position = createInfo.position + spawnOffset.translation;
-    m_rotation = createInfo.rotation + glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
+    m_position = m_createInfo.position;
+    m_rotation = m_createInfo.rotation;
 
     std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 

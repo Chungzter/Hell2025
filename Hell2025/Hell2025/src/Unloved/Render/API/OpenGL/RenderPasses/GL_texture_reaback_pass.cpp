@@ -2,9 +2,9 @@
 
 #include "Hell/Render/API/OpenGL/Types/GL_texture_readback.h"
 #include "Hell/Backend/BackEnd.h"
+#include "Hell/Math/Range.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Editor/Editor.h"
-#include "Util/Util.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
@@ -34,8 +34,8 @@ namespace OpenGLRenderer {
             OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
             GLuint fboHandle = gBuffer->GetHandle();
             GLuint attachment = gBuffer->GetColorAttachmentSlotByName("TEXTURE_NAME"); // This was W0rldPosition but you removed that texture.
-            int mappedMouseX = Util::MapRange(Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0, gBuffer->GetWidth());
-            int mappedMouseY = Util::MapRange(Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), gBuffer->GetHeight(), 0);
+            int mappedMouseX = Hell::Math::MapRange(Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0, gBuffer->GetWidth());
+            int mappedMouseY = Hell::Math::MapRange(Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), gBuffer->GetHeight(), 0);
             int xOffset = mappedMouseX;
             int yOffset = mappedMouseY;
             int width = 1;

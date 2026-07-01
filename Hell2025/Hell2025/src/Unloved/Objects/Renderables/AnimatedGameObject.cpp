@@ -1,15 +1,16 @@
 #include "AnimatedGameObject.h"
-#include "Unloved/Bible/Bible.h"
-#include "Unloved/Session/Session.h"
-#include "Unloved/Debug/DebugDraw.h"
+
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Physics/Physics.h"
-#include "Legacy/Renderer/RenderDataManager.h"
-#include "Util.h"
+
+#include "Unloved/Bible/Bible.h"
+#include "Unloved/Systems/DirtyTracker/DirtyTracker.h"
+#include "Unloved/Debug/DebugDraw.h"
 
 #include <iostream>
-#include <unordered_set>
+#include <limits>
+#include <cmath>
 
 namespace Unloved {
 
@@ -18,7 +19,7 @@ AnimatedGameObject::AnimatedGameObject(uint64_t id) {
 }
 
 void AnimatedGameObject::UpdateRenderItems() {
-    m_animatedMeshNodes.UpdateRenderItems(GetModelMatrix(), m_boneSkinningMatrices);
+    m_animatedMeshNodes.UpdateRenderItems(GetModelMatrix(), m_animationState.boneSkinningMatrices);
 }
 
 const uint32_t AnimatedGameObject::GetVerteXCount() {
@@ -36,14 +37,14 @@ void AnimatedGameObject::UpdateBoneTransformsFromRagdoll() {
     if (!m_skinnedModel) return;
 
     int nodeCount = m_skinnedModel->m_nodes.size();
-    m_animator.m_globalBlendedNodeTransforms.resize(nodeCount);
+    m_animationState.globalNodeTransforms.resize(nodeCount);
 
     for (int i = 0; i < m_skinnedModel->m_nodes.size(); i++) {
         std::string NodeName = m_skinnedModel->m_nodes[i].name;
         glm::mat4 nodeTransformation = glm::mat4(1);
         nodeTransformation = m_skinnedModel->m_nodes[i].inverseBindTransform;
         unsigned int parentIndex = m_skinnedModel->m_nodes[i].parentIndex;
-        glm::mat4 ParentTransformation = (parentIndex == -1) ? glm::mat4(1) : m_animator.m_globalBlendedNodeTransforms[parentIndex];
+        glm::mat4 ParentTransformation = (parentIndex == -1) ? glm::mat4(1) : m_animationState.globalNodeTransforms[parentIndex];
         glm::mat4 GlobalTransformation = ParentTransformation * nodeTransformation;
 
         for (int j = 0; j < ragdoll->m_markerBoneNames.size(); j++) {
@@ -53,7 +54,7 @@ void AnimatedGameObject::UpdateBoneTransformsFromRagdoll() {
             }
         }
 
-        m_animator.m_globalBlendedNodeTransforms[i] = GlobalTransformation;
+        m_animationState.globalNodeTransforms[i] = GlobalTransformation;
     }
 }
 
@@ -70,28 +71,196 @@ void AnimatedGameObject::Update(float deltaTime) {
             //m_animator.ClearAllAnimations();
         }
 
-        m_animator.UpdateAnimations(deltaTime);
+        Animator::Update(m_animationState, deltaTime);
         //m_globalBlendedNodeTransforms = m_animator.m_globalBlendedNodeTransforms;
     }
 
-    m_boneSkinningMatrices.clear();
-
-    for (uint32_t i = 0; i < m_skinnedModel->GetBoneCount(); i++) {
-        m_boneSkinningMatrices.push_back(glm::mat4(1));
-    }
-
-    // Compute local bone matrices
-    int boneCount = m_skinnedModel->GetBoneCount();
-    m_boneSkinningMatrices.resize(boneCount);
-    for (int b = 0; b < boneCount; ++b) {
-        int nodeIdx = m_skinnedModel->m_boneNodeIndices[b];
-        m_boneSkinningMatrices[b] = m_animator.m_globalBlendedNodeTransforms[nodeIdx] * m_skinnedModel->m_boneOffsets[b];
-    }
+    Animator::UpdateBoneSkinningMatrices(m_animationState);
 
     // If it has a ragdoll then sink the ragdoll rigids to the animated pose
     if (m_animationMode == AnimationMode::BINDPOSE || m_animationMode == AnimationMode::ANIMATION) {
         SyncRagdollToAnimation();
     }
+
+    UpdateDirtyBounds();
+}
+
+void AnimatedGameObject::ComputeBoneSegments() {
+    m_boneSegments.clear();
+
+    for (int boneIndex = 0; boneIndex < m_skinnedModel->m_boneNodeIndices.size(); boneIndex++) {
+        int nodeIndex = m_skinnedModel->m_boneNodeIndices[boneIndex];
+        if (nodeIndex < 0 || nodeIndex >= m_animationState.globalNodeTransforms.size()) {
+            continue;
+        }
+
+        int parentNodeIndex = m_skinnedModel->m_nodes[nodeIndex].parentIndex;
+        int parentBoneNodeIndex = -1;
+
+        // Walk past helper nodes until another skinning bone is found
+        while (parentNodeIndex >= 0 && parentNodeIndex < m_skinnedModel->m_nodes.size()) {
+            const std::string& parentNodeName = m_skinnedModel->m_nodes[parentNodeIndex].name;
+            if (m_skinnedModel->BoneExists(parentNodeName)) {
+                parentBoneNodeIndex = parentNodeIndex;
+                break;
+            }
+
+            parentNodeIndex = m_skinnedModel->m_nodes[parentNodeIndex].parentIndex;
+        }
+
+        if (parentBoneNodeIndex == -1 || parentBoneNodeIndex >= m_animationState.globalNodeTransforms.size()) {
+            continue;
+        }
+
+        const glm::mat4& boneWorldMatrix = m_animationState.globalNodeTransforms[nodeIndex];
+        const glm::mat4& parentBoneWorldMatrix = m_animationState.globalNodeTransforms[parentBoneNodeIndex];
+
+        BoneSegment& segment = m_boneSegments.emplace_back();
+        segment.boneName = m_skinnedModel->m_nodes[nodeIndex].name;
+        segment.start = GetModelMatrix() * boneWorldMatrix * glm::vec4(0, 0, 0, 1);
+        segment.end = GetModelMatrix() * parentBoneWorldMatrix * glm::vec4(0, 0, 0, 1);
+    }
+}
+
+void AnimatedGameObject::CalculateSkinnedAABB() {
+    glm::vec3 boundsMin = glm::vec3(std::numeric_limits<float>::max());
+    glm::vec3 boundsMax = glm::vec3(std::numeric_limits<float>::lowest());
+
+    // If there is a ragdoll, use each rigid as the body bounds
+    if (Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId)) {
+        for (const AABB& aabb : ragdoll->GetWorldSpaceAABBs()) {
+            boundsMin = glm::min(boundsMin, aabb.GetBoundsMin());
+            boundsMax = glm::max(boundsMax, aabb.GetBoundsMax());
+        }
+
+        boundsMin -= glm::vec3(m_skinnedAABBThreshold);
+        boundsMax += glm::vec3(m_skinnedAABBThreshold);
+        m_skinnedAABB = AABB(boundsMin, boundsMax);
+        return;
+    }
+    else {
+        ComputeBoneSegments();
+
+        // Min/Max of all bone segments
+        for (const BoneSegment& boneSegment : m_boneSegments) {
+            boundsMin = glm::min(boundsMin, boneSegment.start);
+            boundsMax = glm::max(boundsMax, boneSegment.start);
+            boundsMin = glm::min(boundsMin, boneSegment.end);
+            boundsMax = glm::max(boundsMax, boneSegment.end);
+        }
+
+        // Inflate bone bounds
+        boundsMin -= glm::vec3(m_skinnedAABBThreshold);
+        boundsMax += glm::vec3(m_skinnedAABBThreshold);
+    }
+
+    // Add visible non deforming mesh bounds
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+    const glm::mat4 modelMatrix = GetModelMatrix();
+
+    for (const AnimatedMeshNode& node : m_animatedMeshNodes.GetNodes()) {
+        if (node.blendingMode == BlendingMode::DO_NOT_RENDER) {
+            continue;
+        }
+
+        if (node.deforming) {
+            continue;
+        }
+
+        Mesh* mesh = meshBuffer.GetMeshById(node.meshId);
+        Hell::SkinnedMeshMetadata* metadata = meshBuffer.GetSkinnedMeshMetadataByMeshId(node.meshId);
+        if (!mesh || !metadata) {
+            continue;
+        }
+
+        int boneIndex = metadata->nonDeformingBoneIndex;
+        if (boneIndex < 0 || boneIndex >= m_animationState.boneSkinningMatrices.size()) {
+            continue;
+        }
+
+        const glm::mat4 finalWorldMatrix = modelMatrix * m_animationState.boneSkinningMatrices[boneIndex];
+        const glm::vec3 localCenter = 0.5f * (mesh->aabbMin + mesh->aabbMax);
+        const glm::vec3 localExtents = 0.5f * (mesh->aabbMax - mesh->aabbMin);
+        const glm::vec3 worldCenter = glm::vec3(finalWorldMatrix * glm::vec4(localCenter, 1.0f));
+
+        const glm::vec3 col0 = glm::vec3(finalWorldMatrix[0]);
+        const glm::vec3 col1 = glm::vec3(finalWorldMatrix[1]);
+        const glm::vec3 col2 = glm::vec3(finalWorldMatrix[2]);
+
+        const glm::vec3 worldExtents = glm::abs(col0) * localExtents.x +
+                                       glm::abs(col1) * localExtents.y +
+                                       glm::abs(col2) * localExtents.z;
+
+        boundsMin = glm::min(boundsMin, worldCenter - worldExtents);
+        boundsMax = glm::max(boundsMax, worldCenter + worldExtents);
+    }
+
+    m_skinnedAABB = AABB(boundsMin, boundsMax);
+}
+
+void AnimatedGameObject::UpdateDirtyBounds() {
+    if (!RenderingEnabled()) {
+        return;
+    }
+
+    if (!CastsShadows()) {
+        return;
+    }
+
+    Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_ragdollId);
+
+    if (ragdoll) {
+        ragdoll->UpdateWorldSpaceAABBs(m_skinnedAABBChangeThreshold);
+    }
+
+    CalculateSkinnedAABB();
+
+    const glm::vec3& boundsMin = m_skinnedAABB.GetBoundsMin();
+    const glm::vec3& boundsMax = m_skinnedAABB.GetBoundsMax();
+    const glm::vec3& boundsMinLastFrame = m_skinnedAABBLastFrame.GetBoundsMin();
+    const glm::vec3& boundsMaxLastFrame = m_skinnedAABBLastFrame.GetBoundsMax();
+
+    bool aabbChanged = false;
+
+    // Force dirty on the first valid frame
+    if (!m_hasSkinnedAABBLastFrame) {
+        aabbChanged = true;
+    }
+    else if (ragdoll && ragdoll->IsDirty()) {
+        aabbChanged = true;
+    }
+    else {
+        // Check if the bounds moved enough to matter
+        if (std::abs(boundsMin.x - boundsMinLastFrame.x) > m_skinnedAABBChangeThreshold ||
+            std::abs(boundsMin.y - boundsMinLastFrame.y) > m_skinnedAABBChangeThreshold ||
+            std::abs(boundsMin.z - boundsMinLastFrame.z) > m_skinnedAABBChangeThreshold ||
+            std::abs(boundsMax.x - boundsMaxLastFrame.x) > m_skinnedAABBChangeThreshold ||
+            std::abs(boundsMax.y - boundsMaxLastFrame.y) > m_skinnedAABBChangeThreshold ||
+            std::abs(boundsMax.z - boundsMaxLastFrame.z) > m_skinnedAABBChangeThreshold) {
+            aabbChanged = true;
+        }
+    }
+
+    if (aabbChanged) {
+        DirtyBounds dirtyBounds;
+        dirtyBounds.objectId = m_objectId;
+        dirtyBounds.boundsMin = boundsMin;
+        dirtyBounds.boundsMax = boundsMax;
+        dirtyBounds.castShadows = true;
+
+        // Dirty both where the shadow was and where it is now
+        if (m_hasSkinnedAABBLastFrame) {
+            dirtyBounds.boundsMin = glm::min(boundsMin, boundsMinLastFrame);
+            dirtyBounds.boundsMax = glm::max(boundsMax, boundsMaxLastFrame);
+        }
+
+        DirtyTracker::AddDirtyBounds(dirtyBounds);
+    }
+
+    m_skinnedAABBLastFrame = m_skinnedAABB;
+    m_hasSkinnedAABBLastFrame = true;
+
+    DebugDraw::DrawAABB(GetSkinnedAABB(), aabbChanged ? GREEN : RED);
 }
 
 void AnimatedGameObject::SyncRagdollToAnimation() {
@@ -209,7 +378,7 @@ const glm::mat4& AnimatedGameObject::GetInverseBindTransformByBoneName(const std
 
 void AnimatedGameObject::SetAnimationModeToBindPose() {
     m_animationMode = AnimationMode::BINDPOSE;
-    m_animator.ClearAllAnimations();
+    Animator::ClearAllAnimations(m_animationState);
 }
 
 
@@ -222,7 +391,7 @@ void AnimatedGameObject::SetAnimationModeToRagdoll() {
 
     if (m_animationMode != AnimationMode::RAGDOLL_V2) {
         m_animationMode = AnimationMode::RAGDOLL_V2;
-        m_animator.ClearAllAnimations();
+        Animator::ClearAllAnimations(m_animationState);
         ragdoll->EnableSimulation();
     }
 }
@@ -230,17 +399,17 @@ void AnimatedGameObject::SetAnimationModeToRagdoll() {
 
 void AnimatedGameObject::SetAnimationModeToAnimated() {
     m_animationMode = AnimationMode::ANIMATION;
-    m_animator.ClearAllAnimations();
+    Animator::ClearAllAnimations(m_animationState);
 }
 
 
 void AnimatedGameObject::PlayAnimation(const std::string& layerName, const std::string& animationName, float speed) {
-    m_animator.PlayAnimation(layerName, animationName, speed, false);
+    Animator::PlayAnimation(m_animationState, layerName, animationName, speed, false);
 }
 
 
 void AnimatedGameObject::PlayAndLoopAnimation(const std::string& layerName, const std::string& animationName, float speed) {
-    m_animator.PlayAnimation(layerName, animationName, speed, true);
+    Animator::PlayAnimation(m_animationState, layerName, animationName, speed, true);
 }
 
 
@@ -253,6 +422,26 @@ void AnimatedGameObject::PlayAnimation(const std::string& layerName, std::vector
 void AnimatedGameObject::PlayAndLoopAnimation(const std::string& layerName, std::vector<std::string>& animationNames, float speed) {
     int rand = std::rand() % animationNames.size();
     PlayAndLoopAnimation(layerName, animationNames[rand], speed);
+}
+
+void AnimatedGameObject::CrossFadeAnimation(const std::string& layerName, const std::string& animationName, float fadeDuration, float speed, bool loop) {
+    Animator::CrossFade(m_animationState, layerName, animationName, fadeDuration, speed, loop);
+}
+
+void AnimatedGameObject::FadeOutAnimationLayer(const std::string& layerName, float fadeDuration) {
+    Animator::FadeOutLayer(m_animationState, layerName, fadeDuration);
+}
+
+void AnimatedGameObject::SetAnimationLayerWeight(const std::string& layerName, float weight) {
+    Animator::SetLayerWeight(m_animationState, layerName, weight);
+}
+
+void AnimatedGameObject::SetAnimationLayerBlendMode(const std::string& layerName, AnimationBlendMode blendMode) {
+    Animator::SetLayerBlendMode(m_animationState, layerName, blendMode);
+}
+
+void AnimatedGameObject::SetAnimationLayerNodeWeights(const std::string& layerName, const std::vector<float>& nodeWeights) {
+    Animator::SetLayerNodeWeights(m_animationState, layerName, nodeWeights);
 }
 
 
@@ -271,7 +460,7 @@ const glm::mat4 AnimatedGameObject::GetModelMatrix() {
 
 
 bool AnimatedGameObject::IsAllAnimationsComplete() {
-    return m_animator.AllAnimationsComplete();
+    return Animator::AllAnimationsComplete(m_animationState);
 }
 
 
@@ -284,7 +473,7 @@ void AnimatedGameObject::SetSkinnedModel(const std::string& name, const std::str
     SkinnedModel* ptr = Hell::ResourceManager::GetSkinnedModelByName(name);
     if (ptr) {
         m_skinnedModel = ptr;
-        m_animator.SetSkinnedModel(name);
+        Animator::SetSkinnedModel(m_animationState, ptr);
     }
     else {
         std::cout << "Could not SetSkinnedModel(name) with name: \"" << name << "\", it does not exist\n";
@@ -302,11 +491,11 @@ void AnimatedGameObject::SetSkinnedModel(const std::string& name, const std::str
 const glm::mat4& AnimatedGameObject::GetAnimatedTransformByNodeIndex(int32_t nodeIndex) {
     const static glm::mat4 identity = glm::mat4(1.0f);
 
-    if (!m_skinnedModel || nodeIndex < 0 || nodeIndex >= m_animator.m_globalBlendedNodeTransforms.size()) {
+    if (!m_skinnedModel || nodeIndex < 0 || nodeIndex >= m_animationState.globalNodeTransforms.size()) {
         return identity;
     }
 
-    return m_animator.m_globalBlendedNodeTransforms[nodeIndex];
+    return m_animationState.globalNodeTransforms[nodeIndex];
 }
 
 
@@ -322,12 +511,12 @@ const glm::mat4& AnimatedGameObject::GetAnimatedTransformByBoneName(const std::s
     }
 
     int index = it->second;
-    if (index < 0 || index >= int(m_animator.m_globalBlendedNodeTransforms.size())) {
+    if (index < 0 || index >= int(m_animationState.globalNodeTransforms.size())) {
         //std::cout << "AnimatedGameObject::GetAnimatedTransformByBoneName() '" << name << "' index " << index << " out of range of " << m_animator.m_globalBlendedNodeTransforms.size() << "\n";
         return identity;
     }
 
-    return m_animator.m_globalBlendedNodeTransforms[index];
+    return m_animationState.globalNodeTransforms[index];
 }
 
 
@@ -376,12 +565,12 @@ void AnimatedGameObject::SetCameraMatrix(const glm::mat4& matrix) {
 
 
 const uint32_t AnimatedGameObject::GetAnimationFrameNumber(const std::string& animationLayerName) {
-    return m_animator.GetAnimationFrameNumber(animationLayerName);
+    return Animator::GetAnimationFrameNumber(m_animationState, animationLayerName);
 }
 
 
 bool AnimatedGameObject::AnimationIsPastFrameNumber(const std::string& animationLayerName, int frameNumber) {
-    return m_animator.AnimationIsPastFrameNumber(animationLayerName, frameNumber);
+    return Animator::AnimationIsPastFrameNumber(m_animationState, animationLayerName, frameNumber);
 }
 
 
@@ -396,8 +585,8 @@ void AnimatedGameObject::DrawBones(int exclusiveViewportIndex) {
         std::string& parentNodeName = m_skinnedModel->m_nodes[parentIndex].name;
 
         if (parentIndex != -1 && m_skinnedModel->BoneExists(nodeName) && m_skinnedModel->BoneExists(parentNodeName)) {
-            const glm::mat4& boneWorldMatrix = m_animator.m_globalBlendedNodeTransforms[i];
-            const glm::mat4& parentBoneWorldMatrix = m_animator.m_globalBlendedNodeTransforms[parentIndex];
+            const glm::mat4& boneWorldMatrix = m_animationState.globalNodeTransforms[i];
+            const glm::mat4& parentBoneWorldMatrix = m_animationState.globalNodeTransforms[parentIndex];
             glm::vec3 position = GetModelMatrix() * boneWorldMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             glm::vec3 parentPosition = GetModelMatrix() * parentBoneWorldMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             DebugDraw::DrawPoint(position, OUTLINE_COLOR, false, exclusiveViewportIndex);
@@ -416,7 +605,7 @@ void AnimatedGameObject::DrawBones(int exclusiveViewportIndex) {
 void AnimatedGameObject::DrawBoneTangentVectors(float size, int exclusiveViewportIndex) {
     size *= 0.5f;
 
-    for (const glm::mat4& boneWorldMatrix : m_animator.m_globalBlendedNodeTransforms) {
+    for (const glm::mat4& boneWorldMatrix : m_animationState.globalNodeTransforms) {
         glm::vec3 origin = GetModelMatrix() * boneWorldMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
         glm::vec3 right = glm::normalize(glm::vec3(boneWorldMatrix[0]));
         glm::vec3 up = glm::normalize(glm::vec3(boneWorldMatrix[1]));
@@ -430,15 +619,15 @@ void AnimatedGameObject::DrawBoneTangentVectors(float size, int exclusiveViewpor
 
 
 bool AnimatedGameObject::AnimationByNameIsComplete(const std::string& name) {
-    return m_animator.AnimationIsCompleteAnyLayer(name);
+    return Animator::AnimationIsCompleteAnyLayer(m_animationState, name);
 }
 
 
 const glm::mat4& AnimatedGameObject::GetGlobalBlendedNodeTransfrom(const std::string& nodeName) {
     uint32_t nodeIndex = GetNodeIndex(nodeName);
 
-    if (nodeIndex >= 0 && nodeIndex < (uint32_t)m_animator.m_globalBlendedNodeTransforms.size()) {
-        return m_animator.m_globalBlendedNodeTransforms[nodeIndex];
+    if (nodeIndex >= 0 && nodeIndex < (uint32_t)m_animationState.globalNodeTransforms.size()) {
+        return m_animationState.globalNodeTransforms[nodeIndex];
     }
     static const glm::mat4 identity = glm::mat4(1.0f);
     return identity;
@@ -467,11 +656,11 @@ int32_t AnimatedGameObject::GetNodeIndex(const std::string& nodeName) {
 
 const glm::mat4 AnimatedGameObject::GetBoneWorldMatrix(const std::string& boneName) {
     int nodeIndex = GetNodeIndex(boneName);
-    if (nodeIndex < 0 || nodeIndex >= int(m_animator.m_globalBlendedNodeTransforms.size())) {
+    if (nodeIndex < 0 || nodeIndex >= int(m_animationState.globalNodeTransforms.size())) {
         return glm::mat4(1.0f);
     }
     else {
-        return GetModelMatrix() * m_animator.m_globalBlendedNodeTransforms[nodeIndex];
+        return GetModelMatrix() * m_animationState.globalNodeTransforms[nodeIndex];
     }
 }
 
@@ -484,10 +673,10 @@ void AnimatedGameObject::SetRagdollId(uint64_t RagdollId) {
 }
 
 void AnimatedGameObject::SetAdditiveTransform(const std::string& nodeName, const glm::mat4& matrix) {
-    m_animator.SetAdditiveTransform(nodeName, matrix);
+    Animator::SetAdditiveTransform(m_animationState, nodeName, matrix);
 }
 
 void AnimatedGameObject::PauseAllAnimationLayers() {
-    m_animator.PauseAllLayers();
+    Animator::PauseAllLayers(m_animationState);
 }
 }

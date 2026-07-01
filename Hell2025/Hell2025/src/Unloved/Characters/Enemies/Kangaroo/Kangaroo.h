@@ -33,7 +33,10 @@ namespace Unloved {
     };
 
     struct Kangaroo {
-        void Init(KangarooCreateInfo createInfo);
+        Kangaroo() = default;
+        Kangaroo(uint64_t id, KangarooCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+
+        void Init(uint64_t id, KangarooCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
         void Update(float deltaTime);
         void Kill();
         void GiveDamage(int damage);
@@ -63,6 +66,8 @@ namespace Unloved {
         uint64_t GetRagdollId()                   { return m_RagdollId; }
         glm::vec3 GetPosition()                     { return m_position; }
         bool WoundTextureNeedsClearing()            { return m_woundTextureNeedsClearing; }
+        const KangarooCreateInfo& GetCreateInfo() const { return m_createInfo; }
+        const std::string& GetEditorName() const    { return m_createInfo.editorName; }
 
     private:
         void UpdateAnimatedGameObjectPositionRotation();

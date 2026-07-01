@@ -3,6 +3,7 @@
 #include "Hell/Common/Enum.h"
 #include "Hell/Common/String.h"
 #include "Hell/Logging.h"
+#include "Hell/Math/Range.h"
 #include "Hell/MemoryTracker/MemoryTracker.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
@@ -19,7 +20,7 @@
 #include "Hell/UI/UIBackEnd.h"
 #include "World/LegacyWorld.h"
 #include "Hell/UI/TextBlitter.h"
-#include "Util.h"
+#include "Unloved/World/World.h"
 
 #include "Unloved/Systems/PianoPlayback/PianoPlaybackManager.h"
 
@@ -146,8 +147,8 @@ namespace Debug {
         int gBufferHeight = resolutions.gBuffer.y;
         int viewportWidth = gBufferWidth * viewport->GetSize().x;
         int viewportHeight = gBufferHeight * viewport->GetSize().y;
-        float normalizedMouseX = Util::MapRange(mouseX, 0, windowWidth, 0, gBufferWidth);
-        float normalizedMouseY = Util::MapRange(mouseY, 0, windowHeight, 0, gBufferHeight);
+        float normalizedMouseX = Hell::Math::MapRange(mouseX, 0, windowWidth, 0, gBufferWidth);
+        float normalizedMouseY = Hell::Math::MapRange(mouseY, 0, windowHeight, 0, gBufferHeight);
 
         float offsetX = viewport->GetPosition().x * gBufferWidth;
         float offsetY = (1 - viewport->GetPosition().y) * gBufferHeight;
@@ -163,8 +164,8 @@ namespace Debug {
         float top = Hell::BackEnd::GetCurrentWindowHeight() - (viewport->GetPosition().y * Hell::BackEnd::GetCurrentWindowHeight());
         float bottom = top - height;
 
-        float viewportSpaceMouseX = Util::MapRange(mouseX, left, right, 0, viewportWidth);
-        float viewportSpaceMouseY = Util::MapRange(mouseY, bottom, top, 0, viewportHeight);
+        float viewportSpaceMouseX = Hell::Math::MapRange(mouseX, left, right, 0, viewportWidth);
+        float viewportSpaceMouseY = Hell::Math::MapRange(mouseY, bottom, top, 0, viewportHeight);
 
         AddText("");
         AddText("viewportSpaceMouseX: " + std::to_string(viewportSpaceMouseX));
@@ -277,17 +278,17 @@ namespace Debug {
             if (Input::KeyPressed(HELL_KEY_LEFT)) lightIndex--;
             if (Input::KeyPressed(HELL_KEY_RIGHT)) lightIndex++;
 
-            if (lightIndex < 0) lightIndex = LegacyWorld::GetLightCount() - 1;
-            if (lightIndex == LegacyWorld::GetLightCount()) lightIndex = 0;
+            if (lightIndex < 0) lightIndex = Unloved::World::GetLightCount() - 1;
+            if (lightIndex == Unloved::World::GetLightCount()) lightIndex = 0;
 
-            if (Light* light = LegacyWorld::GetLightByIndex(lightIndex)) {
+            if (Light* light = Unloved::World::GetLightByIndex(lightIndex)) {
                 AABB worldBounds = AABB(light->GetWorldBoundsMin(), light->GetWorldBoundsMax());
                 DebugDraw::DrawAABB(worldBounds, glm::vec4(light->GetColor(), 1.0f));
             }
         }
 
         if (g_debugRenderMode == DebugRenderMode::BONES) {
-            for (AnimatedGameObject& animatedGameObject : LegacyWorld::GetAnimatedGameObjects()) {
+            for (AnimatedGameObject& animatedGameObject : Unloved::World::GetAnimatedGameObjects()) {
                 animatedGameObject.DrawBones();
             }
             for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
@@ -298,7 +299,7 @@ namespace Debug {
             }
         }
         if (g_debugRenderMode == DebugRenderMode::BONE_TANGENTS) {
-            for (AnimatedGameObject& animatedGameObject : LegacyWorld::GetAnimatedGameObjects()) {
+            for (AnimatedGameObject& animatedGameObject : Unloved::World::GetAnimatedGameObjects()) {
                 //animatedGameObject.DrawBoneTangentVectors();
             }
             for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
@@ -309,17 +310,17 @@ namespace Debug {
             }
         }
         if (g_debugRenderMode == DebugRenderMode::CLIPPING_VOLUMES) {
-            for (const Door& door : LegacyWorld::GetDoors()) {
+            for (const Door& door : Unloved::World::GetDoors()) {
                 door.GetClippingVolume().DrawDebugCorners(OUTLINE_COLOR);
                 door.GetClippingVolume().DrawDebugEdges(WHITE);
             }
-            for (const Window& window : LegacyWorld::GetWindows()) {
+            for (const Window& window : Unloved::World::GetWindows()) {
                 window.GetClippingVolume().DrawDebugCorners(OUTLINE_COLOR);
                 window.GetClippingVolume().DrawDebugEdges(WHITE);
             }
         }
         if (g_debugRenderMode == DebugRenderMode::BLOCKING_VOLUMES) {
-            for (const Fireplace& fireplace : LegacyWorld::GetFireplaces()) {
+            for (const Fireplace& fireplace : Unloved::World::GetFireplaces()) {
                 fireplace.GetBlockingVolume().DrawDebugCorners(OUTLINE_COLOR);
                 fireplace.GetBlockingVolume().DrawDebugEdges(WHITE);
             }

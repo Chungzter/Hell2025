@@ -42,7 +42,7 @@ uniform int u_globalInstanceIndex;
 
 out flat int EmissiveTextureIndex; // WARNING! this doens't work when bindless textures are disabled
 out flat int WoundMaskTextureIndex;
-out flat int BlockBloodScreenSpaceDecalsFlag;
+out flat uint MiscFlags;
 
 out vec4 v_currPos;
 out vec4 v_prevPos;
@@ -117,5 +117,5 @@ void main() {
     //vec4 camRelativeWorldPos = vec4(WorldPos.xyz - ViewPos, 1.0);
     //gl_Position = projection * mat4(mat3(view)) * camRelativeWorldPos;
 
-    BlockBloodScreenSpaceDecalsFlag = renderItem.blockBloodScreenSpaceDecals; // rethink this?
+    MiscFlags = renderItem.miscFlags;
 }

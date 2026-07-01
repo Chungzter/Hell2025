@@ -2,6 +2,7 @@
 
 #include "Legacy/Common/HellFunctionTypes.h"
 #include "Unloved/Common/Enums.h"
+#include "Unloved/Editor/ObjectNames.h"
 
 #include <glm/vec3.hpp>
 
@@ -279,19 +280,15 @@ namespace Unloved::EditorUI {
 
     struct Outliner {
         bool CreateImGuiElements(float height);
-        bool CreateImGuiElements();
-        void AddType(const std::string name);
-        void SetItems(const std::string name, const std::vector<std::string>& items);
-        void AddItems(const std::string name, const std::vector<std::uint64_t>& objectIds);
+        void AddEditorObjectNameGroup(const Editor::EditorObjectNameGroup& group);
         void SetSelectedType(const std::string& type);
         void SetSelectedItem(const std::string& item);
         const std::string& GetSelectedType();
         const std::string& GetSelectedItem();
     private:
-        std::map<std::string, std::vector<std::string>> m_typesOLD;
-        std::map<std::string, std::vector<uint64_t>> m_objectIdMap; // key is object type name and value is a vector of ids
+        std::vector<Editor::EditorObjectNameGroup> m_editorObjectNameGroups;
         std::string m_selectedItem;
         std::string m_selectedType;
-        uint64_t m_selectedObjectId;
+        uint64_t m_selectedObjectId = 0;
     };
 }

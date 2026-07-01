@@ -1,13 +1,14 @@
 #include "Hell/Audio.h"
 #include "Hell/Input.h"
+#include "Hell/Math/Rotation.h"
 
 #include "Legacy/Renderer/Renderer.h"
-#include "Legacy/Util/Util.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/ObjectId.h"
+#include "Unloved/World/World.h"
 
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
@@ -33,8 +34,8 @@ namespace Unloved::Editor {
                 Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                 PictureFrameCreateInfo createInfo;
                 createInfo.position = rayResult.hitPosition;
-                createInfo.rotation = Util::EulerRotationFromNormal(rayResult.hitNormal);
-                LegacyWorld::AddPictureFrame(createInfo);
+                createInfo.rotation = Hell::Math::EulerRotationFromNormal(rayResult.hitNormal);
+                Unloved::World::AddPictureFrame(createInfo);
                 ExitObjectPlacement();
             }
         }

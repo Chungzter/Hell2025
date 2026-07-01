@@ -2,7 +2,7 @@
 #include <fstream>
 #include "Hell/Logging.h"
 #include "File/JSON.h"
-#include "World/LegacyWorld.h"
+#include "Unloved/World/World.h"
 
 namespace HouseManager {
     using namespace Unloved;
@@ -72,7 +72,7 @@ namespace HouseManager {
         }
 
         // Construct the JSON string
-        CreateInfoCollection createInfoCollection = LegacyWorld::GetCreateInfoCollection();
+        CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
         house->SetCreateInfoCollection(createInfoCollection);
 
         std::string createInfoJson = JSON::CreateInfoCollectionToJSON(createInfoCollection);
@@ -101,7 +101,7 @@ namespace HouseManager {
             return;
         }
 
-        CreateInfoCollection createInfoCollection = LegacyWorld::GetCreateInfoCollection();
+        CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
         house->SetCreateInfoCollection(createInfoCollection);
     }
 

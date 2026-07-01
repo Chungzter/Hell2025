@@ -1,8 +1,8 @@
 #include "Player.h"
 
 #include "Hell/Input.h"
+#include "Hell/Math/Math.h"
 
-#include "Legacy/Util/Util.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 
@@ -54,8 +54,8 @@ void Player::UpdateViewWeapon(float deltaTime) {
     movementY = std::max(movementY, SWAY_MIN_Y);
 
     if (HasControl()) {
-        m_weaponSwayX = Util::FInterpTo(m_weaponSwayX, movementX, deltaTime, SMOOTH_AMOUNT);
-        m_weaponSwayY = Util::FInterpTo(m_weaponSwayY, movementY, deltaTime, SMOOTH_AMOUNT);
+        m_weaponSwayX = Hell::Math::InterpTo(m_weaponSwayX, movementX, deltaTime, SMOOTH_AMOUNT);
+        m_weaponSwayY = Hell::Math::InterpTo(m_weaponSwayY, movementY, deltaTime, SMOOTH_AMOUNT);
     }
 
     if (ViewportIsVisible()) {

@@ -3,6 +3,7 @@
 #extension GL_ARB_bindless_texture : enable
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
+#include "../common/gl_fixed_bindings.glsl"
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"
@@ -13,18 +14,19 @@ readonly restrict layout(std430, binding = 5) buffer tileLightsBuffer   { TileLi
 layout (location = 0) out vec4 ColorOut;
 layout (location = 1) out float ViewSpaceDepthPreviousOut;
 
-layout (binding = 0) uniform sampler2D baseColorTexture;
-layout (binding = 1) uniform sampler2D normalTexture;
-layout (binding = 2) uniform sampler2D rmaTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowMapArray;
 
-layout (binding = 3) uniform sampler2D plasticBaseColorTexture;
-layout (binding = 4) uniform sampler2D plasticNormalTexture;
-layout (binding = 5) uniform sampler2D plasticRmaTexture;
+layout (binding = 4) uniform sampler2D baseColorTexture;
+layout (binding = 5) uniform sampler2D normalTexture;
+layout (binding = 6) uniform sampler2D rmaTexture;
 
-layout (binding = 6) uniform sampler2D u_SceneColorTexture;
-layout (binding = 7) uniform sampler2D u_SceneDepthTexture;
+layout (binding = 7) uniform sampler2D plasticBaseColorTexture;
+layout (binding = 8) uniform sampler2D plasticNormalTexture;
+layout (binding = 9) uniform sampler2D plasticRmaTexture;
 
-layout (binding = 8) uniform samplerCubeArrayShadow shadowMapArray;
+layout (binding = 10) uniform sampler2D u_SceneColorTexture;
+layout (binding = 11) uniform sampler2D u_SceneDepthTexture;
 
 in vec2 TexCoord;
 in vec3 Normal;
@@ -304,7 +306,13 @@ void main() {
 
         float att = smoothstep(light.radius, 0.0, dist) * light.strength;
 
-        float shadow = ShadowCalculationNEW(lightIndex, lightPos, light.radius, v_worldPos.xyz, u_viewPos, normal.xyz, shadowMapArray);
+        float shadow = 1.0;
+        if (light.hiResShadowMapIndex != -1) {
+            shadow = ShadowCalculationNEW(light.hiResShadowMapIndex, lightPos, light.radius, v_worldPos.xyz, u_viewPos, normal.xyz, hiResShadowMapArray);
+        }
+        else if (light.lowResShadowMapIndex != -1) {
+            shadow = ShadowCalculationNEW(light.lowResShadowMapIndex, lightPos, light.radius, v_worldPos.xyz, u_viewPos, normal.xyz, lowResShadowMapArray);
+        }
 
         float candas = 1.0;
         if (light.iesTextureIndex != 0) {

@@ -17,6 +17,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
 #include "Unloved/ObjectId.h"
+#include "Unloved/World/World.h"
 
 namespace Unloved {
 
@@ -215,8 +216,8 @@ void Player::UpdateUI(float deltaTime) {
 
             // Kangaroos
             if (false) {
-                if (LegacyWorld::GetKangaroos().size()) {
-                    Kangaroo& kangaroo = LegacyWorld::GetKangaroos()[0];
+                if (Unloved::World::GetKangaroos().size()) {
+                    Kangaroo& kangaroo = Unloved::World::GetKangaroos()[0];
                     text += kangaroo.GetDebugInfoString();
                 }
             }
@@ -284,7 +285,7 @@ void Player::UpdateUI(float deltaTime) {
 
             // Lights
             if (false) {
-                for (Light& Light : LegacyWorld::GetLights()) {
+                for (Light& Light : Unloved::World::GetLights()) {
                     text += "Light: " + Hell::String::FormatBool(Light.IsDirtyForShadowMaps()) + "\n";
                 }
             }

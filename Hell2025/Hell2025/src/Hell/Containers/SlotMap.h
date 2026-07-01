@@ -101,6 +101,9 @@ namespace Hell {
         auto begin() const { return m_values.begin(); }
         auto end()   const { return m_values.end(); }
 
+        T& operator[](size_t denseIndex) { return m_values[denseIndex]; }
+        const T& operator[](size_t denseIndex) const { return m_values[denseIndex]; }
+
         T* data() { return m_values.data(); }
         const T* data() const { return m_values.data(); }
 

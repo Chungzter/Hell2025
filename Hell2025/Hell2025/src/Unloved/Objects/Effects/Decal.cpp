@@ -3,6 +3,9 @@
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
 
+#include "Hell/Common/Constants.h"
+#include "Hell/Common/Random.h"
+#include "Hell/Math/Rotation.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 
@@ -43,9 +46,9 @@ Decal::Decal(const DecalCreateInfo& createInfo) {
     }
 
     // Compute the local matrix once because it never changes
-    float randomRotation = Util::RandomFloat(0.0f, HELL_PI * 2.0f);
+    float randomRotation = Hell::Random::Float(0.0f, HELL_PI * 2.0f);
     m_localMatrix = glm::translate(glm::mat4(1.0f), m_localPosition);
-    m_localMatrix *= Util::RotationMatrixFromForwardVector(m_localNormal, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
+    m_localMatrix *= Hell::Math::RotationMatrixFromForward(m_localNormal, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
     m_localMatrix *= glm::rotate(glm::mat4(1.0f), randomRotation, glm::vec3(0, 0, 1));
     m_localMatrix *= glm::scale(glm::mat4(1.0f), glm::vec3(scale));
 

@@ -101,6 +101,38 @@ void Player::UpdateCharacterModelHacks() {
 
         characterModel->SetPosition(GetFootPosition());
         characterModel->SetRotationY(m_camera.GetEulerRotation().y + HELL_PI);
+
+        // Push the body behind the camera so it cannot shadow the view weapon
+        glm::vec3 cameraForwardXZ = m_camera.GetForward() * glm::vec3(1.0f, 0.0f, 1.0f);
+        float cameraForwardXZLengthSquared = glm::dot(cameraForwardXZ, cameraForwardXZ);
+
+        if (cameraForwardXZLengthSquared > 0.0001f) {
+            cameraForwardXZ = glm::normalize(cameraForwardXZ);
+
+            bool foundEyeCenter = false;
+            glm::vec3 eyeCenter = glm::vec3(0.0f);
+
+            if (characterModel->GetNodeIndex("CC_Base_L_Eye") != -1 && characterModel->GetNodeIndex("CC_Base_R_Eye") != -1) {
+                glm::vec3 leftEyePosition = characterModel->GetBoneWorldPosition("CC_Base_L_Eye");
+                glm::vec3 rightEyePosition = characterModel->GetBoneWorldPosition("CC_Base_R_Eye");
+                eyeCenter = (leftEyePosition + rightEyePosition) * 0.5f;
+                foundEyeCenter = true;
+            }
+            else if (characterModel->GetNodeIndex("CC_Base_Head") != -1) {
+                eyeCenter = characterModel->GetBoneWorldPosition("CC_Base_Head");
+                foundEyeCenter = true;
+            }
+
+            if (foundEyeCenter) {
+                float eyeDepth = glm::dot(eyeCenter - m_camera.GetPosition(), cameraForwardXZ);
+                float desiredEyeDepth = -0.05f;
+
+                if (eyeDepth > desiredEyeDepth) {
+                    glm::vec3 correction = cameraForwardXZ * (desiredEyeDepth - eyeDepth);
+                    characterModel->SetPosition(characterModel->GetPosition() + correction);
+                }
+            }
+        }
     }
     else {
         HideKnifeMesh();

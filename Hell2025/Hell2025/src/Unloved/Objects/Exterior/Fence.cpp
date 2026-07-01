@@ -1,17 +1,33 @@
 #include "Fence.h"
 #include "Hell/Common/Bit.h"
 #include "Hell/Common/Random.h"
+#include "Hell/Curve/Curve.h"
 #include "Hell/Logging.h"
+#include "Hell/Math/Rotation.h"
 #include "Hell/Physics/Physics.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Util/Util.h"
+
+#include <cmath>
+
+namespace {
+    glm::vec2 ApplySpawnOffset(const glm::vec2& point, const SpawnOffset& spawnOffset) {
+        const float c = std::cos(spawnOffset.yRotation);
+        const float s = std::sin(spawnOffset.yRotation);
+        const glm::vec2 rotated(point.x * c + point.y * s, -point.x * s + point.y * c);
+        return rotated + glm::vec2(spawnOffset.translation.x, spawnOffset.translation.z);
+    }
+}
 
 namespace Unloved {
 
 Fence::Fence(uint64_t id, FenceCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_objectId = id;
     m_createInfo = createInfo;
-    m_spawnOffset = spawnOffset;
+    for (glm::vec2& point : m_createInfo.controlPoints2D) {
+        point = ApplySpawnOffset(point, spawnOffset);
+    }
+    m_spawnOffset = SpawnOffset();
 
     Init();
 }
@@ -65,7 +81,7 @@ void Fence::Init() {
     }
 
     float spacing = 1.0f;
-    m_finalPositions = Util::GetBeizerPointsFromControlPoints(controlPoints3D, spacing);
+    m_finalPositions = Hell::Curve::SampleBezierPath(controlPoints3D, spacing);
 
     // Error check
     if (m_finalPositions.size() < 2) {
@@ -98,7 +114,7 @@ void Fence::Init() {
 
         Transform transform;
         transform.position = m_finalPositions[i];
-        transform.rotation.y = Util::EulerYRotationBetweenTwoPoints(position, nextPosition);
+        transform.rotation.y = Hell::Math::YawBetweenPoints(position, nextPosition);
         transform.rotation.x += Hell::Random::Float(-maxWonkiness, maxWonkiness);
         transform.rotation.y += Hell::Random::Float(-maxWonkiness, maxWonkiness);
         transform.rotation.z += Hell::Random::Float(-maxWonkiness, maxWonkiness);
@@ -183,7 +199,7 @@ RenderItem Fence::CreateWireRenderItem(RenderItem& localSpaceRenderItem, glm::ve
 
     // Rotation
     glm::vec3 forwardToNext = glm::normalize(nextPosition - position);
-    glm::mat4 rotationMatrix = Util::RotationMatrixFromForwardVector(forwardToNext, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
+    glm::mat4 rotationMatrix = Hell::Math::RotationMatrixFromForward(forwardToNext, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
 
     // Scale
     Transform scale;

@@ -2,11 +2,15 @@
 
 #extension GL_ARB_bindless_texture : enable
 
+#include "../../common/gl_fixed_bindings.glsl"
+
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
-layout(binding = 5) uniform sampler2D u_indirectDiffuseTexture;
-layout(binding = 7) uniform sampler2DArray woundMaskTextureArray;
-layout(binding = 9) uniform samplerCubeArrayShadow u_shadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow u_hiResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow u_lowResShadowMapArray;
+
+layout (binding = 5) uniform sampler2D u_indirectDiffuseTexture;
+layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
 
 layout(early_fragment_tests) in;
 
@@ -633,7 +637,14 @@ void main() {
 
     float lightAttenuation = smoothstep(lightRadius, 0.0, lightDistance) * lightStrength;
 
-    float lightShadow = ShadowCalculationNEW(i, lightPos, lightRadius, v_worldPos.xyz, viewPos, n, u_shadowMapArray);
+    float lightShadow = 1.0;
+    if (light.hiResShadowMapIndex != -1) {
+        lightShadow = ShadowCalculationNEW(light.hiResShadowMapIndex, lightPos, lightRadius, v_worldPos.xyz, viewPos, n, u_hiResShadowMapArray);
+    }
+    else if (light.lowResShadowMapIndex != -1) {
+        lightShadow = ShadowCalculationNEW(light.lowResShadowMapIndex, lightPos, lightRadius, v_worldPos.xyz, viewPos, n, u_lowResShadowMapArray);
+    }
+
     vec3 lightColor = clamp(lightCol, 0.0, 1.0);
     float lightVisibility = lightAttenuation * lightShadow;
 

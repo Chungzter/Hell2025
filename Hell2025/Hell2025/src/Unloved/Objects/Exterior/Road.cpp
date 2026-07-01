@@ -1,8 +1,9 @@
 #include "Road.h"
 #include "Unloved/Debug/DebugDraw.h"
+#include "Hell/Curve/Curve.h"
 #include "Hell/Math/Math.h"
 #include "Hell/Physics/Physics.h"
-#include "Util.h"
+#include "Hell/Projection/Projection.h"
 
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
@@ -32,7 +33,7 @@ void Road::Init() {
 
     if (curveType == BEIZER) {
         float spacing = 1.0f;
-        m_worldPoints = Util::GetBeizerPointsFromControlPoints(m_controlPoints3D, spacing);
+        m_worldPoints = Hell::Curve::SampleBezierPath(m_controlPoints3D, spacing);
 
         // Snap to heightmap
         for (glm::vec3& point : m_worldPoints) {
@@ -70,7 +71,7 @@ void Road::DrawPoints() {
 
 
     glm::ivec2 mouseCoords = glm::ivec2(Input::GetMouseX(), Input::GetMouseY());
-    glm::ivec2 pointCoords = Util::WorldToScreenCoords(worldPos, projectionView, screenWidth, screenHeight);
+    glm::ivec2 pointCoords = Hell::Projection::WorldToScreen(worldPos, projectionView, screenWidth, screenHeight);
 
 
     Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(0);

@@ -1,8 +1,8 @@
 #include "../GL_renderer.h"
 #include "Unloved/Session/Session.h"
+#include "Hell/Common/Random.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
-#include "Util/Util.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 
@@ -160,9 +160,9 @@ namespace OpenGLRenderer {
 
             for (int i = 0; i < 20; i++) {
                 glm::vec3 pos = origin;
-                pos.x -= Util::RandomFloat(-2.0f, 2.0f);
-                pos.y -= Util::RandomFloat(-2.0f, 2.0f);
-                pos.z -= Util::RandomFloat(-2.0f, 2.0f);
+                pos.x -= Hell::Random::Float(-2.0f, 2.0f);
+                pos.y -= Hell::Random::Float(-2.0f, 2.0f);
+                pos.z -= Hell::Random::Float(-2.0f, 2.0f);
                 positions.push_back(glm::vec4(pos, 1.0f));
             }
             OpenGL::UploadSSBOStatic("BubblePositions", positions.size() * sizeof(glm::vec4), positions.data());

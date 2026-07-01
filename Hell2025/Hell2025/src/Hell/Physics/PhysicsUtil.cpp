@@ -10,10 +10,7 @@
 
 namespace Hell::Physics {
 
-    bool PxTransformNearlyEqual(const physx::PxTransform& a, const physx::PxTransform& b) {
-        constexpr float positionEps = 1e-4f;
-        constexpr float rotationEps = 1e-4f;
-
+    bool PxTransformNearlyEqual(const physx::PxTransform& a, const physx::PxTransform& b, float positionEps, float rotationEps) {
         const float dxp = a.p.x - b.p.x;
         const float dyp = a.p.y - b.p.y;
         const float dzp = a.p.z - b.p.z;

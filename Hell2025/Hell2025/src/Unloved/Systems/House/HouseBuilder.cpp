@@ -1,6 +1,7 @@
 #include "HouseBuilder.h"
 
 #include "Legacy/World/LegacyWorld.h"
+#include "Unloved/World/World.h"
 
 #include <algorithm>
 
@@ -24,11 +25,11 @@ void RaycastClippingVolume(const ClippingVolume& clippingVolume, const glm::vec3
 std::vector<const ClippingVolume*> GetClippingVolumes() {
     std::vector<const ClippingVolume*> clippingVolumes;
 
-    for (const Unloved::Door& door : Unloved::LegacyWorld::GetDoors()) {
+    for (const Unloved::Door& door : Unloved::World::GetDoors()) {
         clippingVolumes.push_back(&door.GetClippingVolume());
     }
 
-    for (const Unloved::Window& window : Unloved::LegacyWorld::GetWindows()) {
+    for (const Unloved::Window& window : Unloved::World::GetWindows()) {
         clippingVolumes.push_back(&window.GetClippingVolume());
     }
 
@@ -39,12 +40,12 @@ ClipRayResult RaycastClippingVolumes(const glm::vec3& rayOrigin, const glm::vec3
     ClipRayResult result;
 
     // Update ray result with the closest hit against all door clipping volumes
-    for (const Unloved::Door& door : Unloved::LegacyWorld::GetDoors()) {
+    for (const Unloved::Door& door : Unloved::World::GetDoors()) {
         RaycastClippingVolume(door.GetClippingVolume(), rayOrigin, rayDir, maxDistance, result);
     }
 
     // Update ray result with the closest hit against all window clipping volumes
-    for (const Unloved::Window& window : Unloved::LegacyWorld::GetWindows()) {
+    for (const Unloved::Window& window : Unloved::World::GetWindows()) {
         RaycastClippingVolume(window.GetClippingVolume(), rayOrigin, rayDir, maxDistance, result);
     }
 

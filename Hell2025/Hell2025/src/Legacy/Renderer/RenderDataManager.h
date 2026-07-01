@@ -36,10 +36,6 @@ namespace RenderDataManager {
     void SubmitRenderItem(const RenderItem& renderItem);
     void SubmitRenderItems(const std::vector<RenderItem>& renderItems);
 
-    void SubmitGPULightHighRes(uint32_t lightIndex);
-    //void SubmitSkinnedRenderItems(const std::vector<RenderItem>& renderItems);
-
-
     // House submissions
     void SubmitRenderItemProcedural(const RenderItem& renderItem);
 
@@ -48,10 +44,8 @@ namespace RenderDataManager {
     const RendererData& GetRendererData();
     const std::vector<glm::mat4>& GetOceanPatchTransforms();
     const std::vector<glm::mat4>& GetSkinningTransforms();
-    const std::vector<GPULight>& GetGPULightsHighRes();
+    const std::vector<GPULight>& GetGPULights();
     const std::vector<DecalPaintingInfo>& GetDecalPaintingInfo();
-    //const std::vector<HouseRenderItem>& GetHouseRenderItems();
-    //const std::vector<HouseRenderItem>& GetHouseOutlineRenderItems();
     const std::vector<RenderItem>& GetInstanceData();
     const std::vector<RenderItem>& GetCombinedSkinnedRenderItems();
 

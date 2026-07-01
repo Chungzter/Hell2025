@@ -4,6 +4,7 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Input.h"
 #include "Hell/Logging.h"
+#include "Hell/Math/Range.h"
 #include "Hell/UI/UIBackEnd.h"
 
 #include "Legacy/Renderer/Renderer.h"
@@ -142,8 +143,8 @@ namespace Unloved::Editor {
         int gBufferWidth = resolutions.gBuffer.x;
         int gBufferHeight = resolutions.gBuffer.y;
 
-        int mappedMouseX = Util::MapRange(mouseX, 0, Hell::BackEnd::GetCurrentWindowWidth(), 0, gBufferWidth);
-        int mappedMouseY = Util::MapRange(mouseY, 0, Hell::BackEnd::GetCurrentWindowHeight(), 0, gBufferHeight);
+        int mappedMouseX = Hell::Math::MapRange(mouseX, 0, Hell::BackEnd::GetCurrentWindowWidth(), 0, gBufferWidth);
+        int mappedMouseY = Hell::Math::MapRange(mouseY, 0, Hell::BackEnd::GetCurrentWindowHeight(), 0, gBufferHeight);
 
         // Object selection rectangle
         SelectionRectangleState& rectangleState = GetSelectionRectangleState();

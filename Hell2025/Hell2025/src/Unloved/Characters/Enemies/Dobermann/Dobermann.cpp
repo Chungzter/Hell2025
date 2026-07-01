@@ -1,10 +1,12 @@
 #include "Dobermann.h"
+#include "Hell/Math/Rotation.h"
 #include "Hell/Logging.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Systems/NavMesh/NavMesh.h"
 #include "Renderer/Renderer.h"
 #include "World/LegacyWorld.h"
 #include "Unloved/ObjectId.h"
+#include "Unloved/World/World.h"
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
 
@@ -17,16 +19,22 @@ namespace Input = Hell::Input;
 
 namespace Unloved {
 
-    void Dobermann::Init(DobermannCreateInfo createInfo) {
+    Dobermann::Dobermann(uint64_t id, DobermannCreateInfo createInfo, SpawnOffset spawnOffset) {
+        Init(id, createInfo, spawnOffset);
+    }
+
+    void Dobermann::Init(uint64_t id, DobermannCreateInfo createInfo, SpawnOffset spawnOffset) {
         m_createInfo = createInfo;
+        m_createInfo.position += spawnOffset.translation;
+        m_createInfo.eulerDirection.y += spawnOffset.yRotation;
 
         PhysicsFilterData filterData;
         filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
         filterData.collisionGroup = CollisionGroup::RAGDOLL_ENEMY;
         filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
 
-        m_objectId = Unloved::GetNextObjectId(ObjectType::DOBERMANN);
-        m_RagdollId = Hell::Physics::SpawnRagdoll(createInfo.position, createInfo.eulerDirection, "dobermann_new", m_objectId, filterData);
+        m_objectId = id;
+        m_RagdollId = Hell::Physics::SpawnRagdoll(m_createInfo.position, m_createInfo.eulerDirection, "dobermann_new", m_objectId, filterData);
 
         g_animatedGameObjectObjectId = LegacyWorld::CreateAnimatedGameObject();
 
@@ -49,6 +57,13 @@ namespace Unloved {
         CreateCharacterController(GetPosition());
 
         m_health = 1.0f;
+    }
+
+    void Dobermann::CleanUp() {
+        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
+        if (animatedGameObject) {
+            animatedGameObject->CleanUp();
+        }
     }
 
     void Dobermann::TakeDamage(uint32_t damage) {
@@ -91,7 +106,7 @@ namespace Unloved {
 
     void Dobermann::UpdateAnimatedGameObjectRotation() {
         Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        float rotY = Util::YRotationBetweenTwoPoints(GetPosition(), GetPosition() + GetForward()) + (HELL_PI * 0.5f);
+        float rotY = Hell::Math::YawBetweenPoints(GetPosition(), GetPosition() + GetForward()) + (HELL_PI * 0.5f);
         animatedGameObject->SetRotationY(rotY);
     }
 
@@ -227,7 +242,7 @@ namespace Unloved {
     }
 
     Unloved::AnimatedGameObject* Dobermann::GetAnimatedGameObject() {
-        return LegacyWorld::GetAnimatedGameObjectByObjectId(g_animatedGameObjectObjectId);
+        return Unloved::World::GetAnimatedGameObjectByObjectId(g_animatedGameObjectObjectId);
     }
 
     glm::vec3 Dobermann::GetPosition() {

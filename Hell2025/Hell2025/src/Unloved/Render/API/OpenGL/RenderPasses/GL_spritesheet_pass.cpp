@@ -5,6 +5,7 @@
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Util/Util.h"
 #include "World/LegacyWorld.h"
+#include "Unloved/World/World.h"
 
 #include "Unloved/Session/Session.h"
 #include "Renderer/Renderer.h"
@@ -78,7 +79,7 @@ namespace OpenGLRenderer {
 
             // No depth test for fire
             //glDisable(GL_DEPTH_TEST);
-            for (Fireplace& fireplace : LegacyWorld::GetFireplaces()) {
+            for (Fireplace& fireplace : Unloved::World::GetFireplaces()) {
                 const SpriteSheetRenderItem& renderItem = fireplace.GetFireSpriteSheetRenderItem();
                 Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.textureIndex);
                 OpenGL::SetUniformInt("u_rowCount", renderItem.rowCount);

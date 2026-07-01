@@ -53,5 +53,7 @@ private:
     bool m_firstFrame = true;
     float m_respawnCounter = 0;
     bool m_despawned = false;
+
+    void MarkDirtyInTracker();
 };
 }
