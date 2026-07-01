@@ -23,7 +23,7 @@
 
 #include "Unloved/Systems/DDGI/DDGIVolume.h"
 
-#include "Unloved/Maps/Map.h"
+#include "Unloved/Maps/MapData.h"
 #include "Unloved/Viewport/Viewport.h"
 
 #include <string>
@@ -143,7 +143,7 @@ namespace OpenGLRenderer {
 
     // Utility passes
     void RecalculateAllHeightMapData(bool blitWorldMap);
-    void ReadBackHeightMapData(Unloved::Map* map);
+    void ReadBackHeightMapData(Unloved::MapData* mapData);
     void ClearAllWoundMasks();
 
     // Render tasks

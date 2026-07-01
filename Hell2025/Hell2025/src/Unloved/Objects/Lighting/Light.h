@@ -36,8 +36,10 @@ struct Light {
     Light& operator=(Light&&) noexcept = default;
     ~Light() = default;
 
-    void RaycastWorldBounds();
     void Update(float deltaTime);
+    void CleanUp();
+
+    void RaycastWorldBounds();
     void SetPosition(const glm::vec3& position);
     void SetPositionX(float x);
     void SetPositionY(float y);

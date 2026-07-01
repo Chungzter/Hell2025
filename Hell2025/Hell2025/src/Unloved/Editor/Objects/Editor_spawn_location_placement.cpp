@@ -2,25 +2,29 @@
 #include "Hell/Input.h"
 #include "Hell/Logging.h"
 
-#include "Unloved/Maps/MapManager.h"
+#include "Unloved/Systems/Map/MapManager.h"
 #include "Legacy/Renderer/Renderer.h"
-#include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/World/World.h"
 
 namespace Input = Hell::Input;
 
 namespace Unloved::Editor {
 
     void UpdatePlayerCampaignSpawnPlacement() {
-        Map* map = MapManager::GetMapByName(GetEditorMapName());
-        if (!map) return;
+        MapData* mapData = MapManager::GetMapDataByName(GetEditorMapName());
+        if (!mapData) return;
 
         if (Input::LeftMousePressed()) {
             PhysXRayResult result = GetMouseRayPhsyXHitPosition();
             if (result.hitFound) {
-                map->AddPlayerCampaignSpawn(result.hitPosition);
-                LegacyWorld::UpdateWorldSpawnPointsFromMap(map);
+                mapData->AddPlayerCampaignSpawn(result.hitPosition);
+
+                SpawnPointCreateInfo createInfo;
+                createInfo.position = result.hitPosition;
+                World::AddSpawnPointCampaign(createInfo);
+
                 ExitObjectPlacement();
                 Logging::Debug() << "Added player campaign spawn: " << result.hitPosition;
             }
@@ -28,14 +32,18 @@ namespace Unloved::Editor {
     }
 
     void UpdatePlayerDeathmatchSpawnPlacement() {
-        Map* map = MapManager::GetMapByName(GetEditorMapName());
-        if (!map) return;
+        MapData* mapData = MapManager::GetMapDataByName(GetEditorMapName());
+        if (!mapData) return;
 
         if (Input::LeftMousePressed()) {
             PhysXRayResult result = GetMouseRayPhsyXHitPosition();
             if (result.hitFound) {
-                map->AddPlayerDeathmatchSpawn(result.hitPosition);
-                LegacyWorld::UpdateWorldSpawnPointsFromMap(map);
+                mapData->AddPlayerDeathmatchSpawn(result.hitPosition);
+
+                SpawnPointCreateInfo createInfo;
+                createInfo.position = result.hitPosition;
+                World::AddSpawnPointDeathMatch(createInfo);
+
                 Logging::Debug() << "Added player deathmatch spawn: " << result.hitPosition;
                 ExitObjectPlacement();
             }

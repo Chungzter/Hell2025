@@ -2,7 +2,7 @@
 #include "Unloved/Bible/Bible.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Util/Util.h"
-#include "Legacy/World/LegacyWorld.h"
+#include "Unloved/Objects/Lighting/Light.h"
 #include "Unloved/World/World.h"
 
 namespace Unloved {
@@ -161,7 +161,7 @@ void Fireplace::UpdateWorldMatrix() {
 
     // Remove the old light if there was one
     if (m_lightId != 0) {
-        LegacyWorld::RemoveObject(m_lightId);
+        World::RemoveObjectById(m_lightId);
     }
 
     LightCreateInfo lightCreateInfo;
@@ -245,6 +245,6 @@ void Fireplace::Update(float deltaTime) {
 void Fireplace::CleanUp() {
     m_meshNodes.CleanUp();
 
-    LegacyWorld::RemoveObject(m_lightId);
+    World::RemoveObjectById(m_lightId);
 }
 }

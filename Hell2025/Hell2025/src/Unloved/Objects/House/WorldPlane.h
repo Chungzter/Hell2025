@@ -10,7 +10,7 @@ namespace Unloved {
 
 struct WorldPlane {
     WorldPlane() = default;
-    WorldPlane(uint64_t id, const HousePlaneCreateInfo& createInfo, const SpawnOffset& spawnOffset);
+    WorldPlane(uint64_t id, const WorldPlaneCreateInfo& createInfo, const SpawnOffset& spawnOffset);
     WorldPlane(const WorldPlane&) = delete;
     WorldPlane& operator=(const WorldPlane&) = delete;
     WorldPlane(WorldPlane&&) noexcept = default;
@@ -41,7 +41,7 @@ struct WorldPlane {
     std::vector<Vertex>& GetVertices()              { return m_vertices; }
     std::vector<uint32_t>& GetIndices()             { return m_indices; }
     std::vector<glm::vec2>& GetNavMeshPoly()        { return m_navMeshPoly; }
-    HousePlaneCreateInfo& GetCreateInfo()           { return m_createInfo; }
+    WorldPlaneCreateInfo& GetCreateInfo()           { return m_createInfo; }
     WorldPlaneType GetType() const                  { return m_createInfo.type; }
     uint32_t GetMeshId() const                      { return m_meshId; }
 
@@ -58,7 +58,7 @@ private:
     std::vector<Vertex> m_vertices;
     std::vector<uint32_t> m_indices;
     std::vector<glm::vec2> m_navMeshPoly;
-    HousePlaneCreateInfo m_createInfo;
+    WorldPlaneCreateInfo m_createInfo;
     bool m_hiddenInEditor = false;
     uint32_t m_meshId = 0;
 

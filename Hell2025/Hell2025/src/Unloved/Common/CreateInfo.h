@@ -8,12 +8,12 @@
 
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Common/Enums.h"
+#include "Unloved/Common/SequencePoint.h"
 #include "Unloved/Common/Types.h"
 #include "Unloved/Objects/ObjectEnums.h"
 #include "Unloved/Render/RendererEnums.h"
 #include "Unloved/Physics/PhysicsEnums.h"
 #include "Unloved/Systems/Openables/Openable_types.h"
-#include "Unloved/Objects/Spawns/SpawnPoint.h"
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -22,60 +22,7 @@
 #include <string>
 #include <vector>
 
-struct FenceCreateInfo {
-    std::vector<glm::vec2> controlPoints2D;
-    std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Fence";
-};
-
-struct PowerPoleSetCreateInfo {
-    std::vector<glm::vec2> controlPoints2D;
-    std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Power Pole Set";
-};
-
-struct DDGIVolumeCreateInfo {
-    glm::vec3 origin = glm::vec3(0.0f);
-    glm::vec3 extents = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
-    std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "DDGI Volume";
-    float probeSpacing = 0.75f;
-    float pointCloudSpacing = 0.4f; // ATTENTION: This is missing from the JSON save file process and editor UI
-    bool saveToFile = true;
-};
-
-struct LadderCreateInfo {
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
-    std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Ladder";
-    uint32_t stepCount = 1;
-};
-
-struct StaircaseCreateInfo {
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
-    std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Staircase";
-    uint32_t stepCount = 1;
-};
-
-struct TrimSetCreateInfo {
-	TrimSetType type = TrimSetType::CEILING;
-	std::vector<glm::vec3> points;
-	float trimScale = 1.0f;
-    std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Trim Set";
-};
-
-struct FireplaceCreateInfo {
-    FireplaceType type = FireplaceType::DEFAULT;
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
-    std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Fireplace";
-};
+// Physics
 
 struct RigidDynamicCreateInfo {
     bool createObject = false;
@@ -95,45 +42,26 @@ struct RigidStaticCreateInfo {
     std::string defaultEditorName = "Rigid Static";
 };
 
-struct MeshNodeCreateInfo {
-    std::string meshName;
-    std::string materialName = UNDEFINED_STRING;
-    std::string baseColorOverrideTextureName = UNDEFINED_STRING;
-    BlendingMode blendingMode = BlendingMode::DEFAULT;
-    Unloved::OpenableCreateInfo openable;
-    RigidDynamicCreateInfo rigidDynamic;
-    RigidDynamicCreateInfo rigidDynamicConvexHull; // needs implementing
-    RigidStaticCreateInfo rigidStatic;
-    int32_t customId;
-    DecalType decalType = DecalType::PLASTER;
-    bool forceDynamic = false;
-	bool castShadows = true;
-    bool addtoNavMesh = false;
-    glm::vec3 emissiveColor = glm::vec3(0.0f);
-    glm::vec3 tintColor = glm::vec3(1.0f);
-    glm::vec3 scale = glm::vec3(1.0f);
-    std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Mesh Node";
-};
+// World Objects
 
-struct GenericObjectCreateInfo {
+struct BulletCasingCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
-    glm::vec3 scale = glm::vec3(1.0f);
+    glm::vec3 force = glm::vec3(0.0f);
+    float mass = 0.0f;
+    uint32_t modelId = 0;
+    uint32_t materialIndex = 0;
     std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Generic Object";
-    GenericObjectType type = GenericObjectType::UNDEFINED;
+    std::string defaultEditorName = "Bullet Casing";
 };
 
 struct ChristmasLightsCreateInfo {
+    std::vector<Unloved::SequencePoint> sequencePoints;
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Christmas Lights";
 
     glm::vec3 position = glm::vec3(0.0f);
-
     // Hanging lights
-    std::vector<glm::vec3> points;
-    std::vector<float> sagHeights;
     float spacing = 0.05f;
     float wireRadius = 0.002f;
 
@@ -151,6 +79,17 @@ struct ChristmasTreeCreateInfo {
     std::string defaultEditorName = "Christmas Tree";
 };
 
+struct DDGIVolumeCreateInfo {
+    glm::vec3 origin = glm::vec3(0.0f);
+    glm::vec3 extents = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "DDGI Volume";
+    float probeSpacing = 0.75f;
+    float pointCloudSpacing = 0.4f; // ATTENTION: This is missing from the JSON save file process and editor UI
+    bool saveToFile = true;
+};
+
 struct DecalCreateInfo {
     uint32_t localMeshNodeIndex = 0;
     uint64_t parentObjectId = 0;
@@ -165,20 +104,6 @@ struct DobermannCreateInfo {
     glm::vec3 eulerDirection = glm::vec3(0.0f);
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Dobermann";
-};
-
-struct MermaidCreateInfo {
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
-    std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Mermaid";
-};
-
-struct KangarooCreateInfo {
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
-    std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Kangaroo";
 };
 
 struct DoorChainCreateInfo {
@@ -204,21 +129,46 @@ struct DoorCreateInfo {
     std::string defaultEditorName = "Door";
 };
 
-struct WindowCreateInfo {
+struct FenceCreateInfo {
+    std::vector<glm::vec2> controlPoints2D;
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Fence";
+};
+
+struct FireplaceCreateInfo {
+    FireplaceType type = FireplaceType::DEFAULT;
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
     std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Window";
+    std::string defaultEditorName = "Fireplace";
 };
 
-struct HousePlaneCreateInfo {
+struct GameObjectCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    glm::vec3 scale = glm::vec3(1.0f);
+    std::string modelName = "";
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Game Object";
+};
+
+struct GenericObjectCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    glm::vec3 scale = glm::vec3(1.0f);
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Generic Object";
+    GenericObjectType type = GenericObjectType::UNDEFINED;
+};
+
+struct WorldPlaneCreateInfo {
     glm::vec3 p0 = glm::vec3(0.0f);
     glm::vec3 p1 = glm::vec3(0.0f);
     glm::vec3 p2 = glm::vec3(0.0f);
     glm::vec3 p3 = glm::vec3(0.0f);
     std::string materialName = "";
     std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "House Plane";
+    std::string defaultEditorName = "World Plane";
     float textureScale = 1.0f;
     float textureOffsetU = 0.0f;
     float textureOffsetV = 0.0f;
@@ -227,29 +177,19 @@ struct HousePlaneCreateInfo {
     WorldPlaneType type = WorldPlaneType::UNDEFINED;
 };
 
-struct PianoCreateInfo {
+struct KangarooCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
-    std::string soundFontName = UNDEFINED_STRING;
     std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Piano";
+    std::string defaultEditorName = "Kangaroo";
 };
 
-struct WallCreateInfo {
-    std::vector<glm::vec3> points;
-    std::string materialName = "";
+struct LadderCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
     std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Wall";
-    float height = 2.4f;
-    float textureScale = 1.0f;
-    float textureOffsetU = 0.0f;
-    float textureOffsetV = 0.0f;
-    float textureRotation = 0.0f;
-    float middleTrimHeight = 2.4f;
-    bool useReversePointOrder = false;
-    TrimType ceilingTrimType = TrimType::NONE;
-    TrimType floorTrimType = TrimType::NONE;
-    WallType wallType = WallType::INTERIOR;
+    std::string defaultEditorName = "Ladder";
+    uint32_t stepCount = 1;
 };
 
 struct LightCreateInfo {
@@ -266,6 +206,52 @@ struct LightCreateInfo {
     LightType type = LightType::HANGING_LIGHT;
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Light";
+};
+
+struct MapDataCreateInfo {
+    std::string name;
+    uint32_t width = 4;
+    uint32_t depth = 4;
+    Hell::ivecXZ spawnCoords = Hell::ivecXZ(0, 0);
+    std::string m_sectorNames[MAX_MAP_WIDTH][MAX_MAP_DEPTH];
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Map";
+};
+
+struct MermaidCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Mermaid";
+};
+
+struct MeshNodeCreateInfo {
+    std::string meshName;
+    std::string materialName = UNDEFINED_STRING;
+    std::string baseColorOverrideTextureName = UNDEFINED_STRING;
+    BlendingMode blendingMode = BlendingMode::DEFAULT;
+    Unloved::OpenableCreateInfo openable;
+    RigidDynamicCreateInfo rigidDynamic;
+    RigidDynamicCreateInfo rigidDynamicConvexHull; // needs implementing
+    RigidStaticCreateInfo rigidStatic;
+    int32_t customId;
+    DecalType decalType = DecalType::PLASTER;
+    bool forceDynamic = false;
+	bool castShadows = true;
+    bool addtoNavMesh = false;
+    glm::vec3 emissiveColor = glm::vec3(0.0f);
+    glm::vec3 tintColor = glm::vec3(1.0f);
+    glm::vec3 scale = glm::vec3(1.0f);
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Mesh Node";
+};
+
+struct PianoCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    std::string soundFontName = UNDEFINED_STRING;
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Piano";
 };
 
 struct PickUpCreateInfo {
@@ -296,6 +282,25 @@ struct PictureFrameCreateInfo {
     std::string defaultEditorName = "Picture Frame";
 };
 
+struct PowerPoleSetCreateInfo {
+    std::vector<Unloved::SequencePoint> sequencePoints;
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Power Pole Set";
+};
+
+struct SharkCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Shark";
+};
+
+struct SpawnPointCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 camEuler = glm::vec3(0.0f);
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Spawn Point";
+};
+
 struct SpriteSheetObjectCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
@@ -310,24 +315,12 @@ struct SpriteSheetObjectCreateInfo {
     std::string defaultEditorName = "Sprite Sheet Object";
 };
 
-struct BulletCasingCreateInfo {
+struct StaircaseCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
-    glm::vec3 force = glm::vec3(0.0f);
-    float mass = 0.0f;
-    uint32_t modelId = 0;
-    uint32_t materialIndex = 0;
     std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Bullet Casing";
-};
-
-struct GameObjectCreateInfo {
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
-    glm::vec3 scale = glm::vec3(1.0f);
-    std::string modelName = "";
-    std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Game Object";
+    std::string defaultEditorName = "Staircase";
+    uint32_t stepCount = 1;
 };
 
 struct TreeCreateInfo {
@@ -339,15 +332,39 @@ struct TreeCreateInfo {
     std::string defaultEditorName = "Tree";
 };
 
-struct MapCreateInfo {
-    std::string name;
-    uint32_t width = 4;
-    uint32_t depth = 4;
-    Hell::ivecXZ spawnCoords = Hell::ivecXZ(0, 0);
-    std::string m_sectorNames[MAX_MAP_WIDTH][MAX_MAP_DEPTH];
+struct TrimSetCreateInfo {
+	TrimSetType type = TrimSetType::CEILING;
+	std::vector<glm::vec3> points;
+	float trimScale = 1.0f;
     std::string editorName = UNDEFINED_STRING;
-    std::string defaultEditorName = "Map";
+    std::string defaultEditorName = "Trim Set";
 };
+
+struct WallCreateInfo {
+    std::vector<glm::vec3> points;
+    std::string materialName = "";
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Wall";
+    float height = 2.4f;
+    float textureScale = 1.0f;
+    float textureOffsetU = 0.0f;
+    float textureOffsetV = 0.0f;
+    float textureRotation = 0.0f;
+    float middleTrimHeight = 2.4f;
+    bool useReversePointOrder = false;
+    TrimType ceilingTrimType = TrimType::NONE;
+    TrimType floorTrimType = TrimType::NONE;
+    WallType wallType = WallType::INTERIOR;
+};
+
+struct WindowCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Window";
+};
+
+// Create Info Collection
 
 struct CreateInfoCollection {
     std::vector<ChristmasLightsCreateInfo> christmasLights;
@@ -356,13 +373,17 @@ struct CreateInfoCollection {
     std::vector<FenceCreateInfo> fences;
     std::vector<FireplaceCreateInfo> fireplaces;
     std::vector<GenericObjectCreateInfo> genericObjects;
-    std::vector<HousePlaneCreateInfo> worldPlanes;
+    std::vector<WorldPlaneCreateInfo> worldPlanes;
     std::vector<LadderCreateInfo> ladders;
     std::vector<LightCreateInfo> lights;
+    std::vector<MermaidCreateInfo> mermaids;
     std::vector<PianoCreateInfo> pianos;
     std::vector<PickUpCreateInfo> pickUps;
     std::vector<PictureFrameCreateInfo> pictureFrames;
     std::vector<PowerPoleSetCreateInfo> powerPoleSets;
+    std::vector<SharkCreateInfo> sharks;
+    std::vector<SpawnPointCreateInfo> spawnPointsCampaign;
+    std::vector<SpawnPointCreateInfo> spawnPointsDeathMatch;
     std::vector<StaircaseCreateInfo> staircases;
     std::vector<TreeCreateInfo> trees;
     std::vector<WallCreateInfo> walls;
@@ -371,6 +392,4 @@ struct CreateInfoCollection {
 
 struct AdditionalMapData {
     std::vector<HouseLocation> houseLocations;
-    std::vector<Unloved::SpawnPoint> playerCampaignSpawns;
-    std::vector<Unloved::SpawnPoint> playerDeathmatchSpawns;
 };

@@ -18,7 +18,7 @@ enum class ObjectType : uint16_t {
     GENERIC_BOUNCABLE,
     GENERIC_STATIC,
     HEIGHT_MAP,
-    HOUSE_PLANE,
+    WORLD_PLANE,
     KANGAROO,
     LADDER,
     LIGHT,
@@ -49,6 +49,7 @@ enum class ObjectType : uint16_t {
     TRIM,
     BULLET_CASING,
     MERMAID,
+    WIRE,
 
     UNDEFINED
 };

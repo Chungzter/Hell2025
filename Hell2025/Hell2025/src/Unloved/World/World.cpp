@@ -25,6 +25,6 @@ namespace Unloved::World {
     }
 
     void CleanUp() {
-
+        CleanUpAll();
     }
 }

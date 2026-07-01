@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "Hell/ResourceManagement/Types/Material.h"
 
 #include "Unloved/Common/CreateInfo.h"
@@ -10,14 +12,16 @@ namespace Unloved {
 
 struct Decal {
     Decal() = default;
-    Decal(const DecalCreateInfo& createInfo);
+    Decal(uint64_t id, const DecalCreateInfo& createInfo);
     Decal(const Decal&) = delete;
     Decal& operator=(const Decal&) = delete;
     Decal(Decal&&) noexcept = default;
     Decal& operator=(Decal&&) noexcept = default;
     ~Decal() = default;
     void Update();
+    void CleanUp();
 
+    uint64_t GetObjectId() const               { return m_objectId; }
     const glm::vec3 GetPosition() const         { return glm::vec3(m_worldMatrix[3]); }
     const glm::vec3 GetWorldNormal() const      { return glm::vec3(m_worldNormal); }
     const RenderItem& GetRenderItem() const     { return m_renderItem; }
@@ -25,6 +29,7 @@ struct Decal {
 private:
     const glm::mat4& GetParentWorldMatrix();
 
+    uint64_t m_objectId = 0;
     DecalType m_type = DecalType::UNDEFINED;
     DecalCreateInfo m_createInfo;
     int32_t m_materialIndex = -1;

@@ -73,15 +73,13 @@ namespace Hell::Physics {
         std::vector<PxRigidActor*> ignoreList;
 
         PxU32 constraintCount = pxScene->getNbConstraints();
-        if (!constraintCount) {
-            return debugLines;
-        }
+        if (constraintCount) {
+            std::vector<PxConstraint*> constraints(constraintCount);
+            pxScene->getConstraints(constraints.data(), constraintCount);
 
-        std::vector<PxConstraint*> constraints(constraintCount);
-        pxScene->getConstraints(constraints.data(), constraintCount);
-
-        for (PxConstraint* constraint : constraints) {
-            constraint->setFlag(PxConstraintFlag::eVISUALIZATION, true);
+            for (PxConstraint* constraint : constraints) {
+                constraint->setFlag(PxConstraintFlag::eVISUALIZATION, true);
+            }
         }
 
         //pxScene->setFlag(PxSceneFlag::eENABLE_DEBUG_VISUALIZATION, true);

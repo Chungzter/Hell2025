@@ -19,7 +19,7 @@
 
 #include "Hell/Physics/Physics.h"
 
-#include "Unloved/Maps/MapManager.h"
+#include "Unloved/Systems/Map/MapManager.h"
 #include "World/LegacyWorld.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -72,12 +72,10 @@ namespace OpenGLRenderer {
     }
 
     void BlitWorldMap() {
-        Map* map = MapManager::GetMapByName("Shit");
         OpenGLFrameBuffer* worldFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("World");
         OpenGLFrameBuffer* roadFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("Road");
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("HeightMapToWorldBlit");
 
-        if (!map) return;
         if (!shader) return;
         if (!worldFramebuffer) return;
 
@@ -96,15 +94,18 @@ namespace OpenGLRenderer {
 
         // Blit height maps
         OpenGL::BindShader("HeightMapToWorldBlit");
-        for (MapInstance& mapInstance : LegacyWorld::GetMapInstances()) {
-            int offsetX = mapInstance.spawnOffsetChunkX * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
-            int offsetZ = mapInstance.spawnOffsetChunkZ * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
-            int heightMapTextureWidth = mapInstance.GetChunkCountX() * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
-            int heightMapTextureHeight = mapInstance.GetChunkCountZ() * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
+        for (Map& map : LegacyWorld::GetMaps()) {
+            MapData* mapData = MapManager::GetMapDataByIndex(map.m_mapIndex);
+            if (!mapData) continue;
+
+            int offsetX = map.spawnOffsetChunkX * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
+            int offsetZ = map.spawnOffsetChunkZ * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
+            int heightMapTextureWidth = map.GetChunkCountX() * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
+            int heightMapTextureHeight = map.GetChunkCountZ() * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
             OpenGL::SetUniformInt("u_offsetX", offsetX);
             OpenGL::SetUniformInt("u_offsetZ", offsetZ);
             glBindImageTexture(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R16F);
-            glBindImageTexture(1, map->GetHeightMapGLTexture().GetHandle(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16F);
+            glBindImageTexture(1, mapData->GetHeightMapGLTexture().GetHandle(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16F);
             OpenGL::DispatchCompute(heightMapTextureWidth / 8, heightMapTextureHeight / 8, 1);
         }
 
@@ -347,9 +348,9 @@ namespace OpenGLRenderer {
     }
 
 
-    void ReadBackHeightMapData(Unloved::Map* map) {
-        if (!map) {
-            Logging::Error() << "OpenGLRenderer::ReadBackHeightMapData() failed coz map was nullptr";
+    void ReadBackHeightMapData(Unloved::MapData* mapData) {
+        if (!mapData) {
+            Logging::Error() << "OpenGLRenderer::ReadBackHeightMapData() failed coz mapData was nullptr";
             return;
         }
 
@@ -361,15 +362,15 @@ namespace OpenGLRenderer {
 
         GLuint textureHandle = worldFramebuffer->GetColorAttachmentHandleByName("HeightMap");
 
-        GLuint width = map->GetTextureWidth();
-        GLuint height = map->GetTextureHeight();
+        GLuint width = mapData->GetTextureWidth();
+        GLuint height = mapData->GetTextureHeight();
         size_t dataSize = width * height * sizeof(float);
 
-        map->GetHeightMapData().resize(width * height);
+        mapData->GetHeightMapData().resize(width * height);
 
         // Readback
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-        glGetTextureSubImage(textureHandle, 0, 0, 0, 0, width, height, 1, GL_RED, GL_FLOAT, dataSize, map->GetHeightMapData().data());
+        glGetTextureSubImage(textureHandle, 0, 0, 0, 0, width, height, 1, GL_RED, GL_FLOAT, dataSize, mapData->GetHeightMapData().data());
 
         Logging::Debug() << "ReadBackHeightMapData() width: " << width;
         Logging::Debug() << "ReadBackHeightMapData() height: " << height;

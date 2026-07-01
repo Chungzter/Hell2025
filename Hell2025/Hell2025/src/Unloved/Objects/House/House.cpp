@@ -3,11 +3,7 @@
 
 namespace Unloved {
 
-void House::SetCreateInfoCollection(CreateInfoCollection& createInfoCollection) {
-    m_createInfoCollection = createInfoCollection;
-}
-
-void House::SetFilename(const std::string& filename) {
-    m_filename = filename;
+void House::Init(uint64_t objectId) {
+    m_objectId = objectId;
 }
 }

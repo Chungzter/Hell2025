@@ -1,6 +1,7 @@
 #include "Dobermann.h"
 #include "Hell/Math/Rotation.h"
 #include "Hell/Logging.h"
+#include "Hell/Physics/Physics.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Systems/NavMesh/NavMesh.h"
 #include "Renderer/Renderer.h"
@@ -64,6 +65,7 @@ namespace Unloved {
         if (animatedGameObject) {
             animatedGameObject->CleanUp();
         }
+        Hell::Physics::MarkCharacterControllerForRemoval(m_characterControllerId);
     }
 
     void Dobermann::TakeDamage(uint32_t damage) {

@@ -13,39 +13,39 @@
 #include <fstream>
 
 namespace Unloved::MapManager {
-    std::vector<Map> g_maps;
+    std::vector<MapData> g_mapData;
 
     void Init() {
         //NewMap("Shit", 8, 16, 30.0f);
-        g_maps.clear();
-        LoadMap("Shit");
+        g_mapData.clear();
+        LoadMapData("Shit");
     }
 
     void NewMap(const std::string& name, int chunkWidth, int chunkDepth, float initialHeight) {
-        Map& map = g_maps.emplace_back();
-        map.CreateNew(name, chunkWidth, chunkDepth, initialHeight);
+        MapData& mapData = g_mapData.emplace_back();
+        mapData.CreateNew(name, chunkWidth, chunkDepth, initialHeight);
     }
 
     void SaveMap(const std::string& mapName) {
-        Map* map = GetMapByName(mapName);
-        if (!map) {
+        MapData* mapData = GetMapDataByName(mapName);
+        if (!mapData) {
             Logging::Error() << "SaveMap(): failed because '" << mapName << "' was not found.";
             return;
         }
 
         // Get heightmap data
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            Renderer::ReadBackHeightMapData(map);
+            Renderer::ReadBackHeightMapData(mapData);
         }
         if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan TODO: MapManager::SaveHeightMap()";
             return;
         }
 
-        int32_t textureWidth = map->GetTextureWidth();
-        int32_t textureHeight = map->GetTextureHeight();
+        int32_t textureWidth = mapData->GetTextureWidth();
+        int32_t textureHeight = mapData->GetTextureHeight();
         int32_t floatCount = textureWidth * textureHeight;
-        int32_t dataSize = map->GetHeightMapData().size();
+        int32_t dataSize = mapData->GetHeightMapData().size();
 
         // Validate height map data size
         if (dataSize != floatCount) {
@@ -55,10 +55,10 @@ namespace Unloved::MapManager {
 
         // Construct the JSON string
         CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
-        map->SetCreateInfoCollection(createInfoCollection);
+        mapData->SetCreateInfoCollection(createInfoCollection);
         
         std::string createInfoJson = JSON::CreateInfoCollectionToJSON(createInfoCollection);
-        std::string additionalJson = JSON::AdditionalMapDataToJSON(map->GetAdditionalMapData());
+        std::string additionalJson = JSON::AdditionalMapDataToJSON(mapData->GetAdditionalMapData());
 
         // Create the file
         std::string outputPath = "res/maps/" + mapName + ".map";
@@ -71,15 +71,15 @@ namespace Unloved::MapManager {
         // Write the header
         MapHeader header{};
         header.version = 1;
-        header.chunkCountX = map->GetChunkCountX();
-        header.chunkCountZ = map->GetChunkCountZ();
+        header.chunkCountX = mapData->GetChunkCountX();
+        header.chunkCountZ = mapData->GetChunkCountZ();
         header.createInfoJsonLength = createInfoJson.size();
         header.additionalJsonLength = additionalJson.size();
         MapFile::CopySignature(header.signature, HELL_MAP_SIGNATURE);
         file.write(reinterpret_cast<const char*>(&header), sizeof(MapHeader));
 
         // Write the height map pixel data
-        file.write(reinterpret_cast<const char*>(map->GetHeightMapData().data()), floatCount * sizeof(float));
+        file.write(reinterpret_cast<const char*>(mapData->GetHeightMapData().data()), floatCount * sizeof(float));
 
         // Write JSON blobs immediately after
         file.write(createInfoJson.data(), static_cast<std::streamsize>(createInfoJson.size()));
@@ -96,24 +96,24 @@ namespace Unloved::MapManager {
         //    << additionalJson;
     }
 
-    void LoadMap(const std::string& mapName) {
+    void LoadMapData(const std::string& mapName) {
         const std::string path = "res/maps/" + mapName + ".map";
         std::ifstream file(path, std::ios::binary);
         if (!file) {
-            Logging::Error() << "LoadMap(): failed to open '" << path << "'";
+            Logging::Error() << "LoadMapData(): failed to open '" << path << "'";
             return;
         }
 
         MapHeader header{};
         file.read(reinterpret_cast<char*>(&header), sizeof(header));
         if (!file) {
-            Logging::Error() << "LoadMap(): failed reading header";
+            Logging::Error() << "LoadMapData(): failed reading header";
             return;
         }
 
         // Validate header signature
         if (std::memcmp(header.signature, HELL_MAP_SIGNATURE, sizeof(HELL_MAP_SIGNATURE)) != 0) {
-            Logging::Error() << "LoadMap(): bad file signature";
+            Logging::Error() << "LoadMapData(): bad file signature";
             return;
         }
 
@@ -125,13 +125,13 @@ namespace Unloved::MapManager {
         // Read height map data
         file.read(reinterpret_cast<char*>(heightMapData.data()), static_cast<std::streamsize>(floatCount * sizeof(float)));
         if (!file) {
-            Logging::Error() << "LoadMap(): failed reading height data";
+            Logging::Error() << "LoadMapData(): failed reading height data";
             return;
         }
 
-        Map& map = g_maps.emplace_back();
-        map.SetFilename(mapName);
-        map.SetHeightMapData(header.chunkCountX, header.chunkCountZ, heightMapData);
+        MapData& mapData = g_mapData.emplace_back();
+        mapData.SetFilename(mapName);
+        mapData.SetHeightMapData(header.chunkCountX, header.chunkCountZ, heightMapData);
 
         std::string createInfoJson;
         std::string additionalJson;
@@ -142,7 +142,7 @@ namespace Unloved::MapManager {
         if (header.createInfoJsonLength > 0) {
             file.read(createInfoJson.data(), static_cast<std::streamsize>(header.createInfoJsonLength));
             if (!file) {
-                Logging::Error() << "LoadMap(): failed reading create info json";
+                Logging::Error() << "LoadMapData(): failed reading create info json";
                 return;
             }
         }
@@ -150,7 +150,7 @@ namespace Unloved::MapManager {
         if (header.additionalJsonLength > 0) {
             file.read(additionalJson.data(), static_cast<std::streamsize>(header.additionalJsonLength));
             if (!file) {
-                Logging::Error() << "LoadMap(): failed reading additional json";
+                Logging::Error() << "LoadMapData(): failed reading additional json";
                 return;
             }
         }
@@ -158,8 +158,9 @@ namespace Unloved::MapManager {
         // Load Create Info Collection from JSON string
         CreateInfoCollection createInfoCollection = JSON::CreateInfoCollectionFromJSONString(createInfoJson);
         AdditionalMapData additionalMapData = JSON::AdditionalMapDataFromJSON(additionalJson);
-        map.SetCreateInfoCollection(createInfoCollection);
-        map.SetAdditionalMapData(additionalMapData);
+
+        mapData.SetCreateInfoCollection(createInfoCollection);
+        mapData.SetAdditionalMapData(additionalMapData);
 
         Logging::Debug()
             << "Loaded map: " << mapName << ".map\n"
@@ -175,45 +176,45 @@ namespace Unloved::MapManager {
     }
 
     void UpdateCreateInfoCollectionFromWorld(const std::string& mapName) {
-        Map* map = GetMapByName(mapName);
-        if (!map) {
+        MapData* mapData = GetMapDataByName(mapName);
+        if (!mapData) {
             Logging::Error() << "MapManager::UpdateCreateInfoCollectionFromWorld(): failed because '" << mapName << "' was not found.";
             return;
         }
 
         CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
-        map->SetCreateInfoCollection(createInfoCollection);
+        mapData->SetCreateInfoCollection(createInfoCollection);
     }
 
-    Map* GetTestMap() {
-        return GetMapByName("Shit");
+    MapData* GetTestMapData() {
+        return GetMapDataByName("Shit");
     }
 
-    Map* GetMapByIndex(int32_t index) {
-        if (index > 0 || index >= g_maps.size()) {
-            Logging::Error() << "MapManager::GetMapByIndex() failed coz '" << index << "' is out of range of size " << g_maps.size();
+    MapData* GetMapDataByIndex(int32_t index) {
+        if (index < 0 || index >= static_cast<int32_t>(g_mapData.size())) {
+            Logging::Error() << "MapManager::GetMapDataByIndex() failed coz '" << index << "' is out of range of size " << g_mapData.size();
             return nullptr;
         }
-        return &g_maps[index];
+        return &g_mapData[index];
     }
 
-    Map* GetMapByName(const std::string& name) {
-        for (Map& map : g_maps) {
-            if (map.GetFilename() == name) {
-                return &map;
+    MapData* GetMapDataByName(const std::string& name) {
+        for (MapData& mapData : g_mapData) {
+            if (mapData.GetFilename() == name) {
+                return &mapData;
             }
         }
-        Logging::Error() << "MapManager::GetMapByName() failed coz '" << name << "' was not found";
+        Logging::Error() << "MapManager::GetMapDataByName() failed coz '" << name << "' was not found";
         return nullptr;
     }
 
-    int32_t GetMapIndexByName(const std::string& name) {
-        for (int i = 0; i < g_maps.size(); i++) {
-            if (g_maps[i].GetFilename() == name) {
+    int32_t GetMapDataIndexByName(const std::string& name) {
+        for (int i = 0; i < g_mapData.size(); i++) {
+            if (g_mapData[i].GetFilename() == name) {
                 return (int32_t)i;
             }
         }
-        Logging::Error() << "MapManager::GetMapIndexByName() failed coz '" << name << "' was not found";
+        Logging::Error() << "MapManager::GetMapDataIndexByName() failed coz '" << name << "' was not found";
         return -1;
     }
-} // namespace Unloved::MapManager
+}

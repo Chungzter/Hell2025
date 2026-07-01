@@ -179,17 +179,18 @@ void Fence::Update() {
 }
 
 void Fence::CleanUp() {
-    for (Wire& wire : m_wires) {
-        wire.CleanUp();
-    }
-
     m_meshNodesThin.CleanUp();
     m_meshNodesFat.CleanUp();
     m_meshNodesWireBarbed.CleanUp();
     m_meshNodesWire.CleanUp();
 
+    m_finalPositions.clear();
+    m_wirePositionsA.clear();
+    m_wirePositionsB.clear();
+    m_wirePositionsC.clear();
+    m_wirePositionsD.clear();
+    m_wirePositionsE.clear();
     m_renderItems.clear();
-    m_wires.clear();
 }
 
 RenderItem Fence::CreateWireRenderItem(RenderItem& localSpaceRenderItem, glm::vec3& position, glm::vec3 nextPosition) {

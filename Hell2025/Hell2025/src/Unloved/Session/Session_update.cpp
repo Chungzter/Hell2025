@@ -16,4 +16,13 @@ namespace Unloved::Session {
             g_sessionTime -= TIME_WRAP; // Keep it continuous
         }
     }
+
+    void PostWorldUpdate() {
+        for (uint64_t playerId : GetLocalPlayerIds()) {
+            Player* player = GetPlayerById(playerId);
+            if (!player) continue;
+
+            player->PostWorldUpdate();
+        }
+    }
 }

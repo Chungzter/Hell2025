@@ -73,6 +73,9 @@ enum struct EditorState {
     GIZMO_SCALING,
     GIZMO_ROTATING,
     DRAGGING_SELECT_RECT,
+    PLACING,
+
+    PLACEMENT,
 
     PLACE_CHRISTMAS_LIGHTS,
     PLACE_DDGI_VOLUME,
@@ -80,6 +83,14 @@ enum struct EditorState {
     PLACE_OBJECT,
     PLACE_POWER_POLES,
     PLACE_WALL,
+
+    // Enemies
+    PLACE_DOBERMANN,
+    PLACE_KANGAROO,
+    PLACE_SHARK,
+
+    // Mermaids
+    PLACE_MERMAID,
 
     // Object placement REMOVEEEEEEE MEEEEEEEE
     PLACE_DOOR,

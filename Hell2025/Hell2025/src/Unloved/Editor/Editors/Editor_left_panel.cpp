@@ -2,7 +2,7 @@
 #include "Hell/Common/Enum.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "Unloved/Maps/MapManager.h"
+#include "Unloved/Systems/Map/MapManager.h"
 #include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
 #include "Unloved/World/World.h"
@@ -46,18 +46,18 @@ namespace Unloved::Editor {
 
     EditorUI::FloatInput g_heightFloatInput;
 
-    EditorUI::FloatInput g_housePlaneP0X;
-    EditorUI::FloatInput g_housePlaneP0Y;
-    EditorUI::FloatInput g_housePlaneP0Z;
-    EditorUI::FloatInput g_housePlaneP1X;
-    EditorUI::FloatInput g_housePlaneP1Y;
-    EditorUI::FloatInput g_housePlaneP1Z;
-    EditorUI::FloatInput g_housePlaneP2X;
-    EditorUI::FloatInput g_housePlaneP2Y;
-    EditorUI::FloatInput g_housePlaneP2Z;
-    EditorUI::FloatInput g_housePlaneP3X;
-    EditorUI::FloatInput g_housePlaneP3Y;
-    EditorUI::FloatInput g_housePlaneP3Z;
+    EditorUI::FloatInput g_worldPlaneP0X;
+    EditorUI::FloatInput g_worldPlaneP0Y;
+    EditorUI::FloatInput g_worldPlaneP0Z;
+    EditorUI::FloatInput g_worldPlaneP1X;
+    EditorUI::FloatInput g_worldPlaneP1Y;
+    EditorUI::FloatInput g_worldPlaneP1Z;
+    EditorUI::FloatInput g_worldPlaneP2X;
+    EditorUI::FloatInput g_worldPlaneP2Y;
+    EditorUI::FloatInput g_worldPlaneP2Z;
+    EditorUI::FloatInput g_worldPlaneP3X;
+    EditorUI::FloatInput g_worldPlaneP3Y;
+    EditorUI::FloatInput g_worldPlaneP3Z;
 
     // Door stuff
     EditorUI::DropDown g_doorType;
@@ -93,18 +93,18 @@ namespace Unloved::Editor {
         g_textureOffsetV.SetText("Tex Offset V");
         g_textureOffsetV.SetRange(-1.0f, 1.0f);
 
-        g_housePlaneP0X.SetText("P0 X");
-        g_housePlaneP0Y.SetText("P0 Y");
-        g_housePlaneP0Z.SetText("P0 Z");
-        g_housePlaneP1X.SetText("P1 X");
-        g_housePlaneP1Y.SetText("P1 Y");
-        g_housePlaneP1Z.SetText("P1 Z");
-        g_housePlaneP2X.SetText("P2 X");
-        g_housePlaneP2Y.SetText("P2 Y");
-        g_housePlaneP2Z.SetText("P2 Z");
-        g_housePlaneP3X.SetText("P3 X");
-        g_housePlaneP3Y.SetText("P3 Y");
-        g_housePlaneP3Z.SetText("P3 Z");
+        g_worldPlaneP0X.SetText("P0 X");
+        g_worldPlaneP0Y.SetText("P0 Y");
+        g_worldPlaneP0Z.SetText("P0 Z");
+        g_worldPlaneP1X.SetText("P1 X");
+        g_worldPlaneP1Y.SetText("P1 Y");
+        g_worldPlaneP1Z.SetText("P1 Z");
+        g_worldPlaneP2X.SetText("P2 X");
+        g_worldPlaneP2Y.SetText("P2 Y");
+        g_worldPlaneP2Z.SetText("P2 Z");
+        g_worldPlaneP3X.SetText("P3 X");
+        g_worldPlaneP3Y.SetText("P3 Y");
+        g_worldPlaneP3Z.SetText("P3 Z");
 
         g_probeSpacing.SetText("Probe Spacing");
         g_probeSpacing.SetRange(0.1f, 2.0f);
@@ -126,8 +126,8 @@ namespace Unloved::Editor {
 
         if (GetEditorMode() == EditorMode::HOUSE_EDITOR ||
             GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
-            Map* map = MapManager::GetMapByName(GetEditorMapName());
-            if (map) {
+            MapData* mapData = MapManager::GetMapDataByName(GetEditorMapName());
+            if (mapData) {
                 g_mapNameInput.SetLabel("Map Name");
                 g_mapNameInput.SetText(GetEditorMapName());
 
@@ -378,74 +378,74 @@ namespace Unloved::Editor {
                 }
 
 
-                // House planes (aka floors and ceilings)
-                if (WorldPlane* housePlane = Unloved::World::GetHousePlaneByObjectId(GetSelectedObjectId())) {
-                    bool housePlaneUpdated = false;
+                // World planes (aka floors and ceilings)
+                if (WorldPlane* worldPlane = Unloved::World::GetWorldPlaneByObjectId(GetSelectedObjectId())) {
+                    bool worldPlaneUpdated = false;
 
-                    g_materialDropDown.SetCurrentOption(housePlane->GetCreateInfo().materialName);
-                    g_housePlaneP0X.SetValue(housePlane->GetCreateInfo().p0.x);
-                    g_housePlaneP0Y.SetValue(housePlane->GetCreateInfo().p0.y);
-                    g_housePlaneP0Z.SetValue(housePlane->GetCreateInfo().p0.z);
-                    g_housePlaneP1X.SetValue(housePlane->GetCreateInfo().p1.x);
-                    g_housePlaneP1Y.SetValue(housePlane->GetCreateInfo().p1.y);
-                    g_housePlaneP1Z.SetValue(housePlane->GetCreateInfo().p1.z);
-                    g_housePlaneP2X.SetValue(housePlane->GetCreateInfo().p2.x);
-                    g_housePlaneP2Y.SetValue(housePlane->GetCreateInfo().p2.y);
-                    g_housePlaneP2Z.SetValue(housePlane->GetCreateInfo().p2.z);
-                    g_housePlaneP3X.SetValue(housePlane->GetCreateInfo().p3.x);
-                    g_housePlaneP3Y.SetValue(housePlane->GetCreateInfo().p3.y);
-                    g_housePlaneP3Z.SetValue(housePlane->GetCreateInfo().p3.z);
-                    g_textureOffsetU.SetValue(housePlane->GetCreateInfo().textureOffsetU);
-                    g_textureOffsetV.SetValue(housePlane->GetCreateInfo().textureOffsetV);
-                    g_textureScale.SetValue(housePlane->GetCreateInfo().textureScale);
+                    g_materialDropDown.SetCurrentOption(worldPlane->GetCreateInfo().materialName);
+                    g_worldPlaneP0X.SetValue(worldPlane->GetCreateInfo().p0.x);
+                    g_worldPlaneP0Y.SetValue(worldPlane->GetCreateInfo().p0.y);
+                    g_worldPlaneP0Z.SetValue(worldPlane->GetCreateInfo().p0.z);
+                    g_worldPlaneP1X.SetValue(worldPlane->GetCreateInfo().p1.x);
+                    g_worldPlaneP1Y.SetValue(worldPlane->GetCreateInfo().p1.y);
+                    g_worldPlaneP1Z.SetValue(worldPlane->GetCreateInfo().p1.z);
+                    g_worldPlaneP2X.SetValue(worldPlane->GetCreateInfo().p2.x);
+                    g_worldPlaneP2Y.SetValue(worldPlane->GetCreateInfo().p2.y);
+                    g_worldPlaneP2Z.SetValue(worldPlane->GetCreateInfo().p2.z);
+                    g_worldPlaneP3X.SetValue(worldPlane->GetCreateInfo().p3.x);
+                    g_worldPlaneP3Y.SetValue(worldPlane->GetCreateInfo().p3.y);
+                    g_worldPlaneP3Z.SetValue(worldPlane->GetCreateInfo().p3.z);
+                    g_textureOffsetU.SetValue(worldPlane->GetCreateInfo().textureOffsetU);
+                    g_textureOffsetV.SetValue(worldPlane->GetCreateInfo().textureOffsetV);
+                    g_textureScale.SetValue(worldPlane->GetCreateInfo().textureScale);
 
                     if (g_materialDropDown.CreateImGuiElements()) {
-                        housePlane->SetMaterial(g_materialDropDown.GetSelectedOptionText());
+                        worldPlane->SetMaterial(g_materialDropDown.GetSelectedOptionText());
                         houseMeshUpdateRequired = true;
-                        housePlaneUpdated = true;
+                        worldPlaneUpdated = true;
                     }
 
-                    if (g_housePlaneP0X.CreateImGuiElements()) housePlaneUpdated = true;
-                    if (g_housePlaneP0Y.CreateImGuiElements()) housePlaneUpdated = true;
-                    if (g_housePlaneP0Z.CreateImGuiElements()) housePlaneUpdated = true;
-                    if (g_housePlaneP1X.CreateImGuiElements()) housePlaneUpdated = true;
-                    if (g_housePlaneP1Y.CreateImGuiElements()) housePlaneUpdated = true;
-                    if (g_housePlaneP1Z.CreateImGuiElements()) housePlaneUpdated = true;
-                    if (g_housePlaneP2X.CreateImGuiElements()) housePlaneUpdated = true;
-                    if (g_housePlaneP2Y.CreateImGuiElements()) housePlaneUpdated = true;
-                    if (g_housePlaneP2Z.CreateImGuiElements()) housePlaneUpdated = true;
-                    if (g_housePlaneP3X.CreateImGuiElements()) housePlaneUpdated = true;
-                    if (g_housePlaneP3Y.CreateImGuiElements()) housePlaneUpdated = true;
-                    if (g_housePlaneP3Z.CreateImGuiElements()) housePlaneUpdated = true;
+                    if (g_worldPlaneP0X.CreateImGuiElements()) worldPlaneUpdated = true;
+                    if (g_worldPlaneP0Y.CreateImGuiElements()) worldPlaneUpdated = true;
+                    if (g_worldPlaneP0Z.CreateImGuiElements()) worldPlaneUpdated = true;
+                    if (g_worldPlaneP1X.CreateImGuiElements()) worldPlaneUpdated = true;
+                    if (g_worldPlaneP1Y.CreateImGuiElements()) worldPlaneUpdated = true;
+                    if (g_worldPlaneP1Z.CreateImGuiElements()) worldPlaneUpdated = true;
+                    if (g_worldPlaneP2X.CreateImGuiElements()) worldPlaneUpdated = true;
+                    if (g_worldPlaneP2Y.CreateImGuiElements()) worldPlaneUpdated = true;
+                    if (g_worldPlaneP2Z.CreateImGuiElements()) worldPlaneUpdated = true;
+                    if (g_worldPlaneP3X.CreateImGuiElements()) worldPlaneUpdated = true;
+                    if (g_worldPlaneP3Y.CreateImGuiElements()) worldPlaneUpdated = true;
+                    if (g_worldPlaneP3Z.CreateImGuiElements()) worldPlaneUpdated = true;
 
                     if (g_textureScale.CreateImGuiElements()) {
-                        housePlane->SetTextureScale(g_textureScale.GetValue());
+                        worldPlane->SetTextureScale(g_textureScale.GetValue());
                         houseMeshUpdateRequired = true;
                     }
                     if (g_textureOffsetU.CreateImGuiElements()) {
-                        housePlane->SetTextureOffsetU(g_textureOffsetU.GetValue());
+                        worldPlane->SetTextureOffsetU(g_textureOffsetU.GetValue());
                         houseMeshUpdateRequired = true;
                     }
                     if (g_textureOffsetV.CreateImGuiElements()) {
-                        housePlane->SetTextureOffsetV(g_textureOffsetV.GetValue());
+                        worldPlane->SetTextureOffsetV(g_textureOffsetV.GetValue());
                         houseMeshUpdateRequired = true;
                     }
 
-                    if (housePlaneUpdated) {
-                        HousePlaneCreateInfo& createInfo = housePlane->GetCreateInfo();
-                        createInfo.p0.x = g_housePlaneP0X.GetValue();
-                        createInfo.p0.y = g_housePlaneP0Y.GetValue();
-                        createInfo.p0.z = g_housePlaneP0Z.GetValue();
-                        createInfo.p1.x = g_housePlaneP1X.GetValue();
-                        createInfo.p1.y = g_housePlaneP1Y.GetValue();
-                        createInfo.p1.z = g_housePlaneP1Z.GetValue();
-                        createInfo.p2.x = g_housePlaneP2X.GetValue();
-                        createInfo.p2.y = g_housePlaneP2Y.GetValue();
-                        createInfo.p2.z = g_housePlaneP2Z.GetValue();
-                        createInfo.p3.x = g_housePlaneP3X.GetValue();
-                        createInfo.p3.y = g_housePlaneP3Y.GetValue();
-                        createInfo.p3.z = g_housePlaneP3Z.GetValue();
-                        housePlane->UpdateVertexDataFromCreateInfo();
+                    if (worldPlaneUpdated) {
+                        WorldPlaneCreateInfo& createInfo = worldPlane->GetCreateInfo();
+                        createInfo.p0.x = g_worldPlaneP0X.GetValue();
+                        createInfo.p0.y = g_worldPlaneP0Y.GetValue();
+                        createInfo.p0.z = g_worldPlaneP0Z.GetValue();
+                        createInfo.p1.x = g_worldPlaneP1X.GetValue();
+                        createInfo.p1.y = g_worldPlaneP1Y.GetValue();
+                        createInfo.p1.z = g_worldPlaneP1Z.GetValue();
+                        createInfo.p2.x = g_worldPlaneP2X.GetValue();
+                        createInfo.p2.y = g_worldPlaneP2Y.GetValue();
+                        createInfo.p2.z = g_worldPlaneP2Z.GetValue();
+                        createInfo.p3.x = g_worldPlaneP3X.GetValue();
+                        createInfo.p3.y = g_worldPlaneP3Y.GetValue();
+                        createInfo.p3.z = g_worldPlaneP3Z.GetValue();
+                        worldPlane->UpdateVertexDataFromCreateInfo();
                         houseMeshUpdateRequired = true;
                     }
                 }

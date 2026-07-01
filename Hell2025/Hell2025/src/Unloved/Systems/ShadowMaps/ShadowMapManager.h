@@ -9,10 +9,10 @@ struct ShadowMapInfo {
     int32_t shadowMapIndex = -1;
 };
 
-constexpr size_t SHADOW_MAP_HI_RES_MAX_COUNT = 6;
+constexpr size_t SHADOW_MAP_HI_RES_MAX_COUNT = 5;
 constexpr size_t SHADOW_MAP_HI_RES_RESOLUTION = 1024;
 
-constexpr size_t SHADOW_MAP_LOW_RES_MAX_COUNT = 10;
+constexpr size_t SHADOW_MAP_LOW_RES_MAX_COUNT = 15;
 constexpr size_t SHADOW_MAP_LOW_RES_RESOLUTION = 512;
 
 namespace Unloved::ShadowMapManager {

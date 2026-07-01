@@ -1,14 +1,16 @@
 #include "../GL_renderer.h"
-#include "Unloved/Session/Session.h"
-#include "Unloved/Systems/DDGI/GlobalIllumination.h"
-#include "World/LegacyWorld.h"
-#include "Renderer/Renderer.h"
-#include "Unloved/Systems/Ocean/Ocean.h"
-
-#include "Unloved/Config/Config.h"
 
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+
+#include "Unloved/Config/Config.h"
+#include "Unloved/Session/Session.h"
+#include "Unloved/Systems/DDGI/GlobalIllumination.h"
+#include "Unloved/Render/RendererConstants.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
+
+#include "World/LegacyWorld.h"
+#include "Renderer/Renderer.h"
 
 #include "../../../../../../res/shaders/common/gl_fixed_bindings.glsl"
 

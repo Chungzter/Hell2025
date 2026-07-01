@@ -10,6 +10,7 @@
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
@@ -21,7 +22,7 @@ namespace Unloved::Editor {
 
     //void PlaceObject(ObjectType objectType, glm::vec3 hitPosition, glm::vec3 hitNormal);
     void PlaceFireplace(FireplaceType fireplaceType, const glm::vec3& hitPosition);
-    void PlaceHousePlane(WorldPlaneType housePlaneType, const glm::vec3& hitPosition, const glm::vec3& hitNormal);
+    void PlaceWorldPlane(WorldPlaneType worldPlaneType, const glm::vec3& hitPosition, const glm::vec3& hitNormal);
     void PlaceGenericObject(GenericObjectType genericObjectType, const glm::vec3& hitPosition, const glm::vec3& hitNormal);
     void PlacePickUp(const std::string& pickUpName, const glm::vec3& hitPosition, const glm::vec3& hitNormal);
     void PlaceDoor(const glm::vec3& hitPosition);
@@ -41,7 +42,7 @@ namespace Unloved::Editor {
         //PhysXRayResult rayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true);
 
         PhysXRayResult physXRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, Editor::BackfaceCullingEnabled());
-        BvhRayResult bvhRayResult = LegacyWorld::ClosestHit(rayOrigin, rayDir, maxRayDistance);
+        BvhRayResult bvhRayResult = Unloved::WorldBVH::ClosestHit(rayOrigin, rayDir, maxRayDistance);
 
         glm::vec3 hitPosition = glm::vec3(-9999.0f);
         glm::vec3 hitNormal = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -72,8 +73,8 @@ namespace Unloved::Editor {
                 if (GetPlacementObjectType() == ObjectType::GENERIC_OBJECT) {
                     PlaceGenericObject(GetPlacementObjectSubtype().genericObject, hitPosition, hitNormal);
                 }
-                if (GetPlacementObjectType() == ObjectType::HOUSE_PLANE) {
-                    PlaceHousePlane(GetPlacementObjectSubtype().housePlane, hitPosition, hitNormal);
+                if (GetPlacementObjectType() == ObjectType::WORLD_PLANE) {
+                    PlaceWorldPlane(GetPlacementObjectSubtype().worldPlane, hitPosition, hitNormal);
                 }
                 if (GetPlacementObjectType() == ObjectType::FIREPLACE) {
                     PlaceFireplace(GetPlacementObjectSubtype().fireplace, hitPosition);
@@ -125,8 +126,11 @@ namespace Unloved::Editor {
                 // Create first control point
                 if (g_placementObjectId == 0) {
                  
+                    SequencePoint sequencePoint;
+                    sequencePoint.position = glm::vec3(controlPoint2D.x, 0.0f, controlPoint2D.y);
+
                     PowerPoleSetCreateInfo createInfo;
-                    createInfo.controlPoints2D = { controlPoint2D };
+                    createInfo.sequencePoints = { sequencePoint };
         
                     g_placementObjectId = Unloved::World::AddPowerPoleSet(createInfo, SpawnOffset());
                     Audio::PlayAudio(AUDIO_SELECT, 1.0f);
@@ -187,8 +191,14 @@ namespace Unloved::Editor {
 
                 // Create first point
                 if (g_placementObjectId == 0) {
+                    SequencePoint sequencePoint;
+                    sequencePoint.position = hitPosition;
+                    sequencePoint.normal = hitNormal;
+                    sequencePoint.value = currentSag;
+
                     ChristmasLightsCreateInfo createInfo;
                     createInfo.position = hitPosition;
+                    createInfo.sequencePoints.push_back(sequencePoint);
                     createInfo.spiral = false;
                     lastPoint = hitPosition;
                     currentSag = defaultSag;
@@ -198,7 +208,13 @@ namespace Unloved::Editor {
                 }
                 else {
                     if (ChristmasLightSet* christmasLights = Unloved::World::GetChristmasLightsByObjectId(g_placementObjectId)) {
-                        christmasLights->AddSegementFromLastPoint(hitPosition, currentSag);
+                        std::vector<SequencePoint> sequencePoints = christmasLights->GetCreateInfo().sequencePoints;
+                        SequencePoint& sequencePoint = sequencePoints.emplace_back();
+                        sequencePoint.position = hitPosition;
+                        sequencePoint.normal = hitNormal;
+                        sequencePoint.value = currentSag;
+
+                        christmasLights->UpdateSequencePoints(sequencePoints);
                         lastPoint = hitPosition;
                         Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                     }
@@ -301,16 +317,16 @@ namespace Unloved::Editor {
         ExitObjectPlacement();
     }
 
-    void PlaceHousePlane(WorldPlaneType housePlaneType, const glm::vec3& hitPosition, const glm::vec3& hitNormal) {
-        HousePlaneCreateInfo createInfo;
+    void PlaceWorldPlane(WorldPlaneType worldPlaneType, const glm::vec3& hitPosition, const glm::vec3& hitNormal) {
+        WorldPlaneCreateInfo createInfo;
 
-        if (housePlaneType == WorldPlaneType::FLOOR) {
+        if (worldPlaneType == WorldPlaneType::FLOOR) {
             createInfo.p0 = hitPosition + glm::vec3(-1.0f, 0.0f, -1.0f);
             createInfo.p1 = hitPosition + glm::vec3(-1.0f, 0.0f, 1.0f);
             createInfo.p2 = hitPosition + glm::vec3(1.0f, 0.0f, 1.0f);
             createInfo.p3 = hitPosition + glm::vec3(1.0f, 0.0f, -1.0f);
         }
-        if (housePlaneType == WorldPlaneType::CEILING) {
+        if (worldPlaneType == WorldPlaneType::CEILING) {
             float h = 2.4f;
             createInfo.p3 = hitPosition + glm::vec3(-1.0f, h, -1.0f);
             createInfo.p2 = hitPosition + glm::vec3(-1.0f, h, 1.0f);
@@ -318,10 +334,10 @@ namespace Unloved::Editor {
             createInfo.p0 = hitPosition + glm::vec3(1.0f, h, -1.0f);
         }
 
-        createInfo.type = housePlaneType;
+        createInfo.type = worldPlaneType;
         createInfo.defaultEditorName = GetPlacementObjectSubtype().defaultEditorName;
 
-        Unloved::World::AddHousePlane(createInfo, SpawnOffset());
+        Unloved::World::AddWorldPlane(createInfo, SpawnOffset());
         LegacyWorld::RecreateAllHouseGeometry();
         ExitObjectPlacement();
     }

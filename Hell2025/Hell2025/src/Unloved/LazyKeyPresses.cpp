@@ -1,0 +1,97 @@
+#include "Unloved.h"
+
+#include "Legacy/Renderer/Renderer.h"
+#include "Legacy/World/LegacyWorld.h"
+
+#include "Hell/Audio.h"
+#include "Hell/Backend/BackEnd.h"
+#include "Hell/Input.h"
+
+#include "Unloved/Debug/Debug.h"
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Session/Session.h"
+#include "Unloved/Systems/Blood/BloodSystem.h"
+#include "Unloved/UI/Imgui/ImguiBackEnd.h"
+#include "Unloved/World/World.h"
+
+namespace Unloved {
+
+void UpdateLazyKeypresses() {
+    // Bail early if ImGui is using the keyboard
+    if (ImGuiBackEnd::HasKeyboardFocus()) return;
+
+    // Function keys
+    if (Hell::Input::KeyPressed(HELL_KEY_F1)) LegacyWorld::NewRun();
+    if (Hell::Input::KeyPressed(HELL_KEY_F4)) Editor::OpenHouseEditor();
+    if (Hell::Input::KeyPressed(HELL_KEY_F6)) Editor::OpenMapHeightEditor();
+    if (Hell::Input::KeyPressed(HELL_KEY_F5)) Editor::OpenMapObjectEditor();
+
+    // Core
+    if (Hell::Input::KeyPressed(HELL_KEY_ESCAPE))       Hell::BackEnd::ForceCloseWindow();
+    if (Hell::Input::KeyPressed(HELL_KEY_X))            Hell::BackEnd::ToggleFullscreen();
+    if (Hell::Input::KeyPressed(HELL_KEY_GRAVE_ACCENT)) Debug::NextDebugTextMode();
+
+    // Game
+    if (Hell::Input::KeyPressed(HELL_KEY_K)) Unloved::Session::RespawnPlayers();
+
+    // Renderer
+    if (Renderer::GameIsRendering()) {
+        if (Hell::Input::KeyPressed(HELL_KEY_H))            Renderer::HotloadShaders();
+        if (Hell::Input::KeyPressed(HELL_KEY_I))            Renderer::ToggleRagdollRendering();
+        if (Hell::Input::KeyPressed(HELL_KEY_M))            Renderer::ToggleScreenSpaceReflections();
+        if (Hell::Input::KeyPressed(HELL_KEY_O))            Renderer::ToggleDebugDraw();
+        if (Hell::Input::KeyPressed(HELL_KEY_L))            Renderer::ToggleLighting();
+        if (Hell::Input::KeyPressed(HELL_KEY_SEMICOLON))    Renderer::ToggleSphericalHarmonics();
+        if (Hell::Input::KeyPressed(HELL_KEY_COMMA))        Renderer::TogglePointCloud();
+        if (Hell::Input::KeyPressed(HELL_KEY_PERIOD))       Renderer::NextProbeDebugState();
+        if (Hell::Input::KeyPressed(HELL_KEY_SLASH))        Renderer::ToggleIrradianceProbeSampling();
+        if (Hell::Input::KeyPressed(HELL_KEY_RIGHT_SHIFT))  Renderer::ToggleOverrideState(RendererOverrideState::INDIRECT_DIFFUSE);
+        if (Hell::Input::KeyPressed(HELL_KEY_ENTER))        Renderer::ToggleOverrideState(RendererOverrideState::WORLD_POSITION);
+        if (Hell::Input::KeyPressed(HELL_KEY_V))            Renderer::ToggleOverrideState(RendererOverrideState::VIS_BUFFER);
+        if (Hell::Input::KeyPressed(HELL_KEY_DELETE))       Renderer::ToggleOverrideState(RendererOverrideState::VELOCITY);
+        if (Hell::Input::KeyPressed(HELL_KEY_APOSTROPHE))   Renderer::TogglePointCloudGrid();
+        if (Hell::Input::KeyPressed(HELL_KEY_BACKSLASH))    Renderer::NextRendererOverrideState();
+        if (Hell::Input::KeyPressed(HELL_KEY_LEFT_BRACKET)) Renderer::NextRendererMode();
+    }
+
+    if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    World::CleanUpCasings();
+    if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    World::CleanUpDecals();
+    if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    BloodSystem::CleanUp();
+
+    // Editor only
+    if (!Editor::IsOpen()) {
+        if (Hell::Input::KeyPressed(HELL_KEY_C)) {
+            Session::NextSplitScreenMode();
+        }
+        if (Hell::Input::KeyPressed(HELL_KEY_1) && Session::GetLocalPlayerCount() >= 1) {
+            Session::SetPlayerKeyboardAndMouseIndex(0, 0, 0);
+            Session::SetPlayerKeyboardAndMouseIndex(1, 1, 1);
+            Session::SetPlayerKeyboardAndMouseIndex(2, 1, 1);
+            Session::SetPlayerKeyboardAndMouseIndex(3, 1, 1);
+        }
+        if (Hell::Input::KeyPressed(HELL_KEY_2) && Unloved::Session::GetLocalPlayerCount() >= 2) {
+            Session::SetPlayerKeyboardAndMouseIndex(0, 1, 1);
+            Session::SetPlayerKeyboardAndMouseIndex(1, 0, 0);
+            Session::SetPlayerKeyboardAndMouseIndex(2, 1, 1);
+            Session::SetPlayerKeyboardAndMouseIndex(3, 1, 1);
+        }
+        if (Hell::Input::KeyPressed(HELL_KEY_3) && Unloved::Session::GetLocalPlayerCount() >= 3) {
+            Session::SetPlayerKeyboardAndMouseIndex(0, 1, 1);
+            Session::SetPlayerKeyboardAndMouseIndex(1, 1, 1);
+            Session::SetPlayerKeyboardAndMouseIndex(2, 0, 0);
+            Session::SetPlayerKeyboardAndMouseIndex(3, 1, 1);
+        }
+        if (Hell::Input::KeyPressed(HELL_KEY_4) && Unloved::Session::GetLocalPlayerCount() >= 4) {
+            Session::SetPlayerKeyboardAndMouseIndex(0, 1, 1);
+            Session::SetPlayerKeyboardAndMouseIndex(1, 1, 1);
+            Session::SetPlayerKeyboardAndMouseIndex(2, 1, 1);
+            Session::SetPlayerKeyboardAndMouseIndex(3, 0, 0);
+        }
+        if (Hell::Input::KeyPressed(HELL_KEY_B)) {
+            Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+            Debug::NextDebugRenderMode();
+        }
+    }
+}
+
+}

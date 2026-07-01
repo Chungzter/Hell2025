@@ -8,9 +8,6 @@
 
 #include "Util.h"
 
-#include "Legacy/World/LegacyWorld.h"
-#include "Legacy/Renderer/Renderer.h"
-
 namespace Unloved {
 
 PickUp::PickUp(uint64_t id, const PickUpCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
@@ -64,6 +61,8 @@ void PickUp::Despawn() {
 }
 
 void PickUp::CleanUp() {
+    MarkDirtyInTracker();
+
     m_meshNodes.CleanUp();
 }
 

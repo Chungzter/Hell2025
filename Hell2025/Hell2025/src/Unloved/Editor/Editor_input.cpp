@@ -14,6 +14,7 @@
 #include "Unloved/Config/Config.h"
 #include "Unloved/Editor/Gizmo.h"
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
+#include "Unloved/World/World.h"
 
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
@@ -64,7 +65,7 @@ namespace Unloved::Editor {
             // Object deletion
             if (Input::KeyPressed(HELL_KEY_BACKSPACE)) {
                 if (GetSelectedObjectType() != ObjectType::NO_TYPE) {
-                    LegacyWorld::RemoveObject(GetSelectedObjectId());
+                    World::RemoveObjectById(GetSelectedObjectId());
                     LegacyWorld::RecreateAllHouseGeometry();
                     Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                     UnselectAnyObject();

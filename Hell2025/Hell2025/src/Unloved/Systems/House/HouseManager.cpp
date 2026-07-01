@@ -4,39 +4,40 @@
 #include "File/JSON.h"
 #include "Unloved/World/World.h"
 
-namespace HouseManager {
-    using namespace Unloved;
+#include <vector>
 
-    std::vector<House> g_houses;
+namespace Unloved::HouseManager {
+
+    std::vector<HouseData> g_houseData;
 
     void Init() {
-        //g_houses.clear();
+        //g_houseData.clear();
         //for (FileInfo& fileInfo : Hell::File::IterateDirectory("res/houses/", { "json" })) {
-        //    g_houses[fileInfo.name] = JSON::LoadHouse(fileInfo.path);
+        //    g_houseData[fileInfo.name] = JSON::LoadHouse(fileInfo.path);
         //}
 
-        LoadHouse("TestHouse");
+        LoadHouseData("TestHouse");
     }
 
-    void LoadHouse(const std::string& filename) {
+    void LoadHouseData(const std::string& filename) {
         const std::string path = "res/houses/" + filename + ".house";
         std::ifstream file(path, std::ios::binary);
         if (!file) {
-            Logging::Error() << "HouseManager::LoadHouse(): failed to open '" << path;
+            Logging::Error() << "HouseManager::LoadHouseData(): failed to open '" << path;
             return;
         }
 
         nlohmann::json json;
         if (!JSON::LoadJsonFromFile(json, path)) {
-            Logging::Error() << "HouseManager::LoadHouse() failed to open file: " << path;
+            Logging::Error() << "HouseManager::LoadHouseData() failed to open file: " << path;
             return;
         }
 
         CreateInfoCollection createInfoCollection = JSON::CreateInfoCollectionFromJSONObject(json);
 
-        House& house = g_houses.emplace_back();
-        house.SetFilename(filename);
-        house.SetCreateInfoCollection(createInfoCollection);
+        HouseData& houseData = g_houseData.emplace_back();
+        houseData.SetFilename(filename);
+        houseData.SetCreateInfoCollection(createInfoCollection);
 
         for (size_t i = 0; i < createInfoCollection.genericObjects.size();) {
             if (createInfoCollection.genericObjects[i].type == GenericObjectType::UNDEFINED) {
@@ -65,15 +66,15 @@ namespace HouseManager {
     }
     
     void SaveHouse(const std::string& filename) {
-        House* house = GetHouseByName(filename);
-        if (!house) {
+        HouseData* houseData = GetHouseDataByName(filename);
+        if (!houseData) {
             Logging::Error() << "HouseManager::SaveHouse(): failed because '" << filename << "' was not found.";
             return;
         }
 
         // Construct the JSON string
         CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
-        house->SetCreateInfoCollection(createInfoCollection);
+        houseData->SetCreateInfoCollection(createInfoCollection);
 
         std::string createInfoJson = JSON::CreateInfoCollectionToJSON(createInfoCollection);
 
@@ -95,23 +96,23 @@ namespace HouseManager {
     }
 
     void UpdateCreateInfoCollectionFromWorld(const std::string& houseName) {
-        House* house = GetHouseByName(houseName);
-        if (!house) {
+        HouseData* houseData = GetHouseDataByName(houseName);
+        if (!houseData) {
             Logging::Error() << "HouseManager::UpdateCreateInfoCollectionFromWorld(): failed because '" << houseName << "' was not found.";
             return;
         }
 
         CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
-        house->SetCreateInfoCollection(createInfoCollection);
+        houseData->SetCreateInfoCollection(createInfoCollection);
     }
 
-    House* GetHouseByName(const std::string& filename) {
-        for (House& house : g_houses) {
-            if (house.GetFilename() == filename) {
-                return &house;
+    HouseData* GetHouseDataByName(const std::string& filename) {
+        for (HouseData& houseData : g_houseData) {
+            if (houseData.GetFilename() == filename) {
+                return &houseData;
             }
         }
-        Logging::Error() << "HouseManager::GetHouseByName() failed coz '" << filename << "' was not found";
+        Logging::Error() << "HouseManager::GetHouseDataByName() failed coz '" << filename << "' was not found";
         return nullptr;
     }
 }

@@ -4,11 +4,13 @@ namespace Bible {
     using namespace Unloved;
 
     void ConfigureAnimatedMeshNodesRatKing(uint64_t id, AnimatedMeshNodes* meshNodes);
+    void ConfigureAnimatedMeshNodesTrapKing(uint64_t id, AnimatedMeshNodes* meshNodes);
     void ConfigureAnimatedMeshNodesRemington870(uint64_t id, AnimatedMeshNodes* meshNodes);
     void ConfigureAnimatedMeshNodesSPAS(uint64_t id, AnimatedMeshNodes* meshNodes);
 
     void ConfigureAnimatedMeshNodes(uint64_t id, AnimatedMeshNodes* meshNodes, const std::string& presetName) {
         if (presetName == "RatKing")      ConfigureAnimatedMeshNodesRatKing(id, meshNodes);
+        if (presetName == "TrapKing")     ConfigureAnimatedMeshNodesTrapKing(id, meshNodes);
         if (presetName == "Remington870") ConfigureAnimatedMeshNodesRemington870(id, meshNodes);
         if (presetName == "SPAS")         ConfigureAnimatedMeshNodesSPAS(id, meshNodes);
     }
@@ -76,6 +78,48 @@ namespace Bible {
         meshNodes->SetMeshMaterialByMeshName("Supressor", "Glock");
         meshNodes->SetMeshMaterialByMeshName("LeupoldRedDot", "RedDot");
         meshNodes->SetMeshMaterialByMeshName("LeupoldRedDotGlass", "RedDotGlass", BlendingMode::GLASS);
+    }
+
+    void ConfigureAnimatedMeshNodesTrapKing(uint64_t id, AnimatedMeshNodes* meshNodes) {
+        meshNodes->SetSkinnedModel(id, "TrapKing");
+
+        // Body
+        meshNodes->SetMeshMaterialByMeshName("Body", "TrapKingBodyHead");
+        meshNodes->SetMeshMaterialByMeshName("Body2", "TrapKingBodyTorso");
+        meshNodes->SetMeshMaterialByMeshName("Body3", "TrapKingBodyArms");
+        meshNodes->SetMeshMaterialByMeshName("Body4", "TrapKingBodyLegs");
+        meshNodes->SetMeshMaterialByMeshName("Body5", "TrapKingNails");
+        meshNodes->SetMeshMaterialByMeshName("Body6", "TrapKingEyeLashes");
+        meshNodes->SetBlendingModeByMeshName("Body6", BlendingMode::BLENDED);
+        meshNodes->SetMeshMaterialByMeshName("Tongue", "TrapKingTongue");
+        meshNodes->SetMeshMaterialByMeshName("Teeth", "TrapKingTeethUpper");
+        meshNodes->SetMeshMaterialByMeshName("Teeth2", "TrapKingTeethLower");
+
+        // Hair
+        meshNodes->SetMeshMaterialByMeshName("DreadsTop", "TrapKingHairScalp");
+        meshNodes->SetMeshMaterialByMeshName("DreadsBottom", "TrapKingHairScalp");
+        meshNodes->SetMeshMaterialByMeshName("DreadsFront", "TrapKingHairScalp");
+        meshNodes->SetMeshMaterialByMeshName("DreadsShoulder", "TrapKingHairScalp");
+        meshNodes->SetMeshMaterialByMeshName("DreadsKnot", "TrapKingHairScalp");
+        meshNodes->SetMeshMaterialByMeshName("DreadsScalp", "TrapKingHairScalp");
+        meshNodes->SetBlendingModeByMeshName("DreadsScalp", BlendingMode::BLENDED);
+
+        // Eyes
+        meshNodes->SetBlendingModeByMeshName("EyeOcclusion", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetBlendingModeByMeshName("EyeOcclusion2", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetMeshMaterialByMeshName("Eye", "TrapKingEye");
+        meshNodes->SetBlendingModeByMeshName("Eye2", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetMeshMaterialByMeshName("Eye3", "TrapKingEye");
+        meshNodes->SetBlendingModeByMeshName("Eye4", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetBlendingModeByMeshName("Brow", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetMeshMaterialByMeshName("Brow2", "TrapKingBrow");
+        meshNodes->SetBlendingModeByMeshName("Brow2", BlendingMode::BLENDED);
+        meshNodes->SetBlendingModeByMeshName("TearLine", BlendingMode::DO_NOT_RENDER);
+        meshNodes->SetBlendingModeByMeshName("TearLine2", BlendingMode::DO_NOT_RENDER);
+
+        // Clothes
+        meshNodes->SetMeshMaterialByMeshName("Pants", "TrapKingPants");
+        meshNodes->SetMeshMaterialByMeshName("Boxers", "TrapKingBoxes");
     }
 
     void ConfigureAnimatedMeshNodesRemington870(uint64_t id, AnimatedMeshNodes* meshNodes) {

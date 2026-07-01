@@ -3,9 +3,9 @@
 #include "Hell/BVH/BVH.h"
 #include "Hell/Logging.h"
 
-#include "Legacy/World/LegacyWorld.h"
-
 #include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Objects/House/Door.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/World/World.h"
 
 #include <iostream> // TODO: get me out of here
@@ -81,7 +81,7 @@ void DDGIVolume::CreateRaytracingData() {
 void DDGIVolume::CreateTriangleData() {
     m_triangles.clear();
     std::vector<HouseOccluderTriangle> houseOccluderTriangles;
-    LegacyWorld::CreateHouseOccluderTriangles(m_boundsMin, m_boundsMax, houseOccluderTriangles);
+    Unloved::WorldBVH::CreateHouseOccluderTriangles(m_boundsMin, m_boundsMax, houseOccluderTriangles);
     m_triangles.reserve(houseOccluderTriangles.size());
 
     for (const HouseOccluderTriangle& sourceTriangle : houseOccluderTriangles) {
@@ -131,7 +131,7 @@ void DDGIVolume::CreateHouseBvh() {
 
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
-    LegacyWorld::CreateHouseOccluderGeometry(m_boundsMin, m_boundsMax, vertices, indices);
+    Unloved::WorldBVH::CreateHouseOccluderGeometry(m_boundsMin, m_boundsMax, vertices, indices);
 
     if (vertices.empty() || indices.empty()) {
         return;

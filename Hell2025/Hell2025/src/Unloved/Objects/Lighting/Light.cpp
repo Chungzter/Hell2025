@@ -1,16 +1,20 @@
 #include "Light.h"
+
 #include "Hell/Math/Ray.h"
 #include "Hell/Noise/Noise.h"
 #include "Hell/Physics/Physics.h"
 #include "Hell/Projection/Projection.h"
-#include "Legacy/World/LegacyWorld.h"
-#include "Timer.hpp"
-
-#include "Unloved/Session/Session.h"
-#include "Unloved/World/World.h"
-#include "Legacy/Renderer/Renderer.h"
-#include "Unloved/Editor/Editor.h"
 #include "Hell/Time.h"
+
+#include "Unloved/Editor/Editor.h"
+#include "Unloved/Render/RendererConstants.h"
+#include "Unloved/Session/Session.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
+#include "Unloved/World/World.h"
+
+#include "Legacy/Renderer/Renderer.h"
+
+#include "Timer.hpp"
 
 namespace Unloved {
 
@@ -32,6 +36,10 @@ void Light::Update(float deltaTime) {
     }
 }
 
+void Light::CleanUp() {
+    // Nothing as of yet
+}
+
 void Light::RaycastWorldBounds() {
     glm::vec3 rayOrigin = GetPosition();
     float rayLength = GetRadius() * 2.0f;
@@ -46,7 +54,7 @@ void Light::RaycastWorldBounds() {
         glm::vec3 p1 = rayOrigin;
         glm::vec3 p2 = p1 + (rayDir * rayLength);
 
-        BvhRayResult rayResult = LegacyWorld::ClosestHouseLightOccluderHit(rayOrigin, rayDir, rayLength);
+        BvhRayResult rayResult = Unloved::WorldBVH::ClosestHouseLightOccluderHit(rayOrigin, rayDir, rayLength);
 
         if (rayResult.hitFound) {
             //DebugDraw::DrawLine(p1, rayResult.hitPosition, GREEN);

@@ -1,6 +1,7 @@
 #pragma once
 #include "PlayerTypes.h"
 
+#include "Hell/BVH/Types.h"
 #include "Hell/Math/AABB.h"
 #include "Hell/Math/Transform.h"
 #include "Hell/Math/VecXZ.h"
@@ -43,8 +44,11 @@ public:
 
     void Init(uint64_t playerId, const glm::vec3& position, const glm::vec3& rotation, int32_t viewportIndex);
     void BeginFrame();
+
     void Update(float deltaTime);
     void UpdateCharacterModelHacks();
+    void PostWorldUpdate();
+
     void Respawn();
     void EnableControl();
     void DisableControl();

@@ -1,14 +1,15 @@
 #pragma once
 //#include "Unloved/Common/CreateInfo.h"
-#include "Unloved/Objects/House/House.h"
+#include "Unloved/Objects/House/HouseData.h"
 
-namespace HouseManager {
-    using namespace Unloved;
+#include <string>
+
+namespace Unloved::HouseManager {
 
     void Init();
-    void LoadHouse(const std::string& filename);
+    void LoadHouseData(const std::string& filename);
     void SaveHouse(const std::string& filename);
     void UpdateCreateInfoCollectionFromWorld(const std::string& houseName);
 
-    House* GetHouseByName(const std::string& filename);
+    HouseData* GetHouseDataByName(const std::string& filename);
 }

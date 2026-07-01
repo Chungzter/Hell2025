@@ -7,4 +7,4 @@
 namespace Unloved::MapFile {
 
     void CopySignature(char* signatureBuffer, const std::string& signatureName);
-} // namespace Unloved::MapFile
+}

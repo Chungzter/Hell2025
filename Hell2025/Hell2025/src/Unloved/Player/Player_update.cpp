@@ -2,6 +2,7 @@
 
 #include "Hell/Audio.h"
 #include "Hell/Input.h"
+#include "Hell/Time.h"
 
 #include "Legacy/World/LegacyWorld.h"
 #include "Legacy/Renderer/Renderer.h" // For ragdoll draw settings. TODO: get me out of here
@@ -236,6 +237,11 @@ void Player::UpdateVignette(float deltaTime) {
     }
 
     m_vignetteTimer = std::max(0.0f, m_vignetteTimer);
+}
+
+void Player::PostWorldUpdate() {
+    UpdateWeaponAttachments();
+    UpdateSpriteSheets(Hell::Time::DeltaTime());
 }
 
 } // namespace Unloved

@@ -1,4 +1,4 @@
-#include "HousePlane.h"
+#include "WorldPlane.h"
 #include "Hell/Geometry/Geometry.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -9,7 +9,7 @@
 
 namespace Unloved {
 
-WorldPlane::WorldPlane(uint64_t id, const HousePlaneCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
+WorldPlane::WorldPlane(uint64_t id, const WorldPlaneCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_objectId = id;
 
     m_createInfo = createInfo;
@@ -141,7 +141,7 @@ void WorldPlane::CreatePhysicsObject() {
     userData.physicsId = m_physicsId;
     userData.objectId = m_objectId;
     userData.physicsType = PhysicsType::RIGID_STATIC;
-    //userData.objectType = ObjectType::HOUSE_PLANE;
+    //userData.objectType = ObjectType::WORLD_PLANE;
     Hell::Physics::SetRigidStaticUserData(m_physicsId, userData);
 }
 

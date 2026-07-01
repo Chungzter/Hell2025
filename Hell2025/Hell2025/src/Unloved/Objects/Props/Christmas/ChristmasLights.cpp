@@ -8,7 +8,9 @@
 
 #include "Hell/Logging.h"
 
+#include "Unloved/Objects/Exterior/Wire.h"
 #include "Unloved/Render/RendererConstants.h"
+#include "Unloved/World/World.h"
 
 namespace Unloved {
 
@@ -17,44 +19,39 @@ ChristmasLightSet::ChristmasLightSet(uint64_t id, const ChristmasLightsCreateInf
     m_createInfo = createInfo;
     m_createInfo.position += spawnOffset.translation;
     m_createInfo.sprialTopCenter += spawnOffset.translation;
-    for (glm::vec3& point : m_createInfo.points) {
-        point += spawnOffset.translation;
+    for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) {
+        sequencePoint.position += spawnOffset.translation;
     }
 
     m_position = m_createInfo.position;
-
-    if (m_createInfo.points.empty()) {
-        m_createInfo.points.push_back(m_createInfo.position);
-        m_createInfo.sagHeights.push_back(0);
-        return;
-    }
-
-    m_wires.clear();
-
-    for (size_t i = 1; i < m_createInfo.points.size(); i++) {
-        const glm::vec3& begin = m_createInfo.points[i - 1];
-        const glm::vec3& end = m_createInfo.points[i];
-        const float& sag = m_createInfo.sagHeights[i];
-        Wire& wire = m_wires.emplace_back();
-        wire.Init(begin, end, sag, m_createInfo.wireRadius, m_createInfo.spacing);
-    }
-
-    RecreateLightRenderItems();
+    UpdateSequencePoints(m_createInfo.sequencePoints);
 }
 
-void ChristmasLightSet::AddSegementFromLastPoint(const glm::vec3& nextPoint, float sag) {
-    if (m_createInfo.points.empty()) {
+void ChristmasLightSet::UpdateSequencePoints(const std::vector<SequencePoint>& sequencePoints) {
+    // Clear old runtime data
+    CleanUp();
+    m_renderItems.clear();
+    m_GPUChristmasLights.clear();
+
+    // Update create info
+    m_createInfo.sequencePoints = sequencePoints;
+
+    if (m_createInfo.sequencePoints.empty()) {
+        m_position = m_createInfo.position;
         return;
     }
 
-    m_createInfo.points.push_back(nextPoint);
-    m_createInfo.sagHeights.push_back(sag);
+    m_createInfo.position = m_createInfo.sequencePoints.front().position;
+    m_position = m_createInfo.position;
 
-    const glm::vec3& begin = m_createInfo.points[m_createInfo.points.size() - 2];
-    const glm::vec3& end = m_createInfo.points[m_createInfo.points.size() - 1];
-
-    Wire& wire = m_wires.emplace_back();
-    wire.Init(begin, end, sag, m_createInfo.wireRadius, m_createInfo.spacing);
+    if (m_createInfo.sequencePoints.size() >= 2) {
+        WireCreateInfo wireCreateInfo;
+        wireCreateInfo.sequencePoints = m_createInfo.sequencePoints;
+        wireCreateInfo.radius = m_createInfo.wireRadius;
+        wireCreateInfo.spacing = m_createInfo.spacing;
+        wireCreateInfo.parentObjectId = m_objectId;
+        m_wireIds.push_back(World::AddWire(wireCreateInfo));
+    }
 
     RecreateLightRenderItems();
 }
@@ -69,8 +66,11 @@ void ChristmasLightSet::RecreateLightRenderItems() {
     m_renderItems.clear();
 
     // Wire
-    for (Wire& wire : m_wires) {
-        for (const glm::vec3& position : wire.GetSegmentPoints()) {
+    for (uint64_t wireId : m_wireIds) {
+        Wire* wire = World::GetWireByObjectId(wireId);
+        if (!wire) continue;
+
+        for (const glm::vec3& position : wire->GetSegmentPoints()) {
             Transform transform;
             transform.position = position;
             transform.rotation = glm::vec3(Hell::Random::Float(-1.0f, 1.0f), Hell::Random::Float(-1.0f, 1.0f), Hell::Random::Float(-1.0f, 1.0f));
@@ -186,7 +186,7 @@ void ChristmasLightSet::Update(float deltaTime) {
     int currentPatternIndex = static_cast<int>(m_time / flashSpeed) % patterns.size();
     const auto& currentPattern = patterns[currentPatternIndex];
 
-    //for (auto& p : m_createInfo.points) {
+    //for (auto& p : m_createInfo.sequencePoints) {
     //    DebugDraw::DrawPoint(p, RED);
     //}
 
@@ -216,8 +216,10 @@ void ChristmasLightSet::Update(float deltaTime) {
 }
 
 void ChristmasLightSet::CleanUp() {
-    for (Wire& wire : m_wires) {
-        wire.GetMeshBuffer().Reset();
+    for (uint64_t wireId : m_wireIds) {
+        World::RemoveObjectById(wireId);
     }
+
+    m_wireIds.clear();
 }
 }

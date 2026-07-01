@@ -341,43 +341,6 @@ namespace OpenGLRenderer {
         //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityXYOcclusionSubSurface" });
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
-        OpenGLShader* christmasLightWireShader = OpenGL::ResourceManager::GetShaderPtr("ChristmasLightsWire");
-        OpenGL::BindShader("ChristmasLightsWire");
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
-        EditorRasterizerStateOverride();
-
-        for (int i = 0; i < 4; i++) {
-            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
-            if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
-
-                OpenGL::SetUniformInt("playerIndex", i);
-                OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
-
-                // Draw Christmas light wires
-                for (ChristmasLightSet& lights : Unloved::World::GetChristmasLightSets()) {
-                    std::vector<Wire>& wires = lights.GetWires();
-                    for (Wire& wire : wires) {
-                        MeshBufferOLD& meshBuffer = wire.GetMeshBuffer();
-                        OpenGLMeshBufferOLD& glMeshBuffer = meshBuffer.GetGLMeshBuffer();
-                        glBindVertexArray(glMeshBuffer.GetVAO());
-                        glDrawElements(GL_TRIANGLES, glMeshBuffer.GetIndexCount(), GL_UNSIGNED_INT, 0);
-                    }
-                }
-
-                // Draw power pole wires
-                for (PowerPoleSet& powerPoleSet : Unloved::World::GetPowerPoleSets()) {
-                    std::vector<Wire>& wires = powerPoleSet.GetWires();
-                    for (Wire& wire : wires) {
-                        MeshBufferOLD& meshBuffer = wire.GetMeshBuffer();
-                        OpenGLMeshBufferOLD& glMeshBuffer = meshBuffer.GetGLMeshBuffer();
-                        glBindVertexArray(glMeshBuffer.GetVAO());
-                        glDrawElements(GL_TRIANGLES, glMeshBuffer.GetIndexCount(), GL_UNSIGNED_INT, 0);
-                    }
-                }
-            }
-        }
-
         // Debug draw ragdolls
         if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
             OpenGLShader* ragdollShader = OpenGL::ResourceManager::GetShaderPtr("DebugRagdoll");

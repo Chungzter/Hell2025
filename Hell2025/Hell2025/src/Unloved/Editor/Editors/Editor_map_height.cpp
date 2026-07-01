@@ -3,7 +3,7 @@
 #include "Hell/Logging.h"
 
 #include "Legacy/File/JSON.h"
-#include "Unloved/Maps/MapManager.h"
+#include "Unloved/Systems/Map/MapManager.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Legacy/World/LegacyWorld.h"
@@ -60,12 +60,12 @@ namespace Unloved::Editor {
         SetEditorMode(EditorMode::MAP_HEIGHT_EDITOR);
 
         // World state
-        MapInstanceCreateInfo mapInstanceCreateInfo;
-        mapInstanceCreateInfo.mapName = Editor::GetEditorMapName();
-        mapInstanceCreateInfo.spawnOffsetChunkX = 0;
-        mapInstanceCreateInfo.spawnOffsetChunkZ = 0;
+        MapCreateInfo mapCreateInfo;
+        mapCreateInfo.mapName = Editor::GetEditorMapName();
+        mapCreateInfo.spawnOffsetChunkX = 0;
+        mapCreateInfo.spawnOffsetChunkZ = 0;
         LegacyWorld::ClearAllObjects();
-        LegacyWorld::LoadMapInstancesHeightMapData({ mapInstanceCreateInfo });
+        LegacyWorld::LoadMapsHeightMapData({ mapCreateInfo });
         LegacyWorld::EnableOcean();
 
         MapManager::Init();                          // ?
@@ -196,7 +196,7 @@ namespace Unloved::Editor {
             bool reloadRequired = false;
 
             ///////if (reloadRequired) {
-            ///////    MapCreateInfo* mapCreateInfo = MapManager::GetMapCreateInfoByName("MapHeightEditorMap");
+            ///////    MapDataCreateInfo* mapCreateInfo = MapManager::GetMapCreateInfoByName("MapHeightEditorMap");
             ///////    LegacyWorld::LoadMap(mapCreateInfo);
             ///////    Renderer::RecalculateAllMapHeightData();
             ///////}

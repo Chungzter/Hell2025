@@ -18,10 +18,17 @@ namespace nlohmann {
         j = json::array({ v.x, v.y });
     }
 
+    void to_json(nlohmann::json& j, const Unloved::SequencePoint& sequencePoint) {
+        j = nlohmann::json{
+            {"Position", sequencePoint.position},
+            {"Normal", sequencePoint.normal},
+            {"Value", sequencePoint.value},
+        };
+    }
+
     void to_json(nlohmann::json& j, const ChristmasLightsCreateInfo& info) {
         j = nlohmann::json{
-            {"Points", info.points},
-            {"SagHeights", info.sagHeights},
+            {"SequencePoints", info.sequencePoints},
             {"Spiral", info.spiral},
             {"SpiralRadius", info.spiralRadius},
             {"SpiarlHeight", info.spiarlHeight},
@@ -92,7 +99,7 @@ namespace nlohmann {
         };
     }
 
-    void to_json(nlohmann::json& j, const HousePlaneCreateInfo& createInfo) {
+    void to_json(nlohmann::json& j, const WorldPlaneCreateInfo& createInfo) {
         j = nlohmann::json{
             {"P0", createInfo.p0},
             {"P1", createInfo.p1},
@@ -133,6 +140,14 @@ namespace nlohmann {
         };
     }
 
+    void to_json(nlohmann::json& j, const MermaidCreateInfo& createInfo) {
+        j = nlohmann::json{
+            {"Position", createInfo.position},
+            {"Rotation", createInfo.rotation},
+            {"EditorName", createInfo.editorName}
+        };
+    }
+
     void to_json(nlohmann::json& j, const PianoCreateInfo& createInfo) {
         j = nlohmann::json{
             {"Position", createInfo.position},
@@ -165,15 +180,22 @@ namespace nlohmann {
 
     void to_json(nlohmann::json& j, const PowerPoleSetCreateInfo& createInfo) {
         j = nlohmann::json{
-            {"ControlPoints2D", createInfo.controlPoints2D },
+            {"SequencePoints", createInfo.sequencePoints},
             {"EditorName", createInfo.editorName}
         };
     }
 
-    void to_json(nlohmann::json& j, const Unloved::SpawnPoint& spawnPoint) {
+    void to_json(nlohmann::json& j, const SharkCreateInfo& createInfo) {
         j = nlohmann::json{
-            {"Position", spawnPoint.GetPosition()},
-            {"CamEuler", spawnPoint.GetCamEuler()},
+            {"Position", createInfo.position},
+            {"EditorName", createInfo.editorName}
+        };
+    }
+
+    void to_json(nlohmann::json& j, const SpawnPointCreateInfo& createInfo) {
+        j = nlohmann::json{
+            {"Position", createInfo.position},
+            {"CamEuler", createInfo.camEuler},
         };
     }
 
@@ -236,13 +258,32 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, ChristmasLightsCreateInfo& info) {
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
 
-        info.points = j.value("Points", std::vector<glm::vec3>{});
-        info.sagHeights = j.value("SagHeights", std::vector<float>{});
+        info.sequencePoints = j.value("SequencePoints", std::vector<Unloved::SequencePoint>{});
+        if (info.sequencePoints.empty()) {
+            const std::vector<glm::vec3> points = j.value("Points", std::vector<glm::vec3>{});
+            const std::vector<float> values = j.value("SagHeights", std::vector<float>{});
+
+            info.sequencePoints.reserve(points.size());
+            for (size_t i = 0; i < points.size(); i++) {
+                Unloved::SequencePoint sequencePoint;
+                sequencePoint.position = points[i];
+                if (i < values.size()) {
+                    sequencePoint.value = values[i];
+                }
+                info.sequencePoints.push_back(sequencePoint);
+            }
+        }
 
         info.spiral = j.value("Spiral", false);
         info.spiralRadius = j.value("SpiralRadius", 1.0f);
         info.spiarlHeight = j.value("SpiarlHeight", 1.0f);
         info.sprialTopCenter = j.value("SprialTopCenter", glm::vec3(0.0f));
+    }
+
+    void from_json(const nlohmann::json& j, Unloved::SequencePoint& sequencePoint) {
+        sequencePoint.position = j.value("Position", glm::vec3(0.0f));
+        sequencePoint.normal = j.value("Normal", glm::vec3(0.0f, 1.0f, 0.0f));
+        sequencePoint.value = j.value("Value", 0.0f);
     }
 
     void from_json(const nlohmann::json& j, DDGIVolumeCreateInfo& createInfo) {
@@ -294,7 +335,7 @@ namespace nlohmann {
         houseLocation.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), HouseType::UNDEFINED);
     }
 
-    void from_json(const nlohmann::json& j, HousePlaneCreateInfo& info) {
+    void from_json(const nlohmann::json& j, WorldPlaneCreateInfo& info) {
         info.p0 = j.value("P0", glm::vec3(0.0f));
         info.p1 = j.value("P1", glm::vec3(0.0f));
         info.p2 = j.value("P2", glm::vec3(0.0f));
@@ -329,6 +370,12 @@ namespace nlohmann {
         info.iesExposure = j.value("IESExposure", 1.0f);
     }
 
+    void from_json(const nlohmann::json& j, MermaidCreateInfo& info) {
+        info.position = j.value("Position", glm::vec3(0.0f));
+        info.rotation = j.value("Rotation", glm::vec3(0.0f));
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
+    }
+
     void from_json(const nlohmann::json& j, PianoCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
@@ -354,7 +401,22 @@ namespace nlohmann {
     }
 
     void from_json(const nlohmann::json& j, PowerPoleSetCreateInfo& info) {
-        info.controlPoints2D = j.value("ControlPoints2D", std::vector<glm::vec2>());
+        info.sequencePoints = j.value("SequencePoints", std::vector<Unloved::SequencePoint>{});
+        if (info.sequencePoints.empty()) {
+            const std::vector<glm::vec2> controlPoints2D = j.value("ControlPoints2D", std::vector<glm::vec2>());
+
+            info.sequencePoints.reserve(controlPoints2D.size());
+            for (const glm::vec2& point : controlPoints2D) {
+                Unloved::SequencePoint sequencePoint;
+                sequencePoint.position = glm::vec3(point.x, 0.0f, point.y);
+                info.sequencePoints.push_back(sequencePoint);
+            }
+        }
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
+    }
+
+    void from_json(const nlohmann::json& j, SharkCreateInfo& info) {
+        info.position = j.value("Position", glm::vec3(0.0f));
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -394,10 +456,9 @@ namespace nlohmann {
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
     }
 
-    void from_json(const nlohmann::json& j, Unloved::SpawnPoint& spawnPoint) {
-        glm::vec3 position = j.value("Position", glm::vec3(0.0f));
-        glm::vec3 camEuler = j.value("CamEuler", glm::vec3(0.0f));
-        spawnPoint = Unloved::SpawnPoint(position, camEuler);
+    void from_json(const nlohmann::json& j, SpawnPointCreateInfo& spawnPoint) {
+        spawnPoint.position = j.value("Position", glm::vec3(0.0f));
+        spawnPoint.camEuler = j.value("CamEuler", glm::vec3(0.0f));
     }
 
     void from_json(const nlohmann::json& j, glm::vec2& v) {
@@ -484,6 +545,10 @@ namespace JSON {
     }
 
     CreateInfoCollection CreateInfoCollectionFromJSONString(const std::string& jsonString) {
+        if (jsonString.empty()) {
+            return CreateInfoCollection();
+        }
+
         nlohmann::json json = nlohmann::json::parse(jsonString);
         return CreateInfoCollectionFromJSONObject(json);
     }
@@ -496,13 +561,17 @@ namespace JSON {
         createInfoCollection.fences = json.value("Fences", std::vector<FenceCreateInfo>{});
         createInfoCollection.fireplaces = json.value("Fireplaces", std::vector<FireplaceCreateInfo>{});
         createInfoCollection.genericObjects = json.value("Drawers", std::vector<GenericObjectCreateInfo>{});
-        createInfoCollection.worldPlanes = json.value("Planes", std::vector<HousePlaneCreateInfo>{});
+        createInfoCollection.worldPlanes = json.value("Planes", std::vector<WorldPlaneCreateInfo>{});
         createInfoCollection.ladders = json.value("Ladders", std::vector<LadderCreateInfo>{});
         createInfoCollection.lights = json.value("Lights", std::vector<LightCreateInfo>{});
+        createInfoCollection.mermaids = json.value("Mermaids", std::vector<MermaidCreateInfo>{});
         createInfoCollection.pianos = json.value("Pianos", std::vector<PianoCreateInfo>{});
         createInfoCollection.pickUps = json.value("PickUps", std::vector<PickUpCreateInfo>{});
         createInfoCollection.pictureFrames = json.value("PictureFrames", std::vector<PictureFrameCreateInfo>{});
         createInfoCollection.powerPoleSets = json.value("PowerPoleSets", std::vector<PowerPoleSetCreateInfo>{});
+        createInfoCollection.sharks = json.value("Sharks", std::vector<SharkCreateInfo>{});
+        createInfoCollection.spawnPointsCampaign = json.value("CampaignSpawns", std::vector<SpawnPointCreateInfo>{});
+        createInfoCollection.spawnPointsDeathMatch = json.value("DeathmatchSpawns", std::vector<SpawnPointCreateInfo>{});
         createInfoCollection.staircases = json.value("Staircases", std::vector<StaircaseCreateInfo>{});
         createInfoCollection.trees = json.value("Trees", std::vector<TreeCreateInfo>{});
         createInfoCollection.walls = json.value("Walls", std::vector<WallCreateInfo>{});
@@ -521,10 +590,14 @@ namespace JSON {
         json["Fireplaces"] = createInfoCollection.fireplaces;
         json["Ladders"] = createInfoCollection.ladders;
         json["Lights"] = createInfoCollection.lights;
+        json["Mermaids"] = createInfoCollection.mermaids;
         json["Pianos"] = createInfoCollection.pianos;
         json["PickUps"] = createInfoCollection.pickUps;
         json["PictureFrames"] = createInfoCollection.pictureFrames;
         json["PowerPoleSets"] = createInfoCollection.powerPoleSets;
+        json["Sharks"] = createInfoCollection.sharks;
+        json["CampaignSpawns"] = createInfoCollection.spawnPointsCampaign;
+        json["DeathmatchSpawns"] = createInfoCollection.spawnPointsDeathMatch;
         json["Planes"] = createInfoCollection.worldPlanes;
         json["Staircases"] = createInfoCollection.staircases;
         json["Trees"] = createInfoCollection.trees;
@@ -535,12 +608,14 @@ namespace JSON {
     }
 
     AdditionalMapData AdditionalMapDataFromJSON(const std::string& jsonString) {
+        if (jsonString.empty()) {
+            return AdditionalMapData();
+        }
+
         nlohmann::json json = nlohmann::json::parse(jsonString);
 
         AdditionalMapData additionalMapData;
-        additionalMapData.houseLocations = json["HouseLocations"];
-        additionalMapData.playerCampaignSpawns = json["CampaignSpawns"];
-        additionalMapData.playerDeathmatchSpawns = json["DeathmatchSpawns"];
+        additionalMapData.houseLocations = json.value("HouseLocations", std::vector<HouseLocation>{});
 
         return additionalMapData;
     }
@@ -549,8 +624,6 @@ namespace JSON {
         nlohmann::json json;
 
         json["HouseLocations"] = additionalMapData.houseLocations;
-        json["CampaignSpawns"] = additionalMapData.playerCampaignSpawns;
-        json["DeathmatchSpawns"] = additionalMapData.playerDeathmatchSpawns;
 
         return json.dump(2);
     }

@@ -2,6 +2,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/Objects/Exterior/Wire.h"
 #include "Unloved/World/World.h"
 #include "Hell/Logging.h"
 #include "Renderer/RenderDataManager.h"
@@ -18,10 +19,6 @@ namespace Unloved::LegacyWorld {
             if (!player) continue;
 
             player->SubmitP90MagsRenderItems();
-        }
-
-        for (WorldPlane& housePlane : Unloved::World::GetWorldPlanes()) {
-            housePlane.SubmitRenderItem();
         }
 
         // Main mesh buffer
@@ -50,6 +47,15 @@ namespace Unloved::LegacyWorld {
             wall.SubmitRenderItems();
         }
 
+        for (Wire& wire : Unloved::World::GetWires()) {
+            wire.SubmitRenderItem();
+        }
+
+        for (WorldPlane& worldPlane : Unloved::World::GetWorldPlanes()) {
+            worldPlane.SubmitRenderItem();
+        }
+
+
         for (BulletCasing& bulletCasing : Unloved::World::GetBulletCasings()) {
             bulletCasing.SubmitRenderItem();
         }
@@ -67,27 +73,5 @@ namespace Unloved::LegacyWorld {
 
             player->UpdateUI(Hell::Time::DeltaTime());
         }
-
-
-        // This prints the name and type of a RenderItem list
-        // 
-        // if (Input::KeyPressed(HELL_KEY_E)) {
-        //     std::cout << "\n";
-        // 
-        //     for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsAlphaDiscard()) {
-        //         uint64_t objectId = 0;
-        //         Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
-        // 
-        //         std::cout << objectId << " " << Hell::Enum::ToString(Unloved::GetObjectIdType(objectId)) << " ";
-        // 
-        //         Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
-        //         if (!mesh) {
-        //             std::cout << "\n";
-        //             continue;
-        //         }
-        // 
-        //         std::cout << mesh->GetName() << "\n";
-        //     }
-        // }
     }
 }

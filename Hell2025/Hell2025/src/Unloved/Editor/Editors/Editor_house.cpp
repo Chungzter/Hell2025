@@ -11,6 +11,7 @@
 #include "Unloved/Systems/House/HouseManager.h"
 #include "Unloved/UI/Imgui/Types/Types.h"
 #include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/World/World.h"
 
 #include <imgui/imgui.h>
 
@@ -67,7 +68,11 @@ namespace Unloved::Editor {
         SetEditorMode(EditorMode::HOUSE_EDITOR);
 
         // World state
-        LegacyWorld::LoadSingleHouse(Editor::GetEditorHouseName());
+        LegacyWorld::ResetWorld();
+        if (HouseData* houseData = HouseManager::GetHouseDataByName(Editor::GetEditorHouseName())) {
+            World::LoadHouse(*houseData, SpawnOffset());
+            LegacyWorld::RecreateAllHouseGeometry();
+        }
         LegacyWorld::DisableOcean();
 
         // Init UI

@@ -5,11 +5,18 @@
 #include "Hell/Time.h"
 
 #include "Legacy/Renderer/RenderDataManager.h"
-#include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/ObjectId.h"
+#include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"
+#include "Unloved/Characters/Enemies/Kangaroo/Kangaroo.h"
+#include "Unloved/Characters/Enemies/Shark/Shark.h"
+#include "Unloved/Objects/Interior/Piano.h"
+#include "Unloved/Objects/Props/GenericObject.h"
+#include "Unloved/Objects/Props/PickUp.h"
+#include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Blood/BloodSystem.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/Systems/GameAudio/GameAudio.h"
 #include "Unloved/World/World.h"
 
@@ -92,7 +99,7 @@ namespace Unloved::BulletSystem {
             }
 
             PhysXRayResult physXRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDirection, rayLength, false, ignoredActors);
-            BvhRayResult bvhRayResult = LegacyWorld::ClosestHit(rayOrigin, bullet.GetDirection(), rayLength);
+            BvhRayResult bvhRayResult = Unloved::WorldBVH::ClosestHit(rayOrigin, bullet.GetDirection(), rayLength);
 
             // Defaults
             bool hitFound = false;
@@ -195,7 +202,7 @@ namespace Unloved::BulletSystem {
                 }
 
                 // Retrieve the hit MeshNode, this could be nullptr if the hit was a physics object
-                MeshNode* meshNode = LegacyWorld::GetMeshNodeByObjectIdAndLocalNodeIndex(objectId, localMeshNodeIndex);
+                MeshNode* meshNode = World::GetMeshNodeByObjectIdAndLocalNodeIndex(objectId, localMeshNodeIndex);
 
                 bool glassHit = meshNode && (meshNode->blendingMode == BlendingMode::GLASS ||
                                              meshNode->blendingMode == BlendingMode::MIRROR ||
@@ -215,12 +222,12 @@ namespace Unloved::BulletSystem {
                     decalCreateInfo.parentObjectId = objectId;
                     decalCreateInfo.localMeshNodeIndex = localMeshNodeIndex;
                     decalCreateInfo.surfaceHitNormal = hitNormal;
-                    LegacyWorld::AddDecal2(decalCreateInfo);
+                    World::AddDecal(decalCreateInfo);
 
                     // Create second decal on opposite side if glass was hit + spawn a new bullet
                     if (glassHit) {
                         decalCreateInfo.surfaceHitNormal *= glm::vec3(-1.0f);
-                        LegacyWorld::AddDecal2(decalCreateInfo);
+                        World::AddDecal(decalCreateInfo);
 
                         if (bullet.CreatesFolloWThroughBulletOnGlassHit() && meshNode->blendingMode != BlendingMode::MIRROR) {
                             BulletCreateInfo bulletCreateInfo;
@@ -344,7 +351,7 @@ namespace Unloved::BulletSystem {
     // Shark hit
 
     void ProcessSharkHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
-        Shark* shark = LegacyWorld::GetSharkByObjectId(objectId);
+        Shark* shark = Unloved::World::GetSharkByObjectId(objectId);
         if (!shark) return;
 
         shark->GiveDamage(bullet.GetOwnerObjectId(), bullet.GetDamage());

@@ -41,8 +41,17 @@ namespace Unloved {
         return pts;
     }
 
-    void Shark::Init(const glm::vec3& initialPosition) {
-        m_objectId = Unloved::GetNextObjectId(ObjectType::SHARK);
+    Shark::Shark(uint64_t id, const SharkCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
+        m_objectId = id;
+        m_createInfo = createInfo;
+        m_createInfo.position += spawnOffset.translation;
+
+        Init();
+    }
+
+    void Shark::Init() {
+        const glm::vec3& initialPosition = m_createInfo.position;
+
         m_yHeight = Ocean::GetOceanOriginY();
 
         g_animatedGameObjectObjectId = LegacyWorld::CreateAnimatedGameObject();
@@ -537,7 +546,12 @@ namespace Unloved {
     }
 
     void Shark::CleanUp() {
-        LegacyWorld::RemoveObject(g_animatedGameObjectObjectId);
+        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
+        if (animatedGameObject) {
+            animatedGameObject->CleanUp();
+            Unloved::World::GetAnimatedGameObjects().erase(g_animatedGameObjectObjectId);
+        }
+        g_animatedGameObjectObjectId = 0;
     }
 
     void Shark::StraightenSpine(float deltaTime, float straightSpeed) {

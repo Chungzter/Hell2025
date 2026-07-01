@@ -1,6 +1,6 @@
 #include "GL_renderer.h"
 #include "Hell/Render/API/OpenGL/Types/GL_texture.h"
-#include "Unloved/Maps/MapManager.h"
+#include "Unloved/Systems/Map/MapManager.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
@@ -73,9 +73,9 @@ namespace OpenGLRenderer {
 
         // Heightmap
         if (false) {
-            Map* map = MapManager::GetMapByName("Shit");
-            if (map) {
-                OpenGLTexture& glTexture = map->GetHeightMapGLTexture();
+            MapData* mapData = MapManager::GetMapDataByName("Shit");
+            if (mapData) {
+                OpenGLTexture& glTexture = mapData->GetHeightMapGLTexture();
                 DebugBlitOpenGLTexture(glTexture.GetHandle(), 1.0f);
             }
         }

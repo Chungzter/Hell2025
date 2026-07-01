@@ -6,15 +6,17 @@
 #include "Hell/Physics/Physics.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Util/Util.h"
+#include "Unloved/Objects/Exterior/Wire.h"
+#include "Unloved/World/World.h"
 
 #include <cmath>
 
 namespace {
-    glm::vec2 ApplySpawnOffset(const glm::vec2& point, const SpawnOffset& spawnOffset) {
+    glm::vec3 ApplySpawnOffset(const glm::vec3& point, const SpawnOffset& spawnOffset) {
         const float c = std::cos(spawnOffset.yRotation);
         const float s = std::sin(spawnOffset.yRotation);
-        const glm::vec2 rotated(point.x * c + point.y * s, -point.x * s + point.y * c);
-        return rotated + glm::vec2(spawnOffset.translation.x, spawnOffset.translation.z);
+        const glm::vec2 rotated(point.x * c + point.z * s, -point.x * s + point.z * c);
+        return glm::vec3(rotated.x + spawnOffset.translation.x, point.y, rotated.y + spawnOffset.translation.z);
     }
 }
 
@@ -23,8 +25,8 @@ namespace Unloved {
 PowerPoleSet::PowerPoleSet(uint64_t id, PowerPoleSetCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_objectId = id;
     m_createInfo = createInfo;
-    for (glm::vec2& point : m_createInfo.controlPoints2D) {
-        point = ApplySpawnOffset(point, spawnOffset);
+    for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) {
+        sequencePoint.position = ApplySpawnOffset(sequencePoint.position, spawnOffset);
     }
     m_spawnOffset = SpawnOffset();
 
@@ -32,8 +34,15 @@ PowerPoleSet::PowerPoleSet(uint64_t id, PowerPoleSetCreateInfo& createInfo, Spaw
 }
 
 void PowerPoleSet::AddControlPoint(const glm::vec2& controlPoint2D) {
-    m_createInfo.controlPoints2D.push_back(controlPoint2D);
+    SequencePoint sequencePoint;
+    sequencePoint.position = glm::vec3(controlPoint2D.x, 0.0f, controlPoint2D.y);
+    m_createInfo.sequencePoints.push_back(sequencePoint);
 
+    Init();
+}
+
+void PowerPoleSet::UpdateSequencePoints(const std::vector<SequencePoint>& sequencePoints) {
+    m_createInfo.sequencePoints = sequencePoints;
     Init();
 }
 
@@ -47,8 +56,9 @@ void PowerPoleSet::Init() {
     m_meshNodes.Update(glm::mat4(1.0f));
 
     std::vector<glm::vec3> controlPoints3D;
-    for (glm::vec2& point : m_createInfo.controlPoints2D) {
-        glm::vec3 worldPosition = Hell::Physics::GetHeightMapPositionAtXZ(point.x, point.y);
+    for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) {
+        glm::vec3 worldPosition = Hell::Physics::GetHeightMapPositionAtXZ(sequencePoint.position.x, sequencePoint.position.z);
+        sequencePoint.position.y = worldPosition.y;
         controlPoints3D.push_back(worldPosition);
     }
 
@@ -99,19 +109,22 @@ void PowerPoleSet::Init() {
     }
 
     for (int i = 0; i < m_wirePositionsBackA.size() - 1; i++) {
-        int spacing = 2;
+        auto addWire = [&](const glm::vec3& begin, const glm::vec3& end) {
+            WireCreateInfo wireCreateInfo;
+            wireCreateInfo.sequencePoints.resize(2);
+            wireCreateInfo.sequencePoints[0].position = begin;
+            wireCreateInfo.sequencePoints[1].position = end;
+            wireCreateInfo.sequencePoints[1].value = 0.5f;
+            wireCreateInfo.radius = 0.015f;
+            wireCreateInfo.spacing = 2.0f;
+            wireCreateInfo.parentObjectId = m_objectId;
+            m_wireIds.push_back(World::AddWire(wireCreateInfo));
+        };
 
-        Wire& wireA = m_wires.emplace_back();
-        wireA.Init(m_wirePositionsBackA[i], m_wirePositionsFrontA[i + 1], 0.5f, 0.015f, spacing);
-
-        Wire& wireB = m_wires.emplace_back();
-        wireB.Init(m_wirePositionsBackB[i], m_wirePositionsFrontB[i + 1], 0.5f, 0.015f, spacing);
-
-        Wire& wireC = m_wires.emplace_back();
-        wireC.Init(m_wirePositionsBackC[i], m_wirePositionsFrontC[i + 1], 0.5f, 0.015f, spacing);
-
-        Wire& wireD = m_wires.emplace_back();
-        wireD.Init(m_wirePositionsBackD[i], m_wirePositionsFrontD[i + 1], 0.5f, 0.015f, spacing);
+        addWire(m_wirePositionsBackA[i], m_wirePositionsFrontA[i + 1]);
+        addWire(m_wirePositionsBackB[i], m_wirePositionsFrontB[i + 1]);
+        addWire(m_wirePositionsBackC[i], m_wirePositionsFrontC[i + 1]);
+        addWire(m_wirePositionsBackD[i], m_wirePositionsFrontD[i + 1]);
     }
 
     for (RenderItem& renderItem : m_renderItems) {
@@ -125,14 +138,23 @@ void PowerPoleSet::Update() {
 }
 
 void PowerPoleSet::CleanUp() {
-    for (Wire& wire : m_wires) {
-        wire.CleanUp();
+    for (uint64_t wireId : m_wireIds) {
+        World::RemoveObjectById(wireId);
     }
 
     m_meshNodes.CleanUp();
 
+    m_finalPositions.clear();
+    m_wirePositionsBackA.clear();
+    m_wirePositionsBackB.clear();
+    m_wirePositionsBackC.clear();
+    m_wirePositionsBackD.clear();
+    m_wirePositionsFrontA.clear();
+    m_wirePositionsFrontB.clear();
+    m_wirePositionsFrontC.clear();
+    m_wirePositionsFrontD.clear();
     m_renderItems.clear();
-    m_wires.clear();
+    m_wireIds.clear();
 }
 
 const std::vector<RenderItem>& const PowerPoleSet::GetRenderItems() {

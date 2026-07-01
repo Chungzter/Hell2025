@@ -6,11 +6,14 @@
 #include "Hell/Logging.h"
 #include "Hell/Input.h"
 
-#include "Legacy/World/LegacyWorld.h"
 #include "Legacy/Renderer/Renderer.h"
 
 #include "Unloved/Bible/Bible.h"
+#include "Unloved/Objects/Interior/Piano.h"
+#include "Unloved/Objects/Lighting/Light.h"
+#include "Unloved/Objects/Props/PickUp.h"
 #include "Unloved/Session/Session.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/ObjectId.h"
@@ -56,7 +59,7 @@ void Player::UpdateCursorRays() {
     // Bvh Ray result
     glm::vec3 rayOrigin = GetCameraPosition();
     glm::vec3 rayDir = GetCameraForward();
-    m_bvhRayResult = LegacyWorld::ClosestHit(rayOrigin, rayDir, maxRayDistance);
+    m_bvhRayResult = Unloved::WorldBVH::ClosestHit(rayOrigin, rayDir, maxRayDistance);
 }
 
 
@@ -172,7 +175,7 @@ void Player::UpdateInteract() {
                     }
                 }
                 else {
-                    LegacyWorld::RemoveObject(m_interactObjectId);
+                    World::RemoveObjectById(m_interactObjectId);
                 }
                 Audio::PlayAudio("ItemPickUp.wav", 1.0f);
             }
@@ -196,7 +199,7 @@ void Player::UpdateInteract() {
         glm::vec3 rayDir = GetCameraForward();
         float maxRayDistance = 100.0f;
 
-        BvhRayResult result = LegacyWorld::ClosestHit(rayOrigin, rayDir, maxRayDistance);
+        BvhRayResult result = Unloved::WorldBVH::ClosestHit(rayOrigin, rayDir, maxRayDistance);
         if (result.hitFound) {
             // Sit at
             //if (result.objectType == ObjectType::PIANO) {

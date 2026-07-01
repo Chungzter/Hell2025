@@ -1,43 +1,75 @@
 #include "Wire.h"
 
+#include "Hell/Common/Bit.h"
 #include "Hell/Curve/Curve.h"
 #include "Hell/Geometry/Geometry.h"
+#include "Hell/Render/VertexAttributes.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+#include "Legacy/Renderer/RenderDataManager.h"
 #include "Unloved/Common/Constants.h"
-#include "Unloved/Common/Types.h"
 #include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Render/RendererConstants.h"
+#include "Unloved/Render/RendererTypes.h"
+
+#include <algorithm>
+#include <cmath>
 
 namespace Unloved {
 
-void Wire::Init(glm::vec3 begin, glm::vec3 end, float sag, float radius, float spacing) {
-    m_begin = begin;
-    m_end = end;
-    m_sag = sag;
-    m_radius = radius;
+Wire::Wire(uint64_t id, const WireCreateInfo& createInfo) {
+    m_objectId = id;
+    Init(createInfo);
+}
 
-    const float span = glm::distance(m_begin, m_end);
-    const float minSpan = 0.0001f;
+void Wire::Init(const WireCreateInfo& createInfo) {
+    CleanUp();
 
-    if (span < minSpan) {
-        m_segmentPoints.clear();
-        m_meshBuffer.Reset();
+    m_createInfo = createInfo;
+
+    if (m_createInfo.sequencePoints.size() < 2) {
         return;
     }
 
+    const float minSpacing = 0.01f;
+    float spacing = m_createInfo.spacing;
     if (spacing <= 0.0f) {
-        spacing = 0.25f; // Sensible default
+        spacing = 0.25f;
+    }
+    else if (spacing < minSpacing) {
+        spacing = minSpacing;
     }
 
-    // Number of points along the sag polyline, including endpoints
-    const int segmentCount = std::max(1, (int)std::ceil(span / spacing));
-    const int numSagPoints = segmentCount + 1;
+    const float minSpan = 0.0001f;
+    m_segmentPoints.clear();
 
-    m_segmentPoints = Hell::Curve::GenerateSagPoints(m_begin, m_end, numSagPoints, m_sag);
-    
-    // If sag generation failed or returned too few points, fall back to a straight segment.
+    for (size_t i = 1; i < m_createInfo.sequencePoints.size(); i++) {
+        const SequencePoint& begin = m_createInfo.sequencePoints[i - 1];
+        const SequencePoint& end = m_createInfo.sequencePoints[i];
+        const float span = glm::distance(begin.position, end.position);
+
+        if (span < minSpan) {
+            continue;
+        }
+
+        const int segmentCount = std::max(1, (int)std::ceil(span / spacing));
+        const int numSagPoints = segmentCount + 1;
+        std::vector<glm::vec3> sagPoints = Hell::Curve::GenerateSagPoints(begin.position, end.position, numSagPoints, end.value);
+
+        if (sagPoints.size() < 2) {
+            sagPoints.clear();
+            sagPoints.push_back(begin.position);
+            sagPoints.push_back(end.position);
+        }
+
+        if (!m_segmentPoints.empty() && !sagPoints.empty()) {
+            sagPoints.erase(sagPoints.begin());
+        }
+
+        m_segmentPoints.insert(m_segmentPoints.end(), sagPoints.begin(), sagPoints.end());
+    }
+
     if (m_segmentPoints.size() < 2) {
-        m_segmentPoints.clear();
-        m_segmentPoints.push_back(m_begin);
-        m_segmentPoints.push_back(m_end);
+        return;
     }
     
     const int ringPointCount = 12;
@@ -50,11 +82,9 @@ void Wire::Init(glm::vec3 begin, glm::vec3 end, float sag, float radius, float s
         glm::vec3& p1 = m_segmentPoints[j + 1];
         glm::vec3 forward = p0 - p1;
 
-        const std::vector<glm::vec3>& circle1 = Hell::Geometry::GenerateOrientedCirclePoints(p0, forward, m_radius, ringPointCount);
-        const std::vector<glm::vec3>& circle2 = Hell::Geometry::GenerateOrientedCirclePoints(p1, forward, m_radius, ringPointCount);
+        const std::vector<glm::vec3>& circle1 = Hell::Geometry::GenerateOrientedCirclePoints(p0, forward, m_createInfo.radius, ringPointCount);
+        const std::vector<glm::vec3>& circle2 = Hell::Geometry::GenerateOrientedCirclePoints(p1, forward, m_createInfo.radius, ringPointCount);
 
-        //const std::vector<glm::vec3>& circle1 = Hell::Geometry::GenerateOrientedCirclePoints(p0, forward, m_radius, numSagPoints);
-        //const std::vector<glm::vec3>& circle2 = Hell::Geometry::GenerateOrientedCirclePoints(p1, forward, m_radius, numSagPoints);
         size_t pointCount = circle1.size();
         glm::vec3 center1(0.0f), center2(0.0f);
         for (const auto& p : circle1) center1 += p;
@@ -114,13 +144,46 @@ void Wire::Init(glm::vec3 begin, glm::vec3 end, float sag, float radius, float s
         }
     }
 
-    m_meshBuffer.AddMesh(vertices, indices);
-    m_meshBuffer.UpdateBuffers();
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
+    m_meshId = meshBuffer.AddMesh(vertices, indices, "Wire");
 }
 
 void Wire::CleanUp() {
-    m_meshBuffer.Reset();
+    if (m_meshId != 0) {
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
+        meshBuffer.RemoveMesh(m_meshId);
+        m_meshId = 0;
+    }
+
     m_segmentPoints.clear();
+}
+
+void Wire::SubmitRenderItem() {
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
+
+    Mesh* mesh = meshBuffer.GetMeshById(m_meshId);
+    if (!mesh) return;
+
+    Material* material = Hell::ResourceManager::GetMaterialByName("Black");
+    if (!material) return;
+
+    RenderItem renderItem;
+    renderItem.baseColorTextureIndex = material->m_basecolor;
+    renderItem.normalMapTextureIndex = material->m_normal;
+    renderItem.rmaTextureIndex = material->m_rma;
+    renderItem.modelMatrix = glm::mat4(1.0f);
+    renderItem.inverseModelMatrix = glm::mat4(1.0f);
+    renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
+    renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
+    renderItem.meshId = m_meshId;
+    renderItem.baseVertex = mesh->baseVertex;
+    renderItem.baseIndex = mesh->baseIndex;
+    renderItem.shadowBit = SHADOW_BIT_NONE;
+
+    const uint64_t renderObjectId = m_createInfo.parentObjectId != 0 ? m_createInfo.parentObjectId : m_objectId;
+    Hell::Bit::PackUint64(renderObjectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+
+    RenderDataManager::SubmitRenderItemProcedural(renderItem);
 }
 
 void Wire::Update() {

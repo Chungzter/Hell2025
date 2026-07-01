@@ -6,14 +6,17 @@
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"
 #include "Unloved/Characters/Enemies/Kangaroo/Kangaroo.h"
+#include "Unloved/Characters/Enemies/Shark/Shark.h"
 #include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
 #include "Unloved/Editor/ObjectNames.h"
 #include "Unloved/ObjectId.h"
 #include "Unloved/Objects/Exterior/Fence.h"
 #include "Unloved/Objects/Exterior/PowerPoleSet.h"
+#include "Unloved/Objects/Exterior/Wire.h"
+#include "Unloved/Objects/Effects/Decal.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/House/Fireplace.h"
-#include "Unloved/Objects/House/HousePlane.h"
+#include "Unloved/Objects/House/WorldPlane.h"
 #include "Unloved/Objects/House/TrimSet.h"
 #include "Unloved/Objects/House/Wall.h"
 #include "Unloved/Objects/House/Window.h"
@@ -27,6 +30,7 @@
 #include "Unloved/Objects/Props/GenericObject.h"
 #include "Unloved/Objects/Props/PickUp.h"
 #include "Unloved/Objects/Renderables/AnimatedGameObject.h"
+#include "Unloved/Objects/Spawns/SpawnPoint.h"
 #include "Unloved/Objects/Traversal/Ladder.h"
 #include "Unloved/Objects/Traversal/Staircase.h"
 #include "Unloved/Systems/DDGI/DDGIVolume.h"
@@ -37,6 +41,7 @@ namespace Unloved::World {
     Hell::SlotMap<BulletCasing> g_bulletCasings;
     Hell::SlotMap<ChristmasLightSet> g_christmasLightSets;
     Hell::SlotMap<ChristmasTree> g_christmasTrees;
+    Hell::SlotMap<Decal> g_decals;
     Hell::SlotMap<DDGIVolume> g_ddgiVolumes;
     Hell::SlotMap<Dobermann> g_dobermanns;
     Hell::SlotMap<Door> g_doors;
@@ -44,7 +49,7 @@ namespace Unloved::World {
     Hell::SlotMap<Fireplace> g_fireplaces;
     Hell::SlotMap<GameObject> g_gameObjects;
     Hell::SlotMap<GenericObject> g_genericObjects;
-    Hell::SlotMap<WorldPlane> g_housePlanes;
+    Hell::SlotMap<WorldPlane> g_worldPlanes;
     Hell::SlotMap<Kangaroo> g_kangaroos;
     Hell::SlotMap<Ladder> g_ladders;
     Hell::SlotMap<Light> g_lights;
@@ -53,15 +58,20 @@ namespace Unloved::World {
     Hell::SlotMap<PickUp> g_pickUps;
     Hell::SlotMap<PictureFrame> g_pictureFrames;
     Hell::SlotMap<PowerPoleSet> g_powerPoleSets;
+    Hell::SlotMap<Shark> g_sharks;
+    Hell::SlotMap<SpawnPoint> g_spawnPointsCampaign;
+    Hell::SlotMap<SpawnPoint> g_spawnPointsDeathMatch;
     Hell::SlotMap<Staircase> g_staircases;
     Hell::SlotMap<TrimSet> g_trimSets;
     Hell::SlotMap<Wall> g_walls;
+    Hell::SlotMap<Wire> g_wires;
     Hell::SlotMap<Window> g_windows;
 
     Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects() { return g_animatedGameObjects; }
     Hell::SlotMap<BulletCasing>& GetBulletCasings()             { return g_bulletCasings; }
     Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets()   { return g_christmasLightSets; }
     Hell::SlotMap<ChristmasTree>& GetChristmasTrees()           { return g_christmasTrees; }
+    Hell::SlotMap<Decal>& GetDecals()                           { return g_decals; }
     Hell::SlotMap<DDGIVolume>& GetDDGIVolumes()                 { return g_ddgiVolumes; }
     Hell::SlotMap<Dobermann>& GetDobermanns()                   { return g_dobermanns; }
     Hell::SlotMap<Door>& GetDoors()                             { return g_doors; }
@@ -69,7 +79,7 @@ namespace Unloved::World {
     Hell::SlotMap<Fireplace>& GetFireplaces()                   { return g_fireplaces; }
     Hell::SlotMap<GameObject>& GetGameObjects()                 { return g_gameObjects; }
     Hell::SlotMap<GenericObject>& GetGenericObjects()           { return g_genericObjects; }
-    Hell::SlotMap<WorldPlane>& GetWorldPlanes()                 { return g_housePlanes; }
+    Hell::SlotMap<WorldPlane>& GetWorldPlanes()                 { return g_worldPlanes; }
     Hell::SlotMap<Kangaroo>& GetKangaroos()                     { return g_kangaroos; }
     Hell::SlotMap<Ladder>& GetLadders()                         { return g_ladders; }
     Hell::SlotMap<Light>& GetLights()                           { return g_lights; }
@@ -78,12 +88,22 @@ namespace Unloved::World {
     Hell::SlotMap<PickUp>& GetPickUps()                         { return g_pickUps; }
     Hell::SlotMap<PictureFrame>& GetPictureFrames()             { return g_pictureFrames; }
     Hell::SlotMap<PowerPoleSet>& GetPowerPoleSets()             { return g_powerPoleSets; }
+    Hell::SlotMap<Shark>& GetSharks()                           { return g_sharks; }
+    Hell::SlotMap<SpawnPoint>& GetSpawnPointsCampaign()         { return g_spawnPointsCampaign; }
+    Hell::SlotMap<SpawnPoint>& GetSpawnPointsDeathMatch()       { return g_spawnPointsDeathMatch; }
     Hell::SlotMap<Staircase>& GetStaircases()                   { return g_staircases; }
     Hell::SlotMap<TrimSet>& GetTrimSets()                       { return g_trimSets; }
     Hell::SlotMap<Wall>& GetWalls()                             { return g_walls; }
+    Hell::SlotMap<Wire>& GetWires()                             { return g_wires; }
     Hell::SlotMap<Window>& GetWindows()                         { return g_windows; }
 
     // Animated Game Objects
+
+    uint64_t AddAnimatedGameObject() {
+        const uint64_t id = GetNextObjectId(ObjectType::ANIMATED_GAME_OBJECT);
+        g_animatedGameObjects.emplace_with_id(id, id);
+        return id;
+    }
 
     AnimatedGameObject* GetAnimatedGameObjectByObjectId(uint64_t objectId) {
         return GetAnimatedGameObjects().get(objectId);
@@ -126,6 +146,18 @@ namespace Unloved::World {
 
     ChristmasTree* GetChristmasTreeByObjectId(uint64_t objectId) {
         return GetChristmasTrees().get(objectId);
+    }
+
+    // Decals
+
+    uint64_t AddDecal(DecalCreateInfo createInfo) {
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::DECAL);
+        GetDecals().emplace_with_id(id, id, createInfo);
+        return id;
+    }
+
+    Decal* GetDecalByObjectId(uint64_t objectId) {
+        return GetDecals().get(objectId);
     }
 
     // DDGI Volumes
@@ -394,6 +426,43 @@ namespace Unloved::World {
         return GetPowerPoleSets().get(objectId);
     }
 
+    // Sharks
+
+    uint64_t AddShark(SharkCreateInfo createInfo, SpawnOffset spawnOffset) {
+        Editor::AssignEditorName(createInfo, g_sharks);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::SHARK);
+        g_sharks.emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
+    Shark* GetSharkByObjectId(uint64_t objectId) {
+        return g_sharks.get(objectId);
+    }
+
+    // Spawn Points
+
+    uint64_t AddSpawnPointCampaign(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset) {
+        Editor::AssignEditorName(createInfo, g_spawnPointsCampaign);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::SPAWN_POINT);
+        g_spawnPointsCampaign.emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
+    uint64_t AddSpawnPointDeathMatch(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset) {
+        Editor::AssignEditorName(createInfo, g_spawnPointsDeathMatch);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::SPAWN_POINT);
+        g_spawnPointsDeathMatch.emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
+    SpawnPoint* GetSpawnPointCampaignByObjectId(uint64_t objectId) {
+        return g_spawnPointsCampaign.get(objectId);
+    }
+
+    SpawnPoint* GetSpawnPointDeathMatchByObjectId(uint64_t objectId) {
+        return g_spawnPointsDeathMatch.get(objectId);
+    }
+
     // Staircases
 
     uint64_t AddStaircase(StaircaseCreateInfo createInfo, SpawnOffset spawnOffset) {
@@ -450,6 +519,18 @@ namespace Unloved::World {
         return nullptr;
     }
 
+    // Wires
+
+    uint64_t AddWire(WireCreateInfo createInfo) {
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::WIRE);
+        GetWires().emplace_with_id(id, id, createInfo);
+        return id;
+    }
+
+    Wire* GetWireByObjectId(uint64_t objectId) {
+        return GetWires().get(objectId);
+    }
+
     // Windows
 
     uint64_t AddWindow(WindowCreateInfo createInfo, SpawnOffset spawnOffset) {
@@ -465,16 +546,160 @@ namespace Unloved::World {
 
     // World Planes
 
-    uint64_t AddHousePlane(HousePlaneCreateInfo createInfo, SpawnOffset spawnOffset) {
+    uint64_t AddWorldPlane(WorldPlaneCreateInfo createInfo, SpawnOffset spawnOffset) {
         Editor::AssignEditorName(createInfo, GetWorldPlanes());
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::HOUSE_PLANE);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::WORLD_PLANE);
 
         GetWorldPlanes().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
 
-    WorldPlane* GetHousePlaneByObjectId(uint64_t objectId) {
+    WorldPlane* GetWorldPlaneByObjectId(uint64_t objectId) {
         return GetWorldPlanes().get(objectId);
+    }
+
+    // Remove Object
+
+    template<typename Container>
+    bool RemoveFromSlotMap(Container& objects, uint64_t objectId) {
+        if (!objects.contains(objectId)) return false;
+
+        objects.get(objectId)->CleanUp();
+        objects.erase(objectId);
+        return true;
+    }
+
+    bool RemoveObjectById(uint64_t objectId) {
+        if (objectId == 0) return false;
+
+        switch (GetObjectIdType(objectId)) {
+        case ObjectType::ANIMATED_GAME_OBJECT: return RemoveFromSlotMap(GetAnimatedGameObjects(), objectId);
+        case ObjectType::BULLET_CASING:        return RemoveFromSlotMap(GetBulletCasings(), objectId);
+        case ObjectType::CHRISTMAS_LIGHTS:     return RemoveFromSlotMap(GetChristmasLightSets(), objectId);
+        case ObjectType::TREE:                 return RemoveFromSlotMap(GetChristmasTrees(), objectId);
+        case ObjectType::DECAL:                return RemoveFromSlotMap(GetDecals(), objectId);
+        case ObjectType::DDGI_VOLUME:          return RemoveFromSlotMap(GetDDGIVolumes(), objectId);
+        case ObjectType::DOBERMANN:            return RemoveFromSlotMap(GetDobermanns(), objectId);
+        case ObjectType::DOOR:                 return RemoveFromSlotMap(GetDoors(), objectId);
+        case ObjectType::FENCE:                return RemoveFromSlotMap(GetFences(), objectId);
+        case ObjectType::FIREPLACE:            return RemoveFromSlotMap(GetFireplaces(), objectId);
+        case ObjectType::GAME_OBJECT:          return RemoveFromSlotMap(GetGameObjects(), objectId);
+        case ObjectType::GENERIC_OBJECT:       return RemoveFromSlotMap(GetGenericObjects(), objectId);
+        case ObjectType::WORLD_PLANE:          return RemoveFromSlotMap(GetWorldPlanes(), objectId);
+        case ObjectType::KANGAROO:             return RemoveFromSlotMap(GetKangaroos(), objectId);
+        case ObjectType::LADDER:               return RemoveFromSlotMap(GetLadders(), objectId);
+        case ObjectType::LIGHT:                return RemoveFromSlotMap(GetLights(), objectId);
+        case ObjectType::MERMAID:              return RemoveFromSlotMap(GetMermaids(), objectId);
+        case ObjectType::PIANO:                return RemoveFromSlotMap(GetPianos(), objectId);
+        case ObjectType::PICK_UP:              return RemoveFromSlotMap(GetPickUps(), objectId);
+        case ObjectType::PICTURE_FRAME:        return RemoveFromSlotMap(GetPictureFrames(), objectId);
+        case ObjectType::POWER_POLE_SET:       return RemoveFromSlotMap(GetPowerPoleSets(), objectId);
+        case ObjectType::SHARK:                return RemoveFromSlotMap(GetSharks(), objectId);
+        case ObjectType::STAIRCASE:            return RemoveFromSlotMap(GetStaircases(), objectId);
+        case ObjectType::TRIM_SET:             return RemoveFromSlotMap(GetTrimSets(), objectId);
+        case ObjectType::WALL:                 return RemoveFromSlotMap(GetWalls(), objectId);
+        case ObjectType::WIRE:                 return RemoveFromSlotMap(GetWires(), objectId);
+        case ObjectType::WINDOW:               return RemoveFromSlotMap(GetWindows(), objectId);
+
+        case ObjectType::SPAWN_POINT:
+            if (RemoveFromSlotMap(GetSpawnPointsCampaign(), objectId)) return true;
+            return RemoveFromSlotMap(GetSpawnPointsDeathMatch(), objectId);
+
+        default:
+            Logging::Error() << "World::RemoveObjectById() failed: unsupported object type '" << Hell::Enum::ToString(GetObjectIdType(objectId)) << "'\n";
+            return false;
+        }
+    }
+
+    MeshNode* GetMeshNodeByObjectIdAndLocalNodeIndex(uint64_t objectId, int32_t meshNodeLocalIndex) {
+        if (meshNodeLocalIndex < 0) return nullptr;
+
+        switch (GetObjectIdType(objectId)) {
+        case ObjectType::DOOR:
+            if (Door* object = GetDoorByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+            return nullptr;
+        case ObjectType::FIREPLACE:
+            if (Fireplace* object = GetFireplaceById(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+            return nullptr;
+        case ObjectType::GAME_OBJECT:
+            if (GameObject* object = GetGameObjectByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+            return nullptr;
+        case ObjectType::GENERIC_OBJECT:
+            if (GenericObject* object = GetGenericObjectById(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+            return nullptr;
+        case ObjectType::LADDER:
+            if (Ladder* object = GetLadderByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+            return nullptr;
+        case ObjectType::LIGHT:
+            if (Light* object = GetLightByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+            return nullptr;
+        case ObjectType::MERMAID:
+            if (Mermaid* object = GetMermaidByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+            return nullptr;
+        case ObjectType::PIANO:
+            if (Piano* object = GetPianoByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+            return nullptr;
+        case ObjectType::PICK_UP:
+            if (PickUp* object = GetPickUpByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+            return nullptr;
+        case ObjectType::PICTURE_FRAME:
+            if (PictureFrame* object = GetPictureFrameByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+            return nullptr;
+        case ObjectType::WINDOW:
+            if (Window* object = GetWindowByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
+            return nullptr;
+        default:
+            return nullptr;
+        }
+    }
+
+    // Clean Up
+
+    template<typename Container>
+    void CleanUpSlotMap(Container& objects) {
+        for (auto& object : objects) {
+            object.CleanUp();
+        }
+        objects.clear();
+    }
+
+    void CleanUpCasings() {
+        CleanUpSlotMap(g_bulletCasings);
+    }
+
+    void CleanUpDecals() {
+        CleanUpSlotMap(g_decals);
+    }
+
+    void CleanUpAll() {
+        CleanUpSlotMap(g_bulletCasings);
+        CleanUpSlotMap(g_christmasLightSets);
+        CleanUpSlotMap(g_christmasTrees);
+        CleanUpSlotMap(g_decals);
+        CleanUpSlotMap(g_ddgiVolumes);
+        CleanUpSlotMap(g_dobermanns);
+        CleanUpSlotMap(g_doors);
+        CleanUpSlotMap(g_fences);
+        CleanUpSlotMap(g_fireplaces);
+        CleanUpSlotMap(g_gameObjects);
+        CleanUpSlotMap(g_genericObjects);
+        CleanUpSlotMap(g_worldPlanes);
+        CleanUpSlotMap(g_kangaroos);
+        CleanUpSlotMap(g_ladders);
+        CleanUpSlotMap(g_lights);
+        CleanUpSlotMap(g_mermaids);
+        CleanUpSlotMap(g_pianos);
+        CleanUpSlotMap(g_pickUps);
+        CleanUpSlotMap(g_pictureFrames);
+        CleanUpSlotMap(g_powerPoleSets);
+        CleanUpSlotMap(g_sharks);
+        CleanUpSlotMap(g_spawnPointsCampaign);
+        CleanUpSlotMap(g_spawnPointsDeathMatch);
+        CleanUpSlotMap(g_staircases);
+        CleanUpSlotMap(g_trimSets);
+        CleanUpSlotMap(g_walls);
+        CleanUpSlotMap(g_wires);
+        CleanUpSlotMap(g_windows);
     }
 
 }

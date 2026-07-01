@@ -111,9 +111,9 @@ namespace Renderer {
         }
     }
 
-    void ReadBackHeightMapData(Unloved::Map* map) {
+    void ReadBackHeightMapData(Unloved::MapData* mapData) {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::ReadBackHeightMapData(map);
+            OpenGLRenderer::ReadBackHeightMapData(mapData);
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan: ReadBackHeightMapData()";

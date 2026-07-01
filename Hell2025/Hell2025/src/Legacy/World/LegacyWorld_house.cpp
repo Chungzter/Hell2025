@@ -3,6 +3,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Unloved/Systems/DDGI/GlobalIllumination.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/Systems/House/HouseManager.h"
 #include "Unloved/World/World.h"
 
@@ -14,12 +15,12 @@ namespace Unloved::LegacyWorld {
 
     void RecreateAllHouseGeometry() {
         RecreateAllProceduralWallMesh();
-        RecreateAllProcedularHousePlaneMesh();
+        RecreateAllProcedularWorldPlaneMesh();
         RecreateAllWeatherBoards();
         RecreateAllHangingLightCords();
         RecreateAllWallTrims();
 
-        UpdateHouseLightOccluderBvh();
+        Unloved::WorldBVH::UpdateHouseLightOccluderBvh();
 
         for (Light& light : Unloved::World::GetLights()) {
             light.RaycastWorldBounds();
@@ -72,18 +73,18 @@ namespace Unloved::LegacyWorld {
         }
     }
 
-    void RecreateAllProcedularHousePlaneMesh() {
+    void RecreateAllProcedularWorldPlaneMesh() {
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
 
-        for (WorldPlane& housePlane : Unloved::World::GetWorldPlanes()) {
+        for (WorldPlane& worldPlane : Unloved::World::GetWorldPlanes()) {
             // Remove old mesh
-            meshBuffer.RemoveMesh(housePlane.GetMeshId());
+            meshBuffer.RemoveMesh(worldPlane.GetMeshId());
 
             // Create new mesh
-            uint32_t meshId = meshBuffer.AddMesh(housePlane.GetVertices(), housePlane.GetIndices(), "HousePlane");
+            uint32_t meshId = meshBuffer.AddMesh(worldPlane.GetVertices(), worldPlane.GetIndices(), "WorldPlane");
 
             // Update mesh Id
-            housePlane.SetMeshId(meshId);
+            worldPlane.SetMeshId(meshId);
         }
     }
 

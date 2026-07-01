@@ -1,4 +1,5 @@
-#include "Unloved/Editor/Editor.h"
+#include "Editor.h"
+#include "Editor_placement.h"
 
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
@@ -28,27 +29,32 @@ namespace Unloved::Editor {
             insert.AddChild("Reinsert last",    Shortcut::CTRL_T,   nullptr);
 
             EditorUI::FileMenuNode& bathroom = insert.AddChild("Bathroom", Shortcut::NONE);
-            bathroom.AddChild("Basin",          Shortcut::NONE, Editor::PlaceGenericObject, GenericObjectType::BATHROOM_BASIN, "Basin");
-            bathroom.AddChild("Cabinet",        Shortcut::NONE, Editor::PlaceGenericObject, GenericObjectType::BATHROOM_CABINET, "Cabinet");
-            bathroom.AddChild("Toilet",         Shortcut::NONE, Editor::PlaceGenericObject, GenericObjectType::TOILET, "Toilet");
-            bathroom.AddChild("Towel",          Shortcut::NONE, Editor::PlaceGenericObject, GenericObjectType::BATHROOM_TOWEL_RACK, "Towel Rack");
+            bathroom.AddChild("Basin",          Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_BATHROOM_BASIN);
+            bathroom.AddChild("Cabinet",        Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_BATHROOM_CABINET);
+            bathroom.AddChild("Toilet",         Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_TOILET);
+            bathroom.AddChild("Towel",          Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_BATHROOM_TOWEL_RACK);
 
             EditorUI::FileMenuNode& christmas = insert.AddChild("Christmas", Shortcut::NONE);
-            christmas.AddChild("Lights",        Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_CHRISTMAS_LIGHTS);
-            christmas.AddChild("Present Small", Shortcut::NONE, Editor::PlaceGenericObject, GenericObjectType::CHRISTMAS_PRESENT_SMALL, "Christmas Present Small");
-            christmas.AddChild("Present Large", Shortcut::NONE, Editor::PlaceGenericObject, GenericObjectType::CHRISTMAS_PRESENT_LARGE, "Christmas Present Large");
-            christmas.AddChild("Tree",          Shortcut::NONE, Editor::PlaceGenericObject, GenericObjectType::CHRISTMAS_TREE, "Christmas Tree");
+            christmas.AddChild("Christmas Lights", Shortcut::NONE, BeginPlacement, PlacementTool::CHRISTMAS_LIGHTS);
+            christmas.AddChild("Present Small",    Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_CHRISTMAS_PRESENT_SMALL);
+            christmas.AddChild("Present Large",    Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_CHRISTMAS_PRESENT_LARGE);
+            christmas.AddChild("Tree",             Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_CHRISTMAS_TREE);
+
+            EditorUI::FileMenuNode& enemies = insert.AddChild("Enemies", Shortcut::NONE);
+            enemies.AddChild("Dobermann",       Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_DOBERMANN);
+            enemies.AddChild("Kangaroo",        Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_KANGAROO);
+            enemies.AddChild("Shark",           Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_SHARK);
 
             EditorUI::FileMenuNode& exterior = insert.AddChild("Exterior", Shortcut::NONE);
-            exterior.AddChild("Power Poles",   Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_POWER_POLES);
+            exterior.AddChild("Power Poles",   Shortcut::NONE, BeginPlacement, PlacementTool::POWER_POLES);
             exterior.AddChild("Fence (Farm)",  Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_FENCE);
 
             EditorUI::FileMenuNode& interior = insert.AddChild("Interior", Shortcut::NONE);
-            interior.AddChild("Chair RE",           Shortcut::NONE, PlaceGenericObject, GenericObjectType::CHAIR_RE, "Chair RE");
-            interior.AddChild("Chair Spindle Back", Shortcut::NONE, PlaceGenericObject, GenericObjectType::CHAIR_SPINDLE_BACK, "Chair Spindle Back");
-            interior.AddChild("Couch",              Shortcut::NONE, PlaceGenericObject, GenericObjectType::COUCH, "Couch");
-            interior.AddChild("Drawers Small",      Shortcut::NONE, PlaceGenericObject, GenericObjectType::DRAWERS_SMALL, "Drawers Small");
-            interior.AddChild("Drawers Large",      Shortcut::NONE, PlaceGenericObject, GenericObjectType::DRAWERS_LARGE, "Drawers Large");
+            interior.AddChild("Chair RE",           Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_CHAIR_RE);
+            interior.AddChild("Chair Spindle Back", Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_CHAIR_SPINDLE_BACK);
+            interior.AddChild("Couch",              Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_COUCH);
+            interior.AddChild("Drawers Small",      Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_DRAWERS_SMALL);
+            interior.AddChild("Drawers Large",      Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_DRAWERS_LARGE);
             interior.AddChild("Door",               Shortcut::NONE, PlaceObject, ObjectType::DOOR);
 			interior.AddChild("Fireplace (Open)",   Shortcut::NONE, PlaceFireplace, FireplaceType::DEFAULT, "Fireplace");
 			interior.AddChild("Fireplace (Stove)",  Shortcut::NONE, PlaceFireplace, FireplaceType::WOOD_STOVE, "Wood Stove");
@@ -56,7 +62,7 @@ namespace Unloved::Editor {
             interior.AddChild("Window",             Shortcut::NONE, SetEditorState, EditorState::PLACE_WINDOW);
 
             EditorUI::FileMenuNode& lighting = insert.AddChild("Lighting", Shortcut::NONE);
-            lighting.AddChild("Christmas Lights", Shortcut::NONE, SetEditorState, EditorState::PLACE_CHRISTMAS_LIGHTS);
+            lighting.AddChild("Christmas Lights", Shortcut::NONE, BeginPlacement, PlacementTool::CHRISTMAS_LIGHTS);
             lighting.AddChild("DDGI Volume",      Shortcut::NONE, SetEditorState, EditorState::PLACE_DDGI_VOLUME);
             lighting.AddChild("Light",            Shortcut::NONE, PlaceObject, ObjectType::LIGHT);
 
@@ -65,17 +71,17 @@ namespace Unloved::Editor {
             misc.AddChild("Staircase",          Shortcut::NONE, PlaceObject, ObjectType::STAIRCASE);
 
             EditorUI::FileMenuNode& nature = insert.AddChild("Nature", Shortcut::NONE);
-            nature.AddChild("Mermaid Visitor Rock",     Shortcut::NONE, PlaceGenericObject, GenericObjectType::MERMAID_ROCK, "Mermaid Visitor Rock");
-            nature.AddChild("BlackBerries",             Shortcut::NONE, PlaceGenericObject, GenericObjectType::PLANT_BLACKBERRIES, "Blackberries");
-            nature.AddChild("Tree",                     Shortcut::NONE, PlaceGenericObject, GenericObjectType::PLANT_TREE, "Tree");
+            nature.AddChild("Mermaid Visitor Rock",     Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_MERMAID_ROCK);
+            nature.AddChild("BlackBerries",             Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_PLANT_BLACKBERRIES);
+            nature.AddChild("Tree",                     Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_PLANT_TREE);
 
             EditorUI::FileMenuNode& pickups = insert.AddChild("Pick Ups", Shortcut::NONE);
 
             EditorUI::FileMenuNode& testModels = insert.AddChild("Test Models", Shortcut::NONE);
-            testModels.AddChild("Test Model 1", Shortcut::NONE, PlaceGenericObject, GenericObjectType::TEST_MODEL, "Test Model 1");
-            testModels.AddChild("Test Model 2", Shortcut::NONE, PlaceGenericObject, GenericObjectType::TEST_MODEL2, "Test Model 2");
-            testModels.AddChild("Test Model 3", Shortcut::NONE, PlaceGenericObject, GenericObjectType::TEST_MODEL3, "Test Model 3");
-            testModels.AddChild("Test Model 4", Shortcut::NONE, PlaceGenericObject, GenericObjectType::TEST_MODEL4, "Test Model 4");
+            testModels.AddChild("Test Model 1", Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_TEST_MODEL);
+            testModels.AddChild("Test Model 2", Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_TEST_MODEL2);
+            testModels.AddChild("Test Model 3", Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_TEST_MODEL3);
+            testModels.AddChild("Test Model 4", Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_TEST_MODEL4);
 
             EditorUI::FileMenuNode& weapons = pickups.AddChild("Weapons", Shortcut::NONE);
             weapons.AddChild("AKS74U",          Shortcut::NONE, PlacePickUp, "AKS74U");
@@ -105,8 +111,8 @@ namespace Unloved::Editor {
 
             if (GetEditorMode() == EditorMode::HOUSE_EDITOR) {
                 EditorUI::FileMenuNode& build = g_fileMenu.AddMenuNode("Build", Shortcut::NONE, nullptr);
-                build.AddChild("Ceiling", Shortcut::NONE, PlaceHousePlane, WorldPlaneType::CEILING, "Ceiling");
-                build.AddChild("Floor", Shortcut::NONE,   PlaceHousePlane, WorldPlaneType::FLOOR, "Floor");
+                build.AddChild("Ceiling", Shortcut::NONE, PlaceWorldPlane, WorldPlaneType::CEILING, "Ceiling");
+                build.AddChild("Floor", Shortcut::NONE,   PlaceWorldPlane, WorldPlaneType::FLOOR, "Floor");
                 build.AddChild("Wall", Shortcut::NONE,    SetEditorState, EditorState::PLACE_WALL);
             }
         }

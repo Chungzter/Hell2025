@@ -69,7 +69,7 @@ void Door::UpdateFloor() {
     transform.position = m_position;
     transform.rotation = m_rotation;
 
-    HousePlaneCreateInfo createInfo;
+    WorldPlaneCreateInfo createInfo;
     createInfo.p0 = glm::vec3(transform.to_mat4() * glm::vec4(-half_w, 0.0f, -half_d, 1.0f));
     createInfo.p1 = glm::vec3(transform.to_mat4() * glm::vec4(-half_w, 0.0f, +half_d, 1.0f));
     createInfo.p2 = glm::vec3(transform.to_mat4() * glm::vec4(+half_w, 0.0f, +half_d, 1.0f));
@@ -80,7 +80,7 @@ void Door::UpdateFloor() {
     createInfo.textureScale = 0.4f;
     createInfo.materialName = "FloorBoards";
 
-    Unloved::World::AddHousePlane(createInfo, SpawnOffset());
+    Unloved::World::AddWorldPlane(createInfo, SpawnOffset());
 }
 
 void Door::CleanUp() {

@@ -4,12 +4,13 @@
 
 #include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"
 #include "Unloved/Characters/Enemies/Kangaroo/Kangaroo.h"
+#include "Unloved/Characters/Enemies/Shark/Shark.h"
 #include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
 #include "Unloved/Objects/Exterior/Fence.h"
 #include "Unloved/Objects/Exterior/PowerPoleSet.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/House/Fireplace.h"
-#include "Unloved/Objects/House/HousePlane.h"
+#include "Unloved/Objects/House/WorldPlane.h"
 #include "Unloved/Objects/House/Wall.h"
 #include "Unloved/Objects/House/Window.h"
 #include "Unloved/Objects/Interior/Piano.h"
@@ -70,26 +71,27 @@ namespace Unloved::Editor {
         g_editorObjectNameGroups.clear();
 
         AddEditorObjectNameGroup("Ceilings", World::GetWorldPlanes(), WorldPlaneType::CEILING);
+        AddEditorObjectNameGroup("Christmas Trees", World::GetChristmasTrees());
+        AddEditorObjectNameGroup("Christmas Lights", World::GetChristmasLightSets());
         AddEditorObjectNameGroup("DDGI Volumes", World::GetDDGIVolumes());
+        AddEditorObjectNameGroup("Dobermann", World::GetDobermanns());
         AddEditorObjectNameGroup("Doors", World::GetDoors());
+        AddEditorObjectNameGroup("Fences", World::GetFences());
+        AddEditorObjectNameGroup("Fireplaces", World::GetFireplaces());
         AddEditorObjectNameGroup("Floors", World::GetWorldPlanes(), WorldPlaneType::FLOOR);
-        AddEditorObjectNameGroup("Lights", World::GetLights());
-        AddEditorObjectNameGroup("Walls", World::GetWalls());
-        AddEditorObjectNameGroup("Windows", World::GetWindows());
         AddEditorObjectNameGroup("Generic Objects", World::GetGenericObjects());
+        AddEditorObjectNameGroup("Kangaroos", World::GetKangaroos());
+        AddEditorObjectNameGroup("Ladders", World::GetLadders());
+        AddEditorObjectNameGroup("Lights", World::GetLights());
+        AddEditorObjectNameGroup("Mermaids", World::GetMermaids());
         AddEditorObjectNameGroup("Pick Ups", World::GetPickUps());
         AddEditorObjectNameGroup("Picture Frames", World::GetPictureFrames());
         AddEditorObjectNameGroup("Pianos", World::GetPianos());
-        AddEditorObjectNameGroup("Fireplaces", World::GetFireplaces());
-        AddEditorObjectNameGroup("Ladders", World::GetLadders());
-        AddEditorObjectNameGroup("Staircases", World::GetStaircases());
-        AddEditorObjectNameGroup("Fences", World::GetFences());
         AddEditorObjectNameGroup("Power Pole Sets", World::GetPowerPoleSets());
-        AddEditorObjectNameGroup("Christmas Trees", World::GetChristmasTrees());
-        AddEditorObjectNameGroup("Christmas Lights", World::GetChristmasLightSets());
-        AddEditorObjectNameGroup("Dobermann", World::GetDobermanns());
-        AddEditorObjectNameGroup("Kangaroos", World::GetKangaroos());
-        AddEditorObjectNameGroup("Mermaids", World::GetMermaids());
+        AddEditorObjectNameGroup("Staircases", World::GetStaircases());
+        AddEditorObjectNameGroup("Sharks", World::GetSharks());
+        AddEditorObjectNameGroup("Walls", World::GetWalls());
+        AddEditorObjectNameGroup("Windows", World::GetWindows());
 
         return g_editorObjectNameGroups;
     }

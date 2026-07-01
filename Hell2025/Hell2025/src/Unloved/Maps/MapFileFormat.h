@@ -17,4 +17,4 @@ struct MapHeader {
 };
 #pragma pack(pop)
 
-} // namespace Unloved
+}

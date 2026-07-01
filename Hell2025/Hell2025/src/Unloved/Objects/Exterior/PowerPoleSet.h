@@ -1,6 +1,5 @@
 #pragma once
 #include "Unloved/Common/CreateInfo.h"
-#include "Unloved/Objects/Exterior/Wire.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 
 namespace Unloved {
@@ -16,12 +15,11 @@ struct PowerPoleSet {
 
     void Init();
     void AddControlPoint(const glm::vec2& controlPoint2D);
+    void UpdateSequencePoints(const std::vector<SequencePoint>& sequencePoints);
     void Update();
     void CleanUp();
 
     const std::vector<RenderItem>& const GetRenderItems();
-
-    std::vector<Wire>& GetWires() { return m_wires; }
 
     const uint64_t GetObjectId() const                  { return m_objectId; }
     const PowerPoleSetCreateInfo& GetCreateInfo() const { return m_createInfo; }
@@ -42,6 +40,6 @@ private:
     std::vector<glm::vec3> m_wirePositionsFrontD;
     std::vector<RenderItem> m_renderItems;
     MeshNodes m_meshNodes; 
-    std::vector<Wire> m_wires;
+    std::vector<uint64_t> m_wireIds;
 };
 }

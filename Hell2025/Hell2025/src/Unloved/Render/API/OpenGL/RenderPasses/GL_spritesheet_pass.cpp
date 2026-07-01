@@ -102,34 +102,6 @@ namespace OpenGLRenderer {
                 glBindTexture(GL_TEXTURE_2D, texture->GetGLTexture().GetHandle());
                 glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), 1, mesh->baseVertex, i);
             }
-
-
-            for (SpriteSheetObject& bubbleSpriteSheetObject : LegacyWorld::GetBubbleSpriteSheetObjects()) {
-                if (bubbleSpriteSheetObject.GetTime() > 0) {
-                    const SpriteSheetRenderItem& renderItem = bubbleSpriteSheetObject.GetRenderItem();
-                    Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.textureIndex);
-                    OpenGL::SetUniformInt("u_rowCount", renderItem.rowCount);
-                    OpenGL::SetUniformInt("u_columnCount", renderItem.columnCount);
-                    OpenGL::SetUniformInt("u_frameIndex", renderItem.frameIndex);
-                    OpenGL::SetUniformInt("u_frameNextIndex", renderItem.frameIndexNext);
-                    OpenGL::SetUniformFloat("u_mixFactor", renderItem.mixFactor);
-                    OpenGL::SetUniformVec4("u_position", renderItem.position);
-                    OpenGL::SetUniformVec4("u_rotation", renderItem.rotation);
-                    OpenGL::SetUniformVec4("u_scale", renderItem.scale);
-                    OpenGL::SetUniformInt("u_billboard", renderItem.isBillboard);
-                    OpenGL::SetUniformFloat("u_uOffset", renderItem.uOffset);
-                    OpenGL::SetUniformFloat("u_vOffset", renderItem.vOffset);
-                    OpenGL::SetUniformVec4("u_worldBoundsMin", renderItem.aabbMin);
-                    OpenGL::SetUniformVec4("u_worldBoundsMax", renderItem.aabbMax);
-                    OpenGL::SetUniformBool("u_useFireClipHeight", false);
-
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, texture->GetGLTexture().GetHandle());
-                    glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), 1, mesh->baseVertex, i);
-
-                    DebugDraw::DrawPoint(renderItem.position, RED);
-                }
-            }
         }
     }
 }

@@ -1,17 +1,20 @@
 #pragma once
 
 #include "Unloved/Common/Types.h"
-
-#include "Unloved/Session/Session_types.h"
 #include "Unloved/Camera/Camera.h"
+#include "Unloved/Objects/Spawns/SpawnPoint.h"
 #include "Unloved/Player/Player.h"
+#include "Unloved/Session/Session_types.h"
 
 #include <vector>
 
 namespace Unloved::Session {
     void BeginFrame();
     void Create();
+
     void Update();
+    void PostWorldUpdate();
+
     float GetSessionTime();
 
     // Players
@@ -28,6 +31,10 @@ namespace Unloved::Session {
     int32_t GetOnlinePlayerCount();
     Unloved::Camera* GetLocalPlayerCameraByViewportIndex(uint32_t index);
     float GetLocalPlayerFovByViewportIndex(uint32_t index);
+
+    // Spawn Points
+    const SpawnPoint& GetRandomCampaignSpawnPoint();
+    const SpawnPoint& GetRandomDeathmatchSpawnPoint();
 
     void NextSplitScreenMode();
     void SetSplitscreenMode(SplitscreenMode mode);

@@ -27,8 +27,10 @@ namespace Unloved {
     struct Kangaroo;
     struct Ladder;
     struct Light;
-    struct MapInstance;
+    struct Map;
+    struct MapData;
     struct Mermaid;
+    struct MeshNode;
     struct Piano;
     struct PianoKey;
     struct PickUp;
@@ -43,8 +45,10 @@ namespace Unloved {
     struct TerrainChunk;
     struct TrimSet;
     struct Wall;
+    struct Wire;
+    struct WireCreateInfo;
     struct Window;
-
+    struct HouseData;
 }
 
 namespace Unloved::World {
@@ -53,11 +57,15 @@ namespace Unloved::World {
     void BeginFrame();
     void UpdateBvhs();
     void Update();
+    void UpdateObjects();
     void UpdatePlayers();
-    void UpdateLegacyObjects();
     void SubmitRenderItems();
     void EndFrame();
     void CleanUp();
+
+    void CleanUpAll();
+    void CleanUpCasings();
+    void CleanUpDecals();
 
     void ResetWorld();
     void ClearAllObjects();
@@ -66,11 +74,21 @@ namespace Unloved::World {
     const glm::vec3& GetMoonlightDirection();
 
     CreateInfoCollection GetCreateInfoCollection();
-    void AddCreateInfoCollection(CreateInfoCollection& createInfoCollection, SpawnOffset spawnOffset);
+    void AddCreateInfoCollection(const CreateInfoCollection& createInfoCollection, SpawnOffset spawnOffset);
 
+    void LoadMap(const MapData& mapData, SpawnOffset spawnOffset);
+    void LoadMapObjects(const MapData& mapData, SpawnOffset spawnOffset);
+    void LoadMapHouses(const MapData& mapData, SpawnOffset spawnOffset);
+    void LoadHouse(const HouseData& houseData, SpawnOffset spawnOffset);
+
+    bool RemoveObjectById(uint64_t objectId);
+    MeshNode* GetMeshNodeByObjectIdAndLocalNodeIndex(uint64_t objectId, int32_t meshNodeLocalIndex);
+
+    uint64_t AddAnimatedGameObject();
     uint64_t AddChristmasLights(ChristmasLightsCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddBulletCasing(BulletCasingCreateInfo createInfo);
     uint64_t AddChristmasTree(ChristmasTreeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddDecal(DecalCreateInfo createInfo);
     uint64_t AddDDGIVolume(DDGIVolumeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddDobermann(DobermannCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddDoor(DoorCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
@@ -78,7 +96,7 @@ namespace Unloved::World {
     uint64_t AddFireplace(FireplaceCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddGameObject(GameObjectCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddGenericObject(GenericObjectCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
-    uint64_t AddHousePlane(HousePlaneCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddWorldPlane(WorldPlaneCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddKangaroo(KangarooCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddLadder(LadderCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddLight(LightCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
@@ -87,15 +105,20 @@ namespace Unloved::World {
     uint64_t AddPickUp(PickUpCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddPictureFrame(PictureFrameCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddPowerPoleSet(PowerPoleSetCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddShark(SharkCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddSpawnPointCampaign(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddSpawnPointDeathMatch(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddStaircase(StaircaseCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddTrimSet(TrimSetCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddWall(WallCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddWire(WireCreateInfo createInfo);
     uint64_t AddWindow(WindowCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
 
     AnimatedGameObject* GetAnimatedGameObjectByObjectId(uint64_t objectId);
     BulletCasing* GetBulletCasingByObjectId(uint64_t objectId);
     ChristmasLightSet* GetChristmasLightsByObjectId(uint64_t objectId);
     ChristmasTree* GetChristmasTreeByObjectId(uint64_t objectId);
+    Decal* GetDecalByObjectId(uint64_t objectId);
     DDGIVolume* GetDDGIVolumeByObjectId(uint64_t objectId);
     Dobermann* GetDobermannByObjectId(uint64_t objectId);
     Door* GetDoorByObjectId(uint64_t objectId);
@@ -105,7 +128,7 @@ namespace Unloved::World {
     GameObject* GetGameObjectByIndex(int32_t index);
     GameObject* GetGameObjectByName(const std::string& name);
     GenericObject* GetGenericObjectById(uint64_t objectId);
-    WorldPlane* GetHousePlaneByObjectId(uint64_t objectId);
+    WorldPlane* GetWorldPlaneByObjectId(uint64_t objectId);
     Kangaroo* GetKangarooByObjectId(uint64_t objectId);
     Ladder* GetLadderByObjectId(uint64_t objectId);
     Light* GetLightByObjectId(uint64_t objectId);
@@ -119,10 +142,14 @@ namespace Unloved::World {
     PickUp* GetPickUpByObjectId(uint64_t objectId);
     PictureFrame* GetPictureFrameByObjectId(uint64_t objectId);
     PowerPoleSet* GetPowerPoleSetByObjectId(uint64_t objectId);
+    Shark* GetSharkByObjectId(uint64_t objectId);
+    SpawnPoint* GetSpawnPointCampaignByObjectId(uint64_t objectId);
+    SpawnPoint* GetSpawnPointDeathMatchByObjectId(uint64_t objectId);
     Staircase* GetStaircaseByObjectId(uint64_t objectId);
     TrimSet* GetTrimSetByObjectId(uint64_t objectId);
     Wall* GetWallByObjectId(uint64_t objectId);
     Wall* GetWallByWallSegmentObjectId(uint64_t objectId);
+    Wire* GetWireByObjectId(uint64_t objectId);
     Window* GetWindowByObjectId(uint64_t objectId);
 
     Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects();
@@ -137,14 +164,11 @@ namespace Unloved::World {
     Hell::SlotMap<Fireplace>& GetFireplaces();
     Hell::SlotMap<GameObject>& GetGameObjects();
     Hell::SlotMap<GenericObject>& GetGenericObjects();
-    Hell::SlotMap<GPULight>& GetGPULightsLowRes();
-    Hell::SlotMap<GPULight>& GetGPULightsMidRes();
-    Hell::SlotMap<GPULight>& GetGPULightsHighRes();
     Hell::SlotMap<WorldPlane>& GetWorldPlanes();
     Hell::SlotMap<Kangaroo>& GetKangaroos();
     Hell::SlotMap<Ladder>& GetLadders();
     Hell::SlotMap<Light>& GetLights();
-    Hell::SlotMap<MapInstance>& GetMapInstances();
+    Hell::SlotMap<Map>& GetMaps();
     Hell::SlotMap<Mermaid>& GetMermaids();
     Hell::SlotMap<Piano>& GetPianos();
     Hell::SlotMap<PickUp>& GetPickUps();
@@ -152,12 +176,13 @@ namespace Unloved::World {
     Hell::SlotMap<PowerPoleSet>& GetPowerPoleSets();
     Hell::SlotMap<Road>& GetRoads();
     Hell::SlotMap<Shark>& GetSharks();
-    Hell::SlotMap<SpawnPoint>& GetCampaignSpawnPoints();
-    Hell::SlotMap<SpawnPoint>& GetDeathmatchSpawnPoints();
+    Hell::SlotMap<SpawnPoint>& GetSpawnPointsCampaign();
+    Hell::SlotMap<SpawnPoint>& GetSpawnPointsDeathMatch();
     Hell::SlotMap<SpriteSheetObject>& GetBubbleSpriteSheetObjects();
     Hell::SlotMap<Staircase>& GetStaircases();
     Hell::SlotMap<TerrainChunk>& GetTerrainChunks();
     Hell::SlotMap<TrimSet>& GetTrimSets();
     Hell::SlotMap<Wall>& GetWalls();
+    Hell::SlotMap<Wire>& GetWires();
     Hell::SlotMap<Window>& GetWindows();
 }

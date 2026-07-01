@@ -145,6 +145,7 @@ namespace Unloved {
         if (animatedGameObject) {
             animatedGameObject->CleanUp();
         }
+        Hell::Physics::MarkCharacterControllerForRemoval(m_characterControllerId);
     }
 
     void Kangaroo::SetAgroState(KanagarooAgroState state) {

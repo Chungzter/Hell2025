@@ -12,7 +12,7 @@
 #include "Unloved/ObjectId.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/House/Fireplace.h"
-#include "Unloved/Objects/House/HousePlane.h"
+#include "Unloved/Objects/House/WorldPlane.h"
 #include "Unloved/Objects/Interior/Piano.h"
 #include "Unloved/Objects/Props/GenericObject.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
@@ -200,16 +200,16 @@ namespace Unloved::NavMeshManager {
         }
 
         // Gather floors
-        for (WorldPlane& housePlane : Unloved::World::GetWorldPlanes()) {
-            if (housePlane.GetType() != WorldPlaneType::FLOOR) continue;
+        for (WorldPlane& worldPlane : Unloved::World::GetWorldPlanes()) {
+            if (worldPlane.GetType() != WorldPlaneType::FLOOR) continue;
 
             // Use y height as key
-            float height = housePlane.GetWorldSpaceCenter().y;
+            float height = worldPlane.GetWorldSpaceCenter().y;
             int key = CreatePathKeyFromHeightY(height);
             m_levelInfo[key].y = height;
 
             // Add nav mesh poly to clipper path
-            const std::vector<glm::vec2>& navMeshPoly = housePlane.GetNavMeshPoly();
+            const std::vector<glm::vec2>& navMeshPoly = worldPlane.GetNavMeshPoly();
             m_levelInfo[key].staticPaths.push_back(ConvertToClipperPath(navMeshPoly));
         }
 

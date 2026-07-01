@@ -1,37 +1,40 @@
 #include "Debug.h"
 
+#include "Hell/Input.h"
+#include "Hell/Audio.h"
+#include "Hell/Time.h"
 #include "Hell/Common/Enum.h"
 #include "Hell/Common/String.h"
 #include "Hell/Logging.h"
 #include "Hell/Math/Range.h"
 #include "Hell/MemoryTracker/MemoryTracker.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-
+#include "Hell/UI/TextBlitter.h"
+#include "Hell/Physics/Physics.h"
+#include "Hell/UI/UIBackEnd.h"
 #include "Hell/Backend/BackEnd.h"
+
 #include "Unloved/Config/Config.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/Objects/Effects/Decal.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
+#include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/World/World.h"
+#include "Unloved/Systems/PianoPlayback/PianoPlaybackManager.h"
+
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderDataManager.h"
-#include "Hell/Physics/Physics.h"
-#include "Unloved/Viewport/ViewportManager.h"
-#include "Hell/UI/UIBackEnd.h"
-#include "World/LegacyWorld.h"
-#include "Hell/UI/TextBlitter.h"
-#include "Unloved/World/World.h"
 
-#include "Unloved/Systems/PianoPlayback/PianoPlaybackManager.h"
+#include "World/LegacyWorld.h"
 
 #include <cstdint>
 #include <vector>
 #include <cmath>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include "Hell/Input.h"
-#include "Hell/Audio.h"
-#include "Hell/Time.h"
+
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
 
@@ -326,7 +329,7 @@ namespace Debug {
             }
         }
         if (g_debugRenderMode == DebugRenderMode::DECALS) {
-            for (const Decal& decal : LegacyWorld::GetDecals()) {
+            for (const Decal& decal : Unloved::World::GetDecals()) {
                 DebugDraw::DrawPoint(decal.GetPosition(), OUTLINE_COLOR);
                 DebugDraw::DrawLine(decal.GetPosition(), decal.GetPosition() + decal.GetWorldNormal() * 0.05f, OUTLINE_COLOR);
             }

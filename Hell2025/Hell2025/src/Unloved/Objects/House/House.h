@@ -1,18 +1,16 @@
 #pragma once
 #include "Unloved/Common/Types.h"
-#include "Unloved/Common/CreateInfo.h"
 
 namespace Unloved {
 
 struct House {
-    void SetFilename(const std::string& filename);
-    void SetCreateInfoCollection(CreateInfoCollection& createInfoCollection);
+    void Init(uint64_t objectId);
 
-    CreateInfoCollection& GetCreateInfoCollection()     { return m_createInfoCollection; }
-    const std::string& GetFilename() const              { return m_filename; }
+    uint64_t GetBvhId()     { return m_bvhId; }
+    uint64_t GetObjectId()  { return m_objectId; }
 
 private:
-    CreateInfoCollection m_createInfoCollection;
-    std::string m_filename = UNDEFINED_STRING;
+    uint64_t m_bvhId = 0;
+    uint64_t m_objectId = 0;
 };
 }

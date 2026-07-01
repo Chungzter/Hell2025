@@ -1,22 +1,39 @@
 #pragma once
-#include "Unloved/Objects/Renderables/MeshBufferOLD.h"
+
+#include "Unloved/Common/SequencePoint.h"
+
+#include <glm/glm.hpp>
+
+#include <cstdint>
+#include <vector>
 
 namespace Unloved {
 
+struct WireCreateInfo {
+    std::vector<SequencePoint> sequencePoints;
+    float spacing = 0.25f;
+    float radius = 0.1f;
+    uint64_t parentObjectId = 0;
+};
+
 struct Wire {
-    void Init(glm::vec3 begin, glm::vec3 end, float sag, float radius, float spacing);
+    Wire() = default;
+    Wire(uint64_t id, const WireCreateInfo& createInfo);
+
+    void Init(const WireCreateInfo& createInfo);
     void Update();
+    void SubmitRenderItem();
     void CleanUp();
 
-    MeshBufferOLD& GetMeshBuffer()                             { return m_meshBuffer; }
+    uint32_t GetMeshId() const                              { return m_meshId; }
+    uint64_t GetObjectId() const                            { return m_objectId; }
+    uint64_t GetParentObjectId() const                      { return m_createInfo.parentObjectId; }
     const std::vector<glm::vec3>& GetSegmentPoints() const  { return m_segmentPoints; }
 
 private:
-    float m_sag = 1.0f;
-    float m_radius = 0.1f;
-    glm::vec3 m_begin = glm::vec3(0.0f);
-    glm::vec3 m_end = glm::vec3(0.0f);
+    uint64_t m_objectId = 0;
+    WireCreateInfo m_createInfo;
     std::vector<glm::vec3> m_segmentPoints;
-    MeshBufferOLD m_meshBuffer;
+    uint32_t m_meshId = 0;
 };
 }

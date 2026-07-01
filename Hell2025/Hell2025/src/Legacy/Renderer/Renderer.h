@@ -4,7 +4,7 @@
 
 #include "Unloved/Render/RendererEnums.h"
 #include "Unloved/Render/RendererSettings.h"
-#include "Unloved/Maps/Map.h"
+#include "Unloved/Maps/MapData.h"
 
 #include "Unloved/Common/Types.h"
 
@@ -45,7 +45,7 @@ namespace Renderer {
     void MarkWoundMaskIndexAsAvailable(int32_t index);
 
     void RecalculateAllHeightMapData(bool blitWorldMap);
-    void ReadBackHeightMapData(Unloved::Map* map);
+    void ReadBackHeightMapData(Unloved::MapData* mapData);
 
 	uint32_t GetTileCount();
 	uint32_t GetTileCountX();

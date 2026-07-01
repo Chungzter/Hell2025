@@ -9,13 +9,16 @@
 #include "Unloved/Config/Config.h"
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Editor/Editor_placement.h"
+#include "Unloved/Editor/PlacementTools.h"
 #include "Unloved/Editor/Gizmo.h"
-#include "Unloved/Maps/MapManager.h"
+#include "Unloved/Systems/Map/MapManager.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Systems/House/HouseManager.h"
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/World/World.h"
 
 #include "Unloved/Common/Constants.h"
 #include "Legacy/Renderer/Renderer.h"
@@ -59,6 +62,7 @@ namespace Unloved::Editor {
     SelectionRectangleState g_viewportSelectionRectangleState;
 
     void Init() {
+        Editor::InitPlacementTools();
         ResetViewports();
         ResetCameras();
 
@@ -101,16 +105,20 @@ namespace Unloved::Editor {
             HouseManager::UpdateCreateInfoCollectionFromWorld(Editor::GetEditorHouseName());
 
             // Reload the single editor house
-            LegacyWorld::ClearAllObjects();
-            LegacyWorld::LoadSingleHouse(Editor::GetEditorHouseName());
+            LegacyWorld::ResetWorld();
+            if (HouseData* houseData = HouseManager::GetHouseDataByName(Editor::GetEditorHouseName())) {
+                World::LoadHouse(*houseData, SpawnOffset());
+                LegacyWorld::RecreateAllHouseGeometry();
+            }
         }
         if (GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) {
             // Reload everything from the editor map file
             Renderer::RecalculateAllHeightMapData(false);
             LegacyWorld::ClearAllObjects();
-            LegacyWorld::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
-            LegacyWorld::LoadMapInstanceHouses(Editor::GetEditorMapName(), SpawnOffset());
-            LegacyWorld::RecreateAllHouseGeometry();
+            if (MapData* mapData = MapManager::GetMapDataByName(Editor::GetEditorMapName())) {
+                World::LoadMap(*mapData, SpawnOffset());
+                LegacyWorld::RecreateAllHouseGeometry();
+            }
         }
         if (GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
             // Update the map file with everything in the world
@@ -118,9 +126,10 @@ namespace Unloved::Editor {
 
             // Reload everything from the editor map file, except the heightmap
             LegacyWorld::ClearAllObjects();
-            LegacyWorld::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
-            LegacyWorld::LoadMapInstanceHouses(Editor::GetEditorMapName(), SpawnOffset());
-            LegacyWorld::RecreateAllHouseGeometry();
+            if (MapData* mapData = MapManager::GetMapDataByName(Editor::GetEditorMapName())) {
+                World::LoadMap(*mapData, SpawnOffset());
+                LegacyWorld::RecreateAllHouseGeometry();
+            }
         }
 
         g_isOpen = false;
@@ -211,7 +220,11 @@ namespace Unloved::Editor {
         UpdateCameraInterpolation(deltaTime);
         Gizmo::Update();
 
-        if (GetEditorMode() == EditorMode::HOUSE_EDITOR || GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
+
+        if (GetEditorState() == EditorState::PLACEMENT) {
+            UpdatePlacement();
+        }
+        else if (GetEditorMode() == EditorMode::HOUSE_EDITOR || GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
             UpdateObjectPlacement();
         }
         if (GetEditorState() == EditorState::IDLE) {
@@ -255,18 +268,18 @@ namespace Unloved::Editor {
             DebugDraw::DrawLine(p1, p3, GRID_COLOR, true);
 
             // Draw spawn points as little dots
-            Map* map = MapManager::GetMapByName(GetEditorMapName());
-            if (map) {
-                for (SpawnPoint& spawnPoints : map->GetAdditionalMapData().playerCampaignSpawns) {
-                    DebugDraw::DrawPoint(spawnPoints.GetPosition(), GREEN);
+            MapData* mapData = MapManager::GetMapDataByName(GetEditorMapName());
+            if (mapData) {
+                for (const SpawnPointCreateInfo& spawnPoint : mapData->GetCreateInfoCollection().spawnPointsCampaign) {
+                    DebugDraw::DrawPoint(spawnPoint.position, GREEN);
                 }
-                for (SpawnPoint& spawnPoints : map->GetAdditionalMapData().playerDeathmatchSpawns) {
-                    DebugDraw::DrawPoint(spawnPoints.GetPosition(), YELLOW);
+                for (const SpawnPointCreateInfo& spawnPoint : mapData->GetCreateInfoCollection().spawnPointsDeathMatch) {
+                    DebugDraw::DrawPoint(spawnPoint.position, YELLOW);
                 }
             }
 
             // Draw cubes around spawn points
-            for (SpawnPoint& spawnPoint : LegacyWorld::GetCampaignSpawnPoints()) {
+            for (SpawnPoint& spawnPoint : World::GetSpawnPointsCampaign()) {
                 spawnPoint.DrawDebugCube();
             }
         }
@@ -336,20 +349,12 @@ namespace Unloved::Editor {
         g_placementObjectType = ObjectType::PICK_UP;
     }
 
-    void PlaceHousePlane(WorldPlaneType housePlaneType, const std::string& defaultEditorName) {
+    void PlaceWorldPlane(WorldPlaneType worldPlaneType, const std::string& defaultEditorName) {
         SetEditorState(EditorState::PLACE_OBJECT);
         g_placementObjectSubtype.Reset();
-        g_placementObjectSubtype.housePlane = housePlaneType;
+        g_placementObjectSubtype.worldPlane = worldPlaneType;
         g_placementObjectSubtype.defaultEditorName = defaultEditorName;
-        g_placementObjectType = ObjectType::HOUSE_PLANE;
-    }
-
-    void PlaceGenericObject(GenericObjectType genericObjectType, const std::string& defaultEditorName) {
-        SetEditorState(EditorState::PLACE_OBJECT);
-        g_placementObjectSubtype.Reset();
-        g_placementObjectSubtype.genericObject = genericObjectType;
-        g_placementObjectSubtype.defaultEditorName = defaultEditorName;
-        g_placementObjectType = ObjectType::GENERIC_OBJECT;
+        g_placementObjectType = ObjectType::WORLD_PLANE;
     }
 
     ObjectType GetPlacementObjectType() {

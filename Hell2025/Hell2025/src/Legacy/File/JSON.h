@@ -1,7 +1,6 @@
 #pragma once
 #include "Hell/Math/VecXZ.h"
 
-#include "Unloved/Objects/Spawns/SpawnPoint.h"
 #include "Unloved/Common/CreateInfo.h"
 #include "Unloved/Common/Enums.h"
 #include "Unloved/Common/Types.h"
@@ -10,6 +9,7 @@
 #include <glm/glm.hpp>
 
 namespace nlohmann {
+    void to_json(nlohmann::json& j, const Unloved::SequencePoint& sequencePoint);
     void to_json(nlohmann::json& j, const ChristmasLightsCreateInfo& info);
     void to_json(nlohmann::json& j, const DDGIVolumeCreateInfo& info);
     void to_json(nlohmann::json& j, const DoorCreateInfo& info);
@@ -17,19 +17,22 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const FireplaceCreateInfo& info);
     void to_json(nlohmann::json& j, const GenericObjectCreateInfo& info);
     void to_json(nlohmann::json& j, const HouseLocation& houseLocation);
-    void to_json(nlohmann::json& j, const HousePlaneCreateInfo& info);
+    void to_json(nlohmann::json& j, const WorldPlaneCreateInfo& info);
     void to_json(nlohmann::json& j, const LadderCreateInfo& info);
     void to_json(nlohmann::json& j, const LightCreateInfo& info);   
+    void to_json(nlohmann::json& j, const MermaidCreateInfo& info);
     void to_json(nlohmann::json& j, const PianoCreateInfo& info);
     void to_json(nlohmann::json& j, const PickUpCreateInfo& info);
     void to_json(nlohmann::json& j, const PictureFrameCreateInfo& info);
     void to_json(nlohmann::json& j, const PowerPoleSetCreateInfo& info);
-    void to_json(nlohmann::json& j, const Unloved::SpawnPoint& spawnPoint);
+    void to_json(nlohmann::json& j, const SharkCreateInfo& info);
+    void to_json(nlohmann::json& j, const SpawnPointCreateInfo& createInfo);
     void to_json(nlohmann::json& j, const StaircaseCreateInfo& info);
     void to_json(nlohmann::json& j, const TreeCreateInfo& info);
     void to_json(nlohmann::json& j, const WallCreateInfo& info);
     void to_json(nlohmann::json& j, const WindowCreateInfo& info);
 
+    void from_json(const nlohmann::json& j, Unloved::SequencePoint& sequencePoint);
     void from_json(const nlohmann::json& j, ChristmasLightsCreateInfo& info);
     void from_json(const nlohmann::json& j, DDGIVolumeCreateInfo& info);
     void from_json(const nlohmann::json& j, DoorCreateInfo& info);
@@ -37,14 +40,16 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, FireplaceCreateInfo& info);
     void from_json(const nlohmann::json& j, GenericObjectCreateInfo& info);
     void from_json(const nlohmann::json& j, HouseLocation& houseLocation);
-    void from_json(const nlohmann::json& j, HousePlaneCreateInfo& info);
+    void from_json(const nlohmann::json& j, WorldPlaneCreateInfo& info);
     void from_json(const nlohmann::json& j, LadderCreateInfo& info);
     void from_json(const nlohmann::json& j, LightCreateInfo& info);
+    void from_json(const nlohmann::json& j, MermaidCreateInfo& info);
     void from_json(const nlohmann::json& j, PianoCreateInfo& info);
     void from_json(const nlohmann::json& j, PickUpCreateInfo& info);
     void from_json(const nlohmann::json& j, PictureFrameCreateInfo& info);
     void from_json(const nlohmann::json& j, PowerPoleSetCreateInfo& info);
-    void from_json(const nlohmann::json& j, Unloved::SpawnPoint& info);
+    void from_json(const nlohmann::json& j, SharkCreateInfo& info);
+    void from_json(const nlohmann::json& j, SpawnPointCreateInfo& info);
     void from_json(const nlohmann::json& j, StaircaseCreateInfo& info);
     void from_json(const nlohmann::json& j, TreeCreateInfo& info);
     void from_json(const nlohmann::json& j, WallCreateInfo& info);

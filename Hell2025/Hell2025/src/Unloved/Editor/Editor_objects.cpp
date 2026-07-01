@@ -14,6 +14,7 @@
 #include "Unloved/Editor/Gizmo.h"
 #include "Unloved/ObjectId.h"
 #include "Unloved/Session/Session.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/World/World.h"
 
 namespace Audio = Hell::Audio;
@@ -55,7 +56,7 @@ namespace Unloved::Editor {
         }
 
         // BVH ray
-        BvhRayResult bvhRayResult = LegacyWorld::ClosestHit(rayOrigin, rayDir, maxRayDistance);
+        BvhRayResult bvhRayResult = Unloved::WorldBVH::ClosestHit(rayOrigin, rayDir, maxRayDistance);
         if (bvhRayResult.hitFound) {
             float physXDistance = glm::distance(physxRayResult.hitPosition, rayOrigin);
             float bvhDistance = glm::distance(bvhRayResult.hitPosition, rayOrigin);
@@ -150,7 +151,7 @@ namespace Unloved::Editor {
 
 
         // HACKKK
-        if (WorldPlane* plane = Unloved::World::GetHousePlaneByObjectId(GetSelectedObjectId())) {
+        if (WorldPlane* plane = Unloved::World::GetWorldPlaneByObjectId(GetSelectedObjectId())) {
 
             plane->DrawEdges(OUTLINE_COLOR);
             plane->DrawVertices(OUTLINE_COLOR);
@@ -228,8 +229,8 @@ namespace Unloved::Editor {
                 Gizmo::SetRotation(staircase->GetRotation());
             }
 
-            if (GetSelectedObjectType() == ObjectType::HOUSE_PLANE) {
-                WorldPlane* plane = Unloved::World::GetHousePlaneByObjectId(GetSelectedObjectId());
+            if (GetSelectedObjectType() == ObjectType::WORLD_PLANE) {
+                WorldPlane* plane = Unloved::World::GetWorldPlaneByObjectId(GetSelectedObjectId());
                 if (plane) {
                     // is this IF neccesssary? write safer less confusing logic!!!
                     if (GetEditorSelectionMode() == EditorSelectionMode::OBJECT) {
@@ -314,10 +315,10 @@ namespace Unloved::Editor {
                 // HACK
                 // HACK
                 // HACK
-                if (GetSelectedObjectType() == ObjectType::HOUSE_PLANE) {
-                    if (WorldPlane* plane = Unloved::World::GetHousePlaneByObjectId(GetSelectedObjectId())) {
+                if (GetSelectedObjectType() == ObjectType::WORLD_PLANE) {
+                    if (WorldPlane* plane = Unloved::World::GetWorldPlaneByObjectId(GetSelectedObjectId())) {
 
-                        HousePlaneCreateInfo& createInfo = plane->GetCreateInfo();
+                        WorldPlaneCreateInfo& createInfo = plane->GetCreateInfo();
 
                         if (g_selectedVertexIndex == 0) {
                             createInfo.p0 = Gizmo::GetPosition();

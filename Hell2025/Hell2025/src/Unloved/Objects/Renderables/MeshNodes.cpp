@@ -8,10 +8,10 @@
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
 #include "Legacy/Renderer/RenderDataManager.h"
-#include "Legacy/World/LegacyWorld.h"
 #include "Hell/Math/Math.h"
 #include "Hell/Physics/Physics.h"
 #include "Unloved/ObjectId.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "../../../../res/shaders/common/misc_flags.glsl"
@@ -600,7 +600,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
 
         // If this is a static node and its transform is different than the previous frame, mark the World's static scene as dirty
         if (m_marksStaticSceneBvhAsDirty && MeshNodeIsStatic(i) && !Hell::Math::NearlyEqual(meshNode.worldMatrix, meshNode.prevWorldMatrix)) {
-            LegacyWorld::MarkStaticSceneBvhDirty();
+            Unloved::WorldBVH::MarkStaticSceneBvhDirty();
 
             if (Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode.globalMeshIndex)) {
                 //std::cout << mesh->name << " triggered shit\n";

@@ -1,14 +1,38 @@
-#include "LegacyWorld.h"
-#include "Unloved/Debug/DebugDraw.h"
-#include "Unloved/Editor/Editor.h"
+#include "WorldBVH.h"
+
 #include "Hell/BVH/BVH.h"
 #include "Hell/Common/Bit.h"
+#include "Hell/Math/AABB.h"
 #include "Hell/Math/Math.h"
+#include "Hell/Render/VertexAttributes.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/ResourceManagement/Types/Material.h"
+#include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
+#include "Unloved/Common/Constants.h"
+#include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Objects/Exterior/Fence.h"
+#include "Unloved/Objects/Exterior/PowerPoleSet.h"
+#include "Unloved/Objects/House/Door.h"
+#include "Unloved/Objects/House/Fireplace.h"
+#include "Unloved/Objects/House/Wall.h"
+#include "Unloved/Objects/House/Window.h"
+#include "Unloved/Objects/House/WorldPlane.h"
+#include "Unloved/Objects/Interior/Piano.h"
+#include "Unloved/Objects/Interior/PictureFrame.h"
+#include "Unloved/Objects/Lighting/Light.h"
+#include "Unloved/Objects/Props/Christmas/ChristmasLights.h"
+#include "Unloved/Objects/Props/GenericObject.h"
+#include "Unloved/Objects/Props/PickUp.h"
+#include "Unloved/Objects/Renderables/MeshNodes.h"
+#include "Unloved/Objects/Traversal/Ladder.h"
+#include "Unloved/Objects/Traversal/Staircase.h"
+#include "Unloved/Render/RendererTypes.h"
 #include "Unloved/World/World.h"
 #include "Timer.hpp"
 
-namespace Unloved::LegacyWorld {
+#include <iostream>
+
+namespace Unloved::WorldBVH {
 
 	std::vector<PrimitiveInstance> g_dynamicSceneInstances;
 	std::vector<PrimitiveInstance> g_staticSceneInstances;
@@ -91,7 +115,7 @@ namespace Unloved::LegacyWorld {
         AddHouseOccluderTriangle(triangles, p0, p1, p2, uv0, uv1, uv2, baseColorTextureIndex, rmaTextureIndex);
     }
 
-    void AddHousePlaneOccluderTriangles(std::vector<HouseOccluderTriangle>& triangles, const glm::vec3& boundsMin, const glm::vec3& boundsMax) {
+    void AddWorldPlaneOccluderTriangles(std::vector<HouseOccluderTriangle>& triangles, const glm::vec3& boundsMin, const glm::vec3& boundsMax) {
         for (WorldPlane& plane : Unloved::World::GetWorldPlanes()) {
             if (plane.GetParentDoorId() != 0) {
                 continue;
@@ -190,7 +214,7 @@ namespace Unloved::LegacyWorld {
     void CreateHouseOccluderTriangles(const glm::vec3& boundsMin, const glm::vec3& boundsMax, std::vector<HouseOccluderTriangle>& triangles) {
         triangles.clear();
 
-        AddHousePlaneOccluderTriangles(triangles, boundsMin, boundsMax);
+        AddWorldPlaneOccluderTriangles(triangles, boundsMin, boundsMax);
         AddWallOccluderTriangles(triangles, boundsMin, boundsMax);
         AddDoorGapOccluderTriangles(triangles, boundsMin, boundsMax);
     }

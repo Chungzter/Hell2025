@@ -6,13 +6,16 @@
 #include "Hell/UI/UIBackEnd.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "Legacy/World/LegacyWorld.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Legacy/Renderer/Renderer.h"
 
 #include "Unloved/Config/Config.h"
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/Characters/Enemies/Kangaroo/Kangaroo.h"
+#include "Unloved/Characters/Enemies/Shark/Shark.h"
+#include "Unloved/Objects/Lighting/Light.h"
+#include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
@@ -299,7 +302,7 @@ void Player::UpdateUI(float deltaTime) {
 
             // Shark
             if (false) {
-                for (Shark& shark : LegacyWorld::GetSharks()) {
+                for (Shark& shark : Unloved::World::GetSharks()) {
                     text += shark.GetDebugInfoAsString();
                 }
             }
@@ -318,7 +321,7 @@ void Player::UpdateUI(float deltaTime) {
                 text += "\nBVH ray hit: " + Hell::String::FormatBool(m_bvhRayResult.hitFound) + "\n";
 
                 if (m_bvhRayResult.hitFound) {
-                    MeshNode* meshNode = LegacyWorld::GetMeshNodeByObjectIdAndLocalNodeIndex(m_bvhRayResult.objectId, m_bvhRayResult.localMeshNodeIndex);
+                    MeshNode* meshNode = World::GetMeshNodeByObjectIdAndLocalNodeIndex(m_bvhRayResult.objectId, m_bvhRayResult.localMeshNodeIndex);
 
                     uint64_t hitId = m_bvhRayResult.objectId;
                     ObjectType hitType = Unloved::GetObjectIdType(hitId);

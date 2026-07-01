@@ -1,7 +1,6 @@
 #pragma once
 #include "Unloved/Common/CreateInfo.h"
 #include "Unloved/Common/Types.h"
-#include "Unloved/Objects/Exterior/Wire.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 
 namespace Unloved {
@@ -19,8 +18,6 @@ struct Fence {
     void Init();
     void Update();
     void CleanUp();
-
-    std::vector<Wire>& GetWires() { return m_wires; }
 
     const std::vector<RenderItem>& const GetRenderItems();
 
@@ -45,7 +42,5 @@ private:
     MeshNodes m_meshNodesThin;
     MeshNodes m_meshNodesWire;
     MeshNodes m_meshNodesWireBarbed;
-    
-    std::vector<Wire> m_wires;
 };
 }

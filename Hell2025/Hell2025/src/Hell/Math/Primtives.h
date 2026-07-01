@@ -1,8 +1,11 @@
 #pragma once
-#include <glm/glm.hpp>
+
+#include <glm/vec3.hpp>
+
+#include <cstdint>
 #include <vector>
 
-namespace Primitves {
+namespace Hell::Primtiives {
 
     inline std::vector<glm::vec3> CreateCubeVertices(float size) {
         std::vector<glm::vec3> vertices;
@@ -33,7 +36,7 @@ namespace Primitves {
         return vertices;
     }
 
-    inline std::vector<unsigned int> CreateCubeIndices() {
+    inline std::vector<uint32_t> CreateCubeIndices() {
         return { 0, 1, 3, 1, 2, 3, 7, 5, 4, 7, 6, 5, 11, 9, 8, 11, 10, 9, 12, 13, 15, 13, 14, 15, 16, 17, 19, 17, 18, 19, 23, 21, 20, 23, 22, 21 };
     }
 

@@ -203,7 +203,7 @@ void Player::Respawn() {
     m_awaitingSpawn = false;
 
     // Get random spawn point
-    SpawnPoint spawnPoint = LegacyWorld::GetRandomCampaignSpawnPoint();
+    const SpawnPoint& spawnPoint = Session::GetRandomCampaignSpawnPoint();
     glm::vec3 spawnPosition = spawnPoint.GetPosition() - glm::vec3(0.0f, 1.60, 0.0f);
 
     // Set position and camera rotation to spawn point

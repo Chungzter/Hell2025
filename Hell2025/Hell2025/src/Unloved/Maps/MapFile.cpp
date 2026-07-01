@@ -11,4 +11,4 @@ namespace Unloved::MapFile {
         std::memset(signatureBuffer, 0, signatureBufferSize);
         std::memcpy(signatureBuffer, signatureName.data(), std::min(signatureName.size(), signatureBufferSize - 1));
     }
-} // namespace Unloved::MapFile
+}

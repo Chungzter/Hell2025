@@ -1,7 +1,7 @@
 #include "Hell/Audio.h"
 
 #include "Legacy/File/JSON.h"
-#include "Unloved/Maps/MapManager.h"
+#include "Unloved/Systems/Map/MapManager.h"
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
 
@@ -9,6 +9,7 @@
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Editor/Gizmo.h"
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
+#include "Unloved/World/World.h"
 
 #include <imgui/imgui.h>
 
@@ -42,13 +43,15 @@ namespace Unloved::Editor {
         SetEditorMode(EditorMode::MAP_OBJECT_EDITOR);
 
         // World state
-        MapInstanceCreateInfo mapInstanceCreateInfo;
-        mapInstanceCreateInfo.mapName = Editor::GetEditorMapName();
-        mapInstanceCreateInfo.spawnOffsetChunkX = 0;
-        mapInstanceCreateInfo.spawnOffsetChunkZ = 0;
+        MapCreateInfo mapCreateInfo;
+        mapCreateInfo.mapName = Editor::GetEditorMapName();
+        mapCreateInfo.spawnOffsetChunkX = 0;
+        mapCreateInfo.spawnOffsetChunkZ = 0;
         LegacyWorld::ClearAllObjects();
-        LegacyWorld::LoadMapInstancesHeightMapData({ mapInstanceCreateInfo });
-        LegacyWorld::LoadMapInstanceObjects(Editor::GetEditorMapName(), SpawnOffset());
+        LegacyWorld::LoadMapsHeightMapData({ mapCreateInfo });
+        if (MapData* mapData = MapManager::GetMapDataByName(Editor::GetEditorMapName())) {
+            World::LoadMapObjects(*mapData, SpawnOffset());
+        }
         LegacyWorld::EnableOcean();
 
         // Init UI

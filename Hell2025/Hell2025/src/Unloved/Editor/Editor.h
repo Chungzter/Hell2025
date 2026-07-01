@@ -15,14 +15,14 @@ namespace Unloved::Editor {
     struct PlacementObjectSubtype {
         GenericObjectType genericObject = GenericObjectType::UNDEFINED;
         FireplaceType fireplace = FireplaceType::UNDEFINED;
-        WorldPlaneType housePlane = WorldPlaneType::UNDEFINED;
+        WorldPlaneType worldPlane = WorldPlaneType::UNDEFINED;
         std::string pickUpName = UNDEFINED_STRING;
         std::string defaultEditorName = UNDEFINED_STRING;
 
         void Reset() {
             genericObject = GenericObjectType::UNDEFINED;
             fireplace = FireplaceType::UNDEFINED;
-            housePlane = WorldPlaneType::UNDEFINED;
+            worldPlane = WorldPlaneType::UNDEFINED;
             pickUpName = UNDEFINED_STRING;
             defaultEditorName = UNDEFINED_STRING;
 
@@ -148,9 +148,8 @@ namespace Unloved::Editor {
     void SelectObjectByObjectId(uint64_t objectId);
 
     // Object placement
-    void PlaceHousePlane(WorldPlaneType housePlaneType, const std::string& defaultEditorName = "House Plane");
+    void PlaceWorldPlane(WorldPlaneType worldPlaneType, const std::string& defaultEditorName = "World Plane");
     void PlaceFireplace(FireplaceType fireplaceType, const std::string& defaultEditorName = "Fireplace");
-    void PlaceGenericObject(GenericObjectType objectType, const std::string& defaultEditorName = "Generic Object");
     void PlacePickUp(const std::string& name);
     void PlaceObject(ObjectType objectType); // used for windows, doors, etc
 

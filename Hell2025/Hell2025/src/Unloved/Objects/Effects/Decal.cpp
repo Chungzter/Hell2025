@@ -1,20 +1,20 @@
-#pragma once
 #include "Decal.h"
-#include "Legacy/Renderer/Renderer.h"
-#include "Legacy/World/LegacyWorld.h"
 
 #include "Hell/Common/Constants.h"
 #include "Hell/Common/Random.h"
+#include "Hell/Logging.h"
 #include "Hell/Math/Rotation.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Legacy/Renderer/RenderDataManager.h"
-
-#include "Hell/Logging.h"
+#include "Legacy/Util/Util.h"
+#include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Render/RendererConstants.h"
+#include "Unloved/World/World.h"
 
 namespace Unloved {
 
-Decal::Decal(const DecalCreateInfo& createInfo) {
+Decal::Decal(uint64_t id, const DecalCreateInfo& createInfo) {
+    m_objectId = id;
     m_createInfo = createInfo;
 
     m_localPosition = glm::vec3(glm::inverse(GetParentWorldMatrix()) * glm::vec4(createInfo.surfaceHitPosition, 1.0f));
@@ -27,7 +27,7 @@ Decal::Decal(const DecalCreateInfo& createInfo) {
     m_localPosition += m_localNormal * 0.0025f;
 
     // Determine type
-    if (MeshNode* meshNode = LegacyWorld::GetMeshNodeByObjectIdAndLocalNodeIndex(m_createInfo.parentObjectId, m_createInfo.localMeshNodeIndex)) {
+    if (MeshNode* meshNode = World::GetMeshNodeByObjectIdAndLocalNodeIndex(m_createInfo.parentObjectId, m_createInfo.localMeshNodeIndex)) {
         m_type = meshNode->decalType;
     }
     else {
@@ -82,6 +82,10 @@ Decal::Decal(const DecalCreateInfo& createInfo) {
     m_renderItem.blendingMode = static_cast<int32_t>(BlendingMode::ALPHA_DISCARD);
 }
 
+void Decal::CleanUp() {
+
+}
+
 void Decal::Update() {
     glm::vec3 position = GetParentWorldMatrix() * glm::vec4(m_localPosition, 1.0f);
    // DebugDraw::DrawPoint(position, OUTLINE_COLOR);
@@ -108,7 +112,7 @@ void Decal::Update() {
 const glm::mat4& Decal::GetParentWorldMatrix() {
     static glm::mat4 identity = glm::mat4(1.0f);
 
-    if (MeshNode* meshNode = LegacyWorld::GetMeshNodeByObjectIdAndLocalNodeIndex(m_createInfo.parentObjectId, m_createInfo.localMeshNodeIndex)) {
+    if (MeshNode* meshNode = World::GetMeshNodeByObjectIdAndLocalNodeIndex(m_createInfo.parentObjectId, m_createInfo.localMeshNodeIndex)) {
         return meshNode->worldMatrix;
     }
     

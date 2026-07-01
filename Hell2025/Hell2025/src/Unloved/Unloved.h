@@ -5,8 +5,10 @@ namespace Unloved {
 
     void BeginFrame();
 
-    void UpdateLoadingScreen();
     void OnAssetLoadingComplete();
+
+    void UpdateLazyKeypresses();
+    void UpdateLoadingScreen();
 
     void Update();
     void Render();
