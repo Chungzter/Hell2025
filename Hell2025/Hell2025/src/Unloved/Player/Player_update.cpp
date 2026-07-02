@@ -5,7 +5,7 @@
 #include "Hell/Time.h"
 
 #include "Legacy/World/LegacyWorld.h"
-#include "Legacy/Renderer/Renderer.h" // For ragdoll draw settings. TODO: get me out of here
+#include "Unloved/Render/Renderer.h" // For ragdoll draw settings. TODO: get me out of here
 
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/Ocean/Ocean.h"

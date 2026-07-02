@@ -708,6 +708,12 @@ namespace Hell::ResourceManager {
         return -1;
     }
 
+    void FreeTextureCPUMemory() {
+        for (auto& [name, texture] : g_textures) {
+            texture.FreeCPUMemory();
+        }
+    }
+
     // Texture Array
 
     TextureArray& CreateTextureArray(const std::string& name) {

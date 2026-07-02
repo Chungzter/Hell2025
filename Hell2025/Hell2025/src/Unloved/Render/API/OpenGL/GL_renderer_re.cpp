@@ -14,8 +14,8 @@
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "World/LegacyWorld.h"
-#include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
 
 #include "../../../../../res/shaders/common/gl_fixed_bindings.glsl"
 
@@ -117,9 +117,9 @@ namespace OpenGLRenderer {
 
         // DDGI Debug
         Unloved::DDGIVolume& ddgiVolume = Unloved::LegacyWorld::GetTestDDGIVolume();
-        if (Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
-        if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
-        if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
+        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
+        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
+        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
 
         SpriteSheetPass(); // Muzzle flash, etc
 
@@ -264,7 +264,7 @@ namespace OpenGLRenderer {
     void BubblesPass2() {
         //ProfilerOpenGLZoneFunction();
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = OpenGL::ResourceManager::GetCubemapView("SkyboxNightSky");
         OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
@@ -318,7 +318,7 @@ namespace OpenGLRenderer {
     void BubblesPass3() {
         //ProfilerOpenGLZoneFunction();
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = OpenGL::ResourceManager::GetCubemapView("SkyboxNightSky");
         OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
@@ -414,7 +414,7 @@ namespace OpenGLRenderer {
 	void BlendedLighting() {
 		ProfilerOpenGLZoneFunction();
 
-		const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+		const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
 
 		OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
         OpenGLFrameBuffer& indirectDiffuseFbo = OpenGL::ResourceManager::GetFrameBuffer("IndirectDiffuse");
@@ -488,7 +488,7 @@ namespace OpenGLRenderer {
         ProfilerOpenGLZoneFunction();
         if (!Unloved::LegacyWorld::HasOcean()) return;
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = OpenGL::ResourceManager::GetCubemapView("SkyboxNightSky");
         OpenGLFrameBuffer& fftBand0Fbo = OpenGL::ResourceManager::GetFrameBuffer("FFT_band0");
@@ -552,8 +552,8 @@ namespace OpenGLRenderer {
 
         OpenGLRasterizerStateManager::ForceRasterizerState("GlassPass");
 
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("Glass");
         OpenGLShader* compositeShader = OpenGL::ResourceManager::GetShaderPtr("GlassComposite");
@@ -625,7 +625,7 @@ namespace OpenGLRenderer {
 
     void EmissiveForwardPass() {
         ProfilerOpenGLZoneFunction();
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+        const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
 
         OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
         fbo.Bind();

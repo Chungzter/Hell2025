@@ -2,7 +2,7 @@
 
 #include "Legacy/File/JSON.h"
 #include "Unloved/Systems/Map/MapManager.h"
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Config/Config.h"

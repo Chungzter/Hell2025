@@ -2,7 +2,7 @@
 #include "Hell/Logging.h"
 #include "Util.h"
 
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 
 namespace Unloved {
 

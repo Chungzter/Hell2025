@@ -1,18 +1,15 @@
 #pragma once
+#include "ProgramState.h"
 
 namespace Unloved {
     bool Init();
+    void CleanUp();
 
     void BeginFrame();
-
-    void OnAssetLoadingComplete();
-
-    void UpdateLazyKeypresses();
-    void UpdateLoadingScreen();
-
     void Update();
     void Render();
-
     void EndFrame();
-    void CleanUp();
+
+    void SetProgramState(ProgramState programState);
+    ProgramState GetProgramState();
 }

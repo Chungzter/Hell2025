@@ -1,8 +1,9 @@
 #include "Unloved.h"
 
-#include "Legacy/Renderer/Renderer.h"
-#include "Legacy/Renderer/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
 
+#include "Hell/AssetLoader/AssetLoader.h"
 #include "Hell/Physics/Physics.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/UI/UIBackEnd.h"
@@ -26,13 +27,25 @@
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/World/World.h"
 
-namespace Time = Hell::Time;
-
-
 namespace Unloved {
+
+    ProgramState g_programState = ProgramState::UNDEFINED;
+    ProgramState g_requestedProgramState = ProgramState::LOADING_SCREEN;
+
+    void UpdateLazyKeypresses();
+
+    void BeginFrameLoadingScreen();
+    void UpdateLoadingScreen();
+    void UpdateGame();
+
+    void BeginFrameGame();
+    void RenderLoadingScreen();
+    void RenderGame();
+
     bool Init() {
-        Renderer::Init();
         const Resolutions& resolutions = Config::GetResolutions();
+
+        Renderer::Init();
         UIBackEnd::SetUIResolution(resolutions.ui.x, resolutions.ui.y);
         UIBackEnd::Init();
         Bible::Init();
@@ -41,57 +54,109 @@ namespace Unloved {
         Editor::Init();
         Hell::Physics::Init();
         ImGuiBackEnd::Init();
-
         Systems::Init();
 
         return true;
     }
 
     void BeginFrame() {
+        g_programState = g_requestedProgramState;
+
+        switch (GetProgramState()) {
+            case ProgramState::GAME:           BeginFrameGame();          break;
+            case ProgramState::LOADING_SCREEN: BeginFrameLoadingScreen(); break;
+        }
+
+    }
+
+    void Update() {
+        switch (GetProgramState()) {
+            case ProgramState::GAME:           UpdateGame();          break;
+            case ProgramState::LOADING_SCREEN: UpdateLoadingScreen(); break;
+        }
+
         UpdateLazyKeypresses();
-        DebugDraw::BeginFrame();
-        Unloved::Session::BeginFrame();
-        Systems::BeginFrame();
+    }
+
+    void Render() {
+        switch (GetProgramState()) {
+            case ProgramState::LOADING_SCREEN: RenderLoadingScreen(); break;
+            case ProgramState::GAME:           RenderGame();          break;
+        }
+    }
+
+    void EndFrame() {
+        Debug::EndFrame();
+        World::EndFrame();
+    }
+
+    void CleanUp() {
+        Systems::CleanUp();
+        World::CleanUp();
+        Renderer::CleanUp();
+    }
+
+    void SetProgramState(ProgramState programState) {
+        g_requestedProgramState = programState;
+    }
+
+    ProgramState GetProgramState() {
+        return g_programState;
+    }
+
+    // Loading Screen
+
+    void BeginFrameLoadingScreen() {
         RenderDataManager::BeginFrame();
+        UIBackEnd::BeginFrame();
+    }
+
+    void UpdateLoadingScreen() {
+        Hell::AssetLoader::Update();
+
+        UIBackEnd::Update();
+        RenderDataManager::UpdateDrawCommandsUI();
+
+        if (Hell::AssetLoader::LoadingComplete()) {
+
+            GameAudio::PlayGlockEquipAudio();
+            Renderer::InitMain();
+            HouseManager::Init();
+            MapManager::Init();
+            Session::Create();
+            World::Init();
+
+            Hell::ResourceManager::FreeTextureCPUMemory();
+
+            SetProgramState(ProgramState::GAME);
+        }
+    }
+
+    void RenderLoadingScreen() {
+        Renderer::RenderLoadingScreen();
+    }
+
+    // Game
+
+    void BeginFrameGame() {
+        DebugDraw::BeginFrame();
+        RenderDataManager::BeginFrame();
+        Session::BeginFrame();
+        Systems::BeginFrame();
         UIBackEnd::BeginFrame();
         World::BeginFrame();
     }
 
-    void UpdateLoadingScreen() {
-        UIBackEnd::Update();
-        RenderDataManager::UpdateDrawCommandsUI();
-    }
-
-    void OnAssetLoadingComplete() {
-        Renderer::UploadVertexData();
-        HouseManager::Init();
-        MapManager::Init();
-        Renderer::InitWoundMaskArray();
-
-        World::Init();
-
-        // Free all cpu texture data
-        for (auto& [name, texture] : Hell::ResourceManager::GetTextures()) {
-            texture.FreeCPUMemory();
-        }
-
-        Renderer::InitMain();
-        Unloved::Session::Create();
-        GameAudio::PlayGlockEquipAudio();
-    }
-
-    void Update() {
+    void UpdateGame() {
         // Pre World Update
         Systems::PreWorldUpdate();
 
         Renderer::PreGameLogicComputePasses();
 
-        float deltaTime = Time::DeltaTime();
-
         Unloved::ViewportManager::Update();
 
         if (Editor::IsOpen()) {
-            Editor::Update(deltaTime);
+            Editor::Update(Hell::Time::DeltaTime());
         }
 
         HouseBuilder::RebuildIfDirty();
@@ -131,18 +196,7 @@ namespace Unloved {
         ImGuiBackEnd::Update();
     }
 
-    void Render() {
+    void RenderGame() {
         Renderer::RenderGame();
-    }
-
-    void EndFrame() {
-        Debug::EndFrame();
-        World::EndFrame();
-    }
-
-    void CleanUp() {
-        Systems::CleanUp();
-        World::CleanUp();
-        Renderer::CleanUp();
     }
 }

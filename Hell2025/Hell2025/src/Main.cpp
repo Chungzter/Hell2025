@@ -13,7 +13,7 @@
 
 #include "Hell/Backend/BackEnd.h"
 #include "Unloved/Unloved.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include <iostream>
 #include "Hell/Logging.h"
 
@@ -29,7 +29,7 @@ int main2() {
     return 0;
 }*/
 
-int main() {
+/*int main() {
     std::cout << "\x1B[2J\x1B[H";
     std::cout << "We are all alone on life's journey, held captive by the limitations of human consciousness.\n";
 
@@ -62,7 +62,7 @@ int main() {
         if (!Hell::AssetLoader::LoadingComplete()) {
             Hell::AssetLoader::Update();
             Unloved::UpdateLoadingScreen();
-            Renderer::RenderLoadingScreen();
+            Unloved::Renderer::RenderLoadingScreen();
 
             // Loading complete?
             if (Hell::AssetLoader::LoadingComplete()) {
@@ -81,5 +81,39 @@ int main() {
 
     Unloved::CleanUp();
     Hell::BackEnd::CleanUp();
+    return 0;
+}*/
+
+int main() {
+    std::cout << "\x1B[2J\x1B[H";
+    std::cout << "We are all alone on life's journey, held captive by the limitations of human consciousness.\n";
+
+    // Engine Init
+    if (!Hell::BackEnd::Init(API::OPENGL, WindowedMode::WINDOWED, "Unloved")) {
+        return -1;
+    }
+
+    // Game Init
+    if (!Unloved::Init()) {
+        return -1;
+    }
+
+    // Program loop
+    while (Hell::BackEnd::WindowIsOpen()) {
+
+        Hell::BackEnd::BeginFrame();
+
+        Unloved::BeginFrame();
+        Unloved::Update();
+        Unloved::Render();
+        Unloved::EndFrame();
+
+        Hell::BackEnd::EndFrame();
+    }
+
+    // Clean Up
+    Unloved::CleanUp();
+    Hell::BackEnd::CleanUp();
+
     return 0;
 }

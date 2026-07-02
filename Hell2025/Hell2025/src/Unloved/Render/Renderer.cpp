@@ -19,7 +19,7 @@
 
 namespace Audio = Hell::Audio;
 
-namespace Renderer {
+namespace Unloved::Renderer {
 
     std::vector<bool> g_freeWoundMaskIndices;
 
@@ -51,14 +51,8 @@ namespace Renderer {
             Logging::ToDo() << "Vulkan TODO: Renderer::InitMain()";
         }
 
-        //g_rendererSettingsSet.houseEditor.rendererOverrideState = RendererOverrideState::CAMERA_NDOTL;
-        //g_rendererSettingsSet.houseEditor.drawGrass = false;
-        //
-        //g_rendererSettingsSet.mapHeightEditor.rendererOverrideState = RendererOverrideState::CAMERA_NDOTL;
-        //g_rendererSettingsSet.mapHeightEditor.drawGrass = false;
-        //
-        //g_rendererSettingsSet.mapObjectEditor.rendererOverrideState = RendererOverrideState::CAMERA_NDOTL;
-        //g_rendererSettingsSet.mapObjectEditor.drawGrass = true;
+        UploadVertexData();
+        InitWoundMaskArray();
     }
 
     void RenderLoadingScreen() {

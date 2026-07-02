@@ -13,7 +13,7 @@
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/World/World.h"
 
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
 
 namespace Audio = Hell::Audio;

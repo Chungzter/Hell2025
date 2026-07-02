@@ -23,8 +23,8 @@
 #include "Unloved/Systems/Pathfinding/AStarMap.h"
 #include "Unloved/World/World.h"
 
-#include "Renderer/Renderer.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Common/CreateInfo.h"
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Common/Types.h"

@@ -9,8 +9,8 @@
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/ObjectId.h"
 
-#include "Legacy/Renderer/Renderer.h"
-#include "Legacy/Renderer/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Legacy/World/LegacyWorld.h"
 #include "Util.h"
 

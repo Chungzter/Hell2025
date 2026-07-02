@@ -6,7 +6,7 @@ namespace Audio = Hell::Audio;
 #include "Unloved/Editor/Editor.h"
 #include "Util/Util.h"
 
-namespace Renderer {
+namespace Unloved::Renderer {
     struct RendererSettingsSet {
         RendererSettings game;
         RendererSettings houseEditor;

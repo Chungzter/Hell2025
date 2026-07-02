@@ -3,8 +3,8 @@
 #include "Hell/Input.h"
 #include "Hell/Math/Math.h"
 
-#include "Legacy/Renderer/Renderer.h"
-#include "Legacy/Renderer/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
 
 #include "Unloved/Debug/Debug.h"
 

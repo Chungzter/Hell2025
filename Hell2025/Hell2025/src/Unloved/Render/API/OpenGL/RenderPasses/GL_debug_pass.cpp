@@ -1,6 +1,6 @@
 #include "../GL_renderer.h"
-#include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
 #include "Hell/Physics/Physics.h"
 #include "World/LegacyWorld.h"
 
@@ -16,7 +16,7 @@ using namespace Hell;
 namespace OpenGLRenderer {
 
     void DebugPass() {
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         DebugDraw::UploadVertexData(); // Calling here as the last possible moment to capture all debug geometry submitted within previous render passes
 
@@ -30,7 +30,7 @@ namespace OpenGLRenderer {
         OpenGLShader* shader3D = OpenGL::ResourceManager::GetShaderPtr("DebugVertex3D");
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
 
-        if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+        if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
             gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBufferRE");
         }
 
@@ -98,7 +98,7 @@ namespace OpenGLRenderer {
     }
 
     void DebugViewPass() {
-        RendererSettings& rendererSettings = Renderer::GetCurrentRendererSettings();
+        RendererSettings& rendererSettings = Unloved::Renderer::GetCurrentRendererSettings();
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         OpenGLFrameBuffer* indirectDiffuseFbo = OpenGL::ResourceManager::GetFrameBufferPtr("IndirectDiffuse");
@@ -135,7 +135,7 @@ namespace OpenGLRenderer {
 
 			uint32_t attachmentHandle = 0;
 
-			switch (Renderer::GetRendererMode()) {
+			switch (Unloved::Renderer::GetRendererMode()) {
 			    case RendererMode::OLD_DEFERRED: attachmentHandle = OpenGL::ResourceManager::GetFrameBuffer("GBuffer").GetColorAttachmentHandleByName("Lighting"); break;
 			    case RendererMode::RE_STYLE:     attachmentHandle = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE").GetColorAttachmentHandleByName("Lighting");    break;
 			}
@@ -163,7 +163,7 @@ namespace OpenGLRenderer {
 
             OpenGLFrameBuffer& waterFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Water");
 
-            if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+            if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
 				OpenGLFrameBuffer& gBufferRE = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
 				OpenGLShader& shader = OpenGL::ResourceManager::GetShader("DebugViewRE");
 

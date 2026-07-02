@@ -393,7 +393,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Player\Player_items.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_ladder.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_update.cpp" />
-    <ClCompile Include="src\Legacy\Renderer\Renderer_settings.cpp" />
+    <ClCompile Include="src\Unloved\Render\Renderer_settings.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\MeshBuffer.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\MidiFile.cpp">
       <ObjectFileName>$(IntDir)Hell_MidiFile.obj</ObjectFileName>
@@ -540,8 +540,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Player\Player_ui.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_view_weapon.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_weapon_logic.cpp" />
-    <ClCompile Include="src\Legacy\Renderer\RenderDataManager.cpp" />
-    <ClCompile Include="src\Legacy\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Unloved\Render\RenderDataManager.cpp" />
+    <ClCompile Include="src\Unloved\Render\Renderer.cpp" />
     <ClCompile Include="src\Unloved\Camera\Camera.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\Animation.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\SkinnedModel.cpp" />
@@ -655,6 +655,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Objects\ObjectEnums.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\BoneSegment.h" />
     <ClInclude Include="src\Unloved\Physics\PhysicsEnums.h" />
+    <ClInclude Include="src\Unloved\ProgramState.h" />
     <ClInclude Include="src\Unloved\Render\RendererEnums.h" />
     <ClInclude Include="src\Unloved\Render\RendererSettings.h" />
     <ClInclude Include="src\Hell\Render\RendererTypes.h" />
@@ -888,8 +889,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Editor\Gizmo.h" />
     <ClInclude Include="src\Unloved\Maps\MapFile.h" />
     <ClInclude Include="src\Unloved\Maps\MapFileFormat.h" />
-    <ClInclude Include="src\Legacy\Renderer\RenderDataManager.h" />
-    <ClInclude Include="src\Legacy\Renderer\Renderer.h" />
+    <ClInclude Include="src\Unloved\Render\RenderDataManager.h" />
+    <ClInclude Include="src\Unloved\Render\Renderer.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\Animation.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\SkinnedModel.h" />
     <ClInclude Include="src\Legacy\Timer.hpp" />

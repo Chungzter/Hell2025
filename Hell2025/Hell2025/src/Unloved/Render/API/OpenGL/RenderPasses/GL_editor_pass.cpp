@@ -1,8 +1,8 @@
 #include "../GL_renderer.h"
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Viewport/ViewportManager.h"
-#include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
 
 #include "Unloved/Editor/Gizmo.h"
 
@@ -11,9 +11,9 @@ namespace OpenGLRenderer {
 
 
     void EditorPass() {
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
-        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("SolidColor");

@@ -2,8 +2,8 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Editor/Editor.h"
-#include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Session/Session.h"
 #include "Hell/Time.h"
@@ -38,12 +38,12 @@ namespace OpenGLRenderer {
 
         if (Unloved::Editor::IsOpen()) return;
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLFrameBuffer* fogFbo = OpenGL::ResourceManager::GetFrameBufferPtr("Fog");
         OpenGLTexture3D* perlinNoiseTexture = OpenGL::ResourceManager::GetTexture3DPtr("PerlinNoise");
 
-        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         if (!fogFbo) return;

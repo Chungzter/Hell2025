@@ -7,7 +7,7 @@
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
-#include "Legacy/Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Hell/Math/Math.h"
 #include "Hell/Physics/Physics.h"
 #include "Unloved/ObjectId.h"

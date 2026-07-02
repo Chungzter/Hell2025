@@ -1,7 +1,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -82,7 +82,7 @@ namespace OpenGLRenderer {
 
 
     void OutlinePass() {
-        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         OpenGLFrameBuffer* outlineFBO = OpenGL::ResourceManager::GetFrameBufferPtr("Outline");
@@ -114,7 +114,7 @@ namespace OpenGLRenderer {
             glDisable(GL_BLEND);
             OpenGL::BindShader("OutlineMask");
             OpenGL::SetUniformInt("u_viewportIndex", i);
-            for (const RenderItem& renderItem : RenderDataManager::GetRenderItemsOutline()) {
+            for (const RenderItem& renderItem : Unloved::RenderDataManager::GetRenderItemsOutline()) {
                 OpenGL::SetUniformMat4("u_modelMatrix", renderItem.modelMatrix);
                 Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertex);

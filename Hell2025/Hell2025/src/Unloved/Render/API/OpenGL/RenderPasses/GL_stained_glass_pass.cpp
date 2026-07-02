@@ -1,8 +1,8 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Session/Session.h"
-#include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
 
@@ -17,14 +17,14 @@ namespace OpenGLRenderer {
 
         OpenGLRasterizerStateManager::ForceRasterizerState("GlassPass");
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("StainedGlass");
         OpenGLShader* compositeShader = OpenGL::ResourceManager::GetShaderPtr("GlassComposite");
         OpenGLFrameBuffer* miscFullSizeFrameBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("MiscFullSize");
         OpenGLShadowMap* flashLightShadowMapsFBO = OpenGL::ResourceManager::GetShadowMapPtr("FlashlightShadowMaps");
 
-        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         if (!shader) return;
@@ -55,7 +55,7 @@ namespace OpenGLRenderer {
 
             // Sort by distance to camera
             static std::vector<RenderItem> sortedRenderItems;
-            sortedRenderItems = RenderDataManager::GetRenderItemsStainedGlass();
+            sortedRenderItems = Unloved::RenderDataManager::GetRenderItemsStainedGlass();
 
             std::sort(sortedRenderItems.begin(), sortedRenderItems.end(), [player](RenderItem& a, RenderItem& b) {
                 float distA = glm::distance(player->GetCameraPosition(), glm::vec3(a.modelMatrix[3]));

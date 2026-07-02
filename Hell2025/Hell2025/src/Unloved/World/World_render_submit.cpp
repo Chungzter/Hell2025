@@ -34,8 +34,8 @@
 #include "Unloved/Objects/Traversal/Staircase.h"
 #include "Unloved/Session/Session.h"
 
-#include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
 
 namespace Unloved::World {
 

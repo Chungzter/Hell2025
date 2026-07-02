@@ -8,7 +8,7 @@
 
 #include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Session/Session.h"

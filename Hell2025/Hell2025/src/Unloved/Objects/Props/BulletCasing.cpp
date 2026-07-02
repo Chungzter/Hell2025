@@ -5,7 +5,7 @@
 #include "Hell/Common/Random.h"
 #include "Hell/Physics/Physics.h"
 #include "Unloved/Render/RendererConstants.h"
-#include "Legacy/Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 
 namespace Unloved {
 

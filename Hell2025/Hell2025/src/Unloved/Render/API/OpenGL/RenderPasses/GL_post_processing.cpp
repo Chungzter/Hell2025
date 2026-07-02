@@ -1,5 +1,5 @@
 #include "../GL_renderer.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "World/LegacyWorld.h"
 
 namespace OpenGLRenderer {
@@ -37,7 +37,7 @@ namespace OpenGLRenderer {
     }
 
     void PostProcessingPass() {
-        RendererSettings& rendererSettings = Renderer::GetCurrentRendererSettings();
+        RendererSettings& rendererSettings = Unloved::Renderer::GetCurrentRendererSettings();
         RendererOverrideState state = rendererSettings.rendererOverrideState;
 
         if (state == RendererOverrideState::NONE ||

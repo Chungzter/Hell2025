@@ -4,7 +4,7 @@
 #include "Hell/Logging.h"
 
 #include "Legacy/File/JSON.h"
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 
 #include "Unloved/Maps/MapFile.h"
 #include "Unloved/World/World.h"

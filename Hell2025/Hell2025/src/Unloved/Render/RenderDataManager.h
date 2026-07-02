@@ -15,7 +15,7 @@ struct DecalPaintingInfo {
     int textureArrayIndex = 0;
 };
 
-namespace RenderDataManager {
+namespace Unloved::RenderDataManager {
     using namespace Unloved;
 
     void BeginFrame();

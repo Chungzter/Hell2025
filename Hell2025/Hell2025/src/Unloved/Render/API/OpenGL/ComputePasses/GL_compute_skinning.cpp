@@ -1,6 +1,6 @@
 #include "../GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Session/Session.h" // remove me when u can
 #include "World/LegacyWorld.h" // remove me when u can
 #include "Util.h"
@@ -28,7 +28,7 @@ namespace OpenGLRenderer {
         // Calculate total amount of vertices to skin and allocate space
         uint32_t totalVertexCount = 0;
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
-        for (const RenderItem& renderItem : RenderDataManager::GetCombinedSkinnedRenderItems()) {
+        for (const RenderItem& renderItem : Unloved::RenderDataManager::GetCombinedSkinnedRenderItems()) {
             Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
             if (!mesh) continue;
 
@@ -46,10 +46,10 @@ namespace OpenGLRenderer {
 
         OpenGL::BindShader("ComputeSkinning");
 
-        const std::vector<glm::mat4>& skinningTransforms = RenderDataManager::GetSkinningTransforms();
+        const std::vector<glm::mat4>& skinningTransforms = Unloved::RenderDataManager::GetSkinningTransforms();
         skinningTransformsSSBO->Update(skinningTransforms.size() * sizeof(glm::mat4), &skinningTransforms[0]);
 
-        for (const RenderItem& renderItem : RenderDataManager::GetCombinedSkinnedRenderItems()) {
+        for (const RenderItem& renderItem : Unloved::RenderDataManager::GetCombinedSkinnedRenderItems()) {
             uint32_t meshId = renderItem.meshId;
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
             if (!mesh) continue;

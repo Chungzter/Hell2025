@@ -2,7 +2,7 @@
 #include "Hell/Common/Bit.h"
 #include "Hell/Math/Rotation.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
 #include "Unloved/World/World.h"
 

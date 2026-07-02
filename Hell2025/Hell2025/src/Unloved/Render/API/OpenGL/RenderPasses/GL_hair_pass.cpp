@@ -4,10 +4,10 @@
 #include "Hell/Common/String.h"
 #include "Unloved/Config/Config.h"
 #include "Unloved/Viewport/ViewportManager.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Hell/Audio.h"
 namespace Audio = Hell::Audio;
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "Unloved/World/World.h"
 #include "Unloved/Debug/Debug.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -24,7 +24,7 @@ namespace OpenGLRenderer {
     void RenderHairLayer(int peelCount);
 
     void UpdateHairDebugInput() {
-        RendererSettings& renderSettings = Renderer::GetCurrentRendererSettings();
+        RendererSettings& renderSettings = Unloved::Renderer::GetCurrentRendererSettings();
         int peelCount = renderSettings.depthPeelCount;
         if (Input::KeyPressed(HELL_KEY_RIGHT) && peelCount < 7) {
             Audio::PlayAudio("UI_Select.wav", 1.0f);
@@ -47,8 +47,8 @@ namespace OpenGLRenderer {
     void HairPass() {
         ProfilerOpenGLZoneFunction();
 
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-        const RendererSettings& renderSettings = Renderer::GetCurrentRendererSettings();
+        const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
+        const RendererSettings& renderSettings = Unloved::Renderer::GetCurrentRendererSettings();
         const Resolutions& resolutions = Config::GetResolutions();
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");

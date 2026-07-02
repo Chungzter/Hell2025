@@ -95,7 +95,7 @@ namespace Hell::ResourceManager {
     Texture* GetTextureByName(const std::string& name);
     Texture* GetTextureByBindlessIndex(int32_t bindlessIndex);
     int32_t GetTextureBindlessIndexByName(const std::string& name, bool ignoreWarning = true);
-    void ReserveTextureStorage(size_t textureCount);
+    void FreeTextureCPUMemory();
 
     TextureArray& CreateTextureArray(const std::string& name);
     TextureArray& GetTextureArray(const std::string& name);

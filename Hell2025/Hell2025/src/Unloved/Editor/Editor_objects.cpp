@@ -6,7 +6,7 @@
 #include "Hell/Math/Ray.h"
 #include "Hell/Physics/Physics.h"
 
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Debug/DebugDraw.h"

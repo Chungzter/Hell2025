@@ -1,5 +1,5 @@
 #include "../GL_renderer.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "World/LegacyWorld.h"
 
 #include "Hell/Backend/BackEnd.h"
@@ -21,8 +21,8 @@ namespace OpenGLRenderer {
 	void PlasticPass() {
 		ProfilerOpenGLZoneFunction();
 
-		const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-		const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsPlastic();
+		const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
+		const std::vector<RenderItem>& renderItems = Unloved::RenderDataManager::GetRenderItemsPlastic();
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         OpenGLFrameBuffer* miscFullSizeFbo = OpenGL::ResourceManager::GetFrameBufferPtr("MiscFullSize");
@@ -139,8 +139,8 @@ namespace OpenGLRenderer {
 
 		ProfilerOpenGLZoneFunction();
 
-		const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-		const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+		const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
+		const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
 		OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
 		OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("Plastic");

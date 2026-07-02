@@ -24,8 +24,8 @@
 #include "Unloved/World/World.h"
 #include "Unloved/Systems/PianoPlayback/PianoPlaybackManager.h"
 
-#include "Renderer/Renderer.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
 
 #include "World/LegacyWorld.h"
 

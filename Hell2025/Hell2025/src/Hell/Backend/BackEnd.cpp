@@ -19,10 +19,12 @@
 #include "Hell/AssetCompiler/AssetCompiler.h"
 #include "Hell/AssetLoader/AssetLoader.h"
 #include "Hell/Input.h"
+#include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/ResourceManagement/TextureUploader.h"
 #include "Hell/Time.h"
+
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
 namespace InputMulti = Hell::InputMulti;
@@ -33,6 +35,9 @@ namespace Time = Hell::Time;
 #ifdef _WIN32
 #include <windows.h>
 #include <tlhelp32.h>
+#ifdef ERROR
+#undef ERROR
+#endif
 #endif
 
 // Prevent accidentally selecting integrated GPU
@@ -51,6 +56,15 @@ namespace Hell::BackEnd {
     void CheckForRenderDoc();
 
     bool Init(API api, WindowedMode windowMode, const std::string& title) {
+        Logging::EnableLevel(Logging::Level::INIT);
+        Logging::EnableLevel(Logging::Level::DEBUG);
+        Logging::EnableLevel(Logging::Level::ERROR);
+        Logging::EnableLevel(Logging::Level::FATAL);
+        Logging::EnableLevel(Logging::Level::TODO);
+        Logging::EnableLevel(Logging::Level::WARNING);
+        Logging::EnableLevel(Logging::Level::FUNCTION);
+        Logging::EnableLevel(Logging::Level::SUPPORT);
+
         g_api = api;
         g_title = title;
         CheckForRenderDoc();        // <--- COMMENT OUT THIS

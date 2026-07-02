@@ -3,7 +3,7 @@
 #include "Hell/Logging.h"
 
 #include "Unloved/Systems/Map/MapManager.h"
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/World/World.h"

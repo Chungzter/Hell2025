@@ -21,7 +21,7 @@
 #include "Unloved/World/World.h"
 
 #include "Unloved/Common/Constants.h"
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
 
 namespace Audio = Hell::Audio;

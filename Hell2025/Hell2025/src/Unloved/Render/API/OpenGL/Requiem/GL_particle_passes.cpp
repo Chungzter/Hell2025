@@ -1,8 +1,8 @@
 #include "../GL_renderer.h"
 #include "Unloved/Session/Session.h"
 #include "Hell/Common/Random.h"
-#include "Renderer/Renderer.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 
@@ -99,7 +99,7 @@ namespace OpenGLRenderer {
     void DrawParticles() {
         ProfilerOpenGLZoneFunction();
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = OpenGL::ResourceManager::GetCubemapView("SkyboxNightSky");
         OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
@@ -182,7 +182,7 @@ namespace OpenGLRenderer {
     void BubblesPass() {
         //ProfilerOpenGLZoneFunction();
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = OpenGL::ResourceManager::GetCubemapView("SkyboxNightSky");
         OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");

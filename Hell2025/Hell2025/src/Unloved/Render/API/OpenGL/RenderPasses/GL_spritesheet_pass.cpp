@@ -1,14 +1,14 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Debug/DebugDraw.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Util/Util.h"
 #include "World/LegacyWorld.h"
 #include "Unloved/World/World.h"
 
 #include "Unloved/Session/Session.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
@@ -19,7 +19,7 @@ namespace OpenGLRenderer {
     void SpriteSheetPass() {
         //ProfilerOpenGLZoneFunction();
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("SpriteSheet");
         Model* primitives = Hell::ResourceManager::GetModelByName("Primitives");
         if (!primitives || primitives->GetMeshIndices().empty()) return;
@@ -29,7 +29,7 @@ namespace OpenGLRenderer {
         Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
         if (!mesh) return;
 
-        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         gBuffer.Bind();

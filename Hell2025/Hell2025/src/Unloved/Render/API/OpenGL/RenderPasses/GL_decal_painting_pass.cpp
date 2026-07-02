@@ -3,7 +3,7 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Editor/Editor.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -18,7 +18,7 @@ namespace OpenGLRenderer {
 
         if (Editor::IsOpen()) return;
 
-        const std::vector<DecalPaintingInfo>& decalPaintingInfoSet = RenderDataManager::GetDecalPaintingInfo();
+        const std::vector<DecalPaintingInfo>& decalPaintingInfoSet = Unloved::RenderDataManager::GetDecalPaintingInfo();
         for (const DecalPaintingInfo& decalPaintingInfo : decalPaintingInfoSet) {
 
             OpenGLFrameBuffer* decalPaintingFBO = OpenGL::ResourceManager::GetFrameBufferPtr("DecalPainting");
@@ -41,7 +41,7 @@ namespace OpenGLRenderer {
 
             Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
 
-            const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+            const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
             glm::mat4 viewMatrix = viewportData[0].view;
             glm::mat4 projectionView = viewportData[0].projectionView;
 
@@ -71,7 +71,7 @@ namespace OpenGLRenderer {
 
             projectionView = proj * view;
 
-            const std::vector<RenderItem>& skinnedRenderItems = RenderDataManager::GetCombinedSkinnedRenderItems();
+            const std::vector<RenderItem>& skinnedRenderItems = Unloved::RenderDataManager::GetCombinedSkinnedRenderItems();
 
             for (const RenderItem& renderItem : skinnedRenderItems) {
 

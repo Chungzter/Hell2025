@@ -13,8 +13,8 @@
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "Util/Util.h"
-#include "Renderer/RenderDataManager.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
 #include "World/LegacyWorld.h"
 
 struct GrassVertex {
@@ -133,7 +133,7 @@ namespace OpenGLRenderer {
     void GrassPass() {
         ProfilerOpenGLZoneFunction();
 
-        RendererSettings& rendererSettings = Renderer::GetCurrentRendererSettings();
+        RendererSettings& rendererSettings = Unloved::Renderer::GetCurrentRendererSettings();
         if (!rendererSettings.drawGrass) return;
 
         //return;
@@ -173,7 +173,7 @@ namespace OpenGLRenderer {
 
             Unloved::Frustum& frustum = viewport->GetFrustum();
 
-            const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+            const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
             glm::vec3 viewPos = viewportData[viewportIndex].inverseView[3];
 
             int maxChunkDrawDistance = 3;
@@ -293,7 +293,7 @@ namespace OpenGLRenderer {
 
     void RenderGrass(int viewportIndex) {
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLSSBO* bladeositionsSSBO = OpenGL::ResourceManager::GetSSBOPtr("BladePositions");
         OpenGLShader* geometryShader = OpenGL::ResourceManager::GetShaderPtr("Grass");

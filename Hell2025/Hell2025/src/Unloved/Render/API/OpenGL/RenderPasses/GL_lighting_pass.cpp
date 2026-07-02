@@ -10,7 +10,7 @@
 #include "Unloved/Systems/Ocean/Ocean.h"
 
 #include "World/LegacyWorld.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 
 #include "../../../../../../res/shaders/common/gl_fixed_bindings.glsl"
 
@@ -60,7 +60,7 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformFloat("u_viewportHeight", gBuffer->GetHeight());
         OpenGL::SetUniformInt("u_tileXCount", gBuffer->GetWidth() / TILE_SIZE);
         OpenGL::SetUniformInt("u_tileYCount", gBuffer->GetHeight() / TILE_SIZE);
-        OpenGL::SetUniformBool("u_sampleProbes", Renderer::GetCurrentRendererSettings().enableIrradianceProbeSampling);
+        OpenGL::SetUniformBool("u_sampleProbes", Unloved::Renderer::GetCurrentRendererSettings().enableIrradianceProbeSampling);
 
         if (Unloved::LegacyWorld::HasOcean()) {
             OpenGL::SetUniformFloat("u_oceanHeight", Ocean::GetOceanOriginY());

@@ -4,7 +4,7 @@
 #include "Hell/Common/Random.h"
 #include "Hell/Logging.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 
 namespace Unloved {
 

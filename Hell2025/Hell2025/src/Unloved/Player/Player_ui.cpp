@@ -6,8 +6,8 @@
 #include "Hell/UI/UIBackEnd.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "Legacy/Renderer/RenderDataManager.h"
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
 
 #include "Unloved/Config/Config.h"
 #include "Unloved/Debug/Debug.h"

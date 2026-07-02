@@ -6,7 +6,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Systems/House/HouseClipping.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
-#include "Legacy/Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
 

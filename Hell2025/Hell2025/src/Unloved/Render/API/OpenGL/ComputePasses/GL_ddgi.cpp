@@ -7,8 +7,8 @@
 #include "Hell/Time.h"
 
 #include "Unloved/Common/Constants.h"
-#include "Legacy/Renderer/Renderer.h"
-#include "Legacy/Renderer/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Legacy/Util/Util.h"
 
 #include "Unloved/Debug/DebugDraw.h"
@@ -233,13 +233,13 @@ namespace OpenGLRenderer {
 		OpenGL::BindSSBO(7, "ViewportData");
 
 		OpenGL::BindShader("ProbeRelevance");
-		OpenGL::SetUniformVec3("u_viewPos", RenderDataManager::GetViewportData()[0].viewPos);
+		OpenGL::SetUniformVec3("u_viewPos", Unloved::RenderDataManager::GetViewportData()[0].viewPos);
 		OpenGL::SetUniformBool("u_msaaRenderer", false); // TODO: remove me from shader
-		OpenGL::SetUniformBool("u_octNormals", Renderer::GetRendererMode() == RendererMode::RE_STYLE);
+		OpenGL::SetUniformBool("u_octNormals", Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE);
 
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
-		if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+		if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
 			OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
 			int32_t quarterWidth = (gBuffer.GetWidth() + 3) / 4;
 			int32_t quarterHeight = (gBuffer.GetHeight() + 3) / 4;
@@ -383,7 +383,7 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformFloat("u_pointCloudSpacing", ddgiVolume.GetPointCloudSpacing());
         OpenGL::SetUniformInt("u_pointCount", (int32_t)ddgiVolume.GetPointCloudCount());
         OpenGL::SetUniformInt("u_frameIndex", frameIndex);
-        OpenGL::SetUniformBool("u_useSH", Renderer::GetCurrentRendererSettings().irradianceUsesSH);
+        OpenGL::SetUniformBool("u_useSH", Unloved::Renderer::GetCurrentRendererSettings().irradianceUsesSH);
 
         // These can go soon:
         const Unloved::PointCloud& pointCloud = ddgiVolume.GetPointClound();
@@ -485,7 +485,7 @@ namespace OpenGLRenderer {
         if (!gBuffer) return;
         if (!shader) return;
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         const Unloved::PointCloud& pointCloud = ddgiVolume.GetPointClound();
 
@@ -509,7 +509,7 @@ namespace OpenGLRenderer {
 
 		OpenGLFrameBuffer* fbo = nullptr;
 
-		if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+		if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
 			fbo = OpenGL::ResourceManager::GetFrameBufferPtr("GBufferRE");
 			if (!fbo) return;
 
@@ -551,8 +551,8 @@ namespace OpenGLRenderer {
         if (!shader) return;
 
 		OpenGL::BindShader("DebugProbes");
-		OpenGL::SetUniformInt("u_probeDebugState", static_cast<int>(Renderer::GetCurrentRendererSettings().probeDebugState));
-        OpenGL::SetUniformBool("u_useSH", Renderer::GetCurrentRendererSettings().irradianceUsesSH);
+		OpenGL::SetUniformInt("u_probeDebugState", static_cast<int>(Unloved::Renderer::GetCurrentRendererSettings().probeDebugState));
+        OpenGL::SetUniformBool("u_useSH", Unloved::Renderer::GetCurrentRendererSettings().irradianceUsesSH);
 
         OpenGLTextureArray& probeDistanceTexture = GetProbeDistanceTextureArray();
         OpenGL::BindTextureUnit(0, probeDistanceTexture.GetHandle());
@@ -571,7 +571,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* fbo = nullptr;
 
 
-		if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+		if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
 			fbo = OpenGL::ResourceManager::GetFrameBufferPtr("GBufferRE");
 			if (!fbo) return;
 
@@ -592,7 +592,7 @@ namespace OpenGLRenderer {
 
         glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
         Model* sphereModel = Hell::ResourceManager::GetModelByName("Sphere");
         if (!sphereModel || sphereModel->GetMeshIndices().empty()) return;
         if (sphereModel->GetMeshCount() == 0) return;
@@ -622,7 +622,7 @@ namespace OpenGLRenderer {
         if (!fbo) return;
         if (!shader) return;
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGL::BindShader("RaytraceScene");
         OpenGL::SetUniformMat4("u_projectionMatrix", viewportData[0].projection);
@@ -641,7 +641,7 @@ namespace OpenGLRenderer {
     void ComputeIrradianceTexture(Unloved::DDGIVolume& ddgiVolume) {
         ProfilerOpenGLZoneFunctionLightGreen();
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLFrameBuffer* fbo = OpenGL::ResourceManager::GetFrameBufferPtr("IndirectDiffuse");
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("ProbeIrradianceTexture");
@@ -653,7 +653,7 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformMat4("u_projectionMatrix", viewportData[0].projection);
         OpenGL::SetUniformVec3("u_cameraPos", viewportData[0].viewPos);
         OpenGL::SetUniformMat4("u_viewMatrix", viewportData[0].view);
-        OpenGL::SetUniformBool("u_useSH", Renderer::GetCurrentRendererSettings().irradianceUsesSH);
+        OpenGL::SetUniformBool("u_useSH", Unloved::Renderer::GetCurrentRendererSettings().irradianceUsesSH);
 
         OpenGL::BindSSBO(0, "EntityInstances");
         OpenGL::BindSSBO(1, "TriangleData");
@@ -668,7 +668,7 @@ namespace OpenGLRenderer {
 
         OpenGL::BindImageTexture(0, fbo->GetColorAttachmentHandleByName("Color"), GL_WRITE_ONLY, GL_R11F_G11F_B10F);
 
-        if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+        if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
             OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBufferRE");
             if (!gBuffer) return;
 

@@ -14,7 +14,7 @@ namespace Audio = Hell::Audio;
 #include "Unloved/Config/Config.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Player/Player.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Util/Util.h"
 #include "Hell/UI/UIBackEnd.h"
 #include "Hell/UI/TextBlitter.h"
@@ -32,7 +32,7 @@ namespace Audio = Hell::Audio;
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "World/LegacyWorld.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include <unordered_map>
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
@@ -621,12 +621,12 @@ namespace OpenGLRenderer {
     void UpdateSSBOS() {
         OpenGL::UpdateSSBO("Samplers", sizeof(GLuint64) * OpenGL::BackEnd::GetBindlessTextureIDs().size(), OpenGL::BackEnd::GetBindlessTextureIDs().data());
 
-        const RendererData& rendererData = RenderDataManager::GetRendererData();
-        const std::vector<BloodDecalInstanceData>& bloodScreenSpaceDecalInstances = RenderDataManager::GetBloodScreenSpaceDecalInstanceData();
-        const std::vector<GPULight>& gpuLights = RenderDataManager::GetGPULights();
-        const std::vector<RenderItem>& instanceData = RenderDataManager::GetInstanceData();
-        const std::vector<ViewportData>& playerData = RenderDataManager::GetViewportData();
-        const std::vector<glm::mat4>&oceanPatchTransforms = RenderDataManager::GetOceanPatchTransforms();
+        const RendererData& rendererData = Unloved::RenderDataManager::GetRendererData();
+        const std::vector<BloodDecalInstanceData>& bloodScreenSpaceDecalInstances = Unloved::RenderDataManager::GetBloodScreenSpaceDecalInstanceData();
+        const std::vector<GPULight>& gpuLights = Unloved::RenderDataManager::GetGPULights();
+        const std::vector<RenderItem>& instanceData = Unloved::RenderDataManager::GetInstanceData();
+        const std::vector<ViewportData>& playerData = Unloved::RenderDataManager::GetViewportData();
+        const std::vector<glm::mat4>&oceanPatchTransforms = Unloved::RenderDataManager::GetOceanPatchTransforms();
 
         GLuint zero = 0;
 
@@ -674,7 +674,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(gBuffer, viewport);
-                OpenGL::SetUniformMat4("u_projectionView", RenderDataManager::GetViewportData()[i].projectionView);
+                OpenGL::SetUniformMat4("u_projectionView", Unloved::RenderDataManager::GetViewportData()[i].projectionView);
                 glDrawArrays(GL_LINE_STRIP, 0, 16);
             }
         }
@@ -684,7 +684,7 @@ namespace OpenGLRenderer {
     void RenderGame() {
         ProfilerOpenGLFrame();
 
-		if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+		if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
 			RenderGameREStyle();
 			return;
 		}
@@ -765,15 +765,15 @@ namespace OpenGLRenderer {
         InventoryGaussianPass();
 
         // Disabling lighting actually just clears it, that way you don't have fog and shit everywhere
-        if (!Renderer::GetCurrentRendererSettings().enableLighting) {
+        if (!Unloved::Renderer::GetCurrentRendererSettings().enableLighting) {
             OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
             gBuffer.Bind();
             gBuffer.ClearAttachment("Lighting", 0, 0, 0, 0);
         }
 
-        if (Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
-        if (Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
-        if (Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
+        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
+        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
+        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
 
         PostProcessingPass();
 
@@ -880,7 +880,7 @@ namespace OpenGLRenderer {
             return;
         }
 
-        const std::vector<RenderItem>& instanceData = RenderDataManager::GetInstanceData();
+        const std::vector<RenderItem>& instanceData = Unloved::RenderDataManager::GetInstanceData();
 
         for (const DrawIndexedIndirectCommand& command : commands) {
             int viewportIndex = command.baseInstance >> VIEWPORT_INDEX_SHIFT;
@@ -1071,7 +1071,7 @@ namespace OpenGLRenderer {
         return ProfilerOpenGLTotalCPU();
     }
 
-    uint32_t GetTileCount() { return Renderer::GetTileCount(); }
-	uint32_t GetTileCountX() { return Renderer::GetTileCountX(); }
-	uint32_t GetTileCountY() { return Renderer::GetTileCountY(); }
+    uint32_t GetTileCount() { return Unloved::Renderer::GetTileCount(); }
+	uint32_t GetTileCountX() { return Unloved::Renderer::GetTileCountX(); }
+	uint32_t GetTileCountY() { return Unloved::Renderer::GetTileCountY(); }
 }

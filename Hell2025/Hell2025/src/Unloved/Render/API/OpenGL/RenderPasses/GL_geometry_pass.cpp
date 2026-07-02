@@ -1,6 +1,6 @@
 #include "../GL_renderer.h"
-#include "Renderer/Renderer.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "World/LegacyWorld.h"
 
 #include "Hell/Backend/BackEnd.h"
@@ -51,8 +51,8 @@ namespace OpenGLRenderer {
         MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
         glBindVertexArray(meshBuffer.GetVAO());
 
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
@@ -91,8 +91,8 @@ namespace OpenGLRenderer {
         glBindBuffer(GL_ARRAY_BUFFER, meshBuffer.GetVBO());
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBuffer.GetEBO());
 
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         // Default
         OpenGL::SetUniformBool("u_alphaDiscard", false);
@@ -164,8 +164,8 @@ namespace OpenGLRenderer {
     void GeometryPass() {
         ProfilerOpenGLZoneFunction();
 
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("GBuffer");
@@ -342,7 +342,7 @@ namespace OpenGLRenderer {
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         // Debug draw ragdolls
-        if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
+        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
             OpenGLShader* ragdollShader = OpenGL::ResourceManager::GetShaderPtr("DebugRagdoll");
             OpenGL::BindShader("DebugRagdoll");
             OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
@@ -402,8 +402,8 @@ namespace OpenGLRenderer {
     void MirrorGeometryPass() {
         ProfilerOpenGLZoneFunction();
 
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         OpenGLFrameBuffer* gBufferBackup = OpenGL::ResourceManager::GetFrameBufferPtr("GBufferBackup");
@@ -542,7 +542,7 @@ namespace OpenGLRenderer {
             OpenGL::SetUniformMat4("u_mirrorViewMatrix", mirror->GetViewMatrix(i));
             OpenGL::SetUniformVec4("u_mirrorClipPlane", mirror->GetClipPlane(i));
 
-            const std::vector<RenderItem>& renderItems = RenderDataManager::GetRenderItemsProcedural();
+            const std::vector<RenderItem>& renderItems = Unloved::RenderDataManager::GetRenderItemsProcedural();
             for (const RenderItem& renderItem : renderItems) {
 
                 Mesh* mesh = meshBufferProcedural.GetMeshById(renderItem.meshId);

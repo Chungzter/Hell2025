@@ -1,7 +1,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Renderer/Renderer.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "Hell/Logging.h"
@@ -45,8 +45,8 @@ namespace OpenGLRenderer {
 	void P90MagColor() {
 		ProfilerOpenGLZoneFunction();
 
-		const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
-		const std::vector<RenderItem>& renderItems = RenderDataManager::GetNonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent();
+		const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
+		const std::vector<RenderItem>& renderItems = Unloved::RenderDataManager::GetNonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent();
 
 		OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
 		OpenGLFrameBuffer* depthPeeledTransparencyFbo = OpenGL::ResourceManager::GetFrameBufferPtr("DepthPeeledTransparency");

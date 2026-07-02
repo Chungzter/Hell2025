@@ -4,7 +4,7 @@
 #include "Hell/Common/Enum.h"
 #include "Hell/Time.h"
 
-#include "Legacy/Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 
 #include "Unloved/ObjectId.h"
 #include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"

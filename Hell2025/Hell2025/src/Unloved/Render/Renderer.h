@@ -8,7 +8,7 @@
 
 #include "Unloved/Common/Types.h"
 
-namespace Renderer {
+namespace Unloved::Renderer {
     void Init();
     void InitMain();
     void CleanUp();

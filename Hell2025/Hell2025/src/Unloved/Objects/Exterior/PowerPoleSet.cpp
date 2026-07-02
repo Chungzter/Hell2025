@@ -4,7 +4,7 @@
 #include "Hell/Logging.h"
 #include "Hell/Math/Rotation.h"
 #include "Hell/Physics/Physics.h"
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "Legacy/Util/Util.h"
 #include "Unloved/Objects/Exterior/Wire.h"
 #include "Unloved/World/World.h"

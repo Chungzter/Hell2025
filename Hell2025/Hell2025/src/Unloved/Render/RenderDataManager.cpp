@@ -31,14 +31,14 @@
 #include "Unloved/Render/RendererConstants.h"
 #include "Timer.hpp"
 #include "Unloved/Common/Constants.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 //
 
 namespace Input = Hell::Input;
 
 using namespace Hell;
 
-namespace RenderDataManager {
+namespace Unloved::RenderDataManager {
     using namespace Unloved;
 
     DrawCommandsSet g_drawCommandsSet;

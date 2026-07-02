@@ -9,7 +9,7 @@
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/World/World.h"
 
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "World/LegacyWorld.h"
 
 namespace OpenGLRenderer {
@@ -92,7 +92,7 @@ namespace OpenGLRenderer {
         //
         //shader->SetMat4("u_model", glm::mat4(1.0f));
         //
-        //for (const HouseRenderItem& renderItem : RenderDataManager::GetHouseRenderItems()) {
+        //for (const HouseRenderItem& renderItem : Unloved::RenderDataManager::GetHouseRenderItems()) {
         //    glDrawElementsBaseVertex(
         //        GL_TRIANGLES,
         //        renderItem.indexCount,
@@ -210,7 +210,7 @@ namespace OpenGLRenderer {
 			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (viewport->IsVisible()) {
 				OpenGLRenderer::SetViewport(gBuffer, viewport);
-				OpenGL::SetUniformMat4("u_projectionView", RenderDataManager::GetViewportData()[i].projectionView);
+				OpenGL::SetUniformMat4("u_projectionView", Unloved::RenderDataManager::GetViewportData()[i].projectionView);
                 OpenGL::SetUniformInt("u_lightIndex", lightIndex);
                 glDrawArrays(GL_LINE_STRIP, 0, 16);
 			}

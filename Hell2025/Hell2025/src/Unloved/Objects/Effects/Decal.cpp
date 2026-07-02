@@ -5,7 +5,7 @@
 #include "Hell/Logging.h"
 #include "Hell/Math/Rotation.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Legacy/Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Legacy/Util/Util.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Render/RendererConstants.h"

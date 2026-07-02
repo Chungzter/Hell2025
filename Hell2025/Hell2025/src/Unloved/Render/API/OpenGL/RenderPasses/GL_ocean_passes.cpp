@@ -4,10 +4,10 @@
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "World/LegacyWorld.h"
 
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
@@ -80,7 +80,7 @@ namespace OpenGLRenderer {
 
             OpenGLRenderer::SetViewport(waterFrameBuffer, viewport);
 
-            const ViewportData& viewportData = RenderDataManager::GetViewportData()[i];
+            const ViewportData& viewportData = Unloved::RenderDataManager::GetViewportData()[i];
             glm::mat4 projectionMatrix = viewportData.projectionReverseZ;
             glm::mat4 viewMatrix = viewportData.view;
             glm::vec3 viewPos = viewportData.viewPos;
@@ -194,7 +194,7 @@ namespace OpenGLRenderer {
         ProfilerOpenGLZoneFunction();
         if (!Unloved::LegacyWorld::HasOcean()) return;
 
-        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         OpenGLFrameBuffer& waterFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Water");
@@ -226,7 +226,7 @@ namespace OpenGLRenderer {
 
         OpenGLFrameBuffer& miscFullSizeFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("MiscFullSize");
 
-        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         OpenGL::BindShader("GaussianBlur");
@@ -251,7 +251,7 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer& miscFullSizeFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("MiscFullSize");
         OpenGLFrameBuffer& waterFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Water");
 
-        std::string gBufferName = (Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         OpenGL::BindShader("OceanUnderwaterComposite");

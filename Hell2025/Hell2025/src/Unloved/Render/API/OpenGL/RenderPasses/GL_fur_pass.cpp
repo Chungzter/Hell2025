@@ -3,7 +3,7 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Objects/Props/GameObject.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/World/World.h"
 
@@ -35,7 +35,7 @@ namespace OpenGLRenderer {
         if (!lowResShadowMaps) return;
         if (!flashLightShadowMapsFBO) return;
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
 
         glBindVertexArray(meshBuffer.GetVAO());
@@ -130,7 +130,7 @@ namespace OpenGLRenderer {
         //    if (viewport->IsVisible()) {
         //        OpenGLRenderer::SetViewport(gBuffer, viewport);
         //
-        //        std::vector<AnimatedGameObject*> animatedgameObjects = RenderDataManager::GetAnimatedGameObjectToSkin();
+        //        std::vector<AnimatedGameObject*> animatedgameObjects = Unloved::RenderDataManager::GetAnimatedGameObjectToSkin();
         //
         //        for (AnimatedGameObject* animatedGameObject : animatedgameObjects) {
         //
@@ -172,7 +172,7 @@ namespace OpenGLRenderer {
     void FurPass() {
 
 
-        const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
+        const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         OpenGLFrameBuffer* hairFrameBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("Hair");
@@ -188,7 +188,7 @@ namespace OpenGLRenderer {
         if (!hiResShadowMaps) return;
         if (!flashLightShadowMapsFBO) return;
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
@@ -265,7 +265,7 @@ namespace OpenGLRenderer {
             if (viewport->IsVisible()) {
                 OpenGLRenderer::SetViewport(hairFrameBuffer, viewport);
 
-                std::vector<AnimatedGameObject*> animatedgameObjects = RenderDataManager::GetAnimatedGameObjectToSkin();
+                std::vector<AnimatedGameObject*> animatedgameObjects = Unloved::RenderDataManager::GetAnimatedGameObjectToSkin();
 
                 for (AnimatedGameObject* animatedGameObject : animatedgameObjects) {
 

@@ -6,7 +6,7 @@
 
 // todo remove
 #include "Unloved/Debug/Debug.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
@@ -24,11 +24,11 @@ namespace OpenGLRenderer {
         OpenGLFrameBuffer* gBuffer = nullptr;
         std::string outputTextureName = UNDEFINED_STRING;
 
-        if (Renderer::GetRendererMode() == RendererMode::OLD_DEFERRED) {
+        if (Unloved::Renderer::GetRendererMode() == RendererMode::OLD_DEFERRED) {
             gBuffer = &OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
             outputTextureName = "Lighting";
         }
-        if (Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+        if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
             gBuffer = &OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
             outputTextureName = "Lighting";
         }

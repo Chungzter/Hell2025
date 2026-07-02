@@ -1,8 +1,8 @@
 #include "Hell/Audio.h"
 #include "Hell/Backend/BackEnd.h"
 
-#include "Legacy/Renderer/RenderDataManager.h"
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Config/Config.h"

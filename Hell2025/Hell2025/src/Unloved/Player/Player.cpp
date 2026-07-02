@@ -7,7 +7,7 @@
 #include "Hell/Logging.h"
 
 #include "Unloved/Common/Constants.h"
-#include "Legacy/Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Bible/Bible.h"

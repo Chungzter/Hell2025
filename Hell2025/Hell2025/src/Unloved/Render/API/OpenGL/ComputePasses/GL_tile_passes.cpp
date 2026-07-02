@@ -1,5 +1,5 @@
 #include "../GL_renderer.h"
-#include "Renderer/Renderer.h"
+#include "Unloved/Render/Renderer.h"
 #include "Unloved/Systems/Blood/BloodSystem.h"
 #include "World/LegacyWorld.h"
 #include "Unloved/World/World.h"
@@ -13,7 +13,7 @@ namespace OpenGLRenderer {
 
         uint32_t depthHandle = 0;
 
-		switch (Renderer::GetRendererMode()) {
+		switch (Unloved::Renderer::GetRendererMode()) {
 		    case RendererMode::OLD_DEFERRED: depthHandle = OpenGL::ResourceManager::GetFrameBuffer("GBuffer").GetDepthAttachmentHandle();   break;
             case RendererMode::RE_STYLE:     depthHandle = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE").GetDepthAttachmentHandle(); break;
 		}

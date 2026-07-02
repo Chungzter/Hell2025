@@ -2,7 +2,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Blood/BloodSystem.h"
-#include "Renderer/RenderDataManager.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
 
@@ -18,7 +18,7 @@ namespace OpenGLRenderer {
 
         OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
-        const std::vector<ViewportData>& viewportData = RenderDataManager::GetViewportData();
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("VatBlood");
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
