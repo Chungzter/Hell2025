@@ -5,6 +5,8 @@
 #include "Hell/MemoryTracker/MemoryTracker.h"
 #include "Hell/ResourceManagement/ResourceID.h"
 
+#include "Unloved/Debug/Debug.h"
+
 #include <algorithm>
 #include <iostream>
 #include <unordered_map>
@@ -437,9 +439,10 @@ namespace OpenGL::ResourceManager {
 
         if (allSucceeded) {
             std::cout << "Hotloaded shaders\n";
+            Debug::BlitQuickDebugMessage("HOTLOADED SHADERS");
         }
         else {
-            Logging::Error() << failedShaders << "\n";
+            Debug::BlitQuickDebugMessage(failedShaders);
         }
     }
 

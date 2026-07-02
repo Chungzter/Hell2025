@@ -260,7 +260,7 @@ void AnimatedGameObject::UpdateDirtyBounds() {
     m_skinnedAABBLastFrame = m_skinnedAABB;
     m_hasSkinnedAABBLastFrame = true;
 
-    DebugDraw::DrawAABB(GetSkinnedAABB(), aabbChanged ? GREEN : RED);
+    //DebugDraw::DrawAABB(GetSkinnedAABB(), aabbChanged ? GREEN : RED);
 }
 
 void AnimatedGameObject::SyncRagdollToAnimation() {

@@ -126,6 +126,7 @@ namespace OpenGLRenderer {
 
     void BindShadowMapsRE();
     void RenderFullscreenTriangle();
+    void PresentFinalImage(OpenGLFrameBuffer& presentFbo);
 
 
     // Debug passes

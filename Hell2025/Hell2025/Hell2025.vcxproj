@@ -84,7 +84,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\VkBootstrap;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -95,7 +95,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\GLFW\lib\Release;vendor\compressonator\lib;vendor\fmod\lib;vendor\Vulkan;vendor\physx\lib\debug;vendor\openmesh\lib;vendor\SDL3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;fmod_vc.lib;assimp-vc143-mt.lib;Compressonator_MD_DLL.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;PhysXTask_static_64.lib;PhysXPvdSDK_static_64.lib;PVDRuntime_64.lib;PhysXCharacterKinematic_static_64.lib;vulkan-1.lib;shaderc_combinedd.lib;liblz4_static.lib;OpenMeshCore.lib;OpenMeshTools.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;fmod_vc.lib;assimp-vc143-mt.lib;Compressonator_MD_DLL.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;PhysXTask_static_64.lib;PhysXPvdSDK_static_64.lib;PVDRuntime_64.lib;PhysXCharacterKinematic_static_64.lib;vulkan-1.lib;shaderc_combined.lib;liblz4_static.lib;OpenMeshCore.lib;OpenMeshTools.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
       <AdditionalOptions>/PROFILE  /IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -123,7 +123,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;TRACY_ENABLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\VkBootstrap;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -141,7 +141,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
       <OptimizeReferences>false</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\GLFW\lib\Release;vendor\compressonator\lib;vendor\fmod\lib;vendor\Vulkan;vendor\physx\lib\release;vendor\fluidsynth\lib;vendor\openmesh\lib;vendor\SDL3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;Compressonator_MD.lib;CMP_Framework_MD.lib;assimp-vc143-mt.lib;fmod_vc.lib;vulkan-1.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXFoundation_64.lib;PhysXTask_static_64.lib;PhysXPvdSDK_static_64.lib;PVDRuntime_64.lib;PhysXExtensions_static_64.lib;PhysXCharacterKinematic_static_64.lib;fluidsynth-3.lib;dinput8.lib;dxguid.lib;OpenMeshCore.lib;OpenMeshTools.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;Compressonator_MD.lib;CMP_Framework_MD.lib;assimp-vc143-mt.lib;fmod_vc.lib;vulkan-1.lib;shaderc_combined.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXFoundation_64.lib;PhysXTask_static_64.lib;PhysXPvdSDK_static_64.lib;PVDRuntime_64.lib;PhysXExtensions_static_64.lib;PhysXCharacterKinematic_static_64.lib;fluidsynth-3.lib;dinput8.lib;dxguid.lib;OpenMeshCore.lib;OpenMeshTools.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <Profile>false</Profile>
@@ -169,7 +169,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;TRACY_ENABLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\VkBootstrap;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -186,7 +186,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
       <OptimizeReferences>false</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\GLFW\lib\Release;vendor\compressonator\lib;vendor\fmod\lib;vendor\Vulkan;vendor\physx\lib\release;vendor\fluidsynth\lib;vendor\openmesh\lib;vendor\SDL3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;Compressonator_MD.lib;CMP_Framework_MD.lib;assimp-vc143-mt.lib;fmod_vc.lib;vulkan-1.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXFoundation_64.lib;PhysXTask_static_64.lib;PhysXPvdSDK_static_64.lib;PVDRuntime_64.lib;PhysXExtensions_static_64.lib;PhysXCharacterKinematic_static_64.lib;fluidsynth-3.lib;dinput8.lib;dxguid.lib;OpenMeshCore.lib;OpenMeshTools.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;Compressonator_MD.lib;CMP_Framework_MD.lib;assimp-vc143-mt.lib;fmod_vc.lib;vulkan-1.lib;shaderc_combined.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXFoundation_64.lib;PhysXTask_static_64.lib;PhysXPvdSDK_static_64.lib;PVDRuntime_64.lib;PhysXExtensions_static_64.lib;PhysXCharacterKinematic_static_64.lib;fluidsynth-3.lib;dinput8.lib;dxguid.lib;OpenMeshCore.lib;OpenMeshTools.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <Profile>true</Profile>
@@ -213,6 +213,30 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Render\API\OpenGL\GL_texture_uploader.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\GL_util.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\GL_rasterizer_state_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\VK_back_end.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\VK_texture_uploader.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_command_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_deletion_queue.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_device_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_instance_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_memory_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_raytracing_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_resource_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_swapchain_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_sync_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_acceleration_structure.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_allocated_image.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_buffer.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_descriptor_set.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_generic_mesh.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_mesh_buffer.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_pipeline.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_raytracing_pipeline.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_sampler.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_shader.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_texture.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\vk_tools.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\vk_types.cpp" />
     <ClCompile Include="src\Unloved\LazyKeyPresses.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_blit_road.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_compute_ftt.cpp" />
@@ -223,6 +247,14 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_tile_passes.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_debug.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\LoadingScreen\Passes\VK_loading_screen_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_visibility_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Shared\Passes\VK_present_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Shared\Passes\VK_ui_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_draw.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_render_state.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\vk_render_states.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_renderer.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\GL_support.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_util.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_ddgi.cpp" />
@@ -586,7 +618,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="vendor\midifile\src\Options.cpp" />
     <ClCompile Include="vendor\stb_image\stb_image.cpp" />
     <ClCompile Include="vendor\tinyexr\tinyexr.cpp" />
-    <ClCompile Include="vendor\VkBootstrap\VkBootstrap.cpp" />
+    <ClCompile Include="vendor\Vulkan\Include\Volk\volk.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\common\distance_fog.glsl" />
@@ -595,6 +627,13 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.frag" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.geom" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.vert" />
+    <None Include="res\shaders\Vulkan\VK_fullscreen_triangle.vert" />
+    <None Include="res\shaders\Vulkan\VK_present.frag" />
+    <None Include="res\shaders\Vulkan\VK_solid_color.frag" />
+    <None Include="res\shaders\Vulkan\VK_visibility_alpha_discard.frag" />
+    <None Include="res\shaders\Vulkan\VK_visibility.frag" />
+    <None Include="res\shaders\Vulkan\VK_visibility.vert" />
+    <None Include="res\shaders\Vulkan\VK_visibility_debug.frag" />
     <None Include="res\shaders\OpenGL\GL_blood_screenspace_decals.frag" />
     <None Include="res\shaders\OpenGL\GL_blood_screenspace_decals.vert" />
     <None Include="res\shaders\OpenGL\GL_probe_relocation.comp" />
@@ -654,6 +693,32 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_texture_3d.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\GL_texture_uploader.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_timer.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\VK_back_end.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\VK_texture_uploader.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_command_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_deletion_queue.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_device_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_instance_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_memory_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_raytracing_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_resource_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_swapchain_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_sync_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_acceleration_structure.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_allocated_buffer.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_allocated_image.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_buffer.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_descriptor_set.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_generic_mesh.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_mesh_buffer.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_pipeline.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_raytracing_pipeline.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_sampler.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_shader.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_texture.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\vk_common.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\vk_tools.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\vk_types.h" />
     <ClInclude Include="src\Hell\Backend\Integration\SDL.h" />
     <ClInclude Include="src\Unloved\Player\PlayerTypes.h" />
     <ClInclude Include="src\Unloved\Render\DrawCommandSets.h" />
@@ -697,6 +762,13 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Render\API\OpenGL\GL_back_end.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\GL_support.h" />
     <ClInclude Include="src\Unloved\Render\API\OpenGL\GL_renderer.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_descriptor_indices.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_draw.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_frame_data.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_push_constants.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_render_state.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\vk_render_states.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_renderer.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\GL_util.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_cubemapView.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_mesh_buffer_old.h" />
@@ -903,8 +975,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="vendor\magic_enum\MagicEnum.hpp" />
     <ClInclude Include="vendor\stb_image\stb_image.h" />
     <ClInclude Include="vendor\stb_image\stb_image_write.h" />
-    <ClInclude Include="vendor\VkBootstrap\VkBootstrap.h" />
-    <ClInclude Include="vendor\VkBootstrap\VkBootstrapDispatch.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="src\Unloved\Notes.txt" />

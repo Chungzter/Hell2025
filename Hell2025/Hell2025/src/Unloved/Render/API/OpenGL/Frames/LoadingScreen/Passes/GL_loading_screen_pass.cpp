@@ -17,6 +17,6 @@ namespace OpenGLRenderer {
 
         UIPass();
 
-        OpenGL::BlitToDefaultFrameBuffer(&presentFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        PresentFinalImage(presentFbo);
     }
 }

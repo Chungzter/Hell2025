@@ -367,6 +367,8 @@ void Light::UpdateMatricesAndFrustum() {
 
 	const glm::mat4 projectionMatrix = glm::perspective(fovRadians, aspectRatio, SHADOW_NEAR_PLANE, m_createInfo.radius);
 	const glm::mat4 projectionMatrixReverseZ = Hell::Projection::ReverseZPerspective(fovRadians, aspectRatio, SHADOW_NEAR_PLANE);
+	glm::mat4 faceYFlip = glm::mat4(1.0f);
+	faceYFlip[1][1] = -1.0f;
 
 	const glm::vec3 targets[6] = {
 		glm::vec3(1.0f, 0.0f, 0.0f),  glm::vec3(-1.0f, 0.0f, 0.0f),
@@ -382,8 +384,8 @@ void Light::UpdateMatricesAndFrustum() {
 
 	for (int i = 0; i < 6; i++) {
 		m_viewMatrix[i] = glm::lookAt(m_createInfo.position, m_createInfo.position + targets[i], ups[i]);
-		m_projectionTransforms[i] = projectionMatrix * m_viewMatrix[i];
-		m_projectionTransformsReverseZ[i] = projectionMatrixReverseZ * m_viewMatrix[i];
+		m_projectionTransforms[i] = faceYFlip * projectionMatrix * m_viewMatrix[i];
+		m_projectionTransformsReverseZ[i] = faceYFlip * projectionMatrixReverseZ * m_viewMatrix[i];
 		m_frustum[i].Update(m_projectionTransforms[i]);
 	}
 }

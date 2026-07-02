@@ -3,6 +3,7 @@
 vec3 GetWorldRay(vec2 fragCoordWindow, mat4 inverseProjectionView, vec3 viewPos, vec2 viewportOrigin, vec2 viewportSize) {
     vec2 fragCoord = fragCoordWindow - viewportOrigin;
     vec2 ndc = (fragCoord / viewportSize) * 2.0 - 1.0;
+    ndc.y = -ndc.y;
     vec4 worldH = inverseProjectionView * vec4(ndc, 1.0, 1.0);
     vec3 worldPos = worldH.xyz / worldH.w;
     return normalize(worldPos - viewPos);
@@ -66,6 +67,7 @@ vec2 WorldToScreen(vec3 worldPos, mat4 projView, vec2 viewportPosition, vec2 vie
 
     // Convert from NDC (-1 to 1) to normalized screen UVs (0 to 1)
     vec2 screenUV = ndc.xy * 0.5 + 0.5;
+    screenUV.y = 1.0 - screenUV.y;
 
     // 🔥 Ensure precise viewport size scaling
     return screenUV * viewportSize + viewportPosition;
@@ -135,7 +137,7 @@ uint ComputeViewportIndexFromSplitscreenMode(ivec2 pixelCoords, ivec2 outputSize
         return 0u;
     }
 
-    uint iy = uint(pixelCoords.y < halfH);  // NOTE: flipped
+    uint iy = uint(pixelCoords.y >= halfH);
     uint ix = uint(pixelCoords.x >= halfW);
 
     if (splitscreenMode == 1) {
@@ -179,7 +181,9 @@ vec2 ViewportUVToGlobalUV(vec2 viewportUV, ViewportData v) {
 }
 
 vec3 RayDirectionFromViewportUV(vec2 viewportUV, mat4 inverseProjection, mat4 inverseView) {
-    vec4 clipFar = vec4(viewportUV * 2.0 - 1.0, 1.0, 1.0); // ZERO_TO_ONE
+    vec2 clipXY = viewportUV * 2.0 - 1.0;
+    clipXY.y = -clipXY.y;
+    vec4 clipFar = vec4(clipXY, 1.0, 1.0); // ZERO_TO_ONE
     vec4 viewFarH = inverseProjection * clipFar;
     vec3 viewFar = viewFarH.xyz / max(viewFarH.w, 0.000001);
     vec3 dir_view = viewFarH.xyz / max(viewFarH.w, 1e-6);
@@ -229,7 +233,9 @@ bool PointInSphere(vec3 p, vec3 center, float radius) {
 }
 
 vec3 ReconstructWorldPos(vec2 uv, float depth, mat4 invProjectionView) {
-    vec4 clip = vec4(uv * 2.0 - 1.0, depth, 1.0);
+    vec2 clipXY = uv * 2.0 - 1.0;
+    clipXY.y = -clipXY.y;
+    vec4 clip = vec4(clipXY, depth, 1.0);
     vec4 worldH = invProjectionView * clip;
     return worldH.xyz / worldH.w;
 }

@@ -127,7 +127,7 @@ namespace OpenGLRenderer {
 		state.depthTestEnabled = true;
 		state.blendEnable = false;
 		state.cullfaceEnable = true;
-		state.cullfaceMode = GL_BACK;
+		state.cullfaceMode = GL_FRONT;
         OpenGLRasterizerStateManager::ForceRasterizerState(state);
 
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
@@ -148,7 +148,7 @@ namespace OpenGLRenderer {
         solidShadowState.depthTestEnabled = true;
         solidShadowState.blendEnable = false;
         solidShadowState.cullfaceEnable = true;
-        solidShadowState.cullfaceMode = GL_BACK;
+        solidShadowState.cullfaceMode = GL_FRONT;
 
         OpenGLRasterizerState alphaShadowState = solidShadowState;
         alphaShadowState.cullfaceEnable = false;

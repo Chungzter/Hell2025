@@ -194,7 +194,7 @@ vec3 GetWorldPosition(ivec2 px) {
     mat4 inverseProjectionViewReverseZ = viewportData.inverseProjectionViewReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
-    return ReconstructWorldPos(screenUV, depth, inverseProjectionViewReverseZ);
+    return ReconstructWorldPos(viewportUV, depth, inverseProjectionViewReverseZ);
 }
 
 vec3 GetEmissive(ivec2 px) {

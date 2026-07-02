@@ -22,6 +22,7 @@ ivec2 px = ivec2(gl_GlobalInvocationID.xy);
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
     vec2 ndcXY = viewportUV * 2.0 - 1.0;
+    ndcXY.y = -ndcXY.y;
     vec4 ndcPos = vec4(ndcXY, depth, 1.0);
     vec4 viewPos = inverseProjection * ndcPos;
     float viewZ = viewPos.z / viewPos.w;

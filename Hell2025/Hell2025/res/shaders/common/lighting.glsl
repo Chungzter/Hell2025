@@ -119,6 +119,7 @@ vec3 GetSpotlightLighting(vec3 lightPos, vec3 lightDir, vec3 lightColor, float r
 float SpotlightShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir, vec3 fragWorldPos, vec3 lightPos, vec3 viewPos, sampler2DArray shadowMapArray, int layerIndex) {
     // Project and bias
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w * 0.5 + 0.5;
+    projCoords.y = 1.0 - projCoords.y;
     float currentDepth = projCoords.z;
 
     // Fold slope bias and constant bias into one
@@ -145,6 +146,7 @@ float SpotlightShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 light
 float SpotlightShadowCalculationFast(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir, vec3 fragWorldPos, vec3 lightPos, vec3 viewPos, sampler2DArray shadowMapArray, int layerIndex) {
     // Project and bias
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w * 0.5 + 0.5;
+    projCoords.y = 1.0 - projCoords.y;
     float currentDepth = projCoords.z;
 
     // Fold slope bias and constant bias into one
@@ -187,6 +189,78 @@ vec3 ApplyCookie(mat4 LightViewProj, vec3 worldPos, vec3 lightPos, vec3 lightCol
     float cookieFactor = texture(cookieTexture, clampedUV).r;
     return lightColor * cookieFactor * fadeFactor * distanceFactor;
 }
+
+vec3 GetFlashlightContribution(int flashlightIndex, uint viewportIndex, float flashlightModifer, mat4 flashlightProjectionView, vec3 flashlightDir, vec3 flashlightPosition, vec3 flashlightViewPos, bool flashlightIsInShop, vec3 flashlightColor, vec3 normal, vec3 worldPos, vec3 baseColor, float roughness, float metallic, float fragDistance, float oceanHeight, sampler2D flashlightCookieTexture, sampler2DArray flashlightShadowMapArrayTexture) {
+    if (flashlightModifer <= 0.05) return vec3(0.0);
+
+    int layerIndex = flashlightIndex;
+    vec3 spotLightPos = flashlightPosition;
+    vec3 spotLightDir = flashlightDir;
+    vec3 spotLightColor = flashlightColor;
+    float spotLightRadius = 25.0;
+    float spotLightStregth = 4.5;
+
+    if (worldPos.y < oceanHeight - 0.1) {
+        spotLightStregth *= 2.0;
+    }
+
+    // Prevent flashlight being drawn on the back of your head when viewed by another player
+    if (flashlightIndex != int(viewportIndex)) {
+        spotLightPos += spotLightDir * 0.2;
+
+        // and weaken it for other players
+        spotLightColor *= 0.825;
+    }
+
+    float innerAngle = cos(radians(5.0 * flashlightModifer));
+    float outerAngle = cos(radians(20.5));
+
+    if (flashlightIsInShop) {
+        spotLightRadius = 8;
+        outerAngle = cos(radians(50.0));
+    }
+
+    mat4 lightProjectionView = flashlightProjectionView;
+    vec3 spotLighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, spotLightRadius, spotLightStregth, innerAngle, outerAngle, normal, worldPos, baseColor, roughness, metallic, flashlightViewPos, lightProjectionView);
+
+    vec4 FragPosLightSpace = lightProjectionView * vec4(worldPos, 1.0);
+    float shadow = 0;
+
+    // If this flashlight is in the shop AND this flashlight belongs to the current viewport
+    if (flashlightIndex == int(viewportIndex) && flashlightIsInShop) {
+        // do nothing
+    }
+    else {
+        shadow = SpotlightShadowCalculation(FragPosLightSpace, normal, spotLightDir, worldPos, spotLightPos, flashlightViewPos, flashlightShadowMapArrayTexture, layerIndex);
+    }
+
+    vec3 cookie = ApplyCookie(lightProjectionView, worldPos, spotLightPos, spotLightColor, spotLightRadius, flashlightCookieTexture);
+
+    float cookieStartDistance = 1.0;
+    float cookieEndDistance = 10.0;
+    float cookieDistanceExponent = 2;
+    float cookieMinValue = 0.5;
+    float cookieMaxValue = 5.0;
+    float cookieDistScale;
+    if(fragDistance <= cookieStartDistance) {
+        cookieDistScale = cookieMinValue;
+    } else if(fragDistance >= cookieEndDistance) {
+        cookieDistScale = cookieMaxValue;
+    } else {
+        float t = (fragDistance - cookieStartDistance) / (cookieEndDistance - cookieStartDistance);
+        cookieDistScale = mix(cookieMinValue, cookieMaxValue, pow(t, cookieDistanceExponent));
+    }
+    spotLighting *= cookieDistScale;
+
+    spotLighting *= vec3(1 - shadow);
+
+    if (!flashlightIsInShop) {
+        spotLighting *= cookie;
+    }
+
+    return vec3(spotLighting) * flashlightModifer;
+}
+
 
 
 vec3 gridSamplingDisk[20] = vec3[](

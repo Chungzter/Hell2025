@@ -188,7 +188,7 @@ namespace UIBackEnd {
         renderItem.clipMaxY = (clipMaxY >= 0) ? clipMaxY : H;
     }
 
-    const std::vector<RenderItemUI>& GetRenderItems() {
-        return g_renderItems;
-    }
+    const std::vector<Vertex2D>& GetVertices() { return g_vertices; }
+    const std::vector<uint32_t>& GetIndices() { return g_indices; }
+    const std::vector<RenderItemUI>& GetRenderItems() { return g_renderItems; }
 }

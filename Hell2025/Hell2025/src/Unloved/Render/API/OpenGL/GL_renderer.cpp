@@ -361,6 +361,7 @@ namespace OpenGLRenderer {
     }
 
     void LoadShaders() {
+        OpenGL::ResourceManager::LoadShader("Present", { "GL_present.vert", "GL_present.frag" });
         OpenGL::ResourceManager::LoadShader("ChristmasLightCulling", { "GL_christmas_light_culling.comp" });
         OpenGL::ResourceManager::LoadShader("ChristmasLightsWire", { "GL_christmas_light_wire.vert", "GL_christmas_light_wire.frag" });
         OpenGL::ResourceManager::LoadShader("BlitRoad", { "GL_blit_road.comp" });
@@ -397,7 +398,6 @@ namespace OpenGLRenderer {
         OpenGL::ResourceManager::LoadShader("HeightMapPaint", { "GL_heightmap_paint.comp" });
         OpenGL::ResourceManager::LoadShader("LightCulling", { "GL_light_culling.comp" });
         OpenGL::ResourceManager::LoadShader("Lighting", { "GL_lighting.comp" });
-        OpenGL::ResourceManager::LoadShader("CSMLighting", { "GL_lighting.vert", "GL_lighting.frag" });
         OpenGL::ResourceManager::LoadShader("GaussianBlur", { "GL_gaussian_blur.comp" }); // am I needed????
         OpenGL::ResourceManager::LoadShader("Outline", { "GL_outline.vert", "GL_outline.frag" });
         OpenGL::ResourceManager::LoadShader("OutlineComposite", { "GL_outline_composite.comp" });
@@ -764,6 +764,28 @@ namespace OpenGLRenderer {
     void DrawFullscreenTriangle() {
         BindEmptyVAO();
         glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+    void PresentFinalImage(OpenGLFrameBuffer& presentFbo) {
+        OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("Present");
+        if (!shader) return;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDrawBuffer(GL_BACK);
+        glViewport(0, 0, Hell::BackEnd::GetCurrentWindowWidth(), Hell::BackEnd::GetCurrentWindowHeight());
+        glDisable(GL_SCISSOR_TEST);
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.depthMask = false;
+        state.cullfaceEnable = false;
+        state.blendEnable = false;
+        state.colorMask = true;
+        OpenGLRasterizerStateManager::ForceRasterizerState(state);
+
+        OpenGL::BindShader("Present");
+        OpenGL::BindTextureUnit(0, presentFbo.GetColorAttachmentHandleByName("Color"));
+        DrawFullscreenTriangle();
     }
 
     void DebugHack(const std::string& message) {

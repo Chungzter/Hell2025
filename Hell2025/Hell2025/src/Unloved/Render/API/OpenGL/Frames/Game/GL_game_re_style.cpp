@@ -143,8 +143,7 @@ namespace OpenGLRenderer {
 
         UIPass();
 
-        // Blit to swap chain
-        OpenGL::BlitToDefaultFrameBuffer(&presentFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        PresentFinalImage(presentFbo);
 
         ImGuiPass();
     }

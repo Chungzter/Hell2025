@@ -103,7 +103,7 @@ namespace Unloved::DirtyTracker {
                     g_dirtyLightIds.push_back(light.GetObjectId());
 
                     // Temporary debug draw function
-                    DebugDraw::DrawAABB(AABB(light.GetWorldBoundsMin(), light.GetWorldBoundsMax()), YELLOW);
+                    // DebugDraw::DrawAABB(AABB(light.GetWorldBoundsMin(), light.GetWorldBoundsMax()), YELLOW);
 
                     break;
                 }

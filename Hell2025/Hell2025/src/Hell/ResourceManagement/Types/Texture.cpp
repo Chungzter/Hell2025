@@ -1,6 +1,7 @@
 #include "Texture.h"
 
 #include "Hell/Render/API/OpenGL/GL_resource_manager.h"
+#include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/MaterialBuilder.h"
@@ -20,7 +21,10 @@ void Texture::CleanUp() {
         }
     }
     else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        // TODO
+        if (m_vulkanId != 0) {
+            VulkanResourceManager::RemoveTexture(m_vulkanId);
+            m_vulkanId = 0;
+        }
     }
 }
 
@@ -41,17 +45,19 @@ OpenGLTexture& Texture::GetGLTexture() {
     return invalid;
 }
 
-// VulkanTexture& Texture::GetVKTexture() {
-//     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-//         Logging::Error() << "Texture::GetVKTexture() was called but API is OpenGL\n";
-//     }
-//     else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-//         // TODO
-//     }
-//
-//     static VulkanTexture invalid;
-//     return invalid;
-// }
+VulkanTexture& Texture::GetVKTexture() {
+    if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+        if (m_vulkanId == 0) {
+            m_vulkanId = VulkanResourceManager::CreateTexture();
+        }
+
+        return VulkanResourceManager::GetTexture(m_vulkanId);
+    }
+
+    Logging::Error() << "Texture::GetVKTexture() was called but API is not Vulkan\n";
+    static VulkanTexture invalid;
+    return invalid;
+}
 
 void Texture::FreeCPUMemory() {
     for (TextureMip& mip : m_imageData.mips) {
@@ -129,7 +135,9 @@ size_t Texture::GetGPUAllocatedByteCount() const {
         }
     }
     else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        // TODO
+        if (VulkanTexture* texture = VulkanResourceManager::GetTexturePtr(m_vulkanId)) {
+            return texture->GetAllocatedByteCount();
+        }
     }
 
     return 0;

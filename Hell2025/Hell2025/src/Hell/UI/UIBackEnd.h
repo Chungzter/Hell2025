@@ -1,5 +1,6 @@
 #pragma once
 #include "Hell/UI/UITypes.h"
+#include "Hell/Render/VertexAttributes.h"
 
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
@@ -20,6 +21,8 @@ namespace UIBackEnd {
     void BlitTexture(BlitTextureInfo info);
     void BlitTexture(const std::string& textureName, glm::ivec2 location, Alignment alignment, glm::vec4 colorTint = glm::vec4(1, 1, 1, 1), glm::ivec2 size = glm::ivec2(-1, -1), TextureFilter textureFilter = TextureFilter::NEAREST, float rotation = 0.0f, int clipMinX = -1, int clipMinY = -1, int clipMaxX = -1, int clipMaxY = -1);
 
+    const std::vector<Vertex2D>& GetVertices();
+    const std::vector<uint32_t>& GetIndices();
     const std::vector<RenderItemUI>& GetRenderItems();
 
 }

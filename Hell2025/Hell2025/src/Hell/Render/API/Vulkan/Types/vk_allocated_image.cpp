@@ -1,0 +1,149 @@
+#include "vk_allocated_image.h"
+#include "Hell/Render/API/Vulkan/Managers/vk_command_manager.h"
+#include "Hell/Render/API/Vulkan/Managers/vk_device_manager.h"
+#include "Hell/Render/API/Vulkan/Managers/vk_memory_manager.h"
+
+VkImageAspectFlags GetImageAspectFlagsFromFormat(VkFormat format) {
+    if (format == VK_FORMAT_D32_SFLOAT || format == VK_FORMAT_D16_UNORM) {
+        return VK_IMAGE_ASPECT_DEPTH_BIT;
+    }
+    if (format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT) {
+        return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+    return VK_IMAGE_ASPECT_COLOR_BIT;
+}
+
+AllocatedImage::AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkImageUsageFlags usage, std::string debugName) {
+    VkDevice device = VulkanDeviceManager::GetDevice();
+    VmaAllocator allocator = VulkanMemoryManager::GetAllocator();
+
+    m_format = imageFormat;
+    m_extent = imageExtent;
+    m_currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    VkImageCreateInfo imageInfo = {};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.format = m_format;
+    imageInfo.extent = m_extent;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.usage = usage;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    allocInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    vmaCreateImage(allocator, &imageInfo, &allocInfo, &m_image, &m_allocation, nullptr);
+
+    VkImageViewCreateInfo viewInfo = {};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.image = m_image;
+    viewInfo.format = m_format;
+    viewInfo.subresourceRange.aspectMask = GetImageAspectFlagsFromFormat(m_format);
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    vkCreateImageView(device, &viewInfo, nullptr, &m_imageView);
+
+    // Move image to its permanent layout
+    VulkanCommandManager::SubmitImmediate([&](VkCommandBuffer cmd) {
+        VkImageMemoryBarrier2 barrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+        barrier.image = m_image;
+        barrier.subresourceRange = { GetImageAspectFlagsFromFormat(m_format), 0, 1, 0, 1 };
+        barrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+        barrier.srcAccessMask = 0;
+        barrier.dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+        barrier.dstAccessMask = VK_ACCESS_2_MEMORY_READ_BIT | VK_ACCESS_2_MEMORY_WRITE_BIT;
+
+        VkDependencyInfo dep{ VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+        dep.imageMemoryBarrierCount = 1;
+        dep.pImageMemoryBarriers = &barrier;
+        vkCmdPipelineBarrier2(cmd, &dep);
+    });
+
+    m_currentLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+    VkDebugUtilsObjectNameInfoEXT nameInfo = {};
+    nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+    nameInfo.objectType = VK_OBJECT_TYPE_IMAGE;
+    nameInfo.objectHandle = (uint64_t)m_image;
+    nameInfo.pObjectName = debugName.c_str();
+
+    auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetDeviceProcAddr(device, "vkSetDebugUtilsObjectNameEXT");
+    if (func) {
+        func(device, &nameInfo);
+    }
+}
+
+AllocatedImage::AllocatedImage(AllocatedImage&& other) noexcept {
+    m_image = other.m_image;
+    m_imageView = other.m_imageView;
+    m_allocation = other.m_allocation;
+    m_extent = other.m_extent;
+    m_format = other.m_format;
+    m_currentLayout = other.m_currentLayout;
+    m_currentAccessMask = other.m_currentAccessMask;
+    m_currentStageFlags = other.m_currentStageFlags;
+
+    // Nullify the other object so its cleanup doesn't destroy our handles
+    other.m_image = VK_NULL_HANDLE;
+    other.m_imageView = VK_NULL_HANDLE;
+    other.m_allocation = VK_NULL_HANDLE;
+}
+
+AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other) noexcept {
+    if (this != &other) {
+        m_image = other.m_image;
+        m_imageView = other.m_imageView;
+        m_allocation = other.m_allocation;
+        m_extent = other.m_extent;
+        m_format = other.m_format;
+        m_currentLayout = other.m_currentLayout;
+        m_currentAccessMask = other.m_currentAccessMask;
+        m_currentStageFlags = other.m_currentStageFlags;
+
+        other.m_image = VK_NULL_HANDLE;
+        other.m_imageView = VK_NULL_HANDLE;
+        other.m_allocation = VK_NULL_HANDLE;
+    }
+    return *this;
+}
+
+void AllocatedImage::Sync(VkCommandBuffer cmd, VkAccessFlags2 dstAccess, VkPipelineStageFlags2 dstStage) {
+    // only sync memory, no layout transition needed
+    VkMemoryBarrier2 barrier{ VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+    barrier.srcStageMask = m_currentStageFlags;
+    barrier.srcAccessMask = m_currentAccessMask;
+    barrier.dstStageMask = dstStage;
+    barrier.dstAccessMask = dstAccess;
+
+    VkDependencyInfo dep{ VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+    dep.memoryBarrierCount = 1;
+    dep.pMemoryBarriers = &barrier;
+
+    vkCmdPipelineBarrier2(cmd, &dep);
+
+    m_currentAccessMask = dstAccess;
+    m_currentStageFlags = dstStage;
+}
+
+void AllocatedImage::Cleanup() {
+    VkDevice device = VulkanDeviceManager::GetDevice();
+    VmaAllocator allocator = VulkanMemoryManager::GetAllocator();
+
+    if (m_imageView != VK_NULL_HANDLE) {
+        vkDestroyImageView(device, m_imageView, nullptr);
+    }
+    if (m_image != VK_NULL_HANDLE) {
+        vmaDestroyImage(allocator, m_image, m_allocation);
+    }
+}

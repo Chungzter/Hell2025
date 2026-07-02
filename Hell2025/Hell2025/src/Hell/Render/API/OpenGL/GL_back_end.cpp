@@ -74,7 +74,7 @@ namespace OpenGL::BackEnd {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Match Vulkan matrix shit
-        glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+        glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
 
         // Old texture baking PBO allocation disabled. Texture uploads are owned by OpenGL::TextureUploader.
 

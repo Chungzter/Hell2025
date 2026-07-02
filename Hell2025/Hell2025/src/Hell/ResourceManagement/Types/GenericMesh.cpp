@@ -1,6 +1,7 @@
 #include "GenericMesh.h"
 
 #include "Hell/Render/API/OpenGL/GL_resource_manager.h"
+#include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 
@@ -27,6 +28,16 @@ void GenericMesh::UpdateVertexData(const void* vertices, size_t vertexCount, con
 
         OpenGL::ResourceManager::GetGenericMesh(m_openGLId).UpdateVertexData(vertices, vertexCount, layout);
     }
+    if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+        if (m_vulkanId == 0) {
+            m_vulkanId = VulkanResourceManager::CreateGenericMesh();
+        }
+
+        VulkanGenericMesh* mesh = VulkanResourceManager::GetGenericMesh(m_vulkanId);
+        if (mesh) {
+            mesh->UpdateVertexData(vertices, vertexCount, layout);
+        }
+    }
 }
 
 void GenericMesh::UpdateIndexData(const std::vector<uint32_t>& indices) {
@@ -40,12 +51,26 @@ void GenericMesh::UpdateIndexData(const std::vector<uint32_t>& indices) {
 
         OpenGL::ResourceManager::GetGenericMesh(m_openGLId).UpdateIndexData(indices);
     }
+    if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+        if (m_vulkanId == 0) {
+            m_vulkanId = VulkanResourceManager::CreateGenericMesh();
+        }
+
+        VulkanGenericMesh* mesh = VulkanResourceManager::GetGenericMesh(m_vulkanId);
+        if (mesh) {
+            mesh->UpdateIndexData(indices);
+        }
+    }
 }
 
 void GenericMesh::CleanUp() {
     if (m_openGLId != 0) {
         OpenGL::ResourceManager::RemoveGenericMesh(m_openGLId);
         m_openGLId = 0;
+    }
+    if (m_vulkanId != 0) {
+        VulkanResourceManager::RemoveGenericMesh(m_vulkanId);
+        m_vulkanId = 0;
     }
 
     m_vertexStride = 0;

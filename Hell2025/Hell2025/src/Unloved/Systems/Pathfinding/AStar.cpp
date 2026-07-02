@@ -1,11 +1,16 @@
 #include "AStar.h"
 #include "AStarMap.h"
+#include "Hell/Backend/BackEnd.h"
 #include "Timer.hpp"
 
 void AStar::InitSearch(int startX, int startY, int destinationX, int destinationY) {
     //Timer timer("InitSearch()");
 
     ClearData();
+
+    if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+        return;
+    }
 
     m_cells.resize(AStarMap::GetCellCount());
     m_mapWidth = AStarMap::GetMapWidth();
@@ -92,6 +97,10 @@ bool AStar::SearchInitilized() {
 }
 
 void AStar::FindPath() {
+    if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+        return;
+    }
+
     if (m_destination && m_destination->obstacle) {
         return;
     }

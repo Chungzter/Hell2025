@@ -234,6 +234,10 @@ namespace AStarMap {
     }
 
     bool IsCellObstacle(int x, int y) {
+        if (Hell::BackEnd::GetAPI() == API::VULKAN || g_map.empty()) {
+            return false;
+        }
+
         if (IsInBounds(x, y)) {
             int idx = Index1D(x, y);
             return g_map[idx];

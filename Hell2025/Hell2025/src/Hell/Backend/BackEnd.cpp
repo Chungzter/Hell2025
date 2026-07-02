@@ -8,6 +8,7 @@
 #include <string>
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/Render/API/OpenGL/GL_resource_manager.h"
+#include "Hell/Render/API/Vulkan/VK_back_end.h"
 #include "Unloved/Config/Config.h"
 
 #include "Integration/GLFW.h"
@@ -78,8 +79,9 @@ namespace Hell::BackEnd {
             OpenGL::BackEnd::Init();
         }
         else if (GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan TODO: Hell::BackEnd::Init()";
-            return false;
+            if (!Vulkan::BackEnd::Init()) {
+                return false;
+            }
         }
 
         ResourceManager::Init();
@@ -115,7 +117,8 @@ namespace Hell::BackEnd {
             TextureUploader::Update();
         }
         else if (GetAPI() == API::VULKAN) {
-            // TODO
+            Vulkan::BackEnd::BeginFrame();
+            TextureUploader::Update();
         }
     }
 
@@ -131,6 +134,9 @@ namespace Hell::BackEnd {
 
         if (GetAPI() == API::OPENGL) {
             OpenGL::ResourceManager::CleanUp();
+        }
+        else if (GetAPI() == API::VULKAN) {
+            Vulkan::BackEnd::CleanUp();
         }
 
         GLFW::Destroy();

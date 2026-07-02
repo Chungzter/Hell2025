@@ -79,7 +79,7 @@ namespace Hell::AssetLoader {
         };
 
         LoadingComplete g_loadingComplete;
-        std::vector<std::string> g_loadLog;
+        std::vector<std::string> g_loadLog = { "We are all alone on life's journey, held captive by the limitations of human consciousness.\n\n" };
 
         std::vector<AnimationLoadJob> g_animationLoadJobs;
         std::vector<ModelDataLoadJob> g_modelLoadJobs;

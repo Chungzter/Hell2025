@@ -12,6 +12,7 @@ void main(void){
     vec2 position = positions[gl_VertexID];
 	gl_Position = vec4(position, 0.0, 1.0);
 	vec2 centerTexCoords = position * 0.5 + 0.5;
+	centerTexCoords.y = 1.0 - centerTexCoords.y;
 	float pixelSize = 1.0 / targetWidth;
 	for (int i=-4; i<=4; i++) {
 		blurTextureCoords[i+4] = centerTexCoords + vec2(pixelSize * i, 0.0);

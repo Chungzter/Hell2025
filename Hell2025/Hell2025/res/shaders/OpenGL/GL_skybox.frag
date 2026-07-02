@@ -17,6 +17,7 @@ vec3 GetWorldRay(vec2 fragCoordWindow, int viewportIndex) {
     vec2 viewportSize = vec2(viewportData[viewportIndex].width, viewportData[viewportIndex].height);
     vec2 fragCoord = fragCoordWindow - viewportOrigin;
     vec2 ndc = (fragCoord / viewportSize) * 2.0 - 1.0;
+    ndc.y = -ndc.y;
     mat4 inverseProjectionView = viewportData[viewportIndex].inverseProjectionView;
 
     vec4 nearH = inverseProjectionView * vec4(ndc, -1.0, 1.0);

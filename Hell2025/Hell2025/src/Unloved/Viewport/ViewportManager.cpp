@@ -97,8 +97,8 @@ namespace Unloved::ViewportManager {
                 g_viewports[3].Hide();
             }
             else if (Unloved::Session::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER) {
-                g_viewports[0].SetPosition(glm::vec2(0.0f, 0.5f));  // Top
-                g_viewports[1].SetPosition(glm::vec2(0.0f, 0.0f));  // Bottom
+                g_viewports[0].SetPosition(glm::vec2(0.0f, 0.0f));  // Top
+                g_viewports[1].SetPosition(glm::vec2(0.0f, 0.5f));  // Bottom
                 g_viewports[0].SetSize(glm::vec2(1.0f, 0.5f));
                 g_viewports[1].SetSize(glm::vec2(1.0f, 0.5f));
                 g_viewports[0].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
@@ -109,10 +109,10 @@ namespace Unloved::ViewportManager {
                 g_viewports[3].Hide();
             }
             else if (Unloved::Session::GetSplitscreenMode() == SplitscreenMode::FOUR_PLAYER) {
-                g_viewports[0].SetPosition(glm::vec2(0.0f, 0.5f));  // Top-left
-                g_viewports[1].SetPosition(glm::vec2(0.5f, 0.5f));  // Top-right
-                g_viewports[2].SetPosition(glm::vec2(0.0f, 0.0f));  // Bottom-left
-                g_viewports[3].SetPosition(glm::vec2(0.5f, 0.0f));  // Bottom-right
+                g_viewports[0].SetPosition(glm::vec2(0.0f, 0.0f));  // Top-left
+                g_viewports[1].SetPosition(glm::vec2(0.5f, 0.0f));  // Top-right
+                g_viewports[2].SetPosition(glm::vec2(0.0f, 0.5f));  // Bottom-left
+                g_viewports[3].SetPosition(glm::vec2(0.5f, 0.5f));  // Bottom-right
                 g_viewports[0].SetSize(glm::vec2(0.5f, 0.5f));
                 g_viewports[1].SetSize(glm::vec2(0.5f, 0.5f));
                 g_viewports[2].SetSize(glm::vec2(0.5f, 0.5f));

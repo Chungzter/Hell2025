@@ -118,85 +118,8 @@ void main() {
 
 
     for (int i = 0; i < 2; i++) {
-        float flashlightModifer = viewportDataArr[i].flashlightModifer;
-
-        if (flashlightModifer > 0.05) {
-            mat4 flashlightProjectionView = viewportDataArr[i].flashlightProjectionView;
-            vec4 flashlightDir = viewportDataArr[i].flashlightDir;
-            vec4 flashlightPosition = viewportDataArr[i].flashlightPosition;
-            vec3 flashlightViewPos = viewportDataArr[i].inverseView[3].xyz;
-            vec3 playerForward = -normalize(viewportDataArr[i].inverseView[2].xyz);
-            int layerIndex = i;
-		    vec3 spotLightPos = flashlightPosition.xyz;
-            vec3 camightRight = normalize(viewportDataArr[i].inverseView[0].xyz);
-		    vec3 spotLightDir = flashlightDir.xyz;
-            vec3 spotLightColor = GetFlashLightColor();
-
-            float spotLightRadius = 25.0;
-            float spotLightStregth = 4.5;
-
-            if (worldPos.y < u_oceanHeight - 0.1) {
-                spotLightStregth *= 2.0;
-            }
-
-            // Prevent flashlight being drawn on the back of your head when viewed by another player
-            if (i != viewportIndex) {
-                spotLightPos += spotLightDir * 0.2;
-
-                // and weaken it for other players
-                spotLightColor *= 0.825;
-            }
-
-            float innerAngle = cos(radians(5.0 * flashlightModifer));
-            float outerAngle = cos(radians(20.5));
-
-            bool thisFlashlightIsInShop = bool(viewportDataArr[i].isInShop);
-
-            if (thisFlashlightIsInShop) {
-                spotLightRadius = 8;
-                outerAngle = cos(radians(50.0));
-            }
-
-            mat4 lightProjectionView = flashlightProjectionView;
-            vec3 spotLighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, spotLightRadius, spotLightStregth, innerAngle, outerAngle, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, flashlightViewPos, lightProjectionView);
-
-            vec4 FragPosLightSpace = lightProjectionView * vec4(worldPos, 1.0);
-            float shadow = 0;
-
-            // If this flashlight is in the shop AND this flashlight belongs to the current viewport
-            if (i == viewportIndex && thisFlashlightIsInShop) {
-                // do nothing
-            }
-            else {
-                shadow = SpotlightShadowCalculation(FragPosLightSpace, normal.xyz, spotLightDir, worldPos, spotLightPos, flashlightViewPos, u_flashlighShadowMapArrayTexture, layerIndex);
-            }
-
-            vec3 cookie = ApplyCookie(lightProjectionView, worldPos, spotLightPos, spotLightColor, spotLightRadius, u_flashlightCookieTexture);
-
-            float cookieStartDistance = 1.0;
-            float cookieEndDistance = 10.0;
-            float cookieDistanceExponent = 2;
-            float cookieMinValue = 0.5;
-            float cookieMaxValue = 5.0;
-            float cookieDistScale;
-            if(fragDistance <= cookieStartDistance) {
-                cookieDistScale = cookieMinValue;
-            } else if(fragDistance >= cookieEndDistance) {
-                cookieDistScale = cookieMaxValue;
-            } else {
-                float t = (fragDistance - cookieStartDistance) / (cookieEndDistance - cookieStartDistance);
-                cookieDistScale = mix(cookieMinValue, cookieMaxValue, pow(t, cookieDistanceExponent));
-            }
-            spotLighting *= cookieDistScale;
-
-            spotLighting *= vec3(1 - shadow);
-
-            if (!thisFlashlightIsInShop) {
-                spotLighting *= cookie;
-            }
-            
-            directLighting += vec3(spotLighting) * flashlightModifer;
-        }
+        ViewportData flashlightViewportData = viewportDataArr[i];
+        directLighting += GetFlashlightContribution(i, viewportIndex, flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), GetFlashLightColor(), normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, fragDistance, u_oceanHeight, u_flashlightCookieTexture, u_flashlighShadowMapArrayTexture);
     }
 
     vec3 indirectDiffuse = vec3(0);

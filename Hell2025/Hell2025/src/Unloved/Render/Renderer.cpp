@@ -8,6 +8,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
+#include "Unloved/Render/API/Vulkan/VK_renderer.h"
 #include "Unloved/Config/Config.h"
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Editor/Editor.h"
@@ -28,7 +29,7 @@ namespace Unloved::Renderer {
             OpenGLRenderer::Init();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan TODO: Renderer::Init()";
+            VulkanRenderer::Init();
         }
     }
 
@@ -37,7 +38,7 @@ namespace Unloved::Renderer {
             OpenGLRenderer::CleanUp();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan TODO: Renderer::CleanUp()";
+            VulkanRenderer::CleanUp();
         }
     }
 
@@ -46,7 +47,7 @@ namespace Unloved::Renderer {
             OpenGLRenderer::InitMain();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan TODO: Renderer::InitMain()";
+            VulkanRenderer::InitMain();
         }
 
         UploadVertexData();
@@ -58,7 +59,7 @@ namespace Unloved::Renderer {
             OpenGLRenderer::RenderLoadingScreen();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan: RenderLoadingScreen()";
+            VulkanRenderer::RenderLoadingScreen();
         }
     }
 
@@ -78,7 +79,7 @@ namespace Unloved::Renderer {
             OpenGLRenderer::RenderGame();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan: RenderGame()";
+            VulkanRenderer::RenderGame();
         }
     }
 

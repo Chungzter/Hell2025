@@ -29,7 +29,9 @@ void main() {
     mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseProjectionView;
 
     // Unproject near clipping plane
-    vec4 clipSpaceNear = vec4(viewportUV * 2.0 - 1.0, -1.0, 1.0);
+    vec2 clipXY = viewportUV * 2.0 - 1.0;
+    clipXY.y = -clipXY.y;
+    vec4 clipSpaceNear = vec4(clipXY, -1.0, 1.0);
     vec4 worldNear = inverseProjectionView * clipSpaceNear;
     vec3 worldPosition = worldNear.xyz / worldNear.w;
     

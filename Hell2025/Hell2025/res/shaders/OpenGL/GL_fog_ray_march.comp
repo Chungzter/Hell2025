@@ -91,7 +91,9 @@ ivec2 ViewportUVToAtlasPixel(vec2 viewportUV, ViewportData v) {
 
 // World position reconstruction from depth (ZERO_TO_ONE)
 vec3 ReconstructWorldPosFromViewportUVDepth(vec2 viewportUV, float depth, mat4 inverseProjectionView) {
-    vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
+    vec2 clipXY = viewportUV * 2.0 - 1.0;
+    clipXY.y = -clipXY.y;
+    vec4 clip = vec4(clipXY, depth, 1.0);
     vec4 worldH = inverseProjectionView * clip;
     return worldH.xyz / max(worldH.w, 1e-6);
 }
@@ -103,6 +105,7 @@ vec3 ReconstructWorldPosFromDepth01_ZeroToOne(
     mat4 inverseView)
 {
     vec2 ndcXY = viewportUV * 2.0 - 1.0;
+    ndcXY.y = -ndcXY.y;
     float ndcZ = depth01; // already 0..1
 
     vec4 viewH = inverseProjection * vec4(ndcXY, ndcZ, 1.0);

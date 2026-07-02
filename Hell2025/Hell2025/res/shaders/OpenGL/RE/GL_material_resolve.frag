@@ -114,6 +114,7 @@ void main() {
     vec2 viewportPosition = gl_FragCoord.xy - vec2(viewportData.xOffset, viewportData.yOffset);
     vec2 viewportSize = vec2(viewportData.width, viewportData.height);
     vec2 p = viewportPosition / viewportSize * 2.0 - 1.0;
+    p.y = -p.y;
 
     vec2 s0 = clip0.xy / clip0.w;
     vec2 s1 = clip1.xy / clip1.w;
@@ -125,7 +126,7 @@ void main() {
 
     vec3 bary  = ComputeScreenBarycentrics(p, s0, s1, s2, invW);
     vec3 baryX = ComputeScreenBarycentrics(p + vec2(pixelStep.x, 0.0), s0, s1, s2, invW);
-    vec3 baryY = ComputeScreenBarycentrics(p + vec2(0.0, pixelStep.y), s0, s1, s2, invW);
+    vec3 baryY = ComputeScreenBarycentrics(p + vec2(0.0, -pixelStep.y), s0, s1, s2, invW);
 
     vec2 uv0 = vec2(v0.u, v0.v);
     vec2 uv1 = vec2(v1.u, v1.v);

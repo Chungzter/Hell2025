@@ -21,67 +21,12 @@
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
-/*int main() {
-    std::cout << "\x1B[2J\x1B[H";
-    std::cout << "We are all alone on life's journey, held captive by the limitations of human consciousness.\n";
-
-    Logging::EnableLevel(Logging::Level::INIT);
-    Logging::EnableLevel(Logging::Level::DEBUG);
-    Logging::EnableLevel(Logging::Level::ERROR);
-    Logging::EnableLevel(Logging::Level::FATAL);
-    Logging::EnableLevel(Logging::Level::TODO);
-    Logging::EnableLevel(Logging::Level::WARNING);
-	Logging::EnableLevel(Logging::Level::FUNCTION);
-	Logging::EnableLevel(Logging::Level::SUPPORT);
-
-    // Init the back-end, sub-systems, and the minimum to render loading screen
-    if (!Hell::BackEnd::Init(API::OPENGL, WindowedMode::WINDOWED, "Unloved")) {
-        std::cout << "Hell::BackEnd::Init() FAILED!\n";
-        return -1;
-    }
-    if (!Unloved::Init()) {
-        std::cout << "Unloved::Init() FAILED!\n";
-        return -1;
-    }
-
-    // Program loop
-    while (Hell::BackEnd::WindowIsOpen()) {
-
-        Hell::BackEnd::BeginFrame();
-        Unloved::BeginFrame();
-
-        // Render loading screen
-        if (!Hell::AssetLoader::LoadingComplete()) {
-            Hell::AssetLoader::Update();
-            Unloved::UpdateLoadingScreen();
-            Unloved::Renderer::RenderLoadingScreen();
-
-            // Loading complete?
-            if (Hell::AssetLoader::LoadingComplete()) {
-                Unloved::OnAssetLoadingComplete();
-            }
-        }
-        // Update/render game
-        else {
-            //Timer timer("GameLoop");
-            Unloved::Update();
-            Unloved::Render();
-        }
-        Unloved::EndFrame();
-        Hell::BackEnd::EndFrame();
-    }
-
-    Unloved::CleanUp();
-    Hell::BackEnd::CleanUp();
-    return 0;
-}*/
-
 int main() {
     std::cout << "\x1B[2J\x1B[H";
     std::cout << "We are all alone on life's journey, held captive by the limitations of human consciousness.\n";
 
     // Engine Init
-    if (!Hell::BackEnd::Init(API::OPENGL, WindowedMode::WINDOWED, "Unloved")) {
+    if (!Hell::BackEnd::Init(API::VULKAN, WindowedMode::WINDOWED, "Unloved")) {
         return -1;
     }
 

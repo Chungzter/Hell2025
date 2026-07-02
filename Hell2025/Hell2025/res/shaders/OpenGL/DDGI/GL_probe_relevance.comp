@@ -50,7 +50,9 @@ void main() {
 
     // Position from depth
     float depth = texelFetch(u_depthTexture, px, 0).r;
-    vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
+    vec2 clipXY = viewportUV * 2.0 - 1.0;
+    clipXY.y = -clipXY.y;
+    vec4 clip = vec4(clipXY, depth, 1.0);
     vec4 worldH = viewportData[viewportIndex].inverseProjectionViewReverseZ * clip;
     vec3 fragPosition = worldH.xyz / worldH.w;
 

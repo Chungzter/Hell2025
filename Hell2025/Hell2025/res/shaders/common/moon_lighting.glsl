@@ -32,6 +32,7 @@ vec3 ShadowCalculationCSM(vec3 fragPosWorldSpace, vec3 normal, vec3 lightDir, ma
     vec4 fragPosLightSpace = lightProjectionView * vec4(fragPosWorldSpace + normalOffset, 1.0);
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords.xy = projCoords.xy * 0.5 + 0.5;
+    projCoords.y = 1.0 - projCoords.y;
 
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;

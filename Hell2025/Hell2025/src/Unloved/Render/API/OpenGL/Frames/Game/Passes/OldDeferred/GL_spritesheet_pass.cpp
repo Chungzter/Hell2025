@@ -81,6 +81,8 @@ namespace OpenGLRenderer {
             for (Fireplace& fireplace : Unloved::World::GetFireplaces()) {
                 const SpriteSheetRenderItem& renderItem = fireplace.GetFireSpriteSheetRenderItem();
                 Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.textureIndex);
+                if (!texture) continue;
+
                 OpenGL::SetUniformInt("u_rowCount", renderItem.rowCount);
                 OpenGL::SetUniformInt("u_columnCount", renderItem.columnCount);
                 OpenGL::SetUniformInt("u_frameIndex", renderItem.frameIndex);
