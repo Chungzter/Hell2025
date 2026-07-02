@@ -37,8 +37,8 @@ struct PickUp {
     const std::string GetName() const                   { return m_createInfo.name; }
     const ItemType GetType() const                      { return m_createInfo.type; }
     const std::vector<RenderItem>& GetRenderItems()     { return m_meshNodes.GetRenderItems(); }
-    const glm::vec3 GetPosition()                       { return m_modelMatrix[3]; }
-    const glm::vec3& GetRotation()                      { return m_initialTransform.rotation; }
+    const glm::vec3& GetPosition() const                { return m_createInfo.position; }
+    const glm::vec3& GetRotation() const                { return m_initialTransform.rotation; }
     const glm::mat4& GetModelMatrix()                   { return m_modelMatrix; }
     const uint64_t GetObjectId()                        { return m_objectId; }
     const bool GetDisabledPhysicsAtSpawnState()         { return m_createInfo.disablePhysicsAtSpawn; }

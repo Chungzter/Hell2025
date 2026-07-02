@@ -24,6 +24,7 @@ struct Wall {
 
     void CleanUp();
     void UpdateSegmentsTrimsAndVertexData();
+    void SetPosition(const glm::vec3& position);
     void UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter);
     void SubmitRenderItems();
     void CreateTrims();

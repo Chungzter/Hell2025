@@ -6,6 +6,7 @@
 #include "Hell/Transform.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Legacy/World/LegacyWorld.h"
+#include "Unloved/Systems/House/HouseBuilder.h"
 
 namespace Unloved {
 
@@ -71,6 +72,8 @@ void WorldPlane::UpdateVertexDataFromCreateInfo() {
     m_navMeshPoly.emplace_back(m_p1.x, m_p1.z);
     m_navMeshPoly.emplace_back(m_p2.x, m_p2.z);
     m_navMeshPoly.emplace_back(m_p3.x, m_p3.z);
+
+    HouseBuilder::MarkDirty();
 }
 
 void WorldPlane::CleanUp() {
@@ -87,6 +90,10 @@ void WorldPlane::CleanUp() {
 
     Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
     meshBuffer.RemoveMesh(m_meshId);
+}
+
+void WorldPlane::SetPosition(const glm::vec3& position) {
+    UpdateWorldSpaceCenter(position);
 }
 
 void WorldPlane::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {

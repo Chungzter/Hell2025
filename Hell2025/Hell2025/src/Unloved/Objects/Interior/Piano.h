@@ -66,11 +66,12 @@ struct Piano {
     const bool IsDirty() const                              { return m_meshNodes.IsDirty(); }
     const std::vector<RenderItem>& GetRenderItems() const   { return m_meshNodes.GetRenderItems(); }
     const uint64_t& GetObjectId() const                     { return m_pianoObjectId; };
-    const glm::vec3 GetPosition() const                     { return m_transform.position; }
-    const glm::vec3 GetRotation() const                     { return m_transform.rotation; }
+    const glm::vec3& GetPosition() const                    { return m_transform.position; }
+    const glm::vec3& GetRotation() const                    { return m_transform.rotation; }
     const glm::vec3& GetSeatPosition() const                { return m_seatPosition; }
     const std::string& GetSoundFontName() const             { return m_soundFontName; }
-    const PianoCreateInfo GetCreateInfo() const             { return m_createInfo; }
+    const PianoCreateInfo& GetCreateInfo() const            { return m_createInfo; }
+    const std::string& GetEditorName() const                { return m_createInfo.editorName; }
 
     static uint32_t MeshNameToNote(const std::string& meshName);
         

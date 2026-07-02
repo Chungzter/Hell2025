@@ -76,11 +76,13 @@ namespace Unloved {
         const bool IsAlive() const { return m_alive; }
         const uint64_t& GetObjectId() const { return m_objectId; };
         const uint64_t& GetRagdollId() const { return m_RagdollId; };
+        const glm::vec3& GetPosition() const { return m_spinePositions[0]; }
 
         SharkHuntingState GetHuntingState() { return m_huntingState; }
         SharkMovementState GetMovementState() { return m_movementState; }
 
         const SharkCreateInfo& GetCreateInfo() const { return m_createInfo; }
+        const std::string& GetEditorName() const { return m_createInfo.editorName; }
 
     private:
         void CalculateTargetFromPath();

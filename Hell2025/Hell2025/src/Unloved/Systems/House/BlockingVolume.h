@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace HouseBuilder {
+namespace Unloved {
 
 struct BlockingVolume {
     void Update(const Hell::Transform& transform);

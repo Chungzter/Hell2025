@@ -18,6 +18,7 @@ struct WorldPlane {
     ~WorldPlane() = default;
 
     void UpdateVertexDataFromCreateInfo();
+    void SetPosition(const glm::vec3& position);
     void UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter);
     void SetMaterial(const std::string& materialName);
     void SetMeshId(uint32_t meshId);

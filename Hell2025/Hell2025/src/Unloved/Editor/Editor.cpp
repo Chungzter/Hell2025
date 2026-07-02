@@ -108,7 +108,6 @@ namespace Unloved::Editor {
             LegacyWorld::ResetWorld();
             if (HouseData* houseData = HouseManager::GetHouseDataByName(Editor::GetEditorHouseName())) {
                 World::LoadHouse(*houseData, SpawnOffset());
-                LegacyWorld::RecreateAllHouseGeometry();
             }
         }
         if (GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) {
@@ -117,18 +116,16 @@ namespace Unloved::Editor {
             LegacyWorld::ClearAllObjects();
             if (MapData* mapData = MapManager::GetMapDataByName(Editor::GetEditorMapName())) {
                 World::LoadMap(*mapData, SpawnOffset());
-                LegacyWorld::RecreateAllHouseGeometry();
             }
         }
         if (GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
             // Update the map file with everything in the world
             MapManager::UpdateCreateInfoCollectionFromWorld(Editor::GetEditorMapName());
 
-            // Reload everything from the editor map file, except the heightmap
+            // Reload everything from the editor map file, except the height map
             LegacyWorld::ClearAllObjects();
             if (MapData* mapData = MapManager::GetMapDataByName(Editor::GetEditorMapName())) {
                 World::LoadMap(*mapData, SpawnOffset());
-                LegacyWorld::RecreateAllHouseGeometry();
             }
         }
 
@@ -459,8 +456,8 @@ namespace Unloved::Editor {
     void SelectObject(uint64_t objectId) {
         Audio::PlayAudio(AUDIO_SELECT, 1.0f);
 
-        Gizmo::SetPosition(LegacyWorld::GetObjectPosition(objectId));
-        Gizmo::SetRotation(LegacyWorld::GetObjectRotation(objectId));
+        Gizmo::SetPosition(World::GetPositionById(objectId));
+        Gizmo::SetRotation(World::GetRotationById(objectId));
 
         ExitObjectPlacement();
         g_selectedObjectId = objectId;

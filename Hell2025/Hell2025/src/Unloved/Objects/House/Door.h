@@ -19,6 +19,7 @@ struct Door {
     ~Door() = default;
 
     void SetPosition(const glm::vec3& position);
+    void SetRotation(const glm::vec3& rotation);
     void SetRotationY(float value);
     void Update(float deltaTime);
 	void CleanUp();
@@ -57,7 +58,7 @@ struct Door {
     const bool GetDeadLockState() const                                 { return m_createInfo.hasDeadLock; }
     const bool GetDeadLockedAtInitState() const                         { return m_createInfo.deadLockedAtInit; }
     const AABB& GetPhsyicsAABB() const                                  { return m_physicsAABB; }
-    const HouseBuilder::ClippingVolume& GetClippingVolume() const       { return m_clippingVolume; }
+    const ClippingVolume& GetClippingVolume() const                     { return m_clippingVolume; }
 
     MeshBufferOLD m_raytracingDoorMesh;
     MeshBufferOLD m_raytracingFrameMesh;
@@ -70,7 +71,7 @@ private:
 	DoorCreateInfo m_createInfo;
 	MeshNodes m_meshNodes;
     SpawnOffset m_spawnOffset;
-    HouseBuilder::ClippingVolume m_clippingVolume;
+    ClippingVolume m_clippingVolume;
 
     AABB m_physicsAABB;
 

@@ -2,7 +2,7 @@
 
 #include "Unloved/Debug/DebugDraw.h"
 
-namespace HouseBuilder {
+namespace Unloved {
 
 namespace {
     constexpr int EDGE_INDICES[12][2] = {

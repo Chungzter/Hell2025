@@ -3,14 +3,15 @@
 #include "Hell/Input.h"
 #include "Hell/Logging.h"
 
-#include "Unloved/Viewport/ViewportManager.h"
 #include "Legacy/World/LegacyWorld.h"
-#include "Unloved/World/World.h"
+
 
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
+#include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/World/World.h"
 
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
@@ -338,7 +339,6 @@ namespace Unloved::Editor {
         createInfo.defaultEditorName = GetPlacementObjectSubtype().defaultEditorName;
 
         Unloved::World::AddWorldPlane(createInfo, SpawnOffset());
-        LegacyWorld::RecreateAllHouseGeometry();
         ExitObjectPlacement();
     }
 

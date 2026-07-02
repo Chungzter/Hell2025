@@ -5,7 +5,6 @@
 #include "Hell/Containers/SlotMap.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Hell/Physics/Physics.h"
 #include "Hell/Time.h"
 
 #include "Unloved/Bible/Bible.h"
@@ -18,6 +17,7 @@
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 #include "Unloved/Systems/Blood/BloodSystem.h"
 #include "Unloved/Systems/DDGI/GlobalIllumination.h"
+#include "Unloved/Systems/House/HouseBuilder.h"
 #include "Unloved/Systems/House/HouseManager.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Systems/Pathfinding/AStarMap.h"
@@ -100,17 +100,6 @@ namespace Unloved::LegacyWorld {
             i++;
         }
 
-        RecreateAllHouseGeometry();
-
-        GameObjectCreateInfo createInfo;
-        createInfo.position = glm::vec3(32.45f, 30.52f, 10.22f);
-        createInfo.rotation.y = -HELL_PI * 0.5f;
-        createInfo.scale = glm::vec3(1.0f);
-        createInfo.modelName = "Reflector";
-        Unloved::World::AddGameObject(createInfo);
-        Unloved::World::GetGameObjects()[0].SetMeshMaterial("ReflectorPole", "Fence");
-        Unloved::World::GetGameObjects()[0].SetMeshMaterial("ReflectorRed", "Red");
-
         DobermannCreateInfo dobermannCreateInfo;
         dobermannCreateInfo.position = glm::vec3(37.2f, 31.0f, 35.3f);
         Unloved::World::AddDobermann(dobermannCreateInfo);
@@ -119,13 +108,6 @@ namespace Unloved::LegacyWorld {
         kangarooCreateInfo.position = glm::vec3(48, 32.6, 39);
         kangarooCreateInfo.rotation = glm::vec3(0, HELL_PI * -0.5f, 0);
         Unloved::World::AddKangaroo(kangarooCreateInfo);
-
-        PhysicsFilterData filterData;
-        filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
-        filterData.collisionGroup = CollisionGroup::RAGDOLL_ENEMY;
-        filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
-        Hell::Physics::SpawnRagdoll(glm::vec3(36, 31, 36), glm::vec3(0.0f, 0.2f, 0.0f), "manikin", Unloved::GetNextObjectId(ObjectType::RAGDOLL_STANDALONE), filterData);
-        Hell::Physics::SpawnRagdoll(glm::vec3(37, 31, 36), glm::vec3(0.0f, -0.4f, 0.0f), "manikin", Unloved::GetNextObjectId(ObjectType::RAGDOLL_STANDALONE), filterData);
     }
 
     void LoadMapsHeightMapData(std::vector<MapCreateInfo> mapCreateInfoSet) {
@@ -184,7 +166,6 @@ namespace Unloved::LegacyWorld {
     void LoadSingleHouse(const std::string& houseName) {
         ResetWorld();
         LoadHouse(houseName, SpawnOffset());
-        RecreateAllHouseGeometry();
     }
 
     void LoadHouse(const std::string& houseName, SpawnOffset spawnOffset) {
@@ -257,16 +238,6 @@ namespace Unloved::LegacyWorld {
 
         g_runTime = 0.0f;
         g_playersAwaitingRespawn = true;
-
-        //Update(0.0f);
-        //Hell::Physics::ForceZeroStepUpdate();
-        //Update(0.0f);
-        //Hell::Physics::ForceZeroStepUpdate();
-        //Game::RespawnPlayers();
-        //Update(0.0f);
-        //Hell::Physics::ForceZeroStepUpdate();
-        //Update(0.0f);
-        //Hell::Physics::ForceZeroStepUpdate();
     }
 
     void BeginFrame() {
@@ -297,130 +268,10 @@ namespace Unloved::LegacyWorld {
     }
 
 
-    const glm::vec3& GetObjectPosition(uint64_t objectId) {
-        const static glm::vec3 invalid = glm::vec3(0.0f);
-
-        if (DDGIVolume* object = Unloved::World::GetDDGIVolumeByObjectId(objectId)) return object->GetOrigin();
-        // etc
-
-        Logging::Warning() << "LegacyWorld::GetObjectPosition(..) failed for ID " << objectId << ". You haven't implemented " << Hell::Enum::ToString(Unloved::GetObjectIdType(objectId)) << "\n";
-        return invalid;
-    }
-
-    const glm::vec3& GetObjectRotation(uint64_t objectId) {
-        const static glm::vec3 invalid = glm::vec3(0.0f);
-
-        if (DDGIVolume* object = Unloved::World::GetDDGIVolumeByObjectId(objectId)) return object->GetRotation();
-        // etc
-
-        Logging::Warning() << "LegacyWorld::GetObjectRotation(..) failed for ID " << objectId << ". You haven't implemented " << Hell::Enum::ToString(Unloved::GetObjectIdType(objectId)) << "\n";
-        return invalid;
-    }
-
-    const std::string& GetObjectEditorName(uint64_t objectId) {
-        const static std::string invalid = UNDEFINED_STRING;
-
-        if (DDGIVolume* object = Unloved::World::GetDDGIVolumeByObjectId(objectId)) return object->GetEditorName();
-        if (Door* object = Unloved::World::GetDoorByObjectId(objectId))             return object->GetEditorName();
-        // etc
-
-        return invalid;
-    }
-
     uint64_t CreateAnimatedGameObject() {
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::ANIMATED_GAME_OBJECT);
         Unloved::World::GetAnimatedGameObjects().emplace_with_id(id, id);
         return id;
-    }
-
-    void SetObjectPosition(uint64_t objectId, const glm::vec3& position) {
-
-        if (DDGIVolume* object = Unloved::World::GetDDGIVolumeByObjectId(objectId)) object->SetOrigin(position);
-
-        if (Door* door = Unloved::World::GetDoorByObjectId(objectId)) {
-            door->SetPosition(position);
-            RecreateAllHouseGeometry();
-            Hell::Physics::ForceZeroStepUpdate();
-        }
-
-        if (GenericObject* genericObject = Unloved::World::GetGenericObjectById(objectId)) {
-            genericObject->SetPosition(position);
-        }
-
-        if (Fireplace* fireplace= Unloved::World::GetFireplaceById(objectId)) {
-            fireplace->SetPosition(position);
-        }
-
-        if (Piano* piano = Unloved::World::GetPianoByObjectId(objectId)) {
-            piano->SetPosition(position);
-            Hell::Physics::ForceZeroStepUpdate();
-        }
-
-        if (WorldPlane* plane = Unloved::World::GetWorldPlaneByObjectId(objectId)) {
-            plane->UpdateWorldSpaceCenter(position);
-            RecreateAllHouseGeometry();
-        }
-
-        if (Ladder* ladder = Unloved::World::GetLadderByObjectId(objectId)) {
-            ladder->SetPosition(position);
-        }
-
-        if (Light* light = Unloved::World::GetLightByObjectId(objectId)) {
-            light->SetPosition(position);
-        }
-
-        if (PickUp* pickUp = Unloved::World::GetPickUpByObjectId(objectId)) {
-            pickUp->SetPosition(position);
-        }
-
-        if (PictureFrame* pictureFrame = Unloved::World::GetPictureFrameByObjectId(objectId)) {
-            pictureFrame->SetPosition(position);
-        }
-
-        if (Staircase* staircase = Unloved::World::GetStaircaseByObjectId(objectId)) {
-            staircase->SetPosition(position);
-        }
-
-
-        if (Wall* wall = Unloved::World::GetWallByObjectId(objectId)) {
-            wall->UpdateWorldSpaceCenter(position);
-            Hell::Physics::ForceZeroStepUpdate();
-            RecreateAllHouseGeometry();
-        }
-
-        if (Window* window = Unloved::World::GetWindowByObjectId(objectId)) {
-            window->SetPosition(position);
-            RecreateAllHouseGeometry();
-            Hell::Physics::ForceZeroStepUpdate();
-        }
-    }
-
-    void SetObjectRotation(uint64_t objectId, const glm::vec3& rotation) {
-        if (DDGIVolume* object = Unloved::World::GetDDGIVolumeByObjectId(objectId)) object->SetRotation(rotation);
-
-        if (Fireplace* object = Unloved::World::GetFireplaceById(objectId)) {
-            object->SetRotation(rotation);
-        }
-        if (GenericObject* object = Unloved::World::GetGenericObjectById(objectId)) {
-            object->SetRotation(rotation);
-        }
-        if (Ladder* object = Unloved::World::GetLadderByObjectId(objectId)) {
-            object->SetRotation(rotation);
-        }
-        if (PickUp* object = Unloved::World::GetPickUpByObjectId(objectId)) {
-            object->SetRotation(rotation);
-        }
-        if (Staircase* object = Unloved::World::GetStaircaseByObjectId(objectId)) {
-            object->SetRotation(rotation);
-        }
-    }
-
-    glm::vec3 GetGizmoOffest(uint64_t objectId) {
-        GenericObject* drawers = Unloved::World::GetGenericObjectById(objectId);
-        if (drawers) {
-            return drawers->GetGizmoOffset();
-        }
-        return glm::vec3(0.0f);
     }
 
     void ResetWorld() {
@@ -438,7 +289,7 @@ namespace Unloved::LegacyWorld {
     }
 
     void ClearAllObjects() {
-        RemoveAllWeatherBoards();
+        Unloved::HouseBuilder::RemoveAllWeatherBoards();
         Unloved::MirrorManager::CleanUp();
         Unloved::BulletSystem::CleanUp();
         Unloved::BloodSystem::CleanUp();

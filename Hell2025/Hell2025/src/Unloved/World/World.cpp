@@ -16,10 +16,6 @@ namespace Unloved::World {
         UpdateEnvironment();
     }
 
-    void SubmitRenderItems() {
-        LegacyWorld::SubmitRenderItems();
-    }
-
     void EndFrame() {
         LegacyWorld::EndFrame();
     }

@@ -120,6 +120,7 @@ struct AnimatedGameObject {
     const std::vector<glm::mat4>& GetGlobalBlendedNodeTransforms()                    { return m_animationState.globalNodeTransforms; }
     const std::vector<glm::mat4>& GetBoneSkinningMatrices()                           { return m_animationState.boneSkinningMatrices; }
     const std::string& GetName() const                                                { return m_name; }
+    const std::string& GetEditorName() const                                          { return m_name; }
     const glm::mat4 GetModelMatrixOverride() const                                    { return m_modelMatrixOverride; }
     const AABB& GetSkinnedAABB() const                                                { return m_skinnedAABB; }
 

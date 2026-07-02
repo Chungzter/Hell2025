@@ -330,7 +330,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Session\Session_players.cpp" />
     <ClCompile Include="src\Unloved\Session\Session_spawns.cpp" />
     <ClCompile Include="src\Unloved\Session\Session_update.cpp" />
-    <ClCompile Include="src\Unloved\Systems\FeatureTest\FeatureTest.cpp" />
+    <ClCompile Include="src\Unloved\Systems\FeatureTest\FeatureTest.cpp">
+      <ObjectFileName>$(IntDir)Unloved_Systems_FeatureTest.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="src\Unloved\Systems\House\HouseClipping.cpp" />
     <ClCompile Include="src\Unloved\Systems\P90Mag\P90MagManager.cpp" />
     <ClCompile Include="src\Unloved\Systems\Particles\ParticleManager.cpp" />
     <ClCompile Include="src\Unloved\Debug\DebugDraw.cpp" />
@@ -458,7 +461,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Characters\Mermaids\Mermaid\Mermaid.cpp" />
     <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark.cpp" />
     <ClCompile Include="src\Unloved\Maps\MapFile.cpp" />
-    <ClCompile Include="src\Unloved\Objects\House\Clipping\Clipping.cpp" />
     <ClCompile Include="src\Unloved\UI\Imgui\ImguiBackEnd.cpp" />
     <ClCompile Include="src\Legacy\File\JSON.cpp" />
     <ClCompile Include="src\Unloved\UI\Imgui\Types\Types.cpp" />
@@ -552,7 +554,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Systems\GameAudio\GameAudio.cpp" />
     <ClCompile Include="src\Unloved\Systems\Systems.cpp" />
     <ClCompile Include="src\Unloved\Unloved.cpp" />
-    <ClCompile Include="src\Unloved\World\Objects\Terrain\Terrain.cpp" />
     <ClCompile Include="src\Unloved\World\World.cpp">
       <ObjectFileName>$(IntDir)Unloved_World.obj</ObjectFileName>
     </ClCompile>
@@ -560,6 +561,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\World\World_objects.cpp" />
     <ClCompile Include="src\Unloved\World\World_create_info_collection.cpp" />
     <ClCompile Include="src\Unloved\World\World_loading.cpp" />
+    <ClCompile Include="src\Unloved\World\World_render_submit.cpp" />
     <ClCompile Include="src\Unloved\World\World_update.cpp" />
     <ClCompile Include="src\Unloved\Systems\PianoPlayback\PianoPlaybackManager.cpp" />
     <ClCompile Include="src\Legacy\Util\Util_rendering.cpp" />
@@ -578,8 +580,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Systems\House\HouseManager.cpp" />
     <ClCompile Include="src\Legacy\World\LegacyWorld.cpp" />
     <ClCompile Include="src\Unloved\Systems\WorldBVH\WorldBVH.cpp" />
-    <ClCompile Include="src\Legacy\World\LegacyWorld_house.cpp" />
-    <ClCompile Include="src\Legacy\World\LegacyWorld_render_submit.cpp" />
     <ClCompile Include="vendor\clipper\src\clipper.engine.cpp" />
     <ClCompile Include="vendor\clipper\src\clipper.offset.cpp" />
     <ClCompile Include="vendor\clipper\src\clipper.rectclip.cpp" />
@@ -675,6 +675,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Session\Session.h" />
     <ClInclude Include="src\Unloved\Session\Session_types.h" />
     <ClInclude Include="src\Unloved\Systems\FeatureTest\FeatureTest.h" />
+    <ClInclude Include="src\Unloved\Systems\House\HouseClipping.h" />
     <ClInclude Include="src\Unloved\Systems\P90Mag\P90MagManager.h" />
     <ClInclude Include="src\Unloved\Systems\Particles\ParticleManager.h" />
     <ClInclude Include="src\Unloved\Debug\DebugDraw.h" />
@@ -749,7 +750,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Systems\ShadowMaps\ShadowMapManager.h" />
     <ClInclude Include="src\Unloved\Systems\Systems.h" />
     <ClInclude Include="src\Unloved\Unloved.h" />
-    <ClInclude Include="src\Unloved\World\Objects\Terrain\Terrain.h" />
     <ClInclude Include="src\Unloved\World\World.h" />
     <ClInclude Include="src\Unloved\Systems\PianoPlayback\PianoPlaybackManager.h" />
     <ClInclude Include="src\Unloved\Camera\Frustum.h" />
@@ -820,7 +820,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Characters\Enemies\Shark\Shark.h" />
     <ClInclude Include="src\Unloved\Systems\Openables\Openable.h" />
     <ClInclude Include="src\Hell\Math\LineMath.h" />
-    <ClInclude Include="src\Unloved\Objects\House\Clipping\Clipping.h" />
     <ClInclude Include="src\Unloved\UI\Imgui\ImguiBackEnd.h" />
     <ClInclude Include="src\Legacy\File\JSON.h" />
     <ClInclude Include="src\Unloved\UI\Imgui\Types\Types.h" />

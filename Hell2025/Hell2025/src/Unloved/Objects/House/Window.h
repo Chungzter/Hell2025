@@ -18,6 +18,7 @@ struct Window {
     void Update(float deltaTime);
     void CleanUp();
     void SetPosition(const glm::vec3& position); 
+    void SetRotation(const glm::vec3& rotation);
     void SetRotationY(float value);
     
     const uint64_t GetObjectId() const                          { return m_objectId; }
@@ -25,7 +26,7 @@ struct Window {
     const glm::vec3& GetRotation() const                        { return m_transform.rotation; }
     const std::vector<RenderItem>& GetRenderItems() const       { return m_meshNodes.GetRenderItems(); }
     const WindowCreateInfo& GetCreateInfo() const               { return m_createInfo; }
-    const HouseBuilder::ClippingVolume& GetClippingVolume() const { return m_clippingVolume; }
+    const ClippingVolume& GetClippingVolume() const             { return m_clippingVolume; }
     MeshNodes& GetMeshNodes()                                   { return m_meshNodes; }
 
 private:
@@ -35,7 +36,7 @@ private:
     uint64_t m_physicsId = 0;
     MeshNodes m_meshNodes;
     Hell::Transform m_transform;
-    HouseBuilder::ClippingVolume m_clippingVolume;
+    ClippingVolume m_clippingVolume;
     WindowCreateInfo m_createInfo;
 };
 }

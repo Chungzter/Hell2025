@@ -25,6 +25,8 @@ struct Decal {
     const glm::vec3 GetPosition() const         { return glm::vec3(m_worldMatrix[3]); }
     const glm::vec3 GetWorldNormal() const      { return glm::vec3(m_worldNormal); }
     const RenderItem& GetRenderItem() const     { return m_renderItem; }
+    const DecalCreateInfo& GetCreateInfo() const { return m_createInfo; }
+    const std::string& GetEditorName() const     { return m_createInfo.editorName; }
 
 private:
     const glm::mat4& GetParentWorldMatrix();

@@ -391,6 +391,10 @@ void DDGIVolume::SetEditorName(const std::string& name) {
     m_createInfo.editorName = name;
 }
 
+void DDGIVolume::SetPosition(const glm::vec3& position) {
+    SetOrigin(position);
+}
+
 void DDGIVolume::SetOrigin(const glm::vec3& origin) {
     m_createInfo.origin = origin;
     UpdateMembers();

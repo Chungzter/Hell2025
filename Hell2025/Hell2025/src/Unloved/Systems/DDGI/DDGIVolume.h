@@ -25,6 +25,7 @@ struct DDGIVolume {
     void CleanUp();
     
     void SetEditorName(const std::string& name);
+    void SetPosition(const glm::vec3& position);
     void SetOrigin(const glm::vec3& origin);
     void SetRotation(const glm::vec3& rotation);
     void SetExtents(const glm::vec3& extents);

@@ -34,6 +34,7 @@
 #include "Unloved/Objects/Traversal/Ladder.h"
 #include "Unloved/Objects/Traversal/Staircase.h"
 #include "Unloved/Systems/DDGI/DDGIVolume.h"
+#include "Unloved/Systems/House/HouseBuilder.h"
 
 namespace Unloved::World {
 
@@ -192,6 +193,7 @@ namespace Unloved::World {
         Editor::AssignEditorName(createInfo, GetDoors());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::DOOR);
         GetDoors().emplace_with_id(id, id, createInfo, spawnOffset);
+        HouseBuilder::MarkDirty();
         return id;
     }
 
@@ -218,6 +220,7 @@ namespace Unloved::World {
         Editor::AssignEditorName(createInfo, GetFireplaces());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::FIREPLACE);
         GetFireplaces().emplace_with_id(id, id, createInfo, spawnOffset);
+        HouseBuilder::MarkDirty();
         return id;
     }
 
@@ -443,14 +446,14 @@ namespace Unloved::World {
 
     uint64_t AddSpawnPointCampaign(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset) {
         Editor::AssignEditorName(createInfo, g_spawnPointsCampaign);
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::SPAWN_POINT);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::SPAWN_POINT_CAMPAIGN);
         g_spawnPointsCampaign.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
 
     uint64_t AddSpawnPointDeathMatch(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset) {
         Editor::AssignEditorName(createInfo, g_spawnPointsDeathMatch);
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::SPAWN_POINT);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::SPAWN_POINT_DEATHMATCH);
         g_spawnPointsDeathMatch.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
@@ -501,6 +504,7 @@ namespace Unloved::World {
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::WALL);
 
         GetWalls().emplace_with_id(id, id, createInfo, spawnOffset);
+        HouseBuilder::MarkDirty();
         return id;
     }
 
@@ -537,6 +541,7 @@ namespace Unloved::World {
         Editor::AssignEditorName(createInfo, GetWindows());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::WINDOW);
         GetWindows().emplace_with_id(id, id, createInfo, spawnOffset);
+        HouseBuilder::MarkDirty();
         return id;
     }
 
@@ -551,11 +556,284 @@ namespace Unloved::World {
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::WORLD_PLANE);
 
         GetWorldPlanes().emplace_with_id(id, id, createInfo, spawnOffset);
+        HouseBuilder::MarkDirty();
         return id;
     }
 
     WorldPlane* GetWorldPlaneByObjectId(uint64_t objectId) {
         return GetWorldPlanes().get(objectId);
+    }
+
+    // Set Position
+
+    template<typename Container>
+    bool SetPosition_T(Container& objects, uint64_t objectId, const glm::vec3& position) {
+        auto* object = objects.get(objectId);
+        if (!object) return false;
+
+        object->SetPosition(position);
+        return true;
+    }
+
+    bool SetPositionById(uint64_t objectId, const glm::vec3& position) {
+        if (objectId == 0) return false;
+
+        bool updated = false;
+
+        switch (GetObjectIdType(objectId)) {
+        case ObjectType::DDGI_VOLUME:    updated = SetPosition_T(GetDDGIVolumes(), objectId, position); break;
+        case ObjectType::DOOR:           updated = SetPosition_T(GetDoors(), objectId, position); break;
+        case ObjectType::FIREPLACE:      updated = SetPosition_T(GetFireplaces(), objectId, position); break;
+        case ObjectType::GAME_OBJECT:    updated = SetPosition_T(GetGameObjects(), objectId, position); break;
+        case ObjectType::GENERIC_OBJECT: updated = SetPosition_T(GetGenericObjects(), objectId, position); break;
+        case ObjectType::WORLD_PLANE:    updated = SetPosition_T(GetWorldPlanes(), objectId, position); break;
+        case ObjectType::LADDER:         updated = SetPosition_T(GetLadders(), objectId, position); break;
+        case ObjectType::LIGHT:          updated = SetPosition_T(GetLights(), objectId, position); break;
+        case ObjectType::PIANO:          updated = SetPosition_T(GetPianos(), objectId, position); break;
+        case ObjectType::PICK_UP:        updated = SetPosition_T(GetPickUps(), objectId, position); break;
+        case ObjectType::PICTURE_FRAME:  updated = SetPosition_T(GetPictureFrames(), objectId, position); break;
+        case ObjectType::STAIRCASE:      updated = SetPosition_T(GetStaircases(), objectId, position); break;
+        case ObjectType::WALL:           updated = SetPosition_T(GetWalls(), objectId, position); break;
+        case ObjectType::WINDOW:         updated = SetPosition_T(GetWindows(), objectId, position); break;
+        default:
+            Logging::Error() << "World::SetPositionById() failed: unsupported object type '" << Hell::Enum::ToString(GetObjectIdType(objectId)) << "'\n";
+            return false;
+        }
+
+        return updated;
+    }
+
+    // Set Rotation
+
+    template<typename Container>
+    bool SetRotation_T(Container& objects, uint64_t objectId, const glm::vec3& rotation) {
+        auto* object = objects.get(objectId);
+        if (!object) return false;
+
+        object->SetRotation(rotation);
+        return true;
+    }
+
+    bool SetRotationById(uint64_t objectId, const glm::vec3& rotation) {
+        if (objectId == 0) return false;
+
+        switch (GetObjectIdType(objectId)) {
+        case ObjectType::DDGI_VOLUME:    return SetRotation_T(GetDDGIVolumes(), objectId, rotation);
+        case ObjectType::DOOR:           return SetRotation_T(GetDoors(), objectId, rotation);
+        case ObjectType::FIREPLACE:      return SetRotation_T(GetFireplaces(), objectId, rotation);
+        case ObjectType::GAME_OBJECT:    return SetRotation_T(GetGameObjects(), objectId, rotation);
+        case ObjectType::GENERIC_OBJECT: return SetRotation_T(GetGenericObjects(), objectId, rotation);
+        case ObjectType::LADDER:         return SetRotation_T(GetLadders(), objectId, rotation);
+        case ObjectType::LIGHT:          return SetRotation_T(GetLights(), objectId, rotation);
+        case ObjectType::PICK_UP:        return SetRotation_T(GetPickUps(), objectId, rotation);
+        case ObjectType::PICTURE_FRAME:  return SetRotation_T(GetPictureFrames(), objectId, rotation);
+        case ObjectType::STAIRCASE:      return SetRotation_T(GetStaircases(), objectId, rotation);
+        case ObjectType::WINDOW:         return SetRotation_T(GetWindows(), objectId, rotation);
+        default:
+            Logging::Error() << "World::SetRotationById() failed: unsupported object type '" << Hell::Enum::ToString(GetObjectIdType(objectId)) << "'\n";
+            return false;
+        }
+    }
+
+    // Get Position
+
+    template<typename Container>
+    const glm::vec3* GetPosition_T(Container& objects, uint64_t objectId) {
+        auto* object = objects.get(objectId);
+        if (!object) return nullptr;
+
+        return &object->GetPosition();
+    }
+
+    template<typename Container>
+    const glm::vec3* GetCreateInfoPosition_T(Container& objects, uint64_t objectId) {
+        const auto* object = objects.get(objectId);
+        if (!object) return nullptr;
+
+        return &object->GetCreateInfo().position;
+    }
+
+    template<typename Container>
+    const glm::vec3* GetWorldSpaceCenter_T(Container& objects, uint64_t objectId) {
+        auto* object = objects.get(objectId);
+        if (!object) return nullptr;
+
+        return &object->GetWorldSpaceCenter();
+    }
+
+    const glm::vec3& GetPositionById(uint64_t objectId) {
+        const static glm::vec3 invalid = glm::vec3(0.0f);
+        if (objectId == 0) return invalid;
+
+        const glm::vec3* position = nullptr;
+
+        switch (GetObjectIdType(objectId)) {
+        case ObjectType::ANIMATED_GAME_OBJECT:   position = GetPosition_T(GetAnimatedGameObjects(), objectId); break;
+        case ObjectType::BULLET_CASING:          position = GetCreateInfoPosition_T(GetBulletCasings(), objectId); break;
+        case ObjectType::CHRISTMAS_LIGHTS:       position = GetPosition_T(GetChristmasLightSets(), objectId); break;
+        case ObjectType::TREE:                   position = GetPosition_T(GetChristmasTrees(), objectId); break;
+        case ObjectType::DDGI_VOLUME:
+            if (DDGIVolume* ddgiVolume = GetDDGIVolumes().get(objectId)) position = &ddgiVolume->GetOrigin();
+            break;
+        case ObjectType::DOBERMANN:
+            if (Dobermann* dobermann = GetDobermanns().get(objectId)) {
+                if (AnimatedGameObject* animatedGameObject = dobermann->GetAnimatedGameObject()) {
+                    position = &animatedGameObject->GetPosition();
+                }
+            }
+            break;
+        case ObjectType::DOOR:                   position = GetPosition_T(GetDoors(), objectId); break;
+        case ObjectType::FIREPLACE:              position = GetPosition_T(GetFireplaces(), objectId); break;
+        case ObjectType::GAME_OBJECT:            position = GetPosition_T(GetGameObjects(), objectId); break;
+        case ObjectType::GENERIC_OBJECT:         position = GetPosition_T(GetGenericObjects(), objectId); break;
+        case ObjectType::WORLD_PLANE:            position = GetWorldSpaceCenter_T(GetWorldPlanes(), objectId); break;
+        case ObjectType::KANGAROO:               position = GetPosition_T(GetKangaroos(), objectId); break;
+        case ObjectType::LADDER:                 position = GetPosition_T(GetLadders(), objectId); break;
+        case ObjectType::LIGHT:                  position = GetPosition_T(GetLights(), objectId); break;
+        case ObjectType::MERMAID:                position = GetPosition_T(GetMermaids(), objectId); break;
+        case ObjectType::PIANO:                  position = GetPosition_T(GetPianos(), objectId); break;
+        case ObjectType::PICK_UP:                position = GetPosition_T(GetPickUps(), objectId); break;
+        case ObjectType::PICTURE_FRAME:          position = GetPosition_T(GetPictureFrames(), objectId); break;
+        case ObjectType::SHARK:                  position = GetPosition_T(GetSharks(), objectId); break;
+        case ObjectType::SPAWN_POINT_CAMPAIGN:   position = GetPosition_T(GetSpawnPointsCampaign(), objectId); break;
+        case ObjectType::SPAWN_POINT_DEATHMATCH: position = GetPosition_T(GetSpawnPointsDeathMatch(), objectId); break;
+        case ObjectType::STAIRCASE:              position = GetPosition_T(GetStaircases(), objectId); break;
+        case ObjectType::WALL:                   position = GetWorldSpaceCenter_T(GetWalls(), objectId); break;
+        case ObjectType::WINDOW:                 position = GetPosition_T(GetWindows(), objectId); break;
+        default:
+            break;
+        }
+
+        if (position) return *position;
+
+        Logging::Error() << "World::GetPositionById() failed: unsupported object type '" << Hell::Enum::ToString(GetObjectIdType(objectId)) << "'\n";
+        return invalid;
+    }
+
+    // Get Rotation
+
+    template<typename Container>
+    const glm::vec3* GetRotation_T(Container& objects, uint64_t objectId) {
+        auto* object = objects.get(objectId);
+        if (!object) return nullptr;
+
+        return &object->GetRotation();
+    }
+
+    template<typename Container>
+    const glm::vec3* GetCreateInfoRotation_T(Container& objects, uint64_t objectId) {
+        const auto* object = objects.get(objectId);
+        if (!object) return nullptr;
+
+        return &object->GetCreateInfo().rotation;
+    }
+
+    template<typename Container>
+    const glm::vec3* GetSpawnPointRotation_T(Container& objects, uint64_t objectId) {
+        const auto* object = objects.get(objectId);
+        if (!object) return nullptr;
+
+        return &object->GetCreateInfo().camEuler;
+    }
+
+    const glm::vec3& GetRotationById(uint64_t objectId) {
+        const static glm::vec3 invalid = glm::vec3(0.0f);
+        if (objectId == 0) return invalid;
+
+        const glm::vec3* rotation = nullptr;
+
+        switch (GetObjectIdType(objectId)) {
+        case ObjectType::BULLET_CASING:          rotation = GetCreateInfoRotation_T(GetBulletCasings(), objectId); break;
+        case ObjectType::CHRISTMAS_LIGHTS:       rotation = GetRotation_T(GetChristmasLightSets(), objectId); break;
+        case ObjectType::TREE:                   rotation = GetCreateInfoRotation_T(GetChristmasTrees(), objectId); break;
+        case ObjectType::DDGI_VOLUME:            rotation = GetRotation_T(GetDDGIVolumes(), objectId); break;
+        case ObjectType::DOOR:                   rotation = GetRotation_T(GetDoors(), objectId); break;
+        case ObjectType::FIREPLACE:              rotation = GetRotation_T(GetFireplaces(), objectId); break;
+        case ObjectType::GAME_OBJECT:            rotation = GetRotation_T(GetGameObjects(), objectId); break;
+        case ObjectType::GENERIC_OBJECT:         rotation = GetRotation_T(GetGenericObjects(), objectId); break;
+        case ObjectType::KANGAROO:               rotation = GetRotation_T(GetKangaroos(), objectId); break;
+        case ObjectType::LADDER:                 rotation = GetRotation_T(GetLadders(), objectId); break;
+        case ObjectType::LIGHT:                  rotation = GetRotation_T(GetLights(), objectId); break;
+        case ObjectType::MERMAID:                rotation = GetCreateInfoRotation_T(GetMermaids(), objectId); break;
+        case ObjectType::PIANO:                  rotation = GetRotation_T(GetPianos(), objectId); break;
+        case ObjectType::PICK_UP:                rotation = GetRotation_T(GetPickUps(), objectId); break;
+        case ObjectType::PICTURE_FRAME:          rotation = GetRotation_T(GetPictureFrames(), objectId); break;
+        case ObjectType::SPAWN_POINT_CAMPAIGN:   rotation = GetSpawnPointRotation_T(GetSpawnPointsCampaign(), objectId); break;
+        case ObjectType::SPAWN_POINT_DEATHMATCH: rotation = GetSpawnPointRotation_T(GetSpawnPointsDeathMatch(), objectId); break;
+        case ObjectType::STAIRCASE:              rotation = GetRotation_T(GetStaircases(), objectId); break;
+        case ObjectType::WINDOW:                 rotation = GetRotation_T(GetWindows(), objectId); break;
+        default:
+            break;
+        }
+
+        if (rotation) return *rotation;
+
+        Logging::Error() << "World::GetRotationById() failed: unsupported object type '" << Hell::Enum::ToString(GetObjectIdType(objectId)) << "'\n";
+        return invalid;
+    }
+
+    // Get Editor Name
+
+    template<typename Container>
+    const std::string* GetEditorName_T(Container& objects, uint64_t objectId) {
+        const auto* object = objects.get(objectId);
+        if (!object) return nullptr;
+
+        return &object->GetEditorName();
+    }
+
+    template<typename Container>
+    const std::string* GetCreateInfoEditorName_T(Container& objects, uint64_t objectId) {
+        const auto* object = objects.get(objectId);
+        if (!object) return nullptr;
+
+        return &object->GetCreateInfo().editorName;
+    }
+
+    const std::string& GetEditorNameById(uint64_t objectId) {
+        const static std::string invalid = "";
+        if (objectId == 0) return invalid;
+
+        const std::string* editorName = nullptr;
+
+        switch (GetObjectIdType(objectId)) {
+        case ObjectType::ANIMATED_GAME_OBJECT:   editorName = GetEditorName_T(GetAnimatedGameObjects(), objectId); break;
+        case ObjectType::BULLET_CASING:          editorName = GetEditorName_T(GetBulletCasings(), objectId); break;
+        case ObjectType::CHRISTMAS_LIGHTS:       editorName = GetCreateInfoEditorName_T(GetChristmasLightSets(), objectId); break;
+        case ObjectType::TREE:                   editorName = GetEditorName_T(GetChristmasTrees(), objectId); break;
+        case ObjectType::DECAL:                  editorName = GetEditorName_T(GetDecals(), objectId); break;
+        case ObjectType::DDGI_VOLUME:            editorName = GetEditorName_T(GetDDGIVolumes(), objectId); break;
+        case ObjectType::DOBERMANN:              editorName = GetEditorName_T(GetDobermanns(), objectId); break;
+        case ObjectType::DOOR:                   editorName = GetEditorName_T(GetDoors(), objectId); break;
+        case ObjectType::FENCE:                  editorName = GetCreateInfoEditorName_T(GetFences(), objectId); break;
+        case ObjectType::FIREPLACE:              editorName = GetCreateInfoEditorName_T(GetFireplaces(), objectId); break;
+        case ObjectType::GAME_OBJECT:            editorName = GetCreateInfoEditorName_T(GetGameObjects(), objectId); break;
+        case ObjectType::GENERIC_OBJECT:         editorName = GetEditorName_T(GetGenericObjects(), objectId); break;
+        case ObjectType::WORLD_PLANE:            editorName = GetEditorName_T(GetWorldPlanes(), objectId); break;
+        case ObjectType::KANGAROO:               editorName = GetEditorName_T(GetKangaroos(), objectId); break;
+        case ObjectType::LADDER:                 editorName = GetCreateInfoEditorName_T(GetLadders(), objectId); break;
+        case ObjectType::LIGHT:                  editorName = GetCreateInfoEditorName_T(GetLights(), objectId); break;
+        case ObjectType::MERMAID:                editorName = GetCreateInfoEditorName_T(GetMermaids(), objectId); break;
+        case ObjectType::PIANO:                  editorName = GetEditorName_T(GetPianos(), objectId); break;
+        case ObjectType::PICK_UP:                editorName = GetCreateInfoEditorName_T(GetPickUps(), objectId); break;
+        case ObjectType::PICTURE_FRAME:          editorName = GetCreateInfoEditorName_T(GetPictureFrames(), objectId); break;
+        case ObjectType::POWER_POLE_SET:         editorName = GetCreateInfoEditorName_T(GetPowerPoleSets(), objectId); break;
+        case ObjectType::SHARK:                  editorName = GetEditorName_T(GetSharks(), objectId); break;
+        case ObjectType::SPAWN_POINT_CAMPAIGN:   editorName = GetCreateInfoEditorName_T(GetSpawnPointsCampaign(), objectId); break;
+        case ObjectType::SPAWN_POINT_DEATHMATCH: editorName = GetCreateInfoEditorName_T(GetSpawnPointsDeathMatch(), objectId); break;
+        case ObjectType::STAIRCASE:              editorName = GetCreateInfoEditorName_T(GetStaircases(), objectId); break;
+        case ObjectType::TRIM_SET:               editorName = GetEditorName_T(GetTrimSets(), objectId); break;
+        case ObjectType::WALL:                   editorName = GetEditorName_T(GetWalls(), objectId); break;
+        case ObjectType::WIRE:                   return invalid;
+        case ObjectType::WINDOW:                 editorName = GetCreateInfoEditorName_T(GetWindows(), objectId); break;
+        default:
+            break;
+        }
+
+        if (editorName) return *editorName;
+
+        Logging::Error() << "World::GetEditorNameById() failed: unsupported object type '" << Hell::Enum::ToString(GetObjectIdType(objectId)) << "'\n";
+        return invalid;
     }
 
     // Remove Object
@@ -572,83 +850,83 @@ namespace Unloved::World {
     bool RemoveObjectById(uint64_t objectId) {
         if (objectId == 0) return false;
 
-        switch (GetObjectIdType(objectId)) {
-        case ObjectType::ANIMATED_GAME_OBJECT: return RemoveFromSlotMap(GetAnimatedGameObjects(), objectId);
-        case ObjectType::BULLET_CASING:        return RemoveFromSlotMap(GetBulletCasings(), objectId);
-        case ObjectType::CHRISTMAS_LIGHTS:     return RemoveFromSlotMap(GetChristmasLightSets(), objectId);
-        case ObjectType::TREE:                 return RemoveFromSlotMap(GetChristmasTrees(), objectId);
-        case ObjectType::DECAL:                return RemoveFromSlotMap(GetDecals(), objectId);
-        case ObjectType::DDGI_VOLUME:          return RemoveFromSlotMap(GetDDGIVolumes(), objectId);
-        case ObjectType::DOBERMANN:            return RemoveFromSlotMap(GetDobermanns(), objectId);
-        case ObjectType::DOOR:                 return RemoveFromSlotMap(GetDoors(), objectId);
-        case ObjectType::FENCE:                return RemoveFromSlotMap(GetFences(), objectId);
-        case ObjectType::FIREPLACE:            return RemoveFromSlotMap(GetFireplaces(), objectId);
-        case ObjectType::GAME_OBJECT:          return RemoveFromSlotMap(GetGameObjects(), objectId);
-        case ObjectType::GENERIC_OBJECT:       return RemoveFromSlotMap(GetGenericObjects(), objectId);
-        case ObjectType::WORLD_PLANE:          return RemoveFromSlotMap(GetWorldPlanes(), objectId);
-        case ObjectType::KANGAROO:             return RemoveFromSlotMap(GetKangaroos(), objectId);
-        case ObjectType::LADDER:               return RemoveFromSlotMap(GetLadders(), objectId);
-        case ObjectType::LIGHT:                return RemoveFromSlotMap(GetLights(), objectId);
-        case ObjectType::MERMAID:              return RemoveFromSlotMap(GetMermaids(), objectId);
-        case ObjectType::PIANO:                return RemoveFromSlotMap(GetPianos(), objectId);
-        case ObjectType::PICK_UP:              return RemoveFromSlotMap(GetPickUps(), objectId);
-        case ObjectType::PICTURE_FRAME:        return RemoveFromSlotMap(GetPictureFrames(), objectId);
-        case ObjectType::POWER_POLE_SET:       return RemoveFromSlotMap(GetPowerPoleSets(), objectId);
-        case ObjectType::SHARK:                return RemoveFromSlotMap(GetSharks(), objectId);
-        case ObjectType::STAIRCASE:            return RemoveFromSlotMap(GetStaircases(), objectId);
-        case ObjectType::TRIM_SET:             return RemoveFromSlotMap(GetTrimSets(), objectId);
-        case ObjectType::WALL:                 return RemoveFromSlotMap(GetWalls(), objectId);
-        case ObjectType::WIRE:                 return RemoveFromSlotMap(GetWires(), objectId);
-        case ObjectType::WINDOW:               return RemoveFromSlotMap(GetWindows(), objectId);
+        const ObjectType objectType = GetObjectIdType(objectId);
+        bool removed = false;
 
-        case ObjectType::SPAWN_POINT:
-            if (RemoveFromSlotMap(GetSpawnPointsCampaign(), objectId)) return true;
-            return RemoveFromSlotMap(GetSpawnPointsDeathMatch(), objectId);
-
+        switch (objectType) {
+        case ObjectType::ANIMATED_GAME_OBJECT:    removed = RemoveFromSlotMap(GetAnimatedGameObjects(), objectId); break;
+        case ObjectType::BULLET_CASING:           removed = RemoveFromSlotMap(GetBulletCasings(), objectId); break;
+        case ObjectType::CHRISTMAS_LIGHTS:        removed = RemoveFromSlotMap(GetChristmasLightSets(), objectId); break;
+        case ObjectType::TREE:                    removed = RemoveFromSlotMap(GetChristmasTrees(), objectId); break;
+        case ObjectType::DECAL:                   removed = RemoveFromSlotMap(GetDecals(), objectId); break;
+        case ObjectType::DDGI_VOLUME:             removed = RemoveFromSlotMap(GetDDGIVolumes(), objectId); break;
+        case ObjectType::DOBERMANN:               removed = RemoveFromSlotMap(GetDobermanns(), objectId); break;
+        case ObjectType::DOOR:                    removed = RemoveFromSlotMap(GetDoors(), objectId); break;
+        case ObjectType::FENCE:                   removed = RemoveFromSlotMap(GetFences(), objectId); break;
+        case ObjectType::FIREPLACE:               removed = RemoveFromSlotMap(GetFireplaces(), objectId); break;
+        case ObjectType::GAME_OBJECT:             removed = RemoveFromSlotMap(GetGameObjects(), objectId); break;
+        case ObjectType::GENERIC_OBJECT:          removed = RemoveFromSlotMap(GetGenericObjects(), objectId); break;
+        case ObjectType::WORLD_PLANE:             removed = RemoveFromSlotMap(GetWorldPlanes(), objectId); break;
+        case ObjectType::KANGAROO:                removed = RemoveFromSlotMap(GetKangaroos(), objectId); break;
+        case ObjectType::LADDER:                  removed = RemoveFromSlotMap(GetLadders(), objectId); break;
+        case ObjectType::LIGHT:                   removed = RemoveFromSlotMap(GetLights(), objectId); break;
+        case ObjectType::MERMAID:                 removed = RemoveFromSlotMap(GetMermaids(), objectId); break;
+        case ObjectType::PIANO:                   removed = RemoveFromSlotMap(GetPianos(), objectId); break;
+        case ObjectType::PICK_UP:                 removed = RemoveFromSlotMap(GetPickUps(), objectId); break;
+        case ObjectType::PICTURE_FRAME:           removed = RemoveFromSlotMap(GetPictureFrames(), objectId); break;
+        case ObjectType::POWER_POLE_SET:          removed = RemoveFromSlotMap(GetPowerPoleSets(), objectId); break;
+        case ObjectType::SHARK:                   removed = RemoveFromSlotMap(GetSharks(), objectId); break;
+        case ObjectType::SPAWN_POINT_CAMPAIGN:    removed = RemoveFromSlotMap(GetSpawnPointsCampaign(), objectId); break;
+        case ObjectType::SPAWN_POINT_DEATHMATCH:  removed = RemoveFromSlotMap(GetSpawnPointsDeathMatch(), objectId); break;
+        case ObjectType::STAIRCASE:               removed = RemoveFromSlotMap(GetStaircases(), objectId); break;
+        case ObjectType::TRIM_SET:                removed = RemoveFromSlotMap(GetTrimSets(), objectId); break;
+        case ObjectType::WALL:                    removed = RemoveFromSlotMap(GetWalls(), objectId); break;
+        case ObjectType::WIRE:                    removed = RemoveFromSlotMap(GetWires(), objectId); break;
+        case ObjectType::WINDOW:                  removed = RemoveFromSlotMap(GetWindows(), objectId); break;
         default:
-            Logging::Error() << "World::RemoveObjectById() failed: unsupported object type '" << Hell::Enum::ToString(GetObjectIdType(objectId)) << "'\n";
+            Logging::Error() << "World::RemoveObjectById() failed: unsupported object type '" << Hell::Enum::ToString(objectType) << "'\n";
             return false;
         }
+
+        if (removed &&
+            (objectType == ObjectType::DOOR ||
+             objectType == ObjectType::FIREPLACE ||
+             objectType == ObjectType::WORLD_PLANE ||
+             objectType == ObjectType::WALL ||
+             objectType == ObjectType::WINDOW)) {
+            HouseBuilder::MarkDirty();
+        }
+
+        return removed;
+    }
+
+    // Mesh Node By Object ID And Local Node Index
+
+    template<typename Container>
+    MeshNode* GetMeshNodeByObjectIdAndLocalNodeIndexT(Container& objects, uint64_t objectId, int32_t meshNodeLocalIndex) {
+        auto* object = objects.get(objectId);
+        if (!object) return nullptr;
+
+        return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
     }
 
     MeshNode* GetMeshNodeByObjectIdAndLocalNodeIndex(uint64_t objectId, int32_t meshNodeLocalIndex) {
         if (meshNodeLocalIndex < 0) return nullptr;
 
         switch (GetObjectIdType(objectId)) {
-        case ObjectType::DOOR:
-            if (Door* object = GetDoorByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-            return nullptr;
-        case ObjectType::FIREPLACE:
-            if (Fireplace* object = GetFireplaceById(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-            return nullptr;
-        case ObjectType::GAME_OBJECT:
-            if (GameObject* object = GetGameObjectByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-            return nullptr;
-        case ObjectType::GENERIC_OBJECT:
-            if (GenericObject* object = GetGenericObjectById(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-            return nullptr;
-        case ObjectType::LADDER:
-            if (Ladder* object = GetLadderByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-            return nullptr;
-        case ObjectType::LIGHT:
-            if (Light* object = GetLightByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-            return nullptr;
-        case ObjectType::MERMAID:
-            if (Mermaid* object = GetMermaidByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-            return nullptr;
-        case ObjectType::PIANO:
-            if (Piano* object = GetPianoByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-            return nullptr;
-        case ObjectType::PICK_UP:
-            if (PickUp* object = GetPickUpByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-            return nullptr;
-        case ObjectType::PICTURE_FRAME:
-            if (PictureFrame* object = GetPictureFrameByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-            return nullptr;
-        case ObjectType::WINDOW:
-            if (Window* object = GetWindowByObjectId(objectId)) return object->GetMeshNodes().GetMeshNodeByLocalIndex(meshNodeLocalIndex);
-            return nullptr;
+        case ObjectType::DOOR:           return GetMeshNodeByObjectIdAndLocalNodeIndexT(GetDoors(), objectId, meshNodeLocalIndex);
+        case ObjectType::FIREPLACE:      return GetMeshNodeByObjectIdAndLocalNodeIndexT(GetFireplaces(), objectId, meshNodeLocalIndex);
+        case ObjectType::GAME_OBJECT:    return GetMeshNodeByObjectIdAndLocalNodeIndexT(GetGameObjects(), objectId, meshNodeLocalIndex);
+        case ObjectType::GENERIC_OBJECT: return GetMeshNodeByObjectIdAndLocalNodeIndexT(GetGenericObjects(), objectId, meshNodeLocalIndex);
+        case ObjectType::LADDER:         return GetMeshNodeByObjectIdAndLocalNodeIndexT(GetLadders(), objectId, meshNodeLocalIndex);
+        case ObjectType::LIGHT:          return GetMeshNodeByObjectIdAndLocalNodeIndexT(GetLights(), objectId, meshNodeLocalIndex);
+        case ObjectType::MERMAID:        return GetMeshNodeByObjectIdAndLocalNodeIndexT(GetMermaids(), objectId, meshNodeLocalIndex);
+        case ObjectType::PIANO:          return GetMeshNodeByObjectIdAndLocalNodeIndexT(GetPianos(), objectId, meshNodeLocalIndex);
+        case ObjectType::PICK_UP:        return GetMeshNodeByObjectIdAndLocalNodeIndexT(GetPickUps(), objectId, meshNodeLocalIndex);
+        case ObjectType::PICTURE_FRAME:  return GetMeshNodeByObjectIdAndLocalNodeIndexT(GetPictureFrames(), objectId, meshNodeLocalIndex);
+        case ObjectType::WINDOW:         return GetMeshNodeByObjectIdAndLocalNodeIndexT(GetWindows(), objectId, meshNodeLocalIndex);
         default:
+            Logging::Error() << "World::GetMeshNodeByObjectIdAndLocalNodeIndex() failed: unsupported object type '" << Hell::Enum::ToString(GetObjectIdType(objectId)) << "'\n";
             return nullptr;
         }
     }

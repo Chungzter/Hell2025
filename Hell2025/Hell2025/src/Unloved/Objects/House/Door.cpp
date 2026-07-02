@@ -9,6 +9,7 @@
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Session/Session.h"
+#include "Unloved/Systems/House/HouseBuilder.h"
 #include "Unloved/World/World.h"
 
 #include "Hell/Logging.h"
@@ -255,12 +256,18 @@ void Door::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
     m_position = position;
     UpdateClippingVolume();
+    HouseBuilder::MarkDirty();
+}
+
+void Door::SetRotation(const glm::vec3& rotation) {
+    SetRotationY(rotation.y);
 }
 
 void Door::SetRotationY(float value) {
     m_createInfo.rotation.y = value;
     m_rotation.y = value;
     UpdateClippingVolume();
+    HouseBuilder::MarkDirty();
 }
 
 void Door::SetEditorName(const std::string& name) {
@@ -271,6 +278,7 @@ void Door::SetEditorName(const std::string& name) {
 void Door::SetType(DoorType type) {
     m_createInfo.type = type;
     Bible::ConfigureDoorMeshNodes(m_objectId, m_createInfo, &m_meshNodes);
+    HouseBuilder::MarkDirty();
 }
 
 void Door::SetFrontMaterial(DoorMaterialType type) {

@@ -82,6 +82,13 @@ namespace Unloved::World {
     void LoadHouse(const HouseData& houseData, SpawnOffset spawnOffset);
 
     bool RemoveObjectById(uint64_t objectId);
+    bool SetPositionById(uint64_t objectId, const glm::vec3& position);
+    bool SetRotationById(uint64_t objectId, const glm::vec3& rotation);
+
+    const glm::vec3& GetPositionById(uint64_t objectId);
+    const glm::vec3& GetRotationById(uint64_t objectId);
+    const std::string& GetEditorNameById(uint64_t objectId);
+
     MeshNode* GetMeshNodeByObjectIdAndLocalNodeIndex(uint64_t objectId, int32_t meshNodeLocalIndex);
 
     uint64_t AddAnimatedGameObject();

@@ -1,55 +1,127 @@
 #include "HouseBuilder.h"
 
-#include "Legacy/World/LegacyWorld.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+
+#include "Unloved/Objects/House/TrimSet.h"
+#include "Unloved/Objects/House/Wall.h"
+#include "Unloved/Objects/House/WorldPlane.h"
+#include "Unloved/Objects/Lighting/Light.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/World/World.h"
 
 #include <algorithm>
 
-namespace HouseBuilder {
+namespace Unloved::HouseBuilder {
 
-void RaycastClippingVolume(const ClippingVolume& clippingVolume, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float maxDistance, ClipRayResult& result) {
-    const OBBRayResult hit = clippingVolume.GetOBB().Raycast(rayOrigin, rayDir, maxDistance);
+bool g_dirty = false;
 
-    // If no ray hit, or a hit was found greater or equal than the one already stored in ray result, then bail
-    if (!hit.hitFound || hit.distanceToHit >= result.distanceToHit) {
-        return;
+void RebuildIfDirty() {
+    if (IsDirty()) {
+        RebuildAll();
     }
-
-    result.hitFound = true;
-    result.distanceToHit = hit.distanceToHit;
-    result.hitPosition = hit.hitPositionWorld;
-    result.hitNormal = hit.hitNormalWorld;
-    result.objectId = clippingVolume.GetOwnerObjectId();
 }
 
-std::vector<const ClippingVolume*> GetClippingVolumes() {
-    std::vector<const ClippingVolume*> clippingVolumes;
+void RebuildAll() {
+    RecreateAllProceduralWallMesh();
+    RecreateAllProcedularWorldPlaneMesh();
+    RecreateAllWeatherBoards();
+    RecreateAllHangingLightCords();
+    RecreateAllWallTrims();
 
-    for (const Unloved::Door& door : Unloved::World::GetDoors()) {
-        clippingVolumes.push_back(&door.GetClippingVolume());
+    WorldBVH::UpdateHouseLightOccluderBvh();
+
+    for (Light& light : Unloved::World::GetLights()) {
+        light.RaycastWorldBounds();
     }
 
-    for (const Unloved::Window& window : Unloved::World::GetWindows()) {
-        clippingVolumes.push_back(&window.GetClippingVolume());
-    }
-
-    return clippingVolumes;
+    g_dirty = false;
 }
 
-ClipRayResult RaycastClippingVolumes(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float maxDistance) {
-    ClipRayResult result;
+void RecreateAllWallTrims() {
+    Hell::SlotMap<TrimSet>& trimSets = Unloved::World::GetTrimSets();
+    trimSets.clear();
 
-    // Update ray result with the closest hit against all door clipping volumes
-    for (const Unloved::Door& door : Unloved::World::GetDoors()) {
-        RaycastClippingVolume(door.GetClippingVolume(), rayOrigin, rayDir, maxDistance, result);
+    for (Wall& wall : Unloved::World::GetWalls()) {
+        if (wall.GetWallType() == WallType::WEATHER_BOARDS) continue;
+
+        const WallCreateInfo& createInfo = wall.GetCreateInfo();
+
+        // Ceiling trim
+        TrimSetCreateInfo createInfoCeiling;
+        for (const glm::vec3& point : createInfo.points) {
+            glm::vec3 trimPoint = point + glm::vec3(0.0f, createInfo.height, 0.0f);
+            trimPoint.y -= 0.01f; // safety threshold
+            createInfoCeiling.points.push_back(trimPoint);
+            createInfoCeiling.type = TrimSetType::CEILING_FANCY;
+            createInfoCeiling.trimScale = 0.95f;
+        }
+
+        Unloved::World::AddTrimSet(createInfoCeiling, SpawnOffset());
     }
+}
 
-    // Update ray result with the closest hit against all window clipping volumes
-    for (const Unloved::Window& window : Unloved::World::GetWindows()) {
-        RaycastClippingVolume(window.GetClippingVolume(), rayOrigin, rayDir, maxDistance, result);
+void RecreateAllProceduralWallMesh() {
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
+
+    // Door/window clipping volumes are owned by those objects, so CSG can use them directly
+
+    for (Wall& wall : Unloved::World::GetWalls()) {
+
+        // Update CSG and trims
+        wall.UpdateSegmentsTrimsAndVertexData();
+
+        for (WallSegment& wallSegment : wall.GetWallSegments()) {
+            // Remove old mesh
+            meshBuffer.RemoveMesh(wallSegment.GetMeshId());
+
+            // Create new mesh
+            uint32_t meshId = meshBuffer.AddMesh(wallSegment.GetVertices(), wallSegment.GetIndices(), "WallSegment");
+
+            // Update mesh Id
+            wallSegment.SetMeshId(meshId);
+        }
     }
+}
 
-    return result;
+void RecreateAllProcedularWorldPlaneMesh() {
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
+
+    for (WorldPlane& worldPlane : Unloved::World::GetWorldPlanes()) {
+        // Remove old mesh
+        meshBuffer.RemoveMesh(worldPlane.GetMeshId());
+
+        // Create new mesh
+        uint32_t meshId = meshBuffer.AddMesh(worldPlane.GetVertices(), worldPlane.GetIndices(), "WorldPlane");
+
+        // Update mesh Id
+        worldPlane.SetMeshId(meshId);
+    }
+}
+
+void RecreateAllWeatherBoards() {
+    for (Wall& wall : Unloved::World::GetWalls()) {
+        wall.RecreateWeatherBoardMesh();
+    }
+}
+
+void RemoveAllWeatherBoards() {
+    for (Wall& wall : Unloved::World::GetWalls()) {
+        wall.CleanUpWeatherBoardMesh();
+    }
+}
+
+void RecreateAllHangingLightCords() {
+    for (Light& light : Unloved::World::GetLights()) {
+        light.ConfigureMeshNodes();
+    }
+}
+
+void MarkDirty() {
+    g_dirty = true;
+}
+
+bool IsDirty() {
+    return g_dirty;
 }
 
 }

@@ -176,7 +176,7 @@ void GameObject::SetConvexHullsFromModel(const std::string modelName) {
     }
 }
 
-glm::vec3 GameObject::GetPosition() const {
+const glm::vec3& GameObject::GetPosition() const {
     return m_transform.position;
 }
 

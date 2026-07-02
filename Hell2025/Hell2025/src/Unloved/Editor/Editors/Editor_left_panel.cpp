@@ -162,8 +162,6 @@ namespace Unloved::Editor {
     }
 
     void BeginLeftPanel() {
-        bool houseMeshUpdateRequired = false;
-
         g_leftPanel.BeginImGuiElement();
 
         // Settings
@@ -401,7 +399,6 @@ namespace Unloved::Editor {
 
                     if (g_materialDropDown.CreateImGuiElements()) {
                         worldPlane->SetMaterial(g_materialDropDown.GetSelectedOptionText());
-                        houseMeshUpdateRequired = true;
                         worldPlaneUpdated = true;
                     }
 
@@ -420,15 +417,12 @@ namespace Unloved::Editor {
 
                     if (g_textureScale.CreateImGuiElements()) {
                         worldPlane->SetTextureScale(g_textureScale.GetValue());
-                        houseMeshUpdateRequired = true;
                     }
                     if (g_textureOffsetU.CreateImGuiElements()) {
                         worldPlane->SetTextureOffsetU(g_textureOffsetU.GetValue());
-                        houseMeshUpdateRequired = true;
                     }
                     if (g_textureOffsetV.CreateImGuiElements()) {
                         worldPlane->SetTextureOffsetV(g_textureOffsetV.GetValue());
-                        houseMeshUpdateRequired = true;
                     }
 
                     if (worldPlaneUpdated) {
@@ -446,7 +440,6 @@ namespace Unloved::Editor {
                         createInfo.p3.y = g_worldPlaneP3Y.GetValue();
                         createInfo.p3.z = g_worldPlaneP3Z.GetValue();
                         worldPlane->UpdateVertexDataFromCreateInfo();
-                        houseMeshUpdateRequired = true;
                     }
                 }
 
@@ -461,27 +454,22 @@ namespace Unloved::Editor {
                     // Material
                     if (g_materialDropDown.CreateImGuiElements()) {
                         wall->SetMaterial(g_materialDropDown.GetSelectedOptionText());
-                        houseMeshUpdateRequired = true;
                     }
 
                     // Height
                     if (g_heightFloatInput.CreateImGuiElements()) {
                         wall->SetHeight(g_heightFloatInput.GetValue());
-                        houseMeshUpdateRequired = true;
                     }
 
                     // Texture settings
                     if (g_textureScale.CreateImGuiElements()) {
                         wall->SetTextureScale(g_textureScale.GetValue());
-                        houseMeshUpdateRequired = true;
                     }
                     if (g_textureOffsetU.CreateImGuiElements()) {
                         wall->SetTextureOffsetU(g_textureOffsetU.GetValue());
-                        houseMeshUpdateRequired = true;
                     }
                     if (g_textureOffsetV.CreateImGuiElements()) {
                         wall->SetTextureOffsetV(g_textureOffsetV.GetValue());
-                        houseMeshUpdateRequired = true;
                     }
                 }
 
@@ -492,9 +480,6 @@ namespace Unloved::Editor {
             }
         }
 
-        if (houseMeshUpdateRequired) {
-            LegacyWorld::RecreateAllHouseGeometry();
-        }
     }
 
     void EndLeftPanel() {

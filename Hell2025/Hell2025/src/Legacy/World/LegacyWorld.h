@@ -58,8 +58,6 @@ namespace Unloved::LegacyWorld {
 
     void NewRun();
 
-    void SubmitRenderItems();
-
     void ResetWorld();
     void ClearAllObjects();
 
@@ -90,28 +88,12 @@ namespace Unloved::LegacyWorld {
     void CreateGameObject();
     uint64_t CreateAnimatedGameObject();
 
-    // Objects
-    void SetObjectPosition(uint64_t objectId, const glm::vec3& position);
-    void SetObjectRotation(uint64_t objectId, const glm::vec3& rotation);
-    glm::vec3 GetGizmoOffest(uint64_t objectId);
-
     const float GetWorldSpaceWidth();
     const float GetWorldSpaceDepth();
 
     // Map
     const std::string& GetCurrentMapName();
 
-    void RecreateAllHouseGeometry();
-    void RecreateAllProceduralWallMesh();
-    void RecreateAllProcedularWorldPlaneMesh();
-    void RecreateAllWeatherBoards();
-    void RecreateAllWallTrims();
-    void RecreateAllHangingLightCords();
-    void RemoveAllWeatherBoards();
-
-    const glm::vec3& GetObjectPosition(uint64_t objectId);
-    const glm::vec3& GetObjectRotation(uint64_t objectId);
-    const std::string& GetObjectEditorName(uint64_t objectId);
 
     std::vector<HeightMapChunk>& GetHeightMapChunks();
     std::vector<Map>& GetMaps();

@@ -8,18 +8,19 @@
 #include <limits>
 #include <vector>
 
-namespace HouseBuilder {
+namespace Unloved::HouseBuilder {
 
-struct ClipRayResult {
-    bool hitFound = false;
-    float distanceToHit = std::numeric_limits<float>::max();
-    glm::vec3 hitPosition = glm::vec3(0.0f);
-    glm::vec3 hitNormal = glm::vec3(0.0f);
-    uint64_t objectId = 0;
-};
+    void MarkDirty();
+    void RebuildAll();
+    void RebuildIfDirty();
 
-std::vector<const ClippingVolume*> GetClippingVolumes();
-void RaycastClippingVolume(const ClippingVolume& clippingVolume, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float maxDistance, ClipRayResult& result);
-ClipRayResult RaycastClippingVolumes(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float maxDistance);
+    bool IsDirty();
+
+    void RecreateAllProceduralWallMesh();
+    void RecreateAllProcedularWorldPlaneMesh();
+    void RecreateAllWeatherBoards();
+    void RecreateAllWallTrims();
+    void RecreateAllHangingLightCords();
+    void RemoveAllWeatherBoards();
 
 }

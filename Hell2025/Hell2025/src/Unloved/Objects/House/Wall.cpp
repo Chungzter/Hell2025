@@ -4,6 +4,7 @@
 #include "Hell/Math/Math.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Unloved/Systems/House/HouseClipping.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
 #include "Legacy/Renderer/RenderDataManager.h"
 #include "Legacy/Util/Util.h"
@@ -80,6 +81,11 @@ void Wall::UpdateSegmentsTrimsAndVertexData() {
 void Wall::FlipFaces() {
     m_createInfo.useReversePointOrder = !m_createInfo.useReversePointOrder;
     UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
+}
+
+void Wall::SetPosition(const glm::vec3& position) {
+    UpdateWorldSpaceCenter(position);
 }
 
 void Wall::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {
@@ -88,6 +94,7 @@ void Wall::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {
         point += offset;
     }
     UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
 }
 
 bool Wall::AddPointToEnd(glm::vec3 point, bool supressWarning) {
@@ -100,6 +107,7 @@ bool Wall::AddPointToEnd(glm::vec3 point, bool supressWarning) {
 
     m_createInfo.points.push_back(point);
     UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
     return true;
 }
 
@@ -127,6 +135,7 @@ bool Wall::UpdatePointPosition(int pointIndex, glm::vec3 position, bool supressW
 
     m_createInfo.points[pointIndex] = position;
     UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
     return true;
 }
 
@@ -136,6 +145,7 @@ void Wall::SetMaterial(const std::string& materialName) {
         m_createInfo.materialName = materialName;
         m_materialIndex = materialIndex;
         UpdateSegmentsTrimsAndVertexData();
+        HouseBuilder::MarkDirty();
     }
 }
 
@@ -146,30 +156,36 @@ Material* Wall::GetMaterial() {
 void Wall::SetHeight(float value) {
     m_createInfo.height = value;
     UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
 }
 
 void Wall::SetTextureScale(float value) {
     m_createInfo.textureScale = value;
     UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
 }
 
 void Wall::SetTextureOffsetU(float value) {
     m_createInfo.textureOffsetU = value;
     UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
 }
 
 void Wall::SetTextureOffsetV(float value) {
     m_createInfo.textureOffsetV = value;
     UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
 }
 
 void Wall::SetFloorTrimType(TrimType trimType) {
     m_createInfo.floorTrimType = trimType;
     UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
 }
 void Wall::SetCeilingTrimType(TrimType trimType) {
     m_createInfo.ceilingTrimType = trimType;
     UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
 }
 
 const glm::vec3& Wall::GetPointByIndex(int pointIndex) {
@@ -224,22 +240,22 @@ void Wall::CreateTrims() {
             const float eps = 1e-3f;
 
             while (remaining > eps) {
-                HouseBuilder::ClipRayResult r = HouseBuilder::RaycastClippingVolumes(rayOrigin, rayDir, remaining);
-                if (!r.hitFound) break;
+                ClipRayResult rayResult = HouseClipping::RaycastClippingVolumes(rayOrigin, rayDir, remaining);
+                if (!rayResult.hitFound) break;
 
                 // Only add a trim up to a NEAR face (entering the cube)
-                if (glm::dot(r.hitNormal, rayDir) < 0.0f) {
+                if (glm::dot(rayResult.hitNormal, rayDir) < 0.0f) {
                     Hell::Transform t;
                     t.position = rayOrigin;
                     t.rotation.y = Hell::Math::YawBetweenPoints(start, end);
-                    t.scale.x = r.distanceToHit;
+                    t.scale.x = rayResult.distanceToHit;
                     if (t.scale.x > eps) {
                         Trim& trim = m_trims.emplace_back();
                         trim.Init(t, "TrimFloor", "Trims");
                     }
                 }
 
-                float advance = r.distanceToHit + eps; // step through face
+                float advance = rayResult.distanceToHit + eps; // step through face
                 rayOrigin += rayDir * advance;
                 remaining -= advance;
             }
@@ -257,7 +273,7 @@ void Wall::CreateTrims() {
 }
 
 void Wall::CreateCSGVertexData() {
-    const std::vector<const HouseBuilder::ClippingVolume*> clippingVolumes = HouseBuilder::GetClippingVolumes();
+    const std::vector<const ClippingVolume*> clippingVolumes = HouseClipping::GetClippingVolumes();
 
     for (WallSegment& wallSegment : m_wallSegments) {
         wallSegment.CreateVertexData(clippingVolumes, m_createInfo.textureOffsetU, m_createInfo.textureOffsetV, m_createInfo.textureScale);
@@ -494,7 +510,7 @@ void Wall::RecreateWeatherBoardMesh() {
             const float eps = 1e-3f;
 
             while (remaining > eps) {
-                HouseBuilder::ClipRayResult rayResult = HouseBuilder::RaycastClippingVolumes(rayOrigin, rayDir, remaining);
+                ClipRayResult rayResult = HouseClipping::RaycastClippingVolumes(rayOrigin, rayDir, remaining);
                 if (!rayResult.hitFound) break;
 
                 if (glm::dot(rayResult.hitNormal, rayDir) < 0.0f && rayResult.distanceToHit > eps) {

@@ -48,10 +48,4 @@ void GenericObject::SetRotation(const glm::vec3& rotation) {
     m_transform.rotation = rotation;
 };
 
-glm::vec3 GenericObject::GetGizmoOffset() {
-    //glm::vec3 aabbMin = m_meshNodes.m_worldspaceAABB.GetBoundsMin();
-    //glm::vec3 aabbMax = m_meshNodes.m_worldspaceAABB.GetBoundsMax();
-    //return ((aabbMin + aabbMax) * glm::vec3(0.5f)) - m_transform.position;
-    return glm::vec3(0.0f);
-}
 }

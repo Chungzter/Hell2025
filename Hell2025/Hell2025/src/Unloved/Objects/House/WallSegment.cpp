@@ -4,11 +4,12 @@
 #include "Hell/Physics/Physics.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "Legacy/Renderer/Renderer.h"
 #include "Unloved/Common/Types.h"
-
 #include "Unloved/ObjectId.h"
-#include "Unloved/Objects/House/Clipping/Clipping.h"
+#include "Unloved/Systems/House/HouseClipping.h"
+
+#include "Legacy/Renderer/Renderer.h"
+
 namespace Unloved {
 
 void WallSegment::Init(glm::vec3 start, glm::vec3 end, float height, uint64_t parentObjectId, const SpawnOffset& spawnOffset) {
@@ -48,12 +49,12 @@ void WallSegment::CleanUp() {
     meshBuffer.RemoveMesh(m_meshId);
 }
 
-void WallSegment::CreateVertexData(const std::vector<const HouseBuilder::ClippingVolume*>& clippingVolumes, float texOffsetX, float texOffsetY, float texScale) {
+void WallSegment::CreateVertexData(const std::vector<const ClippingVolume*>& clippingVolumes, float texOffsetX, float texOffsetY, float texScale) {
     m_vertices.clear();
     m_indices.clear();
 
     // Clip the volumes from the wall
-    SubtractClippingVolumesFromWallSegment(*this, clippingVolumes, m_vertices, m_indices);
+    HouseClipping::SubtractClippingVolumesFromWallSegment(*this, clippingVolumes, m_vertices, m_indices);
 
     for (Vertex& vertex : m_vertices) {
         glm::vec3 origin = glm::vec3(0, 0, 0);

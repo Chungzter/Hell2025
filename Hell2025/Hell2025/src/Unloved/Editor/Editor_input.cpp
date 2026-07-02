@@ -7,14 +7,14 @@
 #include "Hell/Math/Range.h"
 #include "Hell/UI/UIBackEnd.h"
 
-#include "Legacy/Renderer/Renderer.h"
-#include "Unloved/Viewport/ViewportManager.h"
-#include "Legacy/World/LegacyWorld.h"
-
 #include "Unloved/Config/Config.h"
 #include "Unloved/Editor/Gizmo.h"
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
+#include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/World/World.h"
+
+#include "Legacy/Renderer/Renderer.h"
+#include "Legacy/World/LegacyWorld.h"
 
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
@@ -66,7 +66,6 @@ namespace Unloved::Editor {
             if (Input::KeyPressed(HELL_KEY_BACKSPACE)) {
                 if (GetSelectedObjectType() != ObjectType::NO_TYPE) {
                     World::RemoveObjectById(GetSelectedObjectId());
-                    LegacyWorld::RecreateAllHouseGeometry();
                     Audio::PlayAudio(AUDIO_SELECT, 1.0f);
                     UnselectAnyObject();
                 }

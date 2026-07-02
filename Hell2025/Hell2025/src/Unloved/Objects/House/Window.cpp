@@ -6,6 +6,7 @@
 
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Render/RendererEnums.h"
+#include "Unloved/Systems/House/HouseBuilder.h"
 
 #include "Util.h"
 
@@ -111,6 +112,11 @@ void Window::SetPosition(const glm::vec3& position) {
     UpdateClippingVolume();
     m_meshNodes.Update(m_transform.to_mat4());
     Hell::Physics::SetRigidStaticWorldTransform(m_physicsId, m_transform.to_mat4());
+    HouseBuilder::MarkDirty();
+}
+
+void Window::SetRotation(const glm::vec3& rotation) {
+    SetRotationY(rotation.y);
 }
 
 void Window::SetRotationY(float value) {
@@ -118,6 +124,7 @@ void Window::SetRotationY(float value) {
     m_transform.rotation.y = value;
     UpdateClippingVolume();
     m_meshNodes.Update(m_transform.to_mat4());
+    HouseBuilder::MarkDirty();
 }
 
 void Window::Update(float deltaTime) {

@@ -20,7 +20,6 @@ struct GenericObject {
     void SetPosition(const glm::vec3& position);
     void SetRotation(const glm::vec3& rotation);
 
-    glm::vec3 GetGizmoOffset();
     uint64_t GetObjectId()                                              { return m_objectId; }
     MeshNodes& GetMeshNodes()                                           { return m_meshNodes; }
     bool IsDirty() const                                                { return m_meshNodes.IsDirty(); }

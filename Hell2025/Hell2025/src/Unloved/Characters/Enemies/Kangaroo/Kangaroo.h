@@ -64,7 +64,8 @@ namespace Unloved {
         uint64_t GetObjectId()                      { return m_objectId; }
         uint64_t GetCharacterControllerId ()        { return m_characterControllerId; }
         uint64_t GetRagdollId()                   { return m_RagdollId; }
-        glm::vec3 GetPosition()                     { return m_position; }
+        const glm::vec3& GetPosition() const        { return m_position; }
+        const glm::vec3& GetRotation() const        { return m_rotation; }
         bool WoundTextureNeedsClearing()            { return m_woundTextureNeedsClearing; }
         const KangarooCreateInfo& GetCreateInfo() const { return m_createInfo; }
         const std::string& GetEditorName() const    { return m_createInfo.editorName; }

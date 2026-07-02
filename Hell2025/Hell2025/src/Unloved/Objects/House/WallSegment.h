@@ -4,12 +4,9 @@
 #include "Hell/Render/VertexAttributes.h"
 
 #include "Unloved/Common/Types.h"
+#include "Unloved/Systems/House/ClippingVolume.h"
 
 #include <vector>
-
-namespace HouseBuilder {
-    struct ClippingVolume;
-}
 
 namespace Unloved {
 
@@ -17,7 +14,7 @@ struct WallSegment {
     void Init(glm::vec3 start, glm::vec3 end, float height, uint64_t parentObjectId, const SpawnOffset& spawnOffset);
     void SetMeshId(uint32_t meshId);
     void CleanUp();
-    void CreateVertexData(const std::vector<const HouseBuilder::ClippingVolume*>& clippingVolumes, float texOffsetX, float texOffsetY, float texScale);
+    void CreateVertexData(const std::vector<const ClippingVolume*>& clippingVolumes, float texOffsetX, float texOffsetY, float texScale);
     void CreatePhysicsObject();
 
     const glm::vec3& GetStart()                 const { return m_start; }

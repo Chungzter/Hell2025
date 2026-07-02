@@ -3,6 +3,7 @@
 #include "Legacy/Renderer/Renderer.h"
 #include "Legacy/Util/Util.h"
 #include "Unloved/Objects/Lighting/Light.h"
+#include "Unloved/Systems/House/HouseBuilder.h"
 #include "Unloved/World/World.h"
 
 namespace Unloved {
@@ -196,6 +197,7 @@ void Fireplace::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
     m_transform.position = position;
     UpdateWorldMatrix();
+    HouseBuilder::MarkDirty();
 }
 
 void Fireplace::SetPositionX(float x) {
@@ -214,6 +216,7 @@ void Fireplace::SetRotation(const glm::vec3& rotation) {
     m_createInfo.rotation = rotation;
     m_transform.rotation = rotation;
     UpdateWorldMatrix();
+    HouseBuilder::MarkDirty();
 }
 
 void Fireplace::Update(float deltaTime) {

@@ -40,7 +40,8 @@ struct GameObject {
     void MarkAsSelected();
     bool IsSelected();
 
-    glm::vec3 GetPosition() const;
+    const glm::vec3& GetPosition() const;
+    const glm::vec3& GetRotation() const                    { return m_transform.rotation; }
     glm::vec3 GetEulerRotation() const;
     glm::vec3 GetScale() const;
     const glm::mat4 GetModelMatrix();

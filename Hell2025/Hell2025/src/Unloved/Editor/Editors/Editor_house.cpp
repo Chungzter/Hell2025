@@ -71,7 +71,6 @@ namespace Unloved::Editor {
         LegacyWorld::ResetWorld();
         if (HouseData* houseData = HouseManager::GetHouseDataByName(Editor::GetEditorHouseName())) {
             World::LoadHouse(*houseData, SpawnOffset());
-            LegacyWorld::RecreateAllHouseGeometry();
         }
         LegacyWorld::DisableOcean();
 

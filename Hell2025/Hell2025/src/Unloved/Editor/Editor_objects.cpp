@@ -7,7 +7,6 @@
 #include "Hell/Physics/Physics.h"
 
 #include "Legacy/Renderer/Renderer.h"
-#include "Unloved/Viewport/ViewportManager.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Debug/DebugDraw.h"
@@ -16,6 +15,7 @@
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/World/World.h"
+#include "Unloved/Viewport/ViewportManager.h"
 
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
@@ -181,11 +181,6 @@ namespace Unloved::Editor {
                 glm::vec3 position = plane->GetVertices()[g_selectedVertexIndex].position;
                 DebugDraw::DrawPoint(position, YELLOW);
             }
-
-            // is this IF neccesssary? write safer less confusing logic!!!
-           // if (GetEditorSelectionMode() == EditorSelectionMode::OBJECT) {
-           //     Gizmo::SetPosition(plane->GetWorldSpaceCenter());
-           // }
         }
 
 
@@ -197,7 +192,7 @@ namespace Unloved::Editor {
             SetSelectedObjectType(GetHoveredObjectType());
             SetSelectedObjectId(GetHoveredObjectId());
 
-            Gizmo::SetSourceObjectOffeset(LegacyWorld::GetGizmoOffest(GetSelectedObjectId()));
+            Gizmo::SetSourceObjectOffeset(glm::vec3(0.0f)); // TODO: get to the bottom of this mess
 
             if (GenericObject* genericObject = Unloved::World::GetGenericObjectById(GetSelectedObjectId())) {
                 Gizmo::SetPosition(genericObject->GetPosition());
@@ -289,7 +284,7 @@ namespace Unloved::Editor {
         if (GetEditorState() == EditorState::GIZMO_TRANSLATING) {
 
             if (GetEditorSelectionMode() == EditorSelectionMode::OBJECT) {
-                LegacyWorld::SetObjectPosition(GetSelectedObjectId(), Gizmo::GetPosition());
+                Unloved::World::SetPositionById(GetSelectedObjectId(), Gizmo::GetPosition());
             }
             else if (GetEditorSelectionMode() == EditorSelectionMode::VERTEX) {
 
@@ -302,9 +297,7 @@ namespace Unloved::Editor {
                 // HACK
                 if (GetSelectedObjectType() == ObjectType::WALL) {
                     if (Wall* wall = Unloved::World::GetWallByObjectId(GetSelectedObjectId())) {
-                        if (wall->UpdatePointPosition(g_selectedVertexIndex, Gizmo::GetPosition())) {
-                            LegacyWorld::RecreateAllHouseGeometry(); // this could be slow???????????????????????????????
-                        }
+                        wall->UpdatePointPosition(g_selectedVertexIndex, Gizmo::GetPosition());
                     }
                 }
 
@@ -333,7 +326,6 @@ namespace Unloved::Editor {
                             createInfo.p3 = Gizmo::GetPosition();
                         }
                         plane->UpdateVertexDataFromCreateInfo();
-                        LegacyWorld::RecreateAllHouseGeometry(); // this could be slow???????????????????????????????
                     }
                 }
             }
@@ -342,7 +334,7 @@ namespace Unloved::Editor {
 
         }
         if (GetEditorState() == EditorState::GIZMO_ROTATING) {
-            LegacyWorld::SetObjectRotation(GetSelectedObjectId(), Gizmo::GetRotation());
+            Unloved::World::SetRotationById(GetSelectedObjectId(), Gizmo::GetRotation());
         }
 
     }
