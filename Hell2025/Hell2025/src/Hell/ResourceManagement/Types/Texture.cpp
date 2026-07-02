@@ -1,7 +1,6 @@
 #include "Texture.h"
 
 #include "Hell/Render/API/OpenGL/GL_resource_manager.h"
-#include "API/Vulkan/Types/VK_texture.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/MaterialBuilder.h"
@@ -42,17 +41,17 @@ OpenGLTexture& Texture::GetGLTexture() {
     return invalid;
 }
 
-VulkanTexture& Texture::GetVKTexture() {
-    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-        Logging::Error() << "Texture::GetVKTexture() was called but API is OpenGL\n";
-    }
-    else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        // TODO
-    }
-
-    static VulkanTexture invalid;
-    return invalid;
-}
+// VulkanTexture& Texture::GetVKTexture() {
+//     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
+//         Logging::Error() << "Texture::GetVKTexture() was called but API is OpenGL\n";
+//     }
+//     else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+//         // TODO
+//     }
+//
+//     static VulkanTexture invalid;
+//     return invalid;
+// }
 
 void Texture::FreeCPUMemory() {
     for (TextureMip& mip : m_imageData.mips) {

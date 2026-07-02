@@ -1,6 +1,5 @@
 #include "PictureFrame.h"
 #include "Hell/Logging.h"
-#include "Util.h"
 
 #include "Unloved/Render/Renderer.h"
 

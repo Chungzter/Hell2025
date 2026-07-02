@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Hell/Render/API/OpenGL/Types/GL_texture.h"
-#include "API/Vulkan/Types/VK_texture.h"
 #include "Hell/Common.h"
 #include "Hell/File.h"
 #include "Hell/Math/GLM.h"
@@ -49,7 +48,7 @@ public:
     const BakeState GetTextureDataLevelBakeState(int index);
 
     OpenGLTexture& GetGLTexture();
-    VulkanTexture& GetVKTexture();
+    // VulkanTexture& GetVKTexture();
 
     const int GetMipmapLevelCount()                  { return m_mipmapLevelCount; }
     const std::string& GetFileName() const           { return m_fileInfo.name; }

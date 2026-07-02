@@ -11,7 +11,7 @@ void MeshBufferOLD::Reset() {
         m_opengMeshBuffer.ReleaseBuffers();
     }
     if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        //m_vkMeshBuffer.ReleaseBuffers();
+        // TODO
     }
 }
 
@@ -59,7 +59,7 @@ void MeshBufferOLD::UpdateBuffers() {
         m_opengMeshBuffer.UpdateBuffers(m_vertices, m_indices);
     }
     else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        //VulkanDetachedMesh.UpdateBuffers(m_vertices, m_indices);
+        // TODO
     }
 }
 

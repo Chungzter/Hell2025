@@ -17,17 +17,9 @@
 #include <iostream>
 #include "Hell/Logging.h"
 
-#include "API/Vulkan/vk_backend.h"
-
 #include "Hell/AssetLoader/AssetLoader.h"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-
-/*
-int main2() {
-    VulkanBackEnd::Init();
-    return 0;
-}*/
 
 /*int main() {
     std::cout << "\x1B[2J\x1B[H";

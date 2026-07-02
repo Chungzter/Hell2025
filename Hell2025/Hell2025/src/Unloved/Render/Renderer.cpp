@@ -1,7 +1,5 @@
 #include "Renderer.h"
 
-#include "API/Vulkan/Renderer/VK_renderer.h"
-
 #include "Hell/Audio.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
@@ -60,7 +58,7 @@ namespace Unloved::Renderer {
             OpenGLRenderer::RenderLoadingScreen();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            VulkanRenderer::RenderLoadingScreen();
+            Logging::ToDo() << "Vulkan: RenderLoadingScreen()";
         }
     }
 

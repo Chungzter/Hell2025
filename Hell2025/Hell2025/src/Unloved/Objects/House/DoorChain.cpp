@@ -4,7 +4,7 @@
 #include "Hell/Math/Math.h"
 #include "Hell/Physics/Physics.h"
 #include "Unloved/Render/RenderDataManager.h"
-#include "Util.h"
+#include "Unloved/Render/RendererUtil.h"
 #include "Hell/Input.h"
 
 namespace Unloved {
@@ -200,7 +200,7 @@ void DoorChain::SubmitRenderItems() {
             renderItem.rmaTextureIndex = material->m_rma;
             renderItem.normalMapTextureIndex = material->m_normal;
             renderItem.meshId = m_chainLinkMeshId;
-            Util::UpdateRenderItemAABB(renderItem);
+            RendererUtil::UpdateRenderItemAABB(renderItem);
 
             RenderDataManager::SubmitRenderItem(renderItem);
 

@@ -4,7 +4,6 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Physics/Physics.h"
 #include "Unloved/Render/RenderDataManager.h"
-#include "Util.h"
 #include "Unloved/ObjectId.h"
 
 #include <iostream> // TODO clean up logging

@@ -8,18 +8,17 @@
 #include "Hell/Render/API/OpenGL/Types/GL_shader.h"
 #include "Hell/Render/API/OpenGL/Types/GL_ssbo.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Hell/Audio.h"
-namespace Audio = Hell::Audio;
 #include "Unloved/Session/Session.h"
 #include "Unloved/Config/Config.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Player/Player.h"
 #include "Unloved/Render/RenderDataManager.h"
-#include "Util/Util.h"
+#include "Unloved/Render/Renderer.h"
 #include "Hell/UI/UIBackEnd.h"
 #include "Hell/UI/TextBlitter.h"
 #include "Unloved/Objects/Props/GameObject.h"
-#include "../Timer.hpp"
+#include "Unloved/Objects/Props/Christmas/ChristmasLights.h"
+#include "Legacy/Timer.hpp"
 
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Editor/Gizmo.h"
@@ -31,11 +30,7 @@ namespace Audio = Hell::Audio;
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "World/LegacyWorld.h"
-#include "Unloved/Render/Renderer.h"
 #include <unordered_map>
-#include "Hell/Input.h"
-namespace Input = Hell::Input;
 
 
 #define NONE_BIT 0
@@ -52,9 +47,6 @@ namespace OpenGLRenderer {
     unsigned int g_lightDepthMaps;
     constexpr unsigned int g_depthMapResolution = 4096;
 
-    int g_fftDisplayMode = 0;
-    int g_fftEditBand = 0;
-
     GLuint g_emptyVao = 0;
     std::unordered_map<std::string, GLuint> g_cachedTextureHandles;
 
@@ -66,12 +58,6 @@ namespace OpenGLRenderer {
     struct Cubemaps {
         OpenGLCubemapView g_skyboxView;
     } g_cubemaps;
-
-    void ClearRenderTargets();
-
-    int GetFftDisplayMode() {
-        return g_fftDisplayMode;
-    }
 
     void Init() {
 
@@ -506,6 +492,38 @@ namespace OpenGLRenderer {
         OpenGL::ResourceManager::LoadShader("PostProcessing", "FXAA", { "GL_fxaa.comp" });
         OpenGL::ResourceManager::LoadShader("PostProcessing", "TAA", { "GL_taa.comp" });
 		OpenGL::ResourceManager::LoadShader("PostProcessing", "PostProcessing", { "GL_post_processing.comp" });
+
+        // RE_STYLE ONLY
+
+        OpenGL::ResourceManager::LoadShader("RE", "DepthPrePassRE", { "GL_depth_prepass.vert", "GL_depth_prepass.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "DepthPrePassAlphaDiscardRE", { "GL_depth_prepass_alpha_discard.vert", "GL_depth_prepass_alpha_discard.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "GBufferRE", { "GL_gbuffer_re.vert", "GL_gbuffer_re.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "LightingDeferred", { "GL_fullscreen_triangle.vert", "GL_lighting_deferred.frag" });
+
+        OpenGL::ResourceManager::LoadShader("RE", "HairLightingForward", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "HairLightingForwardOLD", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward_old.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "HairCompositeRE", { "GL_hair_composite_re.comp" });
+        OpenGL::ResourceManager::LoadShader("RE", "HairDepthPrep", { "GL_fullscreen_triangle.vert", "GL_hair_depth_prep.frag" });
+
+        OpenGL::ResourceManager::LoadShader("RE", "Visibility", { "GL_visibility.vert", "GL_visibility.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "VisibilityAlphaDiscard", { "GL_visibility.vert", "GL_visibility_alpha_discard.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "MaterialResolve", { "GL_material_resolve.vert", "GL_material_resolve.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "MaterialResolveSkinning", { "GL_material_resolve.vert", "GL_material_resolve.frag" }, { "SKINNED" });
+
+        OpenGL::ResourceManager::LoadShader("RE", "EmissiveForward", { "GL_gbuffer_re.vert", "GL_emissive_forward.frag" });
+
+        OpenGL::ResourceManager::LoadShader("RE", "LightingForward", { "GL_lighting_forward.vert", "GL_lighting_forward.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "SkyboxRE", { "GL_fullscreen_triangle.vert", "GL_skybox_re.frag" });
+
+        OpenGL::ResourceManager::LoadShader("RE", "OceanLighting", { "GL_ocean_lighting.vert", "GL_ocean_lighting.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "Bubbles", { "GL_bubbles.vert", "GL_bubbles.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "Bubbles2", { "GL_bubbles_2.vert", "GL_bubbles_2.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "Bubbles3", { "GL_bubbles_3.vert", "GL_bubbles_3.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "BubbleDrawCommandArgs", { "GL_bubble_draw_command_args.comp" });
+
+        OpenGL::ResourceManager::LoadShader("RE", "ParticleAdditions", { "GL_particle_additions.comp" });
+        OpenGL::ResourceManager::LoadShader("RE", "ParticleColor", { "GL_particle_color.vert", "GL_particle_color.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "ParticleUpdate", { "GL_particle_update.comp" });
     }
 
     void CreateSSBOs() {
@@ -678,189 +696,6 @@ namespace OpenGLRenderer {
                 glDrawArrays(GL_LINE_STRIP, 0, 16);
             }
         }
-    }
-
-
-    void RenderGame() {
-        ProfilerOpenGLFrame();
-
-		if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
-			RenderGameREStyle();
-			return;
-		}
-
-
-        ComputeOceanFFTPass();
-        OceanHeightReadback();
-
-        OpenGLFrameBuffer& hairFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Hair");
-        Unloved::DDGIVolume& ddgiVolume = LegacyWorld::GetTestDDGIVolume();
-
-        glDisable(GL_DITHER);
-
-        if (Input::KeyPressed(HELL_KEY_N)) {
-            Audio::PlayAudio(AUDIO_SELECT, 1.00f);
-            FlipNormalMapY();
-        }
-
-        //BlitRoads();
-
-        ComputeSkinningPass();
-        ClearRenderTargets();
-
-        UpdateSSBOS();
-        RenderShadowMaps();
-        SkyBoxPass();
-        HeightMapPass();
-
-
-        DecalPaintingPass();
-        HouseGeometryPass();
-        GeometryPass();
-        GrassPass();
-        MirrorGeometryPass();
-        WeatherBoardsPass();
-        VatBloodPass();
-
-        ComputeTileWorldBounds();
-        ChristmasLightCullingPass();
-        LightCullingPass();
-
-        BloodDecalsPass();
-        ComputeViewspaceDepth();
-
-        // GI
-        UpdateGlobalIllumintation();
-
-        OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(1, "RendererData");
-        OpenGL::BindSSBO(2, "ViewportData");
-        OpenGL::BindSSBO(3, "InstanceData");
-        OpenGL::BindSSBO(4, "Lights");
-        OpenGL::BindSSBO(5, "TileLights");
-        OpenGL::BindSSBO(6, "TileWorldBounds");
-
-        OpenGL::BindSSBO(10, "ProbeSHColor");
-        OpenGL::BindSSBO(11, "ProbeStates");
-
-        LightingPass();
-
-        //FurPass();
-        OceanGeometryPass();
-        OceanUnderWaterFlags();
-        OceanSurfaceCompositePass();
-
-        GlassPass();
-        EmissivePass();
-        ScreenspaceReflectionsPass();
-        HairPass();
-        //DepthPeeledTransparencyPass();
-        PlasticPass();
-        RayMarchFog();
-        GaussianBlur();
-        OceanUnderwaterCompositePass();
-        StainedGlassPass();
-        WinstonPass();
-        SpriteSheetPass(); // Muzzle flash, etc
-        InventoryGaussianPass();
-
-        // Disabling lighting actually just clears it, that way you don't have fog and shit everywhere
-        if (!Unloved::Renderer::GetCurrentRendererSettings().enableLighting) {
-            OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
-            gBuffer.Bind();
-            gBuffer.ClearAttachment("Lighting", 0, 0, 0, 0);
-        }
-
-        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
-        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
-        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
-
-        PostProcessingPass();
-
-        DebugViewPass();
-        DebugPass();
-
-        ExamineItemPass();
-        EditorPass();
-        OutlinePass();
-
-        //DownSampleFinalImage();
-
-        //if (Input::KeyDown(HELL_KEY_U)) {
-        //    OpenGLFrameBuffer* bloodFluidFbo = OpenGL::ResourceManager::GetFrameBufferPtr("BloodFluid");
-        //    OpenGL::BlitFrameBuffer(bloodFluidFbo, &finalImageBuffer, "Depth", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
-        //}
-        //if (Input::KeyDown(HELL_KEY_Y)) {
-        //    OpenGLFrameBuffer* bloodFluidFbo = OpenGL::ResourceManager::GetFrameBufferPtr("BloodFluid");
-        //    OpenGL::BlitFrameBuffer(bloodFluidFbo, &finalImageBuffer, "Thickness", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
-        //}
-        //if (Input::KeyDown(HELL_KEY_T)) {
-        //    OpenGLFrameBuffer* bloodFluidFbo = OpenGL::ResourceManager::GetFrameBufferPtr("BloodFluid");
-        //    OpenGL::BlitFrameBuffer(bloodFluidFbo, &finalImageBuffer, "BlurIntermediate", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
-        //}
-
-        //BlitFog();
-
-        OpenGLFrameBuffer& finalImageFbo = OpenGL::ResourceManager::GetFrameBuffer("FinalImage");
-        OpenGLFrameBuffer& gBufferRE = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
-        OpenGLFrameBuffer& presentFbo = OpenGL::ResourceManager::GetFrameBuffer("Present");
-
-        // Downscale with linear filtering
-        OpenGL::BlitFrameBuffer(&gBufferRE, &finalImageFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-        // Upscale with nearest filtering
-        OpenGL::BlitFrameBuffer(&finalImageFbo, &presentFbo, "Color", "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-        UIPass();
-
-        // Blit to swap chain
-        OpenGL::BlitToDefaultFrameBuffer(&presentFbo, "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-        ImGuiPass();
-        BlitDebugTextures();
-
-        // DEBUG RENDER FFT TEXTURES TO THE SCREEN
-        if (Input::KeyPressed(HELL_KEY_5)) {
-            g_fftDisplayMode = 1;
-            g_fftEditBand = 0;
-        }
-        if (Input::KeyPressed(HELL_KEY_6)) {
-            g_fftDisplayMode = 2;
-            g_fftEditBand = 1;
-        }
-        if (Input::KeyPressed(HELL_KEY_7)) {
-            g_fftDisplayMode = 0;
-        }
-    }
-
-    void ClearRenderTargets() {
-        glDepthMask(GL_TRUE);
-
-        // Water
-        OpenGLFrameBuffer& waterFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Water");
-        waterFrameBuffer.Bind();
-        waterFrameBuffer.ClearAttachment("Lighting", 0, 0, 0, 0);
-        waterFrameBuffer.ClearAttachmentUI("OceanFlags", 0, 0, 0, 0);
-        waterFrameBuffer.ClearAttachmentUI("OceanMask", 0, 0, 0, 0);
-
-        // GBuffer
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
-        gBuffer.Bind();
-        gBuffer.ClearAttachment("Lighting", 0, 0, 0, 1);
-        gBuffer.ClearAttachment("BaseColorMetallic", 0, 0, 0, 1);
-        gBuffer.ClearAttachment("NormalXYRoughnessMisc", 0, 0, 0, 1);
-        gBuffer.ClearAttachment("VelocityXYOcclusionSubSurface", 0, 0, 0, 1);
-        gBuffer.ClearAttachment("Emissive", 0.0f, 0.0f, 0.0f, 0.0f);
-        gBuffer.ClearAttachmentUI("Visibility", 0, 0, 0, 0);
-        gBuffer.ClearDepthAttachment(0.0f);
-        gBuffer.ClearStencilBits(0);
-
-        gBuffer.ClearAttachment("Glass", 0, 0, 0, 0); // TODO: remove me when/if u can
-
-        // Decal mask
-        OpenGLFrameBuffer& miscFullSizeFBO = OpenGL::ResourceManager::GetFrameBuffer("MiscFullSize");
-        miscFullSizeFBO.Bind();
-        miscFullSizeFBO.ClearTexImage("BloodScreenSpaceDecalMask", 0, 0, 0, 0);
     }
 
     void MultiDrawIndirect(const std::vector<DrawIndexedIndirectCommand>& commands) {

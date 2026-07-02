@@ -10,8 +10,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "API/Vulkan/Managers/VK_device_manager.h"
-
 #ifdef _WIN32
 #define NOMINMAX
 #include <Windows.h>
@@ -152,12 +150,8 @@ namespace Hell::BackEnd::SDL {
     }
 
     bool CreateSurface(void* surface) {
-        VkInstance instance = VulkanDeviceManager::GetInstance();
-        VkSurfaceKHR* outSurface = static_cast<VkSurfaceKHR*>(surface);
-        if (!SDL_Vulkan_CreateSurface(g_window, instance, nullptr, outSurface)) {
-            return false;
-        }
-        return true;
+        // Vulkan surface creation will be rewired with the new backend.
+        return false;
     }
 
     void BeginFrame(API /*api*/) {

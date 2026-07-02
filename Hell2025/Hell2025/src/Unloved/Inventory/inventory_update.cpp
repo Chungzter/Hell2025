@@ -6,7 +6,6 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Unloved/Render/Renderer.h"
-#include "Legacy/Util/Util.h"
 
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Session/Session.h"

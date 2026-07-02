@@ -12,7 +12,6 @@
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Legacy/World/LegacyWorld.h"
-#include "Util.h"
 
 namespace Unloved {
 

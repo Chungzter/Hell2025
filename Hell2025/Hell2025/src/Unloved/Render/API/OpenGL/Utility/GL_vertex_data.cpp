@@ -1,4 +1,4 @@
-#include "../GL_renderer.h"
+#include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 namespace OpenGLRenderer {

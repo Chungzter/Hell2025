@@ -5,7 +5,6 @@
 #include "Hell/Physics/Physics.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
-#include "Util.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Session/Session.h"

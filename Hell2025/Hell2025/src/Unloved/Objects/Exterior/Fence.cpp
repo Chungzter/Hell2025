@@ -6,7 +6,7 @@
 #include "Hell/Math/Rotation.h"
 #include "Hell/Physics/Physics.h"
 #include "Unloved/Render/Renderer.h"
-#include "Legacy/Util/Util.h"
+#include "Unloved/Render/RendererUtil.h"
 
 #include <cmath>
 
@@ -123,7 +123,7 @@ void Fence::Init() {
             for (RenderItem& renderItem : meshNodeRenderItemsFat) {
                 renderItem.modelMatrix = transform.to_mat4();
                 renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-                Util::UpdateRenderItemAABB(renderItem);
+                RendererUtil::UpdateRenderItemAABB(renderItem);
                 m_renderItems.push_back(renderItem);
             }
 
@@ -138,7 +138,7 @@ void Fence::Init() {
             for (RenderItem& renderItem : meshNodeRenderItemsThin) {
                 renderItem.modelMatrix = transform.to_mat4();
                 renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-                Util::UpdateRenderItemAABB(renderItem);
+                RendererUtil::UpdateRenderItemAABB(renderItem);
                 m_renderItems.push_back(renderItem);
             }
 
@@ -170,7 +170,7 @@ void Fence::Init() {
 
     for (RenderItem& renderItem : m_renderItems) {
         Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
-        Util::UpdateRenderItemAABB(renderItem);
+        RendererUtil::UpdateRenderItemAABB(renderItem);
     }
 }
 
@@ -209,7 +209,7 @@ RenderItem Fence::CreateWireRenderItem(RenderItem& localSpaceRenderItem, glm::ve
     RenderItem renderItem = localSpaceRenderItem;
     renderItem.modelMatrix = translation.to_mat4() * rotationMatrix * scale.to_mat4();
     renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-    Util::UpdateRenderItemAABB(renderItem);
+    RendererUtil::UpdateRenderItemAABB(renderItem);
 
     return renderItem;
 }

@@ -3,7 +3,7 @@
 #include "Hell/Common/Random.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Render/Renderer.h"
-#include "Legacy/Util/Util.h"
+#include "Unloved/Render/RendererUtil.h"
 #include <array>
 
 #include "Hell/Logging.h"
@@ -96,7 +96,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         renderItem.emissiveG = 0.0f;
         renderItem.emissiveB = 0.0f;
         Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
-        Util::UpdateRenderItemAABB(renderItem);
+        RendererUtil::UpdateRenderItemAABB(renderItem);
         m_renderItems.push_back(renderItem);
     }
 
@@ -112,7 +112,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         renderItem.normalMapTextureIndex = material->m_normal;
         renderItem.shadowBit = SHADOW_BIT_NONE;
         Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
-        Util::UpdateRenderItemAABB(renderItem);
+        RendererUtil::UpdateRenderItemAABB(renderItem);
         m_renderItems.push_back(renderItem);
     }
 

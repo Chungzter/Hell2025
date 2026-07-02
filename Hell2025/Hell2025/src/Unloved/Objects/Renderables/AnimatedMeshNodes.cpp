@@ -5,7 +5,7 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "../../../../res/shaders/common/misc_flags.glsl"
-#include "Util.h"
+#include "Unloved/Render/RendererUtil.h"
 
 namespace Unloved {
 
@@ -117,7 +117,7 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
                 renderItem.prevModelMatrix = renderItem.modelMatrix * boneSkinningMatrices[boneIndex]; // Hack because you are compute skinning and can't rely on shit here. FIGURE THIS OUT
                 renderItem.modelMatrix = modelMatrix * boneSkinningMatrices[boneIndex];
                 renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-                Util::UpdateRenderItemAABB(renderItem);
+                RendererUtil::UpdateRenderItemAABB(renderItem);
 
                 if (mesh->name == "P90_Magazine") {
                     m_nonDeformingRenderItemsDepthPeeledTransparent.push_back(renderItem);

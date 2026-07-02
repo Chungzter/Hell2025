@@ -7,7 +7,7 @@
 #include "Unloved/Systems/House/HouseClipping.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
 #include "Unloved/Render/RenderDataManager.h"
-#include "Legacy/Util/Util.h"
+#include "Unloved/Render/RendererUtil.h"
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Hell/Logging.h"
@@ -485,7 +485,7 @@ void Wall::RecreateWeatherBoardMesh() {
         }
         renderItem.shadowBit |= (SHADOW_BIT_CAST_SHADOW | SHADOW_BIT_CAST_CSM_SHADOW | SHADOW_BIT_STATIC);
 
-        Util::UpdateRenderItemAABB(renderItem);
+        RendererUtil::UpdateRenderItemAABB(renderItem);
         Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }
 

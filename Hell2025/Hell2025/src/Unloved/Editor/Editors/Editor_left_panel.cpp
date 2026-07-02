@@ -3,7 +3,6 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Unloved/Systems/Map/MapManager.h"
-#include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
 #include "Unloved/World/World.h"
 

@@ -3,7 +3,6 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/UI/UIBackEnd.h"
 
-#include "Legacy/Util/Util.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "Unloved/Common/Constants.h"

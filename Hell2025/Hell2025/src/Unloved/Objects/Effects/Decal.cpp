@@ -6,7 +6,7 @@
 #include "Hell/Math/Rotation.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Render/RenderDataManager.h"
-#include "Legacy/Util/Util.h"
+#include "Unloved/Render/RendererUtil.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Render/RendererConstants.h"
 #include "Unloved/World/World.h"
@@ -103,7 +103,7 @@ void Decal::Update() {
     m_renderItem.inverseModelMatrix = glm::inverse(m_renderItem.modelMatrix);
     m_renderItem.aabbMin = glm::vec4(GetPosition() - m_localAABB.GetBoundsMin(), 1.0);
     m_renderItem.aabbMax = glm::vec4(GetPosition() + m_localAABB.GetBoundsMax(), 1.0);
-    Util::UpdateRenderItemAABB(m_renderItem);
+    RendererUtil::UpdateRenderItemAABB(m_renderItem);
 
     RenderDataManager::SubmitRenderItem({ m_renderItem });
 }

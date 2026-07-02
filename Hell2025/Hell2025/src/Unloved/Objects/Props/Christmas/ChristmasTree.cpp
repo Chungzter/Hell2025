@@ -1,6 +1,5 @@
 #include "ChristmasTree.h"
 #include "Unloved/Render/Renderer.h"
-#include "Legacy/Util/Util.h"
 #include "Unloved/World/World.h"
 
 namespace Unloved {
@@ -62,7 +61,7 @@ void ChristmasTree::CreateRenderItems() {
     //        renderItem.rmaTextureIndex = material->m_rma;
     //    }
     //
-    //    Util::UpdateRenderItemAABB(renderItem);
+    //    RendererUtil::UpdateRenderItemAABB(renderItem);
     //}
 }
 

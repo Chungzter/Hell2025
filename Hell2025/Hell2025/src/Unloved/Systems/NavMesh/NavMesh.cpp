@@ -7,7 +7,6 @@
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Render/Renderer.h"
 #include "Legacy/Timer.hpp"
-#include "Legacy/Util/Util.h"
 
 #include "Unloved/ObjectId.h"
 #include "Unloved/Objects/House/Door.h"

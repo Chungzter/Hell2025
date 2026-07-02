@@ -12,7 +12,6 @@
 #include <Vulkan/vulkan.h>
 #include <iostream>
 #include <string>
-#include "API/Vulkan/Managers/VK_device_manager.h"
 #include <unordered_map>
 
 namespace Hell::BackEnd::GLFW {
@@ -111,12 +110,8 @@ namespace Hell::BackEnd::GLFW {
     }
 
     bool CreateSurface(void* surface) {
-        VkInstance instance = VulkanDeviceManager::GetInstance();
-        VkPhysicalDevice GetPhysicalDevice();
-        if (glfwCreateWindowSurface(instance, g_window, nullptr, static_cast<VkSurfaceKHR*>(surface)) != VK_SUCCESS) {
-            return false;
-        }
-        return true;
+        // Vulkan surface creation will be rewired with the new backend.
+        return false;
     }
 
     void BeginFrame(API api) {

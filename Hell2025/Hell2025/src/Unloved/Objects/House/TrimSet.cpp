@@ -3,6 +3,7 @@
 #include "Hell/Math/Rotation.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RendererUtil.h"
 #include "Legacy/World/LegacyWorld.h"
 #include "Unloved/World/World.h"
 
@@ -242,7 +243,7 @@ void TrimSet::CreateRenderItems() {
 
         renderItem.prevModelMatrix = renderItem.modelMatrix; // These never move, so use current model matrix
 
-        Util::UpdateRenderItemAABB(renderItem);
+        RendererUtil::UpdateRenderItemAABB(renderItem);
         Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }
 }

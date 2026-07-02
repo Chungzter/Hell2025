@@ -2,7 +2,6 @@
 
 #include "Hell/Input.h"
 
-#include "Legacy/Util/Util.h"
 
 #include "Unloved/Session/Session.h"
 

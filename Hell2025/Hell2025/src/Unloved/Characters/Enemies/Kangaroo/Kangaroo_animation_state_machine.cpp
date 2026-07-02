@@ -1,6 +1,5 @@
  #include "Kangaroo.h"
 #include "Unloved/Session/Session.h"
-#include "Util.h"
 
 #include <iostream> // TODO clean up logging
 

@@ -1,6 +1,5 @@
 #include "SpriteSheetObject.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Legacy/Util/Util.h"
 
 namespace Unloved {
 

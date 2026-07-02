@@ -1,6 +1,5 @@
 #pragma once
 #include "Hell/Render/API/OpenGL/Types/GL_mesh_buffer_old.h"
-#include "../API/Vulkan/Types/vk_detachedMesh.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/ResourceManagement/Types/Mesh.h"
 
@@ -15,7 +14,7 @@ struct MeshBufferOLD {
 
     std::string& GetName()                  { return m_name; }
     OpenGLMeshBufferOLD& GetGLMeshBuffer()     { return m_opengMeshBuffer; }
-    VulkanDetachedMesh& GetVKMesh()         { return m_vulkanDetachedMesh; }
+    // VulkanDetachedMesh& GetVKMesh()         { return m_vulkanDetachedMesh; }
     std::vector<Vertex>& GetVertices()      { return m_vertices; }
     std::vector<uint32_t>& GetIndices()     { return m_indices; }
     int GetMeshCount()                      { return (int)m_meshes.size(); }
@@ -30,6 +29,6 @@ struct MeshBufferOLD {
 private:
     std::vector<Mesh> m_meshes;
     OpenGLMeshBufferOLD m_opengMeshBuffer;
-    VulkanDetachedMesh m_vulkanDetachedMesh;
+    // VulkanDetachedMesh m_vulkanDetachedMesh;
 };
 }

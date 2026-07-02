@@ -1,5 +1,4 @@
 #include "Shark.h"
-#include "Util.h"
 
 namespace Unloved {
 

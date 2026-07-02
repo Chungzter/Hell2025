@@ -9,7 +9,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Util.h"
 
 #include <cmath>
 #include <cassert>

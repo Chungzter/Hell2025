@@ -84,7 +84,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Util;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\VkBootstrap;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\VkBootstrap;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -123,7 +123,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;TRACY_ENABLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Util;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\VkBootstrap;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\VkBootstrap;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -169,7 +169,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;TRACY_ENABLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Util;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\VkBootstrap;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\VkBootstrap;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -226,46 +226,47 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Render\API\OpenGL\GL_support.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_util.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_ddgi.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_re.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_christmas_lights.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_depth_peeled_transparency.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_fog_passes.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_examine_item_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_blood_decals_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_decal_painting_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_fur_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_glass_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_metalballs_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_ocean_passes.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_plastic_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_post_processing.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_screenspace_reflections.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_stained_glass_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_vat_blood_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_weatherboards_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_winston_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\Requiem\GL_hair_passes.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\Requiem\GL_material_resolve_passes.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\Requiem\GL_particle_passes.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\Requiem\GL_post_processing_re.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\Requiem\GL_visilibty_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\GL_game_old_deferred.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\GL_game_re_style.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_christmas_lights.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_depth_peeled_transparency.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_fog_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_examine_item_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_blood_decals_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_decal_painting_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_fur_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_glass_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_metalballs_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_ocean_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_plastic_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_post_processing.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_screenspace_reflections.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_stained_glass_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_vat_blood_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_weatherboards_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_winston_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_hair_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_material_resolve_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_particle_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_post_processing_re.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_visilibty_passes.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Utility\GL_height_map_utility.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_debug_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_editor_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_emissive_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_imgui_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_geometry_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_grass_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_hair_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_heightmap_passes.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_lighting_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_loading_screen.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_outline_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_shadow_map_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_skybox_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_spritesheet_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_texture_reaback_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\RenderPasses\GL_UI_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_debug_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_editor_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_emissive_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_imgui_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_geometry_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_grass_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_hair_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_heightmap_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_lighting_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\LoadingScreen\Passes\GL_loading_screen_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_outline_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_shadow_map_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_skybox_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_spritesheet_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_texture_reaback_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_UI_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Utility\GL_misc_utility.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Utility\GL_vertex_data.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_cubemapView.cpp" />
@@ -284,21 +285,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_texture_3d.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_texture_array.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_timer.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Managers\vk_command_manager.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Managers\vk_device_manager.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Managers\vk_frame_manager.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Managers\vk_memory_manager.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Managers\vk_pipeline_manager.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Managers\vk_swapchain_manager.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Managers\vk_synchronization_manager.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Managers\vk_texture_manager.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Renderer\vk_renderer_util.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Types\vk_buffer.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Types\vk_detachedMesh.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Types\vk_texture.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\vk_backend.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\Renderer\vk_renderer.cpp" />
-    <ClCompile Include="src\Legacy\API\Vulkan\vk_util.cpp" />
     <ClCompile Include="src\Hell\Audio\Synth.cpp" />
     <ClCompile Include="src\Hell\Backend\BackEnd.cpp" />
     <ClCompile Include="src\Hell\Backend\Integration\GLFW.cpp" />
@@ -564,7 +550,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\World\World_render_submit.cpp" />
     <ClCompile Include="src\Unloved\World\World_update.cpp" />
     <ClCompile Include="src\Unloved\Systems\PianoPlayback\PianoPlaybackManager.cpp" />
-    <ClCompile Include="src\Legacy\Util\Util_rendering.cpp" />
+    <ClCompile Include="src\Unloved\Render\RendererUtil.cpp" />
     <ClCompile Include="src\Unloved\Viewport\Viewport.cpp" />
     <ClCompile Include="src\Hell\UI\FontSpriteSheet.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\GenericMesh.cpp" />
@@ -727,21 +713,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_ssbo.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_texture.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_texture_array.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Managers\vk_command_manager.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Managers\vk_device_manager.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Managers\vk_frame_manager.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Managers\vk_memory_manager.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Managers\vk_pipeline_manager.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Managers\vk_swapchain_manager.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Managers\vk_synchronization_manager.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Managers\vk_texture_manager.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Renderer\vk_renderer_util.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Types\vk_buffer.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Types\vk_detachedMesh.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Types\vk_texture.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\vk_backend.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\Renderer\vk_renderer.h" />
-    <ClInclude Include="src\Legacy\API\Vulkan\vk_util.h" />
     <ClInclude Include="src\Hell\Audio\Synth.h" />
     <ClInclude Include="src\Hell\Backend\BackEnd.h" />
     <ClInclude Include="src\Hell\Backend\Integration\GLFW.h" />
@@ -921,7 +892,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\UI\UIBackEnd.h" />
     <ClInclude Include="src\Hell\UI\UITypes.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\Texture.h" />
-    <ClInclude Include="src\Legacy\Util\Util.h" />
+    <ClInclude Include="src\Unloved\Render\RendererUtil.h" />
     <ClInclude Include="src\Unloved\Viewport\ViewportManager.h" />
     <ClInclude Include="src\Unloved\Systems\House\BlockingVolume.h" />
     <ClInclude Include="src\Unloved\Systems\House\ClippingVolume.h" />

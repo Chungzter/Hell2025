@@ -5,7 +5,6 @@
 
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Render/Renderer.h"
-#include "Legacy/Util/Util.h"
 
 #include "Unloved/Config/Config.h"
 #include "Unloved/Editor/Editor.h"

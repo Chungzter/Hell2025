@@ -1,9 +1,8 @@
-#include "../GL_renderer.h"
+#include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Session/Session.h" // remove me when u can
 #include "World/LegacyWorld.h" // remove me when u can
-#include "Util.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 // TODO

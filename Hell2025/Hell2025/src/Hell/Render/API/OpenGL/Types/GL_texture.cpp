@@ -3,7 +3,6 @@
 
 #include "Hell/Render/API/OpenGL/GL_util.h"
 #include "Hell/Backend/BackEnd.h"
-#include "Util/Util.h"
 
 #include <algorithm>
 #include <iostream>

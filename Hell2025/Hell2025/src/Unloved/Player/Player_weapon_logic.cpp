@@ -6,7 +6,6 @@
 #include "Hell/Audio.h"
 #include "Hell/Logging.h"
 
-#include "Legacy/Util/Util.h"
 #include "Legacy/World/LegacyWorld.h"
 #include "Unloved/Render/Renderer.h"
 

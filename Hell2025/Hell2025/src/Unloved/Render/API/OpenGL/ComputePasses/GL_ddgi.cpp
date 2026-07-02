@@ -9,7 +9,6 @@
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Render/RenderDataManager.h"
-#include "Legacy/Util/Util.h"
 
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Systems/DDGI/GlobalIllumination.h"

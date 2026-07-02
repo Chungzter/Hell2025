@@ -2,7 +2,6 @@
 
 #include "Hell/Logging.h"
 
-#include "Legacy/Util/Util.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include <iostream> // TODO: cleanup logging

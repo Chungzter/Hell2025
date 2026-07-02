@@ -5,7 +5,7 @@
 #include "Hell/Math/Rotation.h"
 #include "Hell/Physics/Physics.h"
 #include "Unloved/Render/Renderer.h"
-#include "Legacy/Util/Util.h"
+#include "Unloved/Render/RendererUtil.h"
 #include "Unloved/Objects/Exterior/Wire.h"
 #include "Unloved/World/World.h"
 
@@ -93,7 +93,7 @@ void PowerPoleSet::Init() {
         for (RenderItem& renderItem : meshNodeRenderItems) {
             renderItem.modelMatrix = transform.to_mat4();
             renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-            Util::UpdateRenderItemAABB(renderItem);
+            RendererUtil::UpdateRenderItemAABB(renderItem);
             m_renderItems.push_back(renderItem);
         }
 
@@ -129,7 +129,7 @@ void PowerPoleSet::Init() {
 
     for (RenderItem& renderItem : m_renderItems) {
         Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
-        Util::UpdateRenderItemAABB(renderItem);
+        RendererUtil::UpdateRenderItemAABB(renderItem);
     }
 }
 

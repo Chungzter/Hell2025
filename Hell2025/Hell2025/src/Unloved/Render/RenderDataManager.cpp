@@ -32,6 +32,7 @@
 #include "Timer.hpp"
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RendererUtil.h"
 //
 
 namespace Input = Hell::Input;
@@ -315,7 +316,7 @@ namespace Unloved::RenderDataManager {
             float viewportWidth = g_viewportData[i].width;
             float viewportHeight = g_viewportData[i].height;
             float fov = g_viewportData[i].fov;
-            const std::vector<glm::mat4> lightProjectionViews = Util::GetLightProjectionViews(viewMatrix, lightDir, g_shadowCascadeLevels, viewportWidth, viewportHeight, fov);
+            const std::vector<glm::mat4> lightProjectionViews = RendererUtil::GetLightProjectionViews(viewMatrix, lightDir, g_shadowCascadeLevels, viewportWidth, viewportHeight, fov);
 
             if (lightProjectionViews.size() != SHADOW_CASCADE_COUNT) Logging::Error() << "INCORRECT SIZE: " << lightProjectionViews.size();
             for (int j = 0; j < SHADOW_CASCADE_COUNT && j < lightProjectionViews.size(); j++) {

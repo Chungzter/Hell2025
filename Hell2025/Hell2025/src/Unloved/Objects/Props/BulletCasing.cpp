@@ -1,5 +1,5 @@
 #include "BulletCasing.h"
-#include "Util.h"
+#include "Unloved/Render/RendererUtil.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Audio.h"
 #include "Hell/Common/Random.h"
@@ -85,7 +85,7 @@ void BulletCasing::SubmitRenderItem() {
         renderItem.baseIndex = mesh->baseIndex;
     }
 
-    Util::UpdateRenderItemAABB(renderItem);
+    RendererUtil::UpdateRenderItemAABB(renderItem);
     RenderDataManager::SubmitRenderItem(renderItem);
 }
 }
