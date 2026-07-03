@@ -4,12 +4,9 @@
 #include "Unloved/Config/Config.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Render/RenderDataManager.h"
-#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/UI/UIBackEnd.h"
 
-using namespace Hell;
-
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void UIPass() {
         ProfilerOpenGLZoneFunction();
@@ -42,7 +39,7 @@ namespace OpenGLRenderer {
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
 
-        GenericMesh& genericMesh = ResourceManager::GetGenericMesh("UI");
+        OpenGLGenericMesh& genericMesh = OpenGL::ResourceManager::GetGenericMesh("UI");
         glBindVertexArray(genericMesh.GetVAO());
 
         const std::vector<DrawIndexedIndirectCommand>& drawCommands = Unloved::RenderDataManager::GetDrawCommandsUI();

@@ -32,15 +32,14 @@ struct GenericMesh {
     void UpdateIndexData(const std::vector<uint32_t>& indices);
     void CleanUp();
 
-    size_t GetVertexCount() const { return m_vertexCount; }
-    size_t GetIndexCount() const { return m_indexCount; }
     size_t GetCPUAllocatedByteCount() const;
     size_t GetGPUAllocatedByteCount() const;
-    const std::string& GetName() const { return m_name; }
-    uint64_t GetOpenGLId() const { return m_openGLId; }
-    uint64_t GetVulkanId() const { return m_vulkanId; }
 
-    uint32_t GetVAO() const;
+    const std::string& GetName() const { return m_name; }
+    size_t GetVertexCount() const      { return m_vertexCount; }
+    size_t GetIndexCount() const       { return m_indexCount; }
+    uint64_t GetOpenGLId() const       { return m_openGLId; }
+    uint64_t GetVulkanId() const       { return m_vulkanId; }
 
 private:
     void UpdateVertexData(const void* vertices, size_t vertexCount, const VertexLayoutDescription& layout);

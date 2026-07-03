@@ -21,7 +21,7 @@
 namespace Input = Hell::Input;
 // remove me
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     GLuint CreateTiling3DNoiseTexture(int resolution = 64);
     void FluidParticleTest();
@@ -115,7 +115,7 @@ namespace OpenGLRenderer {
         OpenGL::BindSSBO(6, "MetaBalls");
 
 
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
         OpenGL::BindShader("MetaBalls");
         OpenGL::SetUniformInt("u_metaBallCount", metaBalls.size());
@@ -132,7 +132,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
             OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionView);
 
@@ -453,7 +453,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(bloodFluidFbo, viewport);
+            OpenGL::Renderer::SetViewport(bloodFluidFbo, viewport);
 
             OpenGL::SetUniformMat4("u_projection", viewportData[i].projection);
             OpenGL::SetUniformMat4("u_view", viewportData[i].view);
@@ -477,7 +477,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(bloodFluidFbo, viewport);
+            OpenGL::Renderer::SetViewport(bloodFluidFbo, viewport);
 
             OpenGL::SetUniformMat4("u_projection", viewportData[i].projection);
             OpenGL::SetUniformMat4("u_view", viewportData[i].view);

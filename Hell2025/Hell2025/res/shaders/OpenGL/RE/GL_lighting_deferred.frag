@@ -1,8 +1,8 @@
 #version 460
 
 #extension GL_ARB_bindless_texture : enable
-
-#include "../../common/gl_fixed_bindings.glsl"
+layout(origin_upper_left) in vec4 gl_FragCoord;
+#include "../../common/OpenGL/binding_indices.glsl"
 #include "../../common/constants.glsl"
 #include "../../common/lighting.glsl"
 #include "../../common/distance_fog.glsl"

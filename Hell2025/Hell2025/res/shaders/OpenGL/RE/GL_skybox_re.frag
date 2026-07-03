@@ -1,4 +1,5 @@
 #version 460
+layout(origin_upper_left) in vec4 gl_FragCoord;
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
 
@@ -53,4 +54,3 @@ void main() {
     // Write output
     FinalLightingOut = vec4(outColor, 1.0);
 }
-

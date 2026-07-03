@@ -26,7 +26,7 @@ namespace Unloved::Renderer {
 
     void Init() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::Init();
+            OpenGL::Renderer::Init();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             VulkanRenderer::Init();
@@ -35,7 +35,7 @@ namespace Unloved::Renderer {
 
     void CleanUp() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::CleanUp();
+            OpenGL::Renderer::CleanUp();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             VulkanRenderer::CleanUp();
@@ -44,19 +44,18 @@ namespace Unloved::Renderer {
 
     void InitMain() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::InitMain();
+            OpenGL::Renderer::InitMain();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             VulkanRenderer::InitMain();
         }
 
-        UploadVertexData();
         InitWoundMaskArray();
     }
 
     void RenderLoadingScreen() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::RenderLoadingScreen();
+            OpenGL::Renderer::RenderLoadingScreen();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             VulkanRenderer::RenderLoadingScreen();
@@ -65,10 +64,10 @@ namespace Unloved::Renderer {
 
     void PreGameLogicComputePasses() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::PreGameLogicComputePasses();
+            OpenGL::Renderer::PreGameLogicComputePasses();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan: PreGameLogicComputePasses()";
+            //Logging::ToDo() << "Vulkan: PreGameLogicComputePasses()";
         }
     }
 
@@ -76,7 +75,7 @@ namespace Unloved::Renderer {
         g_gameIsRendering = true;
 
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::RenderGame();
+            OpenGL::Renderer::RenderGame();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             VulkanRenderer::RenderGame();
@@ -91,13 +90,13 @@ namespace Unloved::Renderer {
             OpenGL::ResourceManager::HotloadShaders();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan: HotloadShaders()";
+            VulkanRenderer::HotloadShaders();
         }
     }
 
     void RecalculateAllHeightMapData(bool blitWorldMap) {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::RecalculateAllHeightMapData(blitWorldMap);
+            OpenGL::Renderer::RecalculateAllHeightMapData(blitWorldMap);
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan: RecalculateAllHeightMapData()";
@@ -106,7 +105,7 @@ namespace Unloved::Renderer {
 
     void ReadBackHeightMapData(Unloved::MapData* mapData) {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::ReadBackHeightMapData(mapData);
+            OpenGL::Renderer::ReadBackHeightMapData(mapData);
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan: ReadBackHeightMapData()";
@@ -129,20 +128,11 @@ namespace Unloved::Renderer {
         return -1;
     }
 
-    void UploadVertexData() {
-        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::UploadVertexWeights();
-        }
-        else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan path for Renderer::UploadVertexData()";
-        }
-    }
-
     void InitWoundMaskArray() {
         // Create and init all wound mask indices to true, aka available
         g_freeWoundMaskIndices.assign(WOUND_MASK_TEXTURE_ARRAY_SIZE, true);
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGLRenderer::ClearAllWoundMasks();
+            OpenGL::Renderer::ClearAllWoundMasks();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan: InitWoundMaskArray()";
@@ -159,7 +149,7 @@ namespace Unloved::Renderer {
 
     const std::string& GetZoneNames() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            return OpenGLRenderer::GetZoneNames();
+            return OpenGL::Renderer::GetZoneNames();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan: GetZoneNames()";
@@ -171,7 +161,7 @@ namespace Unloved::Renderer {
 
     const std::string& GetZoneGPUTimings() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            return OpenGLRenderer::GetZoneGPUTimings();
+            return OpenGL::Renderer::GetZoneGPUTimings();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan: GetZoneGPUTimings()";
@@ -183,7 +173,7 @@ namespace Unloved::Renderer {
 
     const std::string& GetZoneCPUTimings() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            return OpenGLRenderer::GetZoneCPUTimings();
+            return OpenGL::Renderer::GetZoneCPUTimings();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan: GetZoneCPUTimings()";
@@ -195,7 +185,7 @@ namespace Unloved::Renderer {
 
     const std::string& GetTotalGPUTime() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            return OpenGLRenderer::GetTotalGPUTime();
+            return OpenGL::Renderer::GetTotalGPUTime();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan: GetTotalGPUTime()";
@@ -207,7 +197,7 @@ namespace Unloved::Renderer {
 
     const std::string& GetTotalCPUTime() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            return OpenGLRenderer::GetTotalCPUTime();
+            return OpenGL::Renderer::GetTotalCPUTime();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan: GetTotalGPUTime()";

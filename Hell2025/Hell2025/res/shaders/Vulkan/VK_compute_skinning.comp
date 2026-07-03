@@ -1,0 +1,76 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#include "../common/Vulkan/push_constants.glsl"
+
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+struct Vertex {
+    vec3 position;
+    vec3 normal;
+    vec2 uv;
+    vec3 tangent;
+};
+
+struct VertexWeight {
+    ivec4 boneID;
+    vec4 weight;
+};
+
+layout(buffer_reference, scalar) buffer VertexBuffer {
+    Vertex data[];
+};
+
+layout(buffer_reference, scalar) readonly buffer ReadonlyVertexBuffer {
+    Vertex data[];
+};
+
+layout(buffer_reference, scalar) readonly buffer SkinningTransformBuffer {
+    mat4 data[];
+};
+
+layout(buffer_reference, scalar) readonly buffer VertexWeightBuffer {
+    VertexWeight data[];
+};
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsSkinning data;
+} pushConstant;
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    if (index >= pushConstant.data.vertexCount) return;
+
+    VertexBuffer outputVertices = VertexBuffer(pushConstant.data.outputVerticesDeviceAddress);
+    ReadonlyVertexBuffer inputVertices = ReadonlyVertexBuffer(pushConstant.data.inputVerticesDeviceAddress);
+    SkinningTransformBuffer skinningTransforms = SkinningTransformBuffer(pushConstant.data.skinningTransformsDeviceAddress);
+    VertexWeightBuffer vertexWeights = VertexWeightBuffer(pushConstant.data.vertexWeightsDeviceAddress);
+
+    Vertex vertexIn = inputVertices.data[index + pushConstant.data.baseInputVertex];
+    VertexWeight vertexWeight = vertexWeights.data[index + pushConstant.data.baseInputVertexWeight];
+
+    vec4 vertexPosition = vec4(vertexIn.position, 1.0);
+    mat4 skinMat = mat4(0.0);
+
+    for (int i = 0; i < 4; i++) {
+        float weight = vertexWeight.weight[i];
+        if (weight < 0.0001) continue;
+
+        skinMat += skinningTransforms.data[uint(vertexWeight.boneID[i]) + pushConstant.data.baseTransformIndex] * weight;
+    }
+
+    mat3 skinMat3 = mat3(skinMat);
+    vec3 totalNormal = normalize(skinMat3 * vertexIn.normal);
+    vec3 totalTangent = normalize(skinMat3 * vertexIn.tangent);
+    totalTangent = normalize(totalTangent - totalNormal * dot(totalNormal, totalTangent));
+
+    Vertex vertexOut;
+    vertexOut.position = (skinMat * vertexPosition).xyz;
+    vertexOut.normal = totalNormal;
+    vertexOut.uv = vertexIn.uv;
+    vertexOut.tangent = totalTangent;
+
+    outputVertices.data[index + pushConstant.data.baseOutputVertex] = vertexOut;
+}

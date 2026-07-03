@@ -4,7 +4,7 @@
 
 #include <string>
 
-namespace OpenGLRasterizerStateManager {
+namespace OpenGL::RasterizerStateManager {
     OpenGLRasterizerState* CreateRasterizerState(const std::string& name);
     OpenGLRasterizerState* GetRasterizerState(const std::string& name);
     void ForceRasterizerState(const std::string& name);

@@ -2,7 +2,7 @@
 #include "Unloved/Render/Renderer.h"
 #include "World/LegacyWorld.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     // 1. TAA
     // 2. Tone mapping

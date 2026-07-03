@@ -15,6 +15,7 @@ struct VulkanBuffer {
 
     void Cleanup();
 
+    bool EnsureSize(VkDeviceSize size);
     void UpdateData(const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
     void UploadData(const void* data, VkDeviceSize size, VkDeviceSize dstOffset = 0);
     void Map(void** data);
@@ -30,5 +31,8 @@ private:
     VkBuffer m_buffer = VK_NULL_HANDLE;
     VmaAllocation m_allocation = VK_NULL_HANDLE;
     VkDeviceSize m_size = 0;
+    VkBufferUsageFlags m_usage = 0;
+    VmaMemoryUsage m_memoryUsage = VMA_MEMORY_USAGE_UNKNOWN;
+    VmaAllocationCreateFlags m_vmaFlags = 0;
     void* m_mappedPtr = nullptr;
 };

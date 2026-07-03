@@ -4,7 +4,7 @@
 
 #include "World/LegacyWorld.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 
@@ -52,7 +52,7 @@ namespace OpenGLRenderer {
        //glActiveTexture(GL_TEXTURE2);
        //glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
        //
-       //OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+       //OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
        //EditorRasterizerStateOverride();
        //
        //for (int i = 0; i < 4; i++) {
@@ -62,7 +62,7 @@ namespace OpenGLRenderer {
        //    if (!viewport->IsVisible()) continue;
        //    if (indexCount <= 0) continue;
        //
-       //    OpenGLRenderer::SetViewport(gBuffer, viewport);
+       //    OpenGL::Renderer::SetViewport(gBuffer, viewport);
        //    debugShader->SetInt("u_viewportIndex", i);
        //
        //    int baseIndex = 0;

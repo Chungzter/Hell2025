@@ -12,7 +12,7 @@
 #include "Unloved/Render/RenderDataManager.h"
 #include "World/LegacyWorld.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 
@@ -209,7 +209,7 @@ namespace OpenGLRenderer {
 		for (int i = 0; i < 4; i++) {
 			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (viewport->IsVisible()) {
-				OpenGLRenderer::SetViewport(gBuffer, viewport);
+				OpenGL::Renderer::SetViewport(gBuffer, viewport);
 				OpenGL::SetUniformMat4("u_projectionView", Unloved::RenderDataManager::GetViewportData()[i].projectionView);
                 OpenGL::SetUniformInt("u_lightIndex", lightIndex);
                 glDrawArrays(GL_LINE_STRIP, 0, 16);

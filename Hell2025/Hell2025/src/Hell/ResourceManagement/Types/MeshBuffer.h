@@ -62,11 +62,6 @@ struct MeshBuffer {
     uint64_t GetOpenGLId() const { return m_openGLId; }
     uint64_t GetVulkanId() const { return m_vulkanId; }
 
-    // OpenGL
-    uint32_t GetVAO() const;
-    uint32_t GetVBO() const;
-    uint32_t GetEBO() const;
-
 private:
     struct MemoryBlock {
         size_t begin = 0;
@@ -95,6 +90,7 @@ private:
     uint32_t m_nextMeshId = 0;
     size_t m_vertexCapacity = 0;
     size_t m_indexCapacity = 0;
+    size_t m_vertexWeightCapacity = 0;
     size_t m_minCapacity = 1024;
     bool m_initialized = false;
     float m_growthMultiplier = 1.0f;

@@ -13,6 +13,10 @@ VkImageAspectFlags GetImageAspectFlagsFromFormat(VkFormat format) {
     return VK_IMAGE_ASPECT_COLOR_BIT;
 }
 
+bool IsDepthStencilFormat(VkFormat format) {
+    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+}
+
 AllocatedImage::AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkImageUsageFlags usage, std::string debugName) {
     VkDevice device = VulkanDeviceManager::GetDevice();
     VmaAllocator allocator = VulkanMemoryManager::GetAllocator();
@@ -52,6 +56,11 @@ AllocatedImage::AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkI
 
     vkCreateImageView(device, &viewInfo, nullptr, &m_imageView);
 
+    if (IsDepthStencilFormat(m_format)) {
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        vkCreateImageView(device, &viewInfo, nullptr, &m_depthOnlyImageView);
+    }
+
     // Move image to its permanent layout
     VulkanCommandManager::SubmitImmediate([&](VkCommandBuffer cmd) {
         VkImageMemoryBarrier2 barrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
@@ -71,6 +80,8 @@ AllocatedImage::AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkI
     });
 
     m_currentLayout = VK_IMAGE_LAYOUT_GENERAL;
+    m_currentAccessMask = VK_ACCESS_2_MEMORY_READ_BIT | VK_ACCESS_2_MEMORY_WRITE_BIT;
+    m_currentStageFlags = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 
     VkDebugUtilsObjectNameInfoEXT nameInfo = {};
     nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
@@ -87,6 +98,7 @@ AllocatedImage::AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkI
 AllocatedImage::AllocatedImage(AllocatedImage&& other) noexcept {
     m_image = other.m_image;
     m_imageView = other.m_imageView;
+    m_depthOnlyImageView = other.m_depthOnlyImageView;
     m_allocation = other.m_allocation;
     m_extent = other.m_extent;
     m_format = other.m_format;
@@ -97,6 +109,7 @@ AllocatedImage::AllocatedImage(AllocatedImage&& other) noexcept {
     // Nullify the other object so its cleanup doesn't destroy our handles
     other.m_image = VK_NULL_HANDLE;
     other.m_imageView = VK_NULL_HANDLE;
+    other.m_depthOnlyImageView = VK_NULL_HANDLE;
     other.m_allocation = VK_NULL_HANDLE;
 }
 
@@ -104,6 +117,7 @@ AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other) noexcept {
     if (this != &other) {
         m_image = other.m_image;
         m_imageView = other.m_imageView;
+        m_depthOnlyImageView = other.m_depthOnlyImageView;
         m_allocation = other.m_allocation;
         m_extent = other.m_extent;
         m_format = other.m_format;
@@ -113,6 +127,7 @@ AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other) noexcept {
 
         other.m_image = VK_NULL_HANDLE;
         other.m_imageView = VK_NULL_HANDLE;
+        other.m_depthOnlyImageView = VK_NULL_HANDLE;
         other.m_allocation = VK_NULL_HANDLE;
     }
     return *this;
@@ -142,6 +157,9 @@ void AllocatedImage::Cleanup() {
 
     if (m_imageView != VK_NULL_HANDLE) {
         vkDestroyImageView(device, m_imageView, nullptr);
+    }
+    if (m_depthOnlyImageView != VK_NULL_HANDLE) {
+        vkDestroyImageView(device, m_depthOnlyImageView, nullptr);
     }
     if (m_image != VK_NULL_HANDLE) {
         vmaDestroyImage(allocator, m_image, m_allocation);

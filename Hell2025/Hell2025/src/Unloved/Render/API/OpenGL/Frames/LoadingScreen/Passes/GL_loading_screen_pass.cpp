@@ -3,7 +3,7 @@
 #include "Unloved/Render/RenderDataManager.h"
 #include "Hell/UI/UIBackEnd.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void RenderLoadingScreen() {
         const std::vector<GLuint64>& samplers = OpenGL::BackEnd::GetBindlessTextureIDs();

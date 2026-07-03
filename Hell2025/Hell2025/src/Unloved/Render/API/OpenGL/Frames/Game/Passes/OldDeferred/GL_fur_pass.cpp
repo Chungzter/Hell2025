@@ -9,10 +9,10 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "res/shaders/common/gl_fixed_bindings.glsl"
+#include "res/shaders/common/OpenGL/binding_indices.glsl"
 
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 
@@ -36,7 +36,7 @@ namespace OpenGLRenderer {
         if (!flashLightShadowMapsFBO) return;
 
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
-        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
 
         glBindVertexArray(meshBuffer.GetVAO());
 
@@ -45,7 +45,7 @@ namespace OpenGLRenderer {
 
         OpenGL::BindShader("Fur");
 
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Blended");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Blended");
 
         //static bool skip = false;
         //if (Input::KeyPressed(HELL_KEY_X)) {
@@ -73,7 +73,7 @@ namespace OpenGLRenderer {
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
+                OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
                 auto& gameObjects = Unloved::World::GetGameObjects();
                 if (gameObjects.size() == 0) {
@@ -128,7 +128,7 @@ namespace OpenGLRenderer {
         //for (int i = 0; i < 4; i++) {
         //    Viewport* viewport = ViewportManager::GetViewportByIndex(i);
         //    if (viewport->IsVisible()) {
-        //        OpenGLRenderer::SetViewport(gBuffer, viewport);
+        //        OpenGL::Renderer::SetViewport(gBuffer, viewport);
         //
         //        std::vector<AnimatedGameObject*> animatedgameObjects = Unloved::RenderDataManager::GetAnimatedGameObjectToSkin();
         //
@@ -190,7 +190,7 @@ namespace OpenGLRenderer {
 
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         hairFrameBuffer->Bind();
         hairFrameBuffer->ClearAttachment("Lighting", 0, 0, 0, 0);
@@ -198,7 +198,7 @@ namespace OpenGLRenderer {
 
         OpenGL::BindShader("Fur");
 
-        OpenGLRasterizerStateManager::SetRasterizerState("GeometryPass_Default");
+        OpenGL::RasterizerStateManager::SetRasterizerState("GeometryPass_Default");
 
         static bool skip = false;
 
@@ -216,7 +216,7 @@ namespace OpenGLRenderer {
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(hairFrameBuffer, viewport);
+                OpenGL::Renderer::SetViewport(hairFrameBuffer, viewport);
 
                 GameObject& bunny = Unloved::World::GetGameObjects()[0];
 
@@ -263,7 +263,7 @@ namespace OpenGLRenderer {
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(hairFrameBuffer, viewport);
+                OpenGL::Renderer::SetViewport(hairFrameBuffer, viewport);
 
                 std::vector<AnimatedGameObject*> animatedgameObjects = Unloved::RenderDataManager::GetAnimatedGameObjectToSkin();
 

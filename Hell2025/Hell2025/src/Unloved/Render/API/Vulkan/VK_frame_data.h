@@ -10,8 +10,10 @@ struct VulkanFrameData {
     struct Buffers {
         uint64_t instanceData = 0;
         uint64_t viewportData = 0;
+        uint64_t rendererData = 0;
         uint64_t drawCommands = 0;
+        uint64_t skinningTransforms = 0;
+        uint64_t skinnedVertices = 0;
         uint64_t uiRenderItems = 0;
-        uint64_t uiDrawCommands = 0;
     } buffers;
 };

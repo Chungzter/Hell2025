@@ -1,6 +1,5 @@
 #version 460
-
-#include "../../common/gl_fixed_bindings.glsl"
+#include "../../common/OpenGL/binding_indices.glsl"
 
 #ifndef ENABLE_BINDLESS
     #define ENABLE_BINDLESS 1
@@ -8,7 +7,8 @@
 
 #if ENABLE_BINDLESS == 1
     #extension GL_ARB_bindless_texture : enable
-    readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+layout(origin_upper_left) in vec4 gl_FragCoord;
+readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 #endif
 
 layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;

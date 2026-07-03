@@ -12,7 +12,7 @@
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
 
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void SaveHeightMap5() {
 

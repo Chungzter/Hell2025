@@ -20,25 +20,32 @@ struct VulkanMeshBuffer {
 
     void InsertVertices(const std::vector<Vertex>& vertices, uint32_t insertOffset);
     void InsertIndices(const std::vector<uint32_t>& indices, uint32_t insertOffset);
-    void PreAllocate(size_t vertexCapacity, size_t indexCapacity);
+    void InsertVertexWeights(const std::vector<VertexWeight>& vertexWeights, uint32_t insertOffset);
+    void PreAllocate(size_t vertexCapacity, size_t indexCapacity, size_t vertexWeightCapacity);
     void ResizeVertexBuffer(size_t newCapacity, const std::vector<Vertex>& vertices);
     void ResizeIndexBuffer(size_t newCapacity, const std::vector<uint32_t>& indices);
+    void ResizeVertexWeightBuffer(size_t newCapacity, const std::vector<VertexWeight>& vertexWeights);
 
     void Bind(VkCommandBuffer commandBuffer) const;
 
     VulkanBuffer* GetVertexBuffer() { return m_vertexBuffer.GetBuffer() == VK_NULL_HANDLE ? nullptr : &m_vertexBuffer; }
     VulkanBuffer* GetIndexBuffer()  { return m_indexBuffer.GetBuffer() == VK_NULL_HANDLE ? nullptr : &m_indexBuffer; }
+    VulkanBuffer* GetVertexWeightBuffer() { return m_vertexWeightBuffer.GetBuffer() == VK_NULL_HANDLE ? nullptr : &m_vertexWeightBuffer; }
     const VulkanBuffer* GetVertexBuffer() const { return m_vertexBuffer.GetBuffer() == VK_NULL_HANDLE ? nullptr : &m_vertexBuffer; }
     const VulkanBuffer* GetIndexBuffer() const  { return m_indexBuffer.GetBuffer() == VK_NULL_HANDLE ? nullptr : &m_indexBuffer; }
+    const VulkanBuffer* GetVertexWeightBuffer() const { return m_vertexWeightBuffer.GetBuffer() == VK_NULL_HANDLE ? nullptr : &m_vertexWeightBuffer; }
 
     uint64_t GetVertexBufferAddress() const;
     uint64_t GetIndexBufferAddress() const;
+    uint64_t GetVertexWeightBufferAddress() const;
 
 private:
     VulkanBuffer CreateVertexBuffer(size_t vertexCapacity) const;
     VulkanBuffer CreateIndexBuffer(size_t indexCapacity) const;
+    VulkanBuffer CreateVertexWeightBuffer(size_t vertexWeightCapacity) const;
 
     VulkanBuffer m_vertexBuffer;
     VulkanBuffer m_indexBuffer;
+    VulkanBuffer m_vertexWeightBuffer;
     size_t m_vertexStride = 0;
 };

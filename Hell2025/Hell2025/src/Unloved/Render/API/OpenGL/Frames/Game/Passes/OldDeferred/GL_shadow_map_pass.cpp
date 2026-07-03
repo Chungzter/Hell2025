@@ -12,7 +12,7 @@
 
 using namespace Hell;
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 
@@ -35,8 +35,9 @@ namespace OpenGLRenderer {
         OpenGLHeightMapMesh& heightMapMesh = OpenGL::BackEnd::GetHeightMapMesh();
         //const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
         const FlashLightShadowMapDrawInfo& flashLightShadowMapDrawInfo = Unloved::RenderDataManager::GetFlashLightShadowMapDrawInfo();
-        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
-        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
+        MeshBuffer& meshBufferProcedural = Hell::ResourceManager::GetMeshBuffer("Procedural");
+        OpenGLMeshBuffer& glMeshBufferAssets = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& glMeshBufferProcedural = OpenGL::ResourceManager::GetMeshBuffer("Procedural");
 
         glm::mat4 heightMapModelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(HEIGHTMAP_SCALE_XZ, HEIGHTMAP_SCALE_Y, HEIGHTMAP_SCALE_XZ)); // move to height map manager
 
@@ -64,7 +65,7 @@ namespace OpenGLRenderer {
             // Scene geometry
             OpenGL::SetUniformBool("u_useInstanceData", true);
             glCullFace(GL_FRONT);
-            glBindVertexArray(meshBufferAssets.GetVAO());
+            glBindVertexArray(glMeshBufferAssets.GetVAO());
 
             MultiDrawIndirect(flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i]);
 
@@ -91,7 +92,7 @@ namespace OpenGLRenderer {
             // Procedural
             OpenGL::SetUniformMat4("u_modelMatrix", glm::mat4(1.0f));
 
-            glBindVertexArray(meshBufferProcedural.GetVAO());
+            glBindVertexArray(glMeshBufferProcedural.GetVAO());
 
             const std::vector<RenderItem>& renderItems = Unloved::RenderDataManager::GetRenderItemsProcedural();
             for (const RenderItem& renderItem : renderItems) {
@@ -128,7 +129,7 @@ namespace OpenGLRenderer {
 		state.blendEnable = false;
 		state.cullfaceEnable = true;
 		state.cullfaceMode = GL_FRONT;
-        OpenGLRasterizerStateManager::ForceRasterizerState(state);
+        OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
 
@@ -140,8 +141,8 @@ namespace OpenGLRenderer {
         if (!shadowMaps) return;
         if (shadowMapInfoSet.empty()) return;
 
-        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
-        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
+        OpenGLMeshBuffer& meshBufferAssets = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& meshBufferProcedural = OpenGL::ResourceManager::GetMeshBuffer("Procedural");
 
         OpenGLRasterizerState solidShadowState;
         solidShadowState.depthMask = true;
@@ -187,27 +188,27 @@ namespace OpenGLRenderer {
 
                 OpenGL::SetUniformBool("u_useInstanceData", true);
 
-                OpenGLRasterizerStateManager::SetRasterizerState(solidShadowState);
+                OpenGL::RasterizerStateManager::SetRasterizerState(solidShadowState);
                 glBindVertexArray(meshBufferProcedural.GetVAO());
                 MultiDrawIndirect(drawCommands.procedural[shadowMapIndex][face]);
 
                 glBindVertexArray(meshBufferAssets.GetVAO());
                 MultiDrawIndirect(drawCommands.assetGeometry[shadowMapIndex][face]);
-                OpenGLRasterizerStateManager::SetRasterizerState(alphaShadowState);
+                OpenGL::RasterizerStateManager::SetRasterizerState(alphaShadowState);
                 MultiDrawIndirect(drawCommands.assetGeometryAlphaDiscard[shadowMapIndex][face]);
                 MultiDrawIndirect(drawCommands.assetGeometryHair[shadowMapIndex][face]);
-                OpenGLRasterizerStateManager::SetRasterizerState(solidShadowState);
+                OpenGL::RasterizerStateManager::SetRasterizerState(solidShadowState);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][face]);
-                OpenGLRasterizerStateManager::SetRasterizerState(alphaShadowState);
+                OpenGL::RasterizerStateManager::SetRasterizerState(alphaShadowState);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][face]);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][face]);
 
                 glBindVertexArray(OpenGL::BackEnd::GetSkinnedVertexDataVAO());
                 glBindBuffer(GL_ARRAY_BUFFER, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBufferAssets.GetEBO());
-                OpenGLRasterizerStateManager::SetRasterizerState(solidShadowState);
+                OpenGL::RasterizerStateManager::SetRasterizerState(solidShadowState);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinned[shadowMapIndex][face]);
-                OpenGLRasterizerStateManager::SetRasterizerState(alphaShadowState);
+                OpenGL::RasterizerStateManager::SetRasterizerState(alphaShadowState);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][face]);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinnedHair[shadowMapIndex][face]);
             }
@@ -226,8 +227,9 @@ namespace OpenGLRenderer {
         if (!shader) return;
         if (!shadowMapArray) return;
 
-        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
-        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
+        MeshBuffer& meshBufferProcedural = Hell::ResourceManager::GetMeshBuffer("Procedural");
+        OpenGLMeshBuffer& glMeshBufferAssets = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& glMeshBufferProcedural = OpenGL::ResourceManager::GetMeshBuffer("Procedural");
 
         int viewportCount = std::min(4, Unloved::Session::GetLocalPlayerCount());
 
@@ -236,7 +238,7 @@ namespace OpenGLRenderer {
         state.depthTestEnabled = true;
         state.blendEnable = false;
         state.cullfaceEnable = false;
-        OpenGLRasterizerStateManager::ForceRasterizerState(state);
+        OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 
         for (int j = 0; j < viewportCount; j++) {
             Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(j);
@@ -268,7 +270,7 @@ namespace OpenGLRenderer {
                 OpenGL::SetUniformMat4("u_projectionView", lightProjectionView);
 
                 // Geometry
-                glBindVertexArray(meshBufferAssets.GetVAO());
+                glBindVertexArray(glMeshBufferAssets.GetVAO());
 
                 OpenGL::SetUniformBool("u_useInstanceData", true);
                 MultiDrawIndirect(drawInfoSet.moonLightCascades[j][i]);
@@ -277,7 +279,7 @@ namespace OpenGLRenderer {
                 OpenGL::SetUniformMat4("u_modelMatrix", glm::mat4(1.0f));
 
                 // Procedural
-                glBindVertexArray(meshBufferProcedural.GetVAO());
+                glBindVertexArray(glMeshBufferProcedural.GetVAO());
 
                 //glDisable(GL_CULL_FACE);
                 const std::vector<RenderItem>& renderItems = Unloved::RenderDataManager::GetRenderItemsProcedural();

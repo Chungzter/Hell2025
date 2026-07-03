@@ -12,7 +12,7 @@
 namespace Input = Hell::Input;
 
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void DispatchTestPass();
     void BubblesPass();
@@ -119,7 +119,7 @@ namespace OpenGLRenderer {
         state.blendFuncSrcfactor = GL_SRC_ALPHA;
         state.blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
         OpenGL::BindShader("ParticleColor");
         OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
@@ -138,7 +138,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(&fbo, viewport);
+            OpenGL::Renderer::SetViewport(&fbo, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
             OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
             OpenGL::SetUniformMat4("u_view", viewportData[i].view);
@@ -202,7 +202,7 @@ namespace OpenGLRenderer {
         state.blendFuncSrcfactor = GL_SRC_ALPHA;
         state.blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
         OpenGL::BindShader("Bubbles");
         OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
@@ -219,7 +219,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(&fbo, viewport);
+            OpenGL::Renderer::SetViewport(&fbo, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
             OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
             OpenGL::SetUniformMat4("u_view", viewportData[i].view);

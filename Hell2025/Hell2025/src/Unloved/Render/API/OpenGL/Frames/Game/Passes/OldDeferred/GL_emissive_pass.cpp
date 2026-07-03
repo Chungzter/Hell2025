@@ -16,7 +16,7 @@ namespace {
     }
 }
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void EmissivePass() {
         ProfilerOpenGLZoneFunction();
@@ -42,7 +42,7 @@ namespace OpenGLRenderer {
         }
 
         if (old) {
-            OpenGLRasterizerStateManager::ForceRasterizerState("EmissivePass");
+            OpenGL::RasterizerStateManager::ForceRasterizerState("EmissivePass");
 
 
             //OpenGLFrameBuffer* finalImageFBO = OpenGL::ResourceManager::GetFrameBufferPtr("FinalImage");
@@ -59,7 +59,7 @@ namespace OpenGLRenderer {
 
                 OpenGLFrameBuffer* blurBuffer = OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, 0));
 
-                BlitRect srcRect = OpenGLRenderer::BlitRectFromFrameBufferViewport(gBuffer, viewport);
+                BlitRect srcRect = OpenGL::Renderer::BlitRectFromFrameBufferViewport(gBuffer, viewport);
                 BlitRect dstRect;
                 dstRect.x0 = 0;
                 dstRect.x1 = blurBuffer->GetWidth();
@@ -125,7 +125,7 @@ namespace OpenGLRenderer {
         }
         else {
             ProfilerOpenGLZoneFunction();
-            OpenGLRasterizerStateManager::ForceRasterizerState("EmissivePass");
+            OpenGL::RasterizerStateManager::ForceRasterizerState("EmissivePass");
 
             OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
             OpenGLFrameBuffer* emissiveBlurFBO = OpenGL::ResourceManager::GetFrameBufferPtr("EmissiveBlur");

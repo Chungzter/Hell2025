@@ -7,14 +7,14 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "res/shaders/common/gl_fixed_bindings.glsl"
+#include "res/shaders/common/OpenGL/binding_indices.glsl"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void GlassPass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLRasterizerStateManager::ForceRasterizerState("GlassPass");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GlassPass");
 
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
@@ -38,7 +38,7 @@ namespace OpenGLRenderer {
         gBuffer->Bind();
         gBuffer->DrawBuffer("Glass");
 
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
         glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(TEX_IDX_SHADOW_MAP_FLASHLIGHT, flashLightShadowMapsFBO->GetDepthTextureHandle());
 
@@ -47,7 +47,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
 
             Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);

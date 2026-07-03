@@ -19,7 +19,7 @@
 namespace Input = Hell::Input;
 
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void ImGuiPass() {
         const Resolutions& resolutions = Config::GetResolutions();

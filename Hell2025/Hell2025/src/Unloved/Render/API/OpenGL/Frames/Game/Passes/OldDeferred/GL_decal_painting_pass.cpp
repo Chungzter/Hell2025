@@ -9,7 +9,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 
@@ -87,13 +87,13 @@ namespace OpenGLRenderer {
                     glBindVertexArray(OpenGL::BackEnd::GetSkinnedVertexDataVAO());
                     glBindBuffer(GL_ARRAY_BUFFER, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
                     //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGL::BackEnd::GetWeightedVertexDataEBO());
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
                     uint32_t meshId = renderItem.meshId;
                     glm::mat4 modelMatrix = renderItem.modelMatrix;
                     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
                     Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
                     OpenGL::SetUniformMat4("u_model", modelMatrix);
-                    glDrawElementsInstancedBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), 1, renderItem.baseSkinnedVertex);
+                    glDrawElementsInstancedBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), 1, renderItem.baseVertex);
 
                     //std::cout << "Decal Texture Painting into index " << renderItem.woundMaskTexutreIndex << " and the mesh name is " << mesh->name << "\n";
 

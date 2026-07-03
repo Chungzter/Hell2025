@@ -3,7 +3,7 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void BlitFrameBufferDepth(OpenGLFrameBuffer* srcFrameBuffer, OpenGLFrameBuffer* dstFrameBuffer, const Unloved::Viewport* viewport) {
         glm::vec2 position = viewport->GetPosition();

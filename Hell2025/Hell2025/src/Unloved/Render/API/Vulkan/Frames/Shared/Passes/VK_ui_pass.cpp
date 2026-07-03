@@ -2,17 +2,24 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
+#include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
 #include "Hell/UI/UIBackEnd.h"
+#include "Unloved/Render/API/Vulkan/VK_draw.h"
 #include "Unloved/Render/API/Vulkan/VK_push_constants.h"
 #include "Unloved/Render/RenderDataManager.h"
 
 namespace VulkanRenderer {
 
-    void RenderUIPass(VkCommandBuffer commandBuffer, VkImageView imageView, VkExtent2D extent) {
+    void RenderUIPass(VkCommandBuffer commandBuffer) {
+        AllocatedImage* presentImage = VulkanResourceManager::GetAllocatedImage("Present");
         const std::vector<RenderItemUI>& renderItems = UIBackEnd::GetRenderItems();
         const std::vector<DrawIndexedIndirectCommand>& drawCommands = Unloved::RenderDataManager::GetDrawCommandsUI();
+        if (!presentImage) return;
         if (renderItems.empty() || drawCommands.empty()) return;
+
+        VkExtent2D extent = presentImage->GetExtent2D();
+        presentImage->Sync(commandBuffer, VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 
         Hell::GenericMesh& genericMesh = Hell::ResourceManager::GetGenericMesh("UI");
         if (genericMesh.GetVulkanId() == 0 || genericMesh.GetIndexCount() == 0) return;
@@ -26,12 +33,14 @@ namespace VulkanRenderer {
 
         VulkanFrameData& frameData = GetCurrentFrameData();
         VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.uiRenderItems);
-        VulkanBuffer* drawCommandBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.uiDrawCommands);
-        if (!renderItemBuffer || !drawCommandBuffer) return;
+        if (!renderItemBuffer) return;
+
+        VulkanDrawCommandBatch drawCommandBatch = WriteDrawCommands(drawCommands);
+        if (drawCommandBatch.count == 0) return;
 
         VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
-        colorAttachment.imageView = imageView;
-        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachment.imageView = presentImage->GetImageView();
+        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
@@ -60,7 +69,7 @@ namespace VulkanRenderer {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
         vulkanMesh->Bind(commandBuffer);
         vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsUI), &pushConstants);
-        vkCmdDrawIndexedIndirect(commandBuffer, drawCommandBuffer->GetBuffer(), 0, static_cast<uint32_t>(drawCommands.size()), sizeof(DrawIndexedIndirectCommand));
+        MultiDrawIndexedCommands(commandBuffer, drawCommandBatch);
 
         vkCmdEndRendering(commandBuffer);
     }

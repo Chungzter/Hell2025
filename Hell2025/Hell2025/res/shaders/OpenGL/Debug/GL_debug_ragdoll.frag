@@ -1,5 +1,5 @@
 #version 460 core
-
+layout(origin_upper_left) in vec4 gl_FragCoord;
 #include "../../common/normal_encoding.glsl"
 
 layout (location = 0) out vec4 BaseColorMetallicOut;

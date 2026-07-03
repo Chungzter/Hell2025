@@ -9,7 +9,7 @@
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     int g_fftDisplayMode = 0;
     int g_fftEditBand = 0;

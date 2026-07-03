@@ -1,6 +1,7 @@
 #include "GL_resource_manager.h"
 
 #include "Hell/Logging.h"
+#include "Hell/Common/Constants.h"
 #include "Hell/Containers/SlotMap.h"
 #include "Hell/MemoryTracker/MemoryTracker.h"
 #include "Hell/ResourceManagement/ResourceID.h"
@@ -31,6 +32,8 @@ namespace OpenGL::ResourceManager {
         std::unordered_map<std::string, uint64_t> g_cubemapFrameBufferIdByName;
         std::unordered_map<std::string, uint64_t> g_cubemapViewIdByName;
         std::unordered_map<std::string, uint64_t> g_frameBufferIdByName;
+        std::unordered_map<std::string, uint64_t> g_genericMeshIdByName;
+        std::unordered_map<std::string, uint64_t> g_meshBufferIdByName;
         std::unordered_map<std::string, uint64_t> g_shaderIdByName;
         std::unordered_map<std::string, uint64_t> g_shadowCubeMapArrayIdByName;
         std::unordered_map<std::string, uint64_t> g_shadowMapIdByName;
@@ -103,7 +106,9 @@ namespace OpenGL::ResourceManager {
         g_frameBuffers.clear();
         g_frameBufferIdByName.clear();
         g_genericMeshes.clear();
+        g_genericMeshIdByName.clear();
         g_meshBuffers.clear();
+        g_meshBufferIdByName.clear();
         g_shaders.clear();
         g_shaderIdByName.clear();
         g_shadowCubeMapArrays.clear();
@@ -307,6 +312,21 @@ namespace OpenGL::ResourceManager {
         return id;
     }
 
+    uint64_t CreateGenericMesh(const std::string& name) {
+        if (name.empty() || name == UNDEFINED_STRING) {
+            return CreateGenericMesh();
+        }
+
+        auto it = g_genericMeshIdByName.find(name);
+        if (it != g_genericMeshIdByName.end()) {
+            return it->second;
+        }
+
+        uint64_t id = CreateGenericMesh();
+        g_genericMeshIdByName[name] = id;
+        return id;
+    }
+
     OpenGLGenericMesh& GetGenericMesh(uint64_t id) {
         OpenGLGenericMesh* mesh3D = GetGenericMeshPtr(id);
         if (mesh3D) {
@@ -316,11 +336,35 @@ namespace OpenGL::ResourceManager {
         return invalid;
     }
 
+    OpenGLGenericMesh& GetGenericMesh(const std::string& name) {
+        OpenGLGenericMesh* genericMesh = GetGenericMeshPtr(name);
+        if (genericMesh) {
+            return *genericMesh;
+        }
+        static OpenGLGenericMesh invalid;
+        return invalid;
+    }
+
     OpenGLGenericMesh* GetGenericMeshPtr(uint64_t id) {
         return g_genericMeshes.get(id);
     }
 
+    OpenGLGenericMesh* GetGenericMeshPtr(const std::string& name) {
+        auto it = g_genericMeshIdByName.find(name);
+        if (it != g_genericMeshIdByName.end()) {
+            return GetGenericMeshPtr(it->second);
+        }
+        return nullptr;
+    }
+
     void RemoveGenericMesh(uint64_t id) {
+        for (auto it = g_genericMeshIdByName.begin(); it != g_genericMeshIdByName.end(); ++it) {
+            if (it->second == id) {
+                g_genericMeshIdByName.erase(it);
+                break;
+            }
+        }
+
         if (g_genericMeshes.contains(id)) {
             g_genericMeshes.get(id)->CleanUp();
             g_genericMeshes.erase(id);
@@ -335,8 +379,32 @@ namespace OpenGL::ResourceManager {
         return id;
     }
 
+    uint64_t CreateMeshBuffer(const std::string& name) {
+        if (name.empty() || name == UNDEFINED_STRING) {
+            return CreateMeshBuffer();
+        }
+
+        auto it = g_meshBufferIdByName.find(name);
+        if (it != g_meshBufferIdByName.end()) {
+            return it->second;
+        }
+
+        uint64_t id = CreateMeshBuffer();
+        g_meshBufferIdByName[name] = id;
+        return id;
+    }
+
     OpenGLMeshBuffer& GetMeshBuffer(uint64_t id) {
         OpenGLMeshBuffer* meshBuffer = GetMeshBufferPtr(id);
+        if (meshBuffer) {
+            return *meshBuffer;
+        }
+        static OpenGLMeshBuffer invalid;
+        return invalid;
+    }
+
+    OpenGLMeshBuffer& GetMeshBuffer(const std::string& name) {
+        OpenGLMeshBuffer* meshBuffer = GetMeshBufferPtr(name);
         if (meshBuffer) {
             return *meshBuffer;
         }
@@ -348,7 +416,22 @@ namespace OpenGL::ResourceManager {
         return g_meshBuffers.get(id);
     }
 
+    OpenGLMeshBuffer* GetMeshBufferPtr(const std::string& name) {
+        auto it = g_meshBufferIdByName.find(name);
+        if (it != g_meshBufferIdByName.end()) {
+            return GetMeshBufferPtr(it->second);
+        }
+        return nullptr;
+    }
+
     void RemoveMeshBuffer(uint64_t id) {
+        for (auto it = g_meshBufferIdByName.begin(); it != g_meshBufferIdByName.end(); ++it) {
+            if (it->second == id) {
+                g_meshBufferIdByName.erase(it);
+                break;
+            }
+        }
+
         if (g_meshBuffers.contains(id)) {
             g_meshBuffers.get(id)->Reset();
             g_meshBuffers.erase(id);

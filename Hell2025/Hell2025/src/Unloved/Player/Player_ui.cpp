@@ -313,7 +313,7 @@ void Player::UpdateUI(float deltaTime) {
 
             if (false) {
                 text += "\n";
-                text += "Flip normal map Y: " + Hell::String::FormatBool(OpenGLRenderer::ShouldFlipNormalMapY()) + "\n";
+                text += "Flip normal map Y: " + Hell::String::FormatBool(OpenGL::Renderer::ShouldFlipNormalMapY()) + "\n";
             }
 
             // Override with BVH CPU RAYS if that render mode is set

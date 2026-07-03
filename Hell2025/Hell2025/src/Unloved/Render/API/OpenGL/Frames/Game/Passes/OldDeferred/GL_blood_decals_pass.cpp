@@ -6,7 +6,7 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     void BloodDecalTileCulling();
     void BloodDecalDraw();
     void BloodDecalComposite();
@@ -47,7 +47,7 @@ namespace OpenGLRenderer {
         state.blendEnable = false;
         state.cullfaceEnable = false;
         state.colorMask = true;
-        OpenGLRasterizerStateManager::ForceRasterizerState(state);
+        OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 
         OpenGL::BindSSBO(7, "TileBloodDecals");
         OpenGL::BindSSBO(8, "BloodDecalInstances");

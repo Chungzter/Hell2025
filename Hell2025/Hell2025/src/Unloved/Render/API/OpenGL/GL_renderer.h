@@ -28,7 +28,7 @@
 
 #include <string>
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     void Init();
     void InitMain();
     void CleanUp();
@@ -181,9 +181,6 @@ namespace OpenGLRenderer {
     void EditorRasterizerStateOverride();
 
     void DebugHack(const std::string& message);
-
-    // Vertex Data
-    void UploadVertexWeights();
 
     // Drawing
     void MultiDrawIndirect(const std::vector<DrawIndexedIndirectCommand>& commands);

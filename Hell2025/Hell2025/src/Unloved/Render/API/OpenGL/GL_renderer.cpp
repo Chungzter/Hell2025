@@ -35,7 +35,7 @@
 
 #define NONE_BIT 0
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 
@@ -77,7 +77,7 @@ namespace OpenGLRenderer {
         InitSSBOs();
         LoadShaders();
 
-        OpenGLRasterizerState* decalPass = OpenGLRasterizerStateManager::CreateRasterizerState("DecalPass");
+        OpenGLRasterizerState* decalPass = OpenGL::RasterizerStateManager::CreateRasterizerState("DecalPass");
         decalPass->depthTestEnabled = true;
         decalPass->blendEnable = true;
         decalPass->cullfaceEnable = true;
@@ -86,28 +86,28 @@ namespace OpenGLRenderer {
         decalPass->blendFuncSrcfactor = GL_SRC_ALPHA;
         decalPass->blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
 
-        OpenGLRasterizerState* emissivePass = OpenGLRasterizerStateManager::CreateRasterizerState("EmissivePass");
+        OpenGLRasterizerState* emissivePass = OpenGL::RasterizerStateManager::CreateRasterizerState("EmissivePass");
         emissivePass->depthTestEnabled = true;
         emissivePass->blendEnable = false;
         emissivePass->cullfaceEnable = true;
         emissivePass->depthMask = false;
         emissivePass->depthFunc = GL_GREATER;
 
-        OpenGLRasterizerState* geometryPassDefault = OpenGLRasterizerStateManager::CreateRasterizerState("GeometryPass_Default");
+        OpenGLRasterizerState* geometryPassDefault = OpenGL::RasterizerStateManager::CreateRasterizerState("GeometryPass_Default");
         geometryPassDefault->depthTestEnabled = true;
         geometryPassDefault->blendEnable = false;
         geometryPassDefault->cullfaceEnable = true;
         geometryPassDefault->depthMask = true;
         geometryPassDefault->depthFunc = GL_GREATER;
 
-        OpenGLRasterizerState* geometryPassAlphaDiscard = OpenGLRasterizerStateManager::CreateRasterizerState("GeometryPass_AlphaDiscard");
+        OpenGLRasterizerState* geometryPassAlphaDiscard = OpenGL::RasterizerStateManager::CreateRasterizerState("GeometryPass_AlphaDiscard");
         geometryPassAlphaDiscard->depthTestEnabled = true;
         geometryPassAlphaDiscard->blendEnable = false;
         geometryPassAlphaDiscard->cullfaceEnable = true;
         geometryPassAlphaDiscard->depthMask = true;
         geometryPassAlphaDiscard->depthFunc = GL_GEQUAL;
 
-        OpenGLRasterizerState* geometryPassBlended = OpenGLRasterizerStateManager::CreateRasterizerState("GeometryPass_Blended");
+        OpenGLRasterizerState* geometryPassBlended = OpenGL::RasterizerStateManager::CreateRasterizerState("GeometryPass_Blended");
         geometryPassBlended->depthTestEnabled = true;
         geometryPassBlended->blendEnable = true;
         geometryPassBlended->cullfaceEnable = false;
@@ -116,14 +116,14 @@ namespace OpenGLRenderer {
         geometryPassBlended->blendFuncSrcfactor = GL_SRC_ALPHA;
         geometryPassBlended->blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
 
-        OpenGLRasterizerState* glassPass = OpenGLRasterizerStateManager::CreateRasterizerState("GlassPass");
+        OpenGLRasterizerState* glassPass = OpenGL::RasterizerStateManager::CreateRasterizerState("GlassPass");
         glassPass->depthTestEnabled = true;
         glassPass->blendEnable = false;
         glassPass->cullfaceEnable = true;
         glassPass->depthMask = false;
         glassPass->depthFunc = GL_GREATER;
 
-        OpenGLRasterizerState* hairPassViewspaceDepth = OpenGLRasterizerStateManager::CreateRasterizerState("HairViewspaceDepth");
+        OpenGLRasterizerState* hairPassViewspaceDepth = OpenGL::RasterizerStateManager::CreateRasterizerState("HairViewspaceDepth");
         hairPassViewspaceDepth->depthTestEnabled = true;
         hairPassViewspaceDepth->blendEnable = false;
         hairPassViewspaceDepth->cullfaceEnable = true;
@@ -133,7 +133,7 @@ namespace OpenGLRenderer {
         hairPassViewspaceDepth->blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
         hairPassViewspaceDepth->pointSize = 8;
 
-        OpenGLRasterizerState* hairPassLighting = OpenGLRasterizerStateManager::CreateRasterizerState("HairLighting");
+        OpenGLRasterizerState* hairPassLighting = OpenGL::RasterizerStateManager::CreateRasterizerState("HairLighting");
         hairPassLighting->depthTestEnabled = true;
         hairPassLighting->blendEnable = false;
         hairPassLighting->cullfaceEnable = true;
@@ -143,7 +143,7 @@ namespace OpenGLRenderer {
         hairPassLighting->blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
         hairPassLighting->pointSize = 8;
 
-        OpenGLRasterizerState* spriteSheet = OpenGLRasterizerStateManager::CreateRasterizerState("SpriteSheetPass");
+        OpenGLRasterizerState* spriteSheet = OpenGL::RasterizerStateManager::CreateRasterizerState("SpriteSheetPass");
         spriteSheet->depthTestEnabled = true;
         spriteSheet->blendEnable = true;
         spriteSheet->cullfaceEnable = false;
@@ -152,7 +152,7 @@ namespace OpenGLRenderer {
         spriteSheet->blendFuncSrcfactor = GL_SRC_ALPHA;
         spriteSheet->blendFuncDstfactor = GL_ONE; // was GL_ONE_MINUS_SRC_ALPHA
 
-        OpenGLRasterizerState* skybox = OpenGLRasterizerStateManager::CreateRasterizerState("SkyBox");
+        OpenGLRasterizerState* skybox = OpenGL::RasterizerStateManager::CreateRasterizerState("SkyBox");
         skybox->depthTestEnabled = false;
         skybox->blendEnable = false;
         skybox->cullfaceEnable = false;
@@ -508,7 +508,6 @@ namespace OpenGLRenderer {
         OpenGL::ResourceManager::LoadShader("RE", "Visibility", { "GL_visibility.vert", "GL_visibility.frag" });
         OpenGL::ResourceManager::LoadShader("RE", "VisibilityAlphaDiscard", { "GL_visibility.vert", "GL_visibility_alpha_discard.frag" });
         OpenGL::ResourceManager::LoadShader("RE", "MaterialResolve", { "GL_material_resolve.vert", "GL_material_resolve.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "MaterialResolveSkinning", { "GL_material_resolve.vert", "GL_material_resolve.frag" }, { "SKINNED" });
 
         OpenGL::ResourceManager::LoadShader("RE", "EmissiveForward", { "GL_gbuffer_re.vert", "GL_emissive_forward.frag" });
 
@@ -564,7 +563,6 @@ namespace OpenGLRenderer {
         // Vertices
         OpenGL::ResourceManager::CreateSSBO("Indices2");
         OpenGL::ResourceManager::CreateSSBO("Vertices2");
-        OpenGL::ResourceManager::CreateSSBO("VertexWeights");
 
         // Raytracing
 		OpenGL::ResourceManager::CreateSSBO("TriangleData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
@@ -691,7 +689,7 @@ namespace OpenGLRenderer {
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
+                OpenGL::Renderer::SetViewport(gBuffer, viewport);
                 OpenGL::SetUniformMat4("u_projectionView", Unloved::RenderDataManager::GetViewportData()[i].projectionView);
                 glDrawArrays(GL_LINE_STRIP, 0, 16);
             }
@@ -781,7 +779,7 @@ namespace OpenGLRenderer {
         state.cullfaceEnable = false;
         state.blendEnable = false;
         state.colorMask = true;
-        OpenGLRasterizerStateManager::ForceRasterizerState(state);
+        OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 
         OpenGL::BindShader("Present");
         OpenGL::BindTextureUnit(0, presentFbo.GetColorAttachmentHandleByName("Color"));
@@ -824,12 +822,12 @@ namespace OpenGLRenderer {
     }
 
 	void MultiDrawPerViewport(OpenGLFrameBuffer* fbo, OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
-		OpenGLRasterizerStateManager::SetRasterizerState(rasterizerState);
+		OpenGL::RasterizerStateManager::SetRasterizerState(rasterizerState);
 
 		for (int i = 0; i < 4; i++) {
 			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (viewport->IsVisible()) {
-				OpenGLRenderer::SetViewport(fbo, viewport);
+				OpenGL::Renderer::SetViewport(fbo, viewport);
 				if (Hell::BackEnd::RenderDocFound()) {
 					SplitMultiDrawIndirect(shader, drawCommands[i], true, false);
 				}
@@ -841,24 +839,24 @@ namespace OpenGLRenderer {
 	}
 
     void MultiDrawPerViewportRE(OpenGLFrameBuffer& fbo, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
-        OpenGLRasterizerStateManager::SetRasterizerState(rasterizerState);
+        OpenGL::RasterizerStateManager::SetRasterizerState(rasterizerState);
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(&fbo, viewport);
+                OpenGL::Renderer::SetViewport(&fbo, viewport);
                 MultiDrawIndirect(drawCommands[i]);
             }
         }
     }
 
 	void MultiDrawPerViewport(OpenGLFrameBuffer& fbo, OpenGLShader& shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
-		OpenGLRasterizerStateManager::SetRasterizerState(rasterizerState);
+		OpenGL::RasterizerStateManager::SetRasterizerState(rasterizerState);
 
 		for (int i = 0; i < 4; i++) {
 			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (viewport->IsVisible()) {
-				OpenGLRenderer::SetViewport(&fbo, viewport);
+				OpenGL::Renderer::SetViewport(&fbo, viewport);
 				if (Hell::BackEnd::RenderDocFound()) {
 					SplitMultiDrawIndirect(&shader, drawCommands[i], true, false);
 				}
@@ -876,7 +874,7 @@ namespace OpenGLRenderer {
 
         Texture* texture = Hell::ResourceManager::GetTextureByName(name);
         if (!texture) {
-            Logging::Fatal() << "OpenGLRenderer::GetTextureHandleByName() failed because '" << name << "' does not exist\n";
+            Logging::Fatal() << "OpenGL::Renderer::GetTextureHandleByName() failed because '" << name << "' does not exist\n";
             return 0;
         }
 

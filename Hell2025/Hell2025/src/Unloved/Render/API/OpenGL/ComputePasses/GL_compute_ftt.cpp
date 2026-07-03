@@ -5,7 +5,7 @@
 namespace Input = Hell::Input;
 
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void ComputeInverseFFT2D(GLuint handleA, GLuint handleB);
     float g_globalTime = 50.0f;

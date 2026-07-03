@@ -40,7 +40,7 @@ float IntersectNodeDist(vec3 rayOrigin, vec3 rayDirInv, vec3 boundsMin, vec3 bou
     return (tNear <= tFar && tFar > 0.0) ? tNear : 1e27;
 }
 
-// Möller-Trumbore ray-triangle interesction algorithm
+// Moller-Trumbore ray-triangle interesction algorithm
 bool IntersectTriangle(in vec3 rayOrigin, in vec3 rayDir, float minDistance, float maxDistance, in vec3 p0, in vec3 e1, in vec3 e2, in vec3 normal) {
     vec3 c = p0 - rayOrigin;
     vec3 r = cross(rayDir, c);

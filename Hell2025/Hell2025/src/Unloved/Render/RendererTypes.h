@@ -101,7 +101,7 @@ struct RenderItem {
 
     uint32_t objectIdUpperBit = 0;
     uint32_t objectIdLowerBit = 0;
-    int32_t baseSkinnedVertex = 0;
+    int32_t UNUSED = 0;
     int32_t baseSkinningTransformIndex = 0;
 
     uint32_t openableId = 0;

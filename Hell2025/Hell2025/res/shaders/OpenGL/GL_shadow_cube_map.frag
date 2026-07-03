@@ -1,4 +1,5 @@
 #version 460 core
+layout(origin_upper_left) in vec4 gl_FragCoord;
 in vec3 FragPos;
 
 uniform vec3 lightPosition;

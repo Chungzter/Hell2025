@@ -94,7 +94,9 @@ namespace VulkanDeviceManager {
             // used through PhysicalStorageBuffer buffer references.
             if (!checkFeatures.features.drawIndirectFirstInstance ||
                 !checkFeatures.features.multiDrawIndirect ||
+                !checkFeatures.features.geometryShader ||
                 !supportedFeatures11.shaderDrawParameters ||
+                !supportedFeatures12.descriptorBindingStorageImageUpdateAfterBind ||
                 !supportedFeatures12.scalarBlockLayout ||
                 !unifiedFeatures.unifiedImageLayouts) {
                 continue;
@@ -128,6 +130,7 @@ namespace VulkanDeviceManager {
             features.shaderInt64 = VK_TRUE;
             features.drawIndirectFirstInstance = VK_TRUE;
             features.multiDrawIndirect = VK_TRUE;
+            features.geometryShader = VK_TRUE;
 
             VkPhysicalDeviceVulkan11Features features11{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES };
             features11.shaderDrawParameters = VK_TRUE;
@@ -140,6 +143,7 @@ namespace VulkanDeviceManager {
             features12.descriptorIndexing = VK_TRUE;
             features12.bufferDeviceAddress = VK_TRUE;
             features12.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
+            features12.descriptorBindingStorageImageUpdateAfterBind = VK_TRUE;
             features12.scalarBlockLayout = VK_TRUE;
 
             VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipeline{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR };

@@ -1,7 +1,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "World/LegacyWorld.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 

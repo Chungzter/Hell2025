@@ -12,7 +12,7 @@
 namespace Input = Hell::Input;
 
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     static const int g_readbackBufferCount = 3;
     GLuint readbackSSBOs[g_readbackBufferCount];
@@ -78,7 +78,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(waterFrameBuffer, viewport);
+            OpenGL::Renderer::SetViewport(waterFrameBuffer, viewport);
 
             const ViewportData& viewportData = Unloved::RenderDataManager::GetViewportData()[i];
             glm::mat4 projectionMatrix = viewportData.projectionReverseZ;

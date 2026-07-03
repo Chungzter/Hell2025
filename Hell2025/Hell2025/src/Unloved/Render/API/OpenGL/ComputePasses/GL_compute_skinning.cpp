@@ -13,10 +13,15 @@ struct SkinningCommand {
     uint32_t baseTransformIndex;
 };
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void ComputeSkinningPass() {
         ProfilerOpenGLZoneFunction();
+
+        const std::vector<glm::mat4>& transforms = Unloved::RenderDataManager::GetSkinningTransforms();
+
+        OpenGLSSBO* ssbo = OpenGL::ResourceManager::GetSSBOPtr("SkinningTransforms");
+        ssbo->Update(transforms.size() * sizeof(glm::mat4), transforms.data());
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("ComputeSkinning");
         OpenGLSSBO* skinningTransformsSSBO = OpenGL::ResourceManager::GetSSBOPtr("SkinningTransforms");
@@ -25,23 +30,18 @@ namespace OpenGLRenderer {
         if (!skinningTransformsSSBO) return;
 
         // Calculate total amount of vertices to skin and allocate space
-        uint32_t totalVertexCount = 0;
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
-        for (const RenderItem& renderItem : Unloved::RenderDataManager::GetCombinedSkinnedRenderItems()) {
-            Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
-            if (!mesh) continue;
-
-            totalVertexCount += mesh->vertexCount;
-        }
+        OpenGLMeshBuffer& glMeshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
+        uint32_t totalVertexCount = Unloved::RenderDataManager::GetRequiredSkinnedVertexCount();
 
         // Make sure there is enough space allocated on the GPU to store them all
         OpenGL::BackEnd::AllocateSkinnedVertexBufferSpace(totalVertexCount);
 
         // Skin
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, meshBuffer.GetVBO());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glMeshBuffer.GetVBO());
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, skinningTransformsSSBO->GetHandle());
-        OpenGL::BindSSBO(3, "VertexWeights");
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, glMeshBuffer.GetVertexWeightSSBO());
 
         OpenGL::BindShader("ComputeSkinning");
 
@@ -56,7 +56,7 @@ namespace OpenGLRenderer {
             OpenGL::SetUniformInt("vertexCount", mesh->vertexCount);
             OpenGL::SetUniformInt("baseInputVertex", mesh->baseVertex);
             OpenGL::SetUniformInt("baseInputVertexWeight", renderItem.baseVertexWeight);
-            OpenGL::SetUniformInt("baseOutputVertex", renderItem.baseSkinnedVertex);
+            OpenGL::SetUniformInt("baseOutputVertex", renderItem.baseVertex);
             OpenGL::SetUniformInt("baseTransformIndex", renderItem.baseSkinningTransformIndex);
 
             //std::cout << mesh->name << " " << renderItem.baseVertexWeight << "\n";

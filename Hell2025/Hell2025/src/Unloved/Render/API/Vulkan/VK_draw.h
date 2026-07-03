@@ -19,7 +19,7 @@ namespace VulkanRenderer {
         uint32_t count = 0;
     };
 
-    void BeginDrawCommandWrite();
+    void ResetDrawCommandOffset();
     VulkanDrawCommandBatch WriteDrawCommands(const std::vector<DrawIndexedIndirectCommand>& drawCommands);
     std::array<VulkanDrawCommandBatch, 4> WriteDrawCommandsByViewport(const std::vector<DrawIndexedIndirectCommand> drawCommands[4]);
     void DrawIndexedCommands(VkCommandBuffer commandBuffer, const std::vector<DrawIndexedIndirectCommand>& drawCommands);

@@ -1,9 +1,10 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : enable
+layout(origin_upper_left) in vec4 gl_FragCoord;
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
-#include "../common/gl_fixed_bindings.glsl"
+#include "../common/OpenGL/binding_indices.glsl"
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"

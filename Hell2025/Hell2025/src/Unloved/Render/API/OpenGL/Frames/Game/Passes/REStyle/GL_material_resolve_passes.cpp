@@ -1,13 +1,10 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Render/Renderer.h"
 
 #include "Unloved/Render/RendererConstants.h"
 
-using namespace Hell;
-
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void MaterialResolvePass() {
         ProfilerOpenGLZoneFunction();
@@ -22,7 +19,7 @@ namespace OpenGLRenderer {
         OpenGL::BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
 
-        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
         OpenGL::BindSSBO(0, meshBuffer.GetVBO());
         OpenGL::BindSSBO(1, meshBuffer.GetEBO());
         OpenGL::BindSSBO(2, "ViewportData");
@@ -46,7 +43,7 @@ namespace OpenGLRenderer {
         state.stencilDepthFailOp = GL_KEEP;
         state.stencilPassOp = GL_KEEP;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
         RenderFullscreenTriangle();
     }
 
@@ -58,13 +55,13 @@ namespace OpenGLRenderer {
         gbufferFbo.SetViewport();
         gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
 
-        OpenGL::BindShader("MaterialResolveSkinning");
+        OpenGL::BindShader("MaterialResolve");
 
         OpenGL::BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
 
         OpenGL::BindSSBO(0, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
-        OpenGL::BindSSBO(1, ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
+        OpenGL::BindSSBO(1, OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
         OpenGL::BindSSBO(2, "ViewportData");
         OpenGL::BindSSBO(3, "InstanceData");
         OpenGL::BindSSBO(4, "Samplers");
@@ -86,18 +83,18 @@ namespace OpenGLRenderer {
         state.stencilPassOp = GL_KEEP;
 
         state.stencilRef = STENCIL_BIT_SKINNED;
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
         RenderFullscreenTriangle();
 
         state.stencilRef = STENCIL_BIT_SKINNED_HAIR;
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
         RenderFullscreenTriangle();
     }
 
     void MaterialResolveProceduralPass() {
         ProfilerOpenGLZoneFunction();
 
-        MeshBuffer& proceduralMeshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+        OpenGLMeshBuffer& proceduralMeshBuffer = OpenGL::ResourceManager::GetMeshBuffer("Procedural");
 
         OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
         gbufferFbo.Bind();
@@ -132,7 +129,7 @@ namespace OpenGLRenderer {
         state.stencilDepthFailOp = GL_KEEP;
         state.stencilPassOp = GL_KEEP;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
         RenderFullscreenTriangle();
     }
 
@@ -150,7 +147,7 @@ namespace OpenGLRenderer {
         OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
 
         OpenGL::BindSSBO(0, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
-        OpenGL::BindSSBO(1, ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
+        OpenGL::BindSSBO(1, OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
         OpenGL::BindSSBO(2, "ViewportData");
         OpenGL::BindSSBO(3, "InstanceData");
         OpenGL::BindSSBO(4, "Samplers");
@@ -172,7 +169,7 @@ namespace OpenGLRenderer {
         state.stencilDepthFailOp = GL_KEEP;
         state.stencilPassOp = GL_KEEP;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
         RenderFullscreenTriangle();
     }
 }

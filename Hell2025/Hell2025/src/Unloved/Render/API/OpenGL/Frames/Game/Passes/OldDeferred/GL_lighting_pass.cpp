@@ -12,9 +12,9 @@
 #include "World/LegacyWorld.h"
 #include "Unloved/Render/Renderer.h"
 
-#include "res/shaders/common/gl_fixed_bindings.glsl"
+#include "res/shaders/common/OpenGL/binding_indices.glsl"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void ComputeViewspaceDepth() {
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");

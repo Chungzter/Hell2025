@@ -1,10 +1,11 @@
 #version 460
 #extension GL_EXT_nonuniform_qualifier : require
 
-#include "../common/Vulkan/constants.glsl"
+#include "../common/Vulkan/binding_indices.glsl"
 
 layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamplers[];
 
 layout(location = 0) flat in uint v_globalInstanceIndex;
 layout(location = 1) in vec2 v_uv;
@@ -13,7 +14,8 @@ layout(location = 0) out uvec2 out_visibility;
 
 void main() {
     if (v_baseColorTextureIndex >= 0) {
-        float alpha = texture(sampler2D(textures[nonuniformEXT(uint(v_baseColorTextureIndex))], samplers[0]), v_uv).a;
+        uint textureIndex = uint(v_baseColorTextureIndex);
+        float alpha = texture(sampler2D(textures[nonuniformEXT(textureIndex)], textureSamplers[nonuniformEXT(textureIndex)]), v_uv).a;
         if (alpha < 0.25) discard;
     }
 

@@ -4,7 +4,7 @@
 
 #include <unordered_map>
 
-namespace OpenGLRasterizerStateManager {
+namespace OpenGL::RasterizerStateManager {
 
     namespace {
         OpenGLRasterizerState g_globalState;
@@ -20,7 +20,7 @@ namespace OpenGLRasterizerStateManager {
     OpenGLRasterizerState* GetRasterizerState(const std::string& name) {
         auto it = g_rasterizerStates.find(name);
         if (it == g_rasterizerStates.end()) {
-            Logging::Error() << "OpenGLRasterizerStateManager::GetRasterizerState() failed to get '" << name << "'\n";
+            Logging::Error() << "OpenGL::RasterizerStateManager::GetRasterizerState() failed to get '" << name << "'\n";
             return nullptr;
         }
         return &it->second;
@@ -29,7 +29,7 @@ namespace OpenGLRasterizerStateManager {
     void ForceRasterizerState(const std::string& name) {
         OpenGLRasterizerState* rasterizerState = GetRasterizerState(name);
         if (!rasterizerState) {
-            Logging::Error() << "OpenGLRasterizerStateManager::ForceRasterizerState() failed because '" << name << "' does not exist\n";
+            Logging::Error() << "OpenGL::RasterizerStateManager::ForceRasterizerState() failed because '" << name << "' does not exist\n";
             return;
         }
         ForceRasterizerState(*rasterizerState);
@@ -61,7 +61,7 @@ namespace OpenGLRasterizerStateManager {
     void SetRasterizerState(const std::string& name) {
         OpenGLRasterizerState* rasterizerState = GetRasterizerState(name);
         if (!rasterizerState) {
-            Logging::Error() << "OpenGLRasterizerStateManager::SetRasterizerState() failed because '" << name << "' does not exist\n";
+            Logging::Error() << "OpenGL::RasterizerStateManager::SetRasterizerState() failed because '" << name << "' does not exist\n";
             return;
         }
         SetRasterizerState(*rasterizerState);

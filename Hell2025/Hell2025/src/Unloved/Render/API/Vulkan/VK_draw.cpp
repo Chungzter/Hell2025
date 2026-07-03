@@ -9,7 +9,7 @@
 namespace VulkanRenderer {
     static VkDeviceSize g_drawCommandBufferOffset = 0;
 
-    void BeginDrawCommandWrite() {
+    void ResetDrawCommandOffset() {
         // Reset shared draw command buffer offset
         g_drawCommandBufferOffset = 0;
     }

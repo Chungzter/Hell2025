@@ -74,6 +74,15 @@ struct Vertex {
 
         return { sizeof(Vertex), attributes };
     }
+
+    static VertexLayoutDescription GetPositionUVLayout() {
+        static constexpr std::array<VertexAttribute, 2> attributes = {
+            VertexAttribute { 0, 3, VertexAttributeType::Float, false, offsetof(Vertex, position) },
+            VertexAttribute { 2, 2, VertexAttributeType::Float, false, offsetof(Vertex, uv) }
+        };
+
+        return { sizeof(Vertex), attributes };
+    }
 };
 
 struct VertexWeight {

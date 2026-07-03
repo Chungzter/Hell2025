@@ -1,6 +1,6 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void DownSampleFinalImage() {
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");

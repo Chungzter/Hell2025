@@ -12,26 +12,28 @@ struct AllocatedImage {
     AllocatedImage& operator=(AllocatedImage&& other) noexcept;
 
     void Sync(VkCommandBuffer cmd, VkAccessFlags2 dstAccess, VkPipelineStageFlags2 dstStage);
-    //void TransitionLayout(VkCommandBuffer cmd, VkImageLayout newLayout, VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
     void Cleanup();
 
     int32_t GetWidth() const            { return m_extent.width; }
     int32_t GetHeight() const           { return m_extent.height; }
     int32_t GetDepth() const            { return m_extent.depth; }
     VkExtent3D GetExtent() const        { return m_extent; }
+    VkExtent2D GetExtent2D() const      { return { m_extent.width, m_extent.height }; }
     VkFormat GetFormat() const          { return m_format; }
     VkImage GetImage() const            { return m_image; }
     VkImageView GetImageView() const    { return m_imageView; }
+    VkImageView GetDepthOnlyImageView() const { return m_depthOnlyImageView != VK_NULL_HANDLE ? m_depthOnlyImageView : m_imageView; }
     VmaAllocation GetAllocation() const { return m_allocation; }
 
 private:
     VkImage m_image = VK_NULL_HANDLE;
     VkImageView m_imageView = VK_NULL_HANDLE;
+    VkImageView m_depthOnlyImageView = VK_NULL_HANDLE;
     VmaAllocation m_allocation = VK_NULL_HANDLE;
     VkExtent3D m_extent = {};
     VkFormat m_format = VK_FORMAT_UNDEFINED;
 
     VkImageLayout m_currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    VkAccessFlags m_currentAccessMask = 0;
-    VkPipelineStageFlags m_currentStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    VkAccessFlags2 m_currentAccessMask = 0;
+    VkPipelineStageFlags2 m_currentStageFlags = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
 };

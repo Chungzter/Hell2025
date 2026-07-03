@@ -48,6 +48,7 @@ namespace Unloved::RenderDataManager {
     const std::vector<DecalPaintingInfo>& GetDecalPaintingInfo();
     const std::vector<RenderItem>& GetInstanceData();
     const std::vector<RenderItem>& GetCombinedSkinnedRenderItems();
+    uint32_t GetRequiredSkinnedVertexCount();
 
     const std::vector<RenderItem>& GetRenderItems();
     const std::vector<RenderItem>& GetRenderItemsAlphaDiscard();

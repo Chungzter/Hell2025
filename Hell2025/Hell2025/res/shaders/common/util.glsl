@@ -1,4 +1,4 @@
-﻿#include "types.glsl"
+#include "types.glsl"
 
 vec3 GetWorldRay(vec2 fragCoordWindow, mat4 inverseProjectionView, vec3 viewPos, vec2 viewportOrigin, vec2 viewportSize) {
     vec2 fragCoord = fragCoordWindow - viewportOrigin;
@@ -69,7 +69,7 @@ vec2 WorldToScreen(vec3 worldPos, mat4 projView, vec2 viewportPosition, vec2 vie
     vec2 screenUV = ndc.xy * 0.5 + 0.5;
     screenUV.y = 1.0 - screenUV.y;
 
-    // 🔥 Ensure precise viewport size scaling
+    // Ensure precise viewport size scaling
     return screenUV * viewportSize + viewportPosition;
 }
 

@@ -5,7 +5,7 @@
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void SkyBoxPass() {
         if (Unloved::Editor::IsOpen()) return;
@@ -28,11 +28,11 @@ namespace OpenGLRenderer {
         state.depthMask = false;
         state.depthFunc = GL_GREATER;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemapView->GetHandle());
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         RenderFullscreenTriangle();
     }

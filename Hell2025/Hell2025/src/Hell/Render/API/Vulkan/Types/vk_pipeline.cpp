@@ -141,6 +141,16 @@ void VulkanPipeline::SetDepthCompareOp(VkCompareOp compareOp) {
     m_depthCompareOp = compareOp;
 }
 
+void VulkanPipeline::SetStencilTest(bool enabled, VkCompareOp compareOp, VkStencilOp failOp, VkStencilOp depthFailOp, VkStencilOp passOp, uint32_t readMask, uint32_t writeMask) {
+    m_stencilTest = enabled;
+    m_stencilCompareOp = compareOp;
+    m_stencilFailOp = failOp;
+    m_stencilDepthFailOp = depthFailOp;
+    m_stencilPassOp = passOp;
+    m_stencilReadMask = readMask;
+    m_stencilWriteMask = writeMask;
+}
+
 void VulkanPipeline::SetVertexDescription(const VertexLayoutDescription& layout) {
     m_bindingDescription = {};
     m_attributeDescriptions.clear();
@@ -205,6 +215,15 @@ bool VulkanPipeline::Build() {
 
     if (!CheckResult(vkCreatePipelineLayout(device, &layoutInfo, nullptr, &m_layout), "Failed to create pipeline layout")) {
         return false;
+    }
+
+    VkPipelineShaderStageCreateInfo computeStage = m_shader->GetStageCreateInfo(VK_SHADER_STAGE_COMPUTE_BIT);
+    if (computeStage.module != VK_NULL_HANDLE) {
+        VkComputePipelineCreateInfo pipelineInfo{ VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
+        pipelineInfo.stage = computeStage;
+        pipelineInfo.layout = m_layout;
+
+        return CheckResult(vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_handle), "Failed to create compute pipeline");
     }
 
     // Shader Stages
@@ -276,7 +295,18 @@ bool VulkanPipeline::Build() {
     depthStencil.depthWriteEnable = m_depthWrite ? VK_TRUE : VK_FALSE;
     depthStencil.depthCompareOp = m_depthCompareOp;
     depthStencil.depthBoundsTestEnable = VK_FALSE;
-    depthStencil.stencilTestEnable = VK_FALSE;
+    depthStencil.stencilTestEnable = m_stencilTest ? VK_TRUE : VK_FALSE;
+
+    VkStencilOpState stencilState{};
+    stencilState.failOp = m_stencilFailOp;
+    stencilState.passOp = m_stencilPassOp;
+    stencilState.depthFailOp = m_stencilDepthFailOp;
+    stencilState.compareOp = m_stencilCompareOp;
+    stencilState.compareMask = m_stencilReadMask;
+    stencilState.writeMask = m_stencilWriteMask;
+    stencilState.reference = 0;
+    depthStencil.front = stencilState;
+    depthStencil.back = stencilState;
 
     // Color Blending
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
@@ -303,7 +333,7 @@ bool VulkanPipeline::Build() {
     colorBlending.pAttachments = colorBlendAttachments.empty() ? nullptr : colorBlendAttachments.data();
 
     // Dynamic State
-    std::array<VkDynamicState, 2> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+    std::array<VkDynamicState, 3> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_STENCIL_REFERENCE };
     VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
     dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicStateInfo.dynamicStateCount = (uint32_t)dynamicStates.size();
@@ -315,6 +345,7 @@ bool VulkanPipeline::Build() {
     renderingInfo.colorAttachmentCount = static_cast<uint32_t>(m_colorAttachmentFormats.size());
     renderingInfo.pColorAttachmentFormats = m_colorAttachmentFormats.empty() ? nullptr : m_colorAttachmentFormats.data();
     renderingInfo.depthAttachmentFormat = m_depthAttachmentFormat;
+    renderingInfo.stencilAttachmentFormat = m_stencilTest ? m_depthAttachmentFormat : VK_FORMAT_UNDEFINED;
 
     // Final Creation
     VkGraphicsPipelineCreateInfo pipelineInfo{};

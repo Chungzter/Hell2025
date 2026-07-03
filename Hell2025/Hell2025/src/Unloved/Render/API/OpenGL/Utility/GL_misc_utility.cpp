@@ -2,7 +2,7 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void ClearAllWoundMasks() {
         Hell::TextureArray* woundMaskArray = Hell::ResourceManager::GetTextureArrayPtr("WoundMasks");

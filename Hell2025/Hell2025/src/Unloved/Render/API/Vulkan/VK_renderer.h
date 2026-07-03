@@ -6,6 +6,7 @@ namespace VulkanRenderer {
     void Init();
     void InitMain();
     void CleanUp();
+    void HotloadShaders();
     void RenderLoadingScreen();
     void RenderGame();
 
@@ -14,6 +15,6 @@ namespace VulkanRenderer {
     uint32_t GetCurrentFrameIndex();
 
     void UpdateBindlessTextureDescriptors();
-    void UpdateUIBuffers();
-    void RenderUIPass(VkCommandBuffer commandBuffer, VkImageView imageView, VkExtent2D extent);
+
+    void RenderUIPass(VkCommandBuffer commandBuffer);
 }

@@ -17,7 +17,7 @@
 #include "Unloved/Session/Session.h" // For Session::GetSessionTime(). It's a hack to prevent colorful probe glitch at start
 #include "Unloved/World/World.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     float g_time = 0.0f; // Hack to prevent colorful probe glitch at start
 
@@ -504,7 +504,7 @@ namespace OpenGLRenderer {
 		state.blendEnable = false;
 		state.depthMask = true;
 		state.depthFunc = GL_GREATER;
-		OpenGLRasterizerStateManager::ForceRasterizerState(state);
+		OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 
 		OpenGLFrameBuffer* fbo = nullptr;
 
@@ -523,14 +523,14 @@ namespace OpenGLRenderer {
 			fbo->DrawBuffer("Lighting");
 
 			state.depthFunc = GL_LESS;
-			OpenGLRasterizerStateManager::ForceRasterizerState(state);
+			OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 		}
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(fbo, viewport);
+            OpenGL::Renderer::SetViewport(fbo, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
             OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 
@@ -565,7 +565,7 @@ namespace OpenGLRenderer {
 		state.blendEnable = false;
 		state.depthMask = true;
 		state.depthFunc = GL_GREATER;
-		OpenGLRasterizerStateManager::ForceRasterizerState(state);
+		OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 
         OpenGLFrameBuffer* fbo = nullptr;
 
@@ -589,7 +589,7 @@ namespace OpenGLRenderer {
         OpenGL::BindSSBO(7, "DDGIVolume");
         OpenGL::BindSSBO(8, "ProbeStates");
 
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
         Model* sphereModel = Hell::ResourceManager::GetModelByName("Sphere");
@@ -604,7 +604,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-			OpenGLRenderer::SetViewport(fbo, viewport);
+			OpenGL::Renderer::SetViewport(fbo, viewport);
 			OpenGL::SetUniformInt("u_viewportIndex", i);
             OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 

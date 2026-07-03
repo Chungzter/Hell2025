@@ -1,4 +1,5 @@
 #version 450
+layout(origin_upper_left) in vec4 gl_FragCoord;
 #include "../../common/lighting.glsl"
 #include "../../common/post_processing.glsl"
 #include "../../common/types.glsl"

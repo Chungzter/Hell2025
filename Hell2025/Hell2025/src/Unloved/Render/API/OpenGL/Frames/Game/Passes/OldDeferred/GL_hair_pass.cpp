@@ -14,10 +14,10 @@ namespace Audio = Hell::Audio;
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
-#include "res/shaders/common/gl_fixed_bindings.glsl"
+#include "res/shaders/common/OpenGL/binding_indices.glsl"
 
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     bool g_cullFace = false;
 
@@ -69,7 +69,7 @@ namespace OpenGLRenderer {
 
         UpdateHairDebugInput();
 
-        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
 
         // Clear textures do initial values
         hairFrameBuffer->Bind();
@@ -84,7 +84,7 @@ namespace OpenGLRenderer {
 
         for (int j = 0; j < renderSettings.depthPeelCount; j++) {
 
-            OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+            OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
             glDrawBuffer(GL_NONE);
             glDepthFunc(GL_LESS);
             glDepthMask(GL_TRUE);
@@ -106,7 +106,7 @@ namespace OpenGLRenderer {
                 Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
                 if (!viewport->IsVisible()) continue;
 
-                OpenGLRenderer::SetViewport(hairFrameBuffer, viewport);
+                OpenGL::Renderer::SetViewport(hairFrameBuffer, viewport);
                 if (Hell::BackEnd::RenderDocFound()) {
                     SplitMultiDrawIndirect(depthPeelShader, drawInfoSet.hair[i], false, false);
                 }
@@ -123,7 +123,7 @@ namespace OpenGLRenderer {
                 Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
                 if (!viewport->IsVisible()) continue;
 
-                OpenGLRenderer::SetViewport(hairFrameBuffer, viewport);
+                OpenGL::Renderer::SetViewport(hairFrameBuffer, viewport);
                 if (Hell::BackEnd::RenderDocFound()) {
                     SplitMultiDrawIndirect(depthPeelShader, drawInfoSet.skinnedHair[i], false, false);
                 }
@@ -133,7 +133,7 @@ namespace OpenGLRenderer {
             }
 
             // Color pass
-            OpenGLRasterizerStateManager::ForceRasterizerState("HairLighting");
+            OpenGL::RasterizerStateManager::ForceRasterizerState("HairLighting");
 
             if (!g_cullFace) glDisable(GL_CULL_FACE);
 
@@ -167,7 +167,7 @@ namespace OpenGLRenderer {
                 Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
                 if (!viewport->IsVisible()) continue;
 
-                OpenGLRenderer::SetViewport(hairFrameBuffer, viewport);
+                OpenGL::Renderer::SetViewport(hairFrameBuffer, viewport);
                 if (Hell::BackEnd::RenderDocFound()) {
                     SplitMultiDrawIndirect(hairLightingShader, drawInfoSet.hair[i], true, false);
                 }
@@ -184,7 +184,7 @@ namespace OpenGLRenderer {
                 Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
                 if (!viewport->IsVisible()) continue;
 
-                OpenGLRenderer::SetViewport(hairFrameBuffer, viewport);
+                OpenGL::Renderer::SetViewport(hairFrameBuffer, viewport);
                 if (Hell::BackEnd::RenderDocFound()) {
                     SplitMultiDrawIndirect(hairLightingShader, drawInfoSet.skinnedHair[i], true, false);
                 }

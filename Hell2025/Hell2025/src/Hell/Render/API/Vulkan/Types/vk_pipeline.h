@@ -26,6 +26,7 @@ struct  VulkanPipeline {
     void SetColorBlending(bool enabled);
     void SetDepthTest(bool enabled, bool writeEnabled = true);
     void SetDepthCompareOp(VkCompareOp compareOp);
+    void SetStencilTest(bool enabled, VkCompareOp compareOp, VkStencilOp failOp, VkStencilOp depthFailOp, VkStencilOp passOp, uint32_t readMask, uint32_t writeMask);
     void SetVertexDescription(const VertexLayoutDescription& layout);
 
     template<typename T>
@@ -58,6 +59,13 @@ private:
     bool m_depthTest = true;
     bool m_depthWrite = true;
     VkCompareOp m_depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    bool m_stencilTest = false;
+    VkCompareOp m_stencilCompareOp = VK_COMPARE_OP_ALWAYS;
+    VkStencilOp m_stencilFailOp = VK_STENCIL_OP_KEEP;
+    VkStencilOp m_stencilDepthFailOp = VK_STENCIL_OP_KEEP;
+    VkStencilOp m_stencilPassOp = VK_STENCIL_OP_KEEP;
+    uint32_t m_stencilReadMask = 0xff;
+    uint32_t m_stencilWriteMask = 0xff;
 
     VkVertexInputBindingDescription m_bindingDescription{};
     std::vector<VkVertexInputAttributeDescription> m_attributeDescriptions;

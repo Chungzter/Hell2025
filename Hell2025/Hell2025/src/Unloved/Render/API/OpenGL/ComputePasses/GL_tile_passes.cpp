@@ -3,7 +3,7 @@
 #include "Unloved/Systems/Blood/BloodSystem.h"
 #include "World/LegacyWorld.h"
 #include "Unloved/World/World.h"
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
     std::vector<GPUChristmasLight> g_gpuLights;

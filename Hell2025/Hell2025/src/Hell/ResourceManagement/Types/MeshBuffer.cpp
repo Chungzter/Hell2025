@@ -24,7 +24,8 @@ size_t MeshBuffer::GetCPUAllocatedByteCount() const {
 
 size_t MeshBuffer::GetGPUAllocatedByteCount() const {
     return (m_vertexCapacity * Vertex::GetLayout().stride) +
-           (m_indexCapacity * sizeof(uint32_t));
+           (m_indexCapacity * sizeof(uint32_t)) +
+           (m_vertexWeightCapacity * sizeof(VertexWeight));
 }
 
 void MeshBuffer::Initialize() {
@@ -32,7 +33,7 @@ void MeshBuffer::Initialize() {
 
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         if (m_openGLId == 0) {
-            m_openGLId = OpenGL::ResourceManager::CreateMeshBuffer();
+            m_openGLId = OpenGL::ResourceManager::CreateMeshBuffer(m_name);
         }
 
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
@@ -66,6 +67,7 @@ void MeshBuffer::Reset() {
     m_nextMeshId = 0;
     m_vertexCapacity = 0;
     m_indexCapacity = 0;
+    m_vertexWeightCapacity = 0;
 
     if (Hell::BackEnd::GetAPI() == API::OPENGL && m_openGLId != 0) {
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
@@ -339,8 +341,36 @@ int32_t MeshBuffer::AddVertexWeights(const std::vector<VertexWeight>& newVertexW
     }
 
     int32_t insertOffset = static_cast<int32_t>(m_vertexWeights.size());
-    m_vertexWeights.reserve(m_vertexWeights.size() + newVertexWeights.size());
+    size_t requiredCount = m_vertexWeights.size() + newVertexWeights.size();
+
+    if (requiredCount > m_vertexWeightCapacity) {
+        m_vertexWeightCapacity = CalculateNewCapacity(requiredCount, m_vertexWeightCapacity);
+
+        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
+            OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
+            meshBuffer.ResizeVertexWeightBuffer(m_vertexWeightCapacity, m_vertexWeights);
+        }
+        if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+            VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer(m_vulkanId);
+            if (meshBuffer) {
+                meshBuffer->ResizeVertexWeightBuffer(m_vertexWeightCapacity, m_vertexWeights);
+            }
+        }
+    }
+
     m_vertexWeights.insert(m_vertexWeights.end(), newVertexWeights.begin(), newVertexWeights.end());
+
+    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
+        meshBuffer.InsertVertexWeights(newVertexWeights, insertOffset);
+    }
+    if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+        VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer(m_vulkanId);
+        if (meshBuffer) {
+            meshBuffer->InsertVertexWeights(newVertexWeights, insertOffset);
+        }
+    }
+
     return insertOffset;
 }
 
@@ -398,54 +428,6 @@ int32_t MeshBuffer::AllocateExtraIndexSpace(size_t indexCount) {
     m_indices.resize(blockEnd);
 
     return static_cast<int32_t>(m_freeIndexMemoryBlocks.size() - 1);
-}
-
-uint32_t MeshBuffer::GetVBO() const {
-    if (m_openGLId == 0) {
-        Logging::Error() << "MeshBuffer::GetVBO() was called before OpenGL resources were initialized\n";
-        return 0;
-    }
-
-    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
-        return meshBuffer.GetVBO();
-    }
-    else {
-        Logging::Error() << "MeshBuffer::GetVBO() was called by API is Vulkan\n";
-        return 0;
-    }
-}
-
-uint32_t MeshBuffer::GetEBO() const {
-    if (m_openGLId == 0) {
-        Logging::Error() << "MeshBuffer::GetEBO() was called before OpenGL resources were initialized\n";
-        return 0;
-    }
-
-    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
-        return meshBuffer.GetEBO();
-    }
-    else {
-        Logging::Error() << "MeshBuffer::GetEBO() was called by API is Vulkan\n";
-        return 0;
-    }
-}
-
-uint32_t MeshBuffer::GetVAO() const {
-    if (m_openGLId == 0) {
-        Logging::Error() << "MeshBuffer::GetVAO() was called before OpenGL resources were initialized\n";
-        return 0;
-    }
-
-    if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
-        return meshBuffer.GetVAO();
-    }
-    else {
-        Logging::Error() << "MeshBuffer::GetVAO() was called by API is Vulkan\n";
-        return 0;
-    }
 }
 
 void MeshBuffer::RemoveMesh(uint32_t meshId) {
@@ -545,16 +527,17 @@ void MeshBuffer::PreAllocate(size_t maxVertices, size_t maxIndices, size_t maxVe
     m_vertexWeights.reserve(maxVertexWeights);
     m_vertexCapacity = maxVertices;
     m_indexCapacity = maxIndices;
+    m_vertexWeightCapacity = maxVertexWeights;
 
     // Allocate new GPU memory
     if (Hell::BackEnd::GetAPI() == API::OPENGL) {
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer(m_openGLId);
-        meshBuffer.PreAllocate(m_vertexCapacity, m_indexCapacity);
+        meshBuffer.PreAllocate(m_vertexCapacity, m_indexCapacity, m_vertexWeightCapacity);
     }
     if (Hell::BackEnd::GetAPI() == API::VULKAN) {
         VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer(m_vulkanId);
         if (meshBuffer) {
-            meshBuffer->PreAllocate(m_vertexCapacity, m_indexCapacity);
+            meshBuffer->PreAllocate(m_vertexCapacity, m_indexCapacity, m_vertexWeightCapacity);
         }
     }
 
@@ -729,6 +712,7 @@ void MeshBuffer::PrintDebugInfo() {
     message += "GPU storage\n";
     message += "  GPU vertex capacity: " + std::to_string(m_vertexCapacity) + "\n";
     message += "  GPU index capacity: " + std::to_string(m_indexCapacity) + "\n";
+    message += "  GPU vertex weight capacity: " + std::to_string(m_vertexWeightCapacity) + "\n";
     message += "\n";
 
     message += "Fragmentation\n";

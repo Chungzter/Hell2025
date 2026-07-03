@@ -4,6 +4,8 @@
 #include "Hell/Render/API/Vulkan/Managers/vk_memory_manager.h"
 
 VulkanDescriptorSet::VulkanDescriptorSet(VkDescriptorSetLayout layout) {
+    if (layout == VK_NULL_HANDLE) return;
+
     VkDevice device = VulkanDeviceManager::GetDevice();
     VkDescriptorPool pool = VulkanMemoryManager::GetDescriptorPool();
 
@@ -12,7 +14,9 @@ VulkanDescriptorSet::VulkanDescriptorSet(VkDescriptorSetLayout layout) {
     allocInfo.descriptorSetCount = 1;
     allocInfo.pSetLayouts = &layout;
 
-    vkAllocateDescriptorSets(device, &allocInfo, &m_handle);
+    if (vkAllocateDescriptorSets(device, &allocInfo, &m_handle) != VK_SUCCESS) {
+        m_handle = VK_NULL_HANDLE;
+    }
 }
 
 void VulkanDescriptorSet::Cleanup() {
@@ -120,7 +124,10 @@ VulkanDescriptorSetResource::VulkanDescriptorSetResource(VkDescriptorSetLayoutCr
 
     m_lifetime = lifetime;
 
-    vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &m_layout);
+    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &m_layout) != VK_SUCCESS) {
+        m_layout = VK_NULL_HANDLE;
+        return;
+    }
 
     uint32_t setCount = 1;
 

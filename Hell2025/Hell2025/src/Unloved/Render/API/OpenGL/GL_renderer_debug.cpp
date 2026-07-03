@@ -4,7 +4,7 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 

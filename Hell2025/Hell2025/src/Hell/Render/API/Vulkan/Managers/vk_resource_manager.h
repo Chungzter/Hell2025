@@ -8,6 +8,7 @@
 #include "Hell/Render/API/Vulkan/Types/vk_mesh_buffer.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
 #include "Hell/Render/API/Vulkan/Types/vk_raytracing_pipeline.h"
+#include "Hell/Render/API/Vulkan/Types/VK_render_state.h"
 #include "Hell/Render/API/Vulkan/Types/vk_sampler.h"
 #include "Hell/Render/API/Vulkan/Types/vk_shader.h"
 #include "Hell/Render/API/Vulkan/Types/vk_texture.h"
@@ -58,6 +59,10 @@ namespace VulkanResourceManager {
     VulkanRaytracingPipeline* GetRaytracingPipeline(const std::string& name);
     void CleanUpPipelines();
 
+    // Render States
+    VulkanRenderState& CreateRenderState(const std::string& name);
+    VulkanRenderState* GetRenderState(const std::string& name);
+
     // Samplers
     VulkanSampler& CreateSampler(const std::string& name, VkFilter magFilter, VkFilter minFilter, VkSamplerAddressMode addressMode, float maxAnisotropy = 1.0f);
     VulkanSampler* GetSampler(const std::string& name);
@@ -73,5 +78,6 @@ namespace VulkanResourceManager {
     VulkanShader& CreateShader(const std::string& name, const std::vector<std::string>& paths);
     VulkanShader* GetShader(const std::string& name);
     bool ShaderExists(const std::string& name);
+    bool HotloadShaders(std::string& failedShaders);
     bool HotloadShaders();
 }

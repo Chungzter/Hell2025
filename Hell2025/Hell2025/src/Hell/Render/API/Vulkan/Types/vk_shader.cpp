@@ -40,6 +40,17 @@ static bool TryParseInclude(const std::string& line, std::string& outIncludeFile
     return !outIncludeFile.empty();
 }
 
+static void StripUTF8BOMFromLine(std::string& line) {
+    if (line.size() >= 3) {
+        const unsigned char b0 = (unsigned char)line[0];
+        const unsigned char b1 = (unsigned char)line[1];
+        const unsigned char b2 = (unsigned char)line[2];
+        if (b0 == 0xEF && b1 == 0xBB && b2 == 0xBF) {
+            line.erase(0, 3);
+        }
+    }
+}
+
 static std::string NormalizePath(const std::filesystem::path& path) {
     std::error_code errorCode;
     std::filesystem::path normalized = std::filesystem::weakly_canonical(path, errorCode);
@@ -60,8 +71,14 @@ static std::string ReadShaderFileWithIncludes(const std::string& filepath, Vulka
     }
 
     std::string baseDir = std::filesystem::path(filepath).parent_path().string();
+    bool firstLineOfThisFile = true;
 
     while (getline(stream, line)) {
+        if (firstLineOfThisFile) {
+            StripUTF8BOMFromLine(line);
+            firstLineOfThisFile = false;
+        }
+
         std::string includeFile;
         if (TryParseInclude(line, includeFile)) {
             std::string includePath = NormalizePath(std::filesystem::path(baseDir) / includeFile);
@@ -288,6 +305,17 @@ bool VulkanShader::Hotload() {
     }
 
     return true;
+}
+
+std::vector<std::string> VulkanShader::GetPaths() const {
+    std::vector<std::string> paths;
+    paths.reserve(m_modules.size());
+
+    for (const VulkanShaderModule& module : m_modules) {
+        paths.push_back(module.GetPath());
+    }
+
+    return paths;
 }
 
 VkShaderModule VulkanShader::GetVertexShader() {

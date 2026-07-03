@@ -1,11 +1,11 @@
 #version 460
-
 #ifndef ENABLE_BINDLESS
     #define ENABLE_BINDLESS 1
 #endif
 
 #if ENABLE_BINDLESS == 1
     #extension GL_ARB_bindless_texture : enable
+layout(origin_upper_left) in vec4 gl_FragCoord;
     readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
     in flat int OpacityTextureIndex;
 #else

@@ -9,7 +9,7 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void InventoryGaussianPass() {
         ProfilerOpenGLZoneFunction();
@@ -54,7 +54,7 @@ namespace OpenGLRenderer {
 
         gBuffer->ClearDepthAttachment(0.0f);
 
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
 
         glm::vec3 cameraPosition = glm::vec3(0, 0, 1.5f); // Remember the item is rendered at (0,0,0)
@@ -69,7 +69,7 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformVec3("u_viewPos", cameraPosition);
         OpenGL::SetUniformBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         // Non blended
         for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
@@ -80,7 +80,7 @@ namespace OpenGLRenderer {
             if (player->InventoryIsClosed()) continue;
             if (player->GetInvetoryState() != InventoryState::EXAMINE_ITEM) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
                 //float m_fov = glm::radians(20.0f);
                 //float m_aspect = 1920.0f / 1080.0f;
                 //float m_nearPlane = NEAR_PLANE;

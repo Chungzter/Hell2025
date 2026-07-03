@@ -62,11 +62,11 @@ namespace VulkanMemoryManager {
         uint32_t sets = 4; // Buffer for a few versions/overlays
 
         std::vector<VkDescriptorPoolSize> sizes = {
-            // From Binding 0
-            { VK_DESCRIPTOR_TYPE_SAMPLER, 16 * sets + 100 },
+            // Static samplers + texture samplers
+            { VK_DESCRIPTOR_TYPE_SAMPLER, (16 + 10000) * sets + 100 },
 
-            // From Binding 1
-            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 10000 * sets },
+            // From Binding 1 + uint sampled render targets
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, (10000 + 128) * sets },
 
             // From Binding 2
             { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 128 * sets + 100 },

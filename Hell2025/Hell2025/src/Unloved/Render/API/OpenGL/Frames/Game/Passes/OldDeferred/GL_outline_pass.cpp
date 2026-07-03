@@ -14,7 +14,7 @@
 #include <algorithm>
 
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     std::vector<glm::vec2> GenerateOutlineOffsets(int lineThickness = 1) {
         std::vector<glm::vec2> offsets;
@@ -99,7 +99,7 @@ namespace OpenGLRenderer {
         outlineFBO->Bind();
         outlineFBO->ClearAttachmentI("Mask", 0);
         outlineFBO->ClearAttachmentI("Result", 0);
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
         glDisable(GL_DEPTH_TEST);
 
         // For each viewport
@@ -107,7 +107,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(&gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(&gBuffer, viewport);
 
             // Render the mask (by drawing all the mesh into it)
             glDrawBuffer(outlineFBO->GetColorAttachmentSlotByName("Mask"));

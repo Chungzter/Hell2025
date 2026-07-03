@@ -34,10 +34,12 @@ void OpenGLMeshBuffer::Reset() {
     if (m_vao != 0) glDeleteVertexArrays(1, &m_vao);
     if (m_vbo != 0) glDeleteBuffers(1, &m_vbo);
     if (m_ebo != 0) glDeleteBuffers(1, &m_ebo);
+    if (m_vertexWeightSSBO != 0) glDeleteBuffers(1, &m_vertexWeightSSBO);
 
     m_vao = 0;
     m_vbo = 0;
     m_ebo = 0;
+    m_vertexWeightSSBO = 0;
     m_vertexStride = 0;
 }
 
@@ -57,6 +59,15 @@ void OpenGLMeshBuffer::InsertIndices(const std::vector<uint32_t>& indices, uint3
     size_t byteSize = indices.size() * sizeof(uint32_t);
 
     glNamedBufferSubData(m_ebo, byteOffset, byteSize, indices.data());
+}
+
+void OpenGLMeshBuffer::InsertVertexWeights(const std::vector<VertexWeight>& vertexWeights, uint32_t insertOffset) {
+    if (vertexWeights.empty()) return;
+
+    size_t byteOffset = insertOffset * sizeof(VertexWeight);
+    size_t byteSize = vertexWeights.size() * sizeof(VertexWeight);
+
+    glNamedBufferSubData(m_vertexWeightSSBO, byteOffset, byteSize, vertexWeights.data());
 }
 
 void OpenGLMeshBuffer::ResizeVertexBuffer(size_t newCapacity, const std::vector<Vertex>& vertices) {
@@ -91,15 +102,36 @@ void OpenGLMeshBuffer::ResizeIndexBuffer(size_t newCapacity, const std::vector<u
     glVertexArrayElementBuffer(m_vao, m_ebo);
 }
 
-void OpenGLMeshBuffer::PreAllocate(size_t vertexCapacity, size_t indexCapacity) {
+void OpenGLMeshBuffer::ResizeVertexWeightBuffer(size_t newCapacity, const std::vector<VertexWeight>& vertexWeights) {
+    GLuint newVertexWeightSSBO = 0;
+    glCreateBuffers(1, &newVertexWeightSSBO);
+    glNamedBufferStorage(newVertexWeightSSBO, newCapacity * sizeof(VertexWeight), nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+    if (!vertexWeights.empty()) {
+        glNamedBufferSubData(newVertexWeightSSBO, 0, vertexWeights.size() * sizeof(VertexWeight), vertexWeights.data());
+    }
+
+    if (m_vertexWeightSSBO != 0) glDeleteBuffers(1, &m_vertexWeightSSBO);
+
+    m_vertexWeightSSBO = newVertexWeightSSBO;
+}
+
+void OpenGLMeshBuffer::PreAllocate(size_t vertexCapacity, size_t indexCapacity, size_t vertexWeightCapacity) {
     if (m_vbo != 0) glDeleteBuffers(1, &m_vbo);
     if (m_ebo != 0) glDeleteBuffers(1, &m_ebo);
+    if (m_vertexWeightSSBO != 0) glDeleteBuffers(1, &m_vertexWeightSSBO);
 
     glCreateBuffers(1, &m_vbo);
     glCreateBuffers(1, &m_ebo);
 
     glNamedBufferStorage(m_vbo, vertexCapacity * m_vertexStride, nullptr, GL_DYNAMIC_STORAGE_BIT);
     glNamedBufferStorage(m_ebo, indexCapacity * sizeof(uint32_t), nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+    m_vertexWeightSSBO = 0;
+    if (vertexWeightCapacity > 0) {
+        glCreateBuffers(1, &m_vertexWeightSSBO);
+        glNamedBufferStorage(m_vertexWeightSSBO, vertexWeightCapacity * sizeof(VertexWeight), nullptr, GL_DYNAMIC_STORAGE_BIT);
+    }
 
     glVertexArrayElementBuffer(m_vao, m_ebo);
     glVertexArrayVertexBuffer(m_vao, 0, m_vbo, 0, static_cast<GLsizei>(m_vertexStride));

@@ -12,7 +12,7 @@ namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
 
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     //void HairLightingSkinnedResolvePass();
     void HairDepthPrep();
@@ -62,7 +62,7 @@ namespace OpenGLRenderer {
         state.stencilDepthFailOp = GL_KEEP;
         state.stencilPassOp = GL_KEEP;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
         RenderFullscreenTriangle();
     }
 
@@ -87,7 +87,7 @@ namespace OpenGLRenderer {
         OpenGLShader& shader = OpenGL::ResourceManager::GetShader("DepthPrePassAlphaDiscardRE");
         OpenGL::BindShader("DepthPrePassAlphaDiscardRE");
 
-        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
         glBindVertexArray(meshBuffer.GetVAO());
         MultiDrawPerViewport(&fbo, &shader, drawInfoSet.hair, state);
         MultiDrawPerViewport(&fbo, &shader, drawInfoSet.skinnedNonDeformingHair, state);
@@ -149,7 +149,7 @@ namespace OpenGLRenderer {
         OpenGL::BindShader("LightingForward");
         OpenGL::SetUniformBool("u_solidAlpha", true);
 
-        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
         glBindVertexArray(meshBuffer.GetVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.hair, maskedState);
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingHair, maskedState);

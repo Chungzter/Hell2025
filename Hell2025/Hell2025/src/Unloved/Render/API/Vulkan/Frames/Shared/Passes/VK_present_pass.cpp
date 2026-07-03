@@ -1,14 +1,20 @@
 #include "Unloved/Render/API/Vulkan/VK_renderer.h"
 
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
+#include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
 
 namespace VulkanRenderer {
 
-    void RenderPresentPass(VkCommandBuffer commandBuffer, VkImageView imageView, VkExtent2D extent) {
+    void RenderPresentPass(VkCommandBuffer commandBuffer, VkImageView imageView) {
+        AllocatedImage* presentImage = VulkanResourceManager::GetAllocatedImage("Present");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("Present");
-        VulkanDescriptorSet* descriptorSet = VulkanResourceManager::GetDescriptorSet("PresentDescriptorSet");
-        if (!pipeline || !descriptorSet) return;
+        VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
+        if (!presentImage) return;
+        if (!pipeline || !staticDescriptorSet) return;
+
+        VkExtent2D extent = presentImage->GetExtent2D();
+        presentImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
 
         VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
         colorAttachment.imageView = imageView;
@@ -35,7 +41,7 @@ namespace VulkanRenderer {
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, descriptorSet->GetHandlePtr(), 0, nullptr);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
         vkCmdEndRendering(commandBuffer);

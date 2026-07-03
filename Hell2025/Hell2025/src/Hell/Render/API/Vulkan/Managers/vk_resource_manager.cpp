@@ -11,6 +11,7 @@ namespace VulkanResourceManager {
     std::unordered_map<std::string, VulkanDescriptorSetResource> g_descriptorSets;
     std::unordered_map<std::string, VulkanPipeline> g_pipelines;
     std::unordered_map<std::string, VulkanRaytracingPipeline> g_raytracingPipelines;
+    std::unordered_map<std::string, VulkanRenderState> g_renderStates;
     std::unordered_map<std::string, VulkanSampler> g_samplers;
     std::unordered_map<std::string, VulkanShader> g_shaders;
 
@@ -32,6 +33,7 @@ namespace VulkanResourceManager {
         for (auto& [name, object] : g_descriptorSets)  { object.Cleanup(); } g_descriptorSets.clear();
         for (auto& [name, object] : g_allocatedImages) { object.Cleanup(); } g_allocatedImages.clear();
         for (auto& [name, object] : g_samplers)        { object.Cleanup(); } g_samplers.clear();
+        for (auto& [name, object] : g_renderStates)    { object.CleanUp(); } g_renderStates.clear();
         for (auto& [name, shader] : g_shaders)         { shader.Cleanup(); } g_shaders.clear();
 
         CleanUpPipelines();
@@ -368,6 +370,10 @@ namespace VulkanResourceManager {
     VulkanPipeline* GetPipeline(const std::string& name) {
         auto it = g_pipelines.find(name);
         if (it != g_pipelines.end()) {
+            if (it->second.GetHandle() == VK_NULL_HANDLE) {
+                Logging::Error() << "VulkanResourceManager::GetPipeline(..) graphics pipeline '" << name << "' has no handle.\n";
+                return nullptr;
+            }
             return &it->second;
         }
 
@@ -382,6 +388,34 @@ namespace VulkanResourceManager {
         }
 
         Logging::Error() << "VulkanResourceManager::GetRaytracingPipeline(..) no raytracing pipeline named '" << name << "'.\n";
+        return nullptr;
+    }
+
+    // Render States
+
+    VulkanRenderState& CreateRenderState(const std::string& name) {
+        if (name.empty()) {
+            Logging::Error() << "VulkanResourceManager::CreateRenderState(..) empty resource name requested.\n";
+            __debugbreak();
+        }
+
+        auto [it, inserted] = g_renderStates.try_emplace(name);
+
+        if (!inserted) {
+            it->second.CleanUp();
+        }
+
+        it->second = VulkanRenderState();
+        return it->second;
+    }
+
+    VulkanRenderState* GetRenderState(const std::string& name) {
+        auto it = g_renderStates.find(name);
+        if (it != g_renderStates.end()) {
+            return &it->second;
+        }
+
+        Logging::Error() << "VulkanResourceManager::GetRenderState(..) no render state named '" << name << "'.\n";
         return nullptr;
     }
 
@@ -500,15 +534,25 @@ namespace VulkanResourceManager {
         return g_shaders.find(name) != g_shaders.end();
     }
 
-    bool HotloadShaders() {
+    bool HotloadShaders(std::string& failedShaders) {
         bool success = true;
 
         for (auto& [name, shader] : g_shaders) {
             if (!shader.Hotload()) {
                 success = false;
+
+                failedShaders += "\n- ";
+                for (const std::string& path : shader.GetPaths()) {
+                    failedShaders += path + " ";
+                }
             }
         }
 
         return success;
+    }
+
+    bool HotloadShaders() {
+        std::string failedShaders = "FAILED TO HOTLOAD";
+        return HotloadShaders(failedShaders);
     }
 }

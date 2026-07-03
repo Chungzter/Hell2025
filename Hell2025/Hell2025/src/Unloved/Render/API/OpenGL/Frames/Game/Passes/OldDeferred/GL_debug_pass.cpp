@@ -4,27 +4,23 @@
 #include "Hell/Physics/Physics.h"
 #include "World/LegacyWorld.h"
 
-#include "Hell/ResourceManagement/ResourceManager.h"
-
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Render/RendererTypes.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
-using namespace Hell;
-
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void DebugPass() {
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         DebugDraw::UploadVertexData(); // Calling here as the last possible moment to capture all debug geometry submitted within previous render passes
 
-        GenericMesh& genericMeshLines2D = ResourceManager::GetGenericMesh("DebugLines2D");
-        GenericMesh& genericMeshLines3D = ResourceManager::GetGenericMesh("DebugLines3D");
-        GenericMesh& genericMeshPoints2D = ResourceManager::GetGenericMesh("DebugPoints2D");
-        GenericMesh& genericMeshPoints3D = ResourceManager::GetGenericMesh("DebugPoints3D");
-        GenericMesh& genericMeshExamineLines2D = ResourceManager::GetGenericMesh("DebugMeshItemExamineLines");
+        OpenGLGenericMesh& genericMeshLines2D = OpenGL::ResourceManager::GetGenericMesh("DebugLines2D");
+        OpenGLGenericMesh& genericMeshLines3D = OpenGL::ResourceManager::GetGenericMesh("DebugLines3D");
+        OpenGLGenericMesh& genericMeshPoints2D = OpenGL::ResourceManager::GetGenericMesh("DebugPoints2D");
+        OpenGLGenericMesh& genericMeshPoints3D = OpenGL::ResourceManager::GetGenericMesh("DebugPoints3D");
+        OpenGLGenericMesh& genericMeshExamineLines2D = OpenGL::ResourceManager::GetGenericMesh("DebugMeshItemExamineLines");
 
         OpenGLShader* shader2D = OpenGL::ResourceManager::GetShaderPtr("DebugVertex2D");
         OpenGLShader* shader3D = OpenGL::ResourceManager::GetShaderPtr("DebugVertex3D");
@@ -52,7 +48,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
             OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 

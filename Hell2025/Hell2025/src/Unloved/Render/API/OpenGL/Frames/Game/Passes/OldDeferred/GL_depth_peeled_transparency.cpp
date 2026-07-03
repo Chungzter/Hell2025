@@ -29,7 +29,7 @@ namespace Input = Hell::Input;
 "DecalPainting"].CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 */
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
 	void P90MagColor();
 	void P90MagComposite();
@@ -67,10 +67,10 @@ namespace OpenGLRenderer {
 		depthPeeledTransparencyFbo->DrawBuffers({ "Composite", });
 
 
-		OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+		OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
 
-        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
         glBindVertexArray(meshBuffer.GetVAO());
         glBindBuffer(GL_ARRAY_BUFFER, meshBuffer.GetVBO());
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBuffer.GetEBO());
@@ -83,7 +83,7 @@ namespace OpenGLRenderer {
 			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (!viewport->IsVisible()) continue;
 
-			OpenGLRenderer::SetViewport(gBuffer, viewport);
+			OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
 			OpenGL::BindShader("DepthPeeledTransparencyDepth");
 			OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionView);

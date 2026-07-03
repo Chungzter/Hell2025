@@ -11,7 +11,7 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 
@@ -34,15 +34,15 @@ namespace OpenGLRenderer {
         gBuffer.Bind();
         gBuffer.DrawBuffer("Lighting");
         OpenGL::BindShader("SpriteSheet");
-        OpenGLRasterizerStateManager::ForceRasterizerState("SpriteSheetPass");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("SpriteSheetPass");
 
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(&gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(&gBuffer, viewport);
 
             Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;

@@ -18,11 +18,11 @@
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Render/Renderer.h"
 
-#include "res/shaders/common/gl_fixed_bindings.glsl"
+#include "res/shaders/common/OpenGL/binding_indices.glsl"
 
 namespace Input = Hell::Input;
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     struct RESettings {
         glm::ivec2 gBufferResolution = glm::ivec2(1920, 1080);
         glm::ivec2 finalImageResolution = glm::ivec2(1920, 1080) / 2;
@@ -33,7 +33,6 @@ namespace OpenGLRenderer {
     void CreateFramebuffersRE();
 
     void LightingPassRE();
-    void LoadShadersRE();
     void SkyboxPassRE();
     void GlassPassRE();
     void OceanRE();
@@ -45,7 +44,6 @@ namespace OpenGLRenderer {
 
     void InitREStyle() {
         CreateFramebuffersRE();
-        LoadShadersRE();
     }
 
     void RenderGameREStyle() {
@@ -54,7 +52,7 @@ namespace OpenGLRenderer {
         OpenGLRasterizerState state;
         state.depthMask = true;
         state.colorMask = true;
-        OpenGLRasterizerStateManager::ForceRasterizerState(state);
+        OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 
         ComputeSkinningPass();
         UpdateSSBOS();
@@ -192,38 +190,6 @@ namespace OpenGLRenderer {
         OpenGL::UploadSSBOStatic("ParticleDrawCommand", sizeof(DrawArraysIndirectCommand), &particleDrawCommand);
     }
 
-    void LoadShadersRE() {
-        OpenGL::ResourceManager::LoadShader("RE", "DepthPrePassRE", { "GL_depth_prepass.vert", "GL_depth_prepass.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "DepthPrePassAlphaDiscardRE", { "GL_depth_prepass_alpha_discard.vert", "GL_depth_prepass_alpha_discard.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "GBufferRE", { "GL_gbuffer_re.vert", "GL_gbuffer_re.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "LightingDeferred", { "GL_fullscreen_triangle.vert", "GL_lighting_deferred.frag" });
-
-        OpenGL::ResourceManager::LoadShader("RE", "HairLightingForward", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "HairLightingForwardOLD", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward_old.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "HairCompositeRE", { "GL_hair_composite_re.comp" });
-        OpenGL::ResourceManager::LoadShader("RE", "HairDepthPrep", { "GL_fullscreen_triangle.vert", "GL_hair_depth_prep.frag" });
-
-        OpenGL::ResourceManager::LoadShader("RE", "Visibility", { "GL_visibility.vert", "GL_visibility.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "VisibilityAlphaDiscard", { "GL_visibility.vert", "GL_visibility_alpha_discard.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "MaterialResolve", { "GL_material_resolve.vert", "GL_material_resolve.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "MaterialResolveSkinning", { "GL_material_resolve.vert", "GL_material_resolve.frag" }, { "SKINNED" });
-
-        OpenGL::ResourceManager::LoadShader("RE", "EmissiveForward", { "GL_gbuffer_re.vert", "GL_emissive_forward.frag" });
-
-        OpenGL::ResourceManager::LoadShader("RE", "LightingForward", { "GL_lighting_forward.vert", "GL_lighting_forward.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "SkyboxRE", { "GL_fullscreen_triangle.vert", "GL_skybox_re.frag" });
-
-        OpenGL::ResourceManager::LoadShader("RE", "OceanLighting", { "GL_ocean_lighting.vert", "GL_ocean_lighting.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "Bubbles", { "GL_bubbles.vert", "GL_bubbles.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "Bubbles2", { "GL_bubbles_2.vert", "GL_bubbles_2.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "Bubbles3", { "GL_bubbles_3.vert", "GL_bubbles_3.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "BubbleDrawCommandArgs", { "GL_bubble_draw_command_args.comp" });
-
-        OpenGL::ResourceManager::LoadShader("RE", "ParticleAdditions", { "GL_particle_additions.comp" });
-        OpenGL::ResourceManager::LoadShader("RE", "ParticleColor", { "GL_particle_color.vert", "GL_particle_color.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "ParticleUpdate", { "GL_particle_update.comp" });
-    }
-
 	void ClearRenderTargetsRE() {
 		OpenGLFrameBuffer& gBufferRE = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
 		gBufferRE.ClearAttachment("Lighting", 0, 0, 0, 1);
@@ -282,7 +248,7 @@ namespace OpenGLRenderer {
         state.blendFuncSrcfactor = GL_SRC_ALPHA;
         state.blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
         OpenGL::BindShader("Bubbles2");
         OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
@@ -297,7 +263,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(&fbo, viewport);
+            OpenGL::Renderer::SetViewport(&fbo, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
             OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
             OpenGL::SetUniformMat4("u_view", viewportData[i].view);
@@ -336,7 +302,7 @@ namespace OpenGLRenderer {
         state.blendFuncSrcfactor = GL_SRC_ALPHA;
         state.blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
         OpenGL::BindShader("Bubbles3");
         OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
@@ -348,7 +314,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(&fbo, viewport);
+            OpenGL::Renderer::SetViewport(&fbo, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
             OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
             OpenGL::SetUniformMat4("u_view", viewportData[i].view);
@@ -404,7 +370,7 @@ namespace OpenGLRenderer {
         state.stencilRef = 0;
         state.stencilReadMask = STENCIL_BIT_SKINNED_HAIR;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
         RenderFullscreenTriangle();
 	}
@@ -432,7 +398,7 @@ namespace OpenGLRenderer {
 		OpenGL::BindShader("LightingForward");
         OpenGL::BindTextureUnit(5, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
 
-        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
 		glBindVertexArray(meshBuffer.GetVAO());
 		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.blended, state);
 
@@ -473,11 +439,11 @@ namespace OpenGLRenderer {
         state.stencilDepthFailOp = GL_KEEP;
         state.stencilPassOp = GL_KEEP;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemapView->GetHandle());
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         RenderFullscreenTriangle();
     }
@@ -518,7 +484,7 @@ namespace OpenGLRenderer {
         state.colorMask = true;
         state.depthFunc = GL_GREATER;
 
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
         BindEmptyVAO();
 
         static bool lines = false;
@@ -535,7 +501,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(&waterFbo, viewport);
+            OpenGL::Renderer::SetViewport(&waterFbo, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
 
             if (lines) glDrawArrays(GL_LINES, 0, vertexCount);
@@ -548,7 +514,7 @@ namespace OpenGLRenderer {
     void GlassPassRE() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLRasterizerStateManager::ForceRasterizerState("GlassPass");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GlassPass");
 
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
@@ -581,9 +547,9 @@ namespace OpenGLRenderer {
         state.depthFunc = GL_GREATER;
         state.blendFuncSrcfactor = GL_ONE;
         state.blendFuncDstfactor = GL_ONE;
-        OpenGLRasterizerStateManager::SetRasterizerState(state);
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
         glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(TEX_IDX_SHADOW_MAP_FLASHLIGHT, flashLightShadowMapsFBO->GetDepthTextureHandle());
 
@@ -592,7 +558,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
 
             for (const RenderItem& renderItem : drawInfoSet.glass[i]) {
@@ -644,13 +610,13 @@ namespace OpenGLRenderer {
         state.colorMask = true;
         state.depthFunc = GL_EQUAL;
 
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         MultiDrawPerViewportRE(fbo, drawInfoSet.emissive, state);
     }
 
     void RenderFullscreenTriangle() {
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 }

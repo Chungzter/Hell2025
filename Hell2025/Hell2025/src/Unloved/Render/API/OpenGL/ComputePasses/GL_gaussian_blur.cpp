@@ -1,6 +1,6 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void GaussianBlur(OpenGLFrameBuffer& srcFrameBuffer, OpenGLFrameBuffer& dstFrameBuffer, const std::string& srcAttachmentName, const std::string& dstAttachmentName, BlitRect srcRect, BlitRect dstRect, int blurRadius, int passCount) {
         OpenGLFrameBuffer* gaussianFrameBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GaussianBlur");

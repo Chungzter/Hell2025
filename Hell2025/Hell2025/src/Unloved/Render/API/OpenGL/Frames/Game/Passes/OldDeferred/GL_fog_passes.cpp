@@ -8,7 +8,7 @@
 #include "Unloved/Session/Session.h"
 #include "Hell/Time.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void InitFog() {
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("PerlinNoise3D");

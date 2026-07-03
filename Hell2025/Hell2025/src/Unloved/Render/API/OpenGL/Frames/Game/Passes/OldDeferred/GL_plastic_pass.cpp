@@ -13,9 +13,9 @@
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
-#include "res/shaders/common/gl_fixed_bindings.glsl"
+#include "res/shaders/common/OpenGL/binding_indices.glsl"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
 
 	void PlasticPass() {
@@ -46,9 +46,9 @@ namespace OpenGLRenderer {
 
         OpenGL::BindSSBO(5, "TileLights");
 
-		OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+		OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
-		glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+		glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
 		// Fill the death butter
 		glEnable(GL_DEPTH_TEST);
@@ -58,7 +58,7 @@ namespace OpenGLRenderer {
 			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (!viewport->IsVisible()) continue;
 
-			OpenGLRenderer::SetViewport(gBuffer, viewport);
+			OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
 			OpenGL::BindShader("Plastic");
 			OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
@@ -102,7 +102,7 @@ namespace OpenGLRenderer {
 			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (!viewport->IsVisible()) continue;
 
-			OpenGLRenderer::SetViewport(gBuffer, viewport);
+			OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
 			OpenGL::BindShader("Plastic");
             OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
@@ -148,14 +148,14 @@ namespace OpenGLRenderer {
 		if (!gBuffer) return;
 		if (!shader) return;
 
-		glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+		glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
 		gBuffer->Bind();
 		gBuffer->DrawBuffers({ "Lighting" });
 
 		OpenGL::BindShader("Plastic");
 
-		OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+		OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 		EditorRasterizerStateOverride();
 
 		glDisable(GL_DEPTH_TEST);
@@ -166,7 +166,7 @@ namespace OpenGLRenderer {
 		for (int i = 0; i < 4; i++) {
 			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
 			if (viewport->IsVisible()) {
-				OpenGLRenderer::SetViewport(gBuffer, viewport);
+				OpenGL::Renderer::SetViewport(gBuffer, viewport);
 				if (Hell::BackEnd::RenderDocFound()) {
 					SplitMultiDrawIndirect(shader, drawInfoSet.plastic[i], true, false);
 				}

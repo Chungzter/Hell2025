@@ -27,7 +27,7 @@
 namespace Input = Hell::Input;
 
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
     void BlitWorldMap();
@@ -277,7 +277,7 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformFloat("u_worldWidth", LegacyWorld::GetWorldSpaceWidth());
         OpenGL::SetUniformFloat("u_worldDepth", LegacyWorld::GetWorldSpaceDepth());
 
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
         Material* material = Hell::ResourceManager::GetDefaultMaterial();
         int materialIndex = Hell::ResourceManager::GetMaterialIndexByName("Ground_MudVeg");
@@ -319,7 +319,7 @@ namespace OpenGLRenderer {
 
             int test = 0;
             if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
+                OpenGL::Renderer::SetViewport(gBuffer, viewport);
                 std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
 
                 //std::cout << "chunks.size(): " << chunks.size() << "\n";
@@ -350,13 +350,13 @@ namespace OpenGLRenderer {
 
     void ReadBackHeightMapData(Unloved::MapData* mapData) {
         if (!mapData) {
-            Logging::Error() << "OpenGLRenderer::ReadBackHeightMapData() failed coz mapData was nullptr";
+            Logging::Error() << "OpenGL::Renderer::ReadBackHeightMapData() failed coz mapData was nullptr";
             return;
         }
 
         OpenGLFrameBuffer* worldFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("World");
         if (!worldFramebuffer) {
-            Logging::Error() << "OpenGLRenderer::ReadBackHeightMapData() failed coz could not retrieve World framebuffer";
+            Logging::Error() << "OpenGL::Renderer::ReadBackHeightMapData() failed coz could not retrieve World framebuffer";
             return;
         }
 

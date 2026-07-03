@@ -6,6 +6,9 @@
 
 VulkanBuffer::VulkanBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags vmaFlags) {
     m_size = size;
+    m_usage = usage;
+    m_memoryUsage = memoryUsage;
+    m_vmaFlags = vmaFlags;
 
     VkBufferCreateInfo bufferInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
     bufferInfo.size = size;
@@ -34,11 +37,17 @@ VulkanBuffer& VulkanBuffer::operator=(VulkanBuffer&& other) noexcept {
         m_buffer = other.m_buffer;
         m_allocation = other.m_allocation;
         m_size = other.m_size;
+        m_usage = other.m_usage;
+        m_memoryUsage = other.m_memoryUsage;
+        m_vmaFlags = other.m_vmaFlags;
         m_mappedPtr = other.m_mappedPtr;
 
         other.m_buffer = VK_NULL_HANDLE;
         other.m_allocation = VK_NULL_HANDLE;
         other.m_size = 0;
+        other.m_usage = 0;
+        other.m_memoryUsage = VMA_MEMORY_USAGE_UNKNOWN;
+        other.m_vmaFlags = 0;
         other.m_mappedPtr = nullptr;
     }
     return *this;
@@ -52,6 +61,41 @@ void VulkanBuffer::Cleanup() {
         m_size = 0;
         m_mappedPtr = nullptr;
     }
+}
+
+bool VulkanBuffer::EnsureSize(VkDeviceSize size) {
+    if (size == 0) return true;
+    if (m_buffer != VK_NULL_HANDLE && m_size >= size) return true;
+
+    if (m_usage == 0) {
+        Logging::Error() << "VulkanBuffer::EnsureSize(..) failed because buffer has no usage flags\n";
+        return false;
+    }
+
+    Cleanup();
+
+    VkBufferCreateInfo bufferInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+    bufferInfo.size = size;
+    bufferInfo.usage = m_usage;
+
+    VmaAllocationCreateInfo vmaAllocInfo{};
+    vmaAllocInfo.usage = m_memoryUsage;
+    vmaAllocInfo.flags = m_vmaFlags;
+
+    VmaAllocationInfo allocInfo;
+    if (vmaCreateBuffer(VulkanMemoryManager::GetAllocator(), &bufferInfo, &vmaAllocInfo, &m_buffer, &m_allocation, &allocInfo) != VK_SUCCESS) {
+        Logging::Error() << "VulkanBuffer::EnsureSize(..) failed to create buffer\n";
+        return false;
+    }
+
+    m_size = size;
+    m_mappedPtr = nullptr;
+
+    if (m_vmaFlags & VMA_ALLOCATION_CREATE_MAPPED_BIT) {
+        m_mappedPtr = allocInfo.pMappedData;
+    }
+
+    return true;
 }
 
 void VulkanBuffer::UpdateData(const void* data, VkDeviceSize size, VkDeviceSize offset) {

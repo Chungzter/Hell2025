@@ -1,14 +1,14 @@
 #version 460 core
-
 #ifndef ENABLE_BINDLESS
     #define ENABLE_BINDLESS 1
 #endif
 
-#include "../common/gl_fixed_bindings.glsl"
+#include "../common/OpenGL/binding_indices.glsl"
 
 #if ENABLE_BINDLESS
     #extension GL_ARB_bindless_texture : enable        
-    readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer {
+layout(origin_upper_left) in vec4 gl_FragCoord;
+readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer {
 	    uvec2 textureSamplers[];
     };    
     in flat int BaseColorTextureIndex;

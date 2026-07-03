@@ -105,7 +105,7 @@ vec3 GetSpotlightLighting(vec3 lightPos, vec3 lightDir, vec3 lightColor, float r
     // cone fall-off
     float spotFactor = smoothstep(outerAngle, innerAngle, dot(toLight, -lightDir));
 
-    // extra smooth fade by distance²
+    // extra smooth fade by distance
     float distanceFactor = clamp(1.0 - dist / radius, 0.0, 1.0);
     spotFactor *= distanceFactor * distanceFactor;
 
@@ -130,7 +130,7 @@ float SpotlightShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 light
     ivec2 size = textureSize(shadowMapArray, 0).xy;
     vec2 texelSize = 1.0/vec2(size);
 
-    // PCF over 5×5 kernel
+    // PCF over 55 kernel
     float shadow = 0.0;
     for (int x = -2; x <= 2; ++x) {
         for (int y = -2; y <= 2; ++y) {

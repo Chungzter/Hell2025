@@ -18,6 +18,11 @@ namespace {
         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
         VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
         VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+
+    constexpr VkBufferUsageFlags VERTEX_WEIGHT_BUFFER_USAGE =
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 }
 
 void VulkanMeshBuffer::Init(const VertexLayoutDescription& layout) {
@@ -32,6 +37,7 @@ void VulkanMeshBuffer::Init(const VertexLayoutDescription& layout) {
 void VulkanMeshBuffer::Reset() {
     m_vertexBuffer.Cleanup();
     m_indexBuffer.Cleanup();
+    m_vertexWeightBuffer.Cleanup();
 }
 
 void VulkanMeshBuffer::Cleanup() {
@@ -55,7 +61,15 @@ void VulkanMeshBuffer::InsertIndices(const std::vector<uint32_t>& indices, uint3
     m_indexBuffer.UploadData(indices.data(), byteSize, byteOffset);
 }
 
-void VulkanMeshBuffer::PreAllocate(size_t vertexCapacity, size_t indexCapacity) {
+void VulkanMeshBuffer::InsertVertexWeights(const std::vector<VertexWeight>& vertexWeights, uint32_t insertOffset) {
+    if (vertexWeights.empty() || !GetVertexWeightBuffer()) return;
+
+    const VkDeviceSize byteOffset = static_cast<VkDeviceSize>(insertOffset) * sizeof(VertexWeight);
+    const VkDeviceSize byteSize = static_cast<VkDeviceSize>(vertexWeights.size()) * sizeof(VertexWeight);
+    m_vertexWeightBuffer.UploadData(vertexWeights.data(), byteSize, byteOffset);
+}
+
+void VulkanMeshBuffer::PreAllocate(size_t vertexCapacity, size_t indexCapacity, size_t vertexWeightCapacity) {
     Reset();
 
     if (vertexCapacity > 0) {
@@ -64,6 +78,10 @@ void VulkanMeshBuffer::PreAllocate(size_t vertexCapacity, size_t indexCapacity) 
 
     if (indexCapacity > 0) {
         m_indexBuffer = CreateIndexBuffer(indexCapacity);
+    }
+
+    if (vertexWeightCapacity > 0) {
+        m_vertexWeightBuffer = CreateVertexWeightBuffer(vertexWeightCapacity);
     }
 }
 
@@ -89,6 +107,17 @@ void VulkanMeshBuffer::ResizeIndexBuffer(size_t newCapacity, const std::vector<u
     m_indexBuffer = std::move(newBuffer);
 }
 
+void VulkanMeshBuffer::ResizeVertexWeightBuffer(size_t newCapacity, const std::vector<VertexWeight>& vertexWeights) {
+    VulkanBuffer newBuffer = CreateVertexWeightBuffer(newCapacity);
+
+    if (!vertexWeights.empty()) {
+        const VkDeviceSize byteSize = static_cast<VkDeviceSize>(vertexWeights.size()) * sizeof(VertexWeight);
+        newBuffer.UploadData(vertexWeights.data(), byteSize);
+    }
+
+    m_vertexWeightBuffer = std::move(newBuffer);
+}
+
 void VulkanMeshBuffer::Bind(VkCommandBuffer commandBuffer) const {
     if (!GetVertexBuffer() || !GetIndexBuffer()) {
         Logging::Error() << "VulkanMeshBuffer::Bind(..) called without valid vertex and index buffers\n";
@@ -109,6 +138,10 @@ uint64_t VulkanMeshBuffer::GetIndexBufferAddress() const {
     return GetIndexBuffer() ? m_indexBuffer.GetDeviceAddress() : 0;
 }
 
+uint64_t VulkanMeshBuffer::GetVertexWeightBufferAddress() const {
+    return GetVertexWeightBuffer() ? m_vertexWeightBuffer.GetDeviceAddress() : 0;
+}
+
 VulkanBuffer VulkanMeshBuffer::CreateVertexBuffer(size_t vertexCapacity) const {
     const VkDeviceSize size = static_cast<VkDeviceSize>(vertexCapacity) * m_vertexStride;
     return VulkanBuffer(size, VERTEX_BUFFER_USAGE, VMA_MEMORY_USAGE_GPU_ONLY);
@@ -117,4 +150,9 @@ VulkanBuffer VulkanMeshBuffer::CreateVertexBuffer(size_t vertexCapacity) const {
 VulkanBuffer VulkanMeshBuffer::CreateIndexBuffer(size_t indexCapacity) const {
     const VkDeviceSize size = static_cast<VkDeviceSize>(indexCapacity) * sizeof(uint32_t);
     return VulkanBuffer(size, INDEX_BUFFER_USAGE, VMA_MEMORY_USAGE_GPU_ONLY);
+}
+
+VulkanBuffer VulkanMeshBuffer::CreateVertexWeightBuffer(size_t vertexWeightCapacity) const {
+    const VkDeviceSize size = static_cast<VkDeviceSize>(vertexWeightCapacity) * sizeof(VertexWeight);
+    return VulkanBuffer(size, VERTEX_WEIGHT_BUFFER_USAGE, VMA_MEMORY_USAGE_GPU_ONLY);
 }

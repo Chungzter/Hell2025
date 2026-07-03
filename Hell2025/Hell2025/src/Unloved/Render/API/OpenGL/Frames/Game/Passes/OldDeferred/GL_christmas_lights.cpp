@@ -4,7 +4,7 @@
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Session/Session.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void ChristmasLightsPass() {
      //   OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("ChristmasLightsWire");

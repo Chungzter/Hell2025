@@ -19,7 +19,7 @@
 
 using namespace Hell;
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
     void RenderNonDeformingAnimatedGameObjects();
@@ -36,7 +36,7 @@ namespace OpenGLRenderer {
         gBuffer->Bind();
         //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityXYOcclusionSubSurface" });
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
 
         OpenGL::BindShader("GBuffer");
@@ -48,7 +48,7 @@ namespace OpenGLRenderer {
         //OpenGLMeshBuffer& glHouseMeshBuffer = houseMeshBuffer.GetGLMeshBuffer();
         //glBindVertexArray(glHouseMeshBuffer.GetVAO());
 
-        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("Procedural");
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("Procedural");
         glBindVertexArray(meshBuffer.GetVAO());
 
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
@@ -58,7 +58,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
             if (Hell::BackEnd::RenderDocFound()) {
                 SplitMultiDrawIndirect(shader, drawInfoSet.procedural[i], true, false);
@@ -86,7 +86,7 @@ namespace OpenGLRenderer {
         //glBindVertexArray(OpenGL::BackEnd::GetWeightedVertexDataVAO());
         //glBindBuffer(GL_ARRAY_BUFFER, OpenGL::BackEnd::GetWeightedVertexDataVBO());
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGL::BackEnd::GetWeightedVertexDataEBO());
-        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
         glBindVertexArray(meshBuffer.GetVAO());
         glBindBuffer(GL_ARRAY_BUFFER, meshBuffer.GetVBO());
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBuffer.GetEBO());
@@ -96,13 +96,13 @@ namespace OpenGLRenderer {
 
         // Default
         OpenGL::SetUniformBool("u_alphaDiscard", false);
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
             if (Hell::BackEnd::RenderDocFound()) {
                 SplitMultiDrawIndirect(shader, drawInfoSet.skinnedNonDeformingStandard[i], true, false);
@@ -114,13 +114,13 @@ namespace OpenGLRenderer {
 
         // Alpha Discard
         OpenGL::SetUniformBool("u_alphaDiscard", true);
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_AlphaDiscard");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_AlphaDiscard");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
             if (Hell::BackEnd::RenderDocFound()) {
                 SplitMultiDrawIndirect(shader, drawInfoSet.skinnedNonDeformingAlphaDiscard[i], true, false);
@@ -143,13 +143,13 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformBool("u_alphaDiscard", false);
         gBuffer->DrawBuffers({ "BaseColorMetallic" });
         //gBuffer->DrawBuffers({ "BaseColor" });
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Blended");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Blended");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
             if (Hell::BackEnd::RenderDocFound()) {
                 SplitMultiDrawIndirect(shader, drawInfoSet.skinnedNonDeformingBlended[i], true, false);
@@ -178,7 +178,7 @@ namespace OpenGLRenderer {
         if (!woundMaskArray) return;
 
         {
-            MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("AssetGeometry");
+            OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
             glBindVertexArray(meshBuffer.GetVAO());
         }
         glActiveTexture(GL_TEXTURE7);
@@ -196,13 +196,13 @@ namespace OpenGLRenderer {
 
         // Default (Non blended)
         OpenGL::SetUniformBool("u_alphaDiscard", false);
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
+                OpenGL::Renderer::SetViewport(gBuffer, viewport);
                 if (Hell::BackEnd::RenderDocFound()) {
                     SplitMultiDrawIndirect(shader, drawInfoSet.standard[i], true, false);
                 }
@@ -214,13 +214,13 @@ namespace OpenGLRenderer {
 
         // Alpha discard
         OpenGL::SetUniformBool("u_alphaDiscard", true);
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_AlphaDiscard");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_AlphaDiscard");
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
+                OpenGL::Renderer::SetViewport(gBuffer, viewport);
                 if (Hell::BackEnd::RenderDocFound()) {
                     SplitMultiDrawIndirect(shader, drawInfoSet.alphaDiscard[i], true, false);
                 }
@@ -243,13 +243,13 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformBool("u_alphaDiscard", false);
         //gBuffer->DrawBuffers({ "BaseColor" });
         gBuffer->DrawBuffers({ "BaseColorMetallic" });
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Blended");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Blended");
         EditorRasterizerStateOverride();
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
+                OpenGL::Renderer::SetViewport(gBuffer, viewport);
                 if (Hell::BackEnd::RenderDocFound()) {
                     SplitMultiDrawIndirect(shader, drawInfoSet.blended[i], true, false);
                 }
@@ -264,7 +264,7 @@ namespace OpenGLRenderer {
         glBindBuffer(GL_ARRAY_BUFFER, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, OpenGL::BackEnd::GetWeightedVertexDataEBO());
         {
-            MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("AssetGeometry");
+            OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBuffer.GetEBO());
         }
 
@@ -274,13 +274,13 @@ namespace OpenGLRenderer {
 
         // Skinned mesh (non blended)
         OpenGL::SetUniformBool("u_alphaDiscard", false);
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
             if (Hell::BackEnd::RenderDocFound()) {
                 SplitMultiDrawIndirect(shader, drawInfoSet.skinnedStandard[i], true, true);
@@ -292,13 +292,13 @@ namespace OpenGLRenderer {
 
         // Skinned mesh (alpha discard)
         OpenGL::SetUniformBool("u_alphaDiscard", true);
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_AlphaDiscard");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_AlphaDiscard");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
             if (Hell::BackEnd::RenderDocFound()) {
                 SplitMultiDrawIndirect(shader, drawInfoSet.skinnedAlphaDiscard[i], true, false);
@@ -321,13 +321,13 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformBool("u_alphaDiscard", false);
         gBuffer->DrawBuffers({ "BaseColorMetallic" });
         //gBuffer->DrawBuffers({ "BaseColor" });
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Blended");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Blended");
         EditorRasterizerStateOverride();
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
             if (Hell::BackEnd::RenderDocFound()) {
                 SplitMultiDrawIndirect(shader, drawInfoSet.skinnedBlended[i], true, true);
@@ -345,15 +345,16 @@ namespace OpenGLRenderer {
         if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
             OpenGLShader* ragdollShader = OpenGL::ResourceManager::GetShaderPtr("DebugRagdoll");
             OpenGL::BindShader("DebugRagdoll");
-            OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+            OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
             EditorRasterizerStateOverride();
 
-            MeshBuffer& physicsDebugGeometry = ResourceManager::GetMeshBuffer("PhysicsDebugGeometry");
+            MeshBuffer& physicsDebugGeometry = Hell::ResourceManager::GetMeshBuffer("PhysicsDebugGeometry");
+            OpenGLMeshBuffer& glPhysicsDebugGeometry = OpenGL::ResourceManager::GetMeshBuffer("PhysicsDebugGeometry");
             if (physicsDebugGeometry.GetMeshCount() > 0) {
                 for (int i = 0; i < 4; i++) {
                     Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
                     if (viewport->IsVisible()) {
-                        OpenGLRenderer::SetViewport(gBuffer, viewport);
+                        OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
                         Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
                         if (!player) continue;
@@ -361,7 +362,7 @@ namespace OpenGLRenderer {
                         OpenGL::SetUniformInt("u_playerIndex", i);
                         OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
 
-                        glBindVertexArray(physicsDebugGeometry.GetVAO());
+                        glBindVertexArray(glPhysicsDebugGeometry.GetVAO());
 
                         // Ragdoll
                         auto& ragdolls = Hell::Physics::GetRagdolls();
@@ -446,15 +447,16 @@ namespace OpenGLRenderer {
         //glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         //glDisable(GL_DEPTH_TEST);
 
-        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
-        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
+        MeshBuffer& meshBufferProcedural = Hell::ResourceManager::GetMeshBuffer("Procedural");
+        OpenGLMeshBuffer& glMeshBufferAssets = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& glMeshBufferProcedural = OpenGL::ResourceManager::GetMeshBuffer("Procedural");
 
-        glBindVertexArray(meshBufferAssets.GetVAO());
+        glBindVertexArray(glMeshBufferAssets.GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
+                OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
                 Mirror* mirror = Unloved::MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());
                 if (!mirror) continue;
@@ -483,7 +485,7 @@ namespace OpenGLRenderer {
         // Clear the depth buffer so that the mirror world has a clean depth state to test against
         gBuffer->ClearDepthAttachment(0.0);
 
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
         glEnable(GL_CLIP_DISTANCE0);
         glFrontFace(GL_CW);
@@ -496,12 +498,12 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
         // Regular geometry
-        glBindVertexArray(meshBufferAssets.GetVAO());
+        glBindVertexArray(glMeshBufferAssets.GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
+                OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
                 Mirror* mirror = Unloved::MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());
                 if (!mirror) continue;
@@ -510,7 +512,7 @@ namespace OpenGLRenderer {
                 OpenGL::SetUniformMat4("u_mirrorViewMatrix", mirror->GetViewMatrix(i));
                 OpenGL::SetUniformVec4("u_mirrorClipPlane", mirror->GetClipPlane(i));
 
-                OpenGLRenderer::SetViewport(gBuffer, viewport);
+                OpenGL::Renderer::SetViewport(gBuffer, viewport);
                 if (Hell::BackEnd::RenderDocFound()) {
                     SplitMultiDrawIndirect(geometryShader, drawInfoSet.mirrorRenderItems[i], true, false);
                 }
@@ -526,7 +528,7 @@ namespace OpenGLRenderer {
         OpenGL::SetUniformMat4("u_model", glm::mat4(1));
         OpenGL::SetUniformBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
-        glBindVertexArray(meshBufferProcedural.GetVAO());
+        glBindVertexArray(glMeshBufferProcedural.GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
@@ -535,7 +537,7 @@ namespace OpenGLRenderer {
             Mirror* mirror = Unloved::MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId());
             if (!mirror) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
             OpenGL::SetUniformInt("u_viewportIndex", i);
             OpenGL::SetUniformBool("u_useMirrorMatrix", true);

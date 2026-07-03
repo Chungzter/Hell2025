@@ -1,6 +1,6 @@
 #version 460 core
 #extension GL_ARB_bindless_texture : enable
-
+layout(origin_upper_left) in vec4 gl_FragCoord;
 layout (location = 0) out vec4 ColorOut;
 
 in vec4 v_color;

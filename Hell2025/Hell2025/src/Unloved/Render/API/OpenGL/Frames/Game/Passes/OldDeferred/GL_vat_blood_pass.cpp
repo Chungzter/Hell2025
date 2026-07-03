@@ -11,12 +11,12 @@
 #include <cstdint>
 #include <string>
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void VatBloodPass() {
         //ProfilerOpenGLZoneFunction();
 
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
@@ -88,13 +88,13 @@ namespace OpenGLRenderer {
             }
         }
 
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
 
             for (RenderItem& renderItem: renderItems) {

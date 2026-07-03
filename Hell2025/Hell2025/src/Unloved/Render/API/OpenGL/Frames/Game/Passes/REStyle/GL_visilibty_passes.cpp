@@ -1,19 +1,16 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Render/RendererConstants.h"
-#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Render/Renderer.h"
 
-using namespace Hell;
-
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void VisibilityPass() {
         ProfilerOpenGLZoneFunction();
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
-        MeshBuffer& meshBufferProcedural = ResourceManager::GetMeshBuffer("Procedural");
-        MeshBuffer& meshBufferAssets = ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& meshBufferProcedural = OpenGL::ResourceManager::GetMeshBuffer("Procedural");
+        OpenGLMeshBuffer& meshBufferAssets = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
 
         OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
         fbo.Bind();
@@ -55,7 +52,7 @@ namespace OpenGLRenderer {
     void VisibilityAlphaDiscardPass() {
         ProfilerOpenGLZoneFunction();
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
-        MeshBuffer& meshBuffer = ResourceManager::GetMeshBuffer("AssetGeometry");
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
 
         OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
         fbo.Bind();

@@ -1,5 +1,5 @@
 #version 410
-
+layout(origin_upper_left) in vec4 gl_FragCoord;
 layout (location = 0) out vec4 FragColor;
 
 uniform sampler2D u_lightingTexture;
@@ -24,7 +24,7 @@ vec3 Fxaa(sampler2D tex) {
     // Acceptable values are 4.0 or 8.0.
     const float fxaaSpanMax = 8.0;
 
-    // fxaaReduceMin and fxaaReduceMul control how much the edge direction vector gets damped before it’s applied. 
+    // fxaaReduceMin and fxaaReduceMul control how much the edge direction vector gets damped before itï¿½s applied. 
     // These are the NVIDIA recommended tradeoffs, reducing the risk of false edges while still letting strong edges expand.
     const float fxaaReduceMin = 1.0 / 128.0;
     const float fxaaReduceMul = 1.0 / 8.0;

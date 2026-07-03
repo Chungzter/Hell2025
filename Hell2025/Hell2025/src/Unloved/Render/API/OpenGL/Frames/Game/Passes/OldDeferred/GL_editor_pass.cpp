@@ -6,7 +6,7 @@
 
 #include "Unloved/Editor/Gizmo.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 
@@ -26,7 +26,7 @@ namespace OpenGLRenderer {
         state.depthTestEnabled = true;
         state.blendEnable = true;
         state.depthFunc = GL_GREATER;
-        OpenGLRasterizerStateManager::ForceRasterizerState(state);
+        OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 
         gBuffer.Bind();
         gBuffer.DrawBuffers({ "Lighting" });
@@ -37,7 +37,7 @@ namespace OpenGLRenderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
 
-                OpenGLRenderer::SetViewport(&gBuffer, viewport);
+                OpenGL::Renderer::SetViewport(&gBuffer, viewport);
 
                 OpenGL::BindShader("SolidColor");
                 OpenGL::SetUniformMat4("projection", viewportData[i].projectionReverseZ);

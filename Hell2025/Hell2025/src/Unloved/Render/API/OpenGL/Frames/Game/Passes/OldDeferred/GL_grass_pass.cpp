@@ -82,7 +82,7 @@ public:
     }
 };
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 
@@ -160,7 +160,7 @@ namespace OpenGLRenderer {
         glBindTextureUnit(4, wipBuffer->GetDepthAttachmentHandle());
 
         // GL State
-        OpenGLRasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
         // Generate and draw
         for (int i = 0; i < 4; i++) {   // CHANGE TO VIEWPORT NOT PLAYER!!!!
@@ -301,7 +301,7 @@ namespace OpenGLRenderer {
         Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(viewportIndex);
         if (!viewport->IsVisible()) return;
 
-        OpenGLRenderer::SetViewport(gBuffer, viewport);
+        OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
         gBuffer->Bind();
         //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });

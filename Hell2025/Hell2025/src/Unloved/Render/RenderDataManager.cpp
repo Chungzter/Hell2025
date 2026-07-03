@@ -921,7 +921,7 @@ namespace Unloved::RenderDataManager {
             auto& cmd = commands.emplace_back();
             cmd.indexCount = mesh->indexCount;
             cmd.firstIndex = mesh->baseIndex;
-            cmd.baseVertex = renderItem.baseSkinnedVertex;
+            cmd.baseVertex = renderItem.baseVertex;
             cmd.baseInstance = EncodeBaseInstance(viewportIndex, instanceOffset);
             cmd.instanceCount = 1;
             instanceOffset++;
@@ -949,13 +949,13 @@ namespace Unloved::RenderDataManager {
         }
     }
 
-    void SetRenderItemsBaseSkinnedVertex(std::vector<RenderItem>& renderItems) {
+    void UpdateSkinnedRenderItemsBaseVertex(std::vector<RenderItem>& renderItems) {
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
         for (RenderItem& renderItem : renderItems) {
             Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
             if (!mesh) continue;
 
-            renderItem.baseSkinnedVertex = g_baseSkinnedVertex;
+            renderItem.baseVertex = g_baseSkinnedVertex;
             g_baseSkinnedVertex += mesh->vertexCount;
         }
     }
@@ -1008,10 +1008,10 @@ namespace Unloved::RenderDataManager {
 
         // Set their base vertices
         g_baseSkinnedVertex = 0;
-        SetRenderItemsBaseSkinnedVertex(g_skinnedRenderItemsDefault);
-        SetRenderItemsBaseSkinnedVertex(g_skinnedRenderItemsAlphaDiscard);
-        SetRenderItemsBaseSkinnedVertex(g_skinnedRenderItemsBlended);
-        SetRenderItemsBaseSkinnedVertex(g_skinnedRenderItemsHair);
+        UpdateSkinnedRenderItemsBaseVertex(g_skinnedRenderItemsDefault);
+        UpdateSkinnedRenderItemsBaseVertex(g_skinnedRenderItemsAlphaDiscard);
+        UpdateSkinnedRenderItemsBaseVertex(g_skinnedRenderItemsBlended);
+        UpdateSkinnedRenderItemsBaseVertex(g_skinnedRenderItemsHair);
 
         // Create the per viewport draw commands
         for (int i = 0; i < 4; i++) {
@@ -1058,7 +1058,7 @@ namespace Unloved::RenderDataManager {
         g_oceanPatchTransforms.push_back(glm::mat4(1.0f));
 
         return;
-        OpenGLMeshPatch* oceanMeshPatch = OpenGLRenderer::GetOceanMeshPatch();
+        OpenGLMeshPatch* oceanMeshPatch = OpenGL::Renderer::GetOceanMeshPatch();
 
         static bool test = false;
         static bool swap = false;
@@ -1168,26 +1168,6 @@ namespace Unloved::RenderDataManager {
         instanceOffset = baseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
     }
 
-    //void SubmitAnimatedGameObjectForSkinning(AnimatedGameObject* animatedGameObject) {
-    //    g_animatedGameObjectsToSkin.push_back(animatedGameObject);
-    //}
-    //
-    //void ResetBaseSkinnedVertex() {
-    //    g_baseSkinnedVertex = 0;
-    //}
-    //
-    //void IncrementBaseSkinnedVertex(uint32_t vertexCount) {
-    //    g_baseSkinnedVertex += vertexCount;
-    //}
-    //
-    //uint32_t GetBaseSkinnedVertex() {
-    //    return g_baseSkinnedVertex;
-    //}
-    //
-    //std::vector<AnimatedGameObject*>& GetAnimatedGameObjectToSkin() {
-    //    return g_animatedGameObjectsToSkin;
-    //}
-
     const RendererData& GetRendererData() {
         return g_rendererData;
     }
@@ -1215,6 +1195,20 @@ namespace Unloved::RenderDataManager {
 
     const std::vector<RenderItem>& GetCombinedSkinnedRenderItems() {
         return g_combinedSkinnedRenderItems;
+    }
+
+    uint32_t GetRequiredSkinnedVertexCount() {
+        uint32_t totalVertexCount = 0;
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+
+        for (const RenderItem& renderItem : GetCombinedSkinnedRenderItems()) {
+            Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
+            if (!mesh) continue;
+
+            totalVertexCount += mesh->vertexCount;
+        }
+
+        return totalVertexCount;
     }
 
 

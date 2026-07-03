@@ -47,13 +47,19 @@ namespace OpenGL::ResourceManager {
     void RemoveFrameBuffer(uint64_t id);
 
     uint64_t CreateGenericMesh();
+    uint64_t CreateGenericMesh(const std::string& name);
     OpenGLGenericMesh& GetGenericMesh(uint64_t id);
+    OpenGLGenericMesh& GetGenericMesh(const std::string& name);
     OpenGLGenericMesh* GetGenericMeshPtr(uint64_t id);
+    OpenGLGenericMesh* GetGenericMeshPtr(const std::string& name);
     void RemoveGenericMesh(uint64_t id);
 
     uint64_t CreateMeshBuffer();
+    uint64_t CreateMeshBuffer(const std::string& name);
     OpenGLMeshBuffer& GetMeshBuffer(uint64_t id);
+    OpenGLMeshBuffer& GetMeshBuffer(const std::string& name);
     OpenGLMeshBuffer* GetMeshBufferPtr(uint64_t id);
+    OpenGLMeshBuffer* GetMeshBufferPtr(const std::string& name);
     void RemoveMeshBuffer(uint64_t id);
 
     uint64_t CreateShader(const std::string& name);

@@ -8,14 +8,14 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "res/shaders/common/gl_fixed_bindings.glsl"
+#include "res/shaders/common/OpenGL/binding_indices.glsl"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
 
     void StainedGlassPass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLRasterizerStateManager::ForceRasterizerState("GlassPass");
+        OpenGL::RasterizerStateManager::ForceRasterizerState("GlassPass");
 
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
@@ -37,7 +37,7 @@ namespace OpenGLRenderer {
         gBuffer.Bind();
         gBuffer.DrawBuffer("Lighting");
 
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
         glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(TEX_IDX_SHADOW_MAP_FLASHLIGHT, flashLightShadowMapsFBO->GetDepthTextureHandle());
         glBindTextureUnit(8, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"));
@@ -50,7 +50,7 @@ namespace OpenGLRenderer {
             Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
             if (!player) continue;
 
-            OpenGLRenderer::SetViewport(&gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(&gBuffer, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
 
             // Sort by distance to camera

@@ -10,7 +10,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Time.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     using namespace Unloved;
 
 
@@ -42,13 +42,13 @@ namespace OpenGLRenderer {
         glDepthFunc(GL_EQUAL);
 
         glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
-        glBindVertexArray(Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            OpenGLRenderer::SetViewport(gBuffer, viewport);
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
             glm::mat4 projectionMatrix = viewportData[i].projection;
             glm::mat4 viewMatrix = viewportData[i].view;

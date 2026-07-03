@@ -41,6 +41,7 @@ struct VulkanShader {
     VkPipelineShaderStageCreateInfo GetStageCreateInfo(VkShaderStageFlagBits stage) const;
     void Cleanup();
     bool Hotload();
+    std::vector<std::string> GetPaths() const;
     VkShaderModule GetVertexShader();
     VkShaderModule GetFragmentShader();
     VkShaderModule GetComputeShader();

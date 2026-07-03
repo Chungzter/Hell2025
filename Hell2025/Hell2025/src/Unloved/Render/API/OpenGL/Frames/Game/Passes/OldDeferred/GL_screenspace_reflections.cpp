@@ -5,7 +5,7 @@
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Render/RendererConstants.h"
 
-namespace OpenGLRenderer {
+namespace OpenGL::Renderer {
     void ScreenspaceReflectionsPass() {
         if (!Unloved::Renderer::GetCurrentRendererSettings().screenspaceReflections)
             return;
