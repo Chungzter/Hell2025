@@ -6,7 +6,6 @@
 #if ENABLE_BINDLESS == 1
     #extension GL_ARB_bindless_texture : enable
 #endif
-layout(origin_upper_left) in vec4 gl_FragCoord;
 
 #include "../../common/constants.glsl"
 #include "../../common/misc_flags.glsl"

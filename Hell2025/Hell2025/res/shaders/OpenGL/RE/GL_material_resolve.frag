@@ -1,7 +1,6 @@
 #version 460
 #extension GL_ARB_bindless_texture : require
 
-layout(origin_upper_left) in vec4 gl_FragCoord;
 layout(early_fragment_tests) in;
 
 #include "../../common/constants.glsl"
@@ -60,34 +59,14 @@ vec3 ComputeScreenBarycentrics(vec2 p, vec2 s0, vec2 s1, vec2 s2, vec3 invW) {
 }
 
 void main() {
+    ivec2 px =  ivec2(gl_FragCoord.xy);;
     ivec2 outputImageSize = imageSize(u_VisibilityBuffer);
 
-    vec2 screenCoord = gl_FragCoord.xy;
-    ivec2 screenPx = ivec2(screenCoord);
-
-    // Vulkan path:
-    // vec2 screenCoord = gl_FragCoord.xy;
-    // ivec2 screenPx = ivec2(screenCoord);
-
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(
-        screenPx,
-        outputImageSize,
-        rendererData.splitscreenMode
-    );
-
+    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
     ViewportData viewportData = viewportDataArr[viewportIndex];
 
-    vec2 screenUV = (vec2(screenPx) + 0.5) / vec2(outputImageSize);
+    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
-
-    // OpenGL path: u_VisibilityBuffer and u_DepthTexture are addressed in GL storage space.
-    ivec2 px = screenPx;
-    int viewportLocalY = screenPx.y - viewportData.yOffset;
-    int storageViewportY = outputImageSize.y - viewportData.yOffset - viewportData.height;
-    px.y = storageViewportY + viewportData.height - 1 - viewportLocalY;
-
-    // Vulkan path:
-    // ivec2 px = screenPx;
 
     uvec4 visibilityData = imageLoad(u_VisibilityBuffer, px);
     uint globalInstanceIndex = visibilityData.x;
@@ -126,10 +105,11 @@ void main() {
     vec4 clip1 = viewportData.projectionViewReverseZ * vec4(ws1, 1.0);
     vec4 clip2 = viewportData.projectionViewReverseZ * vec4(ws2, 1.0);
 
-    vec2 viewportPosition = screenCoord - vec2(viewportData.xOffset, viewportData.yOffset);
+    vec2 viewportPosition = gl_FragCoord.xy - vec2(viewportData.xOffset, viewportData.yOffset);
     vec2 viewportSize = vec2(viewportData.width, viewportData.height);
+
     vec2 p = viewportPosition / viewportSize * 2.0 - 1.0;
-    //p.y = -p.y;
+    p.y = -p.y; // OpenGL only
 
     vec2 s0 = clip0.xy / clip0.w;
     vec2 s1 = clip1.xy / clip1.w;

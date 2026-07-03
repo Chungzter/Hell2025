@@ -1,5 +1,4 @@
 #version 460 core
-layout(origin_upper_left) in vec4 gl_FragCoord;
 #include "../common/constants.glsl"
 #include "../common/normal_encoding.glsl"
 #include "../common/post_processing.glsl"

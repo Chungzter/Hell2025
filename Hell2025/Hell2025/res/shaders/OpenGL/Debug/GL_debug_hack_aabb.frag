@@ -1,5 +1,4 @@
 #version 460 core
-layout(origin_upper_left) in vec4 gl_FragCoord;
 layout(location = 0) in vec3 v_color;
 layout(location = 0) out vec4 fragColor;
 

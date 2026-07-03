@@ -1,6 +1,5 @@
 #version 460
 #extension GL_ARB_bindless_texture : require
-layout(origin_upper_left) in vec4 gl_FragCoord;
 #include "../../common/types.glsl"
 
 layout(location = 0) out uvec2 FragmentOutput;

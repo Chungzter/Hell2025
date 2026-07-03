@@ -1,5 +1,4 @@
 #version 460 core
-layout(origin_upper_left) in vec4 gl_FragCoord;
 layout (binding = 0) uniform sampler2D baseColorTexture;
 layout (binding = 1) uniform sampler2D normalTexture;
 layout (binding = 2) uniform sampler2D rmaTexture;

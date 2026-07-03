@@ -1,5 +1,4 @@
 #version 460 core
-layout(origin_upper_left) in vec4 gl_FragCoord;
 layout(std430, binding = 6) readonly buffer HairMLAB {
     uvec4 nodes_v4[];
 };

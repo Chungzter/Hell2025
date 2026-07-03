@@ -66,11 +66,11 @@ namespace VulkanRenderer {
         vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_STATIC);
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
-        //pushConstants.vertexBufferDeviceAddress = proceduralGeometry->GetVertexBufferAddress();
-        //pushConstants.indexBufferDeviceAddress = proceduralGeometry->GetIndexBufferAddress();
-        //vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsMaterialResolve), &pushConstants);
-        //vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_PROCEDUAL);
-        //vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+        pushConstants.vertexBufferDeviceAddress = proceduralGeometry->GetVertexBufferAddress();
+        pushConstants.indexBufferDeviceAddress = proceduralGeometry->GetIndexBufferAddress();
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsMaterialResolve), &pushConstants);
+        vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_PROCEDUAL);
+        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
         //
         //pushConstants.vertexBufferDeviceAddress = skinnedVertexBuffer->GetDeviceAddress();
         //pushConstants.indexBufferDeviceAddress = assetGeometry->GetIndexBufferAddress();

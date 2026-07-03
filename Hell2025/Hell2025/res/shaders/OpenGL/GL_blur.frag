@@ -1,5 +1,4 @@
 #version 450
-layout(origin_upper_left) in vec4 gl_FragCoord;
 out vec4 out_colour;
 in vec2 blurTextureCoords[9];
 layout (binding = 0) uniform sampler2D image;

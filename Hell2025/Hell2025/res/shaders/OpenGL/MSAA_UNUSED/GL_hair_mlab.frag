@@ -5,7 +5,6 @@
 
 #extension GL_ARB_fragment_shader_interlock : enable
 #extension GL_ARB_bindless_texture : enable
-layout(origin_upper_left) in vec4 gl_FragCoord;
 
 layout(early_fragment_tests) in;
 layout(pixel_interlock_unordered) in;

@@ -1,5 +1,4 @@
 #version 460 core
-layout(origin_upper_left) in vec4 gl_FragCoord;
 layout (location = 0) out vec4 BaseColorOut;
 layout (location = 1) out vec4 NormalsOut;
 layout (location = 2) out vec4 RMAOut;

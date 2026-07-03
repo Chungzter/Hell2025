@@ -11,5 +11,5 @@ layout(location = 0) out vec4 out_color;
 
 void main() {
     out_color = texture(sampler2D(textures[VULKAN_TEXTURE_IDX_PRESENT], samplers[VULKAN_SAMPLER_IDX_LINEAR]), vec2(v_uv.x, 1.0 - v_uv.y));
-    out_color = vec4(gl_FragCoord.x / 960, gl_FragCoord.y / 540, 0.0, 1.0);
+    //out_color = vec4(gl_FragCoord.x / 960, gl_FragCoord.y / 540, 0.0, 1.0);
 }

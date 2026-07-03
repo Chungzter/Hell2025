@@ -1,5 +1,4 @@
 #version 460
-layout(origin_upper_left) in vec4 gl_FragCoord;
 layout (location = 0) out float ViewspaceDepthOut;
 
 layout(binding = 0, r32f) uniform image2D u_viewspaceDepthPrevious;

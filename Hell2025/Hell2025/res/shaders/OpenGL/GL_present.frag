@@ -1,5 +1,4 @@
 #version 460 core
-layout(origin_upper_left) in vec4 gl_FragCoord;
 
 layout(binding = 0) uniform sampler2D u_texture;
 

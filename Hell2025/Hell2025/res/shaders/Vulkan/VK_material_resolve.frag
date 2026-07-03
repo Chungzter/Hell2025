@@ -78,25 +78,72 @@ vec3 ComputeScreenBarycentrics(vec2 p, vec2 s0, vec2 s1, vec2 s2, vec3 invW) {
     return vec3(u * invW.x, v * invW.y, w * invW.z) / interpW;
 }
 
+uint ComputeViewportIndexFromSplitscreenModeVK(ivec2 px, ivec2 size, int mode) {
+    if (px.x < 0 || px.y < 0 || px.x >= size.x || px.y >= size.y) {
+        return 0u;
+    }
+
+    if (mode == 0) {
+        return 0u;
+    }
+
+    uint x = uint(px.x >= (size.x / 2));
+    uint y = uint(px.y <  (size.y / 2));
+
+    if (mode == 1) {
+        return y;
+    }
+
+    if (mode == 2) {
+        return x + (y << 1);
+    }
+
+    return 0u;
+}
+
+vec2 ViewportUVFromPixel_GL(ivec2 px, ivec2 outputImageSize, ViewportData viewportData) {
+    vec2 viewportPosition = vec2(px) + 0.5 - vec2(viewportData.xOffset, viewportData.yOffset);
+    return viewportPosition / vec2(viewportData.width, viewportData.height);
+}
+
+vec2 ViewportUVFromPixel_VK(ivec2 px, ivec2 outputImageSize, ViewportData viewportData) {
+    vec2 viewportOrigin = vec2(viewportData.xOffset, outputImageSize.y - viewportData.yOffset - viewportData.height);
+    vec2 viewportPosition = vec2(px) + 0.5 - viewportOrigin;
+    return viewportPosition / vec2(viewportData.width, viewportData.height);
+}
+
+vec2 ViewportNDCFromPixel_GL(ivec2 px, ivec2 outputImageSize, ViewportData viewportData) {
+    vec2 viewportUV = ViewportUVFromPixel_GL(px, outputImageSize, viewportData);
+    vec2 viewportNDC = viewportUV * 2.0 - 1.0;
+    viewportNDC.y = -viewportNDC.y;
+    return viewportNDC;
+}
+
+vec2 ViewportNDCFromPixel_VK(ivec2 px, ivec2 outputImageSize, ViewportData viewportData) {
+    vec2 viewportUV = ViewportUVFromPixel_VK(px, outputImageSize, viewportData);
+    return viewportUV * 2.0 - 1.0;
+}
+
 void main() {
-    ivec2 px = ivec2(gl_FragCoord.xy);
-    ivec2 outputImageSize = textureSize(usampler2D(uintTextures[VULKAN_UINT_TEXTURE_IDX_GBUFFER_VISIBILITY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
-
-    uvec4 visibilityData = uvec4(texelFetch(usampler2D(uintTextures[VULKAN_UINT_TEXTURE_IDX_GBUFFER_VISIBILITY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).xy, 0u, 0u);
-    uint globalInstanceIndex = visibilityData.x;
-    uint primitiveID = visibilityData.y;
-
     VertexBuffer vertexBuffer = VertexBuffer(pushConstant.data.vertexBufferDeviceAddress);
     IndexBuffer indexBuffer = IndexBuffer(pushConstant.data.indexBufferDeviceAddress);
     ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.viewportDataDeviceAddress);
     RenderItemBuffer renderItemBuffer = RenderItemBuffer(pushConstant.data.renderItemsDeviceAddress);
     RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.rendererDataDeviceAddress);
+    
+    ivec2 outputImageSize = textureSize(usampler2D(uintTextures[VULKAN_UINT_TEXTURE_IDX_GBUFFER_VISIBILITY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
+    ivec2 px = ivec2(gl_FragCoord.xy);
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererDataBuffer.rendererData.splitscreenMode);
-
+    uint viewportIndex = ComputeViewportIndexFromSplitscreenModeVK(px, outputImageSize, rendererDataBuffer.rendererData.splitscreenMode);
     ViewportData viewportData = viewportDataBuffer.viewportDataArr[viewportIndex];
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
+
+    vec2 viewportSize = vec2(viewportData.width, viewportData.height);
+    vec2 viewportUV = ViewportUVFromPixel_VK(px, outputImageSize, viewportData);
+
+    uvec4 visibilityData = uvec4(texelFetch(usampler2D(uintTextures[VULKAN_UINT_TEXTURE_IDX_GBUFFER_VISIBILITY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).xy, 0u, 0u);
+    
+    uint globalInstanceIndex = visibilityData.x;
+    uint primitiveID = visibilityData.y;
 
     RenderItem renderItem = renderItemBuffer.renderItems[globalInstanceIndex];
     uint triangleIndexOffset = renderItem.baseIndex + (primitiveID * 3);
@@ -131,10 +178,7 @@ void main() {
     vec4 clip1 = viewportData.projectionViewReverseZ * vec4(ws1, 1.0);
     vec4 clip2 = viewportData.projectionViewReverseZ * vec4(ws2, 1.0);
 
-    vec2 viewportPosition = gl_FragCoord.xy - vec2(viewportData.xOffset, viewportData.yOffset);
-    vec2 viewportSize = vec2(viewportData.width, viewportData.height);
-    vec2 p = viewportPosition / viewportSize * 2.0 - 1.0;
-    p.y = -p.y;
+    vec2 viewportNDC = ViewportNDCFromPixel_VK(px, outputImageSize, viewportData);
 
     vec2 s0 = clip0.xy / clip0.w;
     vec2 s1 = clip1.xy / clip1.w;
@@ -144,9 +188,9 @@ void main() {
 
     vec2 pixelStep = 2.0 / viewportSize;
 
-    vec3 bary  = ComputeScreenBarycentrics(p, s0, s1, s2, invW);
-    vec3 baryX = ComputeScreenBarycentrics(p + vec2(pixelStep.x, 0.0), s0, s1, s2, invW);
-    vec3 baryY = ComputeScreenBarycentrics(p + vec2(0.0, -pixelStep.y), s0, s1, s2, invW);
+    vec3 bary  = ComputeScreenBarycentrics(viewportNDC, s0, s1, s2, invW);
+    vec3 baryX = ComputeScreenBarycentrics(viewportNDC + vec2(pixelStep.x, 0.0), s0, s1, s2, invW);
+    vec3 baryY = ComputeScreenBarycentrics(viewportNDC + vec2(0.0, -pixelStep.y), s0, s1, s2, invW);
 
     vec2 uv0 = vec2(v0.u, v0.v);
     vec2 uv1 = vec2(v1.u, v1.v);
@@ -176,11 +220,13 @@ void main() {
     vec3 t2 = normalize(modelMatrix * vec4(v2.tx, v2.ty, v2.tz, 0.0)).xyz;
     vec3 t = normalize(t0 * bary.x + t1 * bary.y + t2 * bary.z);
 
-    if (!isFrontFacing) {
-        n = -n;
-        nX = -nX;
-        nY = -nY;
-    }
+    //if (!isFrontFacing) {
+    //    n = -n;
+    //    nX = -nX;
+    //    nY = -nY;
+    //}
+
+    // Check this is not needed when u get floor rendering
 
     t = normalize(t - dot(t, n) * n);
     vec3 b = cross(n, t);
@@ -221,6 +267,17 @@ void main() {
     VelocityXYOcclusionSubSurfaceOut.b = ao;
     VelocityXYOcclusionSubSurfaceOut.a = 0.0;
 
-    
-    BaseColorMetallicOut.rgb = vec3(uv, 0);
+    BaseColorMetallicOut.rgb = clamp(normal, vec3(0), vec3(1));
+   //if (viewportIndex == 0) {
+   //    BaseColorMetallicOut.rgb = vec3(1,0,0);
+   //}
+   //else if (viewportIndex == 1) {
+   //    BaseColorMetallicOut.rgb = vec3(0,1,0);
+   //}
+   //else if (viewportIndex == 2) {
+   //    BaseColorMetallicOut.rgb = vec3(0,0,1);
+   //}
+   //else if (viewportIndex == 3) {
+   //    BaseColorMetallicOut.rgb = vec3(0,1,1);
+   //}
 }

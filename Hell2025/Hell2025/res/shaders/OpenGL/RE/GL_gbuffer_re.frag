@@ -1,6 +1,5 @@
 #version 460
 #extension GL_ARB_bindless_texture : enable
-layout(origin_upper_left) in vec4 gl_FragCoord;
 #include "../../common/normal_encoding.glsl"
 #include "../../common/types.glsl"
 

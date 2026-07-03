@@ -1,5 +1,4 @@
 #version 460 core
-layout(origin_upper_left) in vec4 gl_FragCoord;
 #include "../common/OpenGL/binding_indices.glsl"
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"

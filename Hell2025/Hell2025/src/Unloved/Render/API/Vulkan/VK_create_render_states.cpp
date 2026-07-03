@@ -19,7 +19,9 @@ namespace {
         state.rasterizer.depthTestEnabled = true;
         state.rasterizer.depthWriteEnabled = true;
         state.rasterizer.depthCompareOp = VK_COMPARE_OP_GREATER;
-        state.rasterizer.cullFaceEnabled = false;
+        state.rasterizer.cullFaceEnabled = true;
+        state.rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+        state.rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 
         state.rasterizer.stencilTestEnabled = true;
         state.rasterizer.stencilCompareOp = VK_COMPARE_OP_ALWAYS;
@@ -40,7 +42,9 @@ namespace {
         state.rasterizer.depthTestEnabled = true;
         state.rasterizer.depthWriteEnabled = true;
         state.rasterizer.depthCompareOp = VK_COMPARE_OP_GREATER;
-        state.rasterizer.cullFaceEnabled = false;
+        state.rasterizer.cullFaceEnabled = true;
+        state.rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+        state.rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 
         state.rasterizer.stencilTestEnabled = true;
         state.rasterizer.stencilCompareOp = VK_COMPARE_OP_ALWAYS;

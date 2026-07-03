@@ -70,9 +70,9 @@ namespace VulkanRenderer {
         glm::vec2 size = viewport.GetSize();
 
         int32_t x = static_cast<int32_t>(pos.x * extent.width);
-        int32_t y = static_cast<int32_t>(pos.y * extent.height);
         uint32_t width = static_cast<uint32_t>(size.x * extent.width);
         uint32_t height = static_cast<uint32_t>(size.y * extent.height);
+        int32_t y = static_cast<int32_t>((1.0f - pos.y - size.y) * extent.height);
 
         VkViewport vkViewport{};
         vkViewport.x = static_cast<float>(x);

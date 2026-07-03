@@ -3,7 +3,6 @@
 // All rights reserved 2025 till forever
 
 #version 450 core
-layout(origin_upper_left) in vec4 gl_FragCoord;
 layout (location = 0) out vec4 FinalLightingOut;
 
 layout (binding = 0) uniform sampler2D DepthTexture;
