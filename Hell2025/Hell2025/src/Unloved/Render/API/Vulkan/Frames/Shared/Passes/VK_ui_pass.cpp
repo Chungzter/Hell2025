@@ -4,6 +4,7 @@
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
+#include "Hell/Render/API/Vulkan/Types/vk_timer.h"
 #include "Hell/UI/UIBackEnd.h"
 #include "Unloved/Render/API/Vulkan/VK_draw.h"
 #include "Unloved/Render/API/Vulkan/VK_push_constants.h"
@@ -12,6 +13,8 @@
 namespace VulkanRenderer {
 
     void RenderUIPass(VkCommandBuffer commandBuffer) {
+        ProfilerVulkanZoneFunction();
+
         AllocatedImage* presentImage = VulkanResourceManager::GetAllocatedImage("Present");
         const std::vector<RenderItemUI>& renderItems = UIBackEnd::GetRenderItems();
         const std::vector<DrawIndexedIndirectCommand>& drawCommands = Unloved::RenderDataManager::GetDrawCommandsUI();

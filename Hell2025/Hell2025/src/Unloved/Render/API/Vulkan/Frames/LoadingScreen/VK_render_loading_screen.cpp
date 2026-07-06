@@ -10,13 +10,13 @@ namespace VulkanRenderer {
 
         frame.presentImage->Sync(frame.commandBuffer, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 
-        RenderLoadingScreenPass(frame.commandBuffer, frame.presentImage->GetImageView(), frame.extent);
+        LoadingScreenPass(frame.commandBuffer, frame.presentImage->GetImageView(), frame.extent);
 
         UpdateBuffersUI();
 
         RenderUIPass(frame.commandBuffer);
 
-        RenderPresentPass(frame.commandBuffer, frame.swapchainImageView);
+        PresentPass(frame.commandBuffer, frame.swapchainImageView);
         EndSwapchainFrame(frame);
     }
 }

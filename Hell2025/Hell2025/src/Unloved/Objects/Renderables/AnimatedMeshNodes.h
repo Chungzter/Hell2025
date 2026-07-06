@@ -23,17 +23,18 @@ struct AnimatedMeshNodeCreateInfo {
 struct AnimatedMeshNode {
     std::string meshName;
     int materialIndex = 0;
-    int woundMaterialIndex = 0;
+    int woundMaterialIndex = -1;
     int emissiveColorTexutreIndex = -1;
     bool renderAsGlass = false;
-    uint32_t meshId = 0;
-    float furLength = 0.0f;
-    float furShellDistanceAttenuation = 0.0f;
-    float furUVScale = 0.0f;
     bool deforming = true;
     int baseSkinningVertex = -1;
     BlendingMode blendingMode = BlendingMode::DEFAULT;
     RenderItem renderItem;
+    uint32_t baseVertex = 0;
+    uint32_t baseIndex = 0;
+    uint32_t vertexCount = 0;
+    uint32_t indexCount = 0;
+    uint32_t meshId = 0;
 };
 
 struct AnimatedMeshNodes {
@@ -47,9 +48,6 @@ struct AnimatedMeshNodes {
     void SetMeshMaterialByMeshName(const std::string& meshName, const std::string& materialName, BlendingMode blendingMode = BlendingMode::DEFAULT);
     void SetMeshMaterialByMeshIndex(int meshIndex, const std::string& materialName);
     void SetMeshToRenderAsGlassByMeshIndex(const std::string& materialName);
-    void SetMeshFurLength(const std::string& meshName, float furLength);
-    void SetMeshFurShellDistanceAttenuation(const std::string& meshName, float furShellDistanceAttenuation);
-    void SetMeshFurUVScale(const std::string& meshName, float uvScale);
     void SetMeshEmissiveColorTextureByMeshName(const std::string& meshName, const std::string& textureName);
     void SetMeshWoundMaterialByMeshName(const std::string& meshName, const std::string& textureName);
     void SetAllMeshMaterials(const std::string& materialName);
@@ -67,8 +65,8 @@ struct AnimatedMeshNodes {
     const std::vector<AnimatedMeshNode>& GetNodes() const { return m_nodes; }
 
     uint64_t m_parentId = 0;
-    uint32_t m_ignoredViewportIndex = -1;
-    uint32_t m_exclusiveViewportIndex = -1;
+    int32_t m_ignoredViewportIndex = -1;
+    int32_t m_exclusiveViewportIndex = -1;
 
     std::vector<int32_t> m_woundMaskTextureIndices;
 

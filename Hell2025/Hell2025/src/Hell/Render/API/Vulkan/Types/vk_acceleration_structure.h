@@ -17,10 +17,13 @@ struct VulkanAccelerationStructure {
 	VkAccelerationStructureKHR GetHandle() const	{ return m_handle; }
 	VkBuffer GetBuffer() const						{ return m_buffer.GetBuffer(); }
 	uint64_t GetDeviceAddress() const				{ return m_deviceAddress; }
+	size_t GetCPUAllocatedByteCount() const;
+	size_t GetGPUAllocatedByteCount() const;
 
 //private:
 	VkAccelerationStructureKHR m_handle = VK_NULL_HANDLE;
 	uint64_t m_deviceAddress = 0;
+	bool m_built = false;
 	VulkanBuffer m_buffer;
 
 private:

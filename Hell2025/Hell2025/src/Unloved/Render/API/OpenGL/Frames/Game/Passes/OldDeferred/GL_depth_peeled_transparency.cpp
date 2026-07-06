@@ -166,12 +166,13 @@ namespace OpenGL::Renderer {
 						Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
 						if (!mesh) continue;
 
+						Material* renderItemMaterial = Hell::ResourceManager::GetMaterialByIndex(renderItem.materialIndex);
 						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+						glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItemMaterial->m_basecolor)->GetGLTexture().GetHandle());
 						glActiveTexture(GL_TEXTURE1);
-						glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+						glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItemMaterial->m_normal)->GetGLTexture().GetHandle());
 						glActiveTexture(GL_TEXTURE2);
-						glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+						glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItemMaterial->m_rma)->GetGLTexture().GetHandle());
 
 						OpenGL::SetUniformMat4("u_model", renderItem.modelMatrix);
 						OpenGL::SetUniformMat4("u_inverseModel", renderItem.inverseModelMatrix);

@@ -11,8 +11,8 @@ layout(r8ui, binding = 1) readonly  uniform uimage2D u_oceanMaskImage;
 layout(binding = 2) uniform sampler2D DisplacementTexture_band0;
 layout(binding = 3) uniform sampler2D DisplacementTexture_band1;
 
-layout(std430, binding = 1) readonly restrict buffer rendererDataBuffer { RendererData rendererData; };
-layout(std430, binding = 2) readonly restrict buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+layout(std430, binding = 2) readonly restrict buffer rendererDataBuffer { RendererData rendererData; };
+layout(std430, binding = 3) readonly restrict buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 uniform int u_mode;
 uniform float u_oceanOriginY;

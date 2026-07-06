@@ -6,7 +6,7 @@ uniform int u_viewportIndex;
 uniform mat4 u_modelMatrix;
 uniform ivec2 u_offsets[16];
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 

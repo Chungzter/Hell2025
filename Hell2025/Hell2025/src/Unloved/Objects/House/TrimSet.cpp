@@ -114,11 +114,13 @@ void TrimSet::CreateRenderItems() {
     }
 
     Material* material = nullptr;
+    int32_t materialIndex = -1;
     Model* model = nullptr;
 
     if (m_createInfo.type == TrimSetType::CEILING_FANCY) {
 		model = Hell::ResourceManager::GetModelByName("TrimsCeilingFancy");
-		material = Hell::ResourceManager::GetMaterialByName("WoodTrims");
+        materialIndex = Hell::ResourceManager::GetMaterialIndexByName("WoodTrims");
+		material = Hell::ResourceManager::GetMaterialByIndex(materialIndex);
     }
 
     if (!material) return;
@@ -169,9 +171,7 @@ void TrimSet::CreateRenderItems() {
             renderItem.modelMatrix = cornerTransform.to_mat4();
             renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
             renderItem.meshId = internalCornerMeshId;
-            renderItem.baseColorTextureIndex = material->m_basecolor;
-            renderItem.rmaTextureIndex = material->m_rma;
-            renderItem.normalMapTextureIndex = material->m_normal;
+            renderItem.materialIndex = materialIndex;
         }
         // External corner
         else if (!m_corners[i].m_internal && externalCornerMeshId != -1) {
@@ -179,9 +179,7 @@ void TrimSet::CreateRenderItems() {
             renderItem.modelMatrix = cornerTransform.to_mat4();
             renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
             renderItem.meshId = externalCornerMeshId;
-            renderItem.baseColorTextureIndex = material->m_basecolor;
-            renderItem.rmaTextureIndex = material->m_rma;
-            renderItem.normalMapTextureIndex = material->m_normal;
+            renderItem.materialIndex = materialIndex;
         }
 
         // Make the trim segments
@@ -202,9 +200,7 @@ void TrimSet::CreateRenderItems() {
                 renderItem.modelMatrix = transform.to_mat4();
                 renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
                 renderItem.meshId = trimMeshId;
-                renderItem.baseColorTextureIndex = material->m_basecolor;
-                renderItem.rmaTextureIndex = material->m_rma;
-                renderItem.normalMapTextureIndex = material->m_normal;
+                renderItem.materialIndex = materialIndex;
             }
 
             cursor += trimLength;
@@ -228,9 +224,7 @@ void TrimSet::CreateRenderItems() {
 		renderItem.modelMatrix = transform.to_mat4();
 		renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
 		renderItem.meshId = trimMeshId;
-		renderItem.baseColorTextureIndex = material->m_basecolor;
-		renderItem.rmaTextureIndex = material->m_rma;
-		renderItem.normalMapTextureIndex = material->m_normal;
+        renderItem.materialIndex = materialIndex;
     }
 
     // Shared logic

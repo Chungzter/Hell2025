@@ -165,3 +165,17 @@ void AllocatedImage::Cleanup() {
         vmaDestroyImage(allocator, m_image, m_allocation);
     }
 }
+
+size_t AllocatedImage::GetCPUAllocatedByteCount() const {
+    return sizeof(AllocatedImage);
+}
+
+size_t AllocatedImage::GetGPUAllocatedByteCount() const {
+    if (m_image == VK_NULL_HANDLE || m_allocation == VK_NULL_HANDLE) {
+        return 0;
+    }
+
+    VmaAllocationInfo allocationInfo{};
+    vmaGetAllocationInfo(VulkanMemoryManager::GetAllocator(), m_allocation, &allocationInfo);
+    return static_cast<size_t>(allocationInfo.size);
+}

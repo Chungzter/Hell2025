@@ -59,14 +59,14 @@ uniform bool u_sampleProbes;
 
 layout(rgba16f, binding = 0) uniform image2D outputImage;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer       { Light lights[]; };
-readonly restrict layout(std430, binding = 5) buffer tileLightsBuffer   { TileLights tileLights[];   };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light lights[]; };
+readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer   { TileLights tileLights[];   };
 
-layout(std430, binding = 7)  readonly restrict  buffer tileChristmasLightsBuffer  { TileInstanceData tileChristmasLights[]; };
-layout(std430, binding = 8)  readonly restrict  buffer ChristmasLightsBuffer      { ChristmasLight christmasLights[]; };
-layout(std430, binding = 9)  readonly restrict  buffer ChristmasLightsIndexBuffer { uint globalChristmasLightIndices[]; };
+layout(std430, binding = 9)  readonly restrict  buffer tileChristmasLightsBuffer  { TileInstanceData tileChristmasLights[]; };
+layout(std430, binding = 10) readonly restrict  buffer ChristmasLightsBuffer      { ChristmasLight christmasLights[]; };
+layout(std430, binding = 11) readonly restrict  buffer ChristmasLightsIndexBuffer { uint globalChristmasLightIndices[]; };
 
 // Moon lighting
 uniform float u_cascadeFarPlane = 256.0;

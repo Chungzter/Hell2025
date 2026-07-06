@@ -152,7 +152,7 @@ namespace Unloved::Renderer {
             return OpenGL::Renderer::GetZoneNames();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan: GetZoneNames()";
+            return VulkanRenderer::GetZoneNames();
         }
 
         static std::string empty = "";
@@ -164,7 +164,7 @@ namespace Unloved::Renderer {
             return OpenGL::Renderer::GetZoneGPUTimings();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan: GetZoneGPUTimings()";
+            return VulkanRenderer::GetZoneGPUTimings();
         }
 
         static std::string empty = "";
@@ -176,7 +176,7 @@ namespace Unloved::Renderer {
             return OpenGL::Renderer::GetZoneCPUTimings();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan: GetZoneCPUTimings()";
+            return VulkanRenderer::GetZoneCPUTimings();
         }
 
         static std::string empty = "";
@@ -188,7 +188,7 @@ namespace Unloved::Renderer {
             return OpenGL::Renderer::GetTotalGPUTime();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan: GetTotalGPUTime()";
+            return VulkanRenderer::GetTotalGPUTime();
         }
 
         static std::string empty = "";
@@ -200,7 +200,7 @@ namespace Unloved::Renderer {
             return OpenGL::Renderer::GetTotalCPUTime();
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan: GetTotalGPUTime()";
+            return VulkanRenderer::GetTotalCPUTime();
         }
 
         static std::string empty = "";

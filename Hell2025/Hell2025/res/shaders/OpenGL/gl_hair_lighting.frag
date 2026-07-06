@@ -10,9 +10,7 @@
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer {
 	    uvec2 textureSamplers[];
     };    
-    in flat int BaseColorTextureIndex;
-    in flat int NormalTextureIndex;
-    in flat int RMATextureIndex;
+    in flat int MaterialIndex;
 #endif
 
 layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
@@ -29,14 +27,16 @@ layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow 
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 
+readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
+
 layout (location = 0) out vec4 FragOut;
 layout (location = 1) out vec4 ViewSpaceDepthPreviousOut;
 layout (binding = 7) uniform sampler2D FlashlightCookieTexture;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData  rendererData;   };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData  viewportData[]; };
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer       { Light         lights[];       };
-readonly restrict layout(std430, binding = 5) buffer tileLightsBuffer   { TileLights    tileLights[];   };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData  rendererData;   };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData  viewportData[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light         lights[];       };
+readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer   { TileLights    tileLights[];   };
 
 in vec2 TexCoord;
 in vec3 Normal;
@@ -55,9 +55,10 @@ uniform vec3 u_moonlightDir;
 
 void main() {
 #if ENABLE_BINDLESS
-    vec4 baseColor = texture(sampler2D(textureSamplers[BaseColorTextureIndex]), TexCoord);
-    vec3 normalMap = texture(sampler2D(textureSamplers[NormalTextureIndex]), TexCoord).rgb;   
-    vec3 rma = texture(sampler2D(textureSamplers[RMATextureIndex]), TexCoord).rgb;  
+    Material material = materials[MaterialIndex];
+    vec4 baseColor = texture(sampler2D(textureSamplers[material.basecolor]), TexCoord);
+    vec3 normalMap = texture(sampler2D(textureSamplers[material.normal]), TexCoord).rgb;   
+    vec3 rma = texture(sampler2D(textureSamplers[material.rma]), TexCoord).rgb;  
 #else
     vec4 baseColor = texture2D(baseColorTexture, TexCoord);
     vec3 normalMap = texture2D(normalTexture, TexCoord).rgb;

@@ -41,8 +41,24 @@ namespace VulkanRenderer {
             }
         }
 
-        if (VulkanResourceManager::AllocatedImageExists("GBufferRE.Lighting")) {
-            AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("GBufferRE.Lighting");
+        if (VulkanResourceManager::AllocatedImageExists("BaseColorMetallic")) {
+            AllocatedImage* baseColorImage = VulkanResourceManager::GetAllocatedImage("BaseColorMetallic");
+            if (baseColorImage) {
+                staticDescriptorSet->WriteImage(DESC_IDX_TEXTURES, baseColorImage->GetImageView(), VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VULKAN_TEXTURE_IDX_BASE_COLOR_METALLIC);
+                dirty = true;
+            }
+        }
+
+        if (VulkanResourceManager::AllocatedImageExists("NormalXYRoughnessMisc")) {
+            AllocatedImage* normalImage = VulkanResourceManager::GetAllocatedImage("NormalXYRoughnessMisc");
+            if (normalImage) {
+                staticDescriptorSet->WriteImage(DESC_IDX_TEXTURES, normalImage->GetImageView(), VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC);
+                dirty = true;
+            }
+        }
+
+        if (VulkanResourceManager::AllocatedImageExists("Lighting")) {
+            AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("Lighting");
             if (lightingImage) {
                 staticDescriptorSet->WriteImage(DESC_IDX_STORAGE_IMAGES_RGBA16F, lightingImage->GetImageView(), VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING);
                 dirty = true;

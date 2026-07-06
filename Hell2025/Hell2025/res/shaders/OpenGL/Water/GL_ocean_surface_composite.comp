@@ -10,8 +10,8 @@ layout (binding = 2) uniform sampler2D WaterColorTexture;
 layout (binding = 3) uniform sampler2D waterDUDVTexture;
 layout (binding = 4) uniform sampler2D DownSampledFinalLightingTexture;
 
-layout(std430, binding = 1) readonly restrict buffer rendererDataBuffer { RendererData rendererData; };
-layout(std430, binding = 2) readonly restrict buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+layout(std430, binding = 2) readonly restrict buffer rendererDataBuffer { RendererData rendererData; };
+layout(std430, binding = 3) readonly restrict buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 uniform float u_time;
 uniform float u_oceanYOrigin;

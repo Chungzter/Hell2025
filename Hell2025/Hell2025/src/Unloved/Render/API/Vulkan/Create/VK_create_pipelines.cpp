@@ -115,13 +115,14 @@ namespace {
         pipeline.Build();
     }
 
-    void CreateVisibilityDebugPipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("VisibilityDebug");
+    void CreateLightingDeferredPipeline() {
+        VulkanShader* shader = VulkanResourceManager::GetShader("LightingDeferred");
         if (!shader) return;
 
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("VisibilityDebug");
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("LightingDeferred");
         pipeline.SetShader(shader);
         pipeline.AddDescriptorSetLayout(VulkanResourceManager::GetDescriptorSetLayout("StaticDescriptorSet"));
+        pipeline.AddPushConstant(sizeof(PushConstantsDeferredLighting), VK_SHADER_STAGE_FRAGMENT_BIT);
         pipeline.AddColorAttachmentFormat(VK_FORMAT_R16G16B16A16_SFLOAT);
         pipeline.SetDepthTest(false, false);
         pipeline.SetCullMode(VK_CULL_MODE_NONE);
@@ -171,7 +172,7 @@ namespace VulkanRenderer {
         CreateVisibilitySkinnedAlphaDiscardPipeline();
         CreateComputeSkinningPipeline();
         CreateComputeRedTestPipeline();
-        CreateVisibilityDebugPipeline();
+        CreateLightingDeferredPipeline();
         CreateMaterialResolvePipeline();
         CreateUIPipeline();
     }

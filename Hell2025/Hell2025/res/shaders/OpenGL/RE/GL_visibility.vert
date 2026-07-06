@@ -10,8 +10,8 @@ layout(location = 2) in vec2 a_uv;
 layout(location = 0) flat out int v_globalInstanceIndex;
 layout(location = 1) out vec2 v_uv;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
-readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
 
 uniform bool u_depthOffset;
 

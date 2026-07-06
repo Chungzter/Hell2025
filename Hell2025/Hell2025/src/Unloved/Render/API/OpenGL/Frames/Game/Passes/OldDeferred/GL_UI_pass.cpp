@@ -22,7 +22,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("UI");
 
         OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(5, "RenderItemsUI");
+        OpenGL::BindSSBO(6, "RenderItemsUI");
 
         OpenGL::SetUniformFloat("u_renderTargetWidth", resolutions.ui.x);
         OpenGL::SetUniformFloat("u_renderTargetHeight", resolutions.ui.y);

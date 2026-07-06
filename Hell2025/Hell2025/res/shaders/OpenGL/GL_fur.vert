@@ -8,7 +8,7 @@ layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec2 inUV;
 layout (location = 3) in vec3 inTangent;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 

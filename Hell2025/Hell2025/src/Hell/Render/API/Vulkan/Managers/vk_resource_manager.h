@@ -15,11 +15,17 @@
 #include <unordered_map>
 #include <string>
 
+namespace Hell::MemoryTracker {
+    struct MemoryReport;
+}
+
 namespace VulkanResourceManager {
     void Cleanup();
+    void AppendMemoryReport(Hell::MemoryTracker::MemoryReport& report);
 
     // Acceleration Structures
     uint64_t CreateAccelerationStructure();
+    bool AccelerationStructureExists(uint64_t id);
     VulkanAccelerationStructure* GetAccelerationStructure(uint64_t id);
     void RemoveAccelerationStructure(uint64_t id);
 
@@ -36,12 +42,14 @@ namespace VulkanResourceManager {
 
     // Generic Meshes
     uint64_t CreateGenericMesh();
+    bool GenericMeshExists(uint64_t id);
     VulkanGenericMesh* GetGenericMesh(uint64_t id);
     void RemoveGenericMesh(uint64_t id);
 
     // Mesh Buffers
     uint64_t CreateMeshBuffer();
     uint64_t CreateMeshBuffer(const std::string& name);
+    bool MeshBufferExists(uint64_t id);
     VulkanMeshBuffer* GetMeshBuffer(uint64_t id);
     VulkanMeshBuffer* GetMeshBuffer(const std::string& name);
     void RemoveMeshBuffer(uint64_t id);

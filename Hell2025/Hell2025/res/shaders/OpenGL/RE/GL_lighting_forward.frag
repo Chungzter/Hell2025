@@ -33,11 +33,12 @@ layout (binding = 13) uniform sampler2D hairRootMap;
 #include "../../common/normal_encoding.glsl"
 #include "../../common/post_processing.glsl"
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportData[]; };
-readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { RenderItem renderItems[]; };
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer       { Light lights[]; };
-readonly restrict layout(std430, binding = 5) buffer tileLightsBuffer   { TileLights tileLights[];   };
+readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportData[]; };
+readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light lights[]; };
+readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer   { TileLights tileLights[];   };
 
 layout (location = 0) out vec4 LightingOut;
 layout (location = 1) out vec4 BaseColorOut;
@@ -63,15 +64,11 @@ void main() {
     RenderItem item = renderItems[v_globalInstanceIndex];
 
 #if ENABLE_BINDLESS == 1
-    vec4 baseColor = texture(sampler2D(textureSamplers[item.baseColorTextureIndex]), TexCoord);
-    vec3 normalMap = texture(sampler2D(textureSamplers[item.normalMapTextureIndex]), TexCoord).rgb;
-    vec4 rma = texture(sampler2D(textureSamplers[item.rmaTextureIndex]), TexCoord).rgba;
-    vec3 emissiveMapColor = texture(sampler2D(textureSamplers[item.emissiveTextureIndex]), TexCoord).rgb;
-
-    // these were being fetched but not used in the lighting loop yet
-    vec3 additionalTex0 = texture(sampler2D(textureSamplers[item.additionalTextureIndex0]), TexCoord).rgb;
-    vec3 additionalTex1 = texture(sampler2D(textureSamplers[item.additionalTextureIndex1]), TexCoord).rgb;
-    vec3 additionalTex2 = texture(sampler2D(textureSamplers[item.additionalTextureIndex2]), TexCoord).rgb;
+    Material material = materials[item.materialIndex];
+    vec4 baseColor = texture(sampler2D(textureSamplers[material.basecolor]), TexCoord);
+    vec3 normalMap = texture(sampler2D(textureSamplers[material.normal]), TexCoord).rgb;
+    vec4 rma = texture(sampler2D(textureSamplers[material.rma]), TexCoord).rgba;
+    vec3 emissiveMapColor = texture(sampler2D(textureSamplers[material.emissive]), TexCoord).rgb;
 #else
     vec4 baseColor = texture(baseColorTexture, TexCoord);
     vec3 normalMap = texture(normalTexture, TexCoord).rgb;

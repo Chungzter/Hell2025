@@ -73,9 +73,7 @@ Decal::Decal(uint64_t id, const DecalCreateInfo& createInfo) {
 
     // Set persistent RenderItem values
     m_renderItem.meshId = meshId;
-    m_renderItem.baseColorTextureIndex = material->m_basecolor;
-    m_renderItem.normalMapTextureIndex = material->m_normal;
-    m_renderItem.rmaTextureIndex = material->m_rma;
+    m_renderItem.materialIndex = m_materialIndex;
     m_renderItem.baseVertex = mesh->baseVertex;
     m_renderItem.baseIndex = mesh->baseIndex;
     m_renderItem.shadowBit = SHADOW_BIT_NONE;

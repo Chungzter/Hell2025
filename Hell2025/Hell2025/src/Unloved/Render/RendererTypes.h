@@ -7,6 +7,7 @@
 #include <glm/vec4.hpp>
 
 #include <cstdint>
+#include <vector>
 
 struct ViewportData {
     glm::mat4 projectionReverseZ;
@@ -86,53 +87,44 @@ struct RenderItem {
     glm::mat4 modelMatrix = glm::mat4(1);
     glm::mat4 prevModelMatrix = glm::mat4(1);
     glm::mat4 inverseModelMatrix = glm::mat4(1);
+
     glm::vec4 aabbMin = glm::vec4(0);
     glm::vec4 aabbMax = glm::vec4(0);
 
-    int32_t meshIndexUNUSED = 0;
-    int32_t baseColorTextureIndex = 0;
-    int32_t normalMapTextureIndex = 0;
-    int32_t rmaTextureIndex = 0;
+    uint32_t vertexCount = 0;
+    uint32_t indexCount = 0;
+    uint32_t baseVertex = 0;
+    uint32_t baseIndex = 0;
 
-    int32_t objectType = 0;
-    int32_t woundMaskTexutreIndex = -1;
+    uint32_t baseVertexWeight = 0;
+    uint32_t baseSkinningTransformIndex = 0;
+    uint32_t objectIdLowerBit = 0;
+    uint32_t objectIdUpperBit = 0;
+
+    int32_t materialIndex = -1;
+    int32_t woundMaskTextureIndex = -1;
     int32_t exclusiveViewportIndex = -1;
     int32_t ignoredViewportIndex = -1;
 
-    uint32_t objectIdUpperBit = 0;
-    uint32_t objectIdLowerBit = 0;
-    int32_t UNUSED = 0;
-    int32_t baseSkinningTransformIndex = 0;
-
     uint32_t openableId = 0;
     uint32_t customId = 0;
-    int32_t skinned = 0;
     uint32_t shadowBit = 0;
+    uint32_t miscFlags = 0;
 
+    uint32_t meshId = 0;
     float emissiveR = 0.0f;
     float emissiveG = 0.0f;
     float emissiveB = 0.0f;
-    int32_t emissiveTextureIndex = -1;
-
-    uint32_t baseVertex = 0;
-    uint32_t baseIndex = 0;
-    uint32_t baseVertexWeight = 0;
-    uint32_t miscFlags = 0;
-
-    int32_t additionalTextureIndex0 = 0;
-    int32_t additionalTextureIndex1 = 0;
-    int32_t additionalTextureIndex2 = 0;
-    int32_t additionalTextureIndex3 = 0;
-
-    int32_t localMeshNodeIndex = 0;
-    int32_t opacityTextureIndex = 0;
-    uint32_t meshId = 0;
-    int32_t blendingMode = static_cast<int32_t>(BlendingMode::DEFAULT);
 
     float tintColorR = 1.0f;
     float tintColorG = 1.0f;
     float tintColorB = 1.0f;
-    int32_t hairMapTextureIndex = -1;
+    uint32_t blendingMode = static_cast<uint32_t>(BlendingMode::DEFAULT);
+
+    int32_t localMeshNodeIndex = 0;
+    int32_t woundMaterialIndex = -1;
+    int padding1 = 0;
+    int padding2 = 0;
 };
 
 struct SpriteSheetRenderItem {
@@ -227,4 +219,30 @@ struct GpuParticle {
     float rotationalVelocity;
     float lifeTime = 0.0f;
     uint32_t exists = 0;
+};
+
+struct SkinningJob {
+    uint32_t vertexCount;
+    uint32_t indexCount;
+    uint32_t baseVertex;
+    uint32_t baseIndex;
+
+    uint32_t baseSkinningVertex;
+    uint32_t baseSkinningTransformIndex;
+    uint32_t padding0;
+    uint32_t padding1;
+};
+
+struct RayQueryGeometryRange {
+    uint32_t baseVertex;
+    uint32_t baseIndex;
+    uint32_t vertexCount;
+    uint32_t indexCount;
+    uint32_t blendingMode;
+    int32_t materialIndex;
+};
+
+struct RayQuerySkinnedGroup {
+    std::vector<RayQueryGeometryRange> ranges;
+    glm::mat4 modelMatrix;
 };

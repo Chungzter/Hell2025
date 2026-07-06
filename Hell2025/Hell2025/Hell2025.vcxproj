@@ -234,6 +234,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_raytracing_pipeline.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_sampler.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_shader.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_timer.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_texture.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\vk_tools.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\vk_types.cpp" />
@@ -247,6 +248,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_tile_passes.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_debug.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Update\VK_update_acceleration_structure.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_lighting_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\LoadingScreen\Passes\VK_loading_screen_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\VK_render_game.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\LoadingScreen\VK_render_loading_screen.cpp" />
@@ -256,16 +259,16 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_visibility_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Shared\Passes\VK_present_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Shared\Passes\VK_ui_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_create_shaders.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_create_pipelines.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_create_render_targets.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_shaders.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_pipelines.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_render_targets.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_blit.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_draw.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_update_buffers.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_update_descriptors.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Update\VK_update_buffers.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Update\VK_update_descriptors.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_render_state_commands.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\VK_render_state.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_create_render_states.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_render_states.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_renderer.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\GL_support.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_util.cpp" />
@@ -634,7 +637,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   <ItemGroup>
     <None Include="res\shaders\common\distance_fog.glsl" />
     <None Include="res\shaders\common\OpenGL\binding_indices.glsl" />
-    <None Include="res\shaders\common\misc_flags.glsl" />
+    <None Include="res\shaders\common\flags.glsl" />
+    <None Include="res\shaders\common\viewport.glsl" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.frag" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.geom" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.vert" />
@@ -647,7 +651,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\Vulkan\VK_visibility_alpha_discard.frag" />
     <None Include="res\shaders\Vulkan\VK_visibility.frag" />
     <None Include="res\shaders\Vulkan\VK_visibility.vert" />
-    <None Include="res\shaders\Vulkan\VK_visibility_debug.frag" />
+    <None Include="res\shaders\Vulkan\VK_lighting_deferred.frag" />
     <None Include="res\shaders\Vulkan\VK_visibility_skinned.vert" />
     <None Include="res\shaders\OpenGL\GL_blood_screenspace_decals.frag" />
     <None Include="res\shaders\OpenGL\GL_blood_screenspace_decals.vert" />
@@ -675,6 +679,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Work\GLRaytracing\BVH\src\OpenGL\Types\GL_timer.h" />
+    <ClInclude Include="res\shaders\common\reconstruction.glsl" />
     <ClInclude Include="res\shaders\OpenGL\RE\test.h" />
     <ClInclude Include="src\Hell\Input.h" />
     <ClInclude Include="src\Hell\Physics.h" />
@@ -730,6 +735,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_raytracing_pipeline.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_sampler.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_shader.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_timer.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_texture.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\vk_common.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\vk_tools.h" />

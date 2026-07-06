@@ -2,6 +2,7 @@
 
 #include "Hell/Render/API/Vulkan/vk_common.h"
 
+#include <cstddef>
 #include <string>
 
 struct VulkanRenderTargetInfo {
@@ -44,4 +45,6 @@ struct VulkanRenderState {
     VulkanRenderTargetInfo& AddColorTarget(const std::string& imageName = "");
     VulkanRenderTargetInfo& SetDepthTarget(const std::string& imageName = "");
     void CleanUp();
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
 };

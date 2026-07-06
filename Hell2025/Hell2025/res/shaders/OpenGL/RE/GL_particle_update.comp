@@ -10,9 +10,9 @@ struct DrawArraysCommand {
     uint baseInstance;
 };
 
-restrict layout(std430, binding = 6) buffer Buffer6 { Particle particlePool[]; };
-restrict layout(std430, binding = 7) buffer Buffer7 { uint particleActiveIndices[]; };
-restrict layout(std430, binding = 8) buffer Buffer8 { DrawArraysCommand command; };
+restrict layout(std430, binding = 7) buffer Buffer6 { Particle particlePool[]; };
+restrict layout(std430, binding = 8) buffer Buffer7 { uint particleActiveIndices[]; };
+restrict layout(std430, binding = 9) buffer Buffer8 { DrawArraysCommand command; };
 
 const uint MAX_GPU_PARTICLES = 12000u;
 

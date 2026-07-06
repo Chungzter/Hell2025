@@ -21,7 +21,7 @@ out vec3 BiTangent;
 out vec3 ViewPos;
 out vec3 TintColor;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 

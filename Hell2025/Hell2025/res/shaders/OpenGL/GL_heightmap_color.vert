@@ -7,7 +7,7 @@ layout (location = 1) in vec3 vNormal;
 layout (location = 2) in vec2 vUV;
 layout (location = 3) in vec3 vTangent;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
     ViewportData viewportData[];
 };
 

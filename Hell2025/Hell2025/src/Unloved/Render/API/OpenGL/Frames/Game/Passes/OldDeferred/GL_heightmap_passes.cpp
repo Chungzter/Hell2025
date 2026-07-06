@@ -157,8 +157,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("HeightMapVertexGeneration");
         glBindImageTexture(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16F);
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, heightMapMesh.GetVBO());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, heightMapMesh.GetEBO());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, heightMapMesh.GetVBO());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, heightMapMesh.GetEBO());
 
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 

@@ -13,13 +13,15 @@ namespace VulkanRenderer {
 
         VisibilityPass(frame.commandBuffer);
         MaterialResolvePass(frame.commandBuffer);
+        UpdateRayQueryAccelerationStructures(frame.commandBuffer);
+        LightingPass(frame.commandBuffer);
 
-        BlitImage(frame.commandBuffer, "BaseColorMetallic", "FinalImage", VK_FILTER_LINEAR);
+        BlitImage(frame.commandBuffer, "Lighting", "FinalImage", VK_FILTER_LINEAR);
         BlitImage(frame.commandBuffer, "FinalImage", "Present", VK_FILTER_NEAREST);
 
         RenderUIPass(frame.commandBuffer);
 
-        RenderPresentPass(frame.commandBuffer, frame.swapchainImageView);
+        PresentPass(frame.commandBuffer, frame.swapchainImageView);
         EndSwapchainFrame(frame);
     }
 }

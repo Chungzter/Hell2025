@@ -305,18 +305,6 @@ void AnimatedGameObject::SetMeshMaterialByMeshName(const std::string& meshName, 
     m_animatedMeshNodes.SetMeshMaterialByMeshName(meshName, materialName);
 }
 
-void AnimatedGameObject::SetMeshFurLength(const std::string& meshName, float furLength) {
-    m_animatedMeshNodes.SetMeshFurLength(meshName, furLength);
-}
-
-void AnimatedGameObject::SetMeshFurUVScale(const std::string& meshName, float uvScale) {
-    m_animatedMeshNodes.SetMeshFurUVScale(meshName, uvScale);
-}
-
-void AnimatedGameObject::SetMeshFurShellDistanceAttenuation(const std::string& meshName, float furShellDistanceAttenuation) {
-    m_animatedMeshNodes.SetMeshFurShellDistanceAttenuation(meshName, furShellDistanceAttenuation);
-}
-
 void AnimatedGameObject::SetMeshMaterialByMeshIndex(int meshIndex, const std::string& materialName) {
     m_animatedMeshNodes.SetMeshMaterialByMeshIndex(meshIndex, materialName);
 }

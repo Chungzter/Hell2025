@@ -6,9 +6,10 @@
 
 layout(early_fragment_tests) in;
 
-#include "../common/misc_flags.glsl"
+#include "../common/flags.glsl"
 #include "../common/normal_encoding.glsl"
 #include "../common/util.glsl"
+#include "../common/viewport.glsl"
 #include "../common/Vulkan/binding_indices.glsl"
 #include "../common/Vulkan/push_constants.glsl"
 
@@ -20,6 +21,12 @@ layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamp
 layout(location = 0) out vec4 BaseColorMetallicOut;
 layout(location = 1) out vec4 NormalXYRoughnessMiscOut;
 layout(location = 2) out vec4 VelocityXYOcclusionSubSurfaceOut;
+
+void WriteMaterialResolveError(vec3 color) {
+    BaseColorMetallicOut = vec4(color, 1.0);
+    NormalXYRoughnessMiscOut = vec4(0.0, 0.0, 1.0, 1.0);
+    VelocityXYOcclusionSubSurfaceOut = vec4(0.0, 0.0, 0.0, 0.0);
+}
 
 struct PackedVertex {
     float vx, vy, vz;
@@ -42,6 +49,10 @@ layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
 
 layout(buffer_reference, scalar) readonly buffer RenderItemBuffer {
     RenderItem renderItems[];
+};
+
+layout(buffer_reference, scalar) readonly buffer MaterialBuffer {
+    Material materials[];
 };
 
 layout(buffer_reference, scalar) readonly buffer RendererDataBuffer {
@@ -101,35 +112,13 @@ uint ComputeViewportIndexFromSplitscreenModeVK(ivec2 px, ivec2 size, int mode) {
     return 0u;
 }
 
-vec2 ViewportUVFromPixel_GL(ivec2 px, ivec2 outputImageSize, ViewportData viewportData) {
-    vec2 viewportPosition = vec2(px) + 0.5 - vec2(viewportData.xOffset, viewportData.yOffset);
-    return viewportPosition / vec2(viewportData.width, viewportData.height);
-}
-
-vec2 ViewportUVFromPixel_VK(ivec2 px, ivec2 outputImageSize, ViewportData viewportData) {
-    vec2 viewportOrigin = vec2(viewportData.xOffset, outputImageSize.y - viewportData.yOffset - viewportData.height);
-    vec2 viewportPosition = vec2(px) + 0.5 - viewportOrigin;
-    return viewportPosition / vec2(viewportData.width, viewportData.height);
-}
-
-vec2 ViewportNDCFromPixel_GL(ivec2 px, ivec2 outputImageSize, ViewportData viewportData) {
-    vec2 viewportUV = ViewportUVFromPixel_GL(px, outputImageSize, viewportData);
-    vec2 viewportNDC = viewportUV * 2.0 - 1.0;
-    viewportNDC.y = -viewportNDC.y;
-    return viewportNDC;
-}
-
-vec2 ViewportNDCFromPixel_VK(ivec2 px, ivec2 outputImageSize, ViewportData viewportData) {
-    vec2 viewportUV = ViewportUVFromPixel_VK(px, outputImageSize, viewportData);
-    return viewportUV * 2.0 - 1.0;
-}
-
 void main() {
     VertexBuffer vertexBuffer = VertexBuffer(pushConstant.data.vertexBufferDeviceAddress);
     IndexBuffer indexBuffer = IndexBuffer(pushConstant.data.indexBufferDeviceAddress);
     ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.viewportDataDeviceAddress);
     RenderItemBuffer renderItemBuffer = RenderItemBuffer(pushConstant.data.renderItemsDeviceAddress);
     RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.rendererDataDeviceAddress);
+    MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.materialsDeviceAddress);
     
     ivec2 outputImageSize = textureSize(usampler2D(uintTextures[VULKAN_UINT_TEXTURE_IDX_GBUFFER_VISIBILITY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
     ivec2 px = ivec2(gl_FragCoord.xy);
@@ -146,11 +135,22 @@ void main() {
     uint primitiveID = visibilityData.y;
 
     RenderItem renderItem = renderItemBuffer.renderItems[globalInstanceIndex];
+    Material material = materialBuffer.materials[renderItem.materialIndex];
     uint triangleIndexOffset = renderItem.baseIndex + (primitiveID * 3);
+
+    if (triangleIndexOffset + 2u >= pushConstant.data.indexCount) {
+        WriteMaterialResolveError(vec3(1.0, 0.0, 1.0));
+        return;
+    }
 
     uint i0 = indexBuffer.indices[triangleIndexOffset + 0] + renderItem.baseVertex;
     uint i1 = indexBuffer.indices[triangleIndexOffset + 1] + renderItem.baseVertex;
     uint i2 = indexBuffer.indices[triangleIndexOffset + 2] + renderItem.baseVertex;
+
+    if (i0 >= pushConstant.data.vertexCount || i1 >= pushConstant.data.vertexCount || i2 >= pushConstant.data.vertexCount) {
+        WriteMaterialResolveError(vec3(0.0, 1.0, 1.0));
+        return;
+    }
     
     PackedVertex v0 = vertexBuffer.vertices[i0];
     PackedVertex v1 = vertexBuffer.vertices[i1];
@@ -232,9 +232,12 @@ void main() {
     vec3 b = cross(n, t);
     mat3 tbn = mat3(t, b, n);
 
-    vec4 baseColor = textureGrad(sampler2D(textures[nonuniformEXT(uint(renderItem.baseColorTextureIndex))], textureSamplers[nonuniformEXT(uint(renderItem.baseColorTextureIndex))]), uv, dPdx, dPdy);
-    vec3 normalMap = textureGrad(sampler2D(textures[nonuniformEXT(uint(renderItem.normalMapTextureIndex))], textureSamplers[nonuniformEXT(uint(renderItem.normalMapTextureIndex))]), uv, dPdx, dPdy).rgb;
-    vec4 rma = textureGrad(sampler2D(textures[nonuniformEXT(uint(renderItem.rmaTextureIndex))], textureSamplers[nonuniformEXT(uint(renderItem.rmaTextureIndex))]), uv, dPdx, dPdy).rgba;
+    uint baseColorTextureIndex = uint(material.basecolor);
+    uint normalTextureIndex = uint(material.normal);
+    uint rmaTextureIndex = uint(material.rma);
+    vec4 baseColor = textureGrad(sampler2D(textures[nonuniformEXT(baseColorTextureIndex)], textureSamplers[nonuniformEXT(baseColorTextureIndex)]), uv, dPdx, dPdy);
+    vec3 normalMap = textureGrad(sampler2D(textures[nonuniformEXT(normalTextureIndex)], textureSamplers[nonuniformEXT(normalTextureIndex)]), uv, dPdx, dPdy).rgb;
+    vec4 rma = textureGrad(sampler2D(textures[nonuniformEXT(rmaTextureIndex)], textureSamplers[nonuniformEXT(rmaTextureIndex)]), uv, dPdx, dPdy).rgba;
 
     float roughness = rma.r;
     float metallic  = rma.g;
@@ -267,7 +270,7 @@ void main() {
     VelocityXYOcclusionSubSurfaceOut.b = ao;
     VelocityXYOcclusionSubSurfaceOut.a = 0.0;
 
-    BaseColorMetallicOut.rgb = clamp(normal, vec3(0), vec3(1));
+   // BaseColorMetallicOut.rgb = clamp(normal, vec3(0), vec3(1));
    //if (viewportIndex == 0) {
    //    BaseColorMetallicOut.rgb = vec3(1,0,0);
    //}

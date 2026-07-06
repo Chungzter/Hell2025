@@ -97,6 +97,103 @@ namespace VulkanRaytracingManager {
         instanceBuffer.Cleanup();
     }
 
+    void BuildBottomLevelASFromMeshes(uint64_t id, VulkanMeshBuffer& meshBuffer, const std::vector<Mesh*>& meshes) {
+        VulkanAccelerationStructure* accelerationStructure = VulkanResourceManager::GetAccelerationStructure(id);
+        if (!accelerationStructure) return;
+
+        VulkanBuffer* vertexBuffer = meshBuffer.GetVertexBuffer();
+        VulkanBuffer* indexBuffer = meshBuffer.GetIndexBuffer();
+        if (!vertexBuffer || !indexBuffer) return;
+
+        const uint64_t vertexBufferAddress = meshBuffer.GetVertexBufferAddress();
+        const uint64_t indexBufferAddress = meshBuffer.GetIndexBufferAddress();
+        if (vertexBufferAddress == 0 || indexBufferAddress == 0) return;
+
+        std::vector<VkAccelerationStructureGeometryKHR> geometries;
+        std::vector<uint32_t> primitiveCounts;
+        geometries.reserve(meshes.size());
+        primitiveCounts.reserve(meshes.size());
+
+        for (Mesh* mesh : meshes) {
+            if (!mesh || mesh->vertexCount == 0 || mesh->indexCount < 3) continue;
+
+            VkDeviceOrHostAddressConstKHR vertexBufferDeviceAddress{};
+            vertexBufferDeviceAddress.deviceAddress = vertexBufferAddress + static_cast<uint64_t>(mesh->baseVertex) * sizeof(Vertex);
+
+            VkDeviceOrHostAddressConstKHR indexBufferDeviceAddress{};
+            indexBufferDeviceAddress.deviceAddress = indexBufferAddress + static_cast<uint64_t>(mesh->baseIndex) * sizeof(uint32_t);
+
+            VkDeviceOrHostAddressConstKHR transformBufferDeviceAddress{};
+
+            VkAccelerationStructureGeometryKHR geometry{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR };
+            geometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
+            geometry.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
+            geometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
+            geometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
+            geometry.geometry.triangles.vertexData = vertexBufferDeviceAddress;
+            geometry.geometry.triangles.maxVertex = mesh->vertexCount - 1;
+            geometry.geometry.triangles.vertexStride = sizeof(Vertex);
+            geometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
+            geometry.geometry.triangles.indexData = indexBufferDeviceAddress;
+            geometry.geometry.triangles.transformData = transformBufferDeviceAddress;
+
+            geometries.push_back(geometry);
+            primitiveCounts.push_back(mesh->indexCount / 3);
+        }
+
+        if (geometries.empty()) {
+            accelerationStructure->Cleanup();
+            return;
+        }
+
+        VkDevice device = VulkanDeviceManager::GetDevice();
+
+        VkAccelerationStructureBuildGeometryInfoKHR buildInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
+        buildInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+        buildInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+        buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+        buildInfo.geometryCount = static_cast<uint32_t>(geometries.size());
+        buildInfo.pGeometries = geometries.data();
+
+        VkAccelerationStructureBuildSizesInfoKHR sizeInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR };
+        vkGetAccelerationStructureBuildSizesKHR(device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildInfo, primitiveCounts.data(), &sizeInfo);
+
+        accelerationStructure->Cleanup();
+        accelerationStructure->CreateBuffer(sizeInfo);
+
+        VkAccelerationStructureCreateInfoKHR createInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
+        createInfo.buffer = accelerationStructure->GetBuffer();
+        createInfo.size = sizeInfo.accelerationStructureSize;
+        createInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+        vkCreateAccelerationStructureKHR(device, &createInfo, nullptr, &accelerationStructure->m_handle);
+
+        VulkanBuffer scratchBuffer = CreateScratchBuffer(sizeInfo.buildScratchSize);
+        buildInfo.dstAccelerationStructure = accelerationStructure->m_handle;
+        buildInfo.scratchData.deviceAddress = scratchBuffer.GetDeviceAddress();
+
+        std::vector<VkAccelerationStructureBuildRangeInfoKHR> rangeInfos;
+        rangeInfos.reserve(primitiveCounts.size());
+
+        for (uint32_t primitiveCount : primitiveCounts) {
+            VkAccelerationStructureBuildRangeInfoKHR& rangeInfo = rangeInfos.emplace_back();
+            rangeInfo.primitiveCount = primitiveCount;
+            rangeInfo.primitiveOffset = 0;
+            rangeInfo.firstVertex = 0;
+            rangeInfo.transformOffset = 0;
+        }
+
+        const VkAccelerationStructureBuildRangeInfoKHR* rangeInfoPtr = rangeInfos.data();
+        VulkanCommandManager::SubmitImmediate([&](VkCommandBuffer cmd) {
+            vkCmdBuildAccelerationStructuresKHR(cmd, 1, &buildInfo, &rangeInfoPtr);
+        });
+
+        VkAccelerationStructureDeviceAddressInfoKHR addressInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR };
+        addressInfo.accelerationStructure = accelerationStructure->m_handle;
+        accelerationStructure->m_deviceAddress = vkGetAccelerationStructureDeviceAddressKHR(device, &addressInfo);
+
+        scratchBuffer.Cleanup();
+    }
+
     uint64_t CreateBottomLevelAS(Mesh* mesh) {
         if (!mesh || mesh->vertexCount == 0 || mesh->indexCount == 0) return 0;
 
@@ -128,7 +225,7 @@ namespace VulkanRaytracingManager {
         geometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
         geometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
         geometry.geometry.triangles.vertexData = vertexBufferDeviceAddress;
-        geometry.geometry.triangles.maxVertex = mesh->vertexCount;
+        geometry.geometry.triangles.maxVertex = mesh->vertexCount - 1;
         geometry.geometry.triangles.vertexStride = sizeof(Vertex);
         geometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
         geometry.geometry.triangles.indexData = indexBufferDeviceAddress;

@@ -4,7 +4,12 @@
 
 #include "Hell/Logging.h"
 #include "Hell/Containers/SlotMap.h"
+#include "Hell/MemoryTracker/MemoryTracker.h"
 #include "Hell/ResourceManagement/ResourceID.h"
+
+#include <algorithm>
+#include <unordered_set>
+#include <utility>
 
 namespace VulkanResourceManager {
     std::unordered_map<std::string, AllocatedImage> g_allocatedImages;
@@ -23,6 +28,27 @@ namespace VulkanResourceManager {
 
     std::unordered_map<std::string, uint64_t> g_meshBufferIdsByName;
 
+    namespace {
+        void SortMemoryReportCategory(Hell::MemoryTracker::MemoryReportCategory& category) {
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
+
+        void AppendCategory(Hell::MemoryTracker::MemoryReport& report, Hell::MemoryTracker::MemoryReportCategory&& category) {
+            if (category.entries.empty()) {
+                return;
+            }
+
+            SortMemoryReportCategory(category);
+            report.categories.push_back(std::move(category));
+        }
+
+        std::string MakeResourceIdName(const char* label, uint64_t id) {
+            return std::string(label) + " " + std::to_string(id);
+        }
+    }
+
     void Cleanup() {
         for (auto& object : g_accelerationStructures)  { object.Cleanup(); } g_accelerationStructures.clear();
         for (auto& object : g_genericMeshes)           { object.CleanUp(); } g_genericMeshes.clear();
@@ -37,6 +63,167 @@ namespace VulkanResourceManager {
         for (auto& [name, shader] : g_shaders)         { shader.Cleanup(); } g_shaders.clear();
 
         CleanUpPipelines();
+    }
+
+    void AppendMemoryReport(Hell::MemoryTracker::MemoryReport& report) {
+        if (!g_allocatedImages.empty()) {
+            Hell::MemoryTracker::MemoryReportCategory category;
+            category.name = "Vulkan Allocated Images";
+            category.entries.reserve(g_allocatedImages.size());
+
+            for (const auto& [name, image] : g_allocatedImages) {
+                Hell::MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = image.GetCPUAllocatedByteCount();
+                entry.gpuBytes = image.GetGPUAllocatedByteCount();
+            }
+
+            AppendCategory(report, std::move(category));
+        }
+
+        std::unordered_set<uint64_t> genericMeshBufferIds;
+        genericMeshBufferIds.reserve(g_genericMeshes.size() * 2);
+        for (const VulkanGenericMesh& mesh : g_genericMeshes) {
+            if (mesh.GetVertexBufferId() != 0) {
+                genericMeshBufferIds.insert(mesh.GetVertexBufferId());
+            }
+            if (mesh.GetIndexBufferId() != 0) {
+                genericMeshBufferIds.insert(mesh.GetIndexBufferId());
+            }
+        }
+
+        if (!g_buffers.empty()) {
+            Hell::MemoryTracker::MemoryReportCategory category;
+            category.name = "Vulkan Buffers";
+            category.entries.reserve(g_buffers.size());
+
+            for (size_t i = 0; i < g_buffers.size(); i++) {
+                const uint64_t id = g_buffers.id_at(i);
+                if (genericMeshBufferIds.contains(id)) {
+                    continue;
+                }
+
+                const VulkanBuffer& buffer = g_buffers[i];
+                if (buffer.GetBuffer() == VK_NULL_HANDLE) {
+                    continue;
+                }
+
+                Hell::MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = MakeResourceIdName("Buffer", id);
+                entry.cpuBytes = buffer.GetCPUAllocatedByteCount();
+                entry.gpuBytes = buffer.GetGPUAllocatedByteCount();
+            }
+
+            AppendCategory(report, std::move(category));
+        }
+
+        if (!g_accelerationStructures.empty()) {
+            Hell::MemoryTracker::MemoryReportCategory category;
+            category.name = "Vulkan Acceleration Structures";
+            category.entries.reserve(g_accelerationStructures.size());
+
+            for (size_t i = 0; i < g_accelerationStructures.size(); i++) {
+                const uint64_t id = g_accelerationStructures.id_at(i);
+                const VulkanAccelerationStructure& accelerationStructure = g_accelerationStructures[i];
+
+                Hell::MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = MakeResourceIdName("Acceleration Structure", id);
+                entry.cpuBytes = accelerationStructure.GetCPUAllocatedByteCount();
+                entry.gpuBytes = accelerationStructure.GetGPUAllocatedByteCount();
+            }
+
+            AppendCategory(report, std::move(category));
+        }
+
+        if (!g_descriptorSets.empty()) {
+            Hell::MemoryTracker::MemoryReportCategory category;
+            category.name = "Vulkan Descriptor Sets";
+            category.entries.reserve(g_descriptorSets.size());
+
+            for (const auto& [name, descriptorSet] : g_descriptorSets) {
+                Hell::MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = descriptorSet.GetCPUAllocatedByteCount();
+                entry.gpuBytes = descriptorSet.GetGPUAllocatedByteCount();
+            }
+
+            AppendCategory(report, std::move(category));
+        }
+
+        if (!g_pipelines.empty()) {
+            Hell::MemoryTracker::MemoryReportCategory category;
+            category.name = "Vulkan Pipelines";
+            category.entries.reserve(g_pipelines.size());
+
+            for (const auto& [name, pipeline] : g_pipelines) {
+                Hell::MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = pipeline.GetCPUAllocatedByteCount();
+                entry.gpuBytes = pipeline.GetGPUAllocatedByteCount();
+            }
+
+            AppendCategory(report, std::move(category));
+        }
+
+        if (!g_raytracingPipelines.empty()) {
+            Hell::MemoryTracker::MemoryReportCategory category;
+            category.name = "Vulkan Raytracing Pipelines";
+            category.entries.reserve(g_raytracingPipelines.size());
+
+            for (const auto& [name, pipeline] : g_raytracingPipelines) {
+                Hell::MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = pipeline.GetCPUAllocatedByteCount();
+                entry.gpuBytes = pipeline.GetGPUAllocatedByteCount();
+            }
+
+            AppendCategory(report, std::move(category));
+        }
+
+        if (!g_renderStates.empty()) {
+            Hell::MemoryTracker::MemoryReportCategory category;
+            category.name = "Vulkan Render States";
+            category.entries.reserve(g_renderStates.size());
+
+            for (const auto& [name, renderState] : g_renderStates) {
+                Hell::MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = renderState.GetCPUAllocatedByteCount();
+                entry.gpuBytes = renderState.GetGPUAllocatedByteCount();
+            }
+
+            AppendCategory(report, std::move(category));
+        }
+
+        if (!g_samplers.empty()) {
+            Hell::MemoryTracker::MemoryReportCategory category;
+            category.name = "Vulkan Samplers";
+            category.entries.reserve(g_samplers.size());
+
+            for (const auto& [name, sampler] : g_samplers) {
+                Hell::MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = sampler.GetCPUAllocatedByteCount();
+                entry.gpuBytes = sampler.GetGPUAllocatedByteCount();
+            }
+
+            AppendCategory(report, std::move(category));
+        }
+
+        if (!g_shaders.empty()) {
+            Hell::MemoryTracker::MemoryReportCategory category;
+            category.name = "Vulkan Shaders";
+            category.entries.reserve(g_shaders.size());
+
+            for (const auto& [name, shader] : g_shaders) {
+                Hell::MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = shader.GetCPUAllocatedByteCount();
+                entry.gpuBytes = shader.GetGPUAllocatedByteCount();
+            }
+
+            AppendCategory(report, std::move(category));
+        }
     }
 
     void CleanUpPipelines() {
@@ -56,6 +243,10 @@ namespace VulkanResourceManager {
         }
 
         return id;
+    }
+
+    bool AccelerationStructureExists(uint64_t id) {
+        return g_accelerationStructures.get(id) != nullptr;
     }
 
     VulkanAccelerationStructure* GetAccelerationStructure(uint64_t id) {
@@ -179,6 +370,10 @@ namespace VulkanResourceManager {
         return id;
     }
 
+    bool GenericMeshExists(uint64_t id) {
+        return g_genericMeshes.get(id) != nullptr;
+    }
+
     VulkanGenericMesh* GetGenericMesh(uint64_t id) {
         VulkanGenericMesh* genericMesh = g_genericMeshes.get(id);
 
@@ -221,12 +416,21 @@ namespace VulkanResourceManager {
 
         auto it = g_meshBufferIdsByName.find(name);
         if (it != g_meshBufferIdsByName.end()) {
-            RemoveMeshBuffer(it->second);
+            if (MeshBufferExists(it->second)) {
+                RemoveMeshBuffer(it->second);
+            }
+            else {
+                g_meshBufferIdsByName.erase(it);
+            }
         }
 
         uint64_t id = CreateMeshBuffer();
         g_meshBufferIdsByName[name] = id;
         return id;
+    }
+
+    bool MeshBufferExists(uint64_t id) {
+        return g_meshBuffers.get(id) != nullptr;
     }
 
     VulkanMeshBuffer* GetMeshBuffer(uint64_t id) {

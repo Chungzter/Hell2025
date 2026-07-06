@@ -25,9 +25,7 @@ void Trim::Init(Transform transform, const std::string& modelName, const std::st
     m_renderItem.modelMatrix = transform.to_mat4();
     m_renderItem.inverseModelMatrix = glm::inverse(m_renderItem.modelMatrix);
     m_renderItem.meshId = model->GetMeshIndices()[0];
-    m_renderItem.baseColorTextureIndex = material->m_basecolor;
-    m_renderItem.rmaTextureIndex = material->m_rma;
-    m_renderItem.normalMapTextureIndex = material->m_normal;
+    m_renderItem.materialIndex = m_materialIndex;
     RendererUtil::UpdateRenderItemAABB(m_renderItem);
     Hell::Bit::PackUint64(m_objectId, m_renderItem.objectIdLowerBit, m_renderItem.objectIdUpperBit);
 }

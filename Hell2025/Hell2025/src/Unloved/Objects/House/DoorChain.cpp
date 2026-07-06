@@ -192,13 +192,12 @@ void DoorChain::SubmitRenderItems() {
         if (RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(m_chainLinkPhysicsIds[i])) {
             glm::mat4 modelMatrix = rigidDynamic->GetWorldTransform();
 
-            Material* material = Hell::ResourceManager::GetMaterialByName("Tokarev");
+            const int32_t materialIndex = Hell::ResourceManager::GetMaterialIndexByName("Tokarev");
+            Material* material = Hell::ResourceManager::GetMaterialByIndex(materialIndex);
             RenderItem renderItem;
             renderItem.modelMatrix = modelMatrix;
             renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-            renderItem.baseColorTextureIndex = material->m_basecolor;
-            renderItem.rmaTextureIndex = material->m_rma;
-            renderItem.normalMapTextureIndex = material->m_normal;
+            renderItem.materialIndex = materialIndex;
             renderItem.meshId = m_chainLinkMeshId;
             RendererUtil::UpdateRenderItemAABB(renderItem);
 

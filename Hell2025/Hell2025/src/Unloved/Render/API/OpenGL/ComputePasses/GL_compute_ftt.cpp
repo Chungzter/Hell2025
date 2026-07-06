@@ -97,7 +97,7 @@ namespace OpenGL::Renderer {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, fftDispXInSSBO->GetHandle());
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, fftDispZInSSBO->GetHandle());
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, fftGradXInSSBO->GetHandle());
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, fftGradZInSSBO->GetHandle());
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, fftGradZInSSBO->GetHandle());
 
             OpenGL::BindShader("OceanCalculateSpectrum");
             OpenGL::SetUniformUVec2("u_fftGridSize", fftResolution);
@@ -128,7 +128,7 @@ namespace OpenGL::Renderer {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, fftDispXInSSBO->GetHandle());
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, fftDispZInSSBO->GetHandle());
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, fftGradXInSSBO->GetHandle());
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, fftGradZInSSBO->GetHandle());
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, fftGradZInSSBO->GetHandle());
 
             OpenGL::BindShader("OceanUpdateTextures");
             OpenGL::SetUniformUVec2("u_fftGridSize", fftResolution);

@@ -4,7 +4,7 @@
 #include "Hell/Logging.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "../../../../res/shaders/common/misc_flags.glsl"
+#include "../../../../res/shaders/common/flags.glsl"
 #include "Unloved/Render/RendererUtil.h"
 
 namespace Unloved {
@@ -29,15 +29,21 @@ void AnimatedMeshNodes::SetSkinnedModel(uint64_t parentId, std::string name) {
 
         for (int i = 0; i < meshCount; i++) {
             uint32_t meshId = m_skinnedModel->GetMeshIndices()[i];
-            Mesh* skinnedMesh = meshBuffer.GetMeshById(meshId);
+            Mesh* mesh = meshBuffer.GetMeshById(meshId);
             Hell::SkinnedMeshMetadata* metadata = meshBuffer.GetSkinnedMeshMetadataByMeshId(meshId);
-            if (!skinnedMesh || !metadata) continue;
+            if (!mesh || !metadata) continue;
 
             AnimatedMeshNode& node = m_nodes.emplace_back();
             node.meshId = meshId;
-            node.meshName = skinnedMesh->name;
+            node.meshName = mesh->name;
             node.deforming = metadata->requiresSkinning;
             node.baseSkinningVertex = metadata->baseVertexWeight;
+            node.vertexCount = mesh->vertexCount;
+            node.indexCount = mesh->indexCount;
+            node.baseVertex = mesh->baseVertex;
+            node.baseIndex = mesh->baseIndex;
+            node.meshId = meshId;
+
             m_woundMaskTextureIndices[i] = -1;
         }
     }
@@ -56,18 +62,16 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
     for (int i = 0; i < m_nodes.size(); i++) {
         if (m_nodes[i].blendingMode == BlendingMode::DO_NOT_RENDER) continue;
 
-        RenderItem& renderItem = m_nodes[i].renderItem;
+        AnimatedMeshNode& node = m_nodes[i];
+
+        RenderItem& renderItem = node.renderItem;
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
-        Mesh* mesh = meshBuffer.GetMeshById(m_nodes[i].meshId);
-        Hell::SkinnedMeshMetadata* metadata = meshBuffer.GetSkinnedMeshMetadataByMeshId(m_nodes[i].meshId);
+        Mesh* mesh = meshBuffer.GetMeshById(node.meshId);
+        Hell::SkinnedMeshMetadata* metadata = meshBuffer.GetSkinnedMeshMetadataByMeshId(node.meshId);
         if (!mesh || !metadata) continue;
 
-        Material* material = Hell::ResourceManager::GetMaterialByIndex(m_nodes[i].materialIndex);
-        renderItem.baseColorTextureIndex = material->m_basecolor;
-        renderItem.rmaTextureIndex = material->m_rma;
-        renderItem.normalMapTextureIndex = material->m_normal;
-        renderItem.hairMapTextureIndex = material->m_hairMaps;
-        renderItem.opacityTextureIndex = material->m_opacity;
+        renderItem.materialIndex = node.materialIndex;
+        renderItem.woundMaterialIndex = node.woundMaterialIndex;
 
         renderItem.prevModelMatrix = renderItem.modelMatrix; // TODO: write logic for on the first frame where this is identity
         renderItem.modelMatrix = modelMatrix;
@@ -76,33 +80,17 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         renderItem.ignoredViewportIndex = m_ignoredViewportIndex;
         renderItem.exclusiveViewportIndex = m_exclusiveViewportIndex;
         renderItem.baseVertexWeight = metadata->baseVertexWeight;
-        //renderItem.furLength = m_nodes[i].furLength;
-        //renderItem.furUVScale = m_nodes[i].furUVScale;
-        //renderItem.furShellDistanceAttenuation = m_nodes[i].furShellDistanceAttenuation;
-        renderItem.woundMaskTexutreIndex = m_woundMaskTextureIndices[i];
-        renderItem.miscFlags = MISC_FLAG_DYNAMIC_OBJECT;
+        renderItem.woundMaskTextureIndex = m_woundMaskTextureIndices[i];
         renderItem.baseVertex = mesh->baseVertex;
         renderItem.baseIndex = mesh->baseIndex;
+        renderItem.vertexCount = mesh->vertexCount;
+        renderItem.indexCount = mesh->indexCount;
+        renderItem.blendingMode = static_cast<uint32_t>(node.blendingMode);
 
-        renderItem.miscFlags = 0;
         Hell::Bit::SetState(renderItem.miscFlags, MISC_FLAG_DYNAMIC_OBJECT, true);
+        Hell::Bit::SetState(renderItem.miscFlags, MISC_FLAG_RESEVERED, false);
 
         Hell::Bit::PackUint64(m_parentId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
-
-        // Additional textures (hair)
-		if (m_nodes[i].blendingMode == BlendingMode::HAIR) {
-			//renderItem.additionalTextureIndex0 = material->m_hairFlowMap;
-            //renderItem.additionalTextureIndex1 = material->m_hairIdMap;
-            //renderItem.additionalTextureIndex2 = material->m_hairRootMap;
-            //renderItem.additionalTextureIndex3 = material->m_hairBlendMap;
-		}
-		// Additional textures (wound mask)
-        else if (m_woundMaskTextureIndices[i] != -1) {
-            Material* wouldMaterial = Hell::ResourceManager::GetMaterialByIndex(m_nodes[i].woundMaterialIndex);
-            renderItem.additionalTextureIndex0 = wouldMaterial->m_basecolor;
-            renderItem.additionalTextureIndex1 = wouldMaterial->m_normal;
-            renderItem.additionalTextureIndex2 = wouldMaterial->m_rma;
-        }
 
         // Put it where it belongs
         if (metadata->requiresSkinning) {
@@ -170,31 +158,6 @@ void AnimatedMeshNodes::SetMeshMaterialByMeshName(const std::string& meshName, c
         }
     }
 }
-
-void AnimatedMeshNodes::SetMeshFurLength(const std::string& meshName, float furLength) {
-    for (AnimatedMeshNode& node : m_nodes) {
-        if (node.meshName == meshName) {
-            node.furLength = furLength;
-        }
-    }
-}
-
-void AnimatedMeshNodes::SetMeshFurUVScale(const std::string& meshName, float uvScale) {
-    for (AnimatedMeshNode& node : m_nodes) {
-        if (node.meshName == meshName) {
-            node.furUVScale = uvScale;
-        }
-    }
-}
-
-void AnimatedMeshNodes::SetMeshFurShellDistanceAttenuation(const std::string& meshName, float furShellDistanceAttenuation) {
-    for (AnimatedMeshNode& node : m_nodes) {
-        if (node.meshName == meshName) {
-            node.furShellDistanceAttenuation = furShellDistanceAttenuation;
-        }
-    }
-}
-
 
 void AnimatedMeshNodes::SetMeshMaterialByMeshIndex(int meshIndex, const std::string& materialName) {
     if (meshIndex >= 0 && meshIndex < m_nodes.size()) {

@@ -73,9 +73,7 @@ void BulletCasing::SubmitRenderItem() {
     RenderItem renderItem;
     renderItem.modelMatrix = GetModelMatrix();
     renderItem.inverseModelMatrix = inverse(renderItem.modelMatrix);
-    renderItem.baseColorTextureIndex = material->m_basecolor;
-    renderItem.rmaTextureIndex = material->m_rma;
-    renderItem.normalMapTextureIndex = material->m_normal;
+    renderItem.materialIndex = GetMaterialIndex();
     renderItem.meshId = GetMeshId();
     renderItem.shadowBit = SHADOW_BIT_NONE;
 

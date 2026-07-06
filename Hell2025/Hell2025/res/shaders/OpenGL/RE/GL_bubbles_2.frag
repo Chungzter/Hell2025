@@ -12,8 +12,8 @@ uniform float u_particleAlphaFade;
 layout (binding = 0) uniform samplerCube cubeMap;
 layout (binding = 1) uniform sampler2D u_texture;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 void main() {
     // Sample the flip book texture

@@ -2,6 +2,7 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Render/API/OpenGL/GL_resource_manager.h"
+#include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 
 #include <iomanip>
 #include <sstream>
@@ -82,6 +83,7 @@ MemoryReport GetMemoryReport() {
     MemoryReport report;
     ResourceManager::AppendMemoryReport(report);
     OpenGL::ResourceManager::AppendMemoryReport(report);
+    VulkanResourceManager::AppendMemoryReport(report);
     return report;
 }
 

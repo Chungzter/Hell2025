@@ -1,4 +1,4 @@
-﻿#version 460 core
+#version 460 core
 #include "../common/constants.glsl"
 #include "../common/util.glsl"
 #include "../common/types.glsl"
@@ -29,7 +29,7 @@ layout(std430, binding = 6) buffer IndirectDraw {
     int baseInstance;
 } drawCmd;
 
-readonly layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 layout(std430, binding = 10) buffer inputVertexBuffer { Vertex InputVertexBuffer[]; };
 layout(std430, binding = 11) buffer inputIndexBuffer { uint InputIndexBuffer[]; };
 layout(std430, binding = 9) buffer BladePositions { vec4 bladePositions[]; };

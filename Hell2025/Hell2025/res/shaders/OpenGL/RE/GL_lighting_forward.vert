@@ -13,8 +13,8 @@ layout (location = 1) in vec3 vNormal;
 layout (location = 2) in vec2 vUV;
 layout (location = 3) in vec3 vTangent;
 
-layout(std430, binding = 2) readonly restrict buffer viewportDataBuffer { ViewportData viewportData[]; };
-layout(std430, binding = 3) readonly restrict buffer renderItemsBuffer  { RenderItem renderItems[]; };
+layout(std430, binding = 3) readonly restrict buffer viewportDataBuffer { ViewportData viewportData[]; };
+layout(std430, binding = 4) readonly restrict buffer renderItemsBuffer  { RenderItem renderItems[]; };
 
 centroid out vec2 TexCoord;
 centroid out vec4 WorldPos;

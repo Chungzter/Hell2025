@@ -14,7 +14,7 @@
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "../../../../res/shaders/common/misc_flags.glsl"
+#include "../../../../res/shaders/common/flags.glsl"
 
 namespace Unloved {
 
@@ -71,6 +71,8 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
         meshNode.addToNavMesh = false;
         meshNode.baseVertex = mesh->baseVertex;
         meshNode.baseIndex = mesh->baseIndex;
+        meshNode.vertexCount = mesh->vertexCount;
+        meshNode.indexCount = mesh->indexCount;
     }
 
     // If the model contains armatures, store the first one (TODO: allow more maybe)
@@ -92,11 +94,6 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
             PrintMeshNames();
 			continue;
 		}
-
-        // Base color texture override
-        if (createInfo.baseColorOverrideTextureName != UNDEFINED_STRING) {
-            meshNode->baseColorOverrideTextureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName(createInfo.baseColorOverrideTextureName);
-        }
 
         meshNode->materialIndex = Hell::ResourceManager::GetMaterialIndexByName(createInfo.materialName);
         meshNode->blendingMode = createInfo.blendingMode;
@@ -535,21 +532,23 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
     for (size_t i = 0; i < m_meshNodes.size(); i++) {
         MeshNode& meshNode = m_meshNodes[i];
         Material* material = GetMaterial(i);
-        if (!material) continue;
-
+        //if (!material) {
+        //    if (Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode.globalMeshIndex)) {
+        //        Logging::Error() << "Mesh node '" << mesh->name << "' has no material!!!\n";
+        //    }
+        //    else {
+        //        Logging::Error() << "Mesh node has no material and has global mesh index '" << meshNode.globalMeshIndex << "'\n";
+        //    }
+        //    continue;
+        //}
         // Update render item
         meshNode.inverseWorldMatrix = glm::inverse(meshNode.worldMatrix);
-        meshNode.renderItem.objectType = (int)Unloved::GetObjectIdType(meshNode.parentObjectId);
         meshNode.renderItem.openableId = meshNode.openableId;
         meshNode.renderItem.customId = meshNode.customId;
         meshNode.renderItem.modelMatrix = meshNode.worldMatrix;
         meshNode.renderItem.prevModelMatrix = meshNode.prevWorldMatrix;
         meshNode.renderItem.inverseModelMatrix = meshNode.inverseWorldMatrix;
         meshNode.renderItem.meshId = GetGlobalMeshIndex(i);
-        meshNode.renderItem.baseColorTextureIndex = material->m_basecolor;
-		meshNode.renderItem.normalMapTextureIndex = material->m_normal;
-		meshNode.renderItem.rmaTextureIndex = material->m_rma;
-		meshNode.renderItem.emissiveTextureIndex = material->m_emissive;
         meshNode.renderItem.aabbMin = glm::vec4(meshNode.worldspaceAabb.GetBoundsMin(), 0.0f);
         meshNode.renderItem.aabbMax = glm::vec4(meshNode.worldspaceAabb.GetBoundsMax(), 0.0f);
         meshNode.renderItem.localMeshNodeIndex = i;
@@ -559,20 +558,15 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.renderItem.tintColorR = meshNode.tintColor.r;
         meshNode.renderItem.tintColorG = meshNode.tintColor.g;
         meshNode.renderItem.tintColorB = meshNode.tintColor.b;
-        meshNode.renderItem.opacityTextureIndex = material->m_opacity;
-        meshNode.renderItem.hairMapTextureIndex = material->m_hairMaps;
         meshNode.renderItem.baseVertex = meshNode.baseVertex;
         meshNode.renderItem.baseIndex = meshNode.baseIndex;
         meshNode.renderItem.blendingMode = (int)meshNode.blendingMode;
         meshNode.renderItem.miscFlags = 0;
+        meshNode.renderItem.materialIndex = meshNode.materialIndex;
 
         Hell::Bit::SetState(meshNode.renderItem.miscFlags, MISC_FLAG_DYNAMIC_OBJECT, !MeshNodeIsStatic((int32_t)i));
         Hell::Bit::SetState(meshNode.renderItem.shadowBit, SHADOW_BIT_CAST_SHADOW, meshNode.castShadows);
         Hell::Bit::SetState(meshNode.renderItem.shadowBit, SHADOW_BIT_CAST_CSM_SHADOW, meshNode.castCSMShadows);
-
-        if (meshNode.baseColorOverrideTextureIndex != -1) {
-            meshNode.renderItem.baseColorTextureIndex = meshNode.baseColorOverrideTextureIndex;
-        }
 
         if (m_firstFrame) {
             meshNode.renderItem.prevModelMatrix = meshNode.worldMatrix;
@@ -580,31 +574,13 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
 
         Hell::Bit::PackUint64(meshNode.parentObjectId, meshNode.renderItem.objectIdLowerBit, meshNode.renderItem.objectIdUpperBit);
 
-        //switch (meshNode.blendingMode) {
-        //case BlendingMode::DEFAULT:       m_renderItems.push_back(meshNode.renderItem);                 break;
-        //case BlendingMode::ALPHA_DISCARD: m_renderItemsAlphaDiscarded.push_back(meshNode.renderItem);   break;
-        //case BlendingMode::BLENDED:       m_renderItemsBlended.push_back(meshNode.renderItem);          break;
-        //case BlendingMode::GLASS:         m_renderItemsGlass.push_back(meshNode.renderItem);            break;
-        //case BlendingMode::HAIR:          m_renderItemsHair.push_back(meshNode.renderItem);     break;
-        //case BlendingMode::TOILET_WATER:  m_renderItemsToiletWater.push_back(meshNode.renderItem);      break;
-        //case BlendingMode::STAINED_GLASS: m_renderItemsStainedGlass.push_back(meshNode.renderItem);     break;
-        //case BlendingMode::PLASTIC:       m_renderItemsPlastic.push_back(meshNode.renderItem);          break;
-        //default: break;
-        //}
-
         if (meshNode.blendingMode != BlendingMode::DO_NOT_RENDER) {
             m_renderItems.push_back(meshNode.renderItem);
         }
 
-        //RenderDataManager::SubmitRenderItem(meshNode.renderItem);
-
         // If this is a static node and its transform is different than the previous frame, mark the World's static scene as dirty
         if (m_marksStaticSceneBvhAsDirty && MeshNodeIsStatic(i) && !Hell::Math::NearlyEqual(meshNode.worldMatrix, meshNode.prevWorldMatrix)) {
             Unloved::WorldBVH::MarkStaticSceneBvhDirty();
-
-            if (Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode.globalMeshIndex)) {
-                //std::cout << mesh->name << " triggered shit\n";
-            }
         }
     }
 

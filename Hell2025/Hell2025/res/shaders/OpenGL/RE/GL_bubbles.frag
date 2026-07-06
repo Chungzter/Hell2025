@@ -9,8 +9,8 @@ uniform float u_time;
 
 layout (binding = 0) uniform samplerCube cubeMap;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 // -90 degrees y rotation
 const mat3 kRotateYMinus90 = mat3(

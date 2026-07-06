@@ -9,8 +9,8 @@ layout (location = 1) in vec3 a_normal;
 layout (location = 2) in vec2 a_uv;
 layout (location = 3) in vec3 a_tangent;
 
-layout(std430, binding = 2) readonly restrict buffer viewportDataBuffer { ViewportData viewportData[]; };
-layout(std430, binding = 3) readonly restrict buffer renderItemsBuffer  { RenderItem renderItems[]; };
+layout(std430, binding = 3) readonly restrict buffer viewportDataBuffer { ViewportData viewportData[]; };
+layout(std430, binding = 4) readonly restrict buffer renderItemsBuffer  { RenderItem renderItems[]; };
 
 centroid out vec2 v_texCoord;
 centroid out vec4 v_worldPos;

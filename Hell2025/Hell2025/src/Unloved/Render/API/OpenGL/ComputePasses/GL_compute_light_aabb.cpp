@@ -177,7 +177,7 @@ namespace OpenGL::Renderer {
         glBindTexture(GL_TEXTURE_CUBE_MAP, fbo.GetColorHandle());
         OpenGL::SetUniformInt("u_WorldPosCubemap", 0);
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, ssbo->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, ssbo->GetHandle());
 
         uint32_t numGroups = fbo.GetSize() / 16;
         //OpenGL::DispatchCompute(numGroups, numGroups, 1);

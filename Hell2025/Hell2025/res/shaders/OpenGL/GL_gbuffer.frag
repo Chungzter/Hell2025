@@ -8,12 +8,8 @@
     readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer {
 	    uvec2 textureSamplers[];
     };
-    in flat int BaseColorTextureIndex;
-    in flat int NormalTextureIndex;
-    in flat int RMATextureIndex;
-    in flat int additionalTextureIndex0;
-    in flat int WoundNormalTextureIndex;
-    in flat int additionalTextureIndex2;
+    in flat int MaterialIndex;
+    in flat int WoundMaterialIndex;
 
 #else
     layout (binding = 0) uniform sampler2D baseColorTexture;
@@ -28,9 +24,11 @@
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
 
 #include "../common/lighting.glsl"
-#include "../common/misc_flags.glsl"
+#include "../common/flags.glsl"
 #include "../common/normal_encoding.glsl"
 #include "../common/post_processing.glsl"
+
+readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
 
 layout (location = 0) out vec4 BaseColorMetallicOut;
 layout (location = 1) out vec4 NormalXYRoughnessMiscOut;
@@ -48,7 +46,6 @@ in vec4 v_prevPos;
 
 in flat int WoundMaskTextureIndex;
 in flat uint MiscFlags;
-in flat int EmissiveTextureIndex;
 
 uniform bool u_alphaDiscard;
 uniform bool u_flipNormalMapY;
@@ -57,10 +54,11 @@ void main() {
     vec3 emissiveColor = EmissiveColor;
 
 #if ENABLE_BINDLESS == 1
-    vec4 baseColor = texture(sampler2D(textureSamplers[BaseColorTextureIndex]), TexCoord);
-    vec3 normalMap = texture(sampler2D(textureSamplers[NormalTextureIndex]), TexCoord).rgb;
-    vec4 rmat = texture(sampler2D(textureSamplers[RMATextureIndex]), TexCoord).rgba;
-    vec3 emissiveMapColor = texture(sampler2D(textureSamplers[EmissiveTextureIndex]), TexCoord).rgb;
+    Material material = materials[MaterialIndex];
+    vec4 baseColor = texture(sampler2D(textureSamplers[material.basecolor]), TexCoord);
+    vec3 normalMap = texture(sampler2D(textureSamplers[material.normal]), TexCoord).rgb;
+    vec4 rmat = texture(sampler2D(textureSamplers[material.rma]), TexCoord).rgba;
+    vec3 emissiveMapColor = texture(sampler2D(textureSamplers[material.emissive]), TexCoord).rgb;
 #else
     vec4 baseColor = texture(baseColorTexture, TexCoord);
     vec3 normalMap = texture(normalTexture, TexCoord).rgb;
@@ -69,9 +67,13 @@ void main() {
 #endif
 
     // Emissive
-    if (EmissiveTextureIndex != -1) {
+#if ENABLE_BINDLESS == 1
+    if (material.emissive != -1) {
         emissiveColor *= emissiveMapColor;
     }
+#else
+    emissiveColor *= emissiveMapColor;
+#endif
     EmissiveOut = vec4(emissiveColor, 0);
 
     if (u_alphaDiscard) {
@@ -88,11 +90,17 @@ void main() {
 
     // If this mesh has a wound mask, then sample it
     float woundMask = 0;
-    if (WoundMaskTextureIndex != -1) {
+    #if ENABLE_BINDLESS == 1
+        bool hasWoundMaterial = WoundMaterialIndex != -1;
+    #else
+        bool hasWoundMaterial = true;
+    #endif
+    if (WoundMaskTextureIndex != -1 && hasWoundMaterial) {
         #if ENABLE_BINDLESS == 1
-            woundBaseColor = texture(sampler2D(textureSamplers[additionalTextureIndex0]), TexCoord);
-            woundNormalMap = texture(sampler2D(textureSamplers[WoundNormalTextureIndex]), TexCoord).rgb;
-            woundRma = texture(sampler2D(textureSamplers[additionalTextureIndex2]), TexCoord).rgb;
+            Material woundMaterial = materials[WoundMaterialIndex];
+            woundBaseColor = texture(sampler2D(textureSamplers[woundMaterial.basecolor]), TexCoord);
+            woundNormalMap = texture(sampler2D(textureSamplers[woundMaterial.normal]), TexCoord).rgb;
+            woundRma = texture(sampler2D(textureSamplers[woundMaterial.rma]), TexCoord).rgb;
         #else
             woundBaseColor = texture(woundBaseColorTexture, TexCoord);
             woundNormalMap = texture(woundNormalTexture, TexCoord).rgb;
@@ -137,6 +145,8 @@ void main() {
     float metallic = rmat.g;
     float ao = rmat.b;
 
+        
+
 
     // Basecolor / Metallic out
     BaseColorMetallicOut.rgb = baseColor.rgb;
@@ -163,7 +173,7 @@ void main() {
     VelocityXYOcclusionSubSurfaceOut = vec4(velocity, ao, 1.0);
 
 
-    //BaseColorOut.rgb = vec3(TexCoord, 0);
+    // BaseColorMetallicOut.rgb = vec3(woundMask);
 
 
 }

@@ -108,3 +108,20 @@ VulkanBuffer* VulkanGenericMesh::GetVertexBuffer() const {
 VulkanBuffer* VulkanGenericMesh::GetIndexBuffer() const {
     return m_indexBufferId == 0 ? nullptr : VulkanResourceManager::GetBuffer(m_indexBufferId);
 }
+
+size_t VulkanGenericMesh::GetCPUAllocatedByteCount() const {
+    return sizeof(VulkanGenericMesh);
+}
+
+size_t VulkanGenericMesh::GetGPUAllocatedByteCount() const {
+    size_t byteCount = 0;
+
+    if (VulkanBuffer* vertexBuffer = GetVertexBuffer()) {
+        byteCount += vertexBuffer->GetGPUAllocatedByteCount();
+    }
+    if (VulkanBuffer* indexBuffer = GetIndexBuffer()) {
+        byteCount += indexBuffer->GetGPUAllocatedByteCount();
+    }
+
+    return byteCount;
+}

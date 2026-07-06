@@ -12,6 +12,7 @@
 #include "Hell/Render/API/Vulkan/Managers/vk_sync_manager.h"
 #include "Hell/Render/API/Vulkan/vk_tools.h"
 #include "Hell/Render/API/Vulkan/vk_types.h"
+#include "Hell/ResourceManagement/Types/Material.h"
 #include "Hell/UI/UITypes.h"
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Common/Constants.h"
@@ -55,6 +56,7 @@ namespace VulkanRenderer {
             vkDeviceWaitIdle(VulkanDeviceManager::GetDevice());
         }
 
+        ProfilerVulkanReset();
         VulkanDeletionQueue::FlushAll();
         VulkanResourceManager::Cleanup();
     }
@@ -98,7 +100,8 @@ namespace VulkanRenderer {
             { DESC_IDX_STORAGE_IMAGES_RGBA16F, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100, VK_SHADER_STAGE_ALL },
             { DESC_IDX_STORAGE_IMAGES_RGBA8, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100, VK_SHADER_STAGE_ALL },
             { DESC_IDX_UINT_TEXTURES, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 128, VK_SHADER_STAGE_ALL },
-            { DESC_IDX_TEXTURE_SAMPLERS, VK_DESCRIPTOR_TYPE_SAMPLER, 10000, VK_SHADER_STAGE_ALL }
+            { DESC_IDX_TEXTURE_SAMPLERS, VK_DESCRIPTOR_TYPE_SAMPLER, 10000, VK_SHADER_STAGE_ALL },
+            { DESC_IDX_ACCELERATION_STRUCTURES, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, 1, VK_SHADER_STAGE_ALL }
         };
 
         std::vector<VkDescriptorBindingFlags> flags(bindings.size(), 0);
@@ -108,6 +111,7 @@ namespace VulkanRenderer {
         flags[DESC_IDX_STORAGE_IMAGES_RGBA8] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
         flags[DESC_IDX_UINT_TEXTURES] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
         flags[DESC_IDX_TEXTURE_SAMPLERS] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+        flags[DESC_IDX_ACCELERATION_STRUCTURES] = VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
 
         VkDescriptorSetLayoutBindingFlagsCreateInfo flagsInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO };
         flagsInfo.bindingCount = static_cast<uint32_t>(flags.size());
@@ -125,17 +129,26 @@ namespace VulkanRenderer {
     void CreateFrameData() {
         VkBufferUsageFlags usageStorage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
         VkBufferUsageFlags usageIndirect = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-        VkBufferUsageFlags usageSkinnedVertices = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        VkBufferUsageFlags usageSkinnedVertices = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        VkBufferUsageFlags usageRayQueryInstances = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+        VkBufferUsageFlags usageRayQueryScratch = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
         VmaAllocationCreateFlags vmaFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
         for (VulkanFrameData& frameData : g_frameData) {
             frameData.buffers.instanceData = VulkanResourceManager::CreateBuffer(sizeof(RenderItem) * MAX_INSTANCE_DATA_COUNT, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.viewportData = VulkanResourceManager::CreateBuffer(sizeof(ViewportData) * MAX_VIEWPORT_COUNT, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.rendererData = VulkanResourceManager::CreateBuffer(sizeof(RendererData), usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.gpuLights = VulkanResourceManager::CreateBuffer(sizeof(GPULight) * 8, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.materials = VulkanResourceManager::CreateBuffer(sizeof(Material), usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.drawCommands = VulkanResourceManager::CreateBuffer(sizeof(DrawIndexedIndirectCommand) * MAX_INDIRECT_DRAW_COMMAND_COUNT, usageIndirect, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.skinningTransforms = VulkanResourceManager::CreateBuffer(sizeof(glm::mat4) * MAX_ANIMATED_TRANSFORMS, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.skinnedVertices = VulkanResourceManager::CreateBuffer(sizeof(Vertex), usageSkinnedVertices, VMA_MEMORY_USAGE_GPU_ONLY);
+            frameData.buffers.rayQueryInstances = VulkanResourceManager::CreateBuffer(1, usageRayQueryInstances, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.rayQueryInstanceData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.rayQueryGeometryData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.rayQueryScratch = VulkanResourceManager::CreateBuffer(1, usageRayQueryScratch, VMA_MEMORY_USAGE_AUTO);
             frameData.buffers.uiRenderItems = VulkanResourceManager::CreateBuffer(sizeof(RenderItemUI) * VULKAN_MAX_UI_RENDER_ITEMS, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.accelerationStructures.rayQueryTLAS = VulkanResourceManager::CreateAccelerationStructure();
         }
     }
 
@@ -172,6 +185,26 @@ namespace VulkanRenderer {
         return g_frameIndex % FRAME_OVERLAP;
     }
 
+    const std::string& GetZoneNames() {
+        return ProfilerVulkanZoneNames();
+    }
+
+    const std::string& GetZoneGPUTimings() {
+        return ProfilerVulkanGpuTimings();
+    }
+
+    const std::string& GetZoneCPUTimings() {
+        return ProfilerVulkanCpuTimings();
+    }
+
+    const std::string& GetTotalGPUTime() {
+        return ProfilerVulkanTotalGPU();
+    }
+
+    const std::string& GetTotalCPUTime() {
+        return ProfilerVulkanTotalCPU();
+    }
+
     bool BeginSwapchainFrame(SwapchainFrame& frame) {
         VkDevice device = VulkanDeviceManager::GetDevice();
         VkSwapchainKHR swapchain = VulkanSwapchainManager::GetSwapchain();
@@ -184,7 +217,12 @@ namespace VulkanRenderer {
 
         frame.frameIndex = g_frameIndex % FRAME_OVERLAP;
 
-        VulkanSyncManager::WaitForRenderFence(frame.frameIndex);
+        VkResult waitResult = VulkanSyncManager::WaitForRenderFence(frame.frameIndex);
+        if (waitResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanRenderer::BeginSwapchainFrame() failed while waiting for render fence: " << static_cast<int>(waitResult) << "\n";
+            return false;
+        }
+
         VulkanDeletionQueue::Flush(frame.frameIndex);
         VulkanDeletionQueue::SetFrameIndex(frame.frameIndex);
 
@@ -207,16 +245,30 @@ namespace VulkanRenderer {
         frame.presentImage = VulkanResourceManager::GetAllocatedImage("Present");
         if (!frame.presentImage) return false;
 
-        VulkanSyncManager::ResetRenderFence(frame.frameIndex);
+        VkResult resetFenceResult = VulkanSyncManager::ResetRenderFence(frame.frameIndex);
+        if (resetFenceResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanRenderer::BeginSwapchainFrame() failed to reset render fence: " << static_cast<int>(resetFenceResult) << "\n";
+            return false;
+        }
 
         VkCommandPool commandPool = VulkanCommandManager::GetGraphicsCommandPool(frame.frameIndex);
         frame.commandBuffer = VulkanCommandManager::GetGraphicsCommandBuffer(frame.frameIndex);
 
-        vkResetCommandPool(device, commandPool, 0);
+        VkResult resetCommandPoolResult = vkResetCommandPool(device, commandPool, 0);
+        if (resetCommandPoolResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanRenderer::BeginSwapchainFrame() failed to reset command pool: " << static_cast<int>(resetCommandPoolResult) << "\n";
+            return false;
+        }
 
         VkCommandBufferBeginInfo beginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        vkBeginCommandBuffer(frame.commandBuffer, &beginInfo);
+        VkResult beginCommandBufferResult = vkBeginCommandBuffer(frame.commandBuffer, &beginInfo);
+        if (beginCommandBufferResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanRenderer::BeginSwapchainFrame() failed to begin command buffer: " << static_cast<int>(beginCommandBufferResult) << "\n";
+            return false;
+        }
+
+        ProfilerVulkanBeginFrame(frame.commandBuffer, frame.frameIndex);
 
         ResetDrawCommandOffset();
 
@@ -232,7 +284,13 @@ namespace VulkanRenderer {
         vktools::setImageLayout(frame.commandBuffer, frame.swapchainImage, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
         g_swapchainImageLayouts[frame.imageIndex] = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        vkEndCommandBuffer(frame.commandBuffer);
+        ProfilerVulkanEndFrame(frame.commandBuffer);
+
+        VkResult endCommandBufferResult = vkEndCommandBuffer(frame.commandBuffer);
+        if (endCommandBufferResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanRenderer::EndSwapchainFrame() failed to end command buffer: " << static_cast<int>(endCommandBufferResult) << "\n";
+            return;
+        }
 
         VkSemaphore waitSemaphore = VulkanSyncManager::GetPresentSemaphore(frame.frameIndex);
         VkSemaphore signalSemaphore = VulkanSyncManager::GetRenderFinishedSemaphore(frame.frameIndex, frame.imageIndex);
@@ -247,7 +305,11 @@ namespace VulkanRenderer {
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = &signalSemaphore;
 
-        vkQueueSubmit(VulkanDeviceManager::GetGraphicsQueue(), 1, &submitInfo, VulkanSyncManager::GetRenderFence(frame.frameIndex));
+        VkResult submitResult = vkQueueSubmit(VulkanDeviceManager::GetGraphicsQueue(), 1, &submitInfo, VulkanSyncManager::GetRenderFence(frame.frameIndex));
+        if (submitResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanRenderer::EndSwapchainFrame() failed to submit command buffer: " << static_cast<int>(submitResult) << "\n";
+            return;
+        }
 
         VkPresentInfoKHR presentInfo{ VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
         presentInfo.waitSemaphoreCount = 1;

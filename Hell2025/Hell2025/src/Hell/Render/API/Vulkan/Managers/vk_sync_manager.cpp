@@ -82,19 +82,19 @@ namespace VulkanSyncManager {
         return g_uploadFence;
     }
 
-    void WaitForRenderFence(uint32_t frameIndex) {
-        vkWaitForFences(VulkanDeviceManager::GetDevice(), 1, &g_frames[frameIndex].renderFence, VK_TRUE, UINT64_MAX);
+    VkResult WaitForRenderFence(uint32_t frameIndex) {
+        return vkWaitForFences(VulkanDeviceManager::GetDevice(), 1, &g_frames[frameIndex].renderFence, VK_TRUE, UINT64_MAX);
     }
 
-    void ResetRenderFence(uint32_t frameIndex) {
-        vkResetFences(VulkanDeviceManager::GetDevice(), 1, &g_frames[frameIndex].renderFence);
+    VkResult ResetRenderFence(uint32_t frameIndex) {
+        return vkResetFences(VulkanDeviceManager::GetDevice(), 1, &g_frames[frameIndex].renderFence);
     }
 
-    void WaitForUploadFence() {
-        vkWaitForFences(VulkanDeviceManager::GetDevice(), 1, &g_uploadFence, VK_TRUE, UINT64_MAX);
+    VkResult WaitForUploadFence() {
+        return vkWaitForFences(VulkanDeviceManager::GetDevice(), 1, &g_uploadFence, VK_TRUE, UINT64_MAX);
     }
 
-    void ResetUploadFence() {
-        vkResetFences(VulkanDeviceManager::GetDevice(), 1, &g_uploadFence);
+    VkResult ResetUploadFence() {
+        return vkResetFences(VulkanDeviceManager::GetDevice(), 1, &g_uploadFence);
     }
 }

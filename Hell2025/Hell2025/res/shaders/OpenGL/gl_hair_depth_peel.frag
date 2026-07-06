@@ -3,7 +3,6 @@ layout (location = 0) out float ViewspaceDepthOut;
 layout (binding = 0, r32f) uniform image2D u_viewspaceDepthPrevious;
 layout (binding = 1) uniform sampler2D u_gBufferDepth;
 
-in flat int BaseColorTextureIndex;
 in vec2 v_uv;
 
 void main() {

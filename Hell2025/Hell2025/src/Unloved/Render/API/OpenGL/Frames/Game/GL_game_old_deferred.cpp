@@ -72,12 +72,13 @@ namespace OpenGL::Renderer {
         UpdateGlobalIllumintation();
 
         OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(1, "RendererData");
-        OpenGL::BindSSBO(2, "ViewportData");
-        OpenGL::BindSSBO(3, "InstanceData");
-        OpenGL::BindSSBO(4, "Lights");
-        OpenGL::BindSSBO(5, "TileLights");
-        OpenGL::BindSSBO(6, "TileWorldBounds");
+        OpenGL::BindSSBO(1, "Materials");
+        OpenGL::BindSSBO(2, "RendererData");
+        OpenGL::BindSSBO(3, "ViewportData");
+        OpenGL::BindSSBO(4, "InstanceData");
+        OpenGL::BindSSBO(5, "Lights");
+        OpenGL::BindSSBO(6, "TileLights");
+        OpenGL::BindSSBO(7, "TileWorldBounds");
 
         OpenGL::BindSSBO(10, "ProbeSHColor");
         OpenGL::BindSSBO(11, "ProbeStates");

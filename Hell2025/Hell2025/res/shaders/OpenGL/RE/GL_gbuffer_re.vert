@@ -9,8 +9,8 @@ layout (location = 1) in vec3 a_normal;
 layout (location = 2) in vec2 a_uv;
 layout (location = 3) in vec3 a_tangent;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
-readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
 
 out vec4 v_currPos;
 out vec4 v_prevPos;

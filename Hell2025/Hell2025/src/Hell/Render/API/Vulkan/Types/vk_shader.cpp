@@ -352,3 +352,35 @@ VkShaderModule VulkanShader::GetTesselationEvaluationShader() {
     }
     return VK_NULL_HANDLE;
 }
+
+size_t VulkanShaderModule::GetCPUAllocatedByteCount() const {
+    return sizeof(VulkanShaderModule) + m_path.capacity();
+}
+
+size_t VulkanShaderModule::GetGPUAllocatedByteCount() const {
+    return 0;
+}
+
+size_t VulkanShader::GetCPUAllocatedByteCount() const {
+    size_t byteCount = sizeof(VulkanShader);
+
+    if (m_modules.capacity() > m_modules.size()) {
+        byteCount += (m_modules.capacity() - m_modules.size()) * sizeof(VulkanShaderModule);
+    }
+
+    for (const VulkanShaderModule& module : m_modules) {
+        byteCount += module.GetCPUAllocatedByteCount();
+    }
+
+    return byteCount;
+}
+
+size_t VulkanShader::GetGPUAllocatedByteCount() const {
+    size_t byteCount = 0;
+
+    for (const VulkanShaderModule& module : m_modules) {
+        byteCount += module.GetGPUAllocatedByteCount();
+    }
+
+    return byteCount;
+}

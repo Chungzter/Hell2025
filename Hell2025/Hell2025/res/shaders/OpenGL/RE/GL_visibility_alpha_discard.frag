@@ -8,7 +8,8 @@ layout(location = 0) flat in int v_globalInstanceIndex;
 layout(location = 1) in vec2 v_uv;
 
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
 
 const float bayerMatrix[16] = float[16](
     0.0,    0.5,    0.125,  0.625,
@@ -22,8 +23,9 @@ uniform uint u_frameCount;
 void main() {
 
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
-    float alpha = texture(sampler2D(textureSamplers[renderItem.baseColorTextureIndex]), v_uv).a;
-    //float alpha = texture(sampler2D(textureSamplers[renderItem.opacityTextureIndex]), v_uv).r;
+    Material material = materials[renderItem.materialIndex];
+    float alpha = texture(sampler2D(textureSamplers[material.basecolor]), v_uv).a;
+    //float alpha = texture(sampler2D(textureSamplers[material.opacity]), v_uv).r;
 
     bool useStochasticDiscard = false;
     float hardAlphaCutoff = 0.25;

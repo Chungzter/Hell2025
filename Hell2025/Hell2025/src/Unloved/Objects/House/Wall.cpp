@@ -291,13 +291,12 @@ void Wall::SubmitRenderItems() {
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
             if (!mesh) continue;
 
-            Material* material = Hell::ResourceManager::GetMaterialByName("WeatherBoards0");
+            const int32_t materialIndex = Hell::ResourceManager::GetMaterialIndexByName("WeatherBoards0");
+            Material* material = Hell::ResourceManager::GetMaterialByIndex(materialIndex);
             if (!material) continue;
 
             RenderItem renderItem;
-            renderItem.baseColorTextureIndex = material->m_basecolor;
-            renderItem.normalMapTextureIndex = material->m_normal;
-            renderItem.rmaTextureIndex = material->m_rma;
+            renderItem.materialIndex = materialIndex;
             renderItem.modelMatrix = glm::mat4(1.0f);
             renderItem.inverseModelMatrix = glm::mat4(1.0f);
             renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
@@ -319,10 +318,8 @@ void Wall::SubmitRenderItems() {
         Material* material = Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
         if (!material) return;
 
-		RenderItem renderItem;
-		renderItem.baseColorTextureIndex = material->m_basecolor;
-		renderItem.normalMapTextureIndex = material->m_normal;
-		renderItem.rmaTextureIndex = material->m_rma;
+	    RenderItem renderItem;
+        renderItem.materialIndex = m_materialIndex;
 		renderItem.modelMatrix = glm::mat4(1.0f);
 		renderItem.inverseModelMatrix = glm::mat4(1.0f);
 		renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
@@ -448,7 +445,7 @@ void Wall::RecreateWeatherBoardMesh() {
 
     if (m_createInfo.wallType != WallType::WEATHER_BOARDS) return;
 
-    Material* material = Hell::ResourceManager::GetMaterialByName("WeatherBoards0");
+    const int32_t weatherBoardsMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("WeatherBoards0");
     Model* model = Hell::ResourceManager::GetModelByName("WeatherBoard_Stop");
 
     if (!model) {
@@ -475,9 +472,7 @@ void Wall::RecreateWeatherBoardMesh() {
         renderItem.modelMatrix = transform.to_mat4();
         renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
         renderItem.meshId = model->GetMeshIndices()[0];
-        renderItem.baseColorTextureIndex = material->m_basecolor;
-        renderItem.rmaTextureIndex = material->m_rma;
-        renderItem.normalMapTextureIndex = material->m_normal;
+        renderItem.materialIndex = weatherBoardsMaterialIndex;
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
         if (Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId)) {
             renderItem.baseIndex = mesh->baseIndex;

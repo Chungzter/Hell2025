@@ -13,6 +13,7 @@ namespace VulkanDeviceManager {
     uint32_t GetPresentQueueFamily();
     const VkPhysicalDeviceProperties& GetProperties();
     const VkPhysicalDeviceRayTracingPipelinePropertiesKHR& GetRayTracingPipelineProperties();
+    const VkPhysicalDeviceAccelerationStructurePropertiesKHR& GetAccelerationStructureProperties();
     const VkPhysicalDeviceAccelerationStructureFeaturesKHR& GetAccelerationStructureFeatures();
     const VkPhysicalDeviceMemoryProperties& GetMemoryProperties();
 }

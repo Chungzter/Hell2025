@@ -3,10 +3,13 @@
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
+#include "Hell/Render/API/Vulkan/Types/vk_timer.h"
 
 namespace VulkanRenderer {
 
-    void RenderPresentPass(VkCommandBuffer commandBuffer, VkImageView imageView) {
+    void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView) {
+        ProfilerVulkanZoneFunction();
+
         AllocatedImage* presentImage = VulkanResourceManager::GetAllocatedImage("Present");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("Present");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");

@@ -57,33 +57,42 @@ namespace OpenGL::Renderer {
 
         std::vector<BloodVAT>& bloodVATItems = Unloved::BloodSystem::GetBloodVAT();
 
-        static std::vector<RenderItem> renderItems;
+        struct RenderItemVAT {
+            glm::mat4 modelMatrix = glm::mat4(1.0f);
+            glm::mat4 inverseModelMatrix = glm::mat4(1.0f);
+            uint32_t meshId = 0;
+            int32_t positionTexIdx= 0;
+            int32_t normalTexIdx = 0;
+            float lifeTime = 0.0f;
+        };
+
+        static std::vector<RenderItemVAT> renderItems;
         renderItems.clear();
 
         for (BloodVAT& bloodVAT : bloodVATItems) {
-            RenderItem& renderItem = renderItems.emplace_back();
+            RenderItemVAT& renderItem = renderItems.emplace_back();
             renderItem.modelMatrix = bloodVAT.GetModelMatrix();
             renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
-            renderItem.emissiveR = bloodVAT.GetLifeTime();
+            renderItem.lifeTime = bloodVAT.GetLifeTime();
 
             if (bloodVAT.GetType() == 4) {
-                renderItem.baseColorTextureIndex = textureIndexBloodPos4;
-                renderItem.normalMapTextureIndex = textureIndexBloodNorm4;
+                renderItem.positionTexIdx = textureIndexBloodPos4;
+                renderItem.normalTexIdx = textureIndexBloodNorm4;
                 renderItem.meshId = meshId4;
             }
             else if (bloodVAT.GetType() == 6) {
-                renderItem.baseColorTextureIndex = textureIndexBloodPos6;
-                renderItem.normalMapTextureIndex = textureIndexBloodNorm6;
+                renderItem.positionTexIdx = textureIndexBloodPos6;
+                renderItem.normalTexIdx = textureIndexBloodNorm6;
                 renderItem.meshId = meshId6;
             }
             else if (bloodVAT.GetType() == 7) {
-                renderItem.baseColorTextureIndex = textureIndexBloodPos7;
-                renderItem.normalMapTextureIndex = textureIndexBloodNorm7;
+                renderItem.positionTexIdx = textureIndexBloodPos7;
+                renderItem.normalTexIdx = textureIndexBloodNorm7;
                 renderItem.meshId = meshId7;
             }
             else if (bloodVAT.GetType() == 9) {
-                renderItem.baseColorTextureIndex = textureIndexBloodPos9;
-                renderItem.normalMapTextureIndex = textureIndexBloodNorm9;
+                renderItem.positionTexIdx = textureIndexBloodPos9;
+                renderItem.normalTexIdx = textureIndexBloodNorm9;
                 renderItem.meshId = meshId9;
             }
         }
@@ -97,19 +106,19 @@ namespace OpenGL::Renderer {
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
 
-            for (RenderItem& renderItem: renderItems) {
+            for (RenderItemVAT& renderItem: renderItems) {
 
                 Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
                 if (!mesh) continue;
 
                 OpenGL::SetUniformMat4("u_modelMatrix", renderItem.modelMatrix);
                 OpenGL::SetUniformMat4("u_inverseModelMatrix", renderItem.inverseModelMatrix);
-                OpenGL::SetUniformFloat("u_time", renderItem.emissiveR);
+                OpenGL::SetUniformFloat("u_time", renderItem.lifeTime);
 
                 glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+                glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.positionTexIdx)->GetGLTexture().GetHandle());
                 glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+                glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.normalTexIdx)->GetGLTexture().GetHandle());
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
             }

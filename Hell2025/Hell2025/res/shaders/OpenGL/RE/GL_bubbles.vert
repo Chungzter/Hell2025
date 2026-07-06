@@ -8,7 +8,7 @@ const float SCALE = 0.1;
 
 out vec2 v_uv;
 
-layout(std430, binding = 5) readonly buffer BubblePositionsBuffer { vec4 bubblePositions[]; };
+layout(std430, binding = 6) readonly buffer BubblePositionsBuffer { vec4 bubblePositions[]; };
 
 void main() {
     // Vertex positions

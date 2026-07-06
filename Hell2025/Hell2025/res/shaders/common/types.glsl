@@ -85,50 +85,40 @@ struct RenderItem {
     vec4 aabbMin;
     vec4 aabbMax;
 
-    int meshIndexUNUSED;
-    int baseColorTextureIndex;
-    int normalMapTextureIndex;
-    int rmaTextureIndex;
+    uint vertexCount;
+    uint indexCount;
+    uint baseVertex;
+    uint baseIndex;
 
-    int objectType;
+    uint baseVertexWeight;
+    uint baseSkinningTransformIndex;
+    uint objectIdLowerBit;
+    uint objectIdUpperBit;
+
+    int materialIndex;
     int woundMaskTextureIndex;
     int exclusiveViewportIndex;
     int ignoredViewportIndex;
 
-    uint objectIdLowerBit;
-    uint objectIdUpperBit;
-    int baseSkinnedVertex;
-    int baseSkinningTransformIndex;
-
     uint openableId;
     uint customId;
-    int skinned;                        // True or false
     uint shadowBit;
+    uint miscFlags;
 
+    uint meshId;
     float emissiveR;
     float emissiveG;
     float emissiveB;
-    int emissiveTextureIndex;           // -1 means nothing, anything else is a texture index
-
-    uint baseVertex;
-    uint baseIndex;
-    uint baseVertexWeight;
-    uint miscFlags;
-
-    int additionalTextureIndex0;
-    int additionalTextureIndex1;
-    int additionalTextureIndex2;
-    int additionalTextureIndex3;
-
-    int localMeshNodeIndex;
-    int opacityTextureIndex;
-    int padding1;
-    int padding2;
 
     float tintColorR;
     float tintColorG;
     float tintColorB;
-    int hairMapTextureIndex;
+    uint blendingMode;
+
+    int localMeshNodeIndex;
+    int woundMaterialIndex;
+    int padding1;
+    int padding2;
 };
 
 struct Light {

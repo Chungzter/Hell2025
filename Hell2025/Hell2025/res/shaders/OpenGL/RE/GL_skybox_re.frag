@@ -6,8 +6,8 @@ layout (location = 0) out vec4 FinalLightingOut;
 
 layout (binding = 0) uniform samplerCube u_skyboxCubeMap;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 mat3 GetSkyboxRotationMatrix() {
     float angle = radians(-90.0);

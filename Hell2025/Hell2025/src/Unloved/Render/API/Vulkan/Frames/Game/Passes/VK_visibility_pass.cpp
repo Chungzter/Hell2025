@@ -17,11 +17,14 @@ namespace VulkanRenderer {
     namespace {
 
     void RenderVisibilityPassOpaque(VkCommandBuffer commandBuffer, VkExtent2D extent) {
+        ProfilerVulkanZoneFunction();
+
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const VulkanFrameData& frameData = GetCurrentFrameData();
 
         VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
         VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
+        VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
         VulkanMeshBuffer* assetGeometry = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
         VulkanMeshBuffer* proceduralGeometry = VulkanResourceManager::GetMeshBuffer("Procedural");
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("Visibility");
@@ -31,6 +34,7 @@ namespace VulkanRenderer {
 
         if (!renderItemBuffer) return;
         if (!viewportDataBuffer) return;
+        if (!materialsBuffer) return;
         if (!assetGeometry) return;
         if (!proceduralGeometry) return;
         if (!renderState) return;
@@ -55,6 +59,7 @@ namespace VulkanRenderer {
                 pushConstants.renderItemsDeviceAddress = renderItemBuffer->GetDeviceAddress();
                 pushConstants.viewportDataDeviceAddress = viewportDataBuffer->GetDeviceAddress();
                 pushConstants.skinnedVerticesDeviceAddress = skinnedVertexBuffer->GetDeviceAddress();
+                pushConstants.materialsDeviceAddress = materialsBuffer->GetDeviceAddress();
                 pushConstants.viewportIndex = i;
 
                 vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
@@ -82,11 +87,14 @@ namespace VulkanRenderer {
     }
 
     void RenderVisibilityAlphaDiscardPass(VkCommandBuffer commandBuffer, VkExtent2D extent) {
+        ProfilerVulkanZoneFunction();
+
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const VulkanFrameData& frameData = GetCurrentFrameData();
 
         VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
         VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
+        VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
         VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("VisibilityAlphaDiscard");
@@ -96,6 +104,7 @@ namespace VulkanRenderer {
 
         if (!renderItemBuffer) return;
         if (!viewportDataBuffer) return;
+        if (!materialsBuffer) return;
         if (!staticDescriptorSet) return;
         if (!meshBuffer) return;
         if (!renderState) return;
@@ -123,6 +132,7 @@ namespace VulkanRenderer {
                 pushConstants.renderItemsDeviceAddress = renderItemBuffer->GetDeviceAddress();
                 pushConstants.viewportDataDeviceAddress = viewportDataBuffer->GetDeviceAddress();
                 pushConstants.skinnedVerticesDeviceAddress = skinnedVertexBuffer->GetDeviceAddress();
+                pushConstants.materialsDeviceAddress = materialsBuffer->GetDeviceAddress();
                 pushConstants.viewportIndex = i;
 
                 vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
@@ -151,6 +161,8 @@ namespace VulkanRenderer {
     }
 
     void VisibilityPass(VkCommandBuffer commandBuffer) {
+        ProfilerVulkanZoneFunction();
+
         AllocatedImage* visibilityImage = VulkanResourceManager::GetAllocatedImage("GBufferRE.Visibility");
         AllocatedImage* depthImage = VulkanResourceManager::GetAllocatedImage("GBufferRE.Depth");
         if (!visibilityImage || !depthImage) return;
@@ -162,49 +174,5 @@ namespace VulkanRenderer {
 
         visibilityImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         depthImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
-    }
-
-    void DebugPass(VkCommandBuffer commandBuffer) {
-        AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("GBufferRE.Lighting");
-        VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("VisibilityDebug");
-        VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
-        if (!pipeline || !staticDescriptorSet || !lightingImage) return;
-
-        VkExtent2D extent = lightingImage->GetExtent2D();
-        lightingImage->Sync(commandBuffer, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
-
-        VkClearValue colorClear{};
-        colorClear.color.float32[3] = 1.0f;
-
-        VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
-        colorAttachment.imageView = lightingImage->GetImageView();
-        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.clearValue = colorClear;
-
-        VkRenderingInfo renderingInfo{ VK_STRUCTURE_TYPE_RENDERING_INFO };
-        renderingInfo.renderArea.extent = extent;
-        renderingInfo.layerCount = 1;
-        renderingInfo.colorAttachmentCount = 1;
-        renderingInfo.pColorAttachments = &colorAttachment;
-
-        vkCmdBeginRendering(commandBuffer, &renderingInfo);
-
-        VkViewport viewport{};
-        viewport.width = static_cast<float>(extent.width);
-        viewport.height = static_cast<float>(extent.height);
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-        VkRect2D scissor{};
-        scissor.extent = extent;
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
-        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-
-        vkCmdEndRendering(commandBuffer);
     }
 }

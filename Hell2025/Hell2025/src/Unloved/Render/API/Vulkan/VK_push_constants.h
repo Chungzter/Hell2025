@@ -9,6 +9,7 @@ struct PushConstantsVisibility {
     uint64_t renderItemsDeviceAddress = 0;
     uint64_t viewportDataDeviceAddress = 0;
     uint64_t skinnedVerticesDeviceAddress = 0;
+    uint64_t materialsDeviceAddress = 0;
     uint32_t viewportIndex = 0;
     uint32_t padding0 = 0;
 };
@@ -32,6 +33,20 @@ struct PushConstantsMaterialResolve {
     uint64_t renderItemsDeviceAddress = 0;
     uint64_t viewportDataDeviceAddress = 0;
     uint64_t rendererDataDeviceAddress = 0;
+    uint64_t materialsDeviceAddress = 0;
     uint64_t vertexBufferDeviceAddress = 0;
     uint64_t indexBufferDeviceAddress = 0;
+    uint32_t vertexCount = 0;
+    uint32_t indexCount = 0;
+};
+
+struct PushConstantsDeferredLighting {
+    uint64_t viewportDataDeviceAddress = 0;
+    uint64_t rendererDataDeviceAddress = 0;
+    uint64_t lightsDeviceAddress = 0;
+    uint64_t materialsDeviceAddress = 0;
+    uint64_t rayQueryInstanceDataDeviceAddress = 0;
+    uint64_t rayQueryGeometryDataDeviceAddress = 0;
+    uint32_t rayQueryEnabled = 0;
+    uint32_t padding0 = 0;
 };

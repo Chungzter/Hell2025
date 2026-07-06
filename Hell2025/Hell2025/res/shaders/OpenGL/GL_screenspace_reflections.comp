@@ -16,8 +16,8 @@ layout (binding = 4) uniform sampler2D u_depthTexture;
 layout (binding = 5) uniform sampler2D DownsizedLightingTexture;
 layout (binding = 6) uniform sampler2D ViewSpaceDepthTexture;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 uniform float u_maxRayDistance = 8.0;
 uniform int u_minSteps = 24; // The higher the floor, the better the result

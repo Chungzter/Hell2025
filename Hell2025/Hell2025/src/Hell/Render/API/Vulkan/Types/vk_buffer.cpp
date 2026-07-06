@@ -21,6 +21,10 @@ VulkanBuffer::VulkanBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemor
     VmaAllocationInfo allocInfo; // Capture this to get the pointer
     vmaCreateBuffer(VulkanMemoryManager::GetAllocator(), &bufferInfo, &vmaAllocInfo, &m_buffer, &m_allocation, &allocInfo);
 
+    VkMemoryPropertyFlags memFlags = 0;
+    vmaGetMemoryTypeProperties(VulkanMemoryManager::GetAllocator(), allocInfo.memoryType, &memFlags);
+    m_hostCoherent = (memFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) != 0;
+
     // If you requested the buffer to be mapped at creation, store the pointer
     if (vmaFlags & VMA_ALLOCATION_CREATE_MAPPED_BIT) {
         m_mappedPtr = allocInfo.pMappedData;
@@ -41,6 +45,8 @@ VulkanBuffer& VulkanBuffer::operator=(VulkanBuffer&& other) noexcept {
         m_memoryUsage = other.m_memoryUsage;
         m_vmaFlags = other.m_vmaFlags;
         m_mappedPtr = other.m_mappedPtr;
+        m_deviceAddress = other.m_deviceAddress;
+        m_hostCoherent = other.m_hostCoherent;
 
         other.m_buffer = VK_NULL_HANDLE;
         other.m_allocation = VK_NULL_HANDLE;
@@ -49,6 +55,8 @@ VulkanBuffer& VulkanBuffer::operator=(VulkanBuffer&& other) noexcept {
         other.m_memoryUsage = VMA_MEMORY_USAGE_UNKNOWN;
         other.m_vmaFlags = 0;
         other.m_mappedPtr = nullptr;
+        other.m_deviceAddress = 0;
+        other.m_hostCoherent = false;
     }
     return *this;
 }
@@ -60,6 +68,8 @@ void VulkanBuffer::Cleanup() {
         m_allocation = VK_NULL_HANDLE;
         m_size = 0;
         m_mappedPtr = nullptr;
+        m_deviceAddress = 0;
+        m_hostCoherent = false;
     }
 }
 
@@ -90,6 +100,11 @@ bool VulkanBuffer::EnsureSize(VkDeviceSize size) {
 
     m_size = size;
     m_mappedPtr = nullptr;
+    m_deviceAddress = 0;
+
+    VkMemoryPropertyFlags memFlags = 0;
+    vmaGetMemoryTypeProperties(VulkanMemoryManager::GetAllocator(), allocInfo.memoryType, &memFlags);
+    m_hostCoherent = (memFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) != 0;
 
     if (m_vmaFlags & VMA_ALLOCATION_CREATE_MAPPED_BIT) {
         m_mappedPtr = allocInfo.pMappedData;
@@ -111,13 +126,7 @@ void VulkanBuffer::UpdateData(const void* data, VkDeviceSize size, VkDeviceSize 
         memcpy(static_cast<char*>(m_mappedPtr) + offset, data, size);
 
         // Ensure changes are visible to the GPU if memory is not coherent
-        VmaAllocationInfo allocInfo;
-        vmaGetAllocationInfo(VulkanMemoryManager::GetAllocator(), m_allocation, &allocInfo);
-
-        VkMemoryPropertyFlags memFlags;
-        vmaGetMemoryTypeProperties(VulkanMemoryManager::GetAllocator(), allocInfo.memoryType, &memFlags);
-
-        if (!(memFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
+        if (!m_hostCoherent) {
             vmaFlushAllocation(VulkanMemoryManager::GetAllocator(), m_allocation, offset, size);
         }
     }
@@ -198,11 +207,29 @@ void VulkanBuffer::Unmap() {
 }
 
 uint64_t VulkanBuffer::GetDeviceAddress() const {
+    if (m_deviceAddress != 0) return m_deviceAddress;
+    if (m_buffer == VK_NULL_HANDLE) return 0;
+
     VkBufferDeviceAddressInfo addressInfo{ VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO };
     addressInfo.buffer = m_buffer;
-    return vkGetBufferDeviceAddressKHR(VulkanDeviceManager::GetDevice(), &addressInfo);
+    m_deviceAddress = vkGetBufferDeviceAddressKHR(VulkanDeviceManager::GetDevice(), &addressInfo);
+    return m_deviceAddress;
 }
 
 VkDescriptorBufferInfo VulkanBuffer::GetDescriptorInfo() const {
     return VkDescriptorBufferInfo{ m_buffer, 0, m_size };
+}
+
+size_t VulkanBuffer::GetCPUAllocatedByteCount() const {
+    return sizeof(VulkanBuffer);
+}
+
+size_t VulkanBuffer::GetGPUAllocatedByteCount() const {
+    if (m_buffer == VK_NULL_HANDLE || m_allocation == VK_NULL_HANDLE) {
+        return 0;
+    }
+
+    VmaAllocationInfo allocationInfo{};
+    vmaGetAllocationInfo(VulkanMemoryManager::GetAllocator(), m_allocation, &allocationInfo);
+    return static_cast<size_t>(allocationInfo.size);
 }

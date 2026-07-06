@@ -11,8 +11,8 @@ namespace VulkanSyncManager {
     VkFence GetRenderFence(uint32_t frameIndex);
     VkFence GetUploadFence();
 
-    void WaitForRenderFence(uint32_t frameIndex);
-    void ResetRenderFence(uint32_t frameIndex);
-    void WaitForUploadFence();
-    void ResetUploadFence();
+    VkResult WaitForRenderFence(uint32_t frameIndex);
+    VkResult ResetRenderFence(uint32_t frameIndex);
+    VkResult WaitForUploadFence();
+    VkResult ResetUploadFence();
 }

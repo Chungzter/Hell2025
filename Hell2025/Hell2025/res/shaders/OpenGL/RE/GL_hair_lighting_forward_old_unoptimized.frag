@@ -20,11 +20,12 @@ layout(early_fragment_tests) in;
 #include "../../common/lighting.glsl"
 #include "../../common/post_processing.glsl"
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportData[]; };
-readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { RenderItem renderItems[]; };
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer       { Light lights[]; };
-readonly restrict layout(std430, binding = 5) buffer tileLightsBuffer   { TileLights tileLights[]; };
+readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportData[]; };
+readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light lights[]; };
+readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer   { TileLights tileLights[]; };
 
 layout (location = 0) out vec4 LightingOut;
 
@@ -185,37 +186,33 @@ void ComputeGhettoNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 
 
 void main() {
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
+    Material material = materials[renderItem.materialIndex];
 
-    sampler2D baseColorSampler = sampler2D(textureSamplers[renderItem.baseColorTextureIndex]);
+    sampler2D baseColorSampler = sampler2D(textureSamplers[material.basecolor]);
 
     vec4 baseColor = texture(baseColorSampler, v_texCoord);
-    vec4 rma = texture(sampler2D(textureSamplers[renderItem.rmaTextureIndex]), v_texCoord).rgba;
-    vec4 additionalColor0 = texture(sampler2D(textureSamplers[renderItem.additionalTextureIndex0]), v_texCoord);
-    vec4 additionalColor1 = texture(sampler2D(textureSamplers[renderItem.additionalTextureIndex1]), v_texCoord);
-    vec4 additionalColor2 = texture(sampler2D(textureSamplers[renderItem.additionalTextureIndex2]), v_texCoord);
+    vec4 rma = texture(sampler2D(textureSamplers[material.rma]), v_texCoord).rgba;
+    vec4 hairMaps = texture(sampler2D(textureSamplers[material.hairMaps]), v_texCoord);
     vec2 baseTextureSizePixels = vec2(textureSize(baseColorSampler, 0));
 
     float hairMipLevelRaw = ComputeHairMipLevel(v_texCoord, baseTextureSizePixels);
 
     vec3 viewPos = viewportData[v_viewportIndex].viewPos.xyz;
 
-    vec3 flowSample = additionalColor0.rgb;
+    vec3 flowSample = vec3(hairMaps.rg, 0.0);
     vec2 flow = flowSample.rg * 2.0 - 1.0;
-    float strandID = additionalColor1.r;
-    float rootFactor = additionalColor2.r;
+    float strandID = hairMaps.b;
+    float rootFactor = hairMaps.a;
 
     float roughness = rma.r;
     float metallic = rma.g;
     float ao = rma.b;
     vec3 gammaBaseColor = pow(baseColor.rgb, vec3(2.2));
 
-    sampler2D hairAutoBakedBaseColorSampler = sampler2D(textureSamplers[renderItem.baseColorTextureIndex]);
-    sampler2D flowSampler = sampler2D(textureSamplers[renderItem.additionalTextureIndex0]);
-    sampler2D hairIDSampler = sampler2D(textureSamplers[renderItem.additionalTextureIndex1]);
-    sampler2D rootSampler = sampler2D(textureSamplers[renderItem.additionalTextureIndex2]);
+    sampler2D hairAutoBakedBaseColorSampler = sampler2D(textureSamplers[material.basecolor]);
 
-    vec3 flowMap = texture(flowSampler, v_texCoord).xyz;
-    float hairID = texture(hairIDSampler, v_texCoord).r;
+    vec3 flowMap = vec3(hairMaps.rg, 0.0);
+    float hairID = hairMaps.b;
 
     vec3 V = normalize(viewPos - v_worldPos.xyz);
 

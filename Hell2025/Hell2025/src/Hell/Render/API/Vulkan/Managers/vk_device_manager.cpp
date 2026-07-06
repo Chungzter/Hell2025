@@ -24,12 +24,14 @@ namespace VulkanDeviceManager {
     VkPhysicalDeviceProperties2 g_properties2 = {};
     VkPhysicalDeviceRayTracingPipelinePropertiesKHR g_rayTracingPipeline = {};
     VkPhysicalDeviceRayTracingPipelinePropertiesKHR g_rayTracingPipelineProperties = {};
+    VkPhysicalDeviceAccelerationStructurePropertiesKHR g_accelerationStructureProperties = {};
     VkPhysicalDeviceMemoryProperties g_memoryProperties = {};
 
     // Features
     VkPhysicalDeviceFeatures2 g_features2 = {};
     VkPhysicalDeviceRayTracingPipelineFeaturesKHR g_rayTracingPipelineFeatures = {};
     VkPhysicalDeviceAccelerationStructureFeaturesKHR g_accelerationStructureFeatures = {};
+    VkPhysicalDeviceRayQueryFeaturesKHR g_rayQueryFeatures = {};
     VkPhysicalDeviceUnifiedImageLayoutsFeaturesKHR g_unifiedLayoutFeatures = {};
 
     bool Init() {
@@ -50,6 +52,7 @@ namespace VulkanDeviceManager {
             VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
             VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+            VK_KHR_RAY_QUERY_EXTENSION_NAME,
             VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
             VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
             VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
@@ -84,10 +87,14 @@ namespace VulkanDeviceManager {
             VkPhysicalDeviceVulkan11Features supportedFeatures11{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES };
             VkPhysicalDeviceVulkan12Features supportedFeatures12{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
             VkPhysicalDeviceUnifiedImageLayoutsFeaturesKHR unifiedFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_UNIFIED_IMAGE_LAYOUTS_FEATURES_KHR };
+            VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR };
+            VkPhysicalDeviceRayQueryFeaturesKHR rayQueryFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR };
             VkPhysicalDeviceFeatures2 checkFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
             checkFeatures.pNext = &supportedFeatures11;
             supportedFeatures11.pNext = &supportedFeatures12;
             supportedFeatures12.pNext = &unifiedFeatures;
+            unifiedFeatures.pNext = &accelerationStructureFeatures;
+            accelerationStructureFeatures.pNext = &rayQueryFeatures;
             vkGetPhysicalDeviceFeatures2(physicalDevice, &checkFeatures);
 
             // Scalar block layout is required by the compact 44-byte Vertex
@@ -98,7 +105,10 @@ namespace VulkanDeviceManager {
                 !supportedFeatures11.shaderDrawParameters ||
                 !supportedFeatures12.descriptorBindingStorageImageUpdateAfterBind ||
                 !supportedFeatures12.scalarBlockLayout ||
-                !unifiedFeatures.unifiedImageLayouts) {
+                !unifiedFeatures.unifiedImageLayouts ||
+                !accelerationStructureFeatures.accelerationStructure ||
+                !accelerationStructureFeatures.descriptorBindingAccelerationStructureUpdateAfterBind ||
+                !rayQueryFeatures.rayQuery) {
                 continue;
             }
 
@@ -149,9 +159,14 @@ namespace VulkanDeviceManager {
             VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipeline{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR };
             rtPipeline.rayTracingPipeline = VK_TRUE;
 
+            VkPhysicalDeviceRayQueryFeaturesKHR rayQuery{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR };
+            rayQuery.rayQuery = VK_TRUE;
+            rayQuery.pNext = &rtPipeline;
+
             VkPhysicalDeviceAccelerationStructureFeaturesKHR accel{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR };
             accel.accelerationStructure = VK_TRUE;
-            accel.pNext = &rtPipeline;
+            accel.descriptorBindingAccelerationStructureUpdateAfterBind = VK_TRUE;
+            accel.pNext = &rayQuery;
 
             VkPhysicalDeviceVulkan13Features features13{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
             features13.maintenance4 = VK_TRUE;
@@ -196,19 +211,25 @@ namespace VulkanDeviceManager {
 
             g_rayTracingPipelineProperties = {};
             g_rayTracingPipelineProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
+            g_accelerationStructureProperties = {};
+            g_accelerationStructureProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR;
+            g_accelerationStructureProperties.pNext = &g_rayTracingPipelineProperties;
 
             g_properties2 = {};
             g_properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-            g_properties2.pNext = &g_rayTracingPipelineProperties;
+            g_properties2.pNext = &g_accelerationStructureProperties;
             vkGetPhysicalDeviceProperties2(g_physicalDevice, &g_properties2);
 
             // Features
             g_accelerationStructureFeatures = {};
             g_accelerationStructureFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+            g_rayQueryFeatures = {};
+            g_rayQueryFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
 
             g_features2 = {};
             g_features2.sType = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
             g_features2.pNext = &g_accelerationStructureFeatures;
+            g_accelerationStructureFeatures.pNext = &g_rayQueryFeatures;
             vkGetPhysicalDeviceFeatures2(g_physicalDevice, &g_features2);
 
             if (vkCreateDevice(g_physicalDevice, &dci, nullptr, &g_device) != VK_SUCCESS) {
@@ -253,6 +274,7 @@ namespace VulkanDeviceManager {
     
     const VkPhysicalDeviceProperties& GetProperties() { return g_properties; }
     const VkPhysicalDeviceRayTracingPipelinePropertiesKHR& GetRayTracingPipelineProperties() { return g_rayTracingPipelineProperties; }
+    const VkPhysicalDeviceAccelerationStructurePropertiesKHR& GetAccelerationStructureProperties() { return g_accelerationStructureProperties; }
     const VkPhysicalDeviceAccelerationStructureFeaturesKHR& GetAccelerationStructureFeatures() { return g_accelerationStructureFeatures; }
     const VkPhysicalDeviceMemoryProperties& GetMemoryProperties() { return g_memoryProperties; }
 }

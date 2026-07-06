@@ -104,23 +104,46 @@ namespace VulkanCommandManager {
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        vkBeginCommandBuffer(cmd, &beginInfo);
+        VkResult beginResult = vkBeginCommandBuffer(cmd, &beginInfo);
+        if (beginResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanCommandManager::SubmitImmediate(..) failed to begin upload command buffer: " << static_cast<int>(beginResult) << "\n";
+            return;
+        }
 
         function(cmd);
 
-        vkEndCommandBuffer(cmd);
+        VkResult endResult = vkEndCommandBuffer(cmd);
+        if (endResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanCommandManager::SubmitImmediate(..) failed to end upload command buffer: " << static_cast<int>(endResult) << "\n";
+            return;
+        }
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &cmd;
 
-        VulkanSyncManager::ResetUploadFence();
+        VkResult resetFenceResult = VulkanSyncManager::ResetUploadFence();
+        if (resetFenceResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanCommandManager::SubmitImmediate(..) failed to reset upload fence: " << static_cast<int>(resetFenceResult) << "\n";
+            return;
+        }
 
-        vkQueueSubmit(graphicsQueue, 1, &submitInfo, uploadFence);
+        VkResult submitResult = vkQueueSubmit(graphicsQueue, 1, &submitInfo, uploadFence);
+        if (submitResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanCommandManager::SubmitImmediate(..) failed to submit upload command buffer: " << static_cast<int>(submitResult) << "\n";
+            return;
+        }
 
-        VulkanSyncManager::WaitForUploadFence();
+        VkResult waitResult = VulkanSyncManager::WaitForUploadFence();
+        if (waitResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanCommandManager::SubmitImmediate(..) failed while waiting for upload fence: " << static_cast<int>(waitResult) << "\n";
+            return;
+        }
 
-        vkResetCommandPool(device, g_uploadPool, 0);
+        VkResult resetCommandPoolResult = vkResetCommandPool(device, g_uploadPool, 0);
+        if (resetCommandPoolResult != VK_SUCCESS) {
+            Logging::Error() << "VulkanCommandManager::SubmitImmediate(..) failed to reset upload command pool: " << static_cast<int>(resetCommandPoolResult) << "\n";
+        }
     }
 }

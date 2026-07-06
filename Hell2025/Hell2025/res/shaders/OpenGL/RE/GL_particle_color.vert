@@ -11,8 +11,8 @@ out vec3 v_worldPos;
 
 out float v_lifetime;
 
-restrict layout(std430, binding = 6) readonly buffer Buffer6 { Particle particlePool[]; };
-restrict layout(std430, binding = 7) readonly buffer Buffer7 { uint particleActiveIndices[]; };
+restrict layout(std430, binding = 7) readonly buffer Buffer6 { Particle particlePool[]; };
+restrict layout(std430, binding = 8) readonly buffer Buffer7 { uint particleActiveIndices[]; };
 
 //uniform int u_particleIndex;
 

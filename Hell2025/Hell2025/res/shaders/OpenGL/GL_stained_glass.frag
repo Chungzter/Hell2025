@@ -14,9 +14,9 @@ layout (binding = 6) uniform sampler2D rmaTexture;
 layout (binding = 7) uniform sampler2D FlashlightCookieTexture;
 layout (binding = 8) uniform sampler2D MainImageGuassianBlurredTexture; // Contains the final lit scene
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData  rendererData;   };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData  viewportData[]; };
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer       { Light         lights[];       };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData  rendererData;   };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData  viewportData[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light         lights[];       };
 
 in vec2 TexCoord;
 in vec3 Normal;

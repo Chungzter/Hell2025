@@ -4,7 +4,7 @@
 
 layout (location = 0) in vec3 inPosition;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 

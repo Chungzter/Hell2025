@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hell/Render/API/Vulkan/vk_common.h"
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -18,6 +19,8 @@ struct VulkanShaderModule {
     VkShaderModule GetModule() const { return m_module; }
     VkShaderStageFlagBits GetStage() const { return m_stage; }
     const std::string& GetPath() const { return m_path; }
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
 
 private:
     bool CreateModule(VkShaderModule& module) const;
@@ -47,6 +50,8 @@ struct VulkanShader {
     VkShaderModule GetComputeShader();
     VkShaderModule GetTesselationControlShader();
     VkShaderModule GetTesselationEvaluationShader();
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
 
 private:
     std::vector<VulkanShaderModule> m_modules;

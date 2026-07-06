@@ -28,7 +28,7 @@ struct MeshNode {
     uint64_t meshBvhId;
     uint32_t globalMeshIndex;
     uint32_t nodeIndex;
-    uint32_t materialIndex;
+    int32_t materialIndex;
     Hell::Transform transform;              // These are the transforms updated by an Openable // rename to offsetTransform
     glm::mat4 localTransform;         // Think of better name. Same for transform/transformPreviousFrame. Cause you are always confused.
     glm::mat4 inverseBindTransform;
@@ -55,7 +55,8 @@ struct MeshNode {
 
     uint32_t baseVertex = 0;
     uint32_t baseIndex = 0;
-    int32_t baseColorOverrideTextureIndex = -1;
+    uint32_t vertexCount = 0;
+    uint32_t indexCount = 0;
 };
 
 struct MeshNodes {

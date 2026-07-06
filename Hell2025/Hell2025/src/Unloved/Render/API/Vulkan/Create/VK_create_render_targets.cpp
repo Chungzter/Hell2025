@@ -14,7 +14,7 @@ namespace VulkanRenderer {
         VkExtent2D finalImageExtent = { static_cast<uint32_t>(resolutions.finalImage.x), static_cast<uint32_t>(resolutions.finalImage.y) };
         VkFormat finalImageFormat = VulkanSwapchainManager::GetSwapchainImageFormat();
 
-        VulkanResourceManager::CreateAllocatedImage("GBufferRE.Lighting", gBufferExtent.width, gBufferExtent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+        VulkanResourceManager::CreateAllocatedImage("Lighting", gBufferExtent.width, gBufferExtent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
         VulkanResourceManager::CreateAllocatedImage("GBufferRE.Visibility", gBufferExtent.width, gBufferExtent.height, VK_FORMAT_R32G32_UINT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
         VulkanResourceManager::CreateAllocatedImage("GBufferRE.Depth", gBufferExtent.width, gBufferExtent.height, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
         VulkanResourceManager::CreateAllocatedImage("BaseColorMetallic", gBufferExtent.width, gBufferExtent.height, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);

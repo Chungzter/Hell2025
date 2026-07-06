@@ -17,11 +17,12 @@ layout(early_fragment_tests) in;
 #include "../../common/lighting.glsl"
 #include "../../common/post_processing.glsl"
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportData[]; };
-readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer { RenderItem renderItems[]; };
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer { Light lights[]; };
-readonly restrict layout(std430, binding = 5) buffer tileLightsBuffer { TileLights tileLights[]; };
+readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportData[]; };
+readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer { Light lights[]; };
+readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer { TileLights tileLights[]; };
 
 layout(location = 0) out vec4 LightingOut;
 
@@ -307,12 +308,11 @@ float FastAcosApprox(float x) {
 
 void main() {
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
+    Material material = materials[renderItem.materialIndex];
 
-    sampler2D baseColorSampler = sampler2D(textureSamplers[renderItem.baseColorTextureIndex]);
-    sampler2D rmaSampler = sampler2D(textureSamplers[renderItem.rmaTextureIndex]);
-    sampler2D additionalSampler0 = sampler2D(textureSamplers[renderItem.additionalTextureIndex0]);
-    sampler2D additionalSampler1 = sampler2D(textureSamplers[renderItem.additionalTextureIndex1]);
-    sampler2D additionalSampler2 = sampler2D(textureSamplers[renderItem.additionalTextureIndex2]);
+    sampler2D baseColorSampler = sampler2D(textureSamplers[material.basecolor]);
+    sampler2D rmaSampler = sampler2D(textureSamplers[material.rma]);
+    sampler2D hairMapsSampler = sampler2D(textureSamplers[material.hairMaps]);
 
     sampler2D blendMapSampler    = sampler2D(textureSamplers[u_hairBlendMapTextureIndex]);
     vec3 blendMultiply  = texture(blendMapSampler, v_texCoord).rgb;
@@ -320,9 +320,7 @@ void main() {
 
     vec4 baseColorOG = texture(baseColorSampler, v_texCoord);
     vec4 rma = texture(rmaSampler, v_texCoord);
-    vec4 additionalColor0 = texture(additionalSampler0, v_texCoord);
-    vec4 additionalColor1 = texture(additionalSampler1, v_texCoord);
-    vec4 additionalColor2 = texture(additionalSampler2, v_texCoord);
+    vec4 hairMaps = texture(hairMapsSampler, v_texCoord);
 
     vec2 baseTextureSizePixels = vec2(textureSize(baseColorSampler, 0));
     float hairMipLevelRaw = ComputeHairMipLevel(v_texCoord, baseTextureSizePixels);
@@ -330,12 +328,12 @@ void main() {
 
     vec3 viewPos = viewportData[v_viewportIndex].inverseView[3].xyz;
 
-    vec3 flowSample = additionalColor0.rgb;
+    vec3 flowSample = vec3(hairMaps.rg, 0.0);
     
     //vec3 flowSample = vec3(1.0, 0.5, 0.5);
 
-    float hairId = additionalColor1.r;
-    float rootFactor = additionalColor2.r;
+    float hairId = hairMaps.b;
+    float rootFactor = hairMaps.a;
 
     float metallicOLD = rma.g;
     float rawAO = rma.b;
@@ -520,10 +518,7 @@ void main() {
     bool overrideLight = true;
     bool overrideTangent = true;
 
-    sampler2D hairAutoBakedBaseColorSampler = sampler2D(textureSamplers[renderItem.baseColorTextureIndex]);
-    sampler2D flowSampler = sampler2D(textureSamplers[renderItem.additionalTextureIndex0]);
-    sampler2D hairIDSampler = sampler2D(textureSamplers[renderItem.additionalTextureIndex1]);
-    sampler2D rootSampler = sampler2D(textureSamplers[renderItem.additionalTextureIndex2]);
+    sampler2D hairAutoBakedBaseColorSampler = sampler2D(textureSamplers[material.basecolor]);
     
     vec3 meshTangent = normalize(v_tangent);
 
@@ -532,7 +527,7 @@ void main() {
 
     vec3 meshBitangent = normalize(cross(meshNormalUnflipped, meshTangent));
 
-    vec3 flowMap = texture(flowSampler, v_texCoord).xyz;
+    vec3 flowMap = vec3(hairMaps.rg, 0.0);
     flowMap = flowMap * 2.0 - 1.0;
 
     vec3 tangentSpaceShift;
@@ -540,7 +535,7 @@ void main() {
     tangentSpaceShift.y = flowMap.y * kTangentMapFlipGreen;
     tangentSpaceShift.z = flowMap.z * 0.03;
 
-    float hairID = texture(hairIDSampler, v_texCoord).r;
+    float hairID = hairMaps.b;
 
     vec3 blackOffset = vec3(-0.206, -0.687, -0.338);
     vec3 whiteOffset = vec3(-0.148, 0.0, 0.370);

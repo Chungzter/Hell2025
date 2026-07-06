@@ -44,7 +44,7 @@ namespace OpenGL::Renderer {
 		OpenGL::BindShader("Plastic");
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
 
-        OpenGL::BindSSBO(5, "TileLights");
+        OpenGL::BindSSBO(6, "TileLights");
 
 		OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
@@ -115,12 +115,13 @@ namespace OpenGL::Renderer {
 				Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
 				if (!mesh) continue;
 
+				Material* material = Hell::ResourceManager::GetMaterialByIndex(renderItem.materialIndex);
 				glActiveTexture(GL_TEXTURE4);
-				glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+				glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
 				glActiveTexture(GL_TEXTURE5);
-				glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+				glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
 				glActiveTexture(GL_TEXTURE6);
-				glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+				glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
 
 				OpenGL::SetUniformMat4("u_model", renderItem.modelMatrix);
 				OpenGL::SetUniformMat4("u_inverseModel", renderItem.inverseModelMatrix);

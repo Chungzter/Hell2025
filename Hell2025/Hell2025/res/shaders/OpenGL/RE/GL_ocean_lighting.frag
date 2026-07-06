@@ -14,8 +14,8 @@ layout (binding = 3) uniform sampler2D NormalTexture_band1;
 layout (binding = 4) uniform samplerCube cubeMap;
 layout (binding = 5) uniform sampler2D DetailRippleNormal;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 in vec3 v_worldPos;
 in vec3 v_normal;

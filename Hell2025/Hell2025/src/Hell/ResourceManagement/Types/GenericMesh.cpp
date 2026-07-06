@@ -28,7 +28,7 @@ void GenericMesh::UpdateVertexData(const void* vertices, size_t vertexCount, con
         OpenGL::ResourceManager::GetGenericMesh(m_openGLId).UpdateVertexData(vertices, vertexCount, layout);
     }
     if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        if (m_vulkanId == 0) {
+        if (m_vulkanId == 0 || !VulkanResourceManager::GenericMeshExists(m_vulkanId)) {
             m_vulkanId = VulkanResourceManager::CreateGenericMesh();
         }
 
@@ -51,7 +51,7 @@ void GenericMesh::UpdateIndexData(const std::vector<uint32_t>& indices) {
         OpenGL::ResourceManager::GetGenericMesh(m_openGLId).UpdateIndexData(indices);
     }
     if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        if (m_vulkanId == 0) {
+        if (m_vulkanId == 0 || !VulkanResourceManager::GenericMeshExists(m_vulkanId)) {
             m_vulkanId = VulkanResourceManager::CreateGenericMesh();
         }
 
@@ -68,7 +68,9 @@ void GenericMesh::CleanUp() {
         m_openGLId = 0;
     }
     if (m_vulkanId != 0) {
-        VulkanResourceManager::RemoveGenericMesh(m_vulkanId);
+        if (VulkanResourceManager::GenericMeshExists(m_vulkanId)) {
+            VulkanResourceManager::RemoveGenericMesh(m_vulkanId);
+        }
         m_vulkanId = 0;
     }
 

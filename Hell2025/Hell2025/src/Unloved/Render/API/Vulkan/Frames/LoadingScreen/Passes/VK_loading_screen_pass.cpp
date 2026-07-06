@@ -2,10 +2,13 @@
 
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
+#include "Hell/Render/API/Vulkan/Types/vk_timer.h"
 
 namespace VulkanRenderer {
 
-    void RenderLoadingScreenPass(VkCommandBuffer commandBuffer, VkImageView imageView, VkExtent2D extent) {
+    void LoadingScreenPass(VkCommandBuffer commandBuffer, VkImageView imageView, VkExtent2D extent) {
+        ProfilerVulkanZoneFunction();
+
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("LoadingScreen");
         if (!pipeline) return;
 

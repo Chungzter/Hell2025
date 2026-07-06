@@ -8,7 +8,7 @@
 #endif
 
 #include "../../common/constants.glsl"
-#include "../../common/misc_flags.glsl"
+#include "../../common/flags.glsl"
 #include "../../common/normal_encoding.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
@@ -29,11 +29,11 @@ layout(binding = 2) uniform sampler2D u_depthTexture;
     layout(binding = 6) uniform sampler2D DecalTex3;
 #endif
 
-layout(std430, binding = 1)  readonly restrict  buffer rendererDataBuffer    { RendererData rendererData; };
-layout(std430, binding = 2)  readonly restrict  buffer viewportDataBuffer    { ViewportData viewportDataArr[]; };
-layout(std430, binding = 7)  restrict           buffer tileBloodDecalsBuffer { TileInstanceData tileBloodDecals[]; };
-layout(std430, binding = 8)  readonly restrict  buffer BloodDecalBuffer      { BloodDecal bloodDecals[]; };
-layout(std430, binding = 9)  restrict           buffer DecalIndexPool        { uint globalBloodDecalIndices[]; };
+layout(std430, binding = 2)  readonly restrict  buffer rendererDataBuffer    { RendererData rendererData; };
+layout(std430, binding = 3)  readonly restrict  buffer viewportDataBuffer    { ViewportData viewportDataArr[]; };
+layout(std430, binding = 8)  restrict           buffer tileBloodDecalsBuffer { TileInstanceData tileBloodDecals[]; };
+layout(std430, binding = 9)  readonly restrict  buffer BloodDecalBuffer      { BloodDecal bloodDecals[]; };
+layout(std430, binding = 10) restrict           buffer DecalIndexPool        { uint globalBloodDecalIndices[]; };
 
 uniform int u_tileXCount;
 uniform int u_tileYCount;
@@ -55,9 +55,6 @@ void main() {
 
     uint miscFlags = DecodeMiscFlags(texelFetch(GBufferNormalXYRoughnessMiscTexture, px, 0).a);
     if ((miscFlags & MISC_FLAG_DYNAMIC_OBJECT) != 0u) discard;
-
-    // Skip if this tile is masked out
-    // if ((miscFlags & MISC_FLAG_RESERVED_0) != 0u) discard;
 
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);

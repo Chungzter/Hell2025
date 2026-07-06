@@ -20,14 +20,11 @@ VulkanDescriptorSet::VulkanDescriptorSet(VkDescriptorSetLayout layout) {
 }
 
 void VulkanDescriptorSet::Cleanup() {
-    for (VkWriteDescriptorSetAccelerationStructureKHR& asInfo : m_asInfos) {
-        delete asInfo.pAccelerationStructures;
-    }
-
     m_handle = VK_NULL_HANDLE;
     m_writes.clear();
     m_bufferInfos.clear();
     m_imageInfos.clear();
+    m_accelerationStructures.clear();
     m_asInfos.clear();
 }
 
@@ -69,8 +66,8 @@ void VulkanDescriptorSet::WriteAccelerationStructure(uint32_t binding, VkAcceler
     };
 
     asInfo.accelerationStructureCount = 1;
-    asInfo.pAccelerationStructures = new VkAccelerationStructureKHR(accelerationStructure);
     m_asInfos.push_back(asInfo);
+    m_accelerationStructures.push_back(accelerationStructure);
 
     VkWriteDescriptorSet write{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
     write.dstSet = m_handle;
@@ -98,6 +95,7 @@ void VulkanDescriptorSet::Update() {
             break;
 
         case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+            m_asInfos[accelerationStructureIndex].pAccelerationStructures = &m_accelerationStructures[accelerationStructureIndex];
             write.pNext = &m_asInfos[accelerationStructureIndex++];
             break;
 
@@ -109,13 +107,10 @@ void VulkanDescriptorSet::Update() {
 
     vkUpdateDescriptorSets(device, static_cast<uint32_t>(m_writes.size()), m_writes.data(), 0, nullptr);
 
-    for (VkWriteDescriptorSetAccelerationStructureKHR& asInfo : m_asInfos) {
-        delete asInfo.pAccelerationStructures;
-    }
-
     m_writes.clear();
     m_bufferInfos.clear();
     m_imageInfos.clear();
+    m_accelerationStructures.clear();
     m_asInfos.clear();
 }
 
@@ -175,4 +170,35 @@ const VulkanDescriptorSet& VulkanDescriptorSetResource::GetSet(uint32_t frameInd
     }
 
     return m_sets[setIndex];
+}
+
+size_t VulkanDescriptorSet::GetCPUAllocatedByteCount() const {
+    return sizeof(VulkanDescriptorSet) +
+        (m_writes.capacity() * sizeof(VkWriteDescriptorSet)) +
+        (m_bufferInfos.capacity() * sizeof(VkDescriptorBufferInfo)) +
+        (m_imageInfos.capacity() * sizeof(VkDescriptorImageInfo)) +
+        (m_accelerationStructures.capacity() * sizeof(VkAccelerationStructureKHR)) +
+        (m_asInfos.capacity() * sizeof(VkWriteDescriptorSetAccelerationStructureKHR));
+}
+
+size_t VulkanDescriptorSet::GetGPUAllocatedByteCount() const {
+    return 0;
+}
+
+size_t VulkanDescriptorSetResource::GetCPUAllocatedByteCount() const {
+    size_t byteCount = sizeof(VulkanDescriptorSetResource);
+
+    if (m_sets.capacity() > m_sets.size()) {
+        byteCount += (m_sets.capacity() - m_sets.size()) * sizeof(VulkanDescriptorSet);
+    }
+
+    for (const VulkanDescriptorSet& set : m_sets) {
+        byteCount += set.GetCPUAllocatedByteCount();
+    }
+
+    return byteCount;
+}
+
+size_t VulkanDescriptorSetResource::GetGPUAllocatedByteCount() const {
+    return 0;
 }

@@ -235,3 +235,23 @@ void VulkanRaytracingPipeline::Cleanup() {
     m_layout = VK_NULL_HANDLE;
     m_handle = VK_NULL_HANDLE;
 }
+
+size_t VulkanShaderBindingTable::GetCPUAllocatedByteCount() const {
+    return sizeof(VulkanShaderBindingTable);
+}
+
+size_t VulkanShaderBindingTable::GetGPUAllocatedByteCount() const {
+    return buffer.GetGPUAllocatedByteCount();
+}
+
+size_t VulkanRaytracingPipeline::GetCPUAllocatedByteCount() const {
+    return sizeof(VulkanRaytracingPipeline) +
+        (m_descriptorLayouts.capacity() * sizeof(VkDescriptorSetLayout)) +
+        (m_pushConstants.capacity() * sizeof(VkPushConstantRange)) +
+        (m_stages.capacity() * sizeof(VkPipelineShaderStageCreateInfo)) +
+        (m_groups.capacity() * sizeof(VkRayTracingShaderGroupCreateInfoKHR));
+}
+
+size_t VulkanRaytracingPipeline::GetGPUAllocatedByteCount() const {
+    return m_shaderBindingTable.GetGPUAllocatedByteCount();
+}

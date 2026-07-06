@@ -38,6 +38,8 @@ struct VulkanMeshBuffer {
     uint64_t GetVertexBufferAddress() const;
     uint64_t GetIndexBufferAddress() const;
     uint64_t GetVertexWeightBufferAddress() const;
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
 
 private:
     VulkanBuffer CreateVertexBuffer(size_t vertexCapacity) const;

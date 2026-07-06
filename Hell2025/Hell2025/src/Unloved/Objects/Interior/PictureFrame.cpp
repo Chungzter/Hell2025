@@ -12,23 +12,7 @@ PictureFrame::PictureFrame(uint64_t id, PictureFrameCreateInfo& createInfo, Spaw
     m_createInfo.position += spawnOffset.translation;
     m_createInfo.rotation += glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
     
-    Init();
-}
-
-void PictureFrame::Init() {
     SelectRandomPicture();
-
-    std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
-
-    MeshNodeCreateInfo& picture = meshNodeCreateInfoSet.emplace_back();
-    picture.meshName = "picture_low.003";
-    picture.baseColorOverrideTextureName = m_pictureTextureName;
-
-    MeshNodeCreateInfo& frame = meshNodeCreateInfoSet.emplace_back();
-    frame.meshName = "frame_side.L_low.022";
-    frame.materialName = "PictureFrame0";
-    
-    m_meshNodes.Init(m_objectId, "PictureFrame_BigLandscape", meshNodeCreateInfoSet);
 }
 
 void PictureFrame::CleanUp() {
@@ -46,20 +30,32 @@ void PictureFrame::Update() {
 
 void PictureFrame::SelectRandomPicture() {
     const std::vector<const char*> bigLandscapeImages = {
-        //"Picture_RainbowMage",
+        //"Picture_RainbowMage_ALB",
         "Picture_SHNakedLady",
         "Picture_Minotaur"
     };
 
+    std::string materialName = "CheckerBoard";
+
     if (m_createInfo.type == PictureFrameType::BIG_LANDSCAPE) {
         int random = rand() % bigLandscapeImages.size();
-        m_pictureTextureName = bigLandscapeImages[random];
+        materialName = bigLandscapeImages[random];
     }
     else {
-        m_pictureTextureName = "CheckerBoard";
+        // TODO
     }
 
-    // TODO: make this trigger an update of the MeshNodes
+    std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
+
+    MeshNodeCreateInfo& picture = meshNodeCreateInfoSet.emplace_back();
+    picture.meshName = "picture_low.003";
+    picture.materialName = materialName;
+
+    MeshNodeCreateInfo& frame = meshNodeCreateInfoSet.emplace_back();
+    frame.meshName = "frame_side.L_low.022";
+    frame.materialName = "PictureFrame0";
+
+    m_meshNodes.Init(m_objectId, "PictureFrame_BigLandscape", meshNodeCreateInfoSet);
 }
 
 void PictureFrame::SetPosition(const glm::vec3& position) {

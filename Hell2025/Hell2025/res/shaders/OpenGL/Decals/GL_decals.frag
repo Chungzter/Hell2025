@@ -16,7 +16,7 @@ in vec3 BiTangent;
 in vec4 WorldPos;
 in vec3 ViewPos;
 
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer {
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer {
 	Light lights[];
 };
 

@@ -164,13 +164,12 @@ void Wire::SubmitRenderItem() {
     Mesh* mesh = meshBuffer.GetMeshById(m_meshId);
     if (!mesh) return;
 
-    Material* material = Hell::ResourceManager::GetMaterialByName("Black");
+    const int32_t materialIndex = Hell::ResourceManager::GetMaterialIndexByName("Black");
+    Material* material = Hell::ResourceManager::GetMaterialByIndex(materialIndex);
     if (!material) return;
 
     RenderItem renderItem;
-    renderItem.baseColorTextureIndex = material->m_basecolor;
-    renderItem.normalMapTextureIndex = material->m_normal;
-    renderItem.rmaTextureIndex = material->m_rma;
+    renderItem.materialIndex = materialIndex;
     renderItem.modelMatrix = glm::mat4(1.0f);
     renderItem.inverseModelMatrix = glm::mat4(1.0f);
     renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);

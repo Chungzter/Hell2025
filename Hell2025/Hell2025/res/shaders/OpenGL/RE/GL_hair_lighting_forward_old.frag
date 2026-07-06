@@ -20,11 +20,12 @@ layout(early_fragment_tests) in;
 #include "../../common/lighting.glsl"
 #include "../../common/post_processing.glsl"
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportData[]; };
-readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { RenderItem renderItems[]; };
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer       { Light lights[]; };
-readonly restrict layout(std430, binding = 5) buffer tileLightsBuffer   { TileLights tileLights[]; };
+readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportData[]; };
+readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light lights[]; };
+readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer   { TileLights tileLights[]; };
 
 layout (location = 0) out vec4 LightingOut;
 
@@ -125,13 +126,14 @@ void ComputeGhettoNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 
 
 void main() {
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
+    Material material = materials[renderItem.materialIndex];
 
-    sampler2D baseColorSampler = sampler2D(textureSamplers[renderItem.baseColorTextureIndex]);
+    sampler2D baseColorSampler = sampler2D(textureSamplers[material.basecolor]);
     vec2 baseTextureSizePixels = vec2(textureSize(baseColorSampler, 0));
 
     vec4 baseColor =   texture(baseColorSampler, v_texCoord);
-    vec4 rma =         texture(sampler2D(textureSamplers[renderItem.rmaTextureIndex]), v_texCoord).rgba;
-    vec4 hairTexture = texture(sampler2D(textureSamplers[renderItem.hairMapTextureIndex]), v_texCoord);
+    vec4 rma =         texture(sampler2D(textureSamplers[material.rma]), v_texCoord).rgba;
+    vec4 hairTexture = texture(sampler2D(textureSamplers[material.hairMaps]), v_texCoord);
 
     vec3 flowMap = vec3(hairTexture.rg, 0);
     float hairID = hairTexture.b;

@@ -18,6 +18,7 @@ void VulkanAccelerationStructure::Cleanup() {
 	}
 	m_buffer.Cleanup();
 	m_deviceAddress = 0;
+	m_built = false;
 }
 
 void VulkanAccelerationStructure::CreateBLAS(VulkanBuffer& vertexBuffer, VulkanBuffer& indexBuffer, VulkanBuffer transformBuffer, uint32_t vertexCount, uint32_t indexCount) {
@@ -43,7 +44,7 @@ void VulkanAccelerationStructure::CreateBLAS(VulkanBuffer& vertexBuffer, VulkanB
     geometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
     geometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
     geometry.geometry.triangles.vertexData = vertexBufferDeviceAddress;
-    geometry.geometry.triangles.maxVertex = vertexCount;
+    geometry.geometry.triangles.maxVertex = vertexCount > 0 ? vertexCount - 1 : 0;
     geometry.geometry.triangles.vertexStride = sizeof(Vertex);
     geometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
     geometry.geometry.triangles.indexData = indexBufferDeviceAddress;
@@ -89,6 +90,7 @@ void VulkanAccelerationStructure::CreateBLAS(VulkanBuffer& vertexBuffer, VulkanB
 
     // Cleanup
     m_scratchBuffer.Cleanup();
+    m_built = true;
 }
 
 void VulkanAccelerationStructure::CreateScratchBuffer(VkDeviceSize size) {
@@ -96,4 +98,12 @@ void VulkanAccelerationStructure::CreateScratchBuffer(VkDeviceSize size) {
 
     VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
     m_scratchBuffer = VulkanBuffer(size, usage, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT);
+}
+
+size_t VulkanAccelerationStructure::GetCPUAllocatedByteCount() const {
+    return sizeof(VulkanAccelerationStructure);
+}
+
+size_t VulkanAccelerationStructure::GetGPUAllocatedByteCount() const {
+    return m_buffer.GetGPUAllocatedByteCount() + m_scratchBuffer.GetGPUAllocatedByteCount();
 }

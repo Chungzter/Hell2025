@@ -13,8 +13,9 @@ layout (location = 1) in vec3 vNormal;
 layout (location = 2) in vec2 vUV;
 layout (location = 3) in vec3 vTangent;
 
-layout(std430, binding = 2) readonly restrict buffer viewportDataBuffer { ViewportData viewportData[]; };
-layout(std430, binding = 3) readonly buffer renderItemsBuffer           { RenderItem renderItems[]; };
+layout(std430, binding = 3) readonly restrict buffer viewportDataBuffer { ViewportData viewportData[]; };
+layout(std430, binding = 1) readonly restrict buffer materialsBuffer    { Material materials[]; };
+layout(std430, binding = 4) readonly buffer renderItemsBuffer           { RenderItem renderItems[]; };
 
 out vec2 TexCoord;
 out vec4 WorldPos;
@@ -42,9 +43,10 @@ void main() {
     int instanceOffset = gl_BaseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
     int globalInstanceIndex = instanceOffset + gl_InstanceID;
 
-    BaseColorTextureIndex = renderItems[globalInstanceIndex].baseColorTextureIndex;
-	NormalTextureIndex = renderItems[globalInstanceIndex].normalMapTextureIndex;
-	RMATextureIndex = renderItems[globalInstanceIndex].rmaTextureIndex;
+    Material material = materials[renderItems[globalInstanceIndex].materialIndex];
+    BaseColorTextureIndex = material.basecolor;
+	NormalTextureIndex = material.normal;
+	RMATextureIndex = material.rma;
 
 #else
     int globalInstanceIndex = u_globalInstanceIndex;
@@ -71,7 +73,7 @@ void main() {
     //vec4 camRelativeWorldPos = vec4(WorldPos.xyz - ViewPos, 1.0);
     //gl_Position = projection * mat4(mat3(view)) * camRelativeWorldPos;
 
-    //MiscFlags = MISC_FLAG_RESERVED_0; // rethink this?
+    //MiscFlags = MISC_FLAG_RESEVERED; // rethink this?
 }
 */
 

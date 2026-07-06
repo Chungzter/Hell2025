@@ -41,6 +41,9 @@ namespace Unloved::RenderDataManager {
 
     void SubmitDecalPaintingInfo(DecalPaintingInfo decalPaintingInfo);
 
+    const std::vector<SkinningJob>& GetSkinningJobs();
+    const std::vector<RayQuerySkinnedGroup>& GetRayQuerySkinnedGroups();
+
     const RendererData& GetRendererData();
     const std::vector<glm::mat4>& GetOceanPatchTransforms();
     const std::vector<glm::mat4>& GetSkinningTransforms();
@@ -61,6 +64,7 @@ namespace Unloved::RenderDataManager {
     const std::vector<RenderItem>& GetRenderItemsProcedural();
     const std::vector<RenderItem>& GetRenderItemsStainedGlass();
     const std::vector<RenderItem>& GetRenderItemsToiletWater();
+    const std::vector<RenderItem>& GetRenderItemsPointLightShadows();
 
     const std::vector<RenderItem>& GetSkinnedRenderItemsAlphaDiscard();
     const std::vector<RenderItem>& GetSkinnedRenderItemsBlended();
@@ -73,5 +77,6 @@ namespace Unloved::RenderDataManager {
     const FlashLightShadowMapDrawInfo& GetFlashLightShadowMapDrawInfo();
 
     const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItems();
+    const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItemsAlphaDiscard();
     const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent();
 }

@@ -17,9 +17,9 @@ layout (binding = 6) uniform sampler2D FlashlightCookieTexture;
 layout (location = 0) out vec4 ColorOut;
 layout (location = 1) out uint OceanMaskOut;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData  rendererData;   };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData  viewportDataArr[]; };
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer       { Light         lights[];       };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData  rendererData;   };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData  viewportDataArr[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light         lights[];       };
 
 uniform vec3 u_wireframeColor;
 uniform vec3 u_viewPos;

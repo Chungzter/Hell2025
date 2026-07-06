@@ -28,7 +28,7 @@ in vec4 WorldPos;
 
 uniform mat4 u_view;
 
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer { Light lights[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer { Light lights[]; };
 
 float InterleavedGradientNoise(vec2 uv) {
     vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);

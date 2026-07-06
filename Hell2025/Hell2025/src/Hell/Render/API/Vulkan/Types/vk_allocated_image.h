@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hell/Render/API/Vulkan/vk_common.h"
+#include <cstddef>
 #include <string>
 
 struct AllocatedImage {
@@ -24,6 +25,8 @@ struct AllocatedImage {
     VkImageView GetImageView() const    { return m_imageView; }
     VkImageView GetDepthOnlyImageView() const { return m_depthOnlyImageView != VK_NULL_HANDLE ? m_depthOnlyImageView : m_imageView; }
     VmaAllocation GetAllocation() const { return m_allocation; }
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
 
 private:
     VkImage m_image = VK_NULL_HANDLE;

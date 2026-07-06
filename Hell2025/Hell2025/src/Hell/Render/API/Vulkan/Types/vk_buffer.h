@@ -3,6 +3,8 @@
 #include "Hell/Render/API/Vulkan/vk_common.h"
 #include "Hell/Common/Constants.h"
 
+#include <cstddef>
+
 struct VulkanBuffer {
     VulkanBuffer() = default;
     VulkanBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags vmaFlags = 0);
@@ -26,6 +28,8 @@ struct VulkanBuffer {
 
     VkBuffer GetBuffer() const   { return m_buffer; }
     VkDeviceSize GetSize() const { return m_size; }
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
 
 private:
     VkBuffer m_buffer = VK_NULL_HANDLE;
@@ -35,4 +39,6 @@ private:
     VmaMemoryUsage m_memoryUsage = VMA_MEMORY_USAGE_UNKNOWN;
     VmaAllocationCreateFlags m_vmaFlags = 0;
     void* m_mappedPtr = nullptr;
+    mutable uint64_t m_deviceAddress = 0;
+    bool m_hostCoherent = false;
 };

@@ -39,24 +39,25 @@ struct MeshBuffer {
     Mesh* GetMeshById(uint32_t meshId);
     Mesh* GetMeshByName(const std::string& name);
     uint32_t GetMeshIdByName(const std::string& name);
-    const std::string& GetMeshNameByMeshId(uint32_t meshId);
     uint32_t GetBaseVertexByMeshId(uint32_t meshId);
     uint32_t GetBaseIndexByMeshId(uint32_t meshId);
     SkinnedMeshMetadata* GetSkinnedMeshMetadataByMeshId(uint32_t meshId);
     bool HasSkinnedMeshMetadata(uint32_t meshId) const;
+    const std::string& GetMeshNameByMeshId(uint32_t meshId);
     std::span<Vertex> GetMeshVertexSpan(uint32_t meshId);
     std::span<uint32_t> GetMeshIndexSpan(uint32_t meshId);
     std::span<VertexWeight> GetMeshVertexWeightSpan(uint32_t meshId);
 
-    size_t GetMeshCount() const               { return m_meshes.size(); }
-    size_t GetSkinnedMeshMetadataCount() const { return m_skinnedMeshMetadata.size(); }
-    size_t GetAllocatedVertexCount() const    { return m_vertices.size(); }
-    size_t GetAllocatedIndexCount() const     { return m_indices.size(); }
-    size_t GetAllocatedVertexWeightCount() const { return m_vertexWeights.size(); }
     size_t GetCPUAllocatedByteCount() const;
     size_t GetGPUAllocatedByteCount() const;
-    std::vector<Vertex>& GetVertices()   { return m_vertices; }
-    std::vector<uint32_t>& GetIndices()  { return m_indices; }
+
+    size_t GetMeshCount() const                   { return m_meshes.size(); }
+    size_t GetSkinnedMeshMetadataCount() const    { return m_skinnedMeshMetadata.size(); }
+    size_t GetAllocatedVertexCount() const        { return m_vertices.size(); }
+    size_t GetAllocatedIndexCount() const         { return m_indices.size(); }
+    size_t GetAllocatedVertexWeightCount() const  { return m_vertexWeights.size(); }
+    std::vector<Vertex>& GetVertices()            { return m_vertices; }
+    std::vector<uint32_t>& GetIndices()           { return m_indices; }
     std::vector<VertexWeight>& GetVertexWeights() { return m_vertexWeights; }
 
     uint64_t GetOpenGLId() const { return m_openGLId; }
@@ -76,6 +77,9 @@ private:
     int32_t AddIndices(const std::vector<uint32_t>& newIndices);
     int32_t AddVertexWeights(const std::vector<VertexWeight>& newVertexWeights);
     size_t CalculateNewCapacity(size_t requiredCount, size_t currentCapacity);
+    void CreateVulkanBlas(Mesh& mesh);
+    void DestroyVulkanBlas(Mesh& mesh);
+    void DestroyAllVulkanBlas();
 
     std::string m_name = UNDEFINED_STRING;
     std::vector<Vertex> m_vertices;
@@ -99,4 +103,4 @@ private:
     uint64_t m_vulkanId = 0;
 };
 
-} // namespace
+}

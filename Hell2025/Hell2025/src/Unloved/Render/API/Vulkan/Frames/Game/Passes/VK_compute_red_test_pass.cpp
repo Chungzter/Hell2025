@@ -1,6 +1,7 @@
 #include "Unloved/Render/API/Vulkan/VK_renderer.h"
 
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
+#include "Hell/Render/API/Vulkan/Types/vk_timer.h"
 #include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
 #include "Hell/Render/API/Vulkan/Types/vk_descriptor_set.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
@@ -8,7 +9,9 @@
 namespace VulkanRenderer {
 
     void ComputeRedTestPass(VkCommandBuffer commandBuffer) {
-        AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("GBufferRE.Lighting");
+        ProfilerVulkanZoneFunction();
+
+        AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("Lighting");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("ComputeRedTest");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
 

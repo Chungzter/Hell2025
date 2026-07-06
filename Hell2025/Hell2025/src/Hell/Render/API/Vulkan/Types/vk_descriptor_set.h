@@ -1,5 +1,6 @@
 #pragma once
 #include "Hell/Render/API/Vulkan/vk_common.h"
+#include <cstddef>
 #include <vector>
 
 enum class DescriptorSetLifetime {
@@ -24,6 +25,8 @@ struct VulkanDescriptorSet {
 
     VkDescriptorSet GetHandle() const           { return m_handle; }
     const VkDescriptorSet* GetHandlePtr() const { return &m_handle; }
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
 
 private:
     VkDescriptorSet m_handle = VK_NULL_HANDLE;
@@ -31,6 +34,7 @@ private:
     std::vector<VkWriteDescriptorSet> m_writes;
     std::vector<VkDescriptorBufferInfo> m_bufferInfos;
     std::vector<VkDescriptorImageInfo> m_imageInfos;
+    std::vector<VkAccelerationStructureKHR> m_accelerationStructures;
     std::vector<VkWriteDescriptorSetAccelerationStructureKHR> m_asInfos;
 };
 
@@ -50,6 +54,8 @@ struct VulkanDescriptorSetResource {
 
     VkDescriptorSetLayout GetLayout() const   { return m_layout; }
     DescriptorSetLifetime GetLifetime() const { return m_lifetime; }
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
 
 private:
     VkDescriptorSetLayout m_layout = VK_NULL_HANDLE;

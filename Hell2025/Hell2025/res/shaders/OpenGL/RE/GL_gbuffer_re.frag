@@ -8,9 +8,10 @@ layout (location = 1) out vec4 NormalXYRoughnessMiscOut;
 layout (location = 2) out vec4 VelocityXYOcclusionSubSurfaceOut;
 
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
-readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
 
 in flat int v_globalInstanceIndex;
 in flat int v_viewportIndex;
@@ -23,11 +24,12 @@ in vec3 v_tangent;
 
 void main() {
     RenderItem renderItem = renderItems[v_globalInstanceIndex];
+    Material material = materials[renderItem.materialIndex];
 
-    vec4 baseColor = texture(sampler2D(textureSamplers[renderItem.baseColorTextureIndex]), v_uv);
-    vec3 normalMap = texture(sampler2D(textureSamplers[renderItem.normalMapTextureIndex]), v_uv).rgb;
-    vec4 rma = texture(sampler2D(textureSamplers[renderItem.rmaTextureIndex]), v_uv).rgba;
-    vec3 emissiveMapColor = texture(sampler2D(textureSamplers[renderItem.emissiveTextureIndex]), v_uv).rgb;
+    vec4 baseColor = texture(sampler2D(textureSamplers[material.basecolor]), v_uv);
+    vec3 normalMap = texture(sampler2D(textureSamplers[material.normal]), v_uv).rgb;
+    vec4 rma = texture(sampler2D(textureSamplers[material.rma]), v_uv).rgba;
+    vec3 emissiveMapColor = texture(sampler2D(textureSamplers[material.emissive]), v_uv).rgb;
 
     // Material
     float roughness = rma.r;

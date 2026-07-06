@@ -13,7 +13,6 @@ struct PictureFrame {
     PictureFrame& operator=(PictureFrame&&) noexcept = default;
     ~PictureFrame() = default;
 
-    void Init();
     void Update();
     void CleanUp();
 
@@ -35,7 +34,6 @@ struct PictureFrame {
 
 private:
     MeshNodes m_meshNodes;
-    std::string m_pictureTextureName = "CheckerBoard";
     uint64_t m_objectId = 0;
     PictureFrameCreateInfo m_createInfo;
     std::vector<RenderItem> m_renderItems;

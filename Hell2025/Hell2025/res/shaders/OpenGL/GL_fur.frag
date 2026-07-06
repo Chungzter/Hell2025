@@ -21,10 +21,10 @@ layout (binding = 9) uniform sampler2D FurMaskTexture;
 layout (location = 0) out vec4 FinalLightingOut;
 
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData  rendererData;   };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData  viewportData[]; };
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer       { Light         lights[];       };
-readonly restrict layout(std430, binding = 5) buffer tileLightsBuffer   { TileLights    tileLights[];   };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData  rendererData;   };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData  viewportData[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light         lights[];       };
+readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer   { TileLights    tileLights[];   };
 
 in vec2 TexCoord;
 in vec3 Normal;

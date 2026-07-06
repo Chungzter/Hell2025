@@ -29,8 +29,8 @@ layout (binding = 10) uniform usampler2D u_oceanFlagsTexture;
 layout (binding = 11) uniform sampler2D u_depthTexture;
 layout (binding = 12) uniform sampler2D u_emissiveTexture;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 #define NONE 0
 #define BASE_COLOR 1

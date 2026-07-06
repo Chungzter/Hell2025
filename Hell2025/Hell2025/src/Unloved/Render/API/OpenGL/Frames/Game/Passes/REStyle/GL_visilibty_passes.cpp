@@ -18,8 +18,8 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindShader("Visibility");
 
-        OpenGL::BindSSBO(2, "ViewportData");
-        OpenGL::BindSSBO(3, "InstanceData");
+        OpenGL::BindSSBO(3, "ViewportData");
+        OpenGL::BindSSBO(4, "InstanceData");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -65,8 +65,8 @@ namespace OpenGL::Renderer {
         OpenGL::SetUniformUInt("u_frameCount", frameCount);
 
         OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(2, "ViewportData");
-        OpenGL::BindSSBO(3, "InstanceData");
+        OpenGL::BindSSBO(3, "ViewportData");
+        OpenGL::BindSSBO(4, "InstanceData");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -108,8 +108,8 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindShader("Visibility");
 
-        OpenGL::BindSSBO(2, "ViewportData");
-        OpenGL::BindSSBO(3, "InstanceData");
+        OpenGL::BindSSBO(3, "ViewportData");
+        OpenGL::BindSSBO(4, "InstanceData");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -143,8 +143,8 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindShader("VisibilityAlphaDiscard");
 
-        OpenGL::BindSSBO(2, "ViewportData");
-        OpenGL::BindSSBO(3, "InstanceData");
+        OpenGL::BindSSBO(3, "ViewportData");
+        OpenGL::BindSSBO(4, "InstanceData");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;

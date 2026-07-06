@@ -1,5 +1,6 @@
 #pragma once
 #include "Hell/Render/API/Vulkan/vk_common.h"
+#include <cstddef>
 
 struct VulkanSampler {
     VulkanSampler() = default;
@@ -14,6 +15,8 @@ struct VulkanSampler {
     VkDescriptorImageInfo GetDescriptorInfo() const;
 
     VkSampler GetSampler() const { return m_sampler; }
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
 
 private:
     VkSampler m_sampler = VK_NULL_HANDLE;

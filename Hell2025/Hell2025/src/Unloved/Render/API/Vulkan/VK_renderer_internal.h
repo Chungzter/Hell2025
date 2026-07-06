@@ -1,6 +1,7 @@
 #pragma once
 #include "Unloved/Render/API/Vulkan/VK_renderer.h"
 #include "Hell/Render/API/Vulkan/Types/VK_render_state.h"
+#include "Hell/Render/API/Vulkan/Types/vk_timer.h"
 
 #include <string>
 #include <vector>
@@ -42,14 +43,21 @@ namespace VulkanRenderer {
     void EndSwapchainFrame(SwapchainFrame& frame);
     void BlitImage(VkCommandBuffer commandBuffer, const std::string& srcName, const std::string& dstName, VkFilter filter);
 
+    // Compute passes
     void ComputeSkinningPass(VkCommandBuffer commandBuffer);
     void ComputeRedTestPass(VkCommandBuffer commandBuffer);
 
-    void RenderLoadingScreenPass(VkCommandBuffer commandBuffer, VkImageView imageView, VkExtent2D extent);
+    // Loading screen passes
+    void LoadingScreenPass(VkCommandBuffer commandBuffer, VkImageView imageView, VkExtent2D extent);
+
+    // Game passes
     void VisibilityPass(VkCommandBuffer commandBuffer);
     void MaterialResolvePass(VkCommandBuffer commandBuffer);
-    void DebugPass(VkCommandBuffer commandBuffer);
-    void RenderPresentPass(VkCommandBuffer commandBuffer, VkImageView imageView);
+    void UpdateRayQueryAccelerationStructures(VkCommandBuffer commandBuffer);
+    void LightingPass(VkCommandBuffer commandBuffer);
+
+    // Present Pass
+    void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView);
 
     bool BeginRenderState(VkCommandBuffer commandBuffer, const VulkanRenderState& state, VkExtent2D extent);
     void EndRenderState(VkCommandBuffer commandBuffer);

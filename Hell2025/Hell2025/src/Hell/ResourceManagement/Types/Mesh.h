@@ -8,6 +8,7 @@ struct Mesh {
     uint32_t vertexCount = 0;
     uint32_t indexCount = 0;
     uint64_t meshBvhId = 0;
+    uint64_t vulkanBlasId = 0;
     int32_t parentIndex = -1;
     glm::vec3 aabbMin = glm::vec3(0);
     glm::vec3 aabbMax = glm::vec3(0);

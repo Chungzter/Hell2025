@@ -5,7 +5,7 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout(rgba8, binding = 0) uniform image2D OutputImage;
 
-readonly restrict layout(std430, binding = 4) buffer lightsBuffer { Light lights[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer { Light lights[]; };
 
 uniform mat4 u_projectionMatrix;
 uniform mat4 u_viewMatrix;

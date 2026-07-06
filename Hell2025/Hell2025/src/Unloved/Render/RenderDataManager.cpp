@@ -34,6 +34,7 @@
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Render/RendererUtil.h"
 //
+#include "../../../res/shaders/common/flags.glsl"
 
 namespace Input = Hell::Input;
 
@@ -64,7 +65,6 @@ namespace Unloved::RenderDataManager {
 
     // Emissive
     std::vector<RenderItem> g_renderItemsEmissive;
-    void GatherEmissiveRenderItems();
 
     std::vector<RenderItem> g_shadowCasterRenderItems;
 
@@ -92,12 +92,17 @@ namespace Unloved::RenderDataManager {
     std::vector<RenderItem> g_skinnedNonDeformingSkinnedMeshRenderItemsHair;
 
     std::vector<RenderItem> g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent;
-    std::unordered_map<uint64_t, uint32_t> g_skinnedTransformIndexMap; // Maps an AnimatedGameObject Id to its base transform index
-    uint32_t g_baseTransformIndex = 0;
-    int g_baseSkinnedVertex = 0;
+    uint32_t g_baseSkinnedVertex = 0;
+    int32_t g_blackTextureIndex = -1;
 
     std::vector<glm::mat4> g_oceanPatchTransforms;
     std::vector<float> g_shadowCascadeLevels{ 5.0f, 10.0f, 20.0f, 40.0f }; // WARNING! YOU have a duplicate of this in GL_renderer.h
+
+    std::vector<SkinningJob> g_skinningJobs;
+    std::vector<RayQuerySkinnedGroup> g_rayQuerySkinnedGroups;
+
+    const std::vector<SkinningJob>& GetSkinningJobs()                   { return g_skinningJobs; }
+    const std::vector<RayQuerySkinnedGroup>& GetRayQuerySkinnedGroups() { return g_rayQuerySkinnedGroups; }
 
     void CreateGPULights();
     void UpdateOceanPatchTransforms();
@@ -126,7 +131,12 @@ namespace Unloved::RenderDataManager {
     void DecodeBaseInstance(int baseInstance, int& playerIndex, int& instanceOffset);
 
     void BeginFrame() {
+        g_skinningJobs.clear();
         g_skinningTransforms.clear();
+        g_baseSkinnedVertex = 0;
+
+        // Ray query (Vulkan only)
+        g_rayQuerySkinnedGroups.clear();
 
         // Skinned (deforming)
         g_combinedSkinnedRenderItems.clear();
@@ -151,6 +161,7 @@ namespace Unloved::RenderDataManager {
         g_renderItemsBlended.clear();
         g_renderItemsAlphaDiscarded.clear();
         g_renderItemsHair.clear();
+        g_renderItemsEmissive.clear();
 
         g_renderItemsPointLightShadows.clear();
         g_renderItemsMoonLightShadows.clear();
@@ -163,6 +174,8 @@ namespace Unloved::RenderDataManager {
 		g_renderItemsGlass.clear();
         
         g_drawCommandsUI.clear();
+
+        g_blackTextureIndex = ResourceManager::GetTextureBindlessIndexByName("Black");
     }
 
     void Update() {
@@ -344,49 +357,6 @@ namespace Unloved::RenderDataManager {
         g_rendererData.moonLightDir = glm::vec4(Unloved::World::GetMoonlightDirection(), 0.0f);
     }
 
-
-    void GatherEmissiveRenderItems() {
-        g_renderItemsEmissive.clear();
-
-        int32_t blackTextureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("Black");
-
-        for (RenderItem& renderItem : g_renderItems) {
-
-            bool isEmissive = false;
-
-            if (renderItem.emissiveTextureIndex != -1 && renderItem.emissiveTextureIndex != blackTextureIndex) {
-                isEmissive = true;
-            }
-
-            if (renderItem.emissiveR != 0.0f ||
-                renderItem.emissiveG != 0.0f ||
-                renderItem.emissiveB != 0.0f) {
-                isEmissive = true;
-            }
-
-            if (isEmissive) {
-                g_renderItemsEmissive.push_back(renderItem);
-
-                //if (Input::KeyPressed(HELL_KEY_U)) {
-                //    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
-                //    std::string textureName = UNDEFINED_STRING;
-                //
-                //    if (renderItem.emissiveTextureIndex != -1) {
-                //        textureName = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.emissiveTextureIndex)->GetFileName();
-                //    }
-                //
-                //    if (mesh) {
-                //        std::cout << "\n";
-                //        std::cout << mesh->GetName() << " " << textureName << " (";
-                //        std::cout << renderItem.emissiveR << ", ";
-                //        std::cout << renderItem.emissiveG << ", ";
-                //        std::cout << renderItem.emissiveB << ")\n";
-                //    }
-                //}
-            }
-        }
-    }
-
     void SortRenderItems(std::vector<RenderItem>& renderItems) {
         std::sort(renderItems.begin(), renderItems.end(), [](const RenderItem& a, const RenderItem& b) {
             return a.meshId < b.meshId;
@@ -446,6 +416,10 @@ namespace Unloved::RenderDataManager {
 
 	const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItems() {
 		return g_skinnedNonDeformingSkinnedMeshRenderItems;
+	}
+
+	const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItemsAlphaDiscard() {
+		return g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard;
 	}
 
 	const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent() {
@@ -518,7 +492,6 @@ namespace Unloved::RenderDataManager {
         SortRenderItems(g_renderItemsPointLightShadows);
         SortRenderItems(g_renderItemsMoonLightShadows);
 
-        GatherEmissiveRenderItems();
         SortRenderItems(g_renderItemsEmissive);
 
         // Lil hack to include bullet decals in mirrors
@@ -718,7 +691,10 @@ namespace Unloved::RenderDataManager {
             uint32_t meshId = renderItem.meshId;
 
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
-            if (!mesh) continue;
+            if (!mesh) {
+                instanceOffset++;
+                continue;
+            }
 
             // If the command exists, increment its instance count
             auto it = commandMap.find(meshId);
@@ -949,41 +925,6 @@ namespace Unloved::RenderDataManager {
         }
     }
 
-    void UpdateSkinnedRenderItemsBaseVertex(std::vector<RenderItem>& renderItems) {
-        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
-        for (RenderItem& renderItem : renderItems) {
-            Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
-            if (!mesh) continue;
-
-            renderItem.baseVertex = g_baseSkinnedVertex;
-            g_baseSkinnedVertex += mesh->vertexCount;
-        }
-    }
-
-    void SetRenderItemsBaseTransformIndex(std::vector<RenderItem>& renderItems) {
-        for (RenderItem& renderItem : renderItems) {
-            uint64_t id = 0;
-            Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, id);
-
-            AnimatedGameObject* animatedGameObject = Unloved::World::GetAnimatedGameObjectByObjectId(id);
-            if (!animatedGameObject) continue;
-
-            // Add the id if aint in the map yet
-            if (g_skinnedTransformIndexMap.find(id) == g_skinnedTransformIndexMap.end()) {
-                g_skinnedTransformIndexMap[id] = g_baseTransformIndex;
-
-                // Append skinning matrices to global array
-                g_skinningTransforms.insert(g_skinningTransforms.end(), animatedGameObject->GetBoneSkinningMatrices().begin(), animatedGameObject->GetBoneSkinningMatrices().end());
-
-                // Set the base transform index for the next animated game object
-                g_baseTransformIndex = g_skinningTransforms.size();
-            }
-
-            // Update render item with the base transform index
-            renderItem.baseSkinningTransformIndex = g_skinnedTransformIndexMap[id];
-        }
-    }
-
     void CreateSkinningData() {
         auto& set = g_drawCommandsSet;
 
@@ -997,21 +938,6 @@ namespace Unloved::RenderDataManager {
         SortRenderItems(g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard);
         SortRenderItems(g_skinnedNonDeformingSkinnedMeshRenderItemsBlended);
         SortRenderItems(g_skinnedNonDeformingSkinnedMeshRenderItemsHair);
-
-        // Create the transforms buffer
-        g_skinnedTransformIndexMap.clear(); // Maps an AnimatedGameObject Id to its base transform index
-        g_baseTransformIndex = 0;
-        SetRenderItemsBaseTransformIndex(g_skinnedRenderItemsDefault);
-        SetRenderItemsBaseTransformIndex(g_skinnedRenderItemsAlphaDiscard);
-        SetRenderItemsBaseTransformIndex(g_skinnedRenderItemsBlended);
-        SetRenderItemsBaseTransformIndex(g_skinnedRenderItemsHair);
-
-        // Set their base vertices
-        g_baseSkinnedVertex = 0;
-        UpdateSkinnedRenderItemsBaseVertex(g_skinnedRenderItemsDefault);
-        UpdateSkinnedRenderItemsBaseVertex(g_skinnedRenderItemsAlphaDiscard);
-        UpdateSkinnedRenderItemsBaseVertex(g_skinnedRenderItemsBlended);
-        UpdateSkinnedRenderItemsBaseVertex(g_skinnedRenderItemsHair);
 
         // Create the per viewport draw commands
         for (int i = 0; i < 4; i++) {
@@ -1187,6 +1113,7 @@ namespace Unloved::RenderDataManager {
     const std::vector<RenderItem>& GetRenderItemsProcedural()   { return g_renderItemsProcedural; }
     const std::vector<RenderItem>& GetRenderItemsStainedGlass() { return g_renderItemsStainedGlass; }
     const std::vector<RenderItem>& GetRenderItemsToiletWater()  { return g_renderItemsToiletWater; }
+    const std::vector<RenderItem>& GetRenderItemsPointLightShadows() { return g_renderItemsPointLightShadows; }
 
     const std::vector<RenderItem>& GetSkinnedRenderItemsAlphaDiscard() { return g_skinnedRenderItemsAlphaDiscard; }
     const std::vector<RenderItem>& GetSkinnedRenderItemsBlended()      { return g_skinnedRenderItemsBlended; }
@@ -1338,81 +1265,131 @@ namespace Unloved::RenderDataManager {
         g_skinnedRenderItemsDefault.insert(g_skinnedRenderItemsDefault.begin(), renderItems.begin(), renderItems.end());
     }
 
+
+
+
     void SubmitAnimatedMeshNodes(const AnimatedMeshNodes& animatedMeshNodes) {
         if (!animatedMeshNodes.RenderingEnabled()) return;
 
+        // Get parent
+        AnimatedGameObject* animatedGameObject = Unloved::World::GetAnimatedGameObjectByObjectId(animatedMeshNodes.m_parentId);
+        if (!animatedGameObject) return;
+
+        // Cache the base indices before they're mutated
+        uint32_t baseSkinningTransformIndex = g_skinningTransforms.size();
+
+        // Append skinning matrices to global array
+        g_skinningTransforms.insert(g_skinningTransforms.end(), animatedGameObject->GetBoneSkinningMatrices().begin(), animatedGameObject->GetBoneSkinningMatrices().end());
+
+        // Ray query group (Vulkan ONLY)
+        RayQuerySkinnedGroup& group = g_rayQuerySkinnedGroups.emplace_back();
+        group.modelMatrix = animatedGameObject->GetModelMatrix();
+
         for (const AnimatedMeshNode& node : animatedMeshNodes.GetNodes()) {
+            RenderItem renderItem = node.renderItem;
+            if (node.blendingMode == BlendingMode::DO_NOT_RENDER) continue;
+
             // Deforming
             if (node.deforming) {
+
+                // Per mesh ray query stuff (Vulkan only)
+                RayQueryGeometryRange& range = group.ranges.emplace_back();
+                range.baseVertex = g_baseSkinnedVertex;
+                range.baseIndex = node.baseIndex;
+                range.vertexCount = node.vertexCount;
+                range.indexCount = node.indexCount;
+                range.blendingMode = static_cast<uint32_t>(node.blendingMode);
+                range.materialIndex = node.materialIndex;
+
+                // Assign a new base vertex to be used by compute skinning
+                renderItem.baseSkinningTransformIndex = baseSkinningTransformIndex;
+                renderItem.baseVertex = g_baseSkinnedVertex;
+
+                g_baseSkinnedVertex += renderItem.vertexCount;
+
                 switch (node.blendingMode) {
-                case BlendingMode::DEFAULT:       g_skinnedRenderItemsDefault.push_back(node.renderItem);             break;
-                case BlendingMode::ALPHA_DISCARD: g_skinnedRenderItemsAlphaDiscard.push_back(node.renderItem); break;
-                case BlendingMode::BLENDED:       g_skinnedRenderItemsBlended.push_back(node.renderItem);      break;
-                case BlendingMode::HAIR:          g_skinnedRenderItemsHair.push_back(node.renderItem);         break;
+                case BlendingMode::DEFAULT:       g_skinnedRenderItemsDefault.push_back(renderItem);      break;
+                case BlendingMode::ALPHA_DISCARD: g_skinnedRenderItemsAlphaDiscard.push_back(renderItem); break;
+                case BlendingMode::BLENDED:       g_skinnedRenderItemsBlended.push_back(renderItem);      break;
+                case BlendingMode::HAIR:          g_skinnedRenderItemsHair.push_back(renderItem);         break;
                 default: break;
                 }
             }
             // Non deforming
             else {
                 switch (node.blendingMode) {
-                case BlendingMode::ALPHA_DISCARD: g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard.push_back(node.renderItem); break;
-                case BlendingMode::BLENDED:       g_skinnedNonDeformingSkinnedMeshRenderItemsBlended.push_back(node.renderItem); break;
-                case BlendingMode::DEFAULT:       g_skinnedNonDeformingSkinnedMeshRenderItems.push_back(node.renderItem); break;
-                case BlendingMode::HAIR:          g_skinnedNonDeformingSkinnedMeshRenderItemsHair.push_back(node.renderItem); break;
+                case BlendingMode::ALPHA_DISCARD: g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard.push_back(renderItem); break;
+                case BlendingMode::BLENDED:       g_skinnedNonDeformingSkinnedMeshRenderItemsBlended.push_back(renderItem);      break;
+                case BlendingMode::DEFAULT:       g_skinnedNonDeformingSkinnedMeshRenderItems.push_back(renderItem);             break;
+                case BlendingMode::HAIR:          g_skinnedNonDeformingSkinnedMeshRenderItemsHair.push_back(renderItem);         break;
                 default: break;
                 }
             }
+        }
+
+        if (group.ranges.empty()) {
+            g_rayQuerySkinnedGroups.pop_back();
         }
     }
 
     void SubmitMeshNodes(const MeshNodes& meshNodes) {
         for (const MeshNode& node : meshNodes.GetNodes()) {
-            switch (node.blendingMode) {
-            case BlendingMode::DEFAULT:       g_renderItems.push_back(node.renderItem); break;
-            case BlendingMode::ALPHA_DISCARD: g_renderItemsAlphaDiscarded.push_back(node.renderItem); break;
-            case BlendingMode::BLENDED:       g_renderItemsBlended.push_back(node.renderItem); break;
-            case BlendingMode::GLASS:         g_renderItemsGlass.push_back(node.renderItem); break;
-            case BlendingMode::HAIR:          g_renderItemsHair.push_back(node.renderItem); break;
-            case BlendingMode::MIRROR:        g_renderItemsMirror.push_back(node.renderItem); break;
-            case BlendingMode::TOILET_WATER:  g_renderItemsToiletWater.push_back(node.renderItem); break;
-            case BlendingMode::STAINED_GLASS: g_renderItemsStainedGlass.push_back(node.renderItem); break;
-            case BlendingMode::PLASTIC:       g_renderItemsPlastic.push_back(node.renderItem); break;
-            default: break;
-            }
-
-            if (node.blendingMode != BlendingMode::DO_NOT_RENDER) {
-                if (node.parentObjectId != 0 && node.parentObjectId == Editor::GetSelectedObjectId()) g_renderItemsOutline.push_back(node.renderItem);
-
-                if (node.castShadows)    g_renderItemsPointLightShadows.push_back(node.renderItem);
-                if (node.castCSMShadows) g_renderItemsMoonLightShadows.push_back(node.renderItem);
-            }
+            SubmitRenderItem(node.renderItem);
         }
     }
 
     void SubmitRenderItem(const RenderItem& renderItem) {
         BlendingMode blendingMode = (BlendingMode)renderItem.blendingMode;
+        RenderItem submittedRenderItem = renderItem;
 
         switch (blendingMode) {
-        case BlendingMode::DEFAULT:       g_renderItems.push_back(renderItem); break;
-        case BlendingMode::ALPHA_DISCARD: g_renderItemsAlphaDiscarded.push_back(renderItem); break;
-        case BlendingMode::BLENDED:       g_renderItemsBlended.push_back(renderItem); break;
-        case BlendingMode::GLASS:         g_renderItemsGlass.push_back(renderItem); break;
-        case BlendingMode::HAIR:          g_renderItemsHair.push_back(renderItem); break;
-        case BlendingMode::MIRROR:        g_renderItemsMirror.push_back(renderItem); break;
-        case BlendingMode::TOILET_WATER:  g_renderItemsToiletWater.push_back(renderItem); break;
-        case BlendingMode::STAINED_GLASS: g_renderItemsStainedGlass.push_back(renderItem); break;
-        case BlendingMode::PLASTIC:       g_renderItemsPlastic.push_back(renderItem); break;
+        case BlendingMode::DEFAULT:       g_renderItems.push_back(submittedRenderItem); break;
+        case BlendingMode::ALPHA_DISCARD: g_renderItemsAlphaDiscarded.push_back(submittedRenderItem); break;
+        case BlendingMode::BLENDED:       g_renderItemsBlended.push_back(submittedRenderItem); break;
+        case BlendingMode::GLASS:         g_renderItemsGlass.push_back(submittedRenderItem); break;
+        case BlendingMode::HAIR:          g_renderItemsHair.push_back(submittedRenderItem); break;
+        case BlendingMode::MIRROR:        g_renderItemsMirror.push_back(submittedRenderItem); break;
+        case BlendingMode::TOILET_WATER:  g_renderItemsToiletWater.push_back(submittedRenderItem); break;
+        case BlendingMode::STAINED_GLASS: g_renderItemsStainedGlass.push_back(submittedRenderItem); break;
+        case BlendingMode::PLASTIC:       g_renderItemsPlastic.push_back(submittedRenderItem); break;
         default: break;
         }
 
         if (blendingMode != BlendingMode::DO_NOT_RENDER) {
             uint64_t objectId = 0;
-            Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+            Hell::Bit::UnpackUint64(submittedRenderItem.objectIdLowerBit, submittedRenderItem.objectIdUpperBit, objectId);
 
-            if (objectId != 0 && objectId == Editor::GetSelectedObjectId()) g_renderItemsOutline.push_back(renderItem);
+            // Emissive
+            if (Material* material = ResourceManager::GetMaterialByIndex(submittedRenderItem.materialIndex)) {
+                bool hasEmissiveMap = material->m_emissive != g_blackTextureIndex;
+                bool hasEmissiveColor = submittedRenderItem.emissiveR != 0.0f || submittedRenderItem.emissiveG != 0.0f || submittedRenderItem.emissiveB != 0.0f;
 
-            if ((renderItem.shadowBit & SHADOW_BIT_CAST_SHADOW) != 0u) g_renderItemsPointLightShadows.push_back(renderItem);
-            if ((renderItem.shadowBit & SHADOW_BIT_CAST_CSM_SHADOW)  != 0u) g_renderItemsMoonLightShadows.push_back(renderItem);
+                if (hasEmissiveMap || hasEmissiveColor) {
+                    g_renderItemsEmissive.push_back(submittedRenderItem);
+                }
+            }
+
+            // Outline
+            if (objectId != 0 && objectId == Editor::GetSelectedObjectId()) g_renderItemsOutline.push_back(submittedRenderItem);
+
+            // Shadow Casting
+            if ((submittedRenderItem.shadowBit & SHADOW_BIT_CAST_SHADOW) != 0u) g_renderItemsPointLightShadows.push_back(submittedRenderItem);
+            if ((submittedRenderItem.shadowBit & SHADOW_BIT_CAST_CSM_SHADOW)  != 0u) g_renderItemsMoonLightShadows.push_back(submittedRenderItem);
+
+            // Vulkan Ray Query
+            //if (BackEnd::GetAPI() == API::VULKAN) {
+            //    RayQueryInstanceInfo info;
+            //    info.meshBufferType = MeshBufferType::ProceduralGeometry;
+            //    info.meshId = submittedRenderItem.meshId;
+            //    info.baseVertex = submittedRenderItem.baseVertex;
+            //    info.baseIndex = submittedRenderItem.baseIndex;
+            //    info.vertexCount = submittedRenderItem.vertexCount;
+            //    info.indexCount = submittedRenderItem.indexCount;
+            //    info.blendingMode = submittedRenderItem.blendingMode;
+            //    info.materialIndex = submittedRenderItem.materialIndex;
+            //    info.modelMatrix = glm::mat4(1.0f);
+            //}
+            //
         }
     }
 

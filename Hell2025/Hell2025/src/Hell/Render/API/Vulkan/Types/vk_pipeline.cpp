@@ -375,3 +375,15 @@ void VulkanPipeline::Cleanup() {
     m_layout = VK_NULL_HANDLE;
     m_handle = VK_NULL_HANDLE;
 }
+
+size_t VulkanPipeline::GetCPUAllocatedByteCount() const {
+    return sizeof(VulkanPipeline) +
+        (m_colorAttachmentFormats.capacity() * sizeof(VkFormat)) +
+        (m_descriptorLayouts.capacity() * sizeof(VkDescriptorSetLayout)) +
+        (m_pushConstants.capacity() * sizeof(VkPushConstantRange)) +
+        (m_attributeDescriptions.capacity() * sizeof(VkVertexInputAttributeDescription));
+}
+
+size_t VulkanPipeline::GetGPUAllocatedByteCount() const {
+    return 0;
+}

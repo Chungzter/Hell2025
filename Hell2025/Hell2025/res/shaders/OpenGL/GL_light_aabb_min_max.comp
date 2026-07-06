@@ -9,7 +9,7 @@ struct AABB {
     vec4 boundsMax;
 };
 
-layout(std430, binding = 5) buffer LightAABBBuffer {
+layout(std430, binding = 6) buffer LightAABBBuffer {
     AABB lightAABBs[];
 };
 

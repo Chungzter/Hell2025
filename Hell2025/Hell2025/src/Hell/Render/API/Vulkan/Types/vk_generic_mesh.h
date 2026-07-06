@@ -17,6 +17,10 @@ struct VulkanGenericMesh {
     size_t GetIndexCount() const  { return m_indexCount; }
     VulkanBuffer* GetVertexBuffer() const;
     VulkanBuffer* GetIndexBuffer() const;
+    uint64_t GetVertexBufferId() const { return m_vertexBufferId; }
+    uint64_t GetIndexBufferId() const  { return m_indexBufferId; }
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
 
 private:
     void ResizeVertexBuffer(size_t newCapacity);

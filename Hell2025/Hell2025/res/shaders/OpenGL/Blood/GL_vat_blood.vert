@@ -21,7 +21,7 @@ uniform mat4 u_modelMatrix;
 uniform mat4 u_inverseModelMatrix;
 uniform float u_time;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 

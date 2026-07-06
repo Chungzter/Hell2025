@@ -16,6 +16,10 @@ layout(buffer_reference, scalar) readonly buffer RenderItemBuffer {
     RenderItem data[];
 };
 
+layout(buffer_reference, scalar) readonly buffer MaterialBuffer {
+    Material data[];
+};
+
 layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
     ViewportData data[];
 };
@@ -29,6 +33,7 @@ layout(location = 2) flat out int v_baseColorTextureIndex;
 
 void main() {
     RenderItemBuffer renderItems = RenderItemBuffer(pushConstant.data.renderItemsDeviceAddress);
+    MaterialBuffer materials = MaterialBuffer(pushConstant.data.materialsDeviceAddress);
     ViewportDataBuffer viewportData = ViewportDataBuffer(pushConstant.data.viewportDataDeviceAddress);
 
     uint baseInstance = uint(gl_BaseInstanceARB);
@@ -37,10 +42,11 @@ void main() {
     uint globalInstanceIndex = instanceOffset + (uint(gl_InstanceIndex) - baseInstance);
 
     RenderItem renderItem = renderItems.data[globalInstanceIndex];
+    Material material = materials.data[renderItem.materialIndex];
     mat4 projectionView = viewportData.data[viewportIndex].projectionViewReverseZ;
 
     v_globalInstanceIndex = globalInstanceIndex;
     v_uv = a_uv;
-    v_baseColorTextureIndex = renderItem.baseColorTextureIndex;
+    v_baseColorTextureIndex = material.basecolor;
     gl_Position = projectionView * renderItem.modelMatrix * vec4(a_position, 1.0);
 }

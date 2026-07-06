@@ -55,11 +55,7 @@ void ChristmasTree::CreateRenderItems() {
     //    renderItem.baseVertex = mesh->baseVertex;
     //    renderItem.baseIndex = mesh->baseIndex;
     //
-    //    if (material) {
-    //        renderItem.baseColorTextureIndex = material->m_basecolor;
-    //        renderItem.normalMapTextureIndex = material->m_normal;
-    //        renderItem.rmaTextureIndex = material->m_rma;
-    //    }
+    //    renderItem.materialIndex = materialIndex;
     //
     //    RendererUtil::UpdateRenderItemAABB(renderItem);
     //}

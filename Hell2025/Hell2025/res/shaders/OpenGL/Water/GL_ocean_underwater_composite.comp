@@ -11,8 +11,8 @@ layout (binding = 2) uniform sampler2D GaussianFinalLighting;
 layout (binding = 3) uniform sampler2D WaterColorTexture;
 layout (binding = 4) uniform sampler2D WaterDUDVTexture;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData  rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData  viewportDataArr[] ; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData  rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData  viewportDataArr[] ; };
 
 uniform float u_time;
 uniform vec2 u_resolution;

@@ -125,9 +125,9 @@ namespace OpenGL::Renderer {
 
             OpenGL::SetUniformInt("u_debugMode", debugMode);
 
-            OpenGL::BindSSBO(5, "TileLights");
-            OpenGL::BindSSBO(6, "TileBloodDecals");
-            OpenGL::BindSSBO(7, "TileChristmasLights");
+            OpenGL::BindSSBO(6, "TileLights");
+            OpenGL::BindSSBO(8, "TileBloodDecals");
+            OpenGL::BindSSBO(9, "TileChristmasLights");
 
 			uint32_t attachmentHandle = 0;
 

@@ -13,11 +13,11 @@ layout (location = 1) in vec3 vNormal;
 layout (location = 2) in vec2 vUV;
 layout (location = 3) in vec3 vTangent;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 
-layout(std430, binding = 3) readonly buffer renderItemsBuffer {
+layout(std430, binding = 4) readonly buffer renderItemsBuffer {
     RenderItem renderItems[];
 };
 
@@ -34,9 +34,7 @@ out float FlashlightModifer;
 out vec3 CameraForward;
 
 #if ENABLE_BINDLESS
-out flat int BaseColorTextureIndex;
-out flat int NormalTextureIndex;
-out flat int RMATextureIndex;
+out flat int MaterialIndex;
 #else
 uniform int u_viewportIndex;
 uniform int u_globalInstanceIndex;
@@ -48,16 +46,15 @@ void main() {
     int viewportIndex = gl_BaseInstance >> VIEWPORT_INDEX_SHIFT;
     int instanceOffset = gl_BaseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
     int globalInstanceIndex = instanceOffset + gl_InstanceID;    
-
-    BaseColorTextureIndex =  renderItems[globalInstanceIndex].baseColorTextureIndex;
-	NormalTextureIndex =  renderItems[globalInstanceIndex].normalMapTextureIndex;
-	RMATextureIndex =  renderItems[globalInstanceIndex].rmaTextureIndex;
 #else 
     int globalInstanceIndex = u_globalInstanceIndex;
     int viewportIndex = u_viewportIndex;
 #endif
 
     RenderItem renderItem = renderItems[globalInstanceIndex];
+#if ENABLE_BINDLESS
+    MaterialIndex = renderItem.materialIndex;
+#endif
     
     mat4 projectionView = viewportData[viewportIndex].projectionView;
     mat4 inverseView = viewportData[viewportIndex].inverseView;

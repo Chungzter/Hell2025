@@ -57,9 +57,9 @@ namespace OpenGL::Renderer {
 
         OpenGL::UploadSSBOStatic("ParticleAdditions", gpuParticles.size() * sizeof(GpuParticle), gpuParticles.data());
 
-        OpenGL::BindSSBO(5, "ParticleAdditions");
-        OpenGL::BindSSBO(6, "ParticlePool");
-        OpenGL::BindSSBO(9, "ParticleAdditionCounter");
+        OpenGL::BindSSBO(6, "ParticleAdditions");
+        OpenGL::BindSSBO(7, "ParticlePool");
+        OpenGL::BindSSBO(10, "ParticleAdditionCounter");
 
         OpenGL::ClearSSBORange("ParticleAdditionCounter", 0, sizeof(uint32_t));
 
@@ -77,9 +77,9 @@ namespace OpenGL::Renderer {
     void UpdateParticles() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGL::BindSSBO(6, "ParticlePool");
-        OpenGL::BindSSBO(7, "ParticleActiveIndices");
-        OpenGL::BindSSBO(8, "ParticleDrawCommand");
+        OpenGL::BindSSBO(7, "ParticlePool");
+        OpenGL::BindSSBO(8, "ParticleActiveIndices");
+        OpenGL::BindSSBO(9, "ParticleDrawCommand");
 
         OpenGL::BindShader("ParticleUpdate");
         OpenGL::SetUniformFloat("u_deltaTime", Hell::Time::DeltaTime());
@@ -128,8 +128,8 @@ namespace OpenGL::Renderer {
 
         glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
-        OpenGL::BindSSBO(6, "ParticlePool");
-        OpenGL::BindSSBO(7, "ParticleActiveIndices");
+        OpenGL::BindSSBO(7, "ParticlePool");
+        OpenGL::BindSSBO(8, "ParticleActiveIndices");
 
         BindEmptyVAO();
         OpenGL::BindDrawIndirectBuffer("ParticleDrawCommand");
@@ -171,9 +171,9 @@ namespace OpenGL::Renderer {
             OpenGL::UpdateSSBO("BubblePositionCount", sizeof(uint64_t), &count);
 
             OpenGL::BindShader("BubbleDrawCommandArgs");
-            OpenGL::BindSSBO(5, "BubblePositions");
-            OpenGL::BindSSBO(6, "BubblePositionCount");
-            OpenGL::BindSSBO(7, "BubbleDrawCommand");
+            OpenGL::BindSSBO(6, "BubblePositions");
+            OpenGL::BindSSBO(7, "BubblePositionCount");
+            OpenGL::BindSSBO(8, "BubbleDrawCommand");
             OpenGL::DispatchCompute(1, 1, 1);
         }
     }
@@ -210,7 +210,7 @@ namespace OpenGL::Renderer {
 
         glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
-        OpenGL::BindSSBO(5, "BubblePositions");
+        OpenGL::BindSSBO(6, "BubblePositions");
 
         BindEmptyVAO();
         OpenGL::BindDrawIndirectBuffer("BubbleDrawCommand");

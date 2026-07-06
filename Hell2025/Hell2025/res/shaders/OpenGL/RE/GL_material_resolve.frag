@@ -4,8 +4,9 @@
 layout(early_fragment_tests) in;
 
 #include "../../common/constants.glsl"
+#include "../../common/OpenGL/binding_indices.glsl"
 #include "../../common/lighting.glsl"
-#include "../../common/misc_flags.glsl"
+#include "../../common/flags.glsl"
 #include "../../common/normal_encoding.glsl"
 #include "../../common/post_processing.glsl"
 #include "../../common/types.glsl"
@@ -25,12 +26,13 @@ struct PackedVertex {
     float tx, ty, tz;
 };
 
-readonly restrict layout(std430, binding = 0) buffer vertexBuffer { PackedVertex vertices[]; };
-readonly restrict layout(std430, binding = 1) buffer indexBuffer { uint indices[]; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
-readonly restrict layout(std430, binding = 3) buffer renderItemsBuffer  { RenderItem renderItems[]; };
-readonly restrict layout(std430, binding = 4) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-readonly restrict layout(std430, binding = 5) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = 6) buffer vertexBuffer { PackedVertex vertices[]; };
+readonly restrict layout(std430, binding = 7) buffer indexBuffer { uint indices[]; };
 
 float Cross2D(vec2 a, vec2 b) {
     return a.x * b.y - a.y * b.x;
@@ -73,6 +75,7 @@ void main() {
     uint primitiveID = visibilityData.y;
 
     RenderItem renderItem = renderItems[globalInstanceIndex];
+    Material material = materials[renderItem.materialIndex];
     uint triangleIndexOffset = renderItem.baseIndex + (primitiveID * 3);
 
     uint i0 = indices[triangleIndexOffset + 0] + renderItem.baseVertex;
@@ -161,9 +164,9 @@ void main() {
     vec3 b = cross(n, t);
     mat3 tbn = mat3(t, b, n);
 
-    vec4 baseColor = textureGrad(sampler2D(textureSamplers[renderItem.baseColorTextureIndex]), uv, dPdx, dPdy);
-    vec3 normalMap = textureGrad(sampler2D(textureSamplers[renderItem.normalMapTextureIndex]), uv, dPdx, dPdy).rgb;
-    vec4 rma = textureGrad(sampler2D(textureSamplers[renderItem.rmaTextureIndex]), uv, dPdx, dPdy).rgba;
+    vec4 baseColor = textureGrad(sampler2D(textureSamplers[material.basecolor]), uv, dPdx, dPdy);
+    vec3 normalMap = textureGrad(sampler2D(textureSamplers[material.normal]), uv, dPdx, dPdy).rgb;
+    vec4 rma = textureGrad(sampler2D(textureSamplers[material.rma]), uv, dPdx, dPdy).rgba;
 
     float roughness = rma.r;
     float metallic  = rma.g;

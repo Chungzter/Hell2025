@@ -6,6 +6,8 @@
 namespace VulkanRenderer {
 
     void BlitImage(VkCommandBuffer commandBuffer, const std::string& srcName, const std::string& dstName, VkFilter filter) {
+        ProfilerVulkanZoneFunction();
+
         AllocatedImage* srcImage = VulkanResourceManager::GetAllocatedImage(srcName);
         AllocatedImage* dstImage = VulkanResourceManager::GetAllocatedImage(dstName);
         if (!srcImage || !dstImage) return;

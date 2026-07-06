@@ -18,6 +18,8 @@ struct VulkanTexture {
     void Cleanup();
 
     size_t GetAllocatedByteCount() const;
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
     uint32_t GetWidth() const             { return m_width; }
     uint32_t GetHeight() const            { return m_height; }
     uint32_t GetMipmapLevelCount() const  { return m_mipmapLevelCount; }

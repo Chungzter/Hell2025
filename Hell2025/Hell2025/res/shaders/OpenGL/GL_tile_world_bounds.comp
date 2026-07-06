@@ -7,9 +7,9 @@ layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
 layout (binding = 0) uniform sampler2D u_depthTexture;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
-layout(std430, binding = 6) buffer tileWorldBoundsBuffer { TileWorldBounds tileWorldBounds[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+layout(std430, binding = 7) buffer tileWorldBoundsBuffer { TileWorldBounds tileWorldBounds[]; };
 
 uniform int u_tileXCount;
 uniform int u_tileYCount;

@@ -10,7 +10,7 @@ layout (binding = 4) uniform sampler2D blurBuffer3ColorB;
 
 uniform int u_viewportIndex;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 

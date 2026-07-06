@@ -9,7 +9,7 @@ uniform int u_offsetCount;
 uniform int u_viewportIndex;
 uniform vec2 u_offsets[256];
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 

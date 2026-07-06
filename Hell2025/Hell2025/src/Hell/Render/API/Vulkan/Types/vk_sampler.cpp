@@ -50,3 +50,11 @@ VkDescriptorImageInfo VulkanSampler::GetDescriptorInfo() const {
     info.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     return info;
 }
+
+size_t VulkanSampler::GetCPUAllocatedByteCount() const {
+    return sizeof(VulkanSampler);
+}
+
+size_t VulkanSampler::GetGPUAllocatedByteCount() const {
+    return 0;
+}

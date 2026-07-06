@@ -29,7 +29,7 @@ struct RenderItemUI {
     int padding2;
 };
 
-layout(std430, binding = 5) readonly buffer RenderItems {
+layout(std430, binding = 6) readonly buffer RenderItems {
     RenderItemUI renderItems[];
 };
 

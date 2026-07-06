@@ -4,7 +4,7 @@
 
 layout (location = 0) in vec3 vPosition;
 
-layout(std430, binding = 3) readonly buffer renderItemsBuffer {
+layout(std430, binding = 4) readonly buffer renderItemsBuffer {
     RenderItem renderItems[];
 };
 

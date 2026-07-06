@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <cstddef>
 
 struct AllocatedImage;
 
@@ -39,6 +40,8 @@ struct  VulkanPipeline {
 
     VkPipeline GetHandle() const { return m_handle; }
     VkPipelineLayout GetLayout() const { return m_layout; }
+    size_t GetCPUAllocatedByteCount() const;
+    size_t GetGPUAllocatedByteCount() const;
 
 private:
     bool CheckResult(VkResult result, const std::string& message);

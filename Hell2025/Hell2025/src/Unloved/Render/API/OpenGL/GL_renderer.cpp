@@ -210,7 +210,7 @@ namespace OpenGL::Renderer {
 
         // Upload materials
         std::vector<Material>& materials = Hell::ResourceManager::GetMaterials();
-        OpenGL::UploadSSBOStatic("Materials", materials.size() * sizeof(Material), materials.data());
+        OpenGL::UpdateSSBO("Materials", materials.size() * sizeof(Material), materials.data());
     }
 
     void CreateFrameBuffers() {
@@ -556,7 +556,7 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::CreateSSBO("SkinningTransforms").Create(sizeof(glm::mat4) * MAX_ANIMATED_TRANSFORMS, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("Lights").Create(sizeof(GPULight) * MAX_GPU_LIGHTS, GL_DYNAMIC_STORAGE_BIT);
 
-        OpenGL::ResourceManager::CreateSSBO("Materials");
+        OpenGL::ResourceManager::CreateSSBO("Materials").Create(sizeof(Material), GL_DYNAMIC_STORAGE_BIT);
 
         OpenGL::ResourceManager::CreateSSBO("RenderItemsUI").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
 
@@ -636,6 +636,8 @@ namespace OpenGL::Renderer {
 
     void UpdateSSBOS() {
         OpenGL::UpdateSSBO("Samplers", sizeof(GLuint64) * OpenGL::BackEnd::GetBindlessTextureIDs().size(), OpenGL::BackEnd::GetBindlessTextureIDs().data());
+        const std::vector<Material>& materials = Hell::ResourceManager::GetMaterials();
+        OpenGL::UpdateSSBO("Materials", materials.size() * sizeof(Material), materials.data());
 
         const RendererData& rendererData = Unloved::RenderDataManager::GetRendererData();
         const std::vector<BloodDecalInstanceData>& bloodScreenSpaceDecalInstances = Unloved::RenderDataManager::GetBloodScreenSpaceDecalInstanceData();
@@ -661,10 +663,11 @@ namespace OpenGL::Renderer {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(1, "RendererData");
-        OpenGL::BindSSBO(2, "ViewportData");
-        OpenGL::BindSSBO(3, "InstanceData");
-        OpenGL::BindSSBO(4, "Lights");
+        OpenGL::BindSSBO(1, "Materials");
+        OpenGL::BindSSBO(2, "RendererData");
+        OpenGL::BindSSBO(3, "ViewportData");
+        OpenGL::BindSSBO(4, "InstanceData");
+        OpenGL::BindSSBO(5, "Lights");
     }
 
     void PreGameLogicComputePasses() {
@@ -726,32 +729,23 @@ namespace OpenGL::Renderer {
                 OpenGL::SetUniformInt("u_globalInstanceIndex", instanceOffset + i);
 
                 if (bindMaterial) {
+                    Material* material = Hell::ResourceManager::GetMaterialByIndex(renderItem.materialIndex);
                     glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.baseColorTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE1);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.normalMapTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE2);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.rmaTextureIndex)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE3);
-
-                    // Try bind emissive texture
-                    if (renderItem.emissiveTextureIndex != -1) {
-                        if (Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.emissiveTextureIndex)) {
-                            glBindTexture(GL_TEXTURE_2D, texture->GetGLTexture().GetHandle());
-                        }
-                    }
-                    // Fall back to black
-                    else {
-                        glBindTexture(GL_TEXTURE_2D, GetTextureHandleByName("Black"));
-                    }
                 }
                 if (bindWoundMaterial) {
+                    Material* material = Hell::ResourceManager::GetMaterialByIndex(renderItem.woundMaterialIndex);
                     glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex0)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE5);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex1)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
                     glActiveTexture(GL_TEXTURE6);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.additionalTextureIndex2)->GetGLTexture().GetHandle());
+                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
                 }
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, command.indexCount, GL_UNSIGNED_INT, (GLvoid*)(command.firstIndex * sizeof(GLuint)), command.baseVertex);

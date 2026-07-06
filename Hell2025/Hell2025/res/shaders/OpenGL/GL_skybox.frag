@@ -8,7 +8,7 @@ layout (binding = 0) uniform samplerCube cubeMap;
 in vec3 TexCoords;
 in flat int ViewportIndex;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
     ViewportData viewportData[];
 };
 

@@ -8,8 +8,8 @@ layout(binding = 1) uniform sampler2D NormalTexture_band0;
 layout(binding = 2) uniform sampler2D DisplacementTexture_band1;
 layout(binding = 3) uniform sampler2D NormalTexture_band1;
 
-readonly restrict layout(std430, binding = 1) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 uniform int u_viewportIndex;
 uniform float u_oceanOriginY;

@@ -3,15 +3,15 @@
 
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
-restrict layout(std430, binding = 5) readonly buffer ParticleAdditionsBuffer {
+restrict layout(std430, binding = 6) readonly buffer ParticleAdditionsBuffer {
     Particle particleAdditions[];
 };
 
-restrict layout(std430, binding = 6) buffer ParticlePoolBuffer {
+restrict layout(std430, binding = 7) buffer ParticlePoolBuffer {
     Particle particlePool[];
 };
 
-restrict layout(std430, binding = 9) buffer ParticleAdditionCounterBuffer {
+restrict layout(std430, binding = 10) buffer ParticleAdditionCounterBuffer {
     uint particleAdditionCounter;
 };
 

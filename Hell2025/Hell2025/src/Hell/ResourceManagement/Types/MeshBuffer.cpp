@@ -16,18 +16,6 @@ MeshBuffer::MeshBuffer(const std::string& name) {
     m_name = name;
 }
 
-size_t MeshBuffer::GetCPUAllocatedByteCount() const {
-    return (m_vertices.capacity() * sizeof(Vertex)) +
-           (m_indices.capacity() * sizeof(uint32_t)) +
-           (m_vertexWeights.capacity() * sizeof(VertexWeight));
-}
-
-size_t MeshBuffer::GetGPUAllocatedByteCount() const {
-    return (m_vertexCapacity * Vertex::GetLayout().stride) +
-           (m_indexCapacity * sizeof(uint32_t)) +
-           (m_vertexWeightCapacity * sizeof(VertexWeight));
-}
-
 void MeshBuffer::Initialize() {
     Reset();
 
@@ -40,7 +28,7 @@ void MeshBuffer::Initialize() {
         meshBuffer.Init(Vertex::GetLayout());
     }
     if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        if (m_vulkanId == 0) {
+        if (m_vulkanId == 0 || !VulkanResourceManager::MeshBufferExists(m_vulkanId)) {
             m_vulkanId = VulkanResourceManager::CreateMeshBuffer(m_name);
         }
 
@@ -54,6 +42,8 @@ void MeshBuffer::Initialize() {
 }
 
 void MeshBuffer::Reset() {
+    DestroyAllVulkanBlas();
+
     m_meshes.clear();
     m_meshIdsByName.clear();
     m_skinnedMeshMetadata.clear();
@@ -74,9 +64,12 @@ void MeshBuffer::Reset() {
         meshBuffer.Reset();
     }
     if (Hell::BackEnd::GetAPI() == API::VULKAN && m_vulkanId != 0) {
-        VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer(m_vulkanId);
-        if (meshBuffer) {
+        if (VulkanResourceManager::MeshBufferExists(m_vulkanId)) {
+            VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer(m_vulkanId);
             meshBuffer->Reset();
+        }
+        else {
+            m_vulkanId = 0;
         }
     }
 
@@ -91,7 +84,9 @@ void MeshBuffer::CleanUp() {
         m_openGLId = 0;
     }
     if (m_vulkanId != 0) {
-        VulkanResourceManager::RemoveMeshBuffer(m_vulkanId);
+        if (VulkanResourceManager::MeshBufferExists(m_vulkanId)) {
+            VulkanResourceManager::RemoveMeshBuffer(m_vulkanId);
+        }
         m_vulkanId = 0;
     }
 }
@@ -129,6 +124,7 @@ uint32_t MeshBuffer::AddMesh(const std::vector<Vertex>& vertices, const std::vec
     mesh.aabbMax = aabbMax;
     mesh.extents = aabbMax - aabbMin;
     mesh.boundingSphereRadius = std::max(mesh.extents.x, std::max(mesh.extents.y, mesh.extents.z)) * 0.5f;
+    CreateVulkanBlas(mesh);
 
     return m_nextMeshId;
 }
@@ -435,6 +431,7 @@ void MeshBuffer::RemoveMesh(uint32_t meshId) {
     if (it == m_meshes.end()) return;
 
     Mesh& mesh = it->second;
+    DestroyVulkanBlas(mesh);
 
     // Create free vertex memory block
     MemoryBlock vertexBlock;
@@ -512,6 +509,30 @@ void MeshBuffer::RemoveMesh(uint32_t meshId) {
     // Remove the mesh
     m_skinnedMeshMetadata.erase(meshId);
     m_meshes.erase(it);
+}
+
+void MeshBuffer::CreateVulkanBlas(Mesh& mesh) {
+    if (Hell::BackEnd::GetAPI() != API::VULKAN) return;
+    if (mesh.vertexCount == 0 || mesh.indexCount < 3) return;
+
+    if (mesh.vulkanBlasId == 0 || !VulkanResourceManager::AccelerationStructureExists(mesh.vulkanBlasId)) {
+        mesh.vulkanBlasId = VulkanResourceManager::CreateAccelerationStructure();
+    }
+}
+
+void MeshBuffer::DestroyVulkanBlas(Mesh& mesh) {
+    if (mesh.vulkanBlasId == 0) return;
+
+    if (VulkanResourceManager::AccelerationStructureExists(mesh.vulkanBlasId)) {
+        VulkanResourceManager::RemoveAccelerationStructure(mesh.vulkanBlasId);
+    }
+    mesh.vulkanBlasId = 0;
+}
+
+void MeshBuffer::DestroyAllVulkanBlas() {
+    for (auto& entry : m_meshes) {
+        DestroyVulkanBlas(entry.second);
+    }
 }
 
 void MeshBuffer::PreAllocate(size_t maxVertices, size_t maxIndices, size_t maxVertexWeights) {
@@ -660,6 +681,14 @@ std::span<VertexWeight> MeshBuffer::GetMeshVertexWeightSpan(uint32_t meshId) {
     }
 
     return std::span<VertexWeight>(m_vertexWeights.data() + base, count);
+}
+
+size_t MeshBuffer::GetCPUAllocatedByteCount() const {
+    return (m_vertices.capacity() * sizeof(Vertex)) + (m_indices.capacity() * sizeof(uint32_t)) + (m_vertexWeights.capacity() * sizeof(VertexWeight));
+}
+
+size_t MeshBuffer::GetGPUAllocatedByteCount() const {
+    return (m_vertexCapacity * Vertex::GetLayout().stride) + (m_indexCapacity * sizeof(uint32_t)) + (m_vertexWeightCapacity * sizeof(VertexWeight));
 }
 
 void MeshBuffer::PrintDebugInfo() {

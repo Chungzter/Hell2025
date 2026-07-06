@@ -141,5 +141,19 @@ void VulkanTexture::Cleanup() {
 }
 
 size_t VulkanTexture::GetAllocatedByteCount() const {
-    return 0;
+    return GetGPUAllocatedByteCount();
+}
+
+size_t VulkanTexture::GetCPUAllocatedByteCount() const {
+    return sizeof(VulkanTexture);
+}
+
+size_t VulkanTexture::GetGPUAllocatedByteCount() const {
+    if (m_image == VK_NULL_HANDLE || m_allocation == VK_NULL_HANDLE) {
+        return 0;
+    }
+
+    VmaAllocationInfo allocationInfo{};
+    vmaGetAllocationInfo(VulkanMemoryManager::GetAllocator(), m_allocation, &allocationInfo);
+    return static_cast<size_t>(allocationInfo.size);
 }

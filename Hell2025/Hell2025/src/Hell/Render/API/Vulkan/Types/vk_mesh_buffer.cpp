@@ -156,3 +156,13 @@ VulkanBuffer VulkanMeshBuffer::CreateVertexWeightBuffer(size_t vertexWeightCapac
     const VkDeviceSize size = static_cast<VkDeviceSize>(vertexWeightCapacity) * sizeof(VertexWeight);
     return VulkanBuffer(size, VERTEX_WEIGHT_BUFFER_USAGE, VMA_MEMORY_USAGE_GPU_ONLY);
 }
+
+size_t VulkanMeshBuffer::GetCPUAllocatedByteCount() const {
+    return sizeof(VulkanMeshBuffer);
+}
+
+size_t VulkanMeshBuffer::GetGPUAllocatedByteCount() const {
+    return m_vertexBuffer.GetGPUAllocatedByteCount() +
+        m_indexBuffer.GetGPUAllocatedByteCount() +
+        m_vertexWeightBuffer.GetGPUAllocatedByteCount();
+}

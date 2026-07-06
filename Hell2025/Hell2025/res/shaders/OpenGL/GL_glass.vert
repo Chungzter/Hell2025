@@ -19,7 +19,7 @@ out vec3 Tangent;
 out vec3 BiTangent;
 out vec3 ViewPos;
 
-readonly restrict layout(std430, binding = 2) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 
