@@ -247,6 +247,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_down_sample_final_image.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_gaussian_blur.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_tile_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_framebuffers.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_shaders.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_ssbos.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_texture_arrays.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_debug.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_hair_pass.cpp" />

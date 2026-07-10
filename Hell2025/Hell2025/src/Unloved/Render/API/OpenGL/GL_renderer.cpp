@@ -33,7 +33,7 @@
 #include <unordered_map>
 
 
-#define NONE_BIT 0
+
 
 namespace OpenGL::Renderer {
     using namespace Unloved;
@@ -51,9 +51,9 @@ namespace OpenGL::Renderer {
     std::unordered_map<std::string, GLuint> g_cachedTextureHandles;
 
     void LoadShaders();
-    void CreateFrameBuffers();
 
-    IndirectBuffer g_indirectBuffer;
+    IndirectBuffer g_indirectBuffer;                                 // TODO: Make me an SSBO and get me the fuck out of here
+    IndirectBuffer& GetIndirectBuffer() { return g_indirectBuffer; } // TODO: Make me an SSBO and get me the fuck out of here
 
     struct Cubemaps {
         OpenGLCubemapView g_skyboxView;
@@ -72,8 +72,10 @@ namespace OpenGL::Renderer {
 
         g_tesselationPatch.Resize2(Ocean::GetTesslationMeshSize().x, Ocean::GetTesslationMeshSize().y);
 
-        CreateFrameBuffers();
+        CreateFramebuffers();
         CreateSSBOs();
+        CreateTextureArrays();
+
         InitSSBOs();
         LoadShaders();
 
@@ -181,9 +183,6 @@ namespace OpenGL::Renderer {
         InitFog();
         InitGrass();
         InitOceanHeightReadback();
-
-		//InitMSAA();
-		InitREStyle();
     }
 
     void InitMain() {
@@ -213,152 +212,7 @@ namespace OpenGL::Renderer {
         OpenGL::UpdateSSBO("Materials", materials.size() * sizeof(Material), materials.data());
     }
 
-    void CreateFrameBuffers() {
-        const Resolutions& resolutions = Config::GetResolutions();
 
-        OpenGLCubemapFrameBuffer& lightAABBfbo = OpenGL::ResourceManager::CreateCubemapFrameBuffer("LightAABB");
-        lightAABBfbo.Create(512);
-        lightAABBfbo.CreateAttachment(GL_RGBA32F, GL_NEAREST);
-        lightAABBfbo.CreateDepthAttachment(GL_DEPTH_COMPONENT32F);
-
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::CreateFrameBuffer("GBuffer");
-        gBuffer.Create(resolutions.gBuffer);
-        gBuffer.CreateAttachment("BaseColorMetallic", GL_RGBA8);
-        gBuffer.CreateAttachment("NormalXYRoughnessMisc", GL_RGB10_A2);
-        //gBuffer.CreateAttachment("Normal", GL_RGBA16F);
-        //gBuffer.CreateAttachment("BaseColor", GL_RGBA8);
-        gBuffer.CreateAttachment("RMA", GL_RGBA8); // In alpha is screenspace blood decal mask
-        gBuffer.CreateAttachment("Lighting", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
-        gBuffer.CreateAttachment("Emissive", GL_RGBA8, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
-        gBuffer.CreateAttachment("Glass", GL_RGBA16F);
-        gBuffer.CreateAttachment("VelocityXYOcclusionSubSurface", GL_RGBA16F);
-        gBuffer.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
-
-        OpenGLFrameBuffer& scratchFbo = OpenGL::ResourceManager::CreateFrameBuffer("Scratch");
-        scratchFbo.Create(resolutions.gBuffer);
-        scratchFbo.CreateAttachment("RGBA16F", GL_RGBA16F);
-
-        OpenGLFrameBuffer& waterFbo = OpenGL::ResourceManager::CreateFrameBuffer("Water");
-        waterFbo.Create(resolutions.gBuffer);
-        waterFbo.CreateAttachment("Lighting", GL_RGBA16F);
-        waterFbo.CreateAttachment("OceanFlags", GL_R8UI);
-        waterFbo.CreateAttachment("OceanMask", GL_R8UI);
-        waterFbo.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
-
-        OpenGLFrameBuffer& emissiveBlurFbo = OpenGL::ResourceManager::CreateFrameBuffer("EmissiveBlur");
-        emissiveBlurFbo.Create(resolutions.gBuffer.x, resolutions.gBuffer.y);
-        emissiveBlurFbo.CreateAttachment("ColorA", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
-        emissiveBlurFbo.CreateAttachment("ColorB", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
-
-        OpenGLFrameBuffer& indirectDiffuseFbo = OpenGL::ResourceManager::CreateFrameBuffer("IndirectDiffuse");
-        indirectDiffuseFbo.Create(resolutions.gBuffer);
-        indirectDiffuseFbo.CreateAttachment("Color", GL_R11F_G11F_B10F);
-
-        OpenGLFrameBuffer& depthPeeledTransparencyFbo = OpenGL::ResourceManager::CreateFrameBuffer("DepthPeeledTransparency");
-        depthPeeledTransparencyFbo.Create(resolutions.gBuffer);
-        depthPeeledTransparencyFbo.CreateAttachment("Color", GL_RGBA16F);
-        depthPeeledTransparencyFbo.CreateAttachment("ViewspaceDepth", GL_R32F);
-        depthPeeledTransparencyFbo.CreateAttachment("ViewspaceDepthPrevious", GL_R32F);
-        depthPeeledTransparencyFbo.CreateAttachment("Composite", GL_RGBA16F);
-        depthPeeledTransparencyFbo.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
-
-        //OpenGLFrameBuffer& bloodFluidFbo = CreateFrameBuffer("BloodFluid", resolutions.gBuffer);
-        //bloodFluidFbo.CreateAttachment("Depth", GL_R32F);
-        //bloodFluidFbo.CreateAttachment("Thickness", GL_R32F);
-        //bloodFluidFbo.CreateAttachment("BlurIntermediate", GL_R32F);
-
-        OpenGLFrameBuffer& gaussianBlurFbo = OpenGL::ResourceManager::CreateFrameBuffer("GaussianBlur");
-        gaussianBlurFbo.Create(resolutions.gBuffer.x / 2, resolutions.gBuffer.y / 2);
-        gaussianBlurFbo.CreateAttachment("ColorA", GL_RGBA16F, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
-        gaussianBlurFbo.CreateAttachment("ColorB", GL_RGBA16F, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
-
-        OpenGLFrameBuffer& decalPaintingFbo = OpenGL::ResourceManager::CreateFrameBuffer("DecalPainting");
-        decalPaintingFbo.Create(512, 512);
-        decalPaintingFbo.CreateAttachment("UVMap", GL_RGBA8, GL_LINEAR, GL_LINEAR);
-        decalPaintingFbo.CreateDepthAttachment(GL_DEPTH_COMPONENT24);
-
-        Hell::TextureArray& woundMasks = Hell::ResourceManager::CreateTextureArray("WoundMasks");
-        woundMasks.CleanUp();
-        woundMasks.AllocateMemory(WOUND_MASK_TEXTURE_SIZE, WOUND_MASK_TEXTURE_SIZE, GL_R8, 1, WOUND_MASK_TEXTURE_ARRAY_SIZE); // consider adding mipmaps
-
-        OpenGL::ResourceManager::CreateFrameBuffer("DecalMasks").Create(WOUND_MASK_TEXTURE_SIZE, WOUND_MASK_TEXTURE_SIZE);
-
-        OpenGLFrameBuffer& gBufferBackupFbo = OpenGL::ResourceManager::CreateFrameBuffer("GBufferBackup");
-        gBufferBackupFbo.Create(resolutions.gBuffer);
-        gBufferBackupFbo.CreateDepthAttachment(GL_DEPTH32F_STENCIL8); // do you really need this? you have WIP below
-
-        OpenGLFrameBuffer& wipFbo = OpenGL::ResourceManager::CreateFrameBuffer("WIP");
-        wipFbo.Create(resolutions.gBuffer);
-        wipFbo.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
-
-        OpenGLFrameBuffer& fogFbo = OpenGL::ResourceManager::CreateFrameBuffer("Fog");
-        fogFbo.Create(resolutions.gBuffer / 2);
-        fogFbo.CreateAttachment("Color", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
-
-        OpenGLFrameBuffer& quarterSizeFbo = OpenGL::ResourceManager::CreateFrameBuffer("QuarterSize");
-        quarterSizeFbo.Create(resolutions.gBuffer.x / 4, resolutions.gBuffer.y / 4);
-        quarterSizeFbo.CreateAttachment("DownsampledFinalLighting", GL_RGBA16F);
-
-        OpenGLFrameBuffer& halfSizeFbo = OpenGL::ResourceManager::CreateFrameBuffer("HalfSize");
-        halfSizeFbo.Create(resolutions.gBuffer.x / 2, resolutions.gBuffer.y / 2);
-        halfSizeFbo.CreateAttachment("DownsampledFinalLighting", GL_RGBA16F, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
-        halfSizeFbo.CreateAttachment("SSRHistoryA", GL_RGBA16F);
-        halfSizeFbo.CreateAttachment("SSRHistoryB", GL_RGBA16F);
-        halfSizeFbo.CreateAttachment("SSRCurrent", GL_RGBA16F);
-
-        OpenGLFrameBuffer& miscFullSizeFbo = OpenGL::ResourceManager::CreateFrameBuffer("MiscFullSize");
-        miscFullSizeFbo.Create(resolutions.gBuffer);
-        miscFullSizeFbo.CreateAttachment("GaussianFinalLightingIntermediate", GL_RGBA16F);
-        miscFullSizeFbo.CreateAttachment("GaussianFinalLighting", GL_RGBA16F);
-        miscFullSizeFbo.CreateAttachment("BloodScreenSpaceDecalMask", GL_R8);
-        miscFullSizeFbo.CreateAttachment("ViewspaceDepth", GL_R32F, GL_NEAREST, GL_NEAREST);
-        miscFullSizeFbo.CreateAttachment("FinalLightingCopy", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
-
-        OpenGLFrameBuffer& outlineFbo = OpenGL::ResourceManager::CreateFrameBuffer("Outline");
-        outlineFbo.Create(resolutions.gBuffer);
-        outlineFbo.CreateAttachment("Mask", GL_R8);
-        outlineFbo.CreateAttachment("Result", GL_R8);
-
-        OpenGLFrameBuffer& hairFbo = OpenGL::ResourceManager::CreateFrameBuffer("Hair");
-        hairFbo.Create(resolutions.hair);
-        hairFbo.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
-        hairFbo.CreateAttachment("Lighting", GL_RGBA16F);
-        hairFbo.CreateAttachment("ViewspaceDepth", GL_R32F);
-        hairFbo.CreateAttachment("ViewspaceDepthPrevious", GL_R32F);
-        hairFbo.CreateAttachment("Composite", GL_RGBA16F);
-
-        OpenGLFrameBuffer& finalImageFbo = OpenGL::ResourceManager::CreateFrameBuffer("FinalImage");
-        finalImageFbo.Create(resolutions.finalImage);
-        finalImageFbo.CreateAttachment("Color", GL_RGBA16F);
-
-        OpenGLFrameBuffer& presentFbo = OpenGL::ResourceManager::CreateFrameBuffer("Present");
-        presentFbo.Create(resolutions.ui);
-        presentFbo.CreateAttachment("Color", GL_RGBA8, GL_NEAREST, GL_NEAREST);
-
-        OpenGLFrameBuffer& worldFbo = OpenGL::ResourceManager::CreateFrameBuffer("World");
-        worldFbo.Create(1, 1);
-        worldFbo.CreateAttachment("HeightMap", GL_R16F);
-
-        OpenGLFrameBuffer& roadFbo = OpenGL::ResourceManager::CreateFrameBuffer("Road");
-        roadFbo.Create(1, 1);
-        roadFbo.CreateAttachment("RoadMask", GL_R16F);
-
-        OpenGL::ResourceManager::CreateFrameBuffer("HeightMapBlitBuffer").Create(HEIGHT_MAP_SIZE, HEIGHT_MAP_SIZE);
-
-        OpenGLFrameBuffer& heightMapFbo = OpenGL::ResourceManager::CreateFrameBuffer("HeightMap");
-        heightMapFbo.Create(HEIGHT_MAP_SIZE, HEIGHT_MAP_SIZE);
-        heightMapFbo.CreateAttachment("Color", GL_R16F);
-
-        OpenGLFrameBuffer& fftFrameBufferBand0 = OpenGL::ResourceManager::CreateFrameBuffer("FFT_band0");
-        fftFrameBufferBand0.Create(Ocean::GetFFTResolution(0).x, Ocean::GetFFTResolution(0).y);
-        fftFrameBufferBand0.CreateAttachment("Displacement", GL_RGBA32F, GL_LINEAR, GL_LINEAR, GL_REPEAT);
-        fftFrameBufferBand0.CreateAttachment("Normals", GL_RGBA32F, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_REPEAT, true);
-
-        OpenGLFrameBuffer& fftFrameBufferBand1 = OpenGL::ResourceManager::CreateFrameBuffer("FFT_band1");
-        fftFrameBufferBand1.Create(Ocean::GetFFTResolution(1).x, Ocean::GetFFTResolution(1).y);
-        fftFrameBufferBand1.CreateAttachment("Displacement", GL_RGBA32F, GL_LINEAR, GL_LINEAR, GL_REPEAT, true);
-        fftFrameBufferBand1.CreateAttachment("Normals", GL_RGBA32F, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_REPEAT, true);
-    }
 
     void LoadShaders() {
         OpenGL::ResourceManager::LoadShader("Present", { "GL_present.vert", "GL_present.frag" });
@@ -524,98 +378,7 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("RE", "ParticleUpdate", { "GL_particle_update.comp" });
     }
 
-    void CreateSSBOs() {
-		GLbitfield staticFlags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT;
-		GLbitfield dynamicFlags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT | GL_MAP_WRITE_BIT;
 
-		// Create ssbos
-
-        // Ocean
-        const glm::uvec2 oceanSize = Ocean::GetBaseFFTResolution(); // WARNING!!! This size must bit your largest FFT dimensions
-		OpenGL::ResourceManager::CreateSSBO("ffth0Band0").Create(Ocean::GetFFTResolution(0).x * Ocean::GetFFTResolution(0).y * sizeof(std::complex<float>), staticFlags);
-		OpenGL::ResourceManager::CreateSSBO("ffth0Band1").Create(Ocean::GetFFTResolution(1).x * Ocean::GetFFTResolution(1).y * sizeof(std::complex<float>), staticFlags);
-		OpenGL::ResourceManager::CreateSSBO("fftSpectrumInSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-		OpenGL::ResourceManager::CreateSSBO("fftSpectrumOutSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-		OpenGL::ResourceManager::CreateSSBO("fftDispInXSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-		OpenGL::ResourceManager::CreateSSBO("fftDispZInSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-		OpenGL::ResourceManager::CreateSSBO("fftGradXInSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-		OpenGL::ResourceManager::CreateSSBO("fftGradZInSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-		OpenGL::ResourceManager::CreateSSBO("fftDispXOutSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-		OpenGL::ResourceManager::CreateSSBO("fftDispZOutSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-		OpenGL::ResourceManager::CreateSSBO("fftGradXOutSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-		OpenGL::ResourceManager::CreateSSBO("fftGradZOutSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-
-        int dummySize = 64;
-
-        // Core
-        OpenGL::ResourceManager::CreateSSBO("Samplers").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("ViewportData").Create(sizeof(ViewportData) * 4, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("RendererData").Create(sizeof(RendererData), GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("InstanceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("SkinningTransforms").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("Lights").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-
-        OpenGL::ResourceManager::CreateSSBO("Materials").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-
-        OpenGL::ResourceManager::CreateSSBO("RenderItemsUI").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-
-        // Vertices
-        OpenGL::ResourceManager::CreateSSBO("Indices2");
-        OpenGL::ResourceManager::CreateSSBO("Vertices2");
-
-        // Raytracing
-		OpenGL::ResourceManager::CreateSSBO("TriangleData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("SceneBvh").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("MeshesBvh").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("EntityInstances").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("PointGridBuffer").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("PointIndicesBuffer").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-
-		// DDGI
-		OpenGL::ResourceManager::CreateSSBO("DDGIVolume").Create(sizeof(DDGIVolumeGPU), GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("DirtyDoorAABBs").Create(sizeof(GPUAABB), GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("PointCloudGridCounts").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("PointCloudDirtyFlags").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("PointCloudGridOffsets").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("PointCloudTextureInfo").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("ProbeDistanceCounter").Create(sizeof(uint32_t), GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("ProbeDistanceDispatchArgs").Create(sizeof(DispatchIndirectCommand), GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("ProbeDistanceIndices").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("ProbeIndexCounter").Create(sizeof(uint32_t), GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("ProbeIrradianceCounter").Create(sizeof(uint32_t), GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("ProbeIrradianceDispatchArgs").Create(sizeof(DispatchIndirectCommand), GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("ProbeIrradianceIndices").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("ProbePointIndices").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("ProbePointOffsets").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("ProbePointCounts").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("ProbeSHColor").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("ProbeStates").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-
-		OpenGL::ResourceManager::CreateSSBO("LightAABBs").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-
-        // Tile data
-		OpenGL::ResourceManager::CreateSSBO("TileChristmasLights").Create(GetTileCount() * sizeof(TileInstanceData), NONE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("TileBloodDecals").Create(GetTileCount() * sizeof(TileInstanceData), NONE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("TileLights").Create(GetTileCount() * sizeof(TileLights), NONE_BIT);
-		OpenGL::ResourceManager::CreateSSBO("TileWorldBounds").Create(GetTileCount() * sizeof(TileWorldBounds), NONE_BIT);
-
-        // Instance data
-        OpenGL::ResourceManager::CreateSSBO("BloodDecalCounter").Create(sizeof(uint32_t), GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("BloodDecalIndices").Create(sizeof(uint32_t) * GetTileCount() * 256, NONE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("BloodDecalInstances").Create(sizeof(BloodDecalInstanceData) * MAX_SCREEN_SPACE_BLOOD_DECAL_COUNT, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("ChristmasLightCounter").Create(sizeof(uint32_t), GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("ChristmasLightIndices").Create(sizeof(uint32_t) * GetTileCount() * 256, NONE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("ChristmasLightInstances").Create(MAX_CHRISTMAS_LIGHTS * sizeof(GPUChristmasLight), GL_DYNAMIC_STORAGE_BIT);
-
-        // Remove me at some point
-		OpenGL::ResourceManager::CreateSSBO("MetaBalls").Create(sizeof(glm::vec4) * 1000, GL_DYNAMIC_STORAGE_BIT);
-
-		int MAX_OCEAN_PATCHES = 500;
-		OpenGL::ResourceManager::CreateSSBO("OceanPatchTransforms").Create(sizeof(glm::mat4) * MAX_OCEAN_PATCHES, GL_DYNAMIC_STORAGE_BIT);
-
-		// Preallocate the indirect command buffer
-		g_indirectBuffer.PreAllocate(sizeof(DrawIndexedIndirectCommand) * MAX_INDIRECT_DRAW_COMMAND_COUNT);
-    }
 
     void InitSSBOs() {
         //DispatchIndirectCommand command = { 1, 1, 1 };

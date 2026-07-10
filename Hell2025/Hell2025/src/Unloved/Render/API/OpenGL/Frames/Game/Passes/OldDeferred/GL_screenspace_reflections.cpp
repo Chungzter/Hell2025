@@ -34,7 +34,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
         OpenGL::BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColorMetallic"));
         OpenGL::BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
-        OpenGL::BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
+        // OpenGL::BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("RMA"));
         OpenGL::BindTextureUnit(4, gBuffer->GetDepthAttachmentHandle());
         OpenGL::BindTextureUnit(5, halfSizeFbo->GetColorAttachmentHandleByName("DownsampledFinalLighting"));
         OpenGL::BindTextureUnit(6, fullSizeFBO->GetColorAttachmentHandleByName("ViewspaceDepth"));

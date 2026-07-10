@@ -330,7 +330,7 @@ float GetShadowVisibility(vec3 rayOrigin, vec3 target) {
     vec3 rayDir = rayVector / rayLength;
 
     const int shadowSampleCount = 1;
-    const float shadowLightSize = 0.0;
+    const float shadowLightSize = 0.05;
 
     float visibility = 0.0;
     for (int i = 0; i < shadowSampleCount; i++) {

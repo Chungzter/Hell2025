@@ -57,7 +57,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(9, "BloodDecalInstances");
         OpenGL::BindSSBO(10, "BloodDecalIndices");
 
-        glBindTextureUnit(0, gBuffer->GetColorAttachmentHandleByName("RMA"));
+        //glBindTextureUnit(0, gBuffer->GetColorAttachmentHandleByName("RMA"));
         glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
         glBindTextureUnit(2, gBuffer->GetDepthAttachmentHandle());
 

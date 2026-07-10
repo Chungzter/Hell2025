@@ -196,6 +196,11 @@ struct GPUAABB {
     glm::vec4 boundsMax{};
 };
 
+struct GPUChristmasLight {
+    glm::vec4 position;
+    glm::vec4 color;
+};
+
 struct TileLights {
     int lightCount;
     int lightIndices[127];
@@ -227,9 +232,9 @@ struct SkinningJob {
     uint32_t baseVertex;
     uint32_t baseIndex;
 
+    uint32_t baseVertexWeight;
     uint32_t baseSkinningVertex;
     uint32_t baseSkinningTransformIndex;
-    uint32_t padding0;
     uint32_t padding1;
 };
 

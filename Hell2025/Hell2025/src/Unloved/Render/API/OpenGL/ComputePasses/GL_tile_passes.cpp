@@ -1,12 +1,15 @@
+#include "Legacy/World/LegacyWorld.h"
+
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RendererTypes.h"
 #include "Unloved/Systems/Blood/BloodSystem.h"
-#include "World/LegacyWorld.h"
 #include "Unloved/World/World.h"
+
 namespace OpenGL::Renderer {
 
     namespace {
-        std::vector<Unloved::GPUChristmasLight> g_christmasLights;
+        std::vector<GPUChristmasLight> g_christmasLights;
     }
 
     void ComputeTileWorldBounds() {
@@ -63,7 +66,7 @@ namespace OpenGL::Renderer {
 
         // Gather all the Christmas lights from ALL the ChristmasLightSets
         for (Unloved::ChristmasLightSet& christmasLightSet : Unloved::World::GetChristmasLightSets()) {
-            const std::vector<Unloved::GPUChristmasLight>& gpuLights = christmasLightSet.GetGPUChristmasLights();
+            const std::vector<GPUChristmasLight>& gpuLights = christmasLightSet.GetGPUChristmasLights();
             g_christmasLights.insert(g_christmasLights.end(), gpuLights.begin(), gpuLights.end());
         }
 
@@ -74,12 +77,12 @@ namespace OpenGL::Renderer {
             OpenGL::ClearSSBO("ChristmasLightIndices");
             OpenGL::ClearSSBO("ChristmasLightCounter");
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    
+
             return;
         }
 
 
-        OpenGL::UpdateSSBO("ChristmasLightInstances", g_christmasLights.size() * sizeof(Unloved::GPUChristmasLight), g_christmasLights.data());
+        OpenGL::UpdateSSBO("ChristmasLightInstances", g_christmasLights.size() * sizeof(GPUChristmasLight), g_christmasLights.data());
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         // Debug draw the lights as points

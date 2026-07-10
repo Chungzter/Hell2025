@@ -31,6 +31,7 @@ struct AnimatedMeshNode {
     uint32_t baseIndex = 0;
     uint32_t vertexCount = 0;
     uint32_t indexCount = 0;
+    uint32_t baseVertexWeight = 0;
     bool deforming = true;
     bool excludeFromVulkanTLAS = false;
 };

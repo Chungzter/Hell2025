@@ -6,6 +6,8 @@
 #include "Unloved/Render/Renderer.h"
 #include "World/LegacyWorld.h"
 
+#include "Hell/MemoryTracker/MemoryTracker.h"
+
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
 
@@ -29,10 +31,19 @@ namespace OpenGL::Renderer {
 		}
 
 
+        if (Hell::Input::KeyPressed(HELL_KEY_J)) {
+
+            OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
+            OpenGLFrameBuffer& gBufferRE = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+
+            std::cout << "GBuffer    " << Hell::MemoryTracker::FormatMemorySize(gBuffer.GetGPUAllocatedByteCount()) << "\n";
+            std::cout << "GBufferRE: " << Hell::MemoryTracker::FormatMemorySize(gBufferRE.GetGPUAllocatedByteCount()) << "\n";
+        }
+
+
         ComputeOceanFFTPass();
         OceanHeightReadback();
 
-        OpenGLFrameBuffer& hairFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Hair");
         Unloved::DDGIVolume& ddgiVolume = Unloved::LegacyWorld::GetTestDDGIVolume();
 
         glDisable(GL_DITHER);

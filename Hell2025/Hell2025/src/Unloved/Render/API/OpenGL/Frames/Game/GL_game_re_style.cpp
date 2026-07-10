@@ -42,10 +42,6 @@ namespace OpenGL::Renderer {
 
     void RenderFullscreenTriangle();
 
-    void InitREStyle() {
-        CreateFramebuffersRE();
-    }
-
     void RenderGameREStyle() {
         ComputeOceanFFTPass();
 
@@ -147,51 +143,6 @@ namespace OpenGL::Renderer {
         ImGuiPass();
     }
 
-    void CreateFramebuffersRE() {
-        OpenGLFrameBuffer& gBufferRE = OpenGL::ResourceManager::CreateFrameBuffer("GBufferRE");
-        gBufferRE.Create(g_settings.gBufferResolution);
-        gBufferRE.CreateAttachment("Lighting", GL_RGBA16F);
-        gBufferRE.CreateAttachment("BaseColorMetallic", GL_RGBA8);
-        gBufferRE.CreateAttachment("NormalXYRoughnessMisc", GL_RGB10_A2);
-        gBufferRE.CreateAttachment("VelocityXYOcclusionSubSurface", GL_RGBA16F);
-        gBufferRE.CreateAttachment("Visibility", GL_RG32UI);
-        gBufferRE.CreateAttachment("Emissive", GL_RGBA8);
-        gBufferRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
-
-        gBufferRE.CreateAttachment("Glass", GL_RGBA16F); // Remove/rethink me
-
-        OpenGLFrameBuffer& hairFboRE = OpenGL::ResourceManager::CreateFrameBuffer("HairRE");
-        hairFboRE.Create(g_settings.gBufferResolution, 4);
-        hairFboRE.CreateAttachment("Lighting", GL_RGBA16F);
-        hairFboRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
-
-        OpenGL::ResourceManager::CreateSSBO("BubblePositions").Create(sizeof(glm::vec4) * 100, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("BubblePositionCount").Create(sizeof(uint64_t), GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("BubbleDrawCommand").Create(sizeof(DrawArraysIndirectCommand), GL_DYNAMIC_STORAGE_BIT);
-
-        OpenGL::ClearSSBO("BubblePositions");
-        OpenGL::ClearSSBO("BubblePositionCount");
-
-        // Particles
-        OpenGL::ResourceManager::CreateSSBO("ParticlePool").Create(sizeof(GpuParticle)* MAX_GPU_PARTICLES, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("ParticleAdditions").Create(sizeof(GpuParticle) * MAX_GPU_PARTICLES, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("ParticleAdditionCounter").Create(sizeof(uint32_t), GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("ParticleActiveIndices").Create(sizeof(uint32_t) * MAX_GPU_PARTICLES, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("ParticleDrawCommand").Create(sizeof(DrawArraysIndirectCommand), GL_DYNAMIC_STORAGE_BIT);
-
-        OpenGL::ClearSSBO("ParticlePool");
-        OpenGL::ClearSSBO("ParticleAdditions");
-
-        // Zero out QUAD draw commands
-        DrawArraysIndirectCommand particleDrawCommand;
-        particleDrawCommand.vertexCount = 6;
-        particleDrawCommand.instanceCount = 0;
-        particleDrawCommand.firstVertex = 0;
-        particleDrawCommand.baseInstance = 0;
-
-        OpenGL::UploadSSBOStatic("BubbleDrawCommand", sizeof(DrawArraysIndirectCommand), &particleDrawCommand);
-        OpenGL::UploadSSBOStatic("ParticleDrawCommand", sizeof(DrawArraysIndirectCommand), &particleDrawCommand);
-    }
 
 	void ClearRenderTargetsRE() {
 		OpenGLFrameBuffer& gBufferRE = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");

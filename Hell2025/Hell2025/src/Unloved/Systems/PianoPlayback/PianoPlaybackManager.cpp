@@ -74,6 +74,7 @@ namespace Unloved::PianoPlaybackManager {
     }
 
     void Init() {
+        Logging::Init() << "Initialized the Piano Playback Manager\n";
         Stop();
     }
 

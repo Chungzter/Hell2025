@@ -28,7 +28,13 @@
 
 #include <string>
 
+
+#include "Hell/Render/API/OpenGL/Types/GL_indirectBuffer.hpp" // TODO: Make me an SSBO and get me the fuck out of here
+
 namespace OpenGL::Renderer {
+
+    IndirectBuffer& GetIndirectBuffer();  // TODO: Make me an SSBO and get me the fuck out of here
+
     void Init();
     void InitMain();
     void CleanUp();
@@ -38,10 +44,13 @@ namespace OpenGL::Renderer {
     void PreGameLogicComputePasses();
     void RenderGame();
 
-	void InitREStyle();
 	void RenderGameREStyle();
 
+    // Create
+    void CreateFramebuffers();
     void CreateSSBOs();
+    void CreateTextureArrays();
+
     void InitSSBOs();
     void UpdateSSBOS();
 

@@ -7,11 +7,6 @@
 
 namespace Unloved {
 
-struct GPUChristmasLight {
-    glm::vec4 position;
-    glm::vec4 color;
-};
-
 struct ChristmasLightSet {
     ChristmasLightSet() = default;
     ChristmasLightSet(uint64_t id, const ChristmasLightsCreateInfo& createInfo, const SpawnOffset& spawnOffset);
@@ -42,7 +37,7 @@ private:
     ChristmasLightsCreateInfo m_createInfo;
     uint64_t m_objectId = 0;
     glm::vec3 m_position = glm::vec3(0.0f);
-    glm::vec3 m_rotation = glm::vec3(0.0f); 
+    glm::vec3 m_rotation = glm::vec3(0.0f);
     std::vector<uint64_t> m_wireIds;
 };
 }

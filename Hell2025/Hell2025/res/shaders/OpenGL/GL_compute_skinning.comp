@@ -1,4 +1,4 @@
-#version 450 core 
+#version 450 core
 layout (local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 
 struct Vertex {
@@ -13,36 +13,53 @@ struct VertexWeight {
     vec4 weight;
 };
 
+struct SkinningJob {
+    uint vertexCount;
+    uint indexCount;
+    uint baseVertex;
+    uint baseIndex;
+
+    uint baseVertexWeight;
+    uint baseSkinningVertex;
+    uint baseSkinningTransformIndex;
+    uint padding1;
+};
+
+
 layout(std430, binding = 0) buffer          outputVertexBuffer { Vertex OutputVertexBuffer[]; };
 layout(std430, binding = 1) readonly buffer inputVertexBuffer  { Vertex InputVertexBuffer[]; };
 layout(std140, binding = 2) readonly buffer transformsBuffer   { mat4 data[];} animatedTransforms;
 layout(std430, binding = 3) readonly buffer weightsBuffer      { VertexWeight vertexWeights[]; };
 
-uniform int baseInputVertex;
-uniform int baseInputVertexWeight;
-uniform int baseOutputVertex;
-uniform int baseTransformIndex;
-uniform int vertexCount;
+layout(std430, binding = 4) readonly buffer SkinningJobBuffer  { SkinningJob skinningJobs[]; };
+
+uniform int u_jobIndex;
 
 void main() {
+    uint baseInputVertex = skinningJobs[u_jobIndex].baseVertex;
+    uint baseInputVertexWeight = skinningJobs[u_jobIndex].baseVertexWeight;
+    uint baseOutputVertex = skinningJobs[u_jobIndex].baseSkinningVertex;
+    uint baseTransformIndex = skinningJobs[u_jobIndex].baseSkinningTransformIndex;
+    uint vertexCount = skinningJobs[u_jobIndex].vertexCount;
+
 	uint index = gl_GlobalInvocationID.x;
     if (index >= vertexCount) return;
 
     Vertex vertexIn = InputVertexBuffer[index + baseInputVertex];
     VertexWeight vertexWeight = vertexWeights[index + baseInputVertexWeight];
-    
+
     vec4 vertexPosition = vec4(vertexIn.position[0], vertexIn.position[1], vertexIn.position[2], 1.0);
     vec3 vertexNormal = vec3(vertexIn.normal[0], vertexIn.normal[1], vertexIn.normal[2]);
     vec3 vertexTangent = vec3(vertexIn.tangent[0], vertexIn.tangent[1], vertexIn.tangent[2]);
     ivec4 boneIDs = vertexWeight.boneID;
     vec4 weights = vertexWeight.weight;
-    
+
     mat4 skinMat = mat4(0.0);
 
     for(int i = 0; i < 4; i++) {
         float weight = weights[i];
         if (weight < 0.0001) continue;
-        
+
         skinMat += animatedTransforms.data[boneIDs[i] + baseTransformIndex] * weight;
     }
 
@@ -51,7 +68,7 @@ void main() {
     vec3 totalLocalPos = (skinMat * vertexPosition).xyz;
     vec3 totalNormal = normalize(skinMat3 * vertexNormal);
     //vec3 totalTangent = skinMat3 * vertexTangent;
-    
+
     vec3 totalTangent = normalize(skinMat3 * vertexTangent);
     totalTangent = normalize(totalTangent - totalNormal * dot(totalNormal, totalTangent));
 

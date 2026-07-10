@@ -43,6 +43,7 @@ void AnimatedMeshNodes::SetSkinnedModel(uint64_t parentId, std::string name) {
             node.baseIndex = mesh->baseIndex;
             node.excludeFromVulkanTLAS = m_excludeFromVulkanTLAS;
             node.meshId = meshId;
+            node.baseVertexWeight = metadata->baseVertexWeight;
 
             m_woundMaskArrayIndices[i] = -1;
         }
