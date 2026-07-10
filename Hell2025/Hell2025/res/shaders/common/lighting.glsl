@@ -58,9 +58,9 @@ vec3 GetDirectLighting(vec3 lightPos, vec3 lightColor, float radius, float stren
     float ndl = max(dot(Normal, lightDir), 0.0);
 
     // Hack to lesson nDotL blowouts from IES profile
-    float wrap = 0.125; 
+    float wrap = 0.125;
     ndl = clamp((ndl + wrap) / (1.0 + wrap), 0.0, 1.0);
-    
+
     vec3 brdf = microfacetBRDF(lightDir, viewDir, Normal, baseColor, metallic, 1.0, roughness);
     return brdf * ndl * att * clamp(lightColor, 0.0, 1.0);
 }
@@ -298,7 +298,7 @@ float ShadowCalculationOLD(int lightIndex, vec3 lightPos, float lightRadius, vec
 
     // Bias
     float cosTheta = clamp(dot(Normal, L), 0.0, 1.0);
-    float bias = max(0.05 * (1.0 - cosTheta), 0.005); 
+    float bias = max(0.05 * (1.0 - cosTheta), 0.005);
 
     int samples = 20;
     float viewDistance = length(viewPos - fragPos);
@@ -364,27 +364,27 @@ float ShadowCalculationNEW(int lightIndex, vec3 lightPos, float lightRadius, vec
    float currentDepth = length(lightToFrag);
    vec3 rayDir = lightToFrag / currentDepth;
    vec3 L = -rayDir;
-  
+
    vec3 receiverNormal = normalize(Normal);
    if (dot(receiverNormal, L) < 0.0) {
        receiverNormal = -receiverNormal;
    }
-  
+
    float cosTheta = clamp(dot(receiverNormal, L), 0.0, 1.0);
    float bias = max(0.05 * (1.0 - cosTheta), 0.005);
-  
+
    float shadowMapSize = float(textureSize(shadowCubeMapArray, 0).x);
    float texelWorldSize = currentDepth * 2.0 / shadowMapSize;
-  
+
    float softness = 2.25;
    float grazingScale = smoothstep(0.08, 0.45, cosTheta);
    float diskRadius = texelWorldSize * mix(0.75, softness, grazingScale);
    float maxPlaneDepthDelta = max(diskRadius * 8.0, 0.02);
-  
+
    vec3 basisSeed = abs(rayDir.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
    vec3 right = normalize(cross(basisSeed, rayDir));
    vec3 up = cross(rayDir, right);
-  
+
    vec2 poissonDisk[8] = vec2[](
        vec2( 0.527,  0.085),
        vec2(-0.406,  0.331),
@@ -395,17 +395,17 @@ float ShadowCalculationNEW(int lightIndex, vec3 lightPos, float lightRadius, vec
        vec2(-0.812,  0.125),
        vec2( 0.311,  0.379)
    );
-  
+
    float visibility = 0.0;
-  
+
    visibility += SamplePointShadowReceiverPlane(lightIndex, lightToFrag, receiverNormal, currentDepth, lightRadius, bias, lightToFrag, maxPlaneDepthDelta, shadowCubeMapArray) * 2.0;
-  
+
    for (int i = 0; i < 8; ++i) {
        vec2 disk = poissonDisk[i] * diskRadius;
        vec3 sampleDir = lightToFrag + right * disk.x + up * disk.y;
        visibility += SamplePointShadowReceiverPlane(lightIndex, lightToFrag, receiverNormal, currentDepth, lightRadius, bias, sampleDir, maxPlaneDepthDelta, shadowCubeMapArray);
    }
-  
+
    return visibility * 0.1;
 
   // vec3 lightToFrag = fragPos - lightPos;
@@ -413,24 +413,24 @@ float ShadowCalculationNEW(int lightIndex, vec3 lightPos, float lightRadius, vec
   // float currentDepth = length(lightToFrag);
   // float far_plane = lightRadius;
   // float shadow = 0.0;
-  // 
+  //
   // // Bias
   // float cosTheta = clamp(dot(Normal, L), 0.0, 1.0);
   // float bias = max(0.05 * (1.0 - cosTheta), 0.005);
-  // 
+  //
   // int samples = 20;
   // float viewDistance = length(viewPos - fragPos);
   // float diskRadius = (1.0 + (viewDistance / far_plane)) / 200.0;
-  // 
+  //
   // for (int i = 0; i < samples; ++i) {
   //     vec3 sampleDir = lightToFrag + gridSamplingDisk[i] * diskRadius;
   //     float compareDepth = (currentDepth - bias) / far_plane;
-  // 
+  //
   //     float visibility = texture(shadowCubeMapArray, vec4(sampleDir, float(lightIndex)), compareDepth);
-  // 
+  //
   //     shadow += 1.0 - visibility;
   // }
-  // 
+  //
   // shadow /= float(samples);
   // return 1.0 - shadow;
 }

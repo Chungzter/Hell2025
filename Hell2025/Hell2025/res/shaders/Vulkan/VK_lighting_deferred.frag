@@ -6,6 +6,7 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
 #include "../common/constants.glsl"
+#include "../common/lighting.glsl"
 #include "../common/normal_encoding.glsl"
 #include "../common/util.glsl"
 #include "../common/reconstruction.glsl"
@@ -80,9 +81,9 @@ layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDeferredLighting data;
 } pushConstant;
 
-vec3 FresnelSchlick(float cosTheta, vec3 f0) {
-    return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-}
+//vec3 FresnelSchlick(float cosTheta, vec3 f0) {
+//    return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+//}
 
 float MaxComponent(vec3 v) {
     return max(max(v.x, v.y), v.z);
@@ -330,7 +331,7 @@ float GetShadowVisibility(vec3 rayOrigin, vec3 target) {
     vec3 rayDir = rayVector / rayLength;
 
     const int shadowSampleCount = 1;
-    const float shadowLightSize = 0.05;
+    const float shadowLightSize = 0.0;
 
     float visibility = 0.0;
     for (int i = 0; i < shadowSampleCount; i++) {
@@ -480,6 +481,7 @@ void main() {
     ivec2 outputImageSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_BASE_COLOR_METALLIC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
     uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, outputImageSize, rendererDataBuffer.rendererData.splitscreenMode);
     ViewportData viewportData = viewportDataBuffer.viewportDataArr[viewportIndex];
+    vec3 viewPos = viewportData.viewPos.xyz;
 
     // Fetch GBuffer
     vec4 baseColorMetallic = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_BASE_COLOR_METALLIC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0);
@@ -496,6 +498,8 @@ void main() {
     float metallic = baseColorMetallic.a;
     float roughness = normalXYRoughnessMisc.b;
 
+    vec3 linearBaseColor = pow(baseColor, vec3(2.2));
+
     // Decode flags
     uint miscFlags = DecodeMiscFlags(normalXYRoughnessMisc.a);
     bool isMirrorSurface = (miscFlags & MISC_FLAG_MIRROR_SURFACE) != 0u;
@@ -504,7 +508,37 @@ void main() {
     vec3 directLighting = vec3(0.0);
 
     if (!isMirrorSurface) {
-        directLighting = DirectLighting(worldPos, normal, baseColor);
+
+        LightBuffer lightBuffer = LightBuffer(pushConstant.data.frame.lightsDeviceAddress);
+        //vec3 lighting = vec3(0.0);
+
+        // Hardcoded light loop until tiled deferred is back
+        for (int i = 0; i < LIGHT_COUNT; i++) {
+            Light light = lightBuffer.lights[i];
+            if (light.radius <= 0.0 || light.strength <= 0.0) {
+                continue;
+            }
+
+            vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+            vec3 lightColor =  vec3(light.colorR, light.colorG, light.colorB);
+
+            vec3 toLight = lightPosition - worldPos;
+            float dist = length(toLight);
+            vec3 lightDir = toLight / max(dist, 0.0001);
+            float attenuation = smoothstep(light.radius, 0.0, dist) * light.strength;
+            float ndotl = max(dot(normal, lightDir), 0.0);
+            if (ndotl <= 0.0 || attenuation <= 0.0) {
+                continue;
+            }
+
+            float visibility = GetShadowVisibility(worldPos + normal * 0.001, lightPosition);
+
+
+            vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, viewPos) * visibility;
+
+
+            directLighting += directLight;
+        }
     }
 
     // Indirect specular

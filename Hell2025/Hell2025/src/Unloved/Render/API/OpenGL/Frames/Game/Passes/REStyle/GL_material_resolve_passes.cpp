@@ -9,7 +9,7 @@ namespace OpenGL::Renderer {
     void MaterialResolvePass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         gbufferFbo.Bind();
         gbufferFbo.SetViewport();
         gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
@@ -51,7 +51,7 @@ namespace OpenGL::Renderer {
     void MaterialResolveSkinnedPass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         gbufferFbo.Bind();
         gbufferFbo.SetViewport();
         gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
@@ -98,7 +98,7 @@ namespace OpenGL::Renderer {
 
         OpenGLMeshBuffer& proceduralMeshBuffer = OpenGL::ResourceManager::GetMeshBuffer("Procedural");
 
-        OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         gbufferFbo.Bind();
         gbufferFbo.SetViewport();
         gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
@@ -139,7 +139,7 @@ namespace OpenGL::Renderer {
     void HairLightingSkinnedResolvePass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         gbufferFbo.Bind();
         gbufferFbo.SetViewport();
         gbufferFbo.DrawBuffers({ "Lighting", "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });

@@ -24,7 +24,7 @@ namespace OpenGL::Renderer {
         OpenGLFrameBuffer* miscFullSizeFrameBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("MiscFullSize");
         OpenGLShadowMap* flashLightShadowMapsFBO = OpenGL::ResourceManager::GetShadowMapPtr("FlashlightShadowMaps");
 
-        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBuffer" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         if (!shader) return;

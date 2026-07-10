@@ -11,7 +11,7 @@ namespace OpenGL::Renderer {
     void ToneMappingPassRE() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& scratchFbo = OpenGL::ResourceManager::GetFrameBuffer("Scratch");
 
         OpenGL::BindShader("PostProcessing");
@@ -25,7 +25,7 @@ namespace OpenGL::Renderer {
     void FXAAPassRE() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& scratchFbo = OpenGL::ResourceManager::GetFrameBuffer("Scratch");
 
         OpenGL::BindShader("FXAA");

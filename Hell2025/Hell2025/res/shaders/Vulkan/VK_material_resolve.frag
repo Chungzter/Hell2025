@@ -120,7 +120,7 @@ void main() {
     RenderItemBuffer renderItemBuffer = RenderItemBuffer(pushConstant.data.frame.renderItemsDeviceAddress);
     RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress);
     MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
-    
+
     ivec2 outputImageSize = textureSize(usampler2D(uintTextures[VULKAN_UINT_TEXTURE_IDX_GBUFFER_VISIBILITY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
     ivec2 px = ivec2(gl_FragCoord.xy);
 
@@ -131,7 +131,7 @@ void main() {
     vec2 viewportUV = ViewportUVFromPixel_VK(px, outputImageSize, viewportData);
 
     uvec4 visibilityData = uvec4(texelFetch(usampler2D(uintTextures[VULKAN_UINT_TEXTURE_IDX_GBUFFER_VISIBILITY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).xy, 0u, 0u);
-    
+
     uint globalInstanceIndex = visibilityData.x;
     uint primitiveID = visibilityData.y;
 
@@ -152,7 +152,7 @@ void main() {
         WriteMaterialResolveError(vec3(0.0, 1.0, 1.0));
         return;
     }
-    
+
     PackedVertex v0 = vertexBuffer.vertices[i0];
     PackedVertex v1 = vertexBuffer.vertices[i1];
     PackedVertex v2 = vertexBuffer.vertices[i2];

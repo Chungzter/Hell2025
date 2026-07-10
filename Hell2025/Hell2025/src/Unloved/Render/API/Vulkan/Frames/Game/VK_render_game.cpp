@@ -5,7 +5,7 @@ namespace VulkanRenderer {
     void RenderGame() {
         SwapchainFrame frame;
         if (!BeginSwapchainFrame(frame)) return;
-        
+
         UpdateBuffers();
         UpdateBuffersUI();
 
@@ -17,8 +17,8 @@ namespace VulkanRenderer {
         LightingPass(frame.commandBuffer);
         LightingForwardBlendedPass(frame.commandBuffer);
         SkyboxPass(frame.commandBuffer);
-
         // HairPass(frame.commandBuffer);
+        PostProcessingPass(frame.commandBuffer);
 
         DebugViewPass(frame.commandBuffer);
 

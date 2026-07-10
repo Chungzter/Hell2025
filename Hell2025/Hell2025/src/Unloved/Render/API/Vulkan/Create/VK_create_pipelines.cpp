@@ -9,56 +9,7 @@
 
 namespace {
 
-    void CreateLoadingScreenPipeline() {
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("LoadingScreen");
-        pipeline.SetShader("FullscreenTriangle");
-        pipeline.AddColorAttachmentFormat(VulkanSwapchainManager::GetSwapchainImageFormat());
-        pipeline.SetDepthTest(false, false);
-        pipeline.SetCullMode(VK_CULL_MODE_NONE);
-        pipeline.Build();
-    }
-
-    void CreatePresentPipeline() {
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("Present");
-        pipeline.SetShader("Present");
-        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
-        pipeline.AddColorAttachmentFormat(VulkanSwapchainManager::GetSwapchainImageFormat());
-        pipeline.SetDepthTest(false, false);
-        pipeline.SetCullMode(VK_CULL_MODE_NONE);
-        pipeline.Build();
-    }
-
-    // Skybox
-
-    void CreateSkyboxPipeline() {
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("Skybox");
-        pipeline.SetShader("Skybox");
-        pipeline.SetRenderState("Skybox");
-        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
-        pipeline.AddPushConstant(sizeof(PushConstantsSkybox), VK_SHADER_STAGE_FRAGMENT_BIT);
-        pipeline.Build();
-    }
-
-    // Visiblity
-
-    void CreateVisibilityPipeline() {
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("Visibility");
-        pipeline.SetShader("Visibility");
-        pipeline.SetRenderState("Visibility");
-        pipeline.AddPushConstant(sizeof(PushConstantsVisibility), VK_SHADER_STAGE_VERTEX_BIT);
-        pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
-        pipeline.Build();
-    }
-
-    void CreateVisibilityAlphaDiscardPipeline() {
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("VisibilityAlphaDiscard");
-        pipeline.SetShader("VisibilityAlphaDiscard");
-        pipeline.SetRenderState("VisibilityAlphaDiscard");
-        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
-        pipeline.AddPushConstant(sizeof(PushConstantsVisibility), VK_SHADER_STAGE_VERTEX_BIT);
-        pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
-        pipeline.Build();
-    }
+    // Compute Skinning
 
     void CreateComputeSkinningPipeline() {
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("ComputeSkinning");
@@ -67,10 +18,23 @@ namespace {
         pipeline.Build();
     }
 
+    // Debug
+
     void CreateComputeRedTestPipeline() {
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("ComputeRedTest");
         pipeline.SetShader("ComputeRedTest");
         pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.Build();
+    }
+
+    void CreateDebugViewPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugView");
+        pipeline.SetShader("DebugView");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDebugView), VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.AddColorAttachmentFormat(VK_FORMAT_R16G16B16A16_SFLOAT);
+        pipeline.SetDepthTest(false, false);
+        pipeline.SetCullMode(VK_CULL_MODE_NONE);
         pipeline.Build();
     }
 
@@ -108,16 +72,68 @@ namespace {
         pipeline.Build();
     }
 
-    // Debug
+    // Loading Screen
 
-    void CreateDebugViewPipeline() {
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugView");
-        pipeline.SetShader("DebugView");
-        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
-        pipeline.AddPushConstant(sizeof(PushConstantsDebugView), VK_SHADER_STAGE_FRAGMENT_BIT);
-        pipeline.AddColorAttachmentFormat(VK_FORMAT_R16G16B16A16_SFLOAT);
+    void CreateLoadingScreenPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("LoadingScreen");
+        pipeline.SetShader("FullscreenTriangle");
+        pipeline.AddColorAttachmentFormat(VulkanSwapchainManager::GetSwapchainImageFormat());
         pipeline.SetDepthTest(false, false);
         pipeline.SetCullMode(VK_CULL_MODE_NONE);
+        pipeline.Build();
+    }
+
+    // Present
+
+    void CreatePresentPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("Present");
+        pipeline.SetShader("Present");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddColorAttachmentFormat(VulkanSwapchainManager::GetSwapchainImageFormat());
+        pipeline.SetDepthTest(false, false);
+        pipeline.SetCullMode(VK_CULL_MODE_NONE);
+        pipeline.Build();
+    }
+
+    // Post processing
+
+    void CreatePostProcessingPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("PostProcessing");
+        pipeline.SetShader("PostProcessing");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsFrameResources), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    // Skybox
+
+    void CreateSkyboxPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("Skybox");
+        pipeline.SetShader("Skybox");
+        pipeline.SetRenderState("Skybox");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsSkybox), VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.Build();
+    }
+
+    // Visibility
+
+    void CreateVisibilityPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("Visibility");
+        pipeline.SetShader("Visibility");
+        pipeline.SetRenderState("Visibility");
+        pipeline.AddPushConstant(sizeof(PushConstantsVisibility), VK_SHADER_STAGE_VERTEX_BIT);
+        pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
+        pipeline.Build();
+    }
+
+    void CreateVisibilityAlphaDiscardPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("VisibilityAlphaDiscard");
+        pipeline.SetShader("VisibilityAlphaDiscard");
+        pipeline.SetRenderState("VisibilityAlphaDiscard");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsVisibility), VK_SHADER_STAGE_VERTEX_BIT);
+        pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
         pipeline.Build();
     }
 
@@ -196,6 +212,9 @@ namespace VulkanRenderer {
 
         // Misc
         CreateComputeRedTestPipeline();
+
+        // Post Processing
+        CreatePostProcessingPipeline();
 
         // Final present
         CreatePresentPipeline();

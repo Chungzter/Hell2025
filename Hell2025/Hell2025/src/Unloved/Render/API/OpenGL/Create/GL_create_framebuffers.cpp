@@ -12,18 +12,6 @@ namespace OpenGL::Renderer {
     void CreateFramebuffers() {
         const Resolutions& resolutions = Config::GetResolutions();
 
-        OpenGLFrameBuffer& gBufferRE = OpenGL::ResourceManager::CreateFrameBuffer("GBufferRE");
-        gBufferRE.Create(resolutions.gBuffer);
-        gBufferRE.CreateAttachment("BaseColorMetallic", GL_RGBA8);
-        gBufferRE.CreateAttachment("NormalXYRoughnessMisc", GL_RGB10_A2);
-        gBufferRE.CreateAttachment("VelocityXYOcclusionSubSurface", GL_RGBA16F);
-        gBufferRE.CreateAttachment("Lighting", GL_RGBA16F);
-        gBufferRE.CreateAttachment("Emissive", GL_RGBA8);
-        gBufferRE.CreateAttachment("Glass", GL_RGBA16F); // Remove/rethink me
-        gBufferRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
-
-        gBufferRE.CreateAttachment("Visibility", GL_RG32UI);
-
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::CreateFrameBuffer("GBuffer");
         gBuffer.Create(resolutions.gBuffer);
         gBuffer.CreateAttachment("BaseColorMetallic", GL_RGBA8);
@@ -32,10 +20,8 @@ namespace OpenGL::Renderer {
         gBuffer.CreateAttachment("Lighting", GL_RGBA16F, GL_LINEAR, GL_LINEAR);
         gBuffer.CreateAttachment("Emissive", GL_RGBA8, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
         gBuffer.CreateAttachment("Glass", GL_RGBA16F);
+        gBuffer.CreateAttachment("Visibility", GL_RG32UI);
         gBuffer.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
-
-        // GBuffer    88.99 MB
-        // GBufferRE: 96.90 MB
 
         OpenGLFrameBuffer& hairFboRE = OpenGL::ResourceManager::CreateFrameBuffer("HairRE");
         hairFboRE.Create(resolutions.gBuffer, 4);

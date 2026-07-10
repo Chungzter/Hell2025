@@ -35,7 +35,7 @@ namespace OpenGL::Renderer {
             glGenVertexArrays(1, &dummyVao);
         }
 
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& hairfbo = OpenGL::ResourceManager::GetFrameBuffer("HairRE");
 
         hairfbo.Bind();
@@ -139,7 +139,7 @@ namespace OpenGL::Renderer {
     void HairCompositeRE() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& hairFbo = OpenGL::ResourceManager::GetFrameBuffer("HairRE");
 
         BindShader("HairCompositeRE");

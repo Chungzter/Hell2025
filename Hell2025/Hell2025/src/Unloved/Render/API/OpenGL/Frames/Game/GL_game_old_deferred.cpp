@@ -31,15 +31,6 @@ namespace OpenGL::Renderer {
 		}
 
 
-        if (Hell::Input::KeyPressed(HELL_KEY_J)) {
-
-            OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
-            OpenGLFrameBuffer& gBufferRE = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
-
-            std::cout << "GBuffer    " << Hell::MemoryTracker::FormatMemorySize(gBuffer.GetGPUAllocatedByteCount()) << "\n";
-            std::cout << "GBufferRE: " << Hell::MemoryTracker::FormatMemorySize(gBufferRE.GetGPUAllocatedByteCount()) << "\n";
-        }
-
 
         ComputeOceanFFTPass();
         OceanHeightReadback();
@@ -153,11 +144,11 @@ namespace OpenGL::Renderer {
         //BlitFog();
 
         OpenGLFrameBuffer& finalImageFbo = OpenGL::ResourceManager::GetFrameBuffer("FinalImage");
-        OpenGLFrameBuffer& gBufferRE = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& presentFbo = OpenGL::ResourceManager::GetFrameBuffer("Present");
 
         // Downscale with linear filtering
-        OpenGL::BlitFrameBuffer(&gBufferRE, &finalImageFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        OpenGL::BlitFrameBuffer(&gBuffer, &finalImageFbo, "Lighting", "Color", GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
         // Upscale with nearest filtering
         OpenGL::BlitFrameBuffer(&finalImageFbo, &presentFbo, "Color", "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);

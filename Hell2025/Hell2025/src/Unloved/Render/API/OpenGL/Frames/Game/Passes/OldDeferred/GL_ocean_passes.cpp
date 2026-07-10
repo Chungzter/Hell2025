@@ -194,7 +194,7 @@ namespace OpenGL::Renderer {
         ProfilerOpenGLZoneFunction();
         if (!Unloved::LegacyWorld::HasOcean()) return;
 
-        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBuffer" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         OpenGLFrameBuffer& waterFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Water");
@@ -226,7 +226,7 @@ namespace OpenGL::Renderer {
 
         OpenGLFrameBuffer& miscFullSizeFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("MiscFullSize");
 
-        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBuffer" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         OpenGL::BindShader("GaussianBlur");
@@ -251,7 +251,7 @@ namespace OpenGL::Renderer {
         OpenGLFrameBuffer& miscFullSizeFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("MiscFullSize");
         OpenGLFrameBuffer& waterFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Water");
 
-        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBuffer" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         OpenGL::BindShader("OceanUnderwaterComposite");

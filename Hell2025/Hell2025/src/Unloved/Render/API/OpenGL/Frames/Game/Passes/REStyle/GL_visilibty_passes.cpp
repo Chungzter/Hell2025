@@ -12,7 +12,7 @@ namespace OpenGL::Renderer {
         OpenGLMeshBuffer& meshBufferProcedural = OpenGL::ResourceManager::GetMeshBuffer("Procedural");
         OpenGLMeshBuffer& meshBufferAssets = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
 
-        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         fbo.Bind();
         fbo.DrawBuffers({ "Visibility" });
 
@@ -54,7 +54,7 @@ namespace OpenGL::Renderer {
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
 
-        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         fbo.Bind();
         fbo.DrawBuffers({ "Visibility" });
 
@@ -102,7 +102,7 @@ namespace OpenGL::Renderer {
         ProfilerOpenGLZoneFunction();
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
 
-        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         fbo.Bind();
         fbo.DrawBuffers({ "Visibility" });
 
@@ -137,7 +137,7 @@ namespace OpenGL::Renderer {
         ProfilerOpenGLZoneFunction();
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
 
-        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         fbo.Bind();
         fbo.DrawBuffers({ "Visibility" });
 

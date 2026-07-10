@@ -239,7 +239,7 @@ namespace OpenGL::Renderer {
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
 		if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
-			OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+			OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
 			int32_t quarterWidth = (gBuffer.GetWidth() + 3) / 4;
 			int32_t quarterHeight = (gBuffer.GetHeight() + 3) / 4;
 
@@ -509,7 +509,7 @@ namespace OpenGL::Renderer {
 		OpenGLFrameBuffer* fbo = nullptr;
 
 		if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
-			fbo = OpenGL::ResourceManager::GetFrameBufferPtr("GBufferRE");
+			fbo = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
 			if (!fbo) return;
 
 			fbo->Bind();
@@ -571,7 +571,7 @@ namespace OpenGL::Renderer {
 
 
 		if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
-			fbo = OpenGL::ResourceManager::GetFrameBufferPtr("GBufferRE");
+			fbo = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
 			if (!fbo) return;
 
 			fbo->Bind();
@@ -668,7 +668,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindImageTexture(0, fbo->GetColorAttachmentHandleByName("Color"), GL_WRITE_ONLY, GL_R11F_G11F_B10F);
 
         if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
-            OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBufferRE");
+            OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
             if (!gBuffer) return;
 
             OpenGL::BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));

@@ -73,6 +73,7 @@ namespace VulkanRenderer {
     void SkyboxPass(VkCommandBuffer commandBuffer);
     void DebugViewPass(VkCommandBuffer commandBuffer);
     void HairPass(VkCommandBuffer commandBuffer);
+    void PostProcessingPass(VkCommandBuffer commandBuffer);
 
     // Present Pass
     void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView);

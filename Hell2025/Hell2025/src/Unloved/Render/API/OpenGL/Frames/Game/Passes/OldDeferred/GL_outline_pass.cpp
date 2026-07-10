@@ -82,7 +82,7 @@ namespace OpenGL::Renderer {
 
 
     void OutlinePass() {
-        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBuffer" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         OpenGLFrameBuffer* outlineFBO = OpenGL::ResourceManager::GetFrameBufferPtr("Outline");

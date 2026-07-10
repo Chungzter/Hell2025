@@ -43,7 +43,7 @@ namespace OpenGL::Renderer {
         OpenGLFrameBuffer* fogFbo = OpenGL::ResourceManager::GetFrameBufferPtr("Fog");
         OpenGLTexture3D* perlinNoiseTexture = OpenGL::ResourceManager::GetTexture3DPtr("PerlinNoise");
 
-        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBuffer" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         if (!fogFbo) return;

@@ -27,7 +27,7 @@ namespace OpenGL::Renderer {
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
 
         if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
-            gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBufferRE");
+            gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         }
 
         if (!gBuffer) return;
@@ -135,7 +135,7 @@ namespace OpenGL::Renderer {
 
 			switch (Unloved::Renderer::GetRendererMode()) {
 			    case RendererMode::OLD_DEFERRED: attachmentHandle = OpenGL::ResourceManager::GetFrameBuffer("GBuffer").GetColorAttachmentHandleByName("Lighting"); break;
-			    case RendererMode::RE_STYLE:     attachmentHandle = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE").GetColorAttachmentHandleByName("Lighting");    break;
+			    case RendererMode::RE_STYLE:     attachmentHandle = OpenGL::ResourceManager::GetFrameBuffer("GBuffer").GetColorAttachmentHandleByName("Lighting");    break;
 			}
 
             OpenGL::BindImageTexture(0, attachmentHandle, GL_READ_WRITE, GL_RGBA16F);
@@ -149,22 +149,21 @@ namespace OpenGL::Renderer {
             OpenGLFrameBuffer& waterFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Water");
 
             if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
-				OpenGLFrameBuffer& gBufferRE = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
 				OpenGLShader& shader = OpenGL::ResourceManager::GetShader("DebugViewRE");
 
 				OpenGL::BindShader("DebugViewRE");
 				OpenGL::SetUniformFloat("u_brushSize", Unloved::Editor::GetMapHeightBrushSize());
 				OpenGL::SetUniformBool("u_heightMapEditor", (Unloved::Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Unloved::Editor::IsOpen());
 
-				OpenGL::BindImageTexture(0, gBufferRE.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
-				OpenGL::BindTextureUnit(1, gBufferRE.GetColorAttachmentHandleByName("BaseColorMetallic"));
-				OpenGL::BindTextureUnit(2, gBufferRE.GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
-                OpenGL::BindTextureUnit(3, gBufferRE.GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
+				OpenGL::BindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
+                OpenGL::BindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("BaseColorMetallic"));
+                OpenGL::BindTextureUnit(2, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
+                OpenGL::BindTextureUnit(3, gBuffer->GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
                 OpenGL::BindTextureUnit(8, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
-                OpenGL::BindTextureUnit(9, gBufferRE.GetColorAttachmentHandleByName("Visibility"));
+                OpenGL::BindTextureUnit(9, gBuffer->GetColorAttachmentHandleByName("Visibility"));
                 // 10 is ocean flags
-                OpenGL::BindTextureUnit(11, gBufferRE.GetDepthAttachmentHandle());
-                OpenGL::BindTextureUnit(12, gBufferRE.GetColorAttachmentHandleByName("Emissive"));
+                OpenGL::BindTextureUnit(11, gBuffer->GetDepthAttachmentHandle());
+                OpenGL::BindTextureUnit(12, gBuffer->GetColorAttachmentHandleByName("Emissive"));
 
                 OpenGL::DispatchCompute(gBuffer->GetWidth() / TILE_SIZE, gBuffer->GetHeight() / TILE_SIZE, 1);
 			}

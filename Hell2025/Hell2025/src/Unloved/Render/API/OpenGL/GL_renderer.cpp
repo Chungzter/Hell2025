@@ -351,7 +351,7 @@ namespace OpenGL::Renderer {
 
         OpenGL::ResourceManager::LoadShader("RE", "DepthPrePassRE", { "GL_depth_prepass.vert", "GL_depth_prepass.frag" });
         OpenGL::ResourceManager::LoadShader("RE", "DepthPrePassAlphaDiscardRE", { "GL_depth_prepass_alpha_discard.vert", "GL_depth_prepass_alpha_discard.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "GBufferRE", { "GL_gbuffer_re.vert", "GL_gbuffer_re.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "GBuffer", { "GL_gbuffer_re.vert", "GL_gbuffer_re.frag" });
         OpenGL::ResourceManager::LoadShader("RE", "LightingDeferred", { "GL_fullscreen_triangle.vert", "GL_lighting_deferred.frag" });
 
         OpenGL::ResourceManager::LoadShader("RE", "HairLightingForward", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward.frag" });

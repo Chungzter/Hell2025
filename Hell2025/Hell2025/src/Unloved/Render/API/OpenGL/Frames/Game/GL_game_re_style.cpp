@@ -127,7 +127,7 @@ namespace OpenGL::Renderer {
         OutlinePass();
 
         OpenGLFrameBuffer& finalImageFbo = OpenGL::ResourceManager::GetFrameBuffer("FinalImage");
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& presentFbo = OpenGL::ResourceManager::GetFrameBuffer("Present");
 
         // Downscale with linear filtering
@@ -145,15 +145,15 @@ namespace OpenGL::Renderer {
 
 
 	void ClearRenderTargetsRE() {
-		OpenGLFrameBuffer& gBufferRE = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
-		gBufferRE.ClearAttachment("Lighting", 0, 0, 0, 1);
-		gBufferRE.ClearAttachment("BaseColorMetallic", 0, 0, 0, 1);
-		gBufferRE.ClearAttachment("NormalXYRoughnessMisc", 0, 0, 0, 1);
-        gBufferRE.ClearAttachment("VelocityXYOcclusionSubSurface", 0, 0, 0, 1);
-        gBufferRE.ClearAttachment("Emissive", 0.0f, 0.0f, 0.0f, 0.0f);
-        gBufferRE.ClearAttachmentUI("Visibility", 0, 0, 0, 0);
-        gBufferRE.ClearDepthAttachment(0.0f);
-        gBufferRE.ClearStencilBits(0);
+		OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
+        gBuffer.ClearAttachment("Lighting", 0, 0, 0, 1);
+        gBuffer.ClearAttachment("BaseColorMetallic", 0, 0, 0, 1);
+        gBuffer.ClearAttachment("NormalXYRoughnessMisc", 0, 0, 0, 1);
+        gBuffer.ClearAttachment("VelocityXYOcclusionSubSurface", 0, 0, 0, 1);
+        gBuffer.ClearAttachment("Emissive", 0.0f, 0.0f, 0.0f, 0.0f);
+        gBuffer.ClearAttachmentUI("Visibility", 0, 0, 0, 0);
+        gBuffer.ClearDepthAttachment(0.0f);
+        gBuffer.ClearStencilBits(0);
 
 		OpenGLFrameBuffer& hairFboRE = OpenGL::ResourceManager::GetFrameBuffer("HairRE");
 		hairFboRE.ClearAttachment("Lighting", 0, 0, 0, 0);
@@ -185,7 +185,7 @@ namespace OpenGL::Renderer {
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = OpenGL::ResourceManager::GetCubemapView("SkyboxNightSky");
-        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
 
         fbo.Bind();
         fbo.SetViewport();
@@ -239,7 +239,7 @@ namespace OpenGL::Renderer {
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = OpenGL::ResourceManager::GetCubemapView("SkyboxNightSky");
-        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
 
         fbo.Bind();
         fbo.SetViewport();
@@ -284,7 +284,7 @@ namespace OpenGL::Renderer {
     void LightingPassRE() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& indirectDiffuseFbo = OpenGL::ResourceManager::GetFrameBuffer("IndirectDiffuse");
 
         OpenGL::BindShader("LightingDeferred");
@@ -303,7 +303,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindTextureUnit(7, gBuffer.GetDepthAttachmentHandle());
         OpenGL::BindTextureUnit(8, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
 
-        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         fbo.Bind();
         fbo.SetViewport();
         fbo.DrawBuffers({ "Lighting" });
@@ -336,7 +336,7 @@ namespace OpenGL::Renderer {
 
 		const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
 
-		OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+		OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& indirectDiffuseFbo = OpenGL::ResourceManager::GetFrameBuffer("IndirectDiffuse");
 		fbo.Bind();
 		fbo.DrawBuffers({ "Lighting" });
@@ -370,7 +370,7 @@ namespace OpenGL::Renderer {
 
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLCubemapView* skyboxCubemapView = OpenGL::ResourceManager::GetCubemapViewPtr("SkyboxNightSky");
 
         gBuffer.Bind();
@@ -413,7 +413,7 @@ namespace OpenGL::Renderer {
         OpenGLCubemapView& skyboxCubemapView = OpenGL::ResourceManager::GetCubemapView("SkyboxNightSky");
         OpenGLFrameBuffer& fftBand0Fbo = OpenGL::ResourceManager::GetFrameBuffer("FFT_band0");
         OpenGLFrameBuffer& fftBand1Fbo = OpenGL::ResourceManager::GetFrameBuffer("FFT_band1");
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& waterFbo = OpenGL::ResourceManager::GetFrameBuffer("Water");
 
         const int gridSize = 128;
@@ -477,7 +477,7 @@ namespace OpenGL::Renderer {
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("Glass");
         OpenGLShader* compositeShader = OpenGL::ResourceManager::GetShaderPtr("GlassComposite");
-        OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBufferRE");
+        OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         OpenGLShadowMap* flashLightShadowMapsFBO = OpenGL::ResourceManager::GetShadowMapPtr("FlashlightShadowMaps");
 
         if (!shader) return;
@@ -548,7 +548,7 @@ namespace OpenGL::Renderer {
         ProfilerOpenGLZoneFunction();
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
 
-        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         fbo.Bind();
         fbo.DrawBuffers({ "Emissive" });
 

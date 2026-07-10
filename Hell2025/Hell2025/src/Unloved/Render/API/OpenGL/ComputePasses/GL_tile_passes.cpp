@@ -19,7 +19,7 @@ namespace OpenGL::Renderer {
 
 		switch (Unloved::Renderer::GetRendererMode()) {
 		    case RendererMode::OLD_DEFERRED: depthHandle = OpenGL::ResourceManager::GetFrameBuffer("GBuffer").GetDepthAttachmentHandle();   break;
-            case RendererMode::RE_STYLE:     depthHandle = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE").GetDepthAttachmentHandle(); break;
+            case RendererMode::RE_STYLE:     depthHandle = OpenGL::ResourceManager::GetFrameBuffer("GBuffer").GetDepthAttachmentHandle(); break;
 		}
 
         OpenGL::BindShader("TileWorldBounds");

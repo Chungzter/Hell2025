@@ -13,7 +13,7 @@ namespace OpenGL::Renderer {
     void EditorPass() {
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
-        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBufferRE" : "GBuffer";
+        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBuffer" : "GBuffer";
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
 
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("SolidColor");

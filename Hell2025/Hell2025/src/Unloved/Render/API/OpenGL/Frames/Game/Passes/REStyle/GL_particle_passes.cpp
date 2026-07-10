@@ -98,7 +98,7 @@ namespace OpenGL::Renderer {
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = OpenGL::ResourceManager::GetCubemapView("SkyboxNightSky");
-        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
 
         fbo.Bind();
         fbo.SetViewport();
@@ -181,7 +181,7 @@ namespace OpenGL::Renderer {
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = OpenGL::ResourceManager::GetCubemapView("SkyboxNightSky");
-        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
+        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
 
         fbo.Bind();
         fbo.SetViewport();
