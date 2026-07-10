@@ -668,6 +668,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\Vulkan\VK_present.frag" />
     <None Include="res\shaders\Vulkan\VK_skybox.frag" />
     <None Include="res\shaders\Vulkan\VK_solid_color.frag" />
+    <None Include="res\shaders\Vulkan\VK_tile_light_culling.comp" />
+    <None Include="res\shaders\Vulkan\VK_tile_world_bounds.comp" />
     <None Include="res\shaders\Vulkan\VK_visibility_alpha_discard.frag" />
     <None Include="res\shaders\Vulkan\VK_visibility.frag" />
     <None Include="res\shaders\Vulkan\VK_visibility.vert" />

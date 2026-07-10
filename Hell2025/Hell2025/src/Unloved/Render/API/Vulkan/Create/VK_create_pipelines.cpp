@@ -27,6 +27,13 @@ namespace {
         pipeline.Build();
     }
 
+    void CreateDebugTileView() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugTileView");
+        pipeline.SetShader("DebugTileView");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.Build();
+    }
+
     void CreateDebugViewPipeline() {
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugView");
         pipeline.SetShader("DebugView");
@@ -116,6 +123,22 @@ namespace {
         pipeline.Build();
     }
 
+    // Tile culling
+
+    void CreateTileWorldBoundsPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("TileWorldBounds");
+        pipeline.SetShader("TileWorldBounds");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.Build();
+    }
+
+    void CreateTileLightCullingPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("TileLightCulling");
+        pipeline.SetShader("TileLightCulling");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.Build();
+    }
+
     // Visibility
 
     void CreateVisibilityPipeline() {
@@ -197,6 +220,10 @@ namespace {
 namespace VulkanRenderer {
 
     void CreatePipelines() {
+        // Debug
+        CreateDebugTileView();
+        CreateDebugViewPipeline();
+
         // Loading screen
         CreateLoadingScreenPipeline();
 
@@ -208,13 +235,19 @@ namespace VulkanRenderer {
         CreateLightingDeferredPipeline();
         CreateLightingForwardBlendedPipeline();
         CreateSkyboxPipeline();
-        CreateDebugViewPipeline();
 
         // Misc
         CreateComputeRedTestPipeline();
 
         // Post Processing
         CreatePostProcessingPipeline();
+
+        // Tile culling
+        CreateTileWorldBoundsPipeline();
+        CreateTileLightCullingPipeline();
+
+
+
 
         // Final present
         CreatePresentPipeline();

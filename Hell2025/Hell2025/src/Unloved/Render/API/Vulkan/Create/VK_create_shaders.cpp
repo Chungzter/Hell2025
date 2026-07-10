@@ -8,6 +8,7 @@ namespace VulkanRenderer {
 
         // Debug
         VulkanResourceManager::CreateShader("DebugView", { "VK_fullscreen_triangle.vert", "VK_debug_view.frag" });
+        VulkanResourceManager::CreateShader("DebugTileView", { "VK_debug_tile_view.comp" });
 
         // Compute
         VulkanResourceManager::CreateShader("ComputeSkinning", { "VK_compute_skinning.comp" });
@@ -34,6 +35,10 @@ namespace VulkanRenderer {
         // Test
         VulkanResourceManager::CreateShader("FullscreenTriangle", { "VK_fullscreen_triangle.vert", "VK_solid_color.frag" });
         VulkanResourceManager::CreateShader("ComputeRedTest", { "VK_compute_red_test.comp" });
+
+        // Tile culling
+        VulkanResourceManager::CreateShader("TileLightCulling", { "VK_tile_light_culling.comp" });
+        VulkanResourceManager::CreateShader("TileWorldBounds", { "VK_tile_world_bounds.comp" });
 
         // UI
         VulkanResourceManager::CreateShader("UI", { "VK_ui.vert", "VK_ui.frag" });

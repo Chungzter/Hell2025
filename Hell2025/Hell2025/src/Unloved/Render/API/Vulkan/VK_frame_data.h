@@ -22,6 +22,8 @@ struct VulkanFrameData {
         uint64_t rayQueryGeometryData = 0;
         uint64_t rayQueryScratch = 0;
         uint64_t uiRenderItems = 0;
+        uint64_t tileLights = 0;
+        uint64_t tileWorldBounds = 0;
     } buffers;
 
     struct GenericMeshes {
