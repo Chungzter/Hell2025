@@ -408,21 +408,20 @@ namespace Unloved::WorldBVH {
 		g_staticSceneInstances.clear();
 
         // Render items
-        for (ChristmasLightSet& object : Unloved::World::GetChristmasLightSets())	CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (Fence& object : Unloved::World::GetFences())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (Ladder& object : Unloved::World::GetLadders())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (Mermaid& object : Unloved::World::GetMermaids())						CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (PowerPoleSet& object : Unloved::World::GetPowerPoleSets())			    CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (Staircase& object : Unloved::World::GetStaircases())					CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (ChristmasLightSet& object : World::GetChristmasLightSets())	CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (Fence& object : World::GetFences())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (Ladder& object : World::GetLadders())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (Mermaid& object : World::GetMermaids())						CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (PowerPoleSet& object : World::GetPowerPoleSets())			    CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (Staircase& object : World::GetStaircases())					CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
 
         // Add any static mesh nodes to the primitive instances vector
-        for (Door& object : Unloved::World::GetDoors())                     CreateStaticPrimtiveInstances(object.GetMeshNodes());
-        for (Fireplace& object : Unloved::World::GetFireplaces())           CreateStaticPrimtiveInstances(object.GetMeshNodes());
-        for (GenericObject& object : Unloved::World::GetGenericObjects())   CreateStaticPrimtiveInstances(object.GetMeshNodes());
-        //for (Ladder& object : GetLadders())                 CreateStaticPrimtiveInstances(object.GetMeshNodes()); why didn't this work? some bug
-        for (Light& object : Unloved::World::GetLights())					CreateStaticPrimtiveInstances(object.GetMeshNodes());
-        for (Piano& object : Unloved::World::GetPianos())                   CreateStaticPrimtiveInstances(object.GetMeshNodes());
-        for (Window& object : Unloved::World::GetWindows())                 CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (Door& object : World::GetDoors())                     CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (Fireplace& object : World::GetFireplaces())           CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (GenericObject& object : World::GetGenericObjects())   CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (Light& object : World::GetLights())				   CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (Piano& object : World::GetPianos())                   CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (Window& object : World::GetWindows())                 CreateStaticPrimtiveInstances(object.GetMeshNodes());
 
         // Recreate the TLAS
 		if (!Hell::Bvh::AddInstanceMeshBvhsToSceneBvh(g_staticSceneBvhId, g_staticSceneInstances)) return;

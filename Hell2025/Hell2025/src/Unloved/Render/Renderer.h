@@ -21,6 +21,7 @@ namespace Unloved::Renderer {
     // Override states
     void SetRendererOverrideState(RendererOverrideState state);
     void NextRendererOverrideState();
+    bool OverrideStateUsesDebugViewPass();
 
     void SetProbeDebugState(ProbeDebugState state);
 	void NextProbeDebugState();

@@ -10,11 +10,17 @@ namespace VulkanRenderer {
         UpdateBuffersUI();
 
         ComputeSkinningPass(frame.commandBuffer);
+        UpdateRayTracing(frame.commandBuffer);
 
         VisibilityPass(frame.commandBuffer);
         MaterialResolvePass(frame.commandBuffer);
-        UpdateRayQueryAccelerationStructures(frame.commandBuffer);
         LightingPass(frame.commandBuffer);
+        LightingForwardBlendedPass(frame.commandBuffer);
+        SkyboxPass(frame.commandBuffer);
+
+        // HairPass(frame.commandBuffer);
+
+        DebugViewPass(frame.commandBuffer);
 
         BlitImage(frame.commandBuffer, "Lighting", "FinalImage", VK_FILTER_LINEAR);
         BlitImage(frame.commandBuffer, "FinalImage", "Present", VK_FILTER_NEAREST);

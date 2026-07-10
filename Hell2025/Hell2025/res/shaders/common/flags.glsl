@@ -1,18 +1,11 @@
+
 #define MISC_FLAG_DYNAMIC_OBJECT (1u << 0)
 #define MISC_FLAG_RESEVERED      (1u << 1)
+#define MISC_FLAG_MIRROR_SURFACE MISC_FLAG_RESEVERED
 
-#define BLENDING_MODE_ALPHA_DISCARD    0u
-#define BLENDING_MODE_BLENDED          1u
-#define BLENDING_MODE_DEFAULT          2u
-#define BLENDING_MODE_HAIR_UNDER_LAYER 3u
-#define BLENDING_MODE_HAIR             4u
-#define BLENDING_MODE_TOILET_WATER     5u
-#define BLENDING_MODE_MIRROR           6u
-#define BLENDING_MODE_GLASS            7u
-#define BLENDING_MODE_PLASTIC          8u
-#define BLENDING_MODE_DO_NOT_RENDER    9u
-#define BLENDING_MODE_STAINED_GLASS    10u
-#define BLENDING_MODE_UNDEFINED        11u
+#define SHADOW_FLAG_NONE        0u
+#define SHADOW_FLAG_POINT_LIGHT (1u << 0)
+#define SHADOW_FLAG_CSM         (1u << 1)
 
 #ifdef __cplusplus
 #pragma once

@@ -18,24 +18,28 @@ namespace OpenGL::Renderer {
     void ComputeSkinningPass() {
         ProfilerOpenGLZoneFunction();
 
-        const std::vector<glm::mat4>& transforms = Unloved::RenderDataManager::GetSkinningTransforms();
-
-        OpenGLSSBO* ssbo = OpenGL::ResourceManager::GetSSBOPtr("SkinningTransforms");
-        ssbo->Update(transforms.size() * sizeof(glm::mat4), transforms.data());
-
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("ComputeSkinning");
         OpenGLSSBO* skinningTransformsSSBO = OpenGL::ResourceManager::GetSSBOPtr("SkinningTransforms");
 
         if (!shader) return;
         if (!skinningTransformsSSBO) return;
 
+        const std::vector<RenderItem>& skinnedRenderItems = Unloved::RenderDataManager::GetCombinedSkinnedRenderItems();
+        const std::vector<glm::mat4>& skinningTransforms = Unloved::RenderDataManager::GetSkinningTransforms();
+        uint32_t totalVertexCount = Unloved::RenderDataManager::GetRequiredSkinnedVertexCount();
+
+        if (skinnedRenderItems.empty()) return;
+        if (skinningTransforms.empty()) return;
+        if (totalVertexCount == 0) return;
+
         // Calculate total amount of vertices to skin and allocate space
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
         OpenGLMeshBuffer& glMeshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
-        uint32_t totalVertexCount = Unloved::RenderDataManager::GetRequiredSkinnedVertexCount();
 
         // Make sure there is enough space allocated on the GPU to store them all
         OpenGL::BackEnd::AllocateSkinnedVertexBufferSpace(totalVertexCount);
+
+        skinningTransformsSSBO->Update(skinningTransforms.size() * sizeof(glm::mat4), skinningTransforms.data());
 
         // Skin
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
@@ -45,10 +49,7 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindShader("ComputeSkinning");
 
-        const std::vector<glm::mat4>& skinningTransforms = Unloved::RenderDataManager::GetSkinningTransforms();
-        skinningTransformsSSBO->Update(skinningTransforms.size() * sizeof(glm::mat4), &skinningTransforms[0]);
-
-        for (const RenderItem& renderItem : Unloved::RenderDataManager::GetCombinedSkinnedRenderItems()) {
+        for (const RenderItem& renderItem : skinnedRenderItems) {
             uint32_t meshId = renderItem.meshId;
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
             if (!mesh) continue;

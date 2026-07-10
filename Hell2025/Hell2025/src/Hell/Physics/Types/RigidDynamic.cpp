@@ -124,6 +124,55 @@ void RigidDynamic::AddForce(glm::vec3 force) {
     m_pxRigidDynamic->wakeUp();
 }
 
+void RigidDynamic::AddVelocityChange(glm::vec3 velocityChange) {
+    if (!m_pxRigidDynamic) return;
+
+    PxVec3 pxVelocityChange = Hell::Physics::GlmVec3toPxVec3(velocityChange);
+    m_settleTimer = 0.0f;
+    m_motionState = RigidDynamicMotionState::AWAKE;
+    m_pxRigidDynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, false);
+    m_pxRigidDynamic->addForce(pxVelocityChange, PxForceMode::eVELOCITY_CHANGE);
+    m_pxRigidDynamic->wakeUp();
+}
+
+void RigidDynamic::AddImpulse(glm::vec3 impulse) {
+    if (!m_pxRigidDynamic) return;
+
+    PxVec3 pxImpulse = Hell::Physics::GlmVec3toPxVec3(impulse);
+    m_settleTimer = 0.0f;
+    m_motionState = RigidDynamicMotionState::AWAKE;
+    m_pxRigidDynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, false);
+    m_pxRigidDynamic->addForce(pxImpulse, PxForceMode::eIMPULSE);
+    m_pxRigidDynamic->wakeUp();
+}
+
+void RigidDynamic::AddImpulseAtPosition(glm::vec3 impulse, glm::vec3 position) {
+    if (!m_pxRigidDynamic) return;
+
+    PxVec3 pxImpulse = Hell::Physics::GlmVec3toPxVec3(impulse);
+    PxVec3 pxPosition = Hell::Physics::GlmVec3toPxVec3(position);
+    m_settleTimer = 0.0f;
+    m_motionState = RigidDynamicMotionState::AWAKE;
+    m_pxRigidDynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, false);
+    PxRigidBodyExt::addForceAtPos(*m_pxRigidDynamic, pxImpulse, pxPosition, PxForceMode::eIMPULSE, true);
+    m_pxRigidDynamic->wakeUp();
+}
+
+void RigidDynamic::AddAngularVelocityChangeAtPosition(glm::vec3 velocityChange, glm::vec3 position) {
+    if (!m_pxRigidDynamic) return;
+
+    PxVec3 pxVelocityChange = Hell::Physics::GlmVec3toPxVec3(velocityChange);
+    PxVec3 pxPosition = Hell::Physics::GlmVec3toPxVec3(position);
+    PxVec3 centerOfMass = m_pxRigidDynamic->getGlobalPose().transform(m_pxRigidDynamic->getCMassLocalPose().p);
+    PxVec3 angularVelocityChange = (pxPosition - centerOfMass).cross(pxVelocityChange);
+
+    m_settleTimer = 0.0f;
+    m_motionState = RigidDynamicMotionState::AWAKE;
+    m_pxRigidDynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, false);
+    m_pxRigidDynamic->addTorque(angularVelocityChange, PxForceMode::eVELOCITY_CHANGE, true);
+    m_pxRigidDynamic->wakeUp();
+}
+
 void RigidDynamic::SetGlobalPose(const glm::mat4& globalPoseMatrix) {
     if (!m_pxRigidDynamic) return;
 

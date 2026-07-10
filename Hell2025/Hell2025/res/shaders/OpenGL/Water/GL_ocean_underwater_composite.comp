@@ -17,7 +17,7 @@ readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { Viewpo
 uniform float u_time;
 uniform vec2 u_resolution;
 
-vec3 GetWorldRay(vec2 fragCoord, vec2 resolution, mat4 inverseProjectionView, vec3 viewPos) {
+vec3 GetWorldRay_GL(vec2 fragCoord, vec2 resolution, mat4 inverseProjectionView, vec3 viewPos) {
     vec2 ndc = (fragCoord / resolution) * 2.0 - 1.0;
     vec4 clip = vec4(ndc, 1.0, 1.0);
     vec4 world = inverseProjectionView * clip;
@@ -51,7 +51,7 @@ void main() {
     vec3 viewPos = viewportData.viewPos.xyz;
     vec2 viewportOrigin = vec2(viewportData.xOffset, viewportData.yOffset);
     vec2 viewportSize = vec2(viewportData.width, viewportData.height);
-    vec3 rayDir = GetWorldRay(px, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
+    vec3 rayDir = GetWorldRay_GL(px, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
 
     // calculate depth-based world ray fog
     vec3 down = vec3(0.0, -1.0, 0.0);

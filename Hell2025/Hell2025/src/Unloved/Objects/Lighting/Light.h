@@ -67,11 +67,9 @@ struct Light {
 
     void ConfigureMeshNodes();
 
-    void SetShadowMapDirtyFlag(bool value) { m_dirtyForShadowMaps = value; }
     void SetRaytracingDirtyFlag(bool value) { m_dirtyForRaytracing = value; }
     bool ConsumeForcedDirtyFlag() { bool value = m_forcedDirty; m_forcedDirty = false; return value; }
 
-    bool IsDirtyForShadowMaps() const      { return m_dirtyForShadowMaps; }
     bool IsForcedDirty() const             { return m_forcedDirty; }
 
     Unloved::Frustum* GetFrustumByFaceIndex(uint32_t faceIndex);
@@ -103,11 +101,8 @@ struct Light {
     LightFlicker m_lightFlicker;
 
 private:
-    //void UpdateDirtyState();
-
 	MeshNodes m_meshNodes;
     bool m_forcedDirty = false;
-    bool m_dirtyForShadowMaps = true;
     bool m_dirtyForRaytracing = true;
     uint64_t m_objectId = 0;
     std::vector<RenderItem> m_renderItems;

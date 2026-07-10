@@ -17,12 +17,13 @@ bool IsDepthStencilFormat(VkFormat format) {
     return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
-AllocatedImage::AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkImageUsageFlags usage, std::string debugName) {
+AllocatedImage::AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkSampleCountFlagBits sampleCount, VkImageUsageFlags usage, std::string debugName) {
     VkDevice device = VulkanDeviceManager::GetDevice();
     VmaAllocator allocator = VulkanMemoryManager::GetAllocator();
 
     m_format = imageFormat;
     m_extent = imageExtent;
+    m_sampleCount = sampleCount;
     m_currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     VkImageCreateInfo imageInfo = {};
@@ -32,7 +33,7 @@ AllocatedImage::AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkI
     imageInfo.extent = m_extent;
     imageInfo.mipLevels = 1;
     imageInfo.arrayLayers = 1;
-    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.samples = m_sampleCount;
     imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
     imageInfo.usage = usage;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -102,6 +103,7 @@ AllocatedImage::AllocatedImage(AllocatedImage&& other) noexcept {
     m_allocation = other.m_allocation;
     m_extent = other.m_extent;
     m_format = other.m_format;
+    m_sampleCount = other.m_sampleCount;
     m_currentLayout = other.m_currentLayout;
     m_currentAccessMask = other.m_currentAccessMask;
     m_currentStageFlags = other.m_currentStageFlags;
@@ -111,6 +113,7 @@ AllocatedImage::AllocatedImage(AllocatedImage&& other) noexcept {
     other.m_imageView = VK_NULL_HANDLE;
     other.m_depthOnlyImageView = VK_NULL_HANDLE;
     other.m_allocation = VK_NULL_HANDLE;
+    other.m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
 }
 
 AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other) noexcept {
@@ -121,6 +124,7 @@ AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other) noexcept {
         m_allocation = other.m_allocation;
         m_extent = other.m_extent;
         m_format = other.m_format;
+        m_sampleCount = other.m_sampleCount;
         m_currentLayout = other.m_currentLayout;
         m_currentAccessMask = other.m_currentAccessMask;
         m_currentStageFlags = other.m_currentStageFlags;
@@ -129,6 +133,7 @@ AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other) noexcept {
         other.m_imageView = VK_NULL_HANDLE;
         other.m_depthOnlyImageView = VK_NULL_HANDLE;
         other.m_allocation = VK_NULL_HANDLE;
+        other.m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
     }
     return *this;
 }

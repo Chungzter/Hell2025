@@ -206,6 +206,7 @@ namespace Unloved::Editor {
 
         UpdateCamera();    // you swapped these two, maybe it was better before?
         UpdateMouseRays(); // you swapped these two, maybe it was better before?
+        Gizmo::Update();
         UpdateObjectHover();
         UpdateObjectSelection();
         UpdateObjectGizmoInteraction();
@@ -215,7 +216,7 @@ namespace Unloved::Editor {
         UpdateCursor();
         UpdateDebug();
         UpdateCameraInterpolation(deltaTime);
-        Gizmo::Update();
+        Gizmo::UpdateRenderItems();
 
 
         if (GetEditorState() == EditorState::PLACEMENT) {

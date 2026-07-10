@@ -5,6 +5,7 @@
 #include "Hell/Physics/Physics.h"
 #include "Hell/Transform.h"
 #include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/RendererConstants.h"
 #include "Legacy/World/LegacyWorld.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
 
@@ -170,6 +171,7 @@ void WorldPlane::SubmitRenderItem() {
     renderItem.meshId = m_meshId;
     renderItem.baseVertex = mesh->baseVertex;
     renderItem.baseIndex = mesh->baseIndex;
+    renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
 
 	RenderDataManager::SubmitRenderItemProcedural(renderItem);
 }

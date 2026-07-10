@@ -37,7 +37,7 @@ namespace OpenGL::Renderer {
 
         state.stencilTestEnabled = true;
         state.stencilFunc = GL_EQUAL;
-        state.stencilRef = STENCIL_BIT_STATIC;
+        state.stencilRef = STENCIL_BIT_ASSET;
         state.stencilReadMask = 0xFF;
         state.stencilWriteMask = 0x00;
         state.stencilFailOp = GL_KEEP;

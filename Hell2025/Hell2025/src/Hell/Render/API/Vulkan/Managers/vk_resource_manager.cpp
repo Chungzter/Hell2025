@@ -13,6 +13,7 @@
 
 namespace VulkanResourceManager {
     std::unordered_map<std::string, AllocatedImage> g_allocatedImages;
+    std::unordered_map<std::string, VulkanCubemap> g_cubemaps;
     std::unordered_map<std::string, VulkanDescriptorSetResource> g_descriptorSets;
     std::unordered_map<std::string, VulkanPipeline> g_pipelines;
     std::unordered_map<std::string, VulkanRaytracingPipeline> g_raytracingPipelines;
@@ -58,6 +59,7 @@ namespace VulkanResourceManager {
 
         for (auto& [name, object] : g_descriptorSets)  { object.Cleanup(); } g_descriptorSets.clear();
         for (auto& [name, object] : g_allocatedImages) { object.Cleanup(); } g_allocatedImages.clear();
+        for (auto& [name, object] : g_cubemaps)        { object.Cleanup(); } g_cubemaps.clear();
         for (auto& [name, object] : g_samplers)        { object.Cleanup(); } g_samplers.clear();
         for (auto& [name, object] : g_renderStates)    { object.CleanUp(); } g_renderStates.clear();
         for (auto& [name, shader] : g_shaders)         { shader.Cleanup(); } g_shaders.clear();
@@ -76,6 +78,21 @@ namespace VulkanResourceManager {
                 entry.name = name;
                 entry.cpuBytes = image.GetCPUAllocatedByteCount();
                 entry.gpuBytes = image.GetGPUAllocatedByteCount();
+            }
+
+            AppendCategory(report, std::move(category));
+        }
+
+        if (!g_cubemaps.empty()) {
+            Hell::MemoryTracker::MemoryReportCategory category;
+            category.name = "Vulkan Cubemaps";
+            category.entries.reserve(g_cubemaps.size());
+
+            for (const auto& [name, cubemap] : g_cubemaps) {
+                Hell::MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = cubemap.GetCPUAllocatedByteCount();
+                entry.gpuBytes = cubemap.GetGPUAllocatedByteCount();
             }
 
             AppendCategory(report, std::move(category));
@@ -271,9 +288,13 @@ namespace VulkanResourceManager {
     
     // Allocated Images
      
-    AllocatedImage& CreateAllocatedImage(const std::string& name, uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage) {
+    AllocatedImage& CreateAllocatedImage(const std::string& name, uint32_t width, uint32_t height, VkSampleCountFlagBits sampleCount, VkFormat format, VkImageUsageFlags usage) {
         if (width == 0 || height == 0) {
             Logging::Error() << "VulkanResourceManager::CreateAllocatedImage(..) zero dimension image '" << name << "' requested.\n";
+            __debugbreak();
+        }
+        if (sampleCount == 0) {
+            Logging::Error() << "VulkanResourceManager::CreateAllocatedImage(..) invalid sample count for image '" << name << "'.\n";
             __debugbreak();
         }
 
@@ -284,7 +305,7 @@ namespace VulkanResourceManager {
         }
 
         VkExtent3D extent{ width, height, 1 };
-        it->second = AllocatedImage(format, extent, usage, name);
+        it->second = AllocatedImage(format, extent, sampleCount, usage, name);
         return it->second;
     }
 
@@ -300,6 +321,49 @@ namespace VulkanResourceManager {
 
     bool AllocatedImageExists(const std::string& name) {
         return g_allocatedImages.find(name) != g_allocatedImages.end();
+    }
+
+    // Cubemaps
+
+    VulkanCubemap& CreateCubemap(const std::string& name) {
+        if (name.empty()) {
+            Logging::Error() << "VulkanResourceManager::CreateCubemap(..) empty resource name requested.\n";
+            __debugbreak();
+        }
+
+        auto [it, inserted] = g_cubemaps.try_emplace(name);
+
+        if (!inserted) {
+            it->second.Cleanup();
+        }
+
+        it->second = VulkanCubemap();
+        return it->second;
+    }
+
+    VulkanCubemap* GetCubemap(const std::string& name) {
+        auto it = g_cubemaps.find(name);
+        if (it != g_cubemaps.end()) {
+            return &it->second;
+        }
+
+        Logging::Error() << "VulkanResourceManager::GetCubemap(..) no cubemap named '" << name << "'.\n";
+        return nullptr;
+    }
+
+    bool CubemapExists(const std::string& name) {
+        return g_cubemaps.find(name) != g_cubemaps.end();
+    }
+
+    void RemoveCubemap(const std::string& name) {
+        auto it = g_cubemaps.find(name);
+        if (it == g_cubemaps.end()) {
+            Logging::Error() << "VulkanResourceManager::RemoveCubemap(..) no cubemap named '" << name << "'.\n";
+            return;
+        }
+
+        it->second.Cleanup();
+        g_cubemaps.erase(it);
     }
                             
     // Buffers              
@@ -553,7 +617,9 @@ namespace VulkanResourceManager {
             g_pipelines.erase(it);
         }
 
-        return g_pipelines[name];
+        VulkanPipeline& pipeline = g_pipelines[name];
+        pipeline.SetName(name);
+        return pipeline;
     }
 
     VulkanRaytracingPipeline& CreateRaytracingPipeline(const std::string& name) {

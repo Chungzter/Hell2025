@@ -98,11 +98,7 @@ vec3 ReconstructWorldPosFromViewportUVDepth(vec2 viewportUV, float depth, mat4 i
     return worldH.xyz / max(worldH.w, 1e-6);
 }
 
-vec3 ReconstructWorldPosFromDepth01_ZeroToOne(
-    vec2 viewportUV,
-    float depth01,
-    mat4 inverseProjection,
-    mat4 inverseView)
+vec3 ReconstructWorldPosFromDepth01_ZeroToOne(vec2 viewportUV, float depth01, mat4 inverseProjection, mat4 inverseView)
 {
     vec2 ndcXY = viewportUV * 2.0 - 1.0;
     ndcXY.y = -ndcXY.y;

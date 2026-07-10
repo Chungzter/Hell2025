@@ -46,15 +46,7 @@ const mat3 kRotateYMinus90 = mat3(
     1.0, 0.0,  0.0
 );
 
-vec3 SampleEstimatedNormalBand(
-    sampler2D displacementTex,
-    sampler2D normalTex,
-    vec2 worldXZ,
-    float invPatchSize,
-    float patchSize,
-    float displacementScale,
-    float lod
-) {
+vec3 SampleEstimatedNormalBand(sampler2D displacementTex, sampler2D normalTex, vec2 worldXZ, float invPatchSize, float patchSize, float displacementScale, float lod) {
     vec2 bestGuessUV = fract(worldXZ * invPatchSize);
 
     vec3 disp = texture(displacementTex, bestGuessUV).xyz;

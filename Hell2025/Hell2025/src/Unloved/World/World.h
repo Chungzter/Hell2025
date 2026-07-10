@@ -57,6 +57,7 @@ namespace Unloved::World {
     void BeginFrame();
     void UpdateBvhs();
     void Update();
+    void UpdateEnemyMovement();
     void UpdateObjects();
     void UpdatePlayers();
     void SubmitRenderItems();

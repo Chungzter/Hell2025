@@ -2,8 +2,6 @@
 #include "Unloved/Render/API/Vulkan/VK_renderer_internal.h"
 
 #include "Hell/Logging.h"
-#include "Hell/Render/DrawCommandTypes.h"
-#include "Hell/Render/VertexAttributes.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_command_manager.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_deletion_queue.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_device_manager.h"
@@ -12,16 +10,10 @@
 #include "Hell/Render/API/Vulkan/Managers/vk_sync_manager.h"
 #include "Hell/Render/API/Vulkan/vk_tools.h"
 #include "Hell/Render/API/Vulkan/vk_types.h"
-#include "Hell/ResourceManagement/Types/Material.h"
-#include "Hell/UI/UITypes.h"
 #include "Unloved/Debug/Debug.h"
-#include "Unloved/Common/Constants.h"
-#include "Unloved/Render/API/Vulkan/VK_descriptor_indices.h"
 #include "Unloved/Render/API/Vulkan/VK_draw.h"
-#include "Unloved/Render/RendererTypes.h"
 
 #include <array>
-#include <glm/mat4x4.hpp>
 #include <iostream>
 #include <vector>
 
@@ -31,14 +23,11 @@ namespace VulkanRenderer {
     std::vector<VkImageLayout> g_swapchainImageLayouts;
     bool g_staticSamplersUploaded = false;
 
-    void CreateSamplers();
-    void CreateStaticDescriptorSet();
-    void CreateFrameData();
-
     void Init() {
         CreateShaders();
         CreateSamplers();
         CreateStaticDescriptorSet();
+        CreateRayQueryDescriptorSet();
         CreateFrameData();
         CreateRenderTargets();
         CreatePresentRenderTarget(VulkanSwapchainManager::GetSwapchainExtent());
@@ -49,6 +38,7 @@ namespace VulkanRenderer {
 
     void InitMain() {
         UpdateBindlessTextureDescriptors();
+        CreateSkybox();
     }
 
     void CleanUp() {
@@ -80,78 +70,6 @@ namespace VulkanRenderer {
         Debug::BlitQuickDebugMessage("HOTLOADED SHADERS");
     }
 
-    void CreateSamplers() {
-        const VkPhysicalDeviceProperties& properties = VulkanDeviceManager::GetProperties();
-        const float maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-
-        VulkanResourceManager::CreateSampler("Linear", VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, maxAnisotropy);
-        VulkanResourceManager::CreateSampler("Nearest", VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-    }
-
-    void CreateStaticDescriptorSet() {
-        g_staticSamplersUploaded = false;
-
-        std::vector<VkDescriptorSetLayoutBinding> bindings = {
-            { DESC_IDX_SAMPLERS, VK_DESCRIPTOR_TYPE_SAMPLER, 16, VK_SHADER_STAGE_ALL },
-            { DESC_IDX_TEXTURES, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 10000, VK_SHADER_STAGE_ALL },
-            { DESC_IDX_UBOS, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 128, VK_SHADER_STAGE_ALL },
-            { DESC_IDX_SSBOS, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1024, VK_SHADER_STAGE_ALL },
-            { DESC_IDX_STORAGE_IMAGES_RGBA32F, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100, VK_SHADER_STAGE_ALL },
-            { DESC_IDX_STORAGE_IMAGES_RGBA16F, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100, VK_SHADER_STAGE_ALL },
-            { DESC_IDX_STORAGE_IMAGES_RGBA8, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100, VK_SHADER_STAGE_ALL },
-            { DESC_IDX_UINT_TEXTURES, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 128, VK_SHADER_STAGE_ALL },
-            { DESC_IDX_TEXTURE_SAMPLERS, VK_DESCRIPTOR_TYPE_SAMPLER, 10000, VK_SHADER_STAGE_ALL },
-            { DESC_IDX_ACCELERATION_STRUCTURES, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, 1, VK_SHADER_STAGE_ALL }
-        };
-
-        std::vector<VkDescriptorBindingFlags> flags(bindings.size(), 0);
-        flags[DESC_IDX_TEXTURES] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-        flags[DESC_IDX_STORAGE_IMAGES_RGBA32F] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-        flags[DESC_IDX_STORAGE_IMAGES_RGBA16F] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-        flags[DESC_IDX_STORAGE_IMAGES_RGBA8] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-        flags[DESC_IDX_UINT_TEXTURES] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-        flags[DESC_IDX_TEXTURE_SAMPLERS] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-        flags[DESC_IDX_ACCELERATION_STRUCTURES] = VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-
-        VkDescriptorSetLayoutBindingFlagsCreateInfo flagsInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO };
-        flagsInfo.bindingCount = static_cast<uint32_t>(flags.size());
-        flagsInfo.pBindingFlags = flags.data();
-
-        VkDescriptorSetLayoutCreateInfo layoutInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-        layoutInfo.pNext = &flagsInfo;
-        layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        VulkanResourceManager::CreateDescriptorSet("StaticDescriptorSet", layoutInfo, DescriptorSetLifetime::STATIC);
-    }
-
-    void CreateFrameData() {
-        VkBufferUsageFlags usageStorage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-        VkBufferUsageFlags usageIndirect = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-        VkBufferUsageFlags usageSkinnedVertices = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        VkBufferUsageFlags usageRayQueryInstances = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
-        VkBufferUsageFlags usageRayQueryScratch = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-        VmaAllocationCreateFlags vmaFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-        for (VulkanFrameData& frameData : g_frameData) {
-            frameData.buffers.instanceData = VulkanResourceManager::CreateBuffer(sizeof(RenderItem) * MAX_INSTANCE_DATA_COUNT, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.viewportData = VulkanResourceManager::CreateBuffer(sizeof(ViewportData) * MAX_VIEWPORT_COUNT, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.rendererData = VulkanResourceManager::CreateBuffer(sizeof(RendererData), usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.gpuLights = VulkanResourceManager::CreateBuffer(sizeof(GPULight) * 8, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.materials = VulkanResourceManager::CreateBuffer(sizeof(Material), usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.drawCommands = VulkanResourceManager::CreateBuffer(sizeof(DrawIndexedIndirectCommand) * MAX_INDIRECT_DRAW_COMMAND_COUNT, usageIndirect, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.skinningTransforms = VulkanResourceManager::CreateBuffer(sizeof(glm::mat4) * MAX_ANIMATED_TRANSFORMS, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.skinnedVertices = VulkanResourceManager::CreateBuffer(sizeof(Vertex), usageSkinnedVertices, VMA_MEMORY_USAGE_GPU_ONLY);
-            frameData.buffers.rayQueryInstances = VulkanResourceManager::CreateBuffer(1, usageRayQueryInstances, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.rayQueryInstanceData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.rayQueryGeometryData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.rayQueryScratch = VulkanResourceManager::CreateBuffer(1, usageRayQueryScratch, VMA_MEMORY_USAGE_AUTO);
-            frameData.buffers.uiRenderItems = VulkanResourceManager::CreateBuffer(sizeof(RenderItemUI) * VULKAN_MAX_UI_RENDER_ITEMS, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.accelerationStructures.rayQueryTLAS = VulkanResourceManager::CreateAccelerationStructure();
-        }
-    }
-
     bool UpdateBuffer(VulkanBuffer* buffer, const void* data, VkDeviceSize size) {
         if (!buffer) return false;
 
@@ -165,9 +83,12 @@ namespace VulkanRenderer {
     }
 
     bool EnsureBufferSize(uint64_t id, VkDeviceSize size) {
-        if (size == 0) return true;
-
         VulkanBuffer* buffer = VulkanResourceManager::GetBuffer(id);
+
+        return EnsureBufferSize(buffer, size);
+    }
+
+    bool EnsureBufferSize(VulkanBuffer* buffer, VkDeviceSize size) {
         if (!buffer) return false;
 
         return buffer->EnsureSize(size);

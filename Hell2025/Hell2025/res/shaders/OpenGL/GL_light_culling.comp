@@ -92,7 +92,7 @@ void main() {
                 if (AABBsIntersect(worldSpaceMin, worldSpaceMax, lightAabbMin, lightAabbMax) && SphereVsAABB(worldSpaceMin, worldSpaceMax, lightPos, lightRadius)) {
 				    uint index = atomicAdd(tilelightCount, 1);
 
-                    const int MAX_LIGHTS_PER_TILE = 127;
+                    const uint MAX_LIGHTS_PER_TILE = 127;
                     if (index < MAX_LIGHTS_PER_TILE) {
                         tilelights[tileIndex].lightIndices[index] = int(lightIndex);
                     }
@@ -103,6 +103,6 @@ void main() {
 	barrier();
 
 	if (gl_LocalInvocationIndex == 0) {
-		tilelights[tileIndex].lightCount = tilelightCount;
+		tilelights[tileIndex].lightCount = min(tilelightCount, 127u);
 	}
 }

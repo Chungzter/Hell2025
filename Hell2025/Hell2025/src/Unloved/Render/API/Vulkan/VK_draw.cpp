@@ -4,6 +4,8 @@
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Render/API/Vulkan/Types/vk_buffer.h"
 #include "Unloved/Render/API/Vulkan/VK_renderer.h"
+#include "Unloved/Render/API/Vulkan/VK_renderer_internal.h"
+#include "Unloved/Render/RendererConstants.h"
 #include "Unloved/Viewport/Viewport.h"
 
 namespace VulkanRenderer {
@@ -20,12 +22,19 @@ namespace VulkanRenderer {
         VulkanBuffer* drawCommandBuffer = VulkanResourceManager::GetBuffer(GetCurrentFrameData().buffers.drawCommands);
         if (!drawCommandBuffer || drawCommands.empty()) return batch;
 
+        if (drawCommands.size() > MAX_INDIRECT_DRAW_COMMAND_COUNT) {
+            Logging::Error() << "VulkanRenderer::WriteDrawCommands() draw command count " << drawCommands.size() << " exceeded MAX_INDIRECT_DRAW_COMMAND_COUNT " << MAX_INDIRECT_DRAW_COMMAND_COUNT << "\n";
+            __debugbreak();
+            return batch;
+        }
+
         VkDeviceSize writeSize = sizeof(DrawIndexedIndirectCommand) * drawCommands.size();
         VkDeviceSize offset = g_drawCommandBufferOffset;
 
         // Bail if buffer is full
         if (offset + writeSize > drawCommandBuffer->GetSize()) {
             Logging::Error() << "VulkanRenderer::WriteDrawCommands() draw command buffer capacity exceeded\n";
+            __debugbreak();
             return batch;
         }
 
@@ -44,6 +53,30 @@ namespace VulkanRenderer {
             batches[viewportIndex] = WriteDrawCommands(drawCommands[viewportIndex]);
         }
         return batches;
+    }
+
+    void BindVertexBuffer(VkCommandBuffer commandBuffer, VulkanBuffer* vertexBuffer) {
+        if (!vertexBuffer || vertexBuffer->GetBuffer() == VK_NULL_HANDLE) {
+            Logging::Error() << "VulkanRenderer::BindVertexBuffer() called without a valid vertex buffer\n";
+            return;
+        }
+
+        const VkBuffer buffer = vertexBuffer->GetBuffer();
+        const VkDeviceSize offset = 0;
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, &buffer, &offset);
+    }
+
+    void BindIndexBuffer(VkCommandBuffer commandBuffer, VulkanBuffer* indexBuffer) {
+        if (!indexBuffer || indexBuffer->GetBuffer() == VK_NULL_HANDLE) {
+            Logging::Error() << "VulkanRenderer::BindIndexBuffer() called without a valid index buffer\n";
+            return;
+        }
+
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+    }
+
+    void SetStencilReference(VkCommandBuffer commandBuffer, uint32_t stencilReference) {
+        vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, stencilReference);
     }
 
     void DrawIndexedCommands(VkCommandBuffer commandBuffer, const std::vector<DrawIndexedIndirectCommand>& drawCommands) {

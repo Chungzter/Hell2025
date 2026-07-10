@@ -42,6 +42,7 @@ void Player::Init(uint64_t playerId, const glm::vec3& position, const glm::vec3&
     AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
     viewWeapon->SetExclusiveViewportIndex(viewportIndex);
     viewWeapon->DisableShadows();
+    viewWeapon->SetExcludeFromVulkanTLAS(true);
 
     AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject();
 

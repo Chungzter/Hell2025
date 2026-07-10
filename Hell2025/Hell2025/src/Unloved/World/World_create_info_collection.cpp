@@ -1,5 +1,6 @@
 #include "World.h"
 
+#include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"
 #include "Unloved/Characters/Enemies/Shark/Shark.h"
 #include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
 #include "Unloved/Objects/Exterior/Fence.h"
@@ -26,6 +27,7 @@ namespace Unloved::World {
     void AddCreateInfoCollection(const CreateInfoCollection& createInfoCollection, SpawnOffset spawnOffset) {
         for (const ChristmasLightsCreateInfo& createInfo : createInfoCollection.christmasLights)  AddChristmasLights(createInfo, spawnOffset);
         for (const DDGIVolumeCreateInfo& createInfo : createInfoCollection.ddgiVolumes)           AddDDGIVolume(createInfo, spawnOffset);
+        for (const DobermannCreateInfo& createInfo : createInfoCollection.dobermanns)             AddDobermann(createInfo, spawnOffset);
         for (const DoorCreateInfo& createInfo : createInfoCollection.doors)                       AddDoor(createInfo, spawnOffset);
         for (const FenceCreateInfo& createInfo : createInfoCollection.fences)                     AddFence(createInfo, spawnOffset);
         for (const FireplaceCreateInfo& createInfo : createInfoCollection.fireplaces)             AddFireplace(createInfo, spawnOffset);
@@ -70,6 +72,7 @@ namespace Unloved::World {
         CreateInfoCollection createInfoCollection;
 
         for (ChristmasLightSet& object : GetChristmasLightSets()) AddObject(object, createInfoCollection.christmasLights);
+        for (Dobermann& object : GetDobermanns())                 AddObject(object, createInfoCollection.dobermanns);
         for (Door& object : GetDoors())                           AddObject(object, createInfoCollection.doors);
         for (Fence& object : GetFences())                         AddObject(object, createInfoCollection.fences);
         for (Fireplace& object : GetFireplaces())                 AddObject(object, createInfoCollection.fireplaces);

@@ -37,6 +37,7 @@ namespace Unloved::BulletSystem {
     void ProcessKangarooHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
     void ProcessPlayerHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
     void ProcessSharkHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
+    void ProcessStandaloneRagdollHit(uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
 
     void AddBullet(BulletCreateInfo createInfo, uint64_t parentBulletTrailId) {
         g_bullets.push_back(Bullet(createInfo, parentBulletTrailId));
@@ -148,29 +149,37 @@ namespace Unloved::BulletSystem {
                 ObjectType hitObjectType = Unloved::GetObjectIdType(objectId);
                 Hell::Physics::PhysicsObjectType physicsObjectType = Hell::Physics::GetPhysicsObjectType(physicsId);
 
-                std::cout << "\n";
-                std::cout << "Hit found " << Unloved::Session::GetSessionTime() << "\n";
-                std::cout << " ObjectId          " << objectId << "\n";
-                std::cout << " PhysicsId         " << physicsId << "\n";
-                std::cout << " ObjectType        " << Hell::Enum::ToString(hitObjectType) << "\n";
-                std::cout << " PhysicsObjectType " << Hell::Enum::ToString(physicsObjectType) << "\n";
+                // std::cout << "\n";
+                // std::cout << "Hit found " << Unloved::Session::GetSessionTime() << "\n";
+                // std::cout << " ObjectId          " << objectId << "\n";
+                // std::cout << " PhysicsId         " << physicsId << "\n";
+                // std::cout << " ObjectType        " << Hell::Enum::ToString(hitObjectType) << "\n";
+                // std::cout << " PhysicsObjectType " << Hell::Enum::ToString(physicsObjectType) << "\n";
 
-                glm::vec3 appliedForce = rayDirection * glm::vec3(5.0f);
-                if (physicsObjectType == Hell::Physics::PhysicsObjectType::RAGDOLL) {
-                    Hell::Physics::AddForceToRagdoll(physicsId, appliedForce);
-                }
-                else if (physicsObjectType == Hell::Physics::PhysicsObjectType::RIGID_DYNAMIC) {
-                    Hell::Physics::AddFoceToRigidDynamic(physicsId, appliedForce);
-                }
+                if (hitObjectType == ObjectType::DOBERMANN)          ProcessDobermannHit(objectId, physicsId, bullet, hitPosition);
+                if (hitObjectType == ObjectType::KANGAROO)           ProcessKangarooHit(objectId, physicsId, bullet, hitPosition);
+                if (hitObjectType == ObjectType::PLAYER)             ProcessPlayerHit(objectId, physicsId, bullet, hitPosition);
+                if (hitObjectType == ObjectType::RAGDOLL_STANDALONE) ProcessStandaloneRagdollHit(physicsId, bullet, hitPosition);
+                if (hitObjectType == ObjectType::SHARK)              ProcessSharkHit(objectId, physicsId, bullet, hitPosition);
 
-                if (hitObjectType == ObjectType::DOBERMANN) ProcessDobermannHit(objectId, physicsId, bullet, hitPosition);
-                if (hitObjectType == ObjectType::KANGAROO)  ProcessKangarooHit(objectId, physicsId, bullet, hitPosition);
-                if (hitObjectType == ObjectType::PLAYER)    ProcessPlayerHit(objectId, physicsId, bullet, hitPosition);
-                if (hitObjectType == ObjectType::SHARK)     ProcessSharkHit(objectId, physicsId, bullet, hitPosition);
-              
-                if (hitObjectType == ObjectType::RAGDOLL_STANDALONE && physicsObjectType == Hell::Physics::PhysicsObjectType::RAGDOLL) {
-                    Unloved::GameAudio::TryPlayFleshImpactAudio();
-                    BloodSystem::AddBloodVAT(hitPosition, rayDirection);
+                const glm::vec3 impactVelocityChange = bullet.GetDirection() * bullet.GetImpactVelocityChange();
+                const glm::vec3 impactAngularVelocityChange = bullet.GetDirection() * bullet.GetImpactAngularVelocityChange();
+                if (physicsObjectType == Hell::Physics::PhysicsObjectType::RIGID_DYNAMIC) {
+                    Hell::Physics::AddVelocityChangeToRigidDynamic(physicsId, impactVelocityChange);
+                    Hell::Physics::AddAngularVelocityChangeAtPositionToRigidDynamic(physicsId, impactAngularVelocityChange, hitPosition);
+                }
+                // This is probably sketchy...
+                else if (hitObjectType == ObjectType::PICK_UP) {
+                    if (PickUp* pickUp = Unloved::World::GetPickUpByObjectId(objectId)) {
+                        pickUp->GetMeshNodes().AddVelocityChangeToPhysics(impactVelocityChange);
+                        pickUp->GetMeshNodes().AddAngularVelocityChangeAtPositionToPhysics(impactAngularVelocityChange, hitPosition);
+                    }
+                }
+                else if (hitObjectType == ObjectType::GENERIC_OBJECT) {
+                    if (GenericObject* object = Unloved::World::GetGenericObjectById(objectId)) {
+                        object->GetMeshNodes().AddVelocityChangeToPhysics(impactVelocityChange);
+                        object->GetMeshNodes().AddAngularVelocityChangeAtPositionToPhysics(impactAngularVelocityChange, hitPosition);
+                    }
                 }
 
                 // Bullet enters water
@@ -184,12 +193,9 @@ namespace Unloved::BulletSystem {
 
                 // Bullet leaves water
                 if (hitObjectType == ObjectType::WATER_PLANE_BOTTOM) {
-                    BulletCreateInfo bulletCreateInfo;
+                    BulletCreateInfo bulletCreateInfo = bullet.GetCreateInfo();
                     bulletCreateInfo.origin = hitPosition + (bullet.GetDirection() * 0.1f);
                     bulletCreateInfo.direction = bullet.GetDirection();
-                    bulletCreateInfo.damage = bullet.GetDamage();
-                    bulletCreateInfo.weaponIndex = bullet.GetWeaponIndex();
-                    bulletCreateInfo.ownerObjectId = bullet.GetOwnerObjectId();
                     bulletCreateInfo.rayLength = 1000.0f;
                     newBullets.emplace_back(Bullet(bulletCreateInfo));
 
@@ -230,12 +236,9 @@ namespace Unloved::BulletSystem {
                         World::AddDecal(decalCreateInfo);
 
                         if (bullet.CreatesFolloWThroughBulletOnGlassHit() && meshNode->blendingMode != BlendingMode::MIRROR) {
-                            BulletCreateInfo bulletCreateInfo;
+                            BulletCreateInfo bulletCreateInfo = bullet.GetCreateInfo();
                             bulletCreateInfo.origin = hitPosition + bullet.GetDirection() * glm::vec3(0.05f);
                             bulletCreateInfo.direction = bullet.GetDirection();
-                            bulletCreateInfo.damage = bullet.GetDamage();
-                            bulletCreateInfo.weaponIndex = bullet.GetWeaponIndex();
-                            bulletCreateInfo.ownerObjectId = bullet.GetOwnerObjectId();
                             newBullets.emplace_back(Bullet(bulletCreateInfo));
                         }
 
@@ -256,18 +259,6 @@ namespace Unloved::BulletSystem {
                     decalPaintingInfo.rayOrigin = bullet.GetOrigin();
                     decalPaintingInfo.rayDirection = bullet.GetDirection();
                     RenderDataManager::SubmitDecalPaintingInfo(decalPaintingInfo);
-                }
-
-                // This is probably sketchy...
-                if (PickUp* pickUp = Unloved::World::GetPickUpByObjectId(objectId)) {
-                    float strength = 250.0f;
-                    glm::vec3 force = bullet.GetDirection() * strength;
-                    pickUp->GetMeshNodes().AddForceToPhsyics(force);
-                }
-                if (GenericObject* object = Unloved::World::GetGenericObjectById(objectId)) {
-                    float strength = 250.0f;
-                    glm::vec3 force = bullet.GetDirection() * strength;
-                    object->GetMeshNodes().AddForceToPhsyics(force);
                 }
             }
         }
@@ -342,22 +333,17 @@ namespace Unloved::BulletSystem {
         Dobermann* dobermann = Unloved::World::GetDobermannByObjectId(objectId);
         if (!dobermann) return;
 
+        // Apply damage
         dobermann->TakeDamage(bullet.GetDamage());
 
-        BloodSystem::AddBloodVAT(hitPosition, -bullet.GetDirection());
-        Unloved::GameAudio::TryPlayFleshImpactAudio();
-    }
-
-    // Shark hit
-
-    void ProcessSharkHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
-        Shark* shark = Unloved::World::GetSharkByObjectId(objectId);
-        if (!shark) return;
-
-        shark->GiveDamage(bullet.GetOwnerObjectId(), bullet.GetDamage());
+        // Apply forces if dead
+        if (dobermann->IsDead()) {
+            Hell::Physics::AddForceToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactVelocityChange(), false);
+            Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, false);
+        }
 
         BloodSystem::AddBloodVAT(hitPosition, -bullet.GetDirection());
-        Unloved::GameAudio::TryPlayFleshImpactAudio();
+        GameAudio::TryPlayFleshImpactAudio();
     }
 
     // Kangaroo hit
@@ -366,10 +352,17 @@ namespace Unloved::BulletSystem {
         Kangaroo* kangaroo = Unloved::World::GetKangarooByObjectId(objectId);
         if (!kangaroo) return;
 
+        // Apply damage
         kangaroo->GiveDamage(bullet.GetDamage());
 
+        // Apply forces if dead
+        if (kangaroo->IsDead()) {
+            Hell::Physics::AddForceToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactVelocityChange(), false);
+            Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, false);
+        }
+
         BloodSystem::AddBloodVAT(hitPosition, -bullet.GetDirection());
-        Unloved::GameAudio::TryPlayFleshImpactAudio();
+        GameAudio::TryPlayFleshImpactAudio();
     }
 
     // Player hit
@@ -392,7 +385,42 @@ namespace Unloved::BulletSystem {
             std::cout << "[Player body shot]\n";
         }
 
-        Unloved::GameAudio::TryPlayFleshImpactAudio();
+        // Apply forces if dead
+        if (player->IsDead()) {
+            Hell::Physics::AddForceToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactVelocityChange(), false);
+            Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, false);
+        }
+
+        GameAudio::TryPlayFleshImpactAudio();
         BloodSystem::AddBloodVAT(hitPosition, -bullet.GetDirection());
+    }
+
+    // Shark hit
+
+    void ProcessSharkHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
+        Shark* shark = Unloved::World::GetSharkByObjectId(objectId);
+        if (!shark) return;
+
+        // Apply damage
+        shark->GiveDamage(bullet.GetOwnerObjectId(), bullet.GetDamage());
+
+        // Apply forces if dead
+        if (shark->IsDead()) {
+            Hell::Physics::AddForceToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactVelocityChange(), false);
+            Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, false);
+        }
+
+        BloodSystem::AddBloodVAT(hitPosition, -bullet.GetDirection());
+        GameAudio::TryPlayFleshImpactAudio();
+    }
+
+    // Standalone Ragdoll hit
+
+    void ProcessStandaloneRagdollHit(uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
+        GameAudio::TryPlayFleshImpactAudio();
+        BloodSystem::AddBloodVAT(hitPosition, bullet.GetDirection());
+
+        Hell::Physics::AddForceToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactVelocityChange(), true);
+        Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, true);
     }
 }

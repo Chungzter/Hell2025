@@ -160,11 +160,11 @@ namespace Unloved {
 
 
         // Hack in a path
-        glm::vec3 center(13.0f, 24.85, 36.0f);
+        glm::vec3 center = initialPosition;
         float radius = 10;
         int segments = 9;
         m_path = GetCirclePoints(center, segments, radius);
-        SetPosition(center);
+        SetPosition(initialPosition);
 
 
         m_alive = true;
@@ -310,129 +310,28 @@ namespace Unloved {
         DebugDraw::DrawPoint(p4, WHITE);
     }
 
-    void Shark::Update(float deltaTime) {
-
-        // Draw path
-        //for (const glm::vec3& point : m_path) {
-        //    glm::vec3 p = glm::vec3(point.x, Ocean::GetOceanOriginY(), point.z);
-        //    DebugDraw::DrawPoint(p, RED);
-        //}
-
-        //if (Input::KeyPressed(HELL_KEY_PERIOD)) {
-        //    float spacing = 1.0f;
-        //    m_path = SmoothPath(m_path, spacing);
-        //}
-
-        //if (Input::KeyPressed(HELL_KEY_COMMA)) {
-        //    glm::vec3 center(10.0f, 30.0f, 58.0f);
-        //    float radius = 10;
-        //    int segments = 9;
-        //    m_path = GetCirclePoints(center, segments, radius);
-        //    m_path.erase(m_path.begin() + 2);
-        //    m_path.erase(m_path.begin() + 2);
-        //    m_path.erase(m_path.begin() + 2);
-        //}
-
-        // Did the player enter the water again while the shark is still angry from being like shot before
+    void Shark::UpdateMovement(float deltaTime) {
         if (m_movementState == SharkMovementState::FOLLOWING_PATH_ANGRY) {
             Unloved::Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId);
             if (player && player->FeetBelowWater()) {
-                // TO DO: Only activate hunt state again if she shark has line of sight to the player
                 m_movementState = SharkMovementState::HUNT_PLAYER;
                 m_huntingState = SharkHuntingState::CHARGE_PLAYER;
             }
         }
 
-        //if (Input::KeyPressed(HELL_KEY_SLASH)) {
-        //    if (m_movementState == SharkMovementState::FOLLOWING_PATH) {
-        //        m_movementState = SharkMovementState::ARROW_KEYS;
-        //    }
-        //    else {
-        //        m_movementState = SharkMovementState::FOLLOWING_PATH;
-        //        m_nextPathPointIndex = 0;
-        //    }
-        //}
-
-        // Put these somewhere better!
-        m_right = glm::cross(m_forward, glm::vec3(0, 1, 0));
-        m_left = -m_right;
-
-        glm::mat4 rootTranslationMatrix = glm::translate(glm::mat4(1), m_spinePositions[3]);
-
-        // Root to the end of the spine
-        float rot0 = Hell::Math::YawBetweenPoints(m_spinePositions[3], m_spinePositions[2]) + HELL_PI * 0.5f;
-        float rot1 = Hell::Math::YawBetweenPoints(m_spinePositions[4], m_spinePositions[3]) + HELL_PI * 0.5f;
-        float rot2 = Hell::Math::YawBetweenPoints(m_spinePositions[5], m_spinePositions[4]) + HELL_PI * 0.5f;
-        float rot3 = Hell::Math::YawBetweenPoints(m_spinePositions[6], m_spinePositions[5]) + HELL_PI * 0.5f;
-        float rot4 = Hell::Math::YawBetweenPoints(m_spinePositions[7], m_spinePositions[6]) + HELL_PI * 0.5f;
-        float rot5 = Hell::Math::YawBetweenPoints(m_spinePositions[8], m_spinePositions[7]) + HELL_PI * 0.5f;
-        float rot6 = Hell::Math::YawBetweenPoints(m_spinePositions[9], m_spinePositions[8]) + HELL_PI * 0.5f;
-        float rot7 = Hell::Math::YawBetweenPoints(m_spinePositions[10], m_spinePositions[9]) + HELL_PI * 0.5f;
-
-        // From the neck to the head
-        float rot8 = Hell::Math::YawBetweenPoints(m_spinePositions[3], m_spinePositions[2]) + HELL_PI * 0.5f;
-        float rot9 = Hell::Math::YawBetweenPoints(m_spinePositions[2], m_spinePositions[1]) + HELL_PI * 0.5f;
-        float rot10 = Hell::Math::YawBetweenPoints(m_spinePositions[1], m_spinePositions[0]) + HELL_PI * 0.5f;
-
-        // Update animation
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        if (animatedGameObject) {
-            glm::vec3 rootPosition = m_spinePositions[3];
-            float yRotation = rot0;
-
-            if (IsAlive()) {
-                float magicNumber = 1.05f;
-                float lerpSpeed = 1.0f;
-
-                // Start with the target at the ocean surface
-                float targetHeight = Ocean::GetOceanOriginY() - magicNumber;
-
-                // But if hunting a player overwrite it with their height
-                if (m_movementState == SharkMovementState::HUNT_PLAYER) {
-                    if (Unloved::Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId)) {
-                        targetHeight = std::min(targetHeight, player->GetCameraPosition().y) - (magicNumber * 0.0f);
-                    }
-                }
-
-                // Lerp to target
-                m_yHeight = Hell::Math::InterpTo(m_yHeight, targetHeight, deltaTime, lerpSpeed);
-
-                // Calculate new position. Which is the spine pos plus the hacked in y height
-                glm::vec3 position = rootPosition;
-                position.y = m_yHeight;
-
-                // Set it
-                animatedGameObject->SetPosition(position);
-            }
-
-            animatedGameObject->SetRotationY(yRotation);
-
-            animatedGameObject->SetAdditiveTransform("BN_Spine_01", glm::rotate(glm::mat4(1.0f), rot1 - rot0, glm::vec3(0, 1, 0)));
-            animatedGameObject->SetAdditiveTransform("BN_Spine_02", glm::rotate(glm::mat4(1.0f), rot2 - rot1, glm::vec3(0, 1, 0)));
-            animatedGameObject->SetAdditiveTransform("BN_Spine_03", glm::rotate(glm::mat4(1.0f), rot3 - rot2, glm::vec3(0, 1, 0)));
-            animatedGameObject->SetAdditiveTransform("BN_Spine_04", glm::rotate(glm::mat4(1.0f), rot4 - rot3, glm::vec3(0, 1, 0)));
-            animatedGameObject->SetAdditiveTransform("BN_Spine_05", glm::rotate(glm::mat4(1.0f), rot5 - rot4, glm::vec3(0, 1, 0)));
-            animatedGameObject->SetAdditiveTransform("BN_Spine_06", glm::rotate(glm::mat4(1.0f), rot6 - rot5, glm::vec3(0, 1, 0)));
-            animatedGameObject->SetAdditiveTransform("BN_Spine_07", glm::rotate(glm::mat4(1.0f), rot7 - rot6, glm::vec3(0, 1, 0)));
-            animatedGameObject->SetAdditiveTransform("BN_Neck_00", glm::rotate(glm::mat4(1.0f), rot8 - rot1, glm::vec3(0, 1, 0)));
-            animatedGameObject->SetAdditiveTransform("BN_Neck_01", glm::rotate(glm::mat4(1.0f), rot9 - rot8, glm::vec3(0, 1, 0)));
-            animatedGameObject->SetAdditiveTransform("BN_Head_00", glm::rotate(glm::mat4(1.0f), rot10 - rot9, glm::vec3(0, 1, 0)));
-
-            animatedGameObject->Update(deltaTime);
-            animatedGameObject->UpdateRenderItems();
-
-            if (Ragdoll* ragdoll = GetRagdoll()) {
-                if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
-                    animatedGameObject->DisableRendering();
-                }
-                else {
-                    animatedGameObject->EnableRendering();
-                }
-            }
-        }
-
-        // Arrow key movement
         if (IsAlive()) {
+            float magicNumber = 1.05f;
+            float lerpSpeed = 1.0f;
+            float targetHeight = Ocean::GetOceanOriginY() - magicNumber;
+
+            if (m_movementState == SharkMovementState::HUNT_PLAYER) {
+                if (Unloved::Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId)) {
+                    targetHeight = std::min(targetHeight, player->GetCameraPosition().y) - (magicNumber * 0.0f);
+                }
+            }
+
+            m_yHeight = Hell::Math::InterpTo(m_yHeight, targetHeight, deltaTime, lerpSpeed);
+
             if (m_movementState == SharkMovementState::ARROW_KEYS) {
                 if (Input::KeyDown(HELL_KEY_UP)) {
                     CalculateForwardVectorFromArrowKeys(deltaTime);
@@ -442,7 +341,6 @@ namespace Unloved {
                     }
                 }
             }
-            // Path following
             else if (m_movementState == SharkMovementState::FOLLOWING_PATH ||
                      m_movementState == SharkMovementState::FOLLOWING_PATH_ANGRY) {
                 CalculateTargetFromPath();
@@ -459,6 +357,7 @@ namespace Unloved {
                     CalculateTargetFromPlayer();
                     CalculateForwardVectorFromTarget(deltaTime);
                 }
+
                 for (int i = 0; i < m_logicSubStepCount; i++) {
                     UpdateHuntingLogic(deltaTime);
                     MoveShark(deltaTime);
@@ -466,83 +365,90 @@ namespace Unloved {
             }
         }
 
-        // Is it alive
         if (m_health > 0) {
             m_alive = true;
         }
-        // Kill if health zero
         if (IsAlive() && m_health <= 0) {
             Kill();
-            //Game::g_sharkDeaths++;
-            //std::ofstream out("SharkDeaths.txt");
-            //out << Game::g_sharkDeaths;
-            //out.close();
         }
         m_health = std::max(m_health, 0);
 
-        //if (IsDead()) {
-        //    StraightenSpine(deltaTime, 0.25f);
-        //    if (animatedGameObject->GetAnimationFrameNumber("MainLayer") > 100) {
-        //        animatedGameObject->PauseAllAnimationLayers();
-        //    }
-        //}
+        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
+        if (!animatedGameObject) return;
 
         if (IsDead()) {
             StraightenSpine(deltaTime, 0.25f);
 
-            // Sink instantly on death
             const glm::vec3& currentPosition = animatedGameObject->GetPosition();
             float sinkAmount = deltaTime * 1.36f;
             glm::vec3 newPosition = currentPosition + glm::vec3(0.0f, -sinkAmount, 0.0f);
             animatedGameObject->SetPosition(newPosition);
 
-            //std::cout << "currentPosition: " << currentPosition << " " << "newPosition: " << newPosition << "\n";
-
-            // PAUSE IT AT FRAME 100 of death anim
             if (animatedGameObject->IsAllAnimationsComplete()) {
                 animatedGameObject->PauseAllAnimationLayers();
             }
 
-            // RESPAWN AFTER FALLING FAR ENOUGH
             if (currentPosition.y < 10.0f) {
                 Respawn();
                 float spawnHeight = 28.85f;
                 glm::vec3 spawnPos = glm::vec3(-50.0f, spawnHeight, 40.5f);
-                animatedGameObject->SetPosition(spawnPos); // is this necessary?
+                animatedGameObject->SetPosition(spawnPos);
                 SetPosition(spawnPos);
             }
         }
+    }
 
+    void Shark::Update(float deltaTime) {
+        m_right = glm::cross(m_forward, glm::vec3(0, 1, 0));
+        m_left = -m_right;
 
-        // Find closest player
-       //float distanceToClosestPlayer = 99999;
-       //float safeHeight = Ocean::GetOceanOriginY() - 1.19f;
-       //
-       //bool targetFound = false;
-       //
-       //// If shark ain't biting, then find next closest target if any
-       //if (m_huntingState != SharkHuntingState::BITING_PLAYER && m_movementState == SharkMovementState::FOLLOWING_PATH) {
-       //    for (int i = 0; i < Game::GetLocalPlayerCount(); i++) {
-       //        Unloved::Player* player = Game::GetLocalPlayerByViewportIndex(i);
-       //        if (!player) continue;
-       //
-       //        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-       //        float distanceToPlayer = glm::distance(animatedGameObject->GetPosition(), player->GetFootPosition());
-       //
-       //        if (player->GetFootPosition().y < safeHeight && distanceToPlayer < distanceToClosestPlayer) {
-       //            distanceToClosestPlayer = distanceToPlayer;
-       //            HuntPlayer(player->GetPlayerId());
-       //            targetFound = true;
-       //        }
-       //    }
-       //}
-       //
-       //if (!targetFound) {
-       //    m_movementState = SharkMovementState::FOLLOWING_PATH;
-       //}
+        // Root to the end of the spine
+        float rot0 = Hell::Math::YawBetweenPoints(m_spinePositions[3], m_spinePositions[2]) + HELL_PI * 0.5f;
+        float rot1 = Hell::Math::YawBetweenPoints(m_spinePositions[4], m_spinePositions[3]) + HELL_PI * 0.5f;
+        float rot2 = Hell::Math::YawBetweenPoints(m_spinePositions[5], m_spinePositions[4]) + HELL_PI * 0.5f;
+        float rot3 = Hell::Math::YawBetweenPoints(m_spinePositions[6], m_spinePositions[5]) + HELL_PI * 0.5f;
+        float rot4 = Hell::Math::YawBetweenPoints(m_spinePositions[7], m_spinePositions[6]) + HELL_PI * 0.5f;
+        float rot5 = Hell::Math::YawBetweenPoints(m_spinePositions[8], m_spinePositions[7]) + HELL_PI * 0.5f;
+        float rot6 = Hell::Math::YawBetweenPoints(m_spinePositions[9], m_spinePositions[8]) + HELL_PI * 0.5f;
+        float rot7 = Hell::Math::YawBetweenPoints(m_spinePositions[10], m_spinePositions[9]) + HELL_PI * 0.5f;
 
+        // From the neck to the head
+        float rot8 = Hell::Math::YawBetweenPoints(m_spinePositions[3], m_spinePositions[2]) + HELL_PI * 0.5f;
+        float rot9 = Hell::Math::YawBetweenPoints(m_spinePositions[2], m_spinePositions[1]) + HELL_PI * 0.5f;
+        float rot10 = Hell::Math::YawBetweenPoints(m_spinePositions[1], m_spinePositions[0]) + HELL_PI * 0.5f;
 
-        //DrawDebug();
+        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
+        if (!animatedGameObject) return;
+
+        if (IsAlive()) {
+            glm::vec3 position = m_spinePositions[3];
+            position.y = m_yHeight;
+            animatedGameObject->SetPosition(position);
+        }
+
+        animatedGameObject->SetRotationY(rot0);
+        animatedGameObject->SetAdditiveTransform("BN_Spine_01", glm::rotate(glm::mat4(1.0f), rot1 - rot0, glm::vec3(0, 1, 0)));
+        animatedGameObject->SetAdditiveTransform("BN_Spine_02", glm::rotate(glm::mat4(1.0f), rot2 - rot1, glm::vec3(0, 1, 0)));
+        animatedGameObject->SetAdditiveTransform("BN_Spine_03", glm::rotate(glm::mat4(1.0f), rot3 - rot2, glm::vec3(0, 1, 0)));
+        animatedGameObject->SetAdditiveTransform("BN_Spine_04", glm::rotate(glm::mat4(1.0f), rot4 - rot3, glm::vec3(0, 1, 0)));
+        animatedGameObject->SetAdditiveTransform("BN_Spine_05", glm::rotate(glm::mat4(1.0f), rot5 - rot4, glm::vec3(0, 1, 0)));
+        animatedGameObject->SetAdditiveTransform("BN_Spine_06", glm::rotate(glm::mat4(1.0f), rot6 - rot5, glm::vec3(0, 1, 0)));
+        animatedGameObject->SetAdditiveTransform("BN_Spine_07", glm::rotate(glm::mat4(1.0f), rot7 - rot6, glm::vec3(0, 1, 0)));
+        animatedGameObject->SetAdditiveTransform("BN_Neck_00", glm::rotate(glm::mat4(1.0f), rot8 - rot1, glm::vec3(0, 1, 0)));
+        animatedGameObject->SetAdditiveTransform("BN_Neck_01", glm::rotate(glm::mat4(1.0f), rot9 - rot8, glm::vec3(0, 1, 0)));
+        animatedGameObject->SetAdditiveTransform("BN_Head_00", glm::rotate(glm::mat4(1.0f), rot10 - rot9, glm::vec3(0, 1, 0)));
+
+        animatedGameObject->Update(deltaTime);
+        animatedGameObject->UpdateRenderItems();
+
+        if (Ragdoll* ragdoll = GetRagdoll()) {
+            if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
+                animatedGameObject->DisableRendering();
+            }
+            else {
+                animatedGameObject->EnableRendering();
+            }
+        }
     }
 
     void Shark::CleanUp() {
@@ -638,6 +544,17 @@ namespace Unloved {
         m_forward = glm::vec3(0, 0, 1);
     }
 
+    void Shark::SetPatrolCenter(const glm::vec3& position) {
+        const glm::vec3 offset = position - m_createInfo.position;
+        m_createInfo.position = position;
+
+        for (glm::vec3& pathPoint : m_path) {
+            pathPoint += offset;
+        }
+
+        SetPosition(position);
+    }
+
     void Shark::CalculateTargetFromPlayer() {
         if (m_huntedPlayerId != 0) {
             Unloved::Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId);
@@ -665,11 +582,7 @@ namespace Unloved {
 
     // Forward-only (wrap) scan starting at startIndex. Returns an index into path.
     // Returns startIndex if nothing qualifies as "in front" (so it never go backwards).
-    int GetClosestPointNotBehindSharkIndex_ForwardOnly(const std::vector<glm::vec3>& path,
-                                                       int startIndex,
-                                                       const glm::vec3& currentPosition,
-                                                       const glm::vec3& currentForward,
-                                                       float dotThreshold) {
+    int GetClosestPointNotBehindSharkIndex_ForwardOnly(const std::vector<glm::vec3>& path, int startIndex, const glm::vec3& currentPosition, const glm::vec3& currentForward, float dotThreshold) {
         if (path.empty()) return 0;
 
         const int pathSize = (int)path.size();

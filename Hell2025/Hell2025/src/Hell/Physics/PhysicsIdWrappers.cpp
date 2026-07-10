@@ -5,9 +5,27 @@ namespace Hell::Physics {
     
     // Ragdolls
 
-    void AddForceToRagdoll(uint64_t physicsId, const glm::vec3& force) {
+    void AddForceToRagdoll(uint64_t physicsId, const glm::vec3& force, bool wakeIfDisabled) {
         for (auto& pair : GetRagdolls()) {
-            pair.second.AddForce(physicsId, force);
+            pair.second.AddForce(physicsId, force, wakeIfDisabled);
+        }
+    }
+
+    void AddImpulseToRagdoll(uint64_t physicsId, const glm::vec3& impulse, bool wakeIfDisabled) {
+        for (auto& pair : GetRagdolls()) {
+            pair.second.AddImpulse(physicsId, impulse, wakeIfDisabled);
+        }
+    }
+
+    void AddImpulseAtPositionToRagdoll(uint64_t physicsId, const glm::vec3& impulse, const glm::vec3& position, bool wakeIfDisabled) {
+        for (auto& pair : GetRagdolls()) {
+            pair.second.AddImpulseAtPosition(physicsId, impulse, position, wakeIfDisabled);
+        }
+    }
+
+    void AddAngularVelocityChangeAtPositionToRagdoll(uint64_t physicsId, const glm::vec3& velocityChange, const glm::vec3& position, bool wakeIfDisabled) {
+        for (auto& pair : GetRagdolls()) {
+            pair.second.AddAngularVelocityChangeAtPosition(physicsId, velocityChange, position, wakeIfDisabled);
         }
     }
 
@@ -60,6 +78,46 @@ namespace Hell::Physics {
         }
 
         rigidDynamic->AddForce(force);
+    }
+
+    void AddVelocityChangeToRigidDynamic(uint64_t rigidDynamicId, glm::vec3 velocityChange) {
+        RigidDynamic* rigidDynamic = GetRigidDynamicById(rigidDynamicId);
+        if (!rigidDynamic) {
+            Logging::Error() << "Hell::Physics::AddVelocityChangeToRigidDynamic() failed: id " << rigidDynamicId << " not found\n";
+            return;
+        }
+
+        rigidDynamic->AddVelocityChange(velocityChange);
+    }
+
+    void AddImpulseToRigidDynamic(uint64_t rigidDynamicId, glm::vec3 impulse) {
+        RigidDynamic* rigidDynamic = GetRigidDynamicById(rigidDynamicId);
+        if (!rigidDynamic) {
+            Logging::Error() << "Hell::Physics::AddImpulseToRigidDynamic() failed: id " << rigidDynamicId << " not found\n";
+            return;
+        }
+
+        rigidDynamic->AddImpulse(impulse);
+    }
+
+    void AddImpulseAtPositionToRigidDynamic(uint64_t rigidDynamicId, glm::vec3 impulse, glm::vec3 position) {
+        RigidDynamic* rigidDynamic = GetRigidDynamicById(rigidDynamicId);
+        if (!rigidDynamic) {
+            Logging::Error() << "Hell::Physics::AddImpulseAtPositionToRigidDynamic() failed: id " << rigidDynamicId << " not found\n";
+            return;
+        }
+
+        rigidDynamic->AddImpulseAtPosition(impulse, position);
+    }
+
+    void AddAngularVelocityChangeAtPositionToRigidDynamic(uint64_t rigidDynamicId, glm::vec3 velocityChange, glm::vec3 position) {
+        RigidDynamic* rigidDynamic = GetRigidDynamicById(rigidDynamicId);
+        if (!rigidDynamic) {
+            Logging::Error() << "Hell::Physics::AddAngularVelocityChangeAtPositionToRigidDynamic() failed: id " << rigidDynamicId << " not found\n";
+            return;
+        }
+
+        rigidDynamic->AddAngularVelocityChangeAtPosition(velocityChange, position);
     }
 
     void ActivateRigidDynamicPhysics(uint64_t rigidDynamicId) {

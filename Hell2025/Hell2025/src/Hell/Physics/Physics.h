@@ -33,6 +33,7 @@ using namespace physx;
 namespace Hell::Physics {
     void Init();
     void BeginFrame();
+    void FlushPendingRemovals();
     void StepSimulation();
     void SyncRuntimeState();
     void ForceZeroStepUpdate();

@@ -5,26 +5,32 @@
 
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
-layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow u_hiResShadowMapArray;
-layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow u_lowResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray u_flashlighShadowMapArrayTexture;
+layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowMapArray;
 
 layout (binding = 5) uniform sampler2D u_indirectDiffuseTexture;
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
+layout (binding = 9) uniform sampler2D u_flashlightCookieTexture;
+layout (binding = 11) uniform sampler2D hairFlowMap;
+layout (binding = 12) uniform sampler2D hairIdMap;
+layout (binding = 13) uniform sampler2D hairRootMap;
 
 layout(early_fragment_tests) in;
 
 #include "../../common/hair.glsl"
 #include "../../common/lighting.glsl"
 #include "../../common/post_processing.glsl"
+#include "../../common/util.glsl"
 
 readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
 readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportData[]; };
-readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer { RenderItem renderItems[]; };
-readonly restrict layout(std430, binding = 5) buffer lightsBuffer { Light lights[]; };
-readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer { TileLights tileLights[]; };
+readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light lights[]; };
+readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer   { TileLights tileLights[]; };
 
-layout(location = 0) out vec4 LightingOut;
+layout (location = 0) out vec4 LightingOut;
 
 centroid in vec2 v_texCoord;
 centroid in vec3 v_normal;
@@ -37,505 +43,63 @@ in flat int v_viewportIndex;
 uniform bool u_alphaDiscard;
 uniform bool u_flipv_normalMapY;
 uniform float u_renderResolutionScale;
-uniform int u_hairBlendMapTextureIndex;
 
-const bool kHasBlendDecalMap = false; // cb12 g_sTexture.uiHasTex & 2
-const uint kBlendDecalOp = 0u;       // cb12 g_sTexture.uiBlendDecalOp
+const float u_spec1Intensity   = 0.25;
+const float u_spec2Intensity   = 0.1;
+const float u_scatterPower     = 12.0;
+const float u_scatterIntensity = 0.1;
+const float u_rootColorFloor   = 0.2;
+const float u_rootAOFloor      = 0.7;
+const float u_tipColorFloor    = 0.45;
+const float u_tipAOFloor       = 0.7;
 
-bool transmissionEnabledForThisLight = false;
-const bool kHasRoughnessMap = true;
-const float kRoughnessGamma = 1.0;
-const float kRoughnessWeight = 1.0;
-const float kRawHairSpecularMask = 0.4313725490196078;
-const float kDiffuseStrength = 0.5;
-const float kTangentMapFlipGreen = 1; // 1.0;
-const vec3 kBlackColorReflectionOffset = vec3(0.081, 0.106, 0.305);
-const vec3 kWhiteColorReflectionOffset = vec3(0.0, 0.0, 0.0);
-
-const vec3 kMaterialDiffuse = vec3(1.0, 1.0, 1.0);
-const float kAOMapOccludeAllLighting = 0.0; // cb5[1].x
-
-const vec3 kVertexGrayToColor = vec3(0.0, 0.0, 0.0);
-const float kVertexColorStrength = 1.0;
-const float kActiveChangeHairColor = 1.0;
-const float kPaddingHasMips = 1.0;
-
-const float kDecalWeight = 1.0;
-const float kDecalGamma = 2.2;
-const bool kHasDecalMap = true;
-
-const bool kHasHairRootMap = true;
-const bool kHasHairIdMap = false;
-
-const bool kHasAOMap = true;
-const float kAoWeight = 0.1;
-const float kAoGamma = 1.0;
-
-const float kBlendDecalWeight = 0.7000; // cb12[15].x, g_sTexture.fBlendDecalWeight
-const float kBlendDecalGamma = 1.0000;  // cb12[17].w, g_sTexture.fBlendDecalGamma
-
-const float kShadowOpacity = 0.0;       // cb13[41].x, g_fShadowOpacity
-const float kShadowDarkenScale = 0.75;  // cb13[41].y, g_fShadowDarkenScale
-const float kShadowSoftness = 1.0;      // cb13[41].z, g_fShadowSoftness
-const uint kReceiveShadow = 1u;         // cb0[13].x, l_uReceiveShadow
-
-const float scalar = 0.75;
-
-const float kHairRoughnessMapStrength = 0.4410;
-const float kHairSpecularMapStrength = 0.4310;
-const float kSpecularStrength = 0.4600 * scalar;
-const float kSecondarySpecularStrength = 2.7350 * scalar;
-const float kTransmissionStrength = 0.1190;
-const float kNoBackFaceTriangles = 0.8490;
-
-float kLightIsIlluminate = 1.0;
-
-float CC5ProcessAO(float rawAO) {
-    float ao = exp2(log2(abs(rawAO)) * kAoGamma);
-    return kAoWeight * (ao - 1.0) + 1.0;
+float HairSpecular(vec3 t, vec3 h, float roughness) {
+    float alpha = max(roughness * roughness, 0.001);
+    float n = 0.36 / alpha;
+    float dotTH = dot(t, h);
+    float sinTH = sqrt(max(0.0, 1.0 - dotTH * dotTH));
+    float dirAtten = smoothstep(-1.0, 0.0, dotTH);
+    return dirAtten * pow(sinTH, n) * (n + 2.0) / (2.0 * 3.14159);
 }
 
-float Pow5(float x) {
-    float x2 = x * x;
-    return x * x2 * x2;
+vec3 EvaluateHairLight(vec3 hairBaseColor, vec3 finalTangent, vec3 V, vec3 L, vec3 t1, vec3 t2, float alpha1, float alpha2, vec3 lightColor, float visibility) {
+    vec3 H = normalize(L + V);
+
+    float dotTL = dot(finalTangent, L);
+    float sinTL = sqrt(max(0.0, 1.0 - dotTL * dotTL));
+    vec3 diffuse = hairBaseColor * sinTL;
+
+    float D1 = HairSpecular(t1, H, alpha1);
+    float D2 = HairSpecular(t2, H, alpha2);
+
+    float dotVH = clamp(dot(V, H), 0.0, 1.0);
+    float fresnel = pow(1.0 - dotVH, 5.0);
+
+    vec3 F1 = vec3(0.04) + vec3(0.96) * fresnel;
+    vec3 F2 = hairBaseColor + (vec3(1.0) - hairBaseColor) * fresnel;
+
+    vec3 spec1 = D1 * F1 * u_spec1Intensity;
+    vec3 spec2 = D2 * F2 * hairBaseColor * u_spec2Intensity;
+
+    float scatterProp = pow(max(dot(V, -L), 0.0), u_scatterPower);
+    vec3 scattering = hairBaseColor * scatterProp * u_scatterIntensity;
+
+    return (diffuse + spec1 + spec2 + scattering) * clamp(lightColor, 0.0, 1.0) * visibility;
 }
 
-float CC5Exp(float x) {
-    return exp2(x * 1.442695);
-}
-
-float CC5FastAsinOLD(float x) {
-    float absX = abs(x);
-    float approx = 1.570796 - 0.156583 * absX;
-    float root = sqrt(1.0 - absX);
-    float angle = approx * root;
-    float selectedAngle = x >= 0.0 ? angle : 3.141593 - angle;
-    return 1.570796 - selectedAngle;
-}
-
-float CC5FastAsin(float x) {
-    float absX = abs(x);
-    float approx = 1.570796 - 0.156583 * absX;
-    
-    // clamp prevents negative floating point drift from generating NaN
-    float root = sqrt(max(1.0 - absX, 0.0));
-    
-    float angle = approx * root;
-    float selectedAngle = x >= 0.0 ? angle : 3.141593 - angle;
-    return 1.570796 - selectedAngle;
-}
-
-vec3 BuildHairTangentFromFlow(vec3 tMesh, vec3 bMesh, vec2 flow) {
-    float flowLen2 = dot(flow, flow);
-
-    if (flowLen2 < 0.0001) {
-        return normalize(tMesh);
-    }
-
-    vec2 flowDir = flow * inversesqrt(flowLen2);
-    return normalize(tMesh * flowDir.x + bMesh * flowDir.y);
-}
-
-vec3 CC5HairSpecularPrimarySecondary_NoTransmission(
-    vec3 T,
-    vec3 V,
-    vec3 L,
-    vec3 hairBaseColor,
-    float roughness,
-    float hairSpecularMask,
-    float specularStrength,
-    float secondarySpecularStrength
-) {
-    float m = clamp(roughness, 0.0, 1.0);
-    m = m * 0.98 + 0.02;
-
-    float m2 = m * m;
-
-    float dotVL = dot(V, L);
-    float dotTL = dot(T, L);
-    float dotTV = dot(T, V);
-
-    float thetaV = CC5FastAsin(dotTV);
-    float thetaL = CC5FastAsin(dotTL);
-
-    float cosHalfThetaDiff = cos(abs(thetaV - thetaL) * 0.5);
-
-    vec3 projectedL = L - dotTL * T;
-    vec3 projectedV = V - dotTV * T;
-
-    float projectedDot = dot(projectedL, projectedV);
-    float projectedLenProduct = dot(projectedL, projectedL) * dot(projectedV, projectedV) + 0.0001;
-    float cosPhi = projectedDot * inversesqrt(projectedLenProduct);
-
-    float cosPhiHalf = sqrt(clamp(cosPhi * 0.5 + 0.5, 0.0, 1.0));
-
-    float primaryWidth = cosPhiHalf * m2;
-    float primarySigma = primaryWidth * 1.414214;
-    float primaryNormalizer = primaryWidth * 3.544908;
-
-    float sinThetaV = sqrt(1.0 - dotTV * dotTV);
-    float azimuthShift = cosPhiHalf * 0.997551 * sinThetaV + dotTV * -0.069943;
-
-    float primaryX = dotTL + dotTV + azimuthShift * 0.139886;
-    float primaryD = CC5Exp((primaryX * primaryX * -0.5) / (primarySigma * primarySigma)) / primaryNormalizer;
-
-    float primaryFresnelBase = 1.0 - sqrt(clamp(dotVL * 0.5 + 0.5, 0.0, 1.0));
-    float primaryFresnel = Pow5(primaryFresnelBase) * 0.953479 + 0.046521;
-
-    float primaryAzimuthFactor = cosPhiHalf * 0.25;
-    float primaryFacingGate = 1.0 - clamp(-dotVL, 0.0, 1.0);
-
-    float primarySpecular = primaryD;
-    primarySpecular *= specularStrength;
-    primarySpecular *= primaryAzimuthFactor;
-    primarySpecular *= primaryFresnel;
-    primarySpecular *= hairSpecularMask + hairSpecularMask;
-    primarySpecular *= primaryFacingGate;
-    
-    
-    //float test = CC5Exp((primaryX * primaryX * -0.5) / (primarySigma * primarySigma));// / primaryNormalizer;
-    //return vec3(test);
-
-    float secondarySigma = m2 + m2;
-    float secondaryNormalizer = m2 * 5.013257;
-    float secondaryX = dotTL + dotTV - 0.140000;
-
-    float secondaryD = CC5Exp((secondaryX * secondaryX * -0.5) / (secondarySigma * secondarySigma)) / secondaryNormalizer;
-
-    float secondaryFresnelBase = 1.0 - cosHalfThetaDiff * 0.5;
-    float secondaryFresnel = Pow5(secondaryFresnelBase) * 0.953479 + 0.046521;
-    secondaryFresnel *= (1.0 - secondaryFresnel) * (1.0 - secondaryFresnel);
-
-    float secondaryTintPower = 0.8 / cosHalfThetaDiff;
-    vec3 secondaryTint = exp2(log2(abs(hairBaseColor)) * secondaryTintPower);
-
-    float secondaryPhiBoost = CC5Exp(cosPhi * 17.0 - 16.780001);
-
-    float secondarySpecular = secondaryD;
-    secondarySpecular *= secondarySpecularStrength;
-    secondarySpecular *= secondaryPhiBoost;
-    secondarySpecular *= secondaryFresnel;
-
-    vec3 specular = vec3(primarySpecular);
-    specular += secondarySpecular * secondaryTint;
-
-    return specular;
-}
-
-float CC5HairDiffuseScalar(vec3 T, vec3 V, vec3 L, vec3 N, float diffuseStrength, float noBackFaceTriangles) {
-    float dotTL = dot(T, L);
-    float dotTV = dot(T, V);
-
-    vec3 projectedV = V - dotTV * T;
-    float projectedVLengthSquared = dot(projectedV, projectedV);
-    vec3 projectedVNormalized = projectedV * inversesqrt(projectedVLengthSquared);
-
-    float hairScatter = dot(projectedVNormalized, L);
-    hairScatter = clamp((hairScatter + 1.0) * 0.25, 0.0, 1.0);
-
-    float tangentLightFactor = 1.0 - abs(dotTL);
-    float hairDiffuse = hairScatter + (tangentLightFactor - hairScatter) * 0.33;
-
-    float standardDiffuse = clamp(dot(N, L), 0.0, 1.0) * diffuseStrength;
-    float hairDiffuseScaled = hairDiffuse * diffuseStrength;
-
-    return standardDiffuse + noBackFaceTriangles * (hairDiffuseScaled - standardDiffuse);
-}
-
-vec3 CC5DecodeColor(vec3 color, float gamma) {
-    return exp2(log2(abs(color)) * gamma);
-}
-
-
-vec3 CC5ComputeHairBaseColorFromCurrentInputs(vec3 baseColorRGB, vec3 decodedBlendMultiply, float vertexColorX) {
-    vec3 hairBaseColor;
-
-    bool useHairAutoBakedBaseColor = (kHasHairRootMap || kHasHairIdMap) && (kActiveChangeHairColor > 0.0);
-
-    if (useHairAutoBakedBaseColor) {
-        hairBaseColor = CC5DecodeColor(baseColorRGB, 2.2);
-    } else {
-        hairBaseColor = kHasDecalMap ? CC5DecodeColor(baseColorRGB, kDecalGamma) : vec3(1.0);
-    }
-
-    float vertexGrayBlend = 1.0 - (kVertexColorStrength * (vertexColorX - 1.0) + 1.0);
-    hairBaseColor = clamp(vertexGrayBlend * (kVertexGrayToColor - hairBaseColor) + hairBaseColor, 0.0, 1.0);
-
-    vec3 decalWeightedColor = kDecalWeight * (hairBaseColor - vec3(1.0)) + vec3(1.0);
-    hairBaseColor = kHasDecalMap ? decalWeightedColor : hairBaseColor;
-
-    if (kHasBlendDecalMap) {
-        if (kBlendDecalOp == 0u) {
-            vec3 blendMultiplyFactor = kBlendDecalWeight * (decodedBlendMultiply - vec3(1.0)) + vec3(1.0);
-            hairBaseColor *= blendMultiplyFactor;
-        } else if (kBlendDecalOp == 1u) {
-            hairBaseColor = kBlendDecalWeight * decodedBlendMultiply + hairBaseColor;
-        } else {
-            vec3 blend = kBlendDecalWeight * (decodedBlendMultiply - vec3(0.5)) + vec3(0.5);
-            vec3 multiplySide = hairBaseColor * blend * 2.0;
-            vec3 screenSide = 1.0 - ((1.0 - hairBaseColor) * 2.0) * (1.0 - blend);
-            hairBaseColor = mix(screenSide, multiplySide, lessThan(hairBaseColor, vec3(0.5)));
-        }
-    }
-
-    hairBaseColor *= kMaterialDiffuse;
-
-    return hairBaseColor;
-}
-
-
-vec3 RecoverRawTextureData(vec3 hardwareLinear) {
-    bvec3 cutoff = lessThan(hardwareLinear, vec3(0.0031308));
-    vec3 lower = hardwareLinear * 12.92;
-    vec3 higher = 1.055 * pow(hardwareLinear, vec3(1.0 / 2.4)) - vec3(0.055);
-    return mix(higher, lower, cutoff);
-}
-
-
-
-
-float FastAcosApprox(float x) {
-    float ax = abs(x);
-    float a = ax * -0.156583 + 1.570796;
-    float b = sqrt(max(1.0 - ax, 0.0));
-    float positiveResult = b * a;
-    float negativeResult = 3.141593 - positiveResult;
-    return x >= 0.0 ? positiveResult : negativeResult;
-}
-
-
-
-
-void main() {
-    RenderItem renderItem = renderItems[v_globalInstanceIndex];
-    Material material = materials[renderItem.materialIndex];
-
-    sampler2D baseColorSampler = sampler2D(textureSamplers[material.basecolor]);
-    sampler2D rmaSampler = sampler2D(textureSamplers[material.rma]);
-    sampler2D hairMapsSampler = sampler2D(textureSamplers[material.hairMaps]);
-
-    sampler2D blendMapSampler    = sampler2D(textureSamplers[u_hairBlendMapTextureIndex]);
-    vec3 blendMultiply  = texture(blendMapSampler, v_texCoord).rgb;
-    vec3 decodedBlendMultiply = CC5DecodeColor(blendMultiply.rgb, kBlendDecalGamma);
-
-    vec4 baseColorOG = texture(baseColorSampler, v_texCoord);
-    vec4 rma = texture(rmaSampler, v_texCoord);
-    vec4 hairMaps = texture(hairMapsSampler, v_texCoord);
-
-    vec2 baseTextureSizePixels = vec2(textureSize(baseColorSampler, 0));
-    float hairMipLevelRaw = ComputeHairMipLevel(v_texCoord, baseTextureSizePixels);
-   
-
-    vec3 viewPos = viewportData[v_viewportIndex].inverseView[3].xyz;
-
-    vec3 flowSample = vec3(hairMaps.rg, 0.0);
-    
-    //vec3 flowSample = vec3(1.0, 0.5, 0.5);
-
-    float hairId = hairMaps.b;
-    float rootFactor = hairMaps.a;
-
-    float metallicOLD = rma.g;
-    float rawAO = rma.b;
-
-    float aoFactor = kHasAOMap ? CC5ProcessAO(rawAO) : 1.0;
-
-
-    float vertexColorX = 0.8235;// v_vertexColorX; // this is an average of the values found in the cc5 geometry
-
-    bool useHairAutoBakedBaseColor = (kHasHairRootMap || kHasHairIdMap) && (kActiveChangeHairColor > 0.0);
-    bool hasDecalMap = kHasDecalMap;
-    bool paddingHasMips = kPaddingHasMips > 0.0;
-
-    
-    float autoBakedSpecularMask = baseColorOG.a;
-    float hairSpecularMask = useHairAutoBakedBaseColor
-        ? autoBakedSpecularMask
-        : 1.0 * kHairSpecularMapStrength;
-
-        vec3 hairBaseColor = CC5ComputeHairBaseColorFromCurrentInputs(baseColorOG.rgb, decodedBlendMultiply, vertexColorX);
-
-    if (kHasAOMap && kAOMapOccludeAllLighting > 0.0) {
-        hairBaseColor *= aoFactor;
-    }
-
-    vec3 cc5View = normalize(viewPos - v_worldPos.xyz);
-
-
-
-    vec3 normalWS = normalize(v_normal);
-    if (!gl_FrontFacing) {
-        normalWS = -normalWS;
-    }
-    
-    vec3 tangentWS = normalize(v_tangent);
-    //tangentWS = normalize(tangentWS - dot(tangentWS, normalWS) * normalWS);
-    
-    vec3 binormalWS = normalize(cross(normalWS, tangentWS));
-    //vec3 binormalWS = normalize(cross(tangentWS, normalWS));
-
-
-
-
-    //vec3 dp1 = dFdx(v_worldPos.xyz);
-    //vec3 dp2 = dFdy(v_worldPos.xyz);
-    //vec2 duv1 = dFdx(v_texCoord);
-    //vec2 duv2 = dFdy(v_texCoord);
-    //
-    //float det = duv1.x * duv2.y - duv2.x * duv1.y;
-    //tangentWS = vec3(0.0);
-    //binormalWS = vec3(0.0);
-    //
-    //// Prevent division by zero on degenerate triangles
-    //if (abs(det) > 0.00001) {
-    //    float invDet = 1.0 / det;
-    //    tangentWS = normalize((dp1 * duv2.y - dp2 * duv1.y) * invDet);
-    //    binormalWS = normalize((dp2 * duv1.x - dp1 * duv2.x) * invDet);
-    //} else {
-    //    // Fallback if derivatives fail
-    //    tangentWS = normalize(v_tangent);
-    //    binormalWS = normalize(cross(normalWS, tangentWS));
-    //}
-    //
-    //// 3. Gram-Schmidt to ensure a perfect 90-degree orthogonal basis
-    //tangentWS = normalize(tangentWS - dot(tangentWS, normalWS) * normalWS);
-    //binormalWS = normalize(binormalWS - dot(binormalWS, normalWS) * normalWS - dot(binormalWS, tangentWS) * tangentWS);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    vec3 flow = flowSample * 2.0 - 1.0;
-
-    vec3 baseHairTangentTS = vec3(
-        flow.x,
-        flow.y * kTangentMapFlipGreen,
-        0.0 
-    );
-
-    vec3 shiftedHairTangentTS = normalize(baseHairTangentTS);
-    
-    if (kHasHairIdMap) {
-        vec3 reflectionOffsetTS = mix(kBlackColorReflectionOffset, kWhiteColorReflectionOffset, hairId);
-        shiftedHairTangentTS += reflectionOffsetTS;
-    }
-
-    vec3 cc5Tangent = normalize(
-        tangentWS * shiftedHairTangentTS.x +
-        binormalWS * shiftedHairTangentTS.y +
-        normalWS * shiftedHairTangentTS.z
-    );
-
-    vec3 n = normalWS;
-
-    float roughnessOLD = 0.5;
-
-    if (kHasRoughnessMap) {
-        float rawRoughness = texture(rmaSampler, v_texCoord).r;
-        roughnessOLD = exp2(log2(abs(rawRoughness)) * kRoughnessGamma);
-        roughnessOLD *= kRoughnessWeight;
-    }
-    
-    roughnessOLD *= kHairRoughnessMapStrength;
-
-    shiftedHairTangentTS = normalize(shiftedHairTangentTS);
-
-    vec3 cc5Normal = normalWS;
-
-    
-
-
-
-
-
-
-
-
-
-
-    
-    
-
-
-   // bool verfiyTangents = true;
-   // if (verfiyTangents) {
-   //     vec3 dp1 = dFdx(v_worldPos.xyz);
-   //     vec3 dp2 = dFdy(v_worldPos.xyz);
-   //     vec2 duv1 = dFdx(v_texCoord);
-   //     vec2 duv2 = dFdy(v_texCoord);
-   // 
-   //     float det = duv1.x * duv2.y - duv2.x * duv1.y;
-   //     meshTangent = vec3(0.0);
-   //     meshBitangent = vec3(0.0);
-   // 
-   //     if (abs(det) > 0.00001) {
-   //         float invDet = 1.0 / det;
-   //         meshTangent = (dp1 * duv2.y - dp2 * duv1.y) * invDet;
-   //         meshBitangent = (dp2 * duv1.x - dp1 * duv2.x) * invDet;//
-
-   //         meshTangent = normalize(meshTangent - dot(meshTangent, meshNormalUnflipped) * meshNormalUnflipped);
-   //         meshBitangent = normalize(meshBitangent - dot(meshBitangent, meshNormalUnflipped) * meshNormalUnflipped - dot(meshBitangent, meshTangent) * meshTangent);
-   //     } 
-   //     else {
-   //         meshTangent = normalize(v_tangent);
-   //         meshTangent = normalize(meshTangent - dot(meshTangent, meshNormalUnflipped) * meshNormalUnflipped);
-   //         meshBitangent = normalize(cross(meshNormalUnflipped, meshTangent));
-   //     }
-   // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    bool overrideLight = true;
-    bool overrideTangent = true;
-
-    sampler2D hairAutoBakedBaseColorSampler = sampler2D(textureSamplers[material.basecolor]);
-    
-    vec3 meshTangent = normalize(v_tangent);
-
-    vec3 meshNormalUnflipped = normalize(v_normal);
+void ComputeCCNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 flowMap, float hairID, float flipTangentGreen, out vec3 finalNormal, out vec3 finalTangent) {
+    vec3 meshTangent = normalize(vertexTangent);
+    vec3 meshNormalUnflipped = normalize(vertexNormal);
     vec3 meshNormal = gl_FrontFacing ? meshNormalUnflipped : -meshNormalUnflipped;
 
     vec3 meshBitangent = normalize(cross(meshNormalUnflipped, meshTangent));
-
-    vec3 flowMap = vec3(hairMaps.rg, 0.0);
+    
     flowMap = flowMap * 2.0 - 1.0;
 
     vec3 tangentSpaceShift;
     tangentSpaceShift.x = flowMap.x;
-    tangentSpaceShift.y = flowMap.y * kTangentMapFlipGreen;
-    tangentSpaceShift.z = flowMap.z * 0.03;
-
-    float hairID = hairMaps.b;
+    tangentSpaceShift.y = flowMap.y * flipTangentGreen;
+    tangentSpaceShift.z = 0;//flowMap.z * 0.03;
 
     vec3 blackOffset = vec3(-0.206, -0.687, -0.338);
     vec3 whiteOffset = vec3(-0.148, 0.0, 0.370);
@@ -543,410 +107,244 @@ void main() {
 
     tangentSpaceShift = normalize(tangentSpaceShift + idOffset);
 
-    vec3 finalTangent = normalize(
+    finalTangent = vec3(
         tangentSpaceShift.x * meshTangent +
         tangentSpaceShift.y * meshBitangent +
         tangentSpaceShift.z * meshNormal
     );
 
-    vec3 bumpNormal = vec3(0.0, 0.0, 1.0); // There is no normal map for this hairBaseColor
+    finalNormal = meshNormal;
+}
 
-    vec3 finalNormal = normalize(
+void ComputeGhettoNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 flowMap, float hairID, float flipTangentGreen, out vec3 finalNormal, out vec3 finalTangent) {
+    vec3 meshTangent = normalize(vertexTangent);
+    vec3 meshNormalUnflipped = normalize(vertexNormal); // unused???
+    vec3 meshNormal = gl_FrontFacing ? meshNormalUnflipped : -meshNormalUnflipped;
+
+    meshTangent = normalize(meshTangent - dot(meshTangent, meshNormal) * meshNormal);
+    vec3 meshBitangent = cross(meshNormalUnflipped, meshTangent);
+
+    float kTangentMapFlipGreen = 1.0;
+    
+    flowMap = flowMap * 2.0 - 1.0;
+
+    float flowLen2 = dot(flowMap.rg, flowMap.rg);
+
+    vec3 t;
+    if (flowLen2 < 0.0001) {
+        t = normalize(meshTangent);
+    }
+    else {
+        vec2 flowDir = flowMap.rg * inversesqrt(flowLen2);
+        t = normalize(meshTangent * flowDir.x + meshBitangent * flowDir.y);
+    }
+    
+    const float u_specularJitter = 0.5;
+
+    finalTangent = normalize(t + meshNormal * (hairID - 0.5) * u_specularJitter);
+
+    vec3 bumpNormal = vec3(0.0, 0.0, 1.0); // There is no normal map for this hair
+
+    finalNormal = normalize(
         bumpNormal.x * meshTangent +
         bumpNormal.y * meshBitangent +
         bumpNormal.z * meshNormal
     );
+}
 
+void main() {
+    RenderItem renderItem = renderItems[v_globalInstanceIndex];
+    Material material = materials[renderItem.materialIndex];
 
+    sampler2D baseColorSampler = sampler2D(textureSamplers[material.basecolor]);
+    vec2 baseTextureSizePixels = vec2(textureSize(baseColorSampler, 0));
 
+    vec4 baseColor =   texture(baseColorSampler, v_texCoord);
+    vec4 rma =         texture(sampler2D(textureSamplers[material.rma]), v_texCoord).rgba;
+    vec4 hairTexture = texture(sampler2D(textureSamplers[material.hairMaps]), v_texCoord);
 
+    vec3 flowMap = vec3(hairTexture.rg, 0);
+    float hairID = hairTexture.b;
+    float rootFactor = hairTexture.a;
 
+    float hairMipLevelRaw = ComputeHairMipLevel(v_texCoord, baseTextureSizePixels);
 
-    vec3 v_color = vec3(0.8235, 0, 0); // This is an average of the values found in the cc5 geometry
+    vec3 viewPos = viewportData[v_viewportIndex].viewPos.xyz;
 
-    vec3 baseColor = texture(hairAutoBakedBaseColorSampler, v_texCoord).rgb;
-    baseColor = pow(abs(baseColor), vec3(2.2));
-    float vertexGrayBlend = kVertexColorStrength * (1.0 - v_color.r);
-    baseColor = clamp(mix(baseColor, kVertexGrayToColor, vertexGrayBlend), 0.0, 1.0);
-    //baseColor = mix(vec3(1.0), baseColor, kDecalWeight);
-    baseColor *= kMaterialDiffuse;
+    float roughness = rma.r;
+    float metallic = 1.0;
+    float ao = rma.b;
+    vec3 linearBaseColor = pow(baseColor.rgb, vec3(2.2));
 
-    float ao = 1.0;
+    vec3 V = normalize(viewPos - v_worldPos.xyz);
 
-    if (kHasAOMap) {
-        ao = texture(rmaSampler, v_texCoord).b; // In my engine, AO is stored in the b channel of the material rma texture
-        ao = pow(abs(ao), kAoGamma);
-        ao = 1.0 + kAoWeight * (ao - 1.0);
-    }
+    vec3 finalNormal;
+    vec3 finalTangent;
 
-    if (kAOMapOccludeAllLighting > 0.0 && kHasAOMap) {
-        baseColor *= ao;
-    }
-
-    float roughness = 0.5;
-
-    if (kHasRoughnessMap) {
-        roughness = texture(rmaSampler, v_texCoord).r;  // In my engine, roughness is stored in the r channel of the material rma texture
-        roughness = pow(abs(roughness), kRoughnessGamma);
-        roughness *= kRoughnessWeight;
-    }
-
-    roughness *= kHairRoughnessMapStrength;
-
-    float metallic = 0.0; // Always assume 0 metallic for hair
-
-
-
-
-
-    float shadow = 1.0;
-    shadow = shadow * (1.0 - kShadowOpacity) + kShadowOpacity;
-    shadow = 1.0 + float(kReceiveShadow) * (shadow - 1.0);
-
-    vec3 viewDirection = normalize(viewPos - v_worldPos.xyz);
-
-    vec3 diffuseColor = baseColor * (1.0 - metallic);
-    vec3 specularColor = mix(vec3(0.03), baseColor, metallic);
-
-    //float lightVisibility = shadow * kLightIsIlluminate;
-
-
-
-
-    bool enableSecondarySpecular = true;
-
-    //vec3 kLightDirection = vec3(0, -1, 0);
-    //vec3 lightDirection = normalize(-kLightDirection);
-
-    int i = 2;
-    Light light = lights[i];
-    vec3 lightPos = vec3(light.posX, light.posY, light.posZ);
-    vec3 lightCol = vec3(light.colorR, light.colorG, light.colorB);
-    float lightStrength = light.strength;
-    float lightRadius = light.radius;
-
-    vec3 toLight = lightPos - v_worldPos.xyz;
-    float lightDistance = length(toLight);
-    vec3 lightDirection = toLight / max(lightDistance, 0.00001);
-
-    float lightAttenuation = smoothstep(lightRadius, 0.0, lightDistance) * lightStrength;
-
-    float lightShadow = 1.0;
-    if (light.hiResShadowMapIndex != -1) {
-        lightShadow = ShadowCalculationNEW(light.hiResShadowMapIndex, lightPos, lightRadius, v_worldPos.xyz, viewPos, n, u_hiResShadowMapArray);
-    }
-    else if (light.lowResShadowMapIndex != -1) {
-        lightShadow = ShadowCalculationNEW(light.lowResShadowMapIndex, lightPos, lightRadius, v_worldPos.xyz, viewPos, n, u_lowResShadowMapArray);
-    }
-
-    vec3 lightColor = clamp(lightCol, 0.0, 1.0);
-    float lightVisibility = lightAttenuation * lightShadow;
-
-    if (light.iesTextureIndex != 0) {
-        sampler2D iesSampler = sampler2D(textureSamplers[(light.iesTextureIndex)]);
-        float candelas = ApplyIESProfile(v_worldPos.xyz, light, iesSampler);
-        lightVisibility *= candelas;
-    }
-
-
-
-
-
-
-
-
-    float hairRoughness = clamp(roughness, 0.0, 1.0);
-    hairRoughness = hairRoughness * 0.98 + 0.02;
-
-    float VdotL = dot(viewDirection, lightDirection);
-    float TdotL = dot(finalTangent, lightDirection);
-    float TdotV = dot(finalTangent, viewDirection);
-
-    float tangentViewAngle = FastAcosApprox(TdotV);
-    float tangentLightAngle = FastAcosApprox(TdotL);
-
-    float tangentViewSinAngle = 1.570796 - tangentViewAngle;
-    float tangentLightSinAngle = 1.570796 - tangentLightAngle;
-
-    float cosHalfTangentAngleDifference = cos(abs(tangentViewSinAngle - tangentLightSinAngle) * 0.5);
-
-    vec3 lightPerpendicularToTangent = lightDirection - finalTangent * TdotL;
-    vec3 viewPerpendicularToTangent = viewDirection - finalTangent * TdotV;
-
-    float perpendicularDot = dot(lightPerpendicularToTangent, viewPerpendicularToTangent);
-    float lightPerpendicularLengthSq = dot(lightPerpendicularToTangent, lightPerpendicularToTangent);
-    float viewPerpendicularLengthSq = dot(viewPerpendicularToTangent, viewPerpendicularToTangent);
-
-    float normalizedPerpendicularDot = perpendicularDot * inversesqrt(lightPerpendicularLengthSq * viewPerpendicularLengthSq + 0.0001);
-
-    float halfAzimuth = normalizedPerpendicularDot * 0.5 + 0.5;
-    halfAzimuth = clamp(halfAzimuth, 0.0, 1.0);
-
-    float cosHalfAzimuth = sqrt(halfAzimuth);
-    float transmissionExponentInput = normalizedPerpendicularDot * 17.0 - 16.780001;
-
-    float hairRoughnessSq = hairRoughness * hairRoughness;
-    float twoHairRoughnessSq = hairRoughnessSq + hairRoughnessSq;
-
-
-
-
-
-    // Primary specular 
-
-    float primaryAzimuthScale = cosHalfAzimuth * 0.997551;
-    float primaryEnergyScale = cosHalfAzimuth * 0.25;
-
-    float sinTangentView = sqrt(max(1.0 - TdotV * TdotV, 0.0));
-    float primaryShift = primaryAzimuthScale * sinTangentView + TdotV * -0.069943;
-
-    float primaryWidthBase = cosHalfAzimuth * hairRoughnessSq;
-    float primaryWidth = primaryWidthBase * 1.414214;
-    float primaryNorm = primaryWidthBase * 3.544908;
-
-    float tangentDotSum = TdotL + TdotV;
-    float primaryCentered = tangentDotSum + primaryShift * 0.139886;
-
-    float primaryExponent = -0.5 * primaryCentered * primaryCentered / (primaryWidth * primaryWidth);
-    float primarySpecular = exp(primaryExponent) / primaryNorm;
-
-    float viewLightHalf = sqrt(clamp(VdotL * 0.5 + 0.5, 0.0, 1.0));
-    float oneMinusViewLightHalf = 1.0 - viewLightHalf;
-
-    float primaryFresnel = oneMinusViewLightHalf * oneMinusViewLightHalf;
-    primaryFresnel *= primaryFresnel;
-    primaryFresnel *= oneMinusViewLightHalf;
-    primaryFresnel = primaryFresnel * 0.953479 + 0.046521;
-
-    primarySpecular *= kSpecularStrength;
-    primarySpecular *= primaryEnergyScale;
-    primarySpecular *= primaryFresnel;
-    primarySpecular *= hairSpecularMask * 2.0;
-
-    float primaryVisibility = enableSecondarySpecular ? 1.0 : 1.0 - clamp(-VdotL, 0.0, 1.0);
-
-    vec3 hairSpecularAccum = vec3(primarySpecular * primaryVisibility);
-
-
-
-
-
-
-
-    // Primary transmission
-
-    float secondaryEnabledFloat = enableSecondarySpecular ? 1.0 : 0.0;
-
-    float transmissionGeometryDenominator = cosHalfTangentAngleDifference * 0.36 + 1.19 / cosHalfTangentAngleDifference;
-
-    float transmissionWidth = hairRoughnessSq * 0.5;
-    float transmissionNorm = hairRoughnessSq * 1.253314;
-
-    float transmissionCentered = tangentDotSum - 0.035;
-    float transmissionExponent = -0.5 * transmissionCentered * transmissionCentered / (transmissionWidth * transmissionWidth);
-    float transmissionLobe = exp(transmissionExponent) / transmissionNorm;
-
-    float inverseTransmissionGeometry = 1.0 / transmissionGeometryDenominator;
-
-    float transmissionAzimuthModifier = 1.0 + inverseTransmissionGeometry * (0.6 - normalizedPerpendicularDot * 0.8);
-    float modifiedCosHalfAzimuth = cosHalfAzimuth * transmissionAzimuthModifier;
-
-    float transmissionFresnelInput = 1.0 - cosHalfTangentAngleDifference * sqrt(max(1.0 - modifiedCosHalfAzimuth * modifiedCosHalfAzimuth, 0.0));
-
-    float transmissionFresnel = transmissionFresnelInput * transmissionFresnelInput;
-    transmissionFresnel *= transmissionFresnel;
-    transmissionFresnel *= transmissionFresnelInput;
-    transmissionFresnel = transmissionFresnel * 0.953479 + 0.046521;
-
-    float transmissionFresnelWeight = (1.0 - transmissionFresnel) * (1.0 - transmissionFresnel);
-
-    float transmissionColorPower = sqrt(max(1.0 - inverseTransmissionGeometry * modifiedCosHalfAzimuth * inverseTransmissionGeometry * modifiedCosHalfAzimuth, 0.0));
-    transmissionColorPower *= 0.5;
-    transmissionColorPower /= cosHalfTangentAngleDifference;
-
-    vec3 transmissionColor = pow(abs(diffuseColor), vec3(transmissionColorPower));
-
-    float transmissionAngularWeight = exp(-3.98 - normalizedPerpendicularDot * 3.65);
-
-    float transmissionSpecular = transmissionLobe;
-    transmissionSpecular *= kTransmissionStrength;
-    transmissionSpecular *= transmissionAngularWeight;
-    transmissionSpecular *= transmissionFresnelWeight;
-
-    hairSpecularAccum = vec3(hairSpecularAccum.z) + transmissionColor * transmissionSpecular * secondaryEnabledFloat;
-
-
-
-
-    // Secondary lobe
-
-    float secondaryCentered = tangentDotSum - 0.140;
-    float secondaryWidth = twoHairRoughnessSq;
-    float secondaryNorm = hairRoughnessSq * 5.013257;
-
-    float secondaryExponent = -0.5 * secondaryCentered * secondaryCentered / (secondaryWidth * secondaryWidth);
-    float secondarySpecular = exp(secondaryExponent) / secondaryNorm;
-
-    float secondaryFresnelInput = 1.0 - cosHalfTangentAngleDifference * 0.5;
-
-    float secondaryFresnel = secondaryFresnelInput * secondaryFresnelInput;
-    secondaryFresnel *= secondaryFresnel;
-    secondaryFresnel *= secondaryFresnelInput;
-    secondaryFresnel = secondaryFresnel * 0.953479 + 0.046521;
-
-    float secondaryFresnelWeight = secondaryFresnel * (1.0 - secondaryFresnel) * (1.0 - secondaryFresnel);
-
-    float secondaryColorPower = 0.8 / cosHalfTangentAngleDifference;
-    vec3 secondaryColor = pow(abs(diffuseColor), vec3(secondaryColorPower));
-
-    float secondaryAngularWeight = exp(transmissionExponentInput);
-
-    secondarySpecular *= kSecondarySpecularStrength;
-    secondarySpecular *= secondaryAngularWeight;
-    secondarySpecular *= secondaryFresnelWeight;
-
-    hairSpecularAccum += secondaryColor * secondarySpecular;
-
-
-
-     //vec3 kLightColor = vec3(0.8187, 0.8580, 0.7458);
-
-
-    // Diffuse
-
-    vec3 normalizedViewPerpendicularToTangent = normalize(viewPerpendicularToTangent);
-
-    float tangentDiffuseA = dot(normalizedViewPerpendicularToTangent, lightDirection);
-    tangentDiffuseA = clamp((tangentDiffuseA + 1.0) * 0.25, 0.0, 1.0);
-
-    float tangentDiffuseB = 1.0 - abs(TdotL);
-
-    float tangentDiffuse = tangentDiffuseA + (tangentDiffuseB - tangentDiffuseA) * 0.33;
-
-    float normalDiffuse = clamp(dot(finalNormal, lightDirection), 0.0, 1.0);
-    normalDiffuse *= kDiffuseStrength;
-
-    tangentDiffuse *= kDiffuseStrength;
-
-    float directDiffuseFactor = normalDiffuse + kNoBackFaceTriangles * (tangentDiffuse - normalDiffuse);
-
-    vec3 directLightColor = lightColor * lightVisibility;
-
-    vec3 directDiffuseLighting = directLightColor * directDiffuseFactor;
-
-    vec3 directSpecularLighting = hairSpecularAccum * 3.141593;
-    directSpecularLighting *= lightColor * lightVisibility * hairSpecularMask;
-
-    vec3 directDiffuseColor = diffuseColor * directDiffuseLighting;
-
-
-
-
-
-
-
-
-
-
-
-    vec3 finalColor = directDiffuseColor + directSpecularLighting;
-
-    float finalAO = texture(hairAutoBakedBaseColorSampler, v_texCoord).a;
-    finalColor *= finalAO;
-
-    //finalColor = vec3(transmissionSpecular);
-
-    /*
-
-
-
-
-
-
-    if (overrideTangent) {
-        cc5Tangent = finalTangent;
-    }
-
-
-
-
-    vec3 directDiffuseLighting = vec3(0.0);
-    vec3 directSpecularLighting = vec3(0.0);
-
+    ComputeCCNormalAndTangents(v_normal, v_tangent, flowMap, hairID, 1.0, finalNormal, finalTangent);
+    //ComputeGhettoNormalAndTangents(v_normal, v_tangent, flowMap, hairID, 1.0, finalNormal, finalTangent);
     
-    vec3 characterPosition = vec3(37.0, 31.0, 36.23);
-    vec3 relativeLightPosition = vec3(0, 2.2, 0);
+    vec3 hairBaseColor = linearBaseColor * mix(u_rootColorFloor, u_tipColorFloor, rootFactor);
+    hairBaseColor *= 0.8;
 
-    //for (int i = 2; i < 4; i++) {
-    {   
-        int i = 2;
-        Light light = lights[i];
+    const float u_specularAARoughnessPerMip = 0.5;
+    const float u_specularMipFadeStrength = 0.2;
+    const float u_specularMipStart = 0.9;
+
+    float mipLevelRaw = max(0.0, hairMipLevelRaw + log2(u_renderResolutionScale));
+    float mipLevel = max(0.0, mipLevelRaw - u_specularMipStart);
+
+    float roughnessAA = clamp(roughness + mipLevel * u_specularAARoughnessPerMip, 0.0, 1.0);
+    float specularMipFade = 1.0 / (1.0 + mipLevel * mipLevel * u_specularMipFadeStrength);
+
+    const float kHairRoughnessMapStrength = 0.45;
+    const float kRoughnessGamma = 1.0;
+    const float kRoughnessWeight = 1.0;
+
+    float ue4Roughness = pow(abs(rma.r), kRoughnessGamma) * kRoughnessWeight * kHairRoughnessMapStrength;
+
+    const float u_specularAlpha1Min = 0.055;
+    const float u_specularAlpha2Min = 0.070;
+
+    float alpha1 = clamp(ue4Roughness * ue4Roughness, u_specularAlpha1Min, 1.0);
+    float alpha2 = clamp(ue4Roughness * ue4Roughness * 1.5, u_specularAlpha2Min, 1.0);
+
+    vec3 t1 = normalize(finalTangent + finalNormal * 0.035);
+    vec3 t2 = normalize(finalTangent - finalNormal * 0.052);
+
+    uvec2 tileCoord = uvec2(gl_FragCoord.xy) / uint(TILE_SIZE);
+    uint tileIndex = tileCoord.y * rendererData.tileCountX + tileCoord.x;
+	uint lightCount = tileLights[tileIndex].lightCount;
+
+    vec3 directLighting = vec3(0.0);
+
+    // Direct lighting
+    for (int i = 0; i < lightCount; i++) {
+        int lightIndex = int(tileLights[tileIndex].lightIndices[i]);
+
+        Light light = lights[lightIndex];
+
         vec3 lightPos = vec3(light.posX, light.posY, light.posZ);
         vec3 lightCol = vec3(light.colorR, light.colorG, light.colorB);
-        float lightStrength = light.strength;
-        float lightRadius = light.radius;
-        
-        if (overrideLight) {
-            lightPos = characterPosition + relativeLightPosition;
-            lightCol = vec3(0.8187, 0.8580, 0.7458);
-            lightStrength = 1.4300;
-            lightRadius = 5;
-        }
 
         vec3 lightVector = lightPos - v_worldPos.xyz;
         float distanceSquared = max(dot(lightVector, lightVector), 0.0001);
+        float lightDistance = sqrt(distanceSquared);
+        float attenuation = smoothstep(light.radius, 0.0, lightDistance) * light.strength;
+        if (attenuation <= 0.0) {
+            continue;
+        }
         vec3 L = lightVector * inversesqrt(distanceSquared);
 
-        float attenuation = 1.0 / max(distanceSquared, 1.0);
+        float shadow = 1.0;
+        if (light.hiResShadowMapIndex != -1) {
+            shadow = ShadowCalculationMedium(light.hiResShadowMapIndex, lightPos, light.radius, v_worldPos.xyz, viewPos, finalNormal, hiResShadowMapArray);
+        }
+        else if (light.lowResShadowMapIndex != -1) {
+            shadow = ShadowCalculationMedium(light.lowResShadowMapIndex, lightPos, light.radius, v_worldPos.xyz, viewPos, finalNormal, lowResShadowMapArray);
+        }
 
-        float rawShadow = ShadowCalculation(i, lightPos, lightRadius, v_worldPos.xyz, viewPos, n, u_shadowMapArray);
+        vec3 lightContribution = EvaluateHairLight(hairBaseColor, finalTangent, V, L, t1, t2, alpha1, alpha2, lightCol, shadow);
 
-        if (overrideLight) rawShadow = 1.0;
-
-        float shadow = rawShadow * (1.0 - kShadowOpacity) + kShadowOpacity;
-        shadow = float(kReceiveShadow) * (shadow - 1.0) + 1.0;
-
-        float lightScalar = lightStrength * attenuation * shadow;
-
-        
-        vec3 cc5Specular = CC5HairSpecularPrimarySecondary_NoTransmission(
-            cc5Tangent,
-            cc5View,
-            L,
-            hairBaseColor,
-            roughness,
-            hairSpecularMask,
-            kSpecularStrength,
-            kSecondarySpecularStrength
-        );
-
-        float cc5Diffuse = CC5HairDiffuseScalar(
-            cc5Tangent,
-            cc5View,
-            L,
-            n,
-            kDiffuseStrength,
-            kNoBackFaceTriangles
-        );
-
-        vec3 diffuseContribution = hairBaseColor * cc5Diffuse * lightCol * lightScalar;
-        vec3 specularContribution = cc5Specular * 3.141593 * lightCol * lightScalar;
-
-
-        directDiffuseLighting += diffuseContribution;
-        directSpecularLighting += specularContribution;
-        
+        if (light.iesTextureIndex != 0) {
+            sampler2D iesSampler = sampler2D(textureSamplers[light.iesTextureIndex]);
+            lightContribution *= ApplyIESProfile(v_worldPos.xyz, light, iesSampler);
+        }
+        directLighting += lightContribution * attenuation;
     }
 
-    vec3 directLighting = directDiffuseLighting + directSpecularLighting;
+    // Flash light direct lighting
+    float fragDistance = distance(v_worldPos.xyz, viewPos);
+
+    for (int i = 0; i < 2; i++) {
+        ViewportData flashlightViewportData = viewportData[i];
+        float flashlightModifer = flashlightViewportData.flashlightModifer;
+        if (flashlightModifer <= 0.05) {
+            continue;
+        }
+
+        int layerIndex = i;
+        vec3 spotLightPos = flashlightViewportData.flashlightPosition.xyz;
+        vec3 spotLightDir = normalize(flashlightViewportData.flashlightDir.xyz);
+        vec3 spotLightColor = GetFlashLightColor();
+        float spotLightRadius = 25.0;
+        float spotLightStrength = 4.5;
+
+        if (i != int(v_viewportIndex)) {
+            spotLightPos += spotLightDir * 0.2;
+            spotLightColor *= 0.825;
+        }
+
+        float innerAngle = cos(radians(5.0 * flashlightModifer));
+        float outerAngle = cos(radians(20.5));
+        bool flashlightIsInShop = bool(flashlightViewportData.isInShop);
+        if (flashlightIsInShop) {
+            spotLightRadius = 8.0;
+            outerAngle = cos(radians(50.0));
+        }
+
+        vec3 lightVector = spotLightPos - v_worldPos.xyz;
+        float distanceSquared = max(dot(lightVector, lightVector), 0.0001);
+        float lightDistance = sqrt(distanceSquared);
+        float attenuation = smoothstep(spotLightRadius, 0.0, lightDistance) * spotLightStrength;
+        vec3 L = lightVector * inversesqrt(distanceSquared);
+
+        float coneFalloff = smoothstep(outerAngle, innerAngle, dot(L, -spotLightDir));
+        float distanceFactor = clamp(1.0 - lightDistance / spotLightRadius, 0.0, 1.0);
+        float spotAttenuation = attenuation * coneFalloff * distanceFactor * distanceFactor;
+        if (spotAttenuation <= 0.0) {
+            continue;
+        }
+
+        mat4 lightProjectionView = flashlightViewportData.flashlightProjectionView;
+        vec4 fragPosLightSpace = lightProjectionView * vec4(v_worldPos.xyz, 1.0);
+        float shadow = 0.0;
+        if (!(i == int(v_viewportIndex) && flashlightIsInShop)) {
+            shadow = SpotlightShadowCalculation(fragPosLightSpace, finalNormal, spotLightDir, v_worldPos.xyz, spotLightPos, flashlightViewportData.inverseView[3].xyz, u_flashlighShadowMapArrayTexture, layerIndex);
+        }
+
+        float visibility = 1.0 - shadow;
+        if (visibility <= 0.0) {
+            continue;
+        }
+
+        vec3 lightContribution = EvaluateHairLight(hairBaseColor, finalTangent, V, L, t1, t2, alpha1, alpha2, spotLightColor, visibility);
+
+        vec3 cookie = ApplyCookie(lightProjectionView, v_worldPos.xyz, spotLightPos, spotLightColor, spotLightRadius, u_flashlightCookieTexture);
+
+        float cookieStartDistance = 1.0;
+        float cookieEndDistance = 10.0;
+        float cookieDistanceExponent = 2.0;
+        float cookieMinValue = 0.5;
+        float cookieMaxValue = 5.0;
+        float cookieDistScale;
+        if (fragDistance <= cookieStartDistance) {
+            cookieDistScale = cookieMinValue;
+        }
+        else if (fragDistance >= cookieEndDistance) {
+            cookieDistScale = cookieMaxValue;
+        }
+        else {
+            float t = (fragDistance - cookieStartDistance) / (cookieEndDistance - cookieStartDistance);
+            cookieDistScale = mix(cookieMinValue, cookieMaxValue, pow(t, cookieDistanceExponent));
+        }
+
+        lightContribution *= cookieDistScale;
+        if (!flashlightIsInShop) {
+            lightContribution *= cookie;
+        }
+
+        directLighting += lightContribution * spotAttenuation * flashlightModifer;
+    }
+
+    // Indirect diffuse
+    bool u_sampleProbes = true;
 
     vec2 resolution = vec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
     vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / resolution;
-
-    vec3 indirectDiffuse = vec3(0.0);
-    bool u_sampleProbes = false;
     vec3 probeIrradiance = texture(u_indirectDiffuseTexture, screenUV).rgb;
-
+    
+    vec3 indirectDiffuse = vec3(0.0);
     vec3 diffuseAlbedo = hairBaseColor.rgb * (1.0 - metallic);
     float indirectDiffuseScale = 1.0;
 
@@ -954,28 +352,15 @@ void main() {
         indirectDiffuse = probeIrradiance * diffuseAlbedo * indirectDiffuseScale;
     }
 
-    vec3 finalColor = (directLighting + indirectDiffuse);//* hairAO;
+    vec3 color = (directLighting + indirectDiffuse) * ao;
 
-    */
+    color += vec3(0.00001);
 
-    //finalColor = hairBaseColor;
+    LightingOut = vec4(color, 1.0);
 
     
-    //finalColor = normalWS;
-    //finalColor = v_normal;
-    //finalColor = baseHairTangentTS;
-    //finalColor = tangentWS;
+   // LightingOut = vec4(debugColor, 1.0);
+    
+    //LightingOut = vec4(directLighting, 1.0);
 
-    //finalColor = cc5Tangent;
-
-    //finalColor = flowMap;
-    //finalColor = vec3(hairID);
-    //finalColor = vec3(idOffset);
-    //finalColor = vec3(baseColor);
-
-    finalColor.rgb += vec3(0.00001);
-
-
-
-    LightingOut = vec4(finalColor, 1.0);
 }

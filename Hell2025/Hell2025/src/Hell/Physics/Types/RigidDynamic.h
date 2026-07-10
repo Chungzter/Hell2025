@@ -28,6 +28,10 @@ struct RigidDynamic {
     void MarkForRemoval();
     void UpdateMassAndInertia(float density);
     void AddForce(glm::vec3 force);
+    void AddVelocityChange(glm::vec3 velocityChange);
+    void AddImpulse(glm::vec3 impulse);
+    void AddImpulseAtPosition(glm::vec3 impulse, glm::vec3 position);
+    void AddAngularVelocityChangeAtPosition(glm::vec3 velocityChange, glm::vec3 position);
     void SetGlobalPose(const glm::mat4& globalPoseMatrix);
     void SetKinematicTarget(const glm::mat4& globalPoseMatrix);
     void SetUserData(PhysicsUserData physicsUserData);

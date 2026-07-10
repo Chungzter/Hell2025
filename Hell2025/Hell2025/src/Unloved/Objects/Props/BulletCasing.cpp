@@ -75,7 +75,8 @@ void BulletCasing::SubmitRenderItem() {
     renderItem.inverseModelMatrix = inverse(renderItem.modelMatrix);
     renderItem.materialIndex = GetMaterialIndex();
     renderItem.meshId = GetMeshId();
-    renderItem.shadowBit = SHADOW_BIT_NONE;
+    renderItem.shadowFlags = SHADOW_FLAG_NONE;
+    renderItem.vulkanFlags = 0;
 
     Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
     if (mesh) {

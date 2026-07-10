@@ -14,13 +14,24 @@ namespace VulkanRenderer {
         VkExtent2D finalImageExtent = { static_cast<uint32_t>(resolutions.finalImage.x), static_cast<uint32_t>(resolutions.finalImage.y) };
         VkFormat finalImageFormat = VulkanSwapchainManager::GetSwapchainImageFormat();
 
-        VulkanResourceManager::CreateAllocatedImage("Lighting", gBufferExtent.width, gBufferExtent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-        VulkanResourceManager::CreateAllocatedImage("GBufferRE.Visibility", gBufferExtent.width, gBufferExtent.height, VK_FORMAT_R32G32_UINT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-        VulkanResourceManager::CreateAllocatedImage("GBufferRE.Depth", gBufferExtent.width, gBufferExtent.height, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-        VulkanResourceManager::CreateAllocatedImage("BaseColorMetallic", gBufferExtent.width, gBufferExtent.height, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-        VulkanResourceManager::CreateAllocatedImage("NormalXYRoughnessMisc", gBufferExtent.width, gBufferExtent.height, VK_FORMAT_A2B10G10R10_UNORM_PACK32, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-        VulkanResourceManager::CreateAllocatedImage("VelocityXYOcclusionSubSurface", gBufferExtent.width, gBufferExtent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-        VulkanResourceManager::CreateAllocatedImage("FinalImage", finalImageExtent.width, finalImageExtent.height, finalImageFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+        const VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        const VkImageUsageFlags hairUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        const VkImageUsageFlags depthUsage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+
+        // GBuffer
+        VulkanResourceManager::CreateAllocatedImage("BaseColorMetallic", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, usage);
+        VulkanResourceManager::CreateAllocatedImage("NormalXYRoughnessMisc", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_A2B10G10R10_UNORM_PACK32, usage);
+        VulkanResourceManager::CreateAllocatedImage("VelocityXYOcclusionSubSurface", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("Visibility", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32G32_UINT, usage);
+        VulkanResourceManager::CreateAllocatedImage("Lighting", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("Depth", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, depthUsage);
+
+        // Hair
+        VulkanResourceManager::CreateAllocatedImage("HairLighting", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_4_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, hairUsage);
+        VulkanResourceManager::CreateAllocatedImage("HairDepth", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_4_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, depthUsage);
+
+        // Final image
+        VulkanResourceManager::CreateAllocatedImage("FinalImage", finalImageExtent.width, finalImageExtent.height, VK_SAMPLE_COUNT_1_BIT, finalImageFormat, usage);
 
         UpdateBindlessRenderTargetDescriptors();
     }
@@ -33,7 +44,7 @@ namespace VulkanRenderer {
             AllocatedImage* presentImage = VulkanResourceManager::GetAllocatedImage("Present");
             if (presentImage) {
                 VkExtent2D presentExtent = presentImage->GetExtent2D();
-                needsCreate = presentExtent.width != extent.width || presentExtent.height != extent.height || presentImage->GetFormat() != format;
+                needsCreate = presentExtent.width != extent.width || presentExtent.height != extent.height || presentImage->GetFormat() != format || presentImage->GetSampleCount() != VK_SAMPLE_COUNT_1_BIT;
             }
             else {
                 needsCreate = true;
@@ -47,7 +58,7 @@ namespace VulkanRenderer {
         }
 
         VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-        VulkanResourceManager::CreateAllocatedImage("Present", extent.width, extent.height, format, usage);
+        VulkanResourceManager::CreateAllocatedImage("Present", extent.width, extent.height, VK_SAMPLE_COUNT_1_BIT, format, usage);
         UpdateBindlessRenderTargetDescriptors();
     }
 }

@@ -42,7 +42,7 @@ namespace OpenGL::Renderer {
         glBindVertexArray(meshBufferProcedural.GetVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.procedural, state);
 
-        state.stencilRef = STENCIL_BIT_STATIC;
+        state.stencilRef = STENCIL_BIT_ASSET;
 
         glBindVertexArray(meshBufferAssets.GetVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.standard, state);
@@ -84,7 +84,7 @@ namespace OpenGL::Renderer {
         state.stencilDepthFailOp = GL_KEEP;
         state.stencilPassOp = GL_REPLACE;
 
-        state.stencilRef = STENCIL_BIT_STATIC;
+        state.stencilRef = STENCIL_BIT_ASSET;
 
         glBindVertexArray(meshBuffer.GetVAO());
 

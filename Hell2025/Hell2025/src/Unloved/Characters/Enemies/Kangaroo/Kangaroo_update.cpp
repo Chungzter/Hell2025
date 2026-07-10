@@ -7,19 +7,7 @@
 
 namespace Unloved {
 
-    void Kangaroo::Update(float deltaTime) {
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        Ragdoll* ragdoll = GetRagdoll();
-
-        if (animatedGameObject && ragdoll) {
-            if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
-                animatedGameObject->DisableRendering();
-            }
-            else {
-                animatedGameObject->EnableRendering();
-            }
-        }
-
+    void Kangaroo::UpdateMovement(float deltaTime) {
         if (m_animationState == KanagarooAnimationState::BITE) {
             m_timeSinceBiteBegan += deltaTime;
         }
@@ -41,11 +29,28 @@ namespace Unloved {
 
         UpdateAnimationStateMachine();
         UpdateMovementLogic(deltaTime);
-        UpdateAnimatedGameObjectPositionRotation();
 
         UpdateAudio();
-    
+
         //DebugDraw();
+    }
+
+    void Kangaroo::Update(float deltaTime) {
+        (void)deltaTime;
+
+        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
+        Ragdoll* ragdoll = GetRagdoll();
+
+        if (animatedGameObject && ragdoll) {
+            if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
+                animatedGameObject->DisableRendering();
+            }
+            else {
+                animatedGameObject->EnableRendering();
+            }
+        }
+
+        UpdateAnimatedGameObjectPositionRotation();
 
         // Death check
         if (m_health <= 0) {

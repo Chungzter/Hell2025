@@ -22,19 +22,17 @@ struct AnimatedMeshNodeCreateInfo {
 
 struct AnimatedMeshNode {
     std::string meshName;
-    int materialIndex = 0;
-    int woundMaterialIndex = -1;
-    int emissiveColorTexutreIndex = -1;
-    bool renderAsGlass = false;
-    bool deforming = true;
-    int baseSkinningVertex = -1;
     BlendingMode blendingMode = BlendingMode::DEFAULT;
     RenderItem renderItem;
+    int32_t materialIndex = 0;
+    int32_t woundMaterialIndex = -1;
+    uint32_t meshId = 0;
     uint32_t baseVertex = 0;
     uint32_t baseIndex = 0;
     uint32_t vertexCount = 0;
     uint32_t indexCount = 0;
-    uint32_t meshId = 0;
+    bool deforming = true;
+    bool excludeFromVulkanTLAS = false;
 };
 
 struct AnimatedMeshNodes {
@@ -43,15 +41,14 @@ struct AnimatedMeshNodes {
 
     void SetSkinnedModel(uint64_t parentId, std::string name); // temp
 
-    void SetMeshWoundMaskTextureIndex(const std::string& meshName, int32_t woundMaskTextureIndex);
     void SetBlendingModeByMeshName(const std::string& meshName, BlendingMode blendingMode);
     void SetMeshMaterialByMeshName(const std::string& meshName, const std::string& materialName, BlendingMode blendingMode = BlendingMode::DEFAULT);
     void SetMeshMaterialByMeshIndex(int meshIndex, const std::string& materialName);
-    void SetMeshToRenderAsGlassByMeshIndex(const std::string& materialName);
-    void SetMeshEmissiveColorTextureByMeshName(const std::string& meshName, const std::string& textureName);
+    void SetMeshWoundMaskArrayIndex(const std::string& meshName, int32_t woundMaskArrayIndex);
     void SetMeshWoundMaterialByMeshName(const std::string& meshName, const std::string& textureName);
     void SetAllMeshMaterials(const std::string& materialName);
     void SetAllMeshBlendingModes(BlendingMode blendingMode);
+    void SetExcludeFromVulkanTLAS(bool exclude);
     void SetExclusiveViewportIndex(int index);
     void SetIgnoredViewportIndex(int index);
     void PrintMeshNames();
@@ -60,15 +57,15 @@ struct AnimatedMeshNodes {
 
     bool RenderingEnabled() const { return m_renderingEnabled; }
 
-    const uint32_t& GetIgnoredViewportIndex() const       { return m_ignoredViewportIndex; };
-    const uint32_t& GetExclusiveViewportIndex() const     { return m_exclusiveViewportIndex; };
+    const int32_t& GetIgnoredViewportIndex() const        { return m_ignoredViewportIndex; };
+    const int32_t& GetExclusiveViewportIndex() const      { return m_exclusiveViewportIndex; };
     const std::vector<AnimatedMeshNode>& GetNodes() const { return m_nodes; }
 
     uint64_t m_parentId = 0;
     int32_t m_ignoredViewportIndex = -1;
     int32_t m_exclusiveViewportIndex = -1;
 
-    std::vector<int32_t> m_woundMaskTextureIndices;
+    std::vector<int32_t> m_woundMaskArrayIndices;
 
     std::vector<RenderItem> m_deformingRenderItems;
     std::vector<RenderItem> m_nonDeformingRenderItems;
@@ -76,6 +73,7 @@ struct AnimatedMeshNodes {
 
     SkinnedModel* m_skinnedModel = nullptr;
     bool m_renderingEnabled = true;
+    bool m_excludeFromVulkanTLAS = false;
 
 private:
     std::vector<AnimatedMeshNode> m_nodes;

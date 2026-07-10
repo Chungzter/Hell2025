@@ -2,7 +2,6 @@
 
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
-#include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
 
 #include <array>
 
@@ -29,20 +28,30 @@ namespace VulkanRenderer {
             attachment.clearValue = target.clearValue;
         }
 
+        bool useDepthAttachment = state.hasDepthTarget && (state.rasterizer.depthTestEnabled || state.rasterizer.depthWriteEnabled);
+        bool useStencilAttachment = state.hasDepthTarget && state.rasterizer.stencilTestEnabled;
+
         VkRenderingAttachmentInfo depthAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
 
         if (state.hasDepthTarget) {
             AllocatedImage* image = VulkanResourceManager::GetAllocatedImage(state.depthTarget.imageName);
             if (!image) return false;
 
-            VkAccessFlags2 accessFlags = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+            VkAccessFlags2 accessFlags = VK_ACCESS_2_SHADER_READ_BIT;
+            VkPipelineStageFlags2 stageFlags = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+
+            if (useDepthAttachment || useStencilAttachment) {
+                accessFlags |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+                stageFlags |= VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
+            }
+
             if (state.rasterizer.depthWriteEnabled || state.rasterizer.stencilWriteMask != 0) {
                 accessFlags |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
             }
 
-            image->Sync(commandBuffer, accessFlags, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
+            image->Sync(commandBuffer, accessFlags, stageFlags);
 
-            depthAttachment.imageView = image->GetImageView();
+            depthAttachment.imageView = useDepthAttachment && !useStencilAttachment ? image->GetDepthOnlyImageView() : image->GetImageView();
             depthAttachment.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
             depthAttachment.loadOp = state.depthTarget.loadOp;
             depthAttachment.storeOp = state.depthTarget.storeOp;
@@ -54,52 +63,19 @@ namespace VulkanRenderer {
         renderingInfo.layerCount = 1;
         renderingInfo.colorAttachmentCount = state.colorTargetCount;
         renderingInfo.pColorAttachments = state.colorTargetCount ? colorAttachments.data() : nullptr;
-        bool useDepthAttachment = state.hasDepthTarget && (state.rasterizer.depthTestEnabled || state.rasterizer.depthWriteEnabled);
-        bool useStencilAttachment = state.hasDepthTarget && state.rasterizer.stencilTestEnabled;
 
         renderingInfo.pDepthAttachment = useDepthAttachment ? &depthAttachment : nullptr;
         renderingInfo.pStencilAttachment = useStencilAttachment ? &depthAttachment : nullptr;
 
         vkCmdBeginRendering(commandBuffer, &renderingInfo);
+        if (useStencilAttachment) {
+            vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, state.rasterizer.stencilRef);
+        }
+
         return true;
     }
 
     void EndRenderState(VkCommandBuffer commandBuffer) {
         vkCmdEndRendering(commandBuffer);
-    }
-
-    bool ApplyRenderStateToPipeline(VulkanPipeline& pipeline, const VulkanRenderState& state) {
-        for (uint32_t i = 0; i < state.colorTargetCount; i++) {
-            const VulkanRenderTargetInfo& target = state.colorTargets[i];
-            VkFormat format = target.format;
-
-            if (format == VK_FORMAT_UNDEFINED) {
-                AllocatedImage* image = VulkanResourceManager::GetAllocatedImage(target.imageName);
-                if (!image) return false;
-                format = image->GetFormat();
-            }
-
-            pipeline.AddColorAttachmentFormat(format);
-        }
-
-        if (state.hasDepthTarget) {
-            VkFormat format = state.depthTarget.format;
-
-            if (format == VK_FORMAT_UNDEFINED) {
-                AllocatedImage* image = VulkanResourceManager::GetAllocatedImage(state.depthTarget.imageName);
-                if (!image) return false;
-                format = image->GetFormat();
-            }
-
-            pipeline.SetDepthAttachmentFormat(format);
-        }
-
-        pipeline.SetDepthTest(state.rasterizer.depthTestEnabled, state.rasterizer.depthWriteEnabled);
-        pipeline.SetDepthCompareOp(state.rasterizer.depthCompareOp);
-        pipeline.SetStencilTest(state.rasterizer.stencilTestEnabled, state.rasterizer.stencilCompareOp, state.rasterizer.stencilFailOp, state.rasterizer.stencilDepthFailOp, state.rasterizer.stencilPassOp, state.rasterizer.stencilReadMask, state.rasterizer.stencilWriteMask);
-        pipeline.SetFrontFace(state.rasterizer.frontFace);
-        pipeline.SetCullMode(state.rasterizer.cullFaceEnabled ? state.rasterizer.cullMode : VK_CULL_MODE_NONE);
-        pipeline.SetColorBlending(state.rasterizer.blendEnabled);
-        return true;
     }
 }

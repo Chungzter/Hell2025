@@ -52,17 +52,7 @@ float FetchViewZ_GlobalUV(vec2 globalUV, ivec2 viewZSize) {
 
 // Refine an intersection between [tA, tB] where dz(tA) <= 0 and dz(tB) > 0.
 // Returns true if we get a refined hit that passes the thickness gate.
-bool BinaryRefineHit(
-    vec3 P_view,
-    vec3 R_view,
-    mat4 projectionMatrix,
-    ViewportData v,
-    ivec2 viewZSize,
-    float thickness,
-    inout float tA,
-    inout float tB,
-    out vec2 outViewportUV,
-    out float outT)
+bool BinaryRefineHit(vec3 P_view, vec3 R_view, mat4 projectionMatrix, ViewportData v, ivec2 viewZSize, float thickness, inout float tA, inout float tB, out vec2 outViewportUV, out float outT)
 {
     float a = tA;
     float b = tB;

@@ -4,11 +4,11 @@
 #include "Hell/Common/Enum.h"
 #include "Hell/Containers/SlotMap.h"
 #include "Hell/Logging.h"
+#include "Hell/Physics/Physics.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Time.h"
 
 #include "Unloved/Bible/Bible.h"
-#include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/Map/MapManager.h"
 #include "Unloved/ObjectId.h"
@@ -98,10 +98,6 @@ namespace Unloved::LegacyWorld {
             break;
             i++;
         }
-
-        DobermannCreateInfo dobermannCreateInfo;
-        dobermannCreateInfo.position = glm::vec3(37.2f, 31.0f, 35.3f);
-        Unloved::World::AddDobermann(dobermannCreateInfo);
 
         KangarooCreateInfo kangarooCreateInfo;
         kangarooCreateInfo.position = glm::vec3(48, 32.6, 39);
@@ -294,6 +290,7 @@ namespace Unloved::LegacyWorld {
         Unloved::BloodSystem::CleanUp();
         Ocean::DestroyPhysicsPlane();
         Unloved::World::CleanUpAll();
+        Hell::Physics::FlushPendingRemovals();
     }
 
     DDGIVolume& GetTestDDGIVolume() {

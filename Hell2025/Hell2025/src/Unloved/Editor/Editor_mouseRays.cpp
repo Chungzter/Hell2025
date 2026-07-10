@@ -2,6 +2,7 @@
 
 #include "Hell/Logging.h"
 
+#include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include <iostream> // TODO: cleanup logging
@@ -44,9 +45,18 @@ namespace Unloved::Editor {
                 //glm::vec3 newRayOrigin = g_mouseRayOrigins[i] + t * g_mouseRayDirections[i];
                 //g_mouseRayOrigins[i] = newRayOrigin;
 
-                // Not correct but is working mostly
-                float ndcX = (2.0f * gBufferSpaceCoords.localMouseX / gBufferSpaceCoords.width) - 1.0f;
-                float ndcY = 1.0f - (2.0f * (gBufferSpaceCoords.localMouseY / gBufferSpaceCoords.height));
+                float localMouseX = gBufferSpaceCoords.localMouseX;
+                float localMouseY = gBufferSpaceCoords.localMouseY;
+                if (Editor::IsOpen()) {
+                    const Unloved::SpaceCoords windowSpaceCoords = viewport->GetWindowSpaceCoords();
+                    const float gBufferPixelsPerWindowPixelY = windowSpaceCoords.height > 0.0f
+                        ? gBufferSpaceCoords.height / windowSpaceCoords.height
+                        : 1.0f;
+                    localMouseY += static_cast<float>(ImGuiBackEnd::GetFileMenuHeight()) * gBufferPixelsPerWindowPixelY;
+                }
+
+                float ndcX = (2.0f * localMouseX / gBufferSpaceCoords.width) - 1.0f;
+                float ndcY = 1.0f - (2.0f * (localMouseY / gBufferSpaceCoords.height));
                 glm::vec4 rayOriginNdc(ndcX, ndcY, 0.0f, 1.0f);
                 glm::vec4 worldPoint = inverseProjectionViewMatrix * rayOriginNdc;
                 g_mouseRayOrigins[i] = glm::vec3(worldPoint) / worldPoint.w;

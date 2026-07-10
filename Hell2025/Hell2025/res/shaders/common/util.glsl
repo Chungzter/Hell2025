@@ -1,9 +1,17 @@
 #include "types.glsl"
 
-vec3 GetWorldRay(vec2 fragCoordWindow, mat4 inverseProjectionView, vec3 viewPos, vec2 viewportOrigin, vec2 viewportSize) {
+vec3 GetWorldRay_GL(vec2 fragCoordWindow, mat4 inverseProjectionView, vec3 viewPos, vec2 viewportOrigin, vec2 viewportSize) {
     vec2 fragCoord = fragCoordWindow - viewportOrigin;
     vec2 ndc = (fragCoord / viewportSize) * 2.0 - 1.0;
     ndc.y = -ndc.y;
+    vec4 worldH = inverseProjectionView * vec4(ndc, 1.0, 1.0);
+    vec3 worldPos = worldH.xyz / worldH.w;
+    return normalize(worldPos - viewPos);
+}
+
+vec3 GetWorldRay_VK(vec2 fragCoordWindow, mat4 inverseProjectionView, vec3 viewPos, vec2 viewportOrigin, vec2 viewportSize) {
+    vec2 fragCoord = fragCoordWindow - viewportOrigin;
+    vec2 ndc = (fragCoord / viewportSize) * 2.0 - 1.0;
     vec4 worldH = inverseProjectionView * vec4(ndc, 1.0, 1.0);
     vec3 worldPos = worldH.xyz / worldH.w;
     return normalize(worldPos - viewPos);

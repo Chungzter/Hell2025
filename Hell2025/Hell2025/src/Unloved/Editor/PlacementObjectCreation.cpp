@@ -9,6 +9,36 @@ namespace Unloved::Editor {
 
     void PlaceDirectObject(PlacementTool tool, const EditorRayResult& rayResult, const PlacementToolInfo& toolInfo) {
         
+        // Dobermanns
+        if (tool == PlacementTool::DOBERMANN) {
+            DobermannCreateInfo createInfo;
+            createInfo.position = rayResult.position;
+            createInfo.defaultEditorName = toolInfo.defaultEditorName;
+            World::AddDobermann(createInfo, SpawnOffset());
+            return;
+        }
+
+        // Mermaids
+        if (tool == PlacementTool::MERMAID) {
+            MermaidCreateInfo createInfo;
+            createInfo.position = rayResult.position;
+            createInfo.rotation = glm::vec3(0.0f);
+            createInfo.editorName = "Mermaid Shop Owner";
+            createInfo.defaultEditorName = toolInfo.defaultEditorName;
+            World::AddMermaid(createInfo, SpawnOffset());
+            return;
+        }
+
+        // Sharks
+        if (tool == PlacementTool::SHARK) {
+            SharkCreateInfo createInfo;
+            createInfo.position = rayResult.position;
+            createInfo.editorName = UNDEFINED_STRING;
+            createInfo.defaultEditorName = toolInfo.defaultEditorName;
+            World::AddShark(createInfo, SpawnOffset());
+            return;
+        }
+
         // Generic Objects
         GenericObjectType genericObjectType = GenericObjectType::UNDEFINED;
 

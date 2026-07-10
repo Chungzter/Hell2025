@@ -2,13 +2,14 @@
 #include "Unloved/Render/API/Vulkan/VK_renderer.h"
 #include "Hell/Render/API/Vulkan/Types/VK_render_state.h"
 #include "Hell/Render/API/Vulkan/Types/vk_timer.h"
+#include "Unloved/Render/API/Vulkan/VK_push_constants.h"
 
+#include <array>
 #include <string>
 #include <vector>
 
 struct AllocatedImage;
 struct VulkanBuffer;
-struct VulkanPipeline;
 
 namespace VulkanRenderer {
     struct SwapchainFrame {
@@ -22,26 +23,39 @@ namespace VulkanRenderer {
     };
 
     extern uint32_t g_frameIndex;
+    extern std::array<VulkanFrameData, FRAME_OVERLAP> g_frameData;
     extern std::vector<VkImageLayout> g_swapchainImageLayouts;
     extern bool g_staticSamplersUploaded;
+
+    void CreateFrameData();
+    void CreateSamplers();
+    void CreateStaticDescriptorSet();
+    void CreateRayQueryDescriptorSet();
+    PushConstantsFrameResources CreatePushConstantsFrameResources();
 
     void CreatePipelines();
     void CreateRenderStates();
     void CreateRenderTargets();
     void CreatePresentRenderTarget(VkExtent2D extent);
     void CreateShaders();
+    void CreateSkybox();
 
     void UpdateBindlessRenderTargetDescriptors();
 
     void UpdateBuffers();
     void UpdateBuffersUI();
 
+    bool UpdateBuffer(VkBuffer* buffer, const void* data, VkDeviceSize size);
     bool UpdateBuffer(VulkanBuffer* buffer, const void* data, VkDeviceSize size);
     bool EnsureBufferSize(uint64_t id, VkDeviceSize size);
+    bool EnsureBufferSize(VulkanBuffer* buffer, VkDeviceSize size);
 
     bool BeginSwapchainFrame(SwapchainFrame& frame);
     void EndSwapchainFrame(SwapchainFrame& frame);
     void BlitImage(VkCommandBuffer commandBuffer, const std::string& srcName, const std::string& dstName, VkFilter filter);
+    void BindVertexBuffer(VkCommandBuffer commandBuffer, VulkanBuffer* vertexBuffer);
+    void BindIndexBuffer(VkCommandBuffer commandBuffer, VulkanBuffer* indexBuffer);
+    void SetStencilReference(VkCommandBuffer commandBuffer, uint32_t stencilReference);
 
     // Compute passes
     void ComputeSkinningPass(VkCommandBuffer commandBuffer);
@@ -53,13 +67,16 @@ namespace VulkanRenderer {
     // Game passes
     void VisibilityPass(VkCommandBuffer commandBuffer);
     void MaterialResolvePass(VkCommandBuffer commandBuffer);
-    void UpdateRayQueryAccelerationStructures(VkCommandBuffer commandBuffer);
+    void UpdateRayTracing(VkCommandBuffer commandBuffer);
     void LightingPass(VkCommandBuffer commandBuffer);
+    void LightingForwardBlendedPass(VkCommandBuffer commandBuffer);
+    void SkyboxPass(VkCommandBuffer commandBuffer);
+    void DebugViewPass(VkCommandBuffer commandBuffer);
+    void HairPass(VkCommandBuffer commandBuffer);
 
     // Present Pass
     void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView);
 
     bool BeginRenderState(VkCommandBuffer commandBuffer, const VulkanRenderState& state, VkExtent2D extent);
     void EndRenderState(VkCommandBuffer commandBuffer);
-    bool ApplyRenderStateToPipeline(VulkanPipeline& pipeline, const VulkanRenderState& state);
 }

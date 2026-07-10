@@ -12,7 +12,7 @@ readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
     ViewportData viewportData[];
 };
 
-vec3 GetWorldRay(vec2 fragCoordWindow, int viewportIndex) {
+vec3 GetWorldRay_GL(vec2 fragCoordWindow, int viewportIndex) {
     vec2 viewportOrigin = vec2(viewportData[viewportIndex].xOffset, viewportData[viewportIndex].yOffset);
     vec2 viewportSize = vec2(viewportData[viewportIndex].width, viewportData[viewportIndex].height);
     vec2 fragCoord = fragCoordWindow - viewportOrigin;
@@ -32,7 +32,7 @@ void main() {
     vec3 skyColor = texture(cubeMap, TexCoords).rgb;
     vec3 skyLinear = pow(skyColor, vec3(2.6));
 
-    vec3 rayDir = GetWorldRay(gl_FragCoord.xy, ViewportIndex);
+    vec3 rayDir = GetWorldRay_GL(gl_FragCoord.xy, ViewportIndex);
 
     vec3 horizonColor = vec3(0.6, 0.2, 0.6);
     vec3 downColor = vec3(0.4);

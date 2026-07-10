@@ -11,15 +11,24 @@ float saturate(float value) {
 }
 
 void main() {
-	ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
     ivec2 outputImageSize = imageSize(GBufferBaseColorMetallicImage);
-    vec2 uv_screenspace = vec2(pixelCoords + 0.5) / vec2(outputImageSize);
+	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
 
-    vec4 baseColorMetallic = imageLoad(GBufferBaseColorMetallicImage, pixelCoords);
-    vec4 normalXYRoughnessMisc = imageLoad(GBufferNormalXYRoughnessMiscImage, pixelCoords);
-    vec4 velocityXYOcclusionSubSurface = imageLoad(GBufferVelocityXYOcclusionSubSurfaceImage, pixelCoords);
+    // Don't do work outside of screen bounds
+    if (any(greaterThanEqual(px, outputImageSize))) {
+        return;
+    }
 
-    float decalMask = texture(DecalMaskTexture, uv_screenspace).r;
+    float decalMask = texelFetch(DecalMaskTexture, px, 0).r;
+
+    // Don't do work if there is no decal here
+    if (decalMask <= 0.0) {
+        return;
+    }
+
+    vec4 baseColorMetallic = imageLoad(GBufferBaseColorMetallicImage, px);
+    vec4 normalXYRoughnessMisc = imageLoad(GBufferNormalXYRoughnessMiscImage, px);
+    vec4 velocityXYOcclusionSubSurface = imageLoad(GBufferVelocityXYOcclusionSubSurfaceImage, px);
 
     vec3 bloodBaseColor = vec3(0.2, 0.00, 0);
     float bloodRoughness = 0.125;
@@ -31,7 +40,7 @@ void main() {
     float outputRoughness = mix(normalXYRoughnessMisc.b, bloodRoughness, decalMask);
     float outputAO = mix(velocityXYOcclusionSubSurface.b, bloodAO, decalMask);
 
-   imageStore(GBufferBaseColorMetallicImage, pixelCoords, vec4(outputBaseColor, outputMetallic));
-   imageStore(GBufferNormalXYRoughnessMiscImage, pixelCoords, vec4(normalXYRoughnessMisc.rg, outputRoughness, normalXYRoughnessMisc.a));
-   imageStore(GBufferVelocityXYOcclusionSubSurfaceImage, pixelCoords, vec4(velocityXYOcclusionSubSurface.rg, outputAO, velocityXYOcclusionSubSurface.a));
+   imageStore(GBufferBaseColorMetallicImage, px, vec4(outputBaseColor, outputMetallic));
+   imageStore(GBufferNormalXYRoughnessMiscImage, px, vec4(normalXYRoughnessMisc.rg, outputRoughness, normalXYRoughnessMisc.a));
+   imageStore(GBufferVelocityXYOcclusionSubSurfaceImage, px, vec4(velocityXYOcclusionSubSurface.rg, outputAO, velocityXYOcclusionSubSurface.a));
 }

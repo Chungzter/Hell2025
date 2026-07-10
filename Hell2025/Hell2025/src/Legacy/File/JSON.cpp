@@ -49,6 +49,14 @@ namespace nlohmann {
         };
     }
 
+    void to_json(nlohmann::json& j, const DobermannCreateInfo& createInfo) {
+        j = nlohmann::json{
+            {"Position", createInfo.position},
+            {"Rotation", createInfo.rotation},
+            {"EditorName", createInfo.editorName}
+        };
+    }
+
     void to_json(nlohmann::json& j, const DoorCreateInfo& createInfo) {
         j = nlohmann::json{
             {"Position", createInfo.position},
@@ -293,6 +301,12 @@ namespace nlohmann {
         createInfo.probeSpacing = j.value("ProbeSpacing", 0.75f);
         createInfo.editorName = j.value("EditorName", UNDEFINED_STRING);
         createInfo.saveToFile = j.value("SaveToFile", true);
+    }
+
+    void from_json(const nlohmann::json& j, DobermannCreateInfo& info) {
+        info.position = j.value("Position", glm::vec3(0.0f));
+        info.rotation = j.value("Rotation", j.value("EulerDirection", glm::vec3(0.0f)));
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
     void from_json(const nlohmann::json& j, DoorCreateInfo& info) {
@@ -557,6 +571,7 @@ namespace JSON {
         CreateInfoCollection createInfoCollection;
         createInfoCollection.christmasLights = json.value("ChristmasLights", std::vector<ChristmasLightsCreateInfo>{});
         createInfoCollection.ddgiVolumes = json.value("DDGIVolumes", std::vector<DDGIVolumeCreateInfo>{});
+        createInfoCollection.dobermanns = json.value("Dobermanns", std::vector<DobermannCreateInfo>{});
         createInfoCollection.doors = json.value("Doors", std::vector<DoorCreateInfo>{});
         createInfoCollection.fences = json.value("Fences", std::vector<FenceCreateInfo>{});
         createInfoCollection.fireplaces = json.value("Fireplaces", std::vector<FireplaceCreateInfo>{});
@@ -584,6 +599,7 @@ namespace JSON {
         nlohmann::json json;
         json["ChristmasLights"] = createInfoCollection.christmasLights;
         json["DDGIVolumes"] = createInfoCollection.ddgiVolumes;
+        json["Dobermanns"] = createInfoCollection.dobermanns;
         json["Doors"] = createInfoCollection.doors;
         json["Drawers"] = createInfoCollection.genericObjects;
         json["Fences"] = createInfoCollection.fences;

@@ -293,8 +293,8 @@ void AnimatedGameObject::CleanUp() {
     Hell::Physics::MarkRagdollForRemoval(m_ragdollId);
 }
 
-void AnimatedGameObject::SetMeshWoundMaskTextureIndex(const std::string& meshName, int32_t woundMaskTextureIndex) {
-    m_animatedMeshNodes.SetMeshWoundMaskTextureIndex(meshName, woundMaskTextureIndex);
+void AnimatedGameObject::SetMeshWoundMaskArrayIndex(const std::string& meshName, int32_t woundMaskTextureIndex) {
+    m_animatedMeshNodes.SetMeshWoundMaskArrayIndex(meshName, woundMaskTextureIndex);
 }
 
 void AnimatedGameObject::SetBlendingModeByMeshName(const std::string& meshName, BlendingMode blendingMode) {
@@ -309,14 +309,6 @@ void AnimatedGameObject::SetMeshMaterialByMeshIndex(int meshIndex, const std::st
     m_animatedMeshNodes.SetMeshMaterialByMeshIndex(meshIndex, materialName);
 }
 
-void AnimatedGameObject::SetMeshToRenderAsGlassByMeshIndex(const std::string& meshName) {
-    m_animatedMeshNodes.SetMeshToRenderAsGlassByMeshIndex(meshName);
-}
-
-void AnimatedGameObject::SetMeshEmissiveColorTextureByMeshName(const std::string& meshName, const std::string& textureName) {
-    m_animatedMeshNodes.SetMeshEmissiveColorTextureByMeshName(meshName, textureName);
-}
-
 void AnimatedGameObject::SetMeshWoundMaterialByMeshName(const std::string& meshName, const std::string& textureName) {
     m_animatedMeshNodes.SetMeshWoundMaterialByMeshName(meshName, textureName);
 }
@@ -327,6 +319,10 @@ void AnimatedGameObject::SetAllMeshMaterials(const std::string& materialName) {
 
 void AnimatedGameObject::SetAllMeshBlendingModes(BlendingMode blendingMode) {
     m_animatedMeshNodes.SetAllMeshBlendingModes(blendingMode);
+}
+
+void AnimatedGameObject::SetExcludeFromVulkanTLAS(bool exclude) {
+    m_animatedMeshNodes.SetExcludeFromVulkanTLAS(exclude);
 }
 
 void AnimatedGameObject::SetExclusiveViewportIndex(int index) {

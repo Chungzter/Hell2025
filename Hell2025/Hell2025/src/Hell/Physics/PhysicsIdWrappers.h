@@ -12,13 +12,20 @@ namespace physx {
 }
 
 namespace Hell::Physics {
-    void AddForceToRagdoll(uint64_t physicsId, const glm::vec3& force);
+    void AddForceToRagdoll(uint64_t physicsId, const glm::vec3& force, bool wakeIfDisabled);
+    void AddImpulseToRagdoll(uint64_t physicsId, const glm::vec3& impulse, bool wakeIfDisabled);
+    void AddImpulseAtPositionToRagdoll(uint64_t physicsId, const glm::vec3& impulse, const glm::vec3& position, bool wakeIfDisabled);
+    void AddAngularVelocityChangeAtPositionToRagdoll(uint64_t physicsId, const glm::vec3& velocityChange, const glm::vec3& position, bool wakeIfDisabled);
     std::vector<physx::PxRigidActor*> GetRagdollPxRigidActors(uint64_t ragdollId);
 
     bool RigidDynamicIsKinematic(uint64_t rigidDynamicId);
     bool RigidDynamicIsDirty(uint64_t rigidDynamicId);
     glm::mat4 GetRigidDynamicWorldMatrix(uint64_t rigidDynamicId);
     void AddFoceToRigidDynamic(uint64_t rigidDynamicId, glm::vec3 force);
+    void AddVelocityChangeToRigidDynamic(uint64_t rigidDynamicId, glm::vec3 velocityChange);
+    void AddImpulseToRigidDynamic(uint64_t rigidDynamicId, glm::vec3 impulse);
+    void AddImpulseAtPositionToRigidDynamic(uint64_t rigidDynamicId, glm::vec3 impulse, glm::vec3 position);
+    void AddAngularVelocityChangeAtPositionToRigidDynamic(uint64_t rigidDynamicId, glm::vec3 velocityChange, glm::vec3 position);
     void ActivateRigidDynamicPhysics(uint64_t rigidDynamicId);
     void DeactivateRigidDynamicPhysics(uint64_t rigidDynamicId);
     void SetRigidDynamicUserData(uint64_t rigidDynamicId, PhysicsUserData physicsUserData);

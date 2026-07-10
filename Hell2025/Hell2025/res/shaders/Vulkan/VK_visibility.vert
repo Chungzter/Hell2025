@@ -44,9 +44,17 @@ void main() {
     RenderItem renderItem = renderItems.data[globalInstanceIndex];
     Material material = materials.data[renderItem.materialIndex];
     mat4 projectionView = viewportData.data[viewportIndex].projectionViewReverseZ;
+    vec4 worldPos = renderItem.modelMatrix * vec4(a_position, 1.0);
+
+    if (pushConstant.data.useDepthOffset != 0u) {
+        vec3 cameraPos = viewportData.data[viewportIndex].viewPos.xyz;
+        vec3 awayFromCamera = normalize(worldPos.xyz - cameraPos);
+        float depthBiasMeters = 0.01;
+        worldPos.xyz += awayFromCamera * depthBiasMeters;
+    }
 
     v_globalInstanceIndex = globalInstanceIndex;
     v_uv = a_uv;
     v_baseColorTextureIndex = material.basecolor;
-    gl_Position = projectionView * renderItem.modelMatrix * vec4(a_position, 1.0);
+    gl_Position = projectionView * worldPos;
 }

@@ -270,6 +270,7 @@ void Ragdoll::Init(const glm::vec3& spawnPosition, const glm::vec3& spawnEulerRo
     }
 
     DisableSimulation();
+    RecalculateRigidMass();
 }
 
 void Ragdoll::Update() {
@@ -280,6 +281,38 @@ void Ragdoll::Update() {
     //}
 }
 
+void Ragdoll::RecalculateRigidMass() {
+    RagdollData* ragdollData = Hell::ResourceManager::GetRagdollDataByName(m_ragdollName);
+    if (!ragdollData) return;
+
+    const size_t count = std::min(m_pxRigidDynamics.size(), ragdollData->m_markers.size());
+    for (size_t i = 0; i < count; ++i) {
+        const RagdollMarker& marker = ragdollData->m_markers[i];
+        if (marker.geometryDescriptionComponent.type == RdGeometryType::kConvexHull) {
+            continue;
+        }
+
+        PxRigidDynamic* pxRigidDynamic = m_pxRigidDynamics[i];
+        if (!pxRigidDynamic) continue;
+
+        const PxU32 shapeCount = pxRigidDynamic->getNbShapes();
+        if (shapeCount == 0) continue;
+
+        std::vector<PxShape*> shapes(shapeCount);
+        pxRigidDynamic->getShapes(shapes.data(), shapeCount);
+
+        float volume = 0.0f;
+        for (PxShape* shape : shapes) {
+            volume += Hell::Physics::ComputeShapeVolume(shape);
+        }
+        if (volume <= 0.0f) continue;
+
+        const float density = marker.densityCustom > 0.0f ? static_cast<float>(marker.densityCustom) : 1.0f;
+        const float mass = volume * density;
+        PxRigidBodyExt::setMassAndUpdateInertia(*pxRigidDynamic, PxReal(mass));
+    }
+}
+
 void Ragdoll::MarkForRemoval() {
     m_markedForRemoval = true;
 }
@@ -288,14 +321,86 @@ bool Ragdoll::IsMarkedForRemoval() const {
     return m_markedForRemoval;
 }
 
-void Ragdoll::AddForce(uint64_t physicsId, const glm::vec3& force) {
+void Ragdoll::AddForce(uint64_t physicsId, const glm::vec3& force, bool wakeIfDisabled) {
     for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
+        if (!pxRigidDynamic) continue;
+
         PhysicsUserData* physicsUserData = static_cast<PhysicsUserData*>(pxRigidDynamic->userData);
         if (!physicsUserData) continue;
 
         if (physicsUserData->physicsId == physicsId) {
-            EnableSimulation();
-            pxRigidDynamic->addForce(PxVec3(force.x, force.y, force.z), PxForceMode::eFORCE, true);
+            if (!m_simulationEnabled) {
+                if (!wakeIfDisabled) return;
+                EnableSimulation();
+            }
+
+            pxRigidDynamic->addForce(PxVec3(force.x, force.y, force.z), PxForceMode::eVELOCITY_CHANGE, true);
+
+            return;
+        }
+    }
+}
+
+void Ragdoll::AddImpulse(uint64_t physicsId, const glm::vec3& impulse, bool wakeIfDisabled) {
+    for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
+        if (!pxRigidDynamic) continue;
+
+        PhysicsUserData* physicsUserData = static_cast<PhysicsUserData*>(pxRigidDynamic->userData);
+        if (!physicsUserData) continue;
+
+        if (physicsUserData->physicsId == physicsId) {
+            if (!m_simulationEnabled) {
+                if (!wakeIfDisabled) return;
+                EnableSimulation();
+            }
+
+            pxRigidDynamic->addForce(PxVec3(impulse.x, impulse.y, impulse.z), PxForceMode::eIMPULSE, true);
+
+            return;
+        }
+    }
+}
+
+void Ragdoll::AddImpulseAtPosition(uint64_t physicsId, const glm::vec3& impulse, const glm::vec3& position, bool wakeIfDisabled) {
+    for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
+        if (!pxRigidDynamic) continue;
+
+        PhysicsUserData* physicsUserData = static_cast<PhysicsUserData*>(pxRigidDynamic->userData);
+        if (!physicsUserData) continue;
+
+        if (physicsUserData->physicsId == physicsId) {
+            if (!m_simulationEnabled) {
+                if (!wakeIfDisabled) return;
+                EnableSimulation();
+            }
+
+            PxVec3 pxImpulse(impulse.x, impulse.y, impulse.z);
+            PxVec3 pxPosition(position.x, position.y, position.z);
+            PxRigidBodyExt::addForceAtPos(*pxRigidDynamic, pxImpulse, pxPosition, PxForceMode::eIMPULSE, true);
+
+            return;
+        }
+    }
+}
+
+void Ragdoll::AddAngularVelocityChangeAtPosition(uint64_t physicsId, const glm::vec3& velocityChange, const glm::vec3& position, bool wakeIfDisabled) {
+    for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
+        if (!pxRigidDynamic) continue;
+
+        PhysicsUserData* physicsUserData = static_cast<PhysicsUserData*>(pxRigidDynamic->userData);
+        if (!physicsUserData) continue;
+
+        if (physicsUserData->physicsId == physicsId) {
+            if (!m_simulationEnabled) {
+                if (!wakeIfDisabled) return;
+                EnableSimulation();
+            }
+
+            PxVec3 pxVelocityChange(velocityChange.x, velocityChange.y, velocityChange.z);
+            PxVec3 pxPosition(position.x, position.y, position.z);
+            PxVec3 centerOfMass = pxRigidDynamic->getGlobalPose().transform(pxRigidDynamic->getCMassLocalPose().p);
+            PxVec3 angularVelocityChange = (pxPosition - centerOfMass).cross(pxVelocityChange);
+            pxRigidDynamic->addTorque(angularVelocityChange, PxForceMode::eVELOCITY_CHANGE, true);
 
             return;
         }
@@ -321,6 +426,18 @@ void Ragdoll::EnableSimulation() {
         pxRigidDynamic->wakeUp();
     }
     m_simulationEnabled = true;
+}
+
+void Ragdoll::SetSpawnPosition(const glm::vec3& position) {
+    m_spawnTransform.position = position;
+    SetToInitialPose();
+    UpdateWorldSpaceAABBs(0.0f);
+}
+
+void Ragdoll::SetSpawnRotation(const glm::vec3& rotation) {
+    m_spawnTransform.rotation = rotation;
+    SetToInitialPose();
+    UpdateWorldSpaceAABBs(0.0f);
 }
 
 void Ragdoll::SetToInitialPose() {

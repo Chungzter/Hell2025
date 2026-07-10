@@ -3,19 +3,15 @@
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_swapchain_manager.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
-#include "Hell/Render/API/Vulkan/Types/VK_render_state.h"
-#include "Hell/Render/API/Vulkan/Types/vk_shader.h"
 #include "Hell/Render/VertexAttributes.h"
 #include "Unloved/Render/API/Vulkan/VK_push_constants.h"
+#include "Unloved/Render/RendererConstants.h"
 
 namespace {
 
     void CreateLoadingScreenPipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("FullscreenTriangle");
-        if (!shader) return;
-
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("LoadingScreen");
-        pipeline.SetShader(shader);
+        pipeline.SetShader("FullscreenTriangle");
         pipeline.AddColorAttachmentFormat(VulkanSwapchainManager::GetSwapchainImageFormat());
         pipeline.SetDepthTest(false, false);
         pipeline.SetCullMode(VK_CULL_MODE_NONE);
@@ -23,134 +19,114 @@ namespace {
     }
 
     void CreatePresentPipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("Present");
-        if (!shader) return;
-
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("Present");
-        pipeline.SetShader(shader);
-        pipeline.AddDescriptorSetLayout(VulkanResourceManager::GetDescriptorSetLayout("StaticDescriptorSet"));
+        pipeline.SetShader("Present");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
         pipeline.AddColorAttachmentFormat(VulkanSwapchainManager::GetSwapchainImageFormat());
         pipeline.SetDepthTest(false, false);
         pipeline.SetCullMode(VK_CULL_MODE_NONE);
         pipeline.Build();
     }
 
-    void CreateVisibilityPipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("Visibility");
-        if (!shader) return;
+    // Skybox
 
-        VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("Visibility");
-        if (!renderState) return;
-
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("Visibility");
-        pipeline.SetShader(shader);
-        pipeline.AddPushConstant(sizeof(PushConstantsVisibility), VK_SHADER_STAGE_VERTEX_BIT);
-        if (!VulkanRenderer::ApplyRenderStateToPipeline(pipeline, *renderState)) return;
-        pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
+    void CreateSkyboxPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("Skybox");
+        pipeline.SetShader("Skybox");
+        pipeline.SetRenderState("Skybox");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsSkybox), VK_SHADER_STAGE_FRAGMENT_BIT);
         pipeline.Build();
     }
 
-    void CreateVisibilitySkinnedPipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("VisibilitySkinned");
-        if (!shader) return;
+    // Visiblity
 
-        VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("Visibility");
-        if (!renderState) return;
-
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("VisibilitySkinned");
-        pipeline.SetShader(shader);
+    void CreateVisibilityPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("Visibility");
+        pipeline.SetShader("Visibility");
+        pipeline.SetRenderState("Visibility");
         pipeline.AddPushConstant(sizeof(PushConstantsVisibility), VK_SHADER_STAGE_VERTEX_BIT);
-        if (!VulkanRenderer::ApplyRenderStateToPipeline(pipeline, *renderState)) return;
+        pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
         pipeline.Build();
     }
 
     void CreateVisibilityAlphaDiscardPipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("VisibilityAlphaDiscard");
-        if (!shader) return;
-
-        VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("VisibilityAlphaDiscard");
-        if (!renderState) return;
-
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("VisibilityAlphaDiscard");
-        pipeline.SetShader(shader);
-        pipeline.AddDescriptorSetLayout(VulkanResourceManager::GetDescriptorSetLayout("StaticDescriptorSet"));
+        pipeline.SetShader("VisibilityAlphaDiscard");
+        pipeline.SetRenderState("VisibilityAlphaDiscard");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
         pipeline.AddPushConstant(sizeof(PushConstantsVisibility), VK_SHADER_STAGE_VERTEX_BIT);
-        if (!VulkanRenderer::ApplyRenderStateToPipeline(pipeline, *renderState)) return;
         pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
         pipeline.Build();
     }
 
-    void CreateVisibilitySkinnedAlphaDiscardPipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("VisibilitySkinnedAlphaDiscard");
-        if (!shader) return;
-
-        VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("VisibilityAlphaDiscard");
-        if (!renderState) return;
-
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("VisibilitySkinnedAlphaDiscard");
-        pipeline.SetShader(shader);
-        pipeline.AddDescriptorSetLayout(VulkanResourceManager::GetDescriptorSetLayout("StaticDescriptorSet"));
-        pipeline.AddPushConstant(sizeof(PushConstantsVisibility), VK_SHADER_STAGE_VERTEX_BIT);
-        if (!VulkanRenderer::ApplyRenderStateToPipeline(pipeline, *renderState)) return;
-        pipeline.Build();
-    }
-
     void CreateComputeSkinningPipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("ComputeSkinning");
-        if (!shader) return;
-
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("ComputeSkinning");
-        pipeline.SetShader(shader);
+        pipeline.SetShader("ComputeSkinning");
         pipeline.AddPushConstant(sizeof(PushConstantsSkinning), VK_SHADER_STAGE_COMPUTE_BIT);
         pipeline.Build();
     }
 
     void CreateComputeRedTestPipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("ComputeRedTest");
-        if (!shader) return;
-
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("ComputeRedTest");
-        pipeline.SetShader(shader);
-        pipeline.AddDescriptorSetLayout(VulkanResourceManager::GetDescriptorSetLayout("StaticDescriptorSet"));
+        pipeline.SetShader("ComputeRedTest");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
         pipeline.Build();
     }
 
-    void CreateLightingDeferredPipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("LightingDeferred");
-        if (!shader) return;
+    // Material Resolve
 
+    void CreateMaterialResolvePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("MaterialResolve");
+        pipeline.SetShader("MaterialResolve");
+        pipeline.SetRenderState("MaterialResolve");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsMaterialResolve), VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.Build();
+    }
+
+    // Lighting
+
+    void CreateLightingDeferredPipeline() {
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("LightingDeferred");
-        pipeline.SetShader(shader);
-        pipeline.AddDescriptorSetLayout(VulkanResourceManager::GetDescriptorSetLayout("StaticDescriptorSet"));
+        pipeline.SetShader("LightingDeferred");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddDescriptorSetLayout("RayQueryDescriptorSet");
         pipeline.AddPushConstant(sizeof(PushConstantsDeferredLighting), VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.SetRenderState("LightingDeferred");
+        pipeline.Build();
+    }
+
+    void CreateLightingForwardBlendedPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("LightingForwardBlended");
+        pipeline.SetShader("LightingForward");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddDescriptorSetLayout("RayQueryDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDeferredLighting), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.SetRenderState("LightingForwardBlended");
+        pipeline.SetVertexDescription<Vertex>();
+        pipeline.Build();
+    }
+
+    // Debug
+
+    void CreateDebugViewPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugView");
+        pipeline.SetShader("DebugView");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDebugView), VK_SHADER_STAGE_FRAGMENT_BIT);
         pipeline.AddColorAttachmentFormat(VK_FORMAT_R16G16B16A16_SFLOAT);
         pipeline.SetDepthTest(false, false);
         pipeline.SetCullMode(VK_CULL_MODE_NONE);
         pipeline.Build();
     }
 
-    void CreateMaterialResolvePipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("MaterialResolve");
-        if (!shader) return;
-
-        VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("MaterialResolve");
-        if (!renderState) return;
-
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("MaterialResolve");
-        pipeline.SetShader(shader);
-        pipeline.AddDescriptorSetLayout(VulkanResourceManager::GetDescriptorSetLayout("StaticDescriptorSet"));
-        pipeline.AddPushConstant(sizeof(PushConstantsMaterialResolve), VK_SHADER_STAGE_FRAGMENT_BIT);
-        if (!VulkanRenderer::ApplyRenderStateToPipeline(pipeline, *renderState)) return;
-        pipeline.Build();
-    }
+    // UI
 
     void CreateUIPipeline() {
-        VulkanShader* shader = VulkanResourceManager::GetShader("UI");
-        if (!shader) return;
-
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("UI");
-        pipeline.SetShader(shader);
-        pipeline.AddDescriptorSetLayout(VulkanResourceManager::GetDescriptorSetLayout("StaticDescriptorSet"));
+        pipeline.SetShader("UI");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
         pipeline.AddPushConstant(sizeof(PushConstantsUI), VK_SHADER_STAGE_VERTEX_BIT);
         pipeline.AddColorAttachmentFormat(VulkanSwapchainManager::GetSwapchainImageFormat());
         pipeline.SetDepthTest(false, false);
@@ -159,21 +135,76 @@ namespace {
         pipeline.SetVertexDescription<Vertex2D>();
         pipeline.Build();
     }
+
+    //void CreateHairDepthPrepPipeline() {
+    //    VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairDepthPrep");
+    //    pipeline.SetShader("HairDepthPrep");
+    //    pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+    //    pipeline.SetRenderState("HairDepthPrep");
+    //    pipeline.SetSampleCount(VK_SAMPLE_COUNT_4_BIT);
+    //    pipeline.SetCullMode(VK_CULL_MODE_NONE);
+    //    pipeline.Build();
+    //}
+    //
+    //void CreateHairDepthPrePassPipeline() {
+    //    VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairDepthPrePass");
+    //    pipeline.SetShader("HairDepthPrePass");
+    //    pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+    //    pipeline.AddPushConstant(sizeof(PushConstantsVisibility), VK_SHADER_STAGE_VERTEX_BIT);
+    //    pipeline.SetRenderState("HairDepthPrePass");
+    //    pipeline.SetSampleCount(VK_SAMPLE_COUNT_4_BIT);
+    //    pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
+    //    pipeline.Build();
+    //}
+    //
+    //void CreateHairLightingPipeline() {
+    //    VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairLighting");
+    //    pipeline.SetShader("HairLighting");
+    //    pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+    //    pipeline.AddDescriptorSetLayout("RayQueryDescriptorSet");
+    //    pipeline.AddPushConstant(sizeof(PushConstantsHair), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+    //    pipeline.SetRenderState("HairLighting");
+    //    pipeline.SetSampleCount(VK_SAMPLE_COUNT_4_BIT);
+    //    pipeline.SetVertexDescription<Vertex>();
+    //    pipeline.Build();
+    //}
+    //
+    //void CreateHairCompositePipeline() {
+    //    VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairComposite");
+    //    pipeline.SetShader("HairComposite");
+    //    pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+    //    pipeline.Build();
+    //}
+
 }
 
 namespace VulkanRenderer {
 
     void CreatePipelines() {
+        // Loading screen
         CreateLoadingScreenPipeline();
-        CreatePresentPipeline();
-        CreateVisibilityPipeline();
-        CreateVisibilitySkinnedPipeline();
-        CreateVisibilityAlphaDiscardPipeline();
-        CreateVisibilitySkinnedAlphaDiscardPipeline();
+
+        // Game
         CreateComputeSkinningPipeline();
-        CreateComputeRedTestPipeline();
-        CreateLightingDeferredPipeline();
+        CreateVisibilityPipeline();
+        CreateVisibilityAlphaDiscardPipeline();
         CreateMaterialResolvePipeline();
+        CreateLightingDeferredPipeline();
+        CreateLightingForwardBlendedPipeline();
+        CreateSkyboxPipeline();
+        CreateDebugViewPipeline();
+
+        // Misc
+        CreateComputeRedTestPipeline();
+
+        // Final present
+        CreatePresentPipeline();
+
+        // CreateHairDepthPrepPipeline();
+        // CreateHairDepthPrePassPipeline();
+        // CreateHairLightingPipeline();
+        // CreateHairCompositePipeline();
+
         CreateUIPipeline();
     }
 }

@@ -26,11 +26,14 @@ void main() {
 
     vec4 worldPos = modelMatrix * vec4(a_position, 1.0);
 
-    gl_Position = projectionView * worldPos;
-    
     if (u_depthOffset) {
-        gl_Position.z -= 0.0001;
+        vec3 cameraPos = viewportDataArr[viewportIndex].viewPos.xyz;
+        vec3 awayFromCamera = normalize(worldPos.xyz - cameraPos);
+        float depthBiasMeters = 0.01;
+        worldPos.xyz += awayFromCamera * depthBiasMeters;
     }
+
+    gl_Position = projectionView * worldPos;
     
     v_uv = a_uv;
 }

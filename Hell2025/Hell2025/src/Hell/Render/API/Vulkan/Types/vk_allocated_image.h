@@ -6,7 +6,7 @@
 
 struct AllocatedImage {
     AllocatedImage() = default;
-    AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkImageUsageFlags usage, std::string debugName);
+    AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkSampleCountFlagBits sampleCount, VkImageUsageFlags usage, std::string debugName);
     AllocatedImage(const AllocatedImage&) = delete;
     AllocatedImage& operator=(const AllocatedImage&) = delete;
     AllocatedImage(AllocatedImage&& other) noexcept;
@@ -21,6 +21,7 @@ struct AllocatedImage {
     VkExtent3D GetExtent() const        { return m_extent; }
     VkExtent2D GetExtent2D() const      { return { m_extent.width, m_extent.height }; }
     VkFormat GetFormat() const          { return m_format; }
+    VkSampleCountFlagBits GetSampleCount() const { return m_sampleCount; }
     VkImage GetImage() const            { return m_image; }
     VkImageView GetImageView() const    { return m_imageView; }
     VkImageView GetDepthOnlyImageView() const { return m_depthOnlyImageView != VK_NULL_HANDLE ? m_depthOnlyImageView : m_imageView; }
@@ -35,6 +36,7 @@ private:
     VmaAllocation m_allocation = VK_NULL_HANDLE;
     VkExtent3D m_extent = {};
     VkFormat m_format = VK_FORMAT_UNDEFINED;
+    VkSampleCountFlagBits m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
 
     VkImageLayout m_currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     VkAccessFlags2 m_currentAccessMask = 0;

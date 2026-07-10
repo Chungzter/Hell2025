@@ -64,6 +64,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
         meshNode.forceDynamic = false;
         meshNode.castShadows = true;
         meshNode.castCSMShadows = false;
+        meshNode.excludeFromVulkanTLAS = false;
         meshNode.emissiveColor = glm::vec3(0.0f);
         meshNode.tintColor = glm::vec3(1.0f);
         meshNode.rigidDynamicId = 0;
@@ -101,6 +102,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
         meshNode->decalType = createInfo.decalType;
         meshNode->forceDynamic = createInfo.forceDynamic;
         meshNode->castShadows = createInfo.castShadows;
+        meshNode->excludeFromVulkanTLAS = createInfo.excludeFromVulkanTLAS;
         meshNode->emissiveColor = createInfo.emissiveColor;
         meshNode->tintColor = createInfo.tintColor;
         meshNode->addToNavMesh = createInfo.addtoNavMesh;
@@ -565,8 +567,8 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.renderItem.materialIndex = meshNode.materialIndex;
 
         Hell::Bit::SetState(meshNode.renderItem.miscFlags, MISC_FLAG_DYNAMIC_OBJECT, !MeshNodeIsStatic((int32_t)i));
-        Hell::Bit::SetState(meshNode.renderItem.shadowBit, SHADOW_BIT_CAST_SHADOW, meshNode.castShadows);
-        Hell::Bit::SetState(meshNode.renderItem.shadowBit, SHADOW_BIT_CAST_CSM_SHADOW, meshNode.castCSMShadows);
+        Hell::Bit::SetState(meshNode.renderItem.shadowFlags, SHADOW_FLAG_POINT_LIGHT, meshNode.castShadows);
+        Hell::Bit::SetState(meshNode.renderItem.shadowFlags, SHADOW_FLAG_CSM, meshNode.castCSMShadows);
 
         if (m_firstFrame) {
             meshNode.renderItem.prevModelMatrix = meshNode.worldMatrix;
@@ -655,6 +657,46 @@ void MeshNodes::AddForceToPhsyics(const glm::vec3 force) {
         if (meshNode.rigidDynamicId != 0) {
             if (!Hell::Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId)) {
                  Hell::Physics::AddFoceToRigidDynamic(meshNode.rigidDynamicId, force);
+            }
+        }
+    }
+}
+
+void MeshNodes::AddVelocityChangeToPhysics(const glm::vec3 velocityChange) {
+    for (MeshNode& meshNode : m_meshNodes) {
+        if (meshNode.rigidDynamicId != 0) {
+            if (!Hell::Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId)) {
+                Hell::Physics::AddVelocityChangeToRigidDynamic(meshNode.rigidDynamicId, velocityChange);
+            }
+        }
+    }
+}
+
+void MeshNodes::AddImpulseToPhysics(const glm::vec3 impulse) {
+    for (MeshNode& meshNode : m_meshNodes) {
+        if (meshNode.rigidDynamicId != 0) {
+            if (!Hell::Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId)) {
+                Hell::Physics::AddImpulseToRigidDynamic(meshNode.rigidDynamicId, impulse);
+            }
+        }
+    }
+}
+
+void MeshNodes::AddImpulseAtPositionToPhysics(const glm::vec3 impulse, const glm::vec3 position) {
+    for (MeshNode& meshNode : m_meshNodes) {
+        if (meshNode.rigidDynamicId != 0) {
+            if (!Hell::Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId)) {
+                Hell::Physics::AddImpulseAtPositionToRigidDynamic(meshNode.rigidDynamicId, impulse, position);
+            }
+        }
+    }
+}
+
+void MeshNodes::AddAngularVelocityChangeAtPositionToPhysics(const glm::vec3 velocityChange, const glm::vec3 position) {
+    for (MeshNode& meshNode : m_meshNodes) {
+        if (meshNode.rigidDynamicId != 0) {
+            if (!Hell::Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId)) {
+                Hell::Physics::AddAngularVelocityChangeAtPositionToRigidDynamic(meshNode.rigidDynamicId, velocityChange, position);
             }
         }
     }

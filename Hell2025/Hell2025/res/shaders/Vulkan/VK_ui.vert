@@ -23,6 +23,11 @@ layout(location = 1) out vec4 v_color;
 layout(location = 2) flat out uint v_textureIndex;
 layout(location = 3) flat out uint v_filterMode;
 
+out gl_PerVertex {
+    vec4 gl_Position;
+    float gl_ClipDistance[4];
+};
+
 void main() {
     RenderItemUIBuffer renderItems = RenderItemUIBuffer(pushConstant.data.renderItemsDeviceAddress);
     RenderItemUI renderItem = renderItems.data[gl_InstanceIndex];
@@ -31,5 +36,20 @@ void main() {
     v_color = a_color;
     v_textureIndex = renderItem.textureIndex;
     v_filterMode = renderItem.filterMode;
-    gl_Position = vec4(a_position, 0.0, 1.0);
+
+    vec4 position = vec4(a_position, 0.0, 1.0);
+
+    float ndcLeft = (renderItem.clipMinX / pushConstant.data.renderTargetWidth) * 2.0 - 1.0;
+    float ndcRight = (renderItem.clipMaxX / pushConstant.data.renderTargetWidth) * 2.0 - 1.0;
+    float ndcTop = 1.0 - (renderItem.clipMinY / pushConstant.data.renderTargetHeight) * 2.0;
+    float ndcBottom = 1.0 - (renderItem.clipMaxY / pushConstant.data.renderTargetHeight) * 2.0;
+
+    vec2 ndc = position.xy / position.w;
+
+    gl_ClipDistance[0] = ndc.x - ndcLeft;
+    gl_ClipDistance[1] = ndcRight - ndc.x;
+    gl_ClipDistance[2] = ndc.y - ndcBottom;
+    gl_ClipDistance[3] = ndcTop - ndc.y;
+
+    gl_Position = position;
 }

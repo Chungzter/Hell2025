@@ -12,7 +12,7 @@ struct VulkanFrameData {
         uint64_t instanceData = 0;
         uint64_t viewportData = 0;
         uint64_t rendererData = 0;
-        uint64_t gpuLights = 0;
+        uint64_t lights = 0;
         uint64_t materials = 0;
         uint64_t drawCommands = 0;
         uint64_t skinningTransforms = 0;
@@ -23,6 +23,10 @@ struct VulkanFrameData {
         uint64_t rayQueryScratch = 0;
         uint64_t uiRenderItems = 0;
     } buffers;
+
+    struct GenericMeshes {
+        uint64_t ui = 0;
+    } genericMeshes;
 
     struct AccelerationStructures {
         struct SkinnedBLASSlot {

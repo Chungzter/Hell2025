@@ -1,7 +1,11 @@
 #include "../common/pbr_functions.glsl"
 #include "../common/types.glsl"
 
+#if defined(VULKAN)
+float ApplyIESProfile(vec3 worldPos, Light light, texture2D iesTexture, sampler iesSampler) {
+#else
 float ApplyIESProfile(vec3 worldPos, Light light, sampler2D iesSampler) {
+#endif
     vec3 lightPos = vec3(light.posX, light.posY, light.posZ);
     vec3 forward = light.forward_iesMaxIntensity.rgb;
     vec3 right = light.right_iesExposure.rgb;
@@ -36,7 +40,11 @@ float ApplyIESProfile(vec3 worldPos, Light light, sampler2D iesSampler) {
     float v = abs(phi) * hScale + hBias;
 
     // Compute mask
+#if defined(VULKAN)
+    float mask = texture(sampler2D(iesTexture, iesSampler), vec2(u, v)).r;
+#else
     float mask = texture(iesSampler, vec2(u, v)).r;
+#endif
     float atten = pow(clamp(1.0 - pow(dist / lightRadius, 4.0), 0.0, 1.0), 2.0) / (dist * dist + 1.0);
     return mask * maxIntensity * atten * exposure * globalDampener;
 }
@@ -170,7 +178,11 @@ float SpotlightShadowCalculationFast(vec4 fragPosLightSpace, vec3 normal, vec3 l
 
 
 
+#if defined(VULKAN)
+vec3 ApplyCookie(mat4 LightViewProj, vec3 worldPos, vec3 lightPos, vec3 lightColor, float maxDistance, texture2D cookieTexture, sampler cookieSampler) {
+#else
 vec3 ApplyCookie(mat4 LightViewProj, vec3 worldPos, vec3 lightPos, vec3 lightColor, float maxDistance, sampler2D cookieTexture) {
+#endif
    vec4 lightSpacePos = LightViewProj * vec4(worldPos, 1.0);
     vec2 cookieUV = lightSpacePos.xy / lightSpacePos.w * 0.5 + 0.5;
 
@@ -186,10 +198,15 @@ vec3 ApplyCookie(mat4 LightViewProj, vec3 worldPos, vec3 lightPos, vec3 lightCol
     float distanceFactor = clamp(1.0 - dist / maxDistance, 0.0, 1.0);
     distanceFactor *= distanceFactor;
 
+#if defined(VULKAN)
+    float cookieFactor = texture(sampler2D(cookieTexture, cookieSampler), clampedUV).r;
+#else
     float cookieFactor = texture(cookieTexture, clampedUV).r;
+#endif
     return lightColor * cookieFactor * fadeFactor * distanceFactor;
 }
 
+#if !defined(VULKAN)
 vec3 GetFlashlightContribution(int flashlightIndex, uint viewportIndex, float flashlightModifer, mat4 flashlightProjectionView, vec3 flashlightDir, vec3 flashlightPosition, vec3 flashlightViewPos, bool flashlightIsInShop, vec3 flashlightColor, vec3 normal, vec3 worldPos, vec3 baseColor, float roughness, float metallic, float fragDistance, float oceanHeight, sampler2D flashlightCookieTexture, sampler2DArray flashlightShadowMapArrayTexture) {
     if (flashlightModifer <= 0.05) return vec3(0.0);
 
@@ -260,6 +277,7 @@ vec3 GetFlashlightContribution(int flashlightIndex, uint viewportIndex, float fl
 
     return vec3(spotLighting) * flashlightModifer;
 }
+#endif
 
 
 
@@ -300,17 +318,7 @@ float ShadowCalculationOLD(int lightIndex, vec3 lightPos, float lightRadius, vec
     return 1.0 - shadow;
 }
 
-float SamplePointShadowReceiverPlane(
-    int lightIndex,
-    vec3 lightToFrag,
-    vec3 receiverNormal,
-    float currentDepth,
-    float lightRadius,
-    float bias,
-    vec3 sampleDir,
-    float maxPlaneDepthDelta,
-    samplerCubeArrayShadow shadowCubeMapArray
-) {
+float SamplePointShadowReceiverPlane(int lightIndex, vec3 lightToFrag, vec3 receiverNormal, float currentDepth, float lightRadius, float bias, vec3 sampleDir, float maxPlaneDepthDelta, samplerCubeArrayShadow shadowCubeMapArray) {
     vec3 sampleRay = normalize(sampleDir);
 
     float receiverDepth = currentDepth;

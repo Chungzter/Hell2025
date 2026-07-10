@@ -6,6 +6,7 @@
 
 layout(early_fragment_tests) in;
 
+#include "../common/constants.glsl"
 #include "../common/flags.glsl"
 #include "../common/normal_encoding.glsl"
 #include "../common/util.glsl"
@@ -115,10 +116,10 @@ uint ComputeViewportIndexFromSplitscreenModeVK(ivec2 px, ivec2 size, int mode) {
 void main() {
     VertexBuffer vertexBuffer = VertexBuffer(pushConstant.data.vertexBufferDeviceAddress);
     IndexBuffer indexBuffer = IndexBuffer(pushConstant.data.indexBufferDeviceAddress);
-    ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.viewportDataDeviceAddress);
-    RenderItemBuffer renderItemBuffer = RenderItemBuffer(pushConstant.data.renderItemsDeviceAddress);
-    RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.rendererDataDeviceAddress);
-    MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.materialsDeviceAddress);
+    ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
+    RenderItemBuffer renderItemBuffer = RenderItemBuffer(pushConstant.data.frame.renderItemsDeviceAddress);
+    RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress);
+    MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
     
     ivec2 outputImageSize = textureSize(usampler2D(uintTextures[VULKAN_UINT_TEXTURE_IDX_GBUFFER_VISIBILITY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
     ivec2 px = ivec2(gl_FragCoord.xy);
@@ -262,9 +263,14 @@ void main() {
     BaseColorMetallicOut.rgb = baseColor.rgb;
     BaseColorMetallicOut.a = metallic;
 
+    uint miscFlags = renderItem.miscFlags;
+    if (renderItem.blendingMode == BLENDING_MODE_MIRROR) {
+        miscFlags |= MISC_FLAG_MIRROR_SURFACE;
+    }
+
     NormalXYRoughnessMiscOut.rg = EncodeNormal(normal);
     NormalXYRoughnessMiscOut.b = roughness;
-    NormalXYRoughnessMiscOut.a = EncodeMiscFlags(renderItem.miscFlags);
+    NormalXYRoughnessMiscOut.a = EncodeMiscFlags(miscFlags);
 
     VelocityXYOcclusionSubSurfaceOut.rg = velocity;
     VelocityXYOcclusionSubSurfaceOut.b = ao;

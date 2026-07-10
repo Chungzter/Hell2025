@@ -49,11 +49,13 @@ void main() {
     // Skip if this tile has no decals
     if (count == 0) discard;
 
+    vec4 gBufferNormalXYRoughnessMisc = texelFetch(GBufferNormalXYRoughnessMiscTexture, px, 0);
+
     // Do nothing on walls (assuming Y is up)
-    vec3 normal = DecodeNormal(texelFetch(GBufferNormalXYRoughnessMiscTexture, px, 0).rg);
+    vec3 normal = DecodeNormal(gBufferNormalXYRoughnessMisc.rg);
     if (abs(normal.y) < 0.5) discard;
 
-    uint miscFlags = DecodeMiscFlags(texelFetch(GBufferNormalXYRoughnessMiscTexture, px, 0).a);
+    uint miscFlags = DecodeMiscFlags(gBufferNormalXYRoughnessMisc.a);
     if ((miscFlags & MISC_FLAG_DYNAMIC_OBJECT) != 0u) discard;
 
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
@@ -88,7 +90,10 @@ void main() {
             bestMask = max(bestMask, a);
         #endif
 
-        if (bestMask >= 0.99) break;
+        if (bestMask >= 0.990) {
+         //   bestMask = 1.0;
+            break;
+        }
     }
 
     DecalMaskOut = vec4(vec3(bestMask), 1.0);

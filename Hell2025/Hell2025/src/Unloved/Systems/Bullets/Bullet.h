@@ -10,11 +10,13 @@ struct Bullet {
         m_parentBulletTrailId = parentBulletTrailId;
     }
 
-    const bool PlaysPiano() const { return m_createInfo.playsPiano; }
+    const bool PlaysPiano() const                           { return m_createInfo.playsPiano; }
     const bool CreatesDecalTexturePaintedWounds() const     { return m_createInfo.createsDecalTexturePaintedWounds; }
     const bool CreatesDecals() const                        { return m_createInfo.createsDecals; }
     const bool CreatesFolloWThroughBulletOnGlassHit() const { return m_createInfo.createsFollowThroughBulletOnGlassHit; }
     const float GetRayLength() const                        { return m_createInfo.rayLength; }
+    const float GetImpactVelocityChange() const             { return m_createInfo.impactVelocityChange; }
+    const float GetImpactAngularVelocityChange() const      { return m_createInfo.impactAngularVelocityChange; }
     const glm::vec3 GetOrigin() const                       { return m_createInfo.origin; }
     const glm::vec3 GetDirection() const                    { return m_createInfo.direction; }
     const int32_t GetWeaponIndex() const                    { return m_createInfo.weaponIndex; }

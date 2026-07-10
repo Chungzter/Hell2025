@@ -89,6 +89,16 @@ void Mermaid::Update(float deltaTime) {
     //DebugDraw();
 }
 
+void Mermaid::SetPosition(const glm::vec3& position) {
+    m_createInfo.position = position;
+    m_transform.position = position;
+}
+
+void Mermaid::SetRotation(const glm::vec3& rotation) {
+    m_createInfo.rotation = rotation;
+    m_transform.rotation = rotation;
+}
+
 void Mermaid::DebugDraw() {
     glm::vec3 p1 = m_transform.position;
     glm::vec3 p2 = m_transform.position + m_worldForward;

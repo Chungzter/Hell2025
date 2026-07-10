@@ -2,6 +2,7 @@
 
 #include "Hell/Common/String.h"
 #include "Hell/Render/API/OpenGL/GL_resource_manager.h"
+#include "Hell/Render/API/Vulkan/Managers/vk_raytracing_manager.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
@@ -514,9 +515,15 @@ void MeshBuffer::RemoveMesh(uint32_t meshId) {
 void MeshBuffer::CreateVulkanBlas(Mesh& mesh) {
     if (Hell::BackEnd::GetAPI() != API::VULKAN) return;
     if (mesh.vertexCount == 0 || mesh.indexCount < 3) return;
+    if (m_vulkanId == 0 || !VulkanResourceManager::MeshBufferExists(m_vulkanId)) return;
 
     if (mesh.vulkanBlasId == 0 || !VulkanResourceManager::AccelerationStructureExists(mesh.vulkanBlasId)) {
         mesh.vulkanBlasId = VulkanResourceManager::CreateAccelerationStructure();
+    }
+
+    VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer(m_vulkanId);
+    if (!meshBuffer || !VulkanRaytracingManager::BuildBottomLevelAS(mesh.vulkanBlasId, *meshBuffer, mesh)) {
+        DestroyVulkanBlas(mesh);
     }
 }
 

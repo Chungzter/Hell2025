@@ -94,6 +94,8 @@ namespace OpenGL::Renderer {
     }
 
     void DebugViewPass() {
+        if (!Unloved::Renderer::OverrideStateUsesDebugViewPass()) return;
+
         RendererSettings& rendererSettings = Unloved::Renderer::GetCurrentRendererSettings();
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
@@ -143,20 +145,7 @@ namespace OpenGL::Renderer {
         }
 
         // Other modes
-        if (rendererSettings.rendererOverrideState == RendererOverrideState::BASE_COLOR ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::NORMALS ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::RMA ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::METALIC ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::AO ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::CAMERA_NDOTL ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::ROUGHNESS ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::INDIRECT_DIFFUSE ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::VELOCITY ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::VIS_BUFFER ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::DEPTH ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::WORLD_POSITION ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::EMISSIVE) {
-
+        {
             OpenGLFrameBuffer& waterFrameBuffer = OpenGL::ResourceManager::GetFrameBuffer("Water");
 
             if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {

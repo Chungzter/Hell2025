@@ -582,7 +582,7 @@
                         "restitution": 0.10000000149011612,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -2424,7 +2424,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -4578,7 +4578,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -5709,7 +5709,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -7560,7 +7560,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -9380,7 +9380,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -11534,7 +11534,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -12665,7 +12665,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -15485,7 +15485,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -19665,7 +19665,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -21516,7 +21516,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -24336,7 +24336,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -28500,7 +28500,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -30351,7 +30351,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -31042,7 +31042,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -33394,7 +33394,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },
@@ -35476,7 +35476,7 @@
                         "restitution": 0.009999999776482582,
                         "sleepThreshold": 4.999999873689376e-06,
                         "thickness": 0.019999999552965164,
-                        "velocityIterations": 1
+                        "velocityIterations": 8
                     },
                     "type": "RigidComponent"
                 },

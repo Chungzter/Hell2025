@@ -1,6 +1,11 @@
 #include "vk_pipeline.h"
+
+#include "Hell/Logging.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_device_manager.h"
+#include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
+#include "Hell/Render/API/Vulkan/Types/VK_render_state.h"
 #include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
+
 #include <array>
 #include <limits>
 
@@ -50,6 +55,10 @@ bool VulkanPipeline::CheckResult(VkResult result, const std::string& message) {
     return true;
 }
 
+void VulkanPipeline::SetName(const std::string& name) {
+    m_name = name;
+}
+
 void VulkanPipeline::AddColorAttachmentFormat(VkFormat format) {
     if (format == VK_FORMAT_UNDEFINED) {
         std::cerr << "[Vulkan Pipeline Error] Cannot add an undefined color attachment format\n";
@@ -61,11 +70,20 @@ void VulkanPipeline::AddColorAttachmentFormat(VkFormat format) {
 
 void VulkanPipeline::AddColorAttachment(const AllocatedImage* image) {
     if (!image) {
-        std::cerr << "[Vulkan Pipeline Error] Cannot add a null color attachment\n";
+        Logging::Error() << "VulkanPipeline::AddColorAttachment(..) failed for pipeline '" << m_name << "' because image was nullptr\n";
         return;
     }
 
     AddColorAttachmentFormat(image->GetFormat());
+}
+
+void VulkanPipeline::AddColorAttachment(const std::string& name) {
+    if (!VulkanResourceManager::AllocatedImageExists(name)) {
+        Logging::Error() << "VulkanPipeline::AddColorAttachment(..) failed for pipeline '" << m_name << "' because image '" << name << "' was not found\n";
+        return;
+    }
+
+    AddColorAttachment(VulkanResourceManager::GetAllocatedImage(name));
 }
 
 void VulkanPipeline::SetDepthAttachmentFormat(VkFormat format) {
@@ -79,15 +97,39 @@ void VulkanPipeline::SetDepthAttachmentFormat(VkFormat format) {
 
 void VulkanPipeline::SetDepthAttachment(const AllocatedImage* image) {
     if (!image) {
-        std::cerr << "[Vulkan Pipeline Error] Cannot set a null depth attachment\n";
+        Logging::Error() << "VulkanPipeline::SetDepthAttachment(..) failed for pipeline '" << m_name << "' because image was nullptr\n";
         return;
     }
 
     SetDepthAttachmentFormat(image->GetFormat());
 }
 
+void VulkanPipeline::SetDepthAttachment(const std::string& name) {
+    if (!VulkanResourceManager::AllocatedImageExists(name)) {
+        Logging::Error() << "VulkanPipeline::SetDepthAttachment(..) failed for pipeline '" << m_name << "' because image '" << name << "' was not found\n";
+        return;
+    }
+
+    SetDepthAttachment(VulkanResourceManager::GetAllocatedImage(name));
+}
+
 void VulkanPipeline::AddDescriptorSetLayout(VkDescriptorSetLayout layout) {
+    if (layout == VK_NULL_HANDLE) {
+        Logging::Error() << "VulkanPipeline::AddDescriptorSetLayout(..) failed for pipeline '" << m_name << "' because descriptor set layout was VK_NULL_HANDLE\n";
+        return;
+    }
+
     m_descriptorLayouts.push_back(layout);
+}
+
+void VulkanPipeline::AddDescriptorSetLayout(const std::string& name) {
+    VkDescriptorSetLayout layout = VulkanResourceManager::GetDescriptorSetLayout(name);
+    if (layout == VK_NULL_HANDLE) {
+        Logging::Error() << "VulkanPipeline::AddDescriptorSetLayout(..) failed for pipeline '" << m_name << "' because descriptor set layout '" << name << "' was not found\n";
+        return;
+    }
+
+    AddDescriptorSetLayout(layout);
 }
 
 void VulkanPipeline::AddPushConstant(uint32_t size, VkShaderStageFlags stageFlags) {
@@ -109,7 +151,21 @@ void VulkanPipeline::AddPushConstant(uint32_t size, VkShaderStageFlags stageFlag
 }
 
 void VulkanPipeline::SetShader(const VulkanShader* shader) {
+    if (!shader) {
+        Logging::Error() << "VulkanPipeline::SetShader(..) failed for pipeline '" << m_name << "' because shader was nullptr\n";
+        return;
+    }
+
     m_shader = shader;
+}
+
+void VulkanPipeline::SetShader(const std::string& name) {
+    if (!VulkanResourceManager::ShaderExists(name)) {
+        Logging::Error() << "VulkanPipeline::SetShader(..) failed for pipeline '" << m_name << "' because shader '" << name << "' was not found\n";
+        return;
+    }
+
+    SetShader(VulkanResourceManager::GetShader(name));
 }
 
 void VulkanPipeline::SetTopology(VkPrimitiveTopology topology) { 
@@ -118,6 +174,15 @@ void VulkanPipeline::SetTopology(VkPrimitiveTopology topology) {
 
 void VulkanPipeline::SetPolygonMode(VkPolygonMode mode) { 
     m_polygonMode = mode; 
+}
+
+void VulkanPipeline::SetSampleCount(VkSampleCountFlagBits sampleCount) {
+    if (sampleCount == 0) {
+        std::cerr << "[Vulkan Pipeline Error] Cannot set an invalid sample count\n";
+        return;
+    }
+
+    m_sampleCount = sampleCount;
 }
 
 void VulkanPipeline::SetFrontFace(VkFrontFace frontFace) {
@@ -197,9 +262,76 @@ void VulkanPipeline::SetVertexDescription(const VertexLayoutDescription& layout)
     }
 }
 
+void VulkanPipeline::SetRenderState(const VulkanRenderState* state) {
+    if (!state) {
+        Logging::Error() << "VulkanPipeline::SetRenderState(..) failed for pipeline '" << m_name << "' because render state was nullptr\n";
+        return;
+    }
+
+    for (uint32_t i = 0; i < state->colorTargetCount; i++) {
+        const VulkanRenderTargetInfo& target = state->colorTargets[i];
+        VkFormat format = target.format;
+
+        if (format == VK_FORMAT_UNDEFINED) {
+            if (!VulkanResourceManager::AllocatedImageExists(target.imageName)) {
+                Logging::Error() << "VulkanPipeline::SetRenderState(..) failed for pipeline '" << m_name << "' because color target image '" << target.imageName << "' was not found\n";
+                return;
+            }
+
+            AllocatedImage* image = VulkanResourceManager::GetAllocatedImage(target.imageName);
+            format = image->GetFormat();
+        }
+
+        if (format == VK_FORMAT_UNDEFINED) {
+            Logging::Error() << "VulkanPipeline::SetRenderState(..) failed for pipeline '" << m_name << "' because color target '" << target.imageName << "' had undefined format\n";
+            return;
+        }
+
+        AddColorAttachmentFormat(format);
+    }
+
+    if (state->hasDepthTarget) {
+        VkFormat format = state->depthTarget.format;
+
+        if (format == VK_FORMAT_UNDEFINED) {
+            if (!VulkanResourceManager::AllocatedImageExists(state->depthTarget.imageName)) {
+                Logging::Error() << "VulkanPipeline::SetRenderState(..) failed for pipeline '" << m_name << "' because depth target image '" << state->depthTarget.imageName << "' was not found\n";
+                return;
+            }
+
+            AllocatedImage* image = VulkanResourceManager::GetAllocatedImage(state->depthTarget.imageName);
+            format = image->GetFormat();
+        }
+
+        if (format == VK_FORMAT_UNDEFINED) {
+            Logging::Error() << "VulkanPipeline::SetRenderState(..) failed for pipeline '" << m_name << "' because depth target '" << state->depthTarget.imageName << "' had undefined format\n";
+            return;
+        }
+
+        SetDepthAttachmentFormat(format);
+    }
+
+    SetDepthTest(state->rasterizer.depthTestEnabled, state->rasterizer.depthWriteEnabled);
+    SetDepthCompareOp(state->rasterizer.depthCompareOp);
+    SetStencilTest(state->rasterizer.stencilTestEnabled, state->rasterizer.stencilCompareOp, state->rasterizer.stencilFailOp, state->rasterizer.stencilDepthFailOp, state->rasterizer.stencilPassOp, state->rasterizer.stencilReadMask, state->rasterizer.stencilWriteMask);
+    SetFrontFace(state->rasterizer.frontFace);
+    SetCullMode(state->rasterizer.cullFaceEnabled ? state->rasterizer.cullMode : VK_CULL_MODE_NONE);
+    SetColorBlending(state->rasterizer.blendEnabled);
+}
+
+void VulkanPipeline::SetRenderState(const std::string& name) {
+    VulkanRenderState* renderState = VulkanResourceManager::GetRenderState(name);
+    if (!renderState) {
+        Logging::Error() << "VulkanPipeline::SetRenderState(..) failed for pipeline '" << m_name << "' because render state '" << name << "' was not found\n";
+        return;
+    }
+
+    SetRenderState(renderState);
+}
+
 bool VulkanPipeline::Build() {
     if (!m_shader) {
-        std::cerr << "[Vulkan Pipeline Error] Cannot build pipeline with a null shader\n";
+        Logging::Error() << "VulkanPipeline::Build(..) failed for pipeline '" << m_name << "' because shader was nullptr\n";
         return false;
     }
 
@@ -286,7 +418,7 @@ bool VulkanPipeline::Build() {
     VkPipelineMultisampleStateCreateInfo multisampling{};
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable = VK_FALSE;
-    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    multisampling.rasterizationSamples = m_sampleCount;
 
     // Depth Stencil
     VkPipelineDepthStencilStateCreateInfo depthStencil{};

@@ -11,13 +11,17 @@ namespace Hell::Physics {
         void UpdateAllRigidDynamics(float deltaTime);
     }
 
-    void BeginFrame() {
+    void FlushPendingRemovals() {
         RemoveAnyHeightFieldMarkedForRemoval();
         RemoveAnyD6JointMarkedForRemoval();
         RemoveAnyRagdollMarkedForRemoval();
         RemoveAnyRigidDynamicMarkedForRemoval();
         RemoveAnyRigidStaticMarkedForRemoval();
         RemoveAnyCharacterControllerMarkedForRemoval();
+    }
+
+    void BeginFrame() {
+        FlushPendingRemovals();
     }
 
     void StepSimulation() {

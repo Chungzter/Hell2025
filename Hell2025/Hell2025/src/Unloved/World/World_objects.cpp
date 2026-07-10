@@ -582,6 +582,12 @@ namespace Unloved::World {
 
         switch (GetObjectIdType(objectId)) {
         case ObjectType::DDGI_VOLUME:    updated = SetPosition_T(GetDDGIVolumes(), objectId, position); break;
+        case ObjectType::DOBERMANN:
+            if (Dobermann* dobermann = GetDobermannByObjectId(objectId)) {
+                dobermann->SetSpawnPosition(position);
+                updated = true;
+            }
+            break;
         case ObjectType::DOOR:           updated = SetPosition_T(GetDoors(), objectId, position); break;
         case ObjectType::FIREPLACE:      updated = SetPosition_T(GetFireplaces(), objectId, position); break;
         case ObjectType::GAME_OBJECT:    updated = SetPosition_T(GetGameObjects(), objectId, position); break;
@@ -589,9 +595,16 @@ namespace Unloved::World {
         case ObjectType::WORLD_PLANE:    updated = SetPosition_T(GetWorldPlanes(), objectId, position); break;
         case ObjectType::LADDER:         updated = SetPosition_T(GetLadders(), objectId, position); break;
         case ObjectType::LIGHT:          updated = SetPosition_T(GetLights(), objectId, position); break;
+        case ObjectType::MERMAID:        updated = SetPosition_T(GetMermaids(), objectId, position); break;
         case ObjectType::PIANO:          updated = SetPosition_T(GetPianos(), objectId, position); break;
         case ObjectType::PICK_UP:        updated = SetPosition_T(GetPickUps(), objectId, position); break;
         case ObjectType::PICTURE_FRAME:  updated = SetPosition_T(GetPictureFrames(), objectId, position); break;
+        case ObjectType::SHARK:
+            if (Shark* shark = GetSharkByObjectId(objectId)) {
+                shark->SetPatrolCenter(position);
+                updated = true;
+            }
+            break;
         case ObjectType::STAIRCASE:      updated = SetPosition_T(GetStaircases(), objectId, position); break;
         case ObjectType::WALL:           updated = SetPosition_T(GetWalls(), objectId, position); break;
         case ObjectType::WINDOW:         updated = SetPosition_T(GetWindows(), objectId, position); break;
@@ -619,12 +632,14 @@ namespace Unloved::World {
 
         switch (GetObjectIdType(objectId)) {
         case ObjectType::DDGI_VOLUME:    return SetRotation_T(GetDDGIVolumes(), objectId, rotation);
+        case ObjectType::DOBERMANN:      return SetRotation_T(GetDobermanns(), objectId, rotation);
         case ObjectType::DOOR:           return SetRotation_T(GetDoors(), objectId, rotation);
         case ObjectType::FIREPLACE:      return SetRotation_T(GetFireplaces(), objectId, rotation);
         case ObjectType::GAME_OBJECT:    return SetRotation_T(GetGameObjects(), objectId, rotation);
         case ObjectType::GENERIC_OBJECT: return SetRotation_T(GetGenericObjects(), objectId, rotation);
         case ObjectType::LADDER:         return SetRotation_T(GetLadders(), objectId, rotation);
         case ObjectType::LIGHT:          return SetRotation_T(GetLights(), objectId, rotation);
+        case ObjectType::MERMAID:        return SetRotation_T(GetMermaids(), objectId, rotation);
         case ObjectType::PICK_UP:        return SetRotation_T(GetPickUps(), objectId, rotation);
         case ObjectType::PICTURE_FRAME:  return SetRotation_T(GetPictureFrames(), objectId, rotation);
         case ObjectType::STAIRCASE:      return SetRotation_T(GetStaircases(), objectId, rotation);
@@ -675,13 +690,7 @@ namespace Unloved::World {
         case ObjectType::DDGI_VOLUME:
             if (DDGIVolume* ddgiVolume = GetDDGIVolumes().get(objectId)) position = &ddgiVolume->GetOrigin();
             break;
-        case ObjectType::DOBERMANN:
-            if (Dobermann* dobermann = GetDobermanns().get(objectId)) {
-                if (AnimatedGameObject* animatedGameObject = dobermann->GetAnimatedGameObject()) {
-                    position = &animatedGameObject->GetPosition();
-                }
-            }
-            break;
+        case ObjectType::DOBERMANN:              position = GetCreateInfoPosition_T(GetDobermanns(), objectId); break;
         case ObjectType::DOOR:                   position = GetPosition_T(GetDoors(), objectId); break;
         case ObjectType::FIREPLACE:              position = GetPosition_T(GetFireplaces(), objectId); break;
         case ObjectType::GAME_OBJECT:            position = GetPosition_T(GetGameObjects(), objectId); break;
@@ -694,7 +703,7 @@ namespace Unloved::World {
         case ObjectType::PIANO:                  position = GetPosition_T(GetPianos(), objectId); break;
         case ObjectType::PICK_UP:                position = GetPosition_T(GetPickUps(), objectId); break;
         case ObjectType::PICTURE_FRAME:          position = GetPosition_T(GetPictureFrames(), objectId); break;
-        case ObjectType::SHARK:                  position = GetPosition_T(GetSharks(), objectId); break;
+        case ObjectType::SHARK:                  position = GetCreateInfoPosition_T(GetSharks(), objectId); break;
         case ObjectType::SPAWN_POINT_CAMPAIGN:   position = GetPosition_T(GetSpawnPointsCampaign(), objectId); break;
         case ObjectType::SPAWN_POINT_DEATHMATCH: position = GetPosition_T(GetSpawnPointsDeathMatch(), objectId); break;
         case ObjectType::STAIRCASE:              position = GetPosition_T(GetStaircases(), objectId); break;
@@ -747,6 +756,7 @@ namespace Unloved::World {
         case ObjectType::CHRISTMAS_LIGHTS:       rotation = GetRotation_T(GetChristmasLightSets(), objectId); break;
         case ObjectType::TREE:                   rotation = GetCreateInfoRotation_T(GetChristmasTrees(), objectId); break;
         case ObjectType::DDGI_VOLUME:            rotation = GetRotation_T(GetDDGIVolumes(), objectId); break;
+        case ObjectType::DOBERMANN:              rotation = GetCreateInfoRotation_T(GetDobermanns(), objectId); break;
         case ObjectType::DOOR:                   rotation = GetRotation_T(GetDoors(), objectId); break;
         case ObjectType::FIREPLACE:              rotation = GetRotation_T(GetFireplaces(), objectId); break;
         case ObjectType::GAME_OBJECT:            rotation = GetRotation_T(GetGameObjects(), objectId); break;

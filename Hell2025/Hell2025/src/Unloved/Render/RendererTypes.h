@@ -106,25 +106,25 @@ struct RenderItem {
     int32_t exclusiveViewportIndex = -1;
     int32_t ignoredViewportIndex = -1;
 
-    uint32_t openableId = 0;
-    uint32_t customId = 0;
-    uint32_t shadowBit = 0;
-    uint32_t miscFlags = 0;
-
     uint32_t meshId = 0;
+    uint32_t miscFlags = 0;
+    uint32_t shadowFlags = 0;
+    uint32_t vulkanFlags = 0;
+
+    int32_t localMeshNodeIndex = 0;
     float emissiveR = 0.0f;
     float emissiveG = 0.0f;
     float emissiveB = 0.0f;
 
+    uint32_t blendingMode = static_cast<uint32_t>(BlendingMode::DEFAULT);
     float tintColorR = 1.0f;
     float tintColorG = 1.0f;
     float tintColorB = 1.0f;
-    uint32_t blendingMode = static_cast<uint32_t>(BlendingMode::DEFAULT);
 
-    int32_t localMeshNodeIndex = 0;
+    uint32_t customId = 0;
+    uint32_t openableId = 0;
     int32_t woundMaterialIndex = -1;
-    int padding1 = 0;
-    int padding2 = 0;
+    int padding = 0;
 };
 
 struct SpriteSheetRenderItem {
@@ -233,16 +233,27 @@ struct SkinningJob {
     uint32_t padding1;
 };
 
-struct RayQueryGeometryRange {
+struct RayTracingGeometryRange {
     uint32_t baseVertex;
     uint32_t baseIndex;
     uint32_t vertexCount;
     uint32_t indexCount;
     uint32_t blendingMode;
     int32_t materialIndex;
+    uint32_t shadowBit = 0;
+    uint32_t padding0 = 0;
 };
 
-struct RayQuerySkinnedGroup {
-    std::vector<RayQueryGeometryRange> ranges;
+struct SkinnedRayTracingGroup {
+    std::vector<RayTracingGeometryRange> ranges;
     glm::mat4 modelMatrix;
 };
+
+struct StaticRayTracingInstance {
+    RayTracingGeometryRange range;
+    uint64_t vulkanBlasId = 0;
+    uint64_t vertexBufferDeviceAddress = 0;
+    uint64_t indexBufferDeviceAddress = 0;
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+};
+

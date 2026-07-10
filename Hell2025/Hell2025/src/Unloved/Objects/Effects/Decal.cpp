@@ -76,7 +76,7 @@ Decal::Decal(uint64_t id, const DecalCreateInfo& createInfo) {
     m_renderItem.materialIndex = m_materialIndex;
     m_renderItem.baseVertex = mesh->baseVertex;
     m_renderItem.baseIndex = mesh->baseIndex;
-    m_renderItem.shadowBit = SHADOW_BIT_NONE;
+    m_renderItem.shadowFlags = SHADOW_FLAG_NONE;
     m_renderItem.blendingMode = static_cast<int32_t>(BlendingMode::ALPHA_DISCARD);
 }
 

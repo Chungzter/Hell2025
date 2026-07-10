@@ -108,32 +108,11 @@ namespace OpenGL::Renderer {
         fbo.Bind();
         fbo.DrawBuffers({ "Lighting" });
 
-        static bool old = true;
-        if (Input::KeyPressed(HELL_KEY_NUMPAD_3)) {
-            old = !old;
-            Audio::PlayAudio(AUDIO_SELECT, 1.0f);
-
-            if (old) {
-                Debug::BlitQuickDebugMessage("Hair: OLD");
-            }
-            else {
-                Debug::BlitQuickDebugMessage("Hair: NEW");
-            }
-        }
-
-        if (old) {
-            OpenGL::BindShader("HairLightingForwardOLD");
-        }
-        else {
-            OpenGL::BindShader("HairLightingForward");
-        }
-
-        OpenGL::SetUniformInt("u_renderResolutionScale", 1.0f);
-        OpenGL::SetUniformInt("u_hairTextureIndex", Hell::ResourceManager::GetTextureBindlessIndexByName("RatKingHair_FLOW_ID_ROOT", true));
-        OpenGL::SetUniformInt("u_hairBlendMapTextureIndex", Hell::ResourceManager::GetTextureBindlessIndexByName("Gold_ALB", true));             // YO!
+        BindShader("HairLightingForward");
+        SetUniformFloat("u_renderResolutionScale", 1.0f);
 
         BindShadowMapsRE();
-        OpenGL::BindTextureUnit(5, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
+        BindTextureUnit(5, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
 
         OpenGLRasterizerState maskedState;
         maskedState.blendEnable = false;
@@ -146,15 +125,15 @@ namespace OpenGL::Renderer {
         glBindVertexArray(OpenGL::BackEnd::GetSkinnedVertexDataVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedHair, maskedState);
 
-        OpenGL::BindShader("LightingForward");
-        OpenGL::SetUniformBool("u_solidAlpha", true);
+        BindShader("LightingForward");
+        SetUniformBool("u_solidAlpha", true);
 
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
         glBindVertexArray(meshBuffer.GetVAO());
         MultiDrawPerViewportRE(fbo, drawInfoSet.hair, maskedState);
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingHair, maskedState);
 
-        OpenGL::SetUniformBool("u_solidAlpha", false);
+        SetUniformBool("u_solidAlpha", false);
     }
 
     void HairCompositeRE() {
@@ -163,12 +142,12 @@ namespace OpenGL::Renderer {
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBufferRE");
         OpenGLFrameBuffer& hairFbo = OpenGL::ResourceManager::GetFrameBuffer("HairRE");
 
-        OpenGL::BindShader("HairCompositeRE");
+        BindShader("HairCompositeRE");
 
-        OpenGL::BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
-        OpenGL::BindImageTexture(1, gBuffer.GetColorAttachmentHandleByName("Emissive"), GL_WRITE_ONLY, GL_RGBA8);
-        OpenGL::BindTextureUnit(2, hairFbo.GetColorAttachmentHandleByName("Lighting"));
+        BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
+        BindImageTexture(1, gBuffer.GetColorAttachmentHandleByName("Emissive"), GL_WRITE_ONLY, GL_RGBA8);
+        BindTextureUnit(2, hairFbo.GetColorAttachmentHandleByName("Lighting"));
 
-        OpenGL::DispatchCompute(gBuffer.GetWidth() / TILE_SIZE, gBuffer.GetHeight() / TILE_SIZE, 1);
+        DispatchCompute(gBuffer.GetWidth() / TILE_SIZE, gBuffer.GetHeight() / TILE_SIZE, 1);
     }
 }

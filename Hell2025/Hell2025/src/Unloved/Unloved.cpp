@@ -166,6 +166,9 @@ namespace Unloved {
         Session::Update();
         World::UpdatePlayers();
         BulletSystem::Update();
+        if (Editor::IsClosed()) {
+            World::UpdateEnemyMovement();
+        }
         World::UpdateObjects();
 
         // World Update

@@ -52,7 +52,7 @@ void main() {
     vec3 viewPos = viewportData.viewPos.xyz;
     vec2 viewportOrigin = vec2(viewportData.xOffset, viewportData.yOffset);
     vec2 viewportSize = vec2(viewportData.width, viewportData.height);
-    vec3 rayDir = GetWorldRay(px, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
+    vec3 rayDir = GetWorldRay_GL(px, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
 
     // Cast ray at water plane
     vec3 rayOrigin = viewPos;

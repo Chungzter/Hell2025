@@ -69,20 +69,6 @@ void VulkanGenericMesh::CleanUp() {
     m_indexCapacity = 0;
 }
 
-void VulkanGenericMesh::Bind(VkCommandBuffer commandBuffer) const {
-    VulkanBuffer* vertexBuffer = GetVertexBuffer();
-    VulkanBuffer* indexBuffer = GetIndexBuffer();
-
-    if (!vertexBuffer || !indexBuffer) {
-        return;
-    }
-
-    const VkBuffer vkVertexBuffer = vertexBuffer->GetBuffer();
-    const VkDeviceSize vertexOffset = 0;
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vkVertexBuffer, &vertexOffset);
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-}
-
 void VulkanGenericMesh::ResizeVertexBuffer(size_t newCapacity) {
     if (m_vertexBufferId != 0) {
         VulkanDeletionQueue::Retire(m_vertexBufferId);

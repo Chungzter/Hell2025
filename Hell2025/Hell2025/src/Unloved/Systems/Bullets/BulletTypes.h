@@ -11,6 +11,8 @@ struct BulletCreateInfo {
     uint32_t damage = 0;
     uint64_t ownerObjectId = 0;
     float rayLength = 1000.0f;
+    float impactVelocityChange = 4.0f;
+    float impactAngularVelocityChange = 1.0f;
     bool createsDecals = true;
     bool createsFollowThroughBulletOnGlassHit = true;
     bool playsPiano = true;

@@ -41,9 +41,9 @@ namespace Unloved::Editor {
             christmas.AddChild("Tree",             Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_CHRISTMAS_TREE);
 
             EditorUI::FileMenuNode& enemies = insert.AddChild("Enemies", Shortcut::NONE);
-            enemies.AddChild("Dobermann",       Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_DOBERMANN);
-            enemies.AddChild("Kangaroo",        Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_KANGAROO);
-            enemies.AddChild("Shark",           Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_SHARK);
+            enemies.AddChild("Dobermann",       Shortcut::NONE, BeginPlacement, PlacementTool::DOBERMANN);
+            enemies.AddChild("Kangaroo",        Shortcut::NONE, BeginPlacement, PlacementTool::KANGAROO);
+            enemies.AddChild("Shark",           Shortcut::NONE, BeginPlacement, PlacementTool::SHARK);
 
             EditorUI::FileMenuNode& exterior = insert.AddChild("Exterior", Shortcut::NONE);
             exterior.AddChild("Power Poles",   Shortcut::NONE, BeginPlacement, PlacementTool::POWER_POLES);
@@ -65,6 +65,9 @@ namespace Unloved::Editor {
             lighting.AddChild("Christmas Lights", Shortcut::NONE, BeginPlacement, PlacementTool::CHRISTMAS_LIGHTS);
             lighting.AddChild("DDGI Volume",      Shortcut::NONE, SetEditorState, EditorState::PLACE_DDGI_VOLUME);
             lighting.AddChild("Light",            Shortcut::NONE, PlaceObject, ObjectType::LIGHT);
+
+            EditorUI::FileMenuNode& mermaids = insert.AddChild("Mermaids", Shortcut::NONE);
+            mermaids.AddChild("Mermaid Shop Owner", Shortcut::NONE, BeginPlacement, PlacementTool::MERMAID);
 
             EditorUI::FileMenuNode& misc = insert.AddChild("Misc", Shortcut::NONE);
             misc.AddChild("Ladder",             Shortcut::NONE, PlaceObject, ObjectType::LADDER);

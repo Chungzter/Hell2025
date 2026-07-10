@@ -22,7 +22,6 @@ struct AnimatedGameObject {
     ~AnimatedGameObject() = default;
 
     void CleanUp();
-    void SetMeshWoundMaskTextureIndex(const std::string& meshName, int32_t woundMaskTextureIndex);
     void UpdateRenderItems();
     void Update(float deltaTime);
     void SetName(std::string name);
@@ -44,19 +43,14 @@ struct AnimatedGameObject {
     void SetAnimationModeToAnimated();
     void SetAnimationModeToBindPose();
     void SetAnimationModeToRagdoll();
-
-
     void SetBlendingModeByMeshName(const std::string& meshName, BlendingMode blendingMode);
     void SetMeshMaterialByMeshName(const std::string& meshName, const std::string& materialName);
     void SetMeshMaterialByMeshIndex(int meshIndex, const std::string& materialName);
-    void SetMeshToRenderAsGlassByMeshIndex(const std::string& materialName);
-    void SetMeshFurLength(const std::string& meshName, float furLength);
-    void SetMeshFurShellDistanceAttenuation(const std::string& meshName, float furShellDistanceAttenuation);
-    void SetMeshFurUVScale(const std::string& meshName, float uvScale);
-    void SetMeshEmissiveColorTextureByMeshName(const std::string& meshName, const std::string& textureName);
     void SetMeshWoundMaterialByMeshName(const std::string& meshName, const std::string& textureName);
+    void SetMeshWoundMaskArrayIndex(const std::string& meshName, int32_t woundMaskArrayIndex);
     void SetAllMeshMaterials(const std::string& materialName);
     void SetAllMeshBlendingModes(BlendingMode blendingMode);
+    void SetExcludeFromVulkanTLAS(bool exclude);
 
     void EnableModelMatrixOverride();
     void SetCameraMatrix(const glm::mat4& matrix);
@@ -64,9 +58,6 @@ struct AnimatedGameObject {
     void DrawBoneTangentVectors(float size = 0.1f, int exclusiveViewportIndex = -1);
     void SetExclusiveViewportIndex(int index);
     void SetIgnoredViewportIndex(int index);
-    //void EnableDrawingForAllMesh();
-    //void EnableDrawingForMeshByMeshName(const std::string& meshName);
-    //void DisableDrawingForMeshByMeshName(const std::string& meshName);
     void PrintNodeNames();
     void PrintMeshNames();
     void SetAdditiveTransform(const std::string& nodeName, const glm::mat4& matrix);

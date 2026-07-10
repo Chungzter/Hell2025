@@ -28,7 +28,7 @@ void main() {
     vec3 viewPos = viewportData.viewPos.xyz;
     vec2 viewportOrigin = vec2(viewportData.xOffset, viewportData.yOffset);
     vec2 viewportSize = vec2(viewportData.width, viewportData.height);
-    vec3 rayDir = GetWorldRay(gl_FragCoord.xy, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
+    vec3 rayDir = GetWorldRay_GL(gl_FragCoord.xy, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
 
     // Sample skybox cubemap
     mat3 skyboxRotation = GetSkyboxRotationMatrix();

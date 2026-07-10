@@ -59,7 +59,7 @@ namespace Unloved {
 
             int32_t woundMaskIndex = Renderer::GetNextFreeWoundMaskIndexAndMarkItTaken();
 
-            animatedGameObject->SetMeshWoundMaskTextureIndex("Body", woundMaskIndex);
+            animatedGameObject->SetMeshWoundMaskArrayIndex("Body", woundMaskIndex);
             animatedGameObject->SetMeshWoundMaterialByMeshName("Body", "KangarooBlood");
            
             //Logging::Debug() << "Assigned a Kangaroo a 'Body' mesh wound mask index of " << woundMaskIndex;
@@ -132,6 +132,11 @@ namespace Unloved {
 
     void Kangaroo::GiveDamage(int damage) {
         m_health -= damage;
+        if (m_health <= 0) {
+            Kill();
+            return;
+        }
+
         Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
         glm::vec3 playerPosition = player->GetCameraPosition();
         GoToTarget(playerPosition);
@@ -144,8 +149,11 @@ namespace Unloved {
         Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
         if (animatedGameObject) {
             animatedGameObject->CleanUp();
+            Unloved::World::GetAnimatedGameObjects().erase(m_animatedGameObjectId);
         }
+        m_animatedGameObjectId = 0;
         Hell::Physics::MarkCharacterControllerForRemoval(m_characterControllerId);
+        m_characterControllerId = 0;
     }
 
     void Kangaroo::SetAgroState(KanagarooAgroState state) {

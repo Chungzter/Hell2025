@@ -18,11 +18,14 @@ namespace Unloved {
         Dobermann(uint64_t id, DobermannCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
 
 	    void Init(uint64_t id, DobermannCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+	    void UpdateMovement(float deltaTime);
 	    void Update(float deltaTime);
         void CleanUp();
 
         void ResetToInitialState();
         void SetPosition(const glm::vec3& position);
+        void SetSpawnPosition(const glm::vec3& position);
+        void SetRotation(const glm::vec3& rotation);
 
 	    void TakeDamage(uint32_t damage);
 
@@ -33,8 +36,11 @@ namespace Unloved {
         glm::vec3 GetPosition();
 
         const glm::vec3& GetForward() const             { return m_forward; }
+        const glm::vec3& GetRotation() const            { return m_createInfo.rotation; }
         uint64_t GetObjectId() const                    { return m_objectId; }
 	    uint64_t GetRagdollId()                       { return m_RagdollId; }
+        bool IsAlive() const                            { return m_health > 0.0f; }
+        bool IsDead() const                             { return !IsAlive(); }
         const DobermannState GetDobermannState() const  { return m_state; }
         const DobermannCreateInfo& GetCreateInfo() const { return m_createInfo; }
         const std::string& GetEditorName() const        { return m_createInfo.editorName; }

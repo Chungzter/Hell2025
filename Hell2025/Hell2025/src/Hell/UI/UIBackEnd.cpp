@@ -25,9 +25,11 @@ namespace UIBackEnd {
     }
 
     void Update() {
-        GenericMesh& genericMesh = ResourceManager::GetGenericMesh("UI");
-        genericMesh.UpdateVertexData(g_vertices);
-        genericMesh.UpdateIndexData(g_indices);
+        if (BackEnd::GetAPI() == API::OPENGL) {
+            GenericMesh& genericMesh = ResourceManager::GetGenericMesh("UI");
+            genericMesh.UpdateVertexData(g_vertices);
+            genericMesh.UpdateIndexData(g_indices);
+        }
     }
 
     void SetUIResolution(uint32_t width, uint32_t height) {
@@ -179,13 +181,10 @@ namespace UIBackEnd {
         renderItem.clipMaxY = clipMaxY;
 
         // Maybe tidy this up later
-        const int W = Hell::BackEnd::GetCurrentWindowWidth();
-        const int H = Hell::BackEnd::GetCurrentWindowHeight();
-
         renderItem.clipMinX = (clipMinX >= 0) ? clipMinX : 0;
         renderItem.clipMinY = (clipMinY >= 0) ? clipMinY : 0;
-        renderItem.clipMaxX = (clipMaxX >= 0) ? clipMaxX : W;
-        renderItem.clipMaxY = (clipMaxY >= 0) ? clipMaxY : H;
+        renderItem.clipMaxX = (clipMaxX >= 0) ? clipMaxX : static_cast<int32_t>(g_uiResolutionWidth);
+        renderItem.clipMaxY = (clipMaxY >= 0) ? clipMaxY : static_cast<int32_t>(g_uiResolutionHeight);
     }
 
     const std::vector<Vertex2D>& GetVertices() { return g_vertices; }

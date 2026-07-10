@@ -182,12 +182,14 @@ namespace OpenGL::Renderer {
         OpenGL::ClearSSBO("ParticlePool");
         OpenGL::ClearSSBO("ParticleAdditions");
 
-        // Init draw command
+        // Zero out QUAD draw commands
         DrawArraysIndirectCommand particleDrawCommand;
         particleDrawCommand.vertexCount = 6;
         particleDrawCommand.instanceCount = 0;
         particleDrawCommand.firstVertex = 0;
         particleDrawCommand.baseInstance = 0;
+
+        OpenGL::UploadSSBOStatic("BubbleDrawCommand", sizeof(DrawArraysIndirectCommand), &particleDrawCommand);
         OpenGL::UploadSSBOStatic("ParticleDrawCommand", sizeof(DrawArraysIndirectCommand), &particleDrawCommand);
     }
 
@@ -363,13 +365,15 @@ namespace OpenGL::Renderer {
         state.colorMask = true;
 
         state.stencilTestEnabled = true;
-        state.stencilFunc = GL_EQUAL;
         state.stencilWriteMask = 0x00;
         state.stencilFailOp = GL_KEEP;
         state.stencilDepthFailOp = GL_KEEP;
         state.stencilPassOp = GL_KEEP;
+
+        // Only allow these bits through
+        state.stencilFunc = GL_NOTEQUAL;
         state.stencilRef = 0;
-        state.stencilReadMask = STENCIL_BIT_SKINNED_HAIR;
+        state.stencilReadMask = STENCIL_BIT_ASSET | STENCIL_BIT_SKINNED | STENCIL_BIT_PROCEDUAL;
 
         OpenGL::RasterizerStateManager::SetRasterizerState(state);
 

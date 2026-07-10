@@ -304,6 +304,7 @@ void Wall::SubmitRenderItems() {
             renderItem.meshId = meshId;
             renderItem.baseVertex = mesh->baseVertex;
             renderItem.baseIndex = mesh->baseIndex;
+            renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
 
             RenderDataManager::SubmitRenderItemProcedural(renderItem);
         }
@@ -327,6 +328,7 @@ void Wall::SubmitRenderItems() {
         renderItem.meshId = wallSegment.GetMeshId();
         renderItem.baseVertex = mesh->baseVertex;
         renderItem.baseIndex = mesh->baseIndex;
+        renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
 
 		RenderDataManager::SubmitRenderItemProcedural(renderItem);
     }
@@ -478,7 +480,7 @@ void Wall::RecreateWeatherBoardMesh() {
             renderItem.baseIndex = mesh->baseIndex;
             renderItem.baseVertex = mesh->baseVertex;
         }
-        renderItem.shadowBit |= (SHADOW_BIT_CAST_SHADOW | SHADOW_BIT_CAST_CSM_SHADOW | SHADOW_BIT_STATIC);
+        renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
 
         RendererUtil::UpdateRenderItemAABB(renderItem);
         Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);

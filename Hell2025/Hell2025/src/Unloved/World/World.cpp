@@ -23,4 +23,12 @@ namespace Unloved::World {
     void CleanUp() {
         CleanUpAll();
     }
+
+    void ResetWorld() {
+        LegacyWorld::ResetWorld();
+    }
+
+    void ClearAllObjects() {
+        LegacyWorld::ClearAllObjects();
+    }
 }

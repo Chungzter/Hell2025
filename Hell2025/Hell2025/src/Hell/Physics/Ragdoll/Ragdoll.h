@@ -23,9 +23,14 @@ struct Ragdoll {
     void Update();
     void DisableSimulation();
     void EnableSimulation();
+    void SetSpawnPosition(const glm::vec3& position);
+    void SetSpawnRotation(const glm::vec3& rotation);
     void SetToInitialPose();
     void MarkForRemoval();
-    void AddForce(uint64_t physicsId, const glm::vec3& force);
+    void AddForce(uint64_t physicsId, const glm::vec3& force, bool wakeIfDisabled);
+    void AddImpulse(uint64_t physicsId, const glm::vec3& impulse, bool wakeIfDisabled);
+    void AddImpulseAtPosition(uint64_t physicsId, const glm::vec3& impulse, const glm::vec3& position, bool wakeIfDisabled);
+    void AddAngularVelocityChangeAtPosition(uint64_t physicsId, const glm::vec3& velocityChange, const glm::vec3& position, bool wakeIfDisabled);
     const std::string& GetBoneNameByPhysicsId(uint64_t physicsId) const;
 
     bool IsInMotion();
@@ -48,6 +53,7 @@ struct Ragdoll {
 
 private:
     void AddMarkerMeshData(RagdollMarker& marker, RagdollSolver& solver);
+    void RecalculateRigidMass();
 
     std::vector<physx::PxD6Joint*> m_pxD6Joints;
     std::vector<uint32_t> m_markerDebugMeshIds;

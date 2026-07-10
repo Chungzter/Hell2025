@@ -1,27 +1,27 @@
-#include "Unloved/Render/API/Vulkan/VK_renderer.h"
-#include "Unloved/Render/API/Vulkan/VK_renderer_internal.h"
-
-#include "Hell/Logging.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
 #include "Hell/Render/API/Vulkan/Types/vk_mesh_buffer.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
 
+#include "Unloved/Render/API/Vulkan/VK_renderer.h"
+#include "Unloved/Render/API/Vulkan/VK_renderer_internal.h"
 #include "Unloved/Render/API/Vulkan/VK_push_constants.h"
 #include "Unloved/Render/RendererConstants.h"
 
 namespace VulkanRenderer {
-    namespace {
-
-    void RenderMaterialResolvePasses(VkCommandBuffer commandBuffer, VkExtent2D extent) {
+    void MaterialResolvePass(VkCommandBuffer commandBuffer) {
         ProfilerVulkanZoneFunction();
 
         const VulkanFrameData& frameData = GetCurrentFrameData();
 
+        AllocatedImage* baseColorImage = VulkanResourceManager::GetAllocatedImage("BaseColorMetallic");
+        AllocatedImage* normalImage = VulkanResourceManager::GetAllocatedImage("NormalXYRoughnessMisc");
+        AllocatedImage* velocityImage = VulkanResourceManager::GetAllocatedImage("VelocityXYOcclusionSubSurface");
         VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
         VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
         VulkanBuffer* rendererDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rendererData);
         VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
+        VulkanBuffer* gpuLightsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.lights);
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
         VulkanMeshBuffer* assetGeometry = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
         VulkanMeshBuffer* proceduralGeometry = VulkanResourceManager::GetMeshBuffer("Procedural");
@@ -29,6 +29,9 @@ namespace VulkanRenderer {
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("MaterialResolve");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("MaterialResolve");
 
+        if (!baseColorImage) return;
+        if (!normalImage) return;
+        if (!velocityImage) return;
         if (!renderItemBuffer) return;
         if (!viewportDataBuffer) return;
         if (!rendererDataBuffer) return;
@@ -44,6 +47,8 @@ namespace VulkanRenderer {
         if (!proceduralGeometry->GetVertexBuffer()) return;
         if (!proceduralGeometry->GetIndexBuffer()) return;
 
+        // Begin
+        VkExtent2D extent = baseColorImage->GetExtent2D();
         if (!BeginRenderState(commandBuffer, *renderState, extent)) return;
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
@@ -60,51 +65,40 @@ namespace VulkanRenderer {
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
         PushConstantsMaterialResolve pushConstants{};
-        pushConstants.renderItemsDeviceAddress = renderItemBuffer->GetDeviceAddress();
-        pushConstants.viewportDataDeviceAddress = viewportDataBuffer->GetDeviceAddress();
-        pushConstants.rendererDataDeviceAddress = rendererDataBuffer->GetDeviceAddress();
-        pushConstants.materialsDeviceAddress = materialsBuffer->GetDeviceAddress();
+        pushConstants.frame = CreatePushConstantsFrameResources();
 
+        // Static
         pushConstants.vertexBufferDeviceAddress = assetGeometry->GetVertexBufferAddress();
         pushConstants.indexBufferDeviceAddress = assetGeometry->GetIndexBufferAddress();
         pushConstants.vertexCount = static_cast<uint32_t>(assetGeometry->GetVertexBuffer()->GetSize() / sizeof(Vertex));
         pushConstants.indexCount = static_cast<uint32_t>(assetGeometry->GetIndexBuffer()->GetSize() / sizeof(uint32_t));
+
         vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsMaterialResolve), &pushConstants);
-        vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_STATIC);
+        SetStencilReference(commandBuffer, STENCIL_BIT_ASSET);
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
+        // Procedural
         pushConstants.vertexBufferDeviceAddress = proceduralGeometry->GetVertexBufferAddress();
         pushConstants.indexBufferDeviceAddress = proceduralGeometry->GetIndexBufferAddress();
         pushConstants.vertexCount = static_cast<uint32_t>(proceduralGeometry->GetVertexBuffer()->GetSize() / sizeof(Vertex));
         pushConstants.indexCount = static_cast<uint32_t>(proceduralGeometry->GetIndexBuffer()->GetSize() / sizeof(uint32_t));
+
         vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsMaterialResolve), &pushConstants);
-        vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_PROCEDUAL);
+        SetStencilReference(commandBuffer, STENCIL_BIT_PROCEDUAL);
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
+        // Skinned
         pushConstants.vertexBufferDeviceAddress = skinnedVertexBuffer->GetDeviceAddress();
         pushConstants.indexBufferDeviceAddress = assetGeometry->GetIndexBufferAddress();
         pushConstants.vertexCount = static_cast<uint32_t>(skinnedVertexBuffer->GetSize() / sizeof(Vertex));
         pushConstants.indexCount = static_cast<uint32_t>(assetGeometry->GetIndexBuffer()->GetSize() / sizeof(uint32_t));
+
         vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsMaterialResolve), &pushConstants);
-        vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_SKINNED);
+        SetStencilReference(commandBuffer, STENCIL_BIT_SKINNED);
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
+        // End
         EndRenderState(commandBuffer);
-    }
-
-    }
-
-    void MaterialResolvePass(VkCommandBuffer commandBuffer) {
-        ProfilerVulkanZoneFunction();
-
-        AllocatedImage* baseColorImage = VulkanResourceManager::GetAllocatedImage("BaseColorMetallic");
-        AllocatedImage* normalImage = VulkanResourceManager::GetAllocatedImage("NormalXYRoughnessMisc");
-        AllocatedImage* velocityImage = VulkanResourceManager::GetAllocatedImage("VelocityXYOcclusionSubSurface");
-        if (!baseColorImage || !normalImage || !velocityImage) return;
-
-        VkExtent2D extent = baseColorImage->GetExtent2D();
-
-        RenderMaterialResolvePasses(commandBuffer, extent);
 
         baseColorImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_TRANSFER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_TRANSFER_BIT);
         normalImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);

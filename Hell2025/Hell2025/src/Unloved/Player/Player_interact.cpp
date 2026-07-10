@@ -192,29 +192,6 @@ void Player::UpdateInteract() {
             }
         }
     }
-
-    if (Input::KeyPressed(HELL_KEY_P)) {
-
-        glm::vec3 rayOrigin = GetCameraPosition();
-        glm::vec3 rayDir = GetCameraForward();
-        float maxRayDistance = 100.0f;
-
-        BvhRayResult result = Unloved::WorldBVH::ClosestHit(rayOrigin, rayDir, maxRayDistance);
-        if (result.hitFound) {
-            // Sit at
-            //if (result.objectType == ObjectType::PIANO) {
-            //    for (Piano& potentialPiano : Unloved::World::GetPianos()) {
-            //        //if (potentialPiano.PianoBodyPartKeyExists(result.objectId)) {
-            //        //    SitAtPiano(potentialPiano.GetObjectId());
-            //        //}
-            //
-            //        // FIX MEEEEEEE
-            //        // FIX MEEEEEEE
-            //        // FIX MEEEEEEE
-            //    }
-            //}
-        }
-    }
 }
 
-} // namespace Unloved
+}

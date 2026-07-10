@@ -87,6 +87,8 @@ void main() {
 
     // Allocate and Write
     if (gl_LocalInvocationIndex == 0) {
+        localDecalCount = min(localDecalCount, 256u);
+
         if (localDecalCount > 0) {
             globalBaseOffset = atomicAdd(globalBloodDecalCounter, localDecalCount);
             tileBloodDecals[tileIndex].count = localDecalCount;

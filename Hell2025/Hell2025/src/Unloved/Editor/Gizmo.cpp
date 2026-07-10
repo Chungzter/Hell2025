@@ -154,6 +154,7 @@ namespace Gizmo {
     void Update() {
         if (!Editor::IsOpen()) return;
         UpdateLocalAxes();
+        UpdateRenderItems();
         UpdateInput();
         UpdateRenderItems();
     }
@@ -216,6 +217,8 @@ namespace Gizmo {
         g_gizmoHasHover = false;
         g_hoverFlag = GizmoFlag::NONE;
         for (GizmoRenderItem& renderItem : g_renderItems[viewportIndex]) {
+            if (renderItem.flag == GizmoFlag::NONE) continue;
+
             MeshBufferOLD* mesh = Gizmo::GetMeshBufferByIndex(renderItem.meshIndex);
             if (mesh) {
                 std::vector<Vertex>& vertices = mesh->GetVertices();
@@ -544,6 +547,7 @@ namespace Gizmo {
                 transform.scale = glm::vec3(scalingFactor);
                 sphere.modelMatrix = transform.to_mat4();
                 sphere.meshIndex = SPHERE;
+                sphere.flag = GizmoFlag::NONE;
                 sphere.color = TRANSPARENT;
                 
                 // Rotate X

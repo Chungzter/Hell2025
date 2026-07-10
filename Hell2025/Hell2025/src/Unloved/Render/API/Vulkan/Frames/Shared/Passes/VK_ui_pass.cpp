@@ -1,13 +1,14 @@
 #include "Unloved/Render/API/Vulkan/VK_renderer.h"
 
-#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
 #include "Hell/Render/API/Vulkan/Types/vk_timer.h"
 #include "Hell/UI/UIBackEnd.h"
+#include "Unloved/Config/Config.h"
 #include "Unloved/Render/API/Vulkan/VK_draw.h"
 #include "Unloved/Render/API/Vulkan/VK_push_constants.h"
+#include "Unloved/Render/API/Vulkan/VK_renderer_internal.h"
 #include "Unloved/Render/RenderDataManager.h"
 
 namespace VulkanRenderer {
@@ -21,20 +22,20 @@ namespace VulkanRenderer {
         if (!presentImage) return;
         if (renderItems.empty() || drawCommands.empty()) return;
 
+        VulkanFrameData& frameData = GetCurrentFrameData();
         VkExtent2D extent = presentImage->GetExtent2D();
         presentImage->Sync(commandBuffer, VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 
-        Hell::GenericMesh& genericMesh = Hell::ResourceManager::GetGenericMesh("UI");
-        if (genericMesh.GetVulkanId() == 0 || genericMesh.GetIndexCount() == 0) return;
-
-        VulkanGenericMesh* vulkanMesh = VulkanResourceManager::GetGenericMesh(genericMesh.GetVulkanId());
-        if (!vulkanMesh) return;
+        VulkanGenericMesh* vulkanMesh = VulkanResourceManager::GetGenericMesh(frameData.genericMeshes.ui);
+        if (!vulkanMesh || vulkanMesh->GetIndexCount() == 0) return;
+        VulkanBuffer* vertexBuffer = vulkanMesh->GetVertexBuffer();
+        VulkanBuffer* indexBuffer = vulkanMesh->GetIndexBuffer();
+        if (!vertexBuffer || !indexBuffer) return;
 
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("UI");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
         if (!pipeline || !staticDescriptorSet) return;
 
-        VulkanFrameData& frameData = GetCurrentFrameData();
         VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.uiRenderItems);
         if (!renderItemBuffer) return;
 
@@ -67,10 +68,13 @@ namespace VulkanRenderer {
 
         PushConstantsUI pushConstants{};
         pushConstants.renderItemsDeviceAddress = renderItemBuffer->GetDeviceAddress();
+        pushConstants.renderTargetWidth = static_cast<float>(Config::GetResolutions().ui.x);
+        pushConstants.renderTargetHeight = static_cast<float>(Config::GetResolutions().ui.y);
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
-        vulkanMesh->Bind(commandBuffer);
+        BindVertexBuffer(commandBuffer, vertexBuffer);
+        BindIndexBuffer(commandBuffer, indexBuffer);
         vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsUI), &pushConstants);
         MultiDrawIndexedCommands(commandBuffer, drawCommandBatch);
 

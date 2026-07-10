@@ -177,7 +177,7 @@ void Wire::SubmitRenderItem() {
     renderItem.meshId = m_meshId;
     renderItem.baseVertex = mesh->baseVertex;
     renderItem.baseIndex = mesh->baseIndex;
-    renderItem.shadowBit = SHADOW_BIT_NONE;
+    renderItem.shadowFlags = SHADOW_FLAG_NONE;
 
     const uint64_t renderObjectId = m_createInfo.parentObjectId != 0 ? m_createInfo.parentObjectId : m_objectId;
     Hell::Bit::PackUint64(renderObjectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);

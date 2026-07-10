@@ -3,6 +3,7 @@
 
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
+#include "Hell/Render/API/Vulkan/Types/vk_buffer.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
 
 #include "Unloved/Render/API/Vulkan/VK_draw.h"
@@ -29,7 +30,6 @@ namespace VulkanRenderer {
         VulkanMeshBuffer* proceduralGeometry = VulkanResourceManager::GetMeshBuffer("Procedural");
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("Visibility");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("Visibility");
-        VulkanPipeline* skinnedPipeline = VulkanResourceManager::GetPipeline("VisibilitySkinned");
         VulkanBuffer* skinnedVertexBuffer = frameData.buffers.skinnedVertices != 0 ? VulkanResourceManager::GetBuffer(frameData.buffers.skinnedVertices) : nullptr;
 
         if (!renderItemBuffer) return;
@@ -39,8 +39,11 @@ namespace VulkanRenderer {
         if (!proceduralGeometry) return;
         if (!renderState) return;
         if (!pipeline) return;
-        if (!skinnedPipeline) return;
         if (!skinnedVertexBuffer) return;
+        if (!assetGeometry->GetVertexBuffer()) return;
+        if (!assetGeometry->GetIndexBuffer()) return;
+        if (!proceduralGeometry->GetVertexBuffer()) return;
+        if (!proceduralGeometry->GetIndexBuffer()) return;
 
         std::array<VulkanDrawCommandBatch, 4> standardCommands = WriteDrawCommandsByViewport(drawInfoSet.standard);
         std::array<VulkanDrawCommandBatch, 4> proceduralCommands = WriteDrawCommandsByViewport(drawInfoSet.procedural);
@@ -65,20 +68,20 @@ namespace VulkanRenderer {
                 vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
                 vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
 
-                assetGeometry->Bind(commandBuffer);
-                vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_STATIC);
+                BindVertexBuffer(commandBuffer, assetGeometry->GetVertexBuffer());
+                BindIndexBuffer(commandBuffer, assetGeometry->GetIndexBuffer());
+                SetStencilReference(commandBuffer, STENCIL_BIT_ASSET);
                 MultiDrawIndexedCommands(commandBuffer, standardCommands[i]);
                 MultiDrawIndexedCommands(commandBuffer, skinnedNonDeformingStandardCommands[i]);
 
-                proceduralGeometry->Bind(commandBuffer);
-                vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_PROCEDUAL);
+                BindVertexBuffer(commandBuffer, proceduralGeometry->GetVertexBuffer());
+                BindIndexBuffer(commandBuffer, proceduralGeometry->GetIndexBuffer());
+                SetStencilReference(commandBuffer, STENCIL_BIT_PROCEDUAL);
                 MultiDrawIndexedCommands(commandBuffer, proceduralCommands[i]);
 
-                vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, skinnedPipeline->GetHandle());
-                vkCmdPushConstants(commandBuffer, skinnedPipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
-
-                assetGeometry->Bind(commandBuffer);
-                vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_SKINNED);
+                BindVertexBuffer(commandBuffer, skinnedVertexBuffer);
+                BindIndexBuffer(commandBuffer, assetGeometry->GetIndexBuffer());
+                SetStencilReference(commandBuffer, STENCIL_BIT_SKINNED);
                 MultiDrawIndexedCommands(commandBuffer, skinnedStandardCommands[i]);
             }
         }
@@ -99,7 +102,6 @@ namespace VulkanRenderer {
         VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("VisibilityAlphaDiscard");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("VisibilityAlphaDiscard");
-        VulkanPipeline* skinnedPipeline = VulkanResourceManager::GetPipeline("VisibilitySkinnedAlphaDiscard");
         VulkanBuffer* skinnedVertexBuffer = frameData.buffers.skinnedVertices != 0 ? VulkanResourceManager::GetBuffer(frameData.buffers.skinnedVertices) : nullptr;
 
         if (!renderItemBuffer) return;
@@ -109,8 +111,9 @@ namespace VulkanRenderer {
         if (!meshBuffer) return;
         if (!renderState) return;
         if (!pipeline) return;
-        if (!skinnedPipeline) return;
         if (!skinnedVertexBuffer) return;
+        if (!meshBuffer->GetVertexBuffer()) return;
+        if (!meshBuffer->GetIndexBuffer()) return;
 
         std::array<VulkanDrawCommandBatch, 4> alphaDiscardCommands = WriteDrawCommandsByViewport(drawInfoSet.alphaDiscard);
         std::array<VulkanDrawCommandBatch, 4> hairCommands = WriteDrawCommandsByViewport(drawInfoSet.hair);
@@ -119,8 +122,6 @@ namespace VulkanRenderer {
         std::array<VulkanDrawCommandBatch, 4> skinnedNonDeformingAlphaDiscardCommands = WriteDrawCommandsByViewport(drawInfoSet.skinnedNonDeformingAlphaDiscard);
 
         if (!BeginRenderState(commandBuffer, *renderState, extent)) return;
-
-        meshBuffer->Bind(commandBuffer);
 
         for (uint32_t i = 0; i < 4; i++) {
             Viewport* viewport = ViewportManager::GetViewportByIndex(i);
@@ -134,23 +135,32 @@ namespace VulkanRenderer {
                 pushConstants.skinnedVerticesDeviceAddress = skinnedVertexBuffer->GetDeviceAddress();
                 pushConstants.materialsDeviceAddress = materialsBuffer->GetDeviceAddress();
                 pushConstants.viewportIndex = i;
+                pushConstants.useDepthOffset = 0;
 
                 vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
                 vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
                 vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
 
-                vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_STATIC);
+                BindVertexBuffer(commandBuffer, meshBuffer->GetVertexBuffer());
+                BindIndexBuffer(commandBuffer, meshBuffer->GetIndexBuffer());
+                SetStencilReference(commandBuffer, STENCIL_BIT_ASSET);
                 MultiDrawIndexedCommands(commandBuffer, alphaDiscardCommands[i]);
                 MultiDrawIndexedCommands(commandBuffer, skinnedNonDeformingAlphaDiscardCommands[i]);
+
+                pushConstants.useDepthOffset = 1;
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
                 MultiDrawIndexedCommands(commandBuffer, hairCommands[i]);
 
-                vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, skinnedPipeline->GetHandle());
-                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, skinnedPipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
-                vkCmdPushConstants(commandBuffer, skinnedPipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
-
-                vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_SKINNED);
+                BindVertexBuffer(commandBuffer, skinnedVertexBuffer);
+                BindIndexBuffer(commandBuffer, meshBuffer->GetIndexBuffer());
+                pushConstants.useDepthOffset = 0;
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
+                SetStencilReference(commandBuffer, STENCIL_BIT_SKINNED);
                 MultiDrawIndexedCommands(commandBuffer, skinnedAlphaDiscardCommands[i]);
-                vkCmdSetStencilReference(commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, STENCIL_BIT_SKINNED_HAIR);
+
+                pushConstants.useDepthOffset = 1;
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
+                SetStencilReference(commandBuffer, STENCIL_BIT_SKINNED_HAIR);
                 MultiDrawIndexedCommands(commandBuffer, skinnedHairCommands[i]);
             }
         }
@@ -163,8 +173,8 @@ namespace VulkanRenderer {
     void VisibilityPass(VkCommandBuffer commandBuffer) {
         ProfilerVulkanZoneFunction();
 
-        AllocatedImage* visibilityImage = VulkanResourceManager::GetAllocatedImage("GBufferRE.Visibility");
-        AllocatedImage* depthImage = VulkanResourceManager::GetAllocatedImage("GBufferRE.Depth");
+        AllocatedImage* visibilityImage = VulkanResourceManager::GetAllocatedImage("Visibility");
+        AllocatedImage* depthImage = VulkanResourceManager::GetAllocatedImage("Depth");
         if (!visibilityImage || !depthImage) return;
 
         VkExtent2D extent = visibilityImage->GetExtent2D();

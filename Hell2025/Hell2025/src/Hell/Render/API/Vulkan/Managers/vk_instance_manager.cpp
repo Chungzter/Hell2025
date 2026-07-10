@@ -12,11 +12,7 @@ namespace VulkanInstanceManager {
     VkSurfaceKHR g_surface = VK_NULL_HANDLE;
     bool g_validationEnabled = true;
 
-    static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageTypes,
-        const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
-        void* userData) {
+    static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageTypes, const VkDebugUtilsMessengerCallbackDataEXT* callbackData, void* userData) {
 
         std::cerr << "Validation Layer: " << callbackData->pMessage << std::endl;
         return VK_FALSE;

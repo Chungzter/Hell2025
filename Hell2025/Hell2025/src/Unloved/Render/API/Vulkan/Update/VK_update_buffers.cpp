@@ -5,6 +5,7 @@
 #include "Hell/UI/UIBackEnd.h"
 
 #include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/RendererConstants.h"
 
 #include <algorithm>
 #include <array>
@@ -15,31 +16,72 @@ namespace VulkanRenderer {
     void UpdateBuffers() {
         const VulkanFrameData& frameData = GetCurrentFrameData();
 
-        const std::vector<RenderItem>& instanceData = Unloved::RenderDataManager::GetInstanceData();
-        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
-        const RendererData& rendererData = Unloved::RenderDataManager::GetRendererData();
-        const std::vector<GPULight>& gpuLights = Unloved::RenderDataManager::GetGPULights();
-        const std::vector<Material>& materials = Hell::ResourceManager::GetMaterials();
-        const std::vector<glm::mat4>& skinningTransforms = Unloved::RenderDataManager::GetSkinningTransforms();
-        std::array<GPULight, 8> gpuLightBufferData{};
-        const size_t gpuLightCount = std::min(gpuLights.size(), gpuLightBufferData.size());
-        std::copy_n(gpuLights.data(), gpuLightCount, gpuLightBufferData.data());
+        // Instance data
 
-        UpdateBuffer(VulkanResourceManager::GetBuffer(frameData.buffers.instanceData), instanceData.data(), sizeof(RenderItem) * instanceData.size());
-        UpdateBuffer(VulkanResourceManager::GetBuffer(frameData.buffers.viewportData), viewportData.data(), sizeof(ViewportData) * viewportData.size());
-        UpdateBuffer(VulkanResourceManager::GetBuffer(frameData.buffers.rendererData), &rendererData, sizeof(RendererData));
-        UpdateBuffer(VulkanResourceManager::GetBuffer(frameData.buffers.gpuLights), gpuLightBufferData.data(), sizeof(GPULight) * gpuLightBufferData.size());
-        if (EnsureBufferSize(frameData.buffers.materials, sizeof(Material) * materials.size())) {
-            UpdateBuffer(VulkanResourceManager::GetBuffer(frameData.buffers.materials), materials.data(), sizeof(Material) * materials.size());
-        }
-        UpdateBuffer(VulkanResourceManager::GetBuffer(frameData.buffers.skinningTransforms), skinningTransforms.data(), sizeof(glm::mat4) * skinningTransforms.size());
+        const std::vector<RenderItem>& instanceData = Unloved::RenderDataManager::GetInstanceData();
+        VulkanBuffer* instanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
+        VkDeviceSize instanceBufferSize = sizeof(RenderItem) * instanceData.size();
+        EnsureBufferSize(instanceDataBuffer, instanceBufferSize);
+        UpdateBuffer(instanceDataBuffer, instanceData.data(), instanceBufferSize);
+
+        // Lights
+
+        const std::vector<GPULight>& lights = Unloved::RenderDataManager::GetGPULights();
+        VulkanBuffer* lightsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.lights);
+        VkDeviceSize lightsBufferSize = sizeof(GPULight) * lights.size();
+        EnsureBufferSize(lightsBuffer, lightsBufferSize);
+        UpdateBuffer(lightsBuffer, lights.data(), lightsBufferSize);
+
+        // Materials
+
+        const std::vector<Material>& materials = Hell::ResourceManager::GetMaterials();
+        VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
+        VkDeviceSize materialsBufferSize = sizeof(Material) * materials.size();
+        EnsureBufferSize(materialsBuffer, materialsBufferSize);
+        UpdateBuffer(materialsBuffer, materials.data(), materialsBufferSize);
+
+        // Renderer data
+
+        const RendererData& rendererData = Unloved::RenderDataManager::GetRendererData();
+        VulkanBuffer* rendererDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rendererData);
+        VkDeviceSize rendererDataBufferSize = sizeof(RendererData);
+        EnsureBufferSize(rendererDataBuffer, rendererDataBufferSize);
+        UpdateBuffer(rendererDataBuffer, &rendererData, rendererDataBufferSize);
+
+        // Skinning transforms
+
+        const std::vector<glm::mat4>& skinningTransforms = Unloved::RenderDataManager::GetSkinningTransforms();
+        VulkanBuffer* skinningTransformsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.skinningTransforms);
+        VkDeviceSize skinningTransformsBufferSize = sizeof(glm::mat4) * skinningTransforms.size();
+        EnsureBufferSize(skinningTransformsBuffer, skinningTransformsBufferSize);
+        UpdateBuffer(skinningTransformsBuffer, skinningTransforms.data(), skinningTransformsBufferSize);
+
+        // Viewport data
+
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
+        VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
+        VkDeviceSize viewportDataBufferSize = sizeof(ViewportData) * viewportData.size();
+        EnsureBufferSize(viewportDataBuffer, viewportDataBufferSize);
+        UpdateBuffer(viewportDataBuffer, viewportData.data(), viewportDataBufferSize);
+
     }
 
     void UpdateBuffersUI() {
         const VulkanFrameData& frameData = GetCurrentFrameData();
 
-        const std::vector<RenderItemUI>& renderItems = UIBackEnd::GetRenderItems();
+        // UI mesh
+        if (VulkanGenericMesh* uiMesh = VulkanResourceManager::GetGenericMesh(frameData.genericMeshes.ui)) {
+            const std::vector<Vertex2D>& vertices = UIBackEnd::GetVertices();
+            const std::vector<uint32_t>& indices = UIBackEnd::GetIndices();
+            uiMesh->UpdateVertexData(vertices.empty() ? nullptr : vertices.data(), vertices.size(), Vertex2D::GetLayout());
+            uiMesh->UpdateIndexData(indices);
+        }
 
-        UpdateBuffer(VulkanResourceManager::GetBuffer(frameData.buffers.uiRenderItems), renderItems.data(), sizeof(RenderItemUI) * renderItems.size());
+        // UI render items
+        const std::vector<RenderItemUI>& renderItems = UIBackEnd::GetRenderItems();
+        VulkanBuffer* renderItemsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.uiRenderItems);
+        VkDeviceSize renderItemsBufferSize = sizeof(RenderItemUI) * renderItems.size();
+        EnsureBufferSize(renderItemsBuffer, renderItemsBufferSize);
+        UpdateBuffer(renderItemsBuffer, renderItems.data(), renderItemsBufferSize);
     }
 }

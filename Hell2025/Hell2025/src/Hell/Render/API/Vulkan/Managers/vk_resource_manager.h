@@ -3,6 +3,7 @@
 #include "Hell/Render/API/Vulkan/Types/vk_acceleration_structure.h"
 #include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
 #include "Hell/Render/API/Vulkan/Types/vk_buffer.h"
+#include "Hell/Render/API/Vulkan/Types/vk_cubemap.h"
 #include "Hell/Render/API/Vulkan/Types/vk_descriptor_set.h"
 #include "Hell/Render/API/Vulkan/Types/vk_generic_mesh.h"
 #include "Hell/Render/API/Vulkan/Types/vk_mesh_buffer.h"
@@ -30,9 +31,15 @@ namespace VulkanResourceManager {
     void RemoveAccelerationStructure(uint64_t id);
 
     // Allocated Images
-    AllocatedImage& CreateAllocatedImage(const std::string& name, uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage);
+    AllocatedImage& CreateAllocatedImage(const std::string& name, uint32_t width, uint32_t height, VkSampleCountFlagBits sampleCount, VkFormat format, VkImageUsageFlags usage);
     AllocatedImage* GetAllocatedImage(const std::string& name);
     bool AllocatedImageExists(const std::string& name);
+
+    // Cubemaps
+    VulkanCubemap& CreateCubemap(const std::string& name);
+    VulkanCubemap* GetCubemap(const std::string& name);
+    bool CubemapExists(const std::string& name);
+    void RemoveCubemap(const std::string& name);
 
     // Buffers
     uint64_t CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags vmaFlags = 0);

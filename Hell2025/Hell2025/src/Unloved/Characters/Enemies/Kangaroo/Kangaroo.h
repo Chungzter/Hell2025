@@ -37,6 +37,7 @@ namespace Unloved {
         Kangaroo(uint64_t id, KangarooCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
 
         void Init(uint64_t id, KangarooCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+        void UpdateMovement(float deltaTime);
         void Update(float deltaTime);
         void Kill();
         void GiveDamage(int damage);
@@ -64,6 +65,8 @@ namespace Unloved {
         uint64_t GetObjectId()                      { return m_objectId; }
         uint64_t GetCharacterControllerId ()        { return m_characterControllerId; }
         uint64_t GetRagdollId()                   { return m_RagdollId; }
+        bool IsAlive() const                        { return m_alive; }
+        bool IsDead() const                         { return !m_alive; }
         const glm::vec3& GetPosition() const        { return m_position; }
         const glm::vec3& GetRotation() const        { return m_rotation; }
         bool WoundTextureNeedsClearing()            { return m_woundTextureNeedsClearing; }

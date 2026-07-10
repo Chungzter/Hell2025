@@ -12,6 +12,10 @@ namespace OpenGL::Renderer {
     void BloodDecalComposite();
 
     void BloodDecalsPass() {
+        if (Unloved::RenderDataManager::GetBloodScreenSpaceDecalInstanceData().empty()) {
+            return;
+        }
+
         BloodDecalTileCulling();
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 

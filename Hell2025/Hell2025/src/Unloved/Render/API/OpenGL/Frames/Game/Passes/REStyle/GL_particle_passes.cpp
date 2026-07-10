@@ -22,6 +22,7 @@ namespace OpenGL::Renderer {
     void DrawParticles();
 
     void ParticlePass() {
+        ProfilerOpenGLZoneFunction();
 
         UploadAnyNewParticles();
         UpdateParticles();
@@ -32,7 +33,6 @@ namespace OpenGL::Renderer {
     }
 
     void UploadAnyNewParticles() {
-        ProfilerOpenGLZoneFunction();
 
         std::vector<BulletTrailParticle>& particles = Unloved::BulletSystem::GetBulletTrailParticles();
         if (particles.empty()) return;
@@ -75,8 +75,6 @@ namespace OpenGL::Renderer {
     }
 
     void UpdateParticles() {
-        ProfilerOpenGLZoneFunction();
-
         OpenGL::BindSSBO(7, "ParticlePool");
         OpenGL::BindSSBO(8, "ParticleActiveIndices");
         OpenGL::BindSSBO(9, "ParticleDrawCommand");
@@ -97,8 +95,6 @@ namespace OpenGL::Renderer {
     }
 
     void DrawParticles() {
-        ProfilerOpenGLZoneFunction();
-
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         OpenGLCubemapView& skyboxCubemapView = OpenGL::ResourceManager::GetCubemapView("SkyboxNightSky");

@@ -1,5 +1,6 @@
 #include "Player.h"
 
+#include "Hell/Backend/BackEnd.h"
 #include "Hell/Common/Enum.h"
 #include "Hell/Common/String.h"
 #include "Hell/UI/TextBlitter.h"
@@ -14,7 +15,6 @@
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Characters/Enemies/Kangaroo/Kangaroo.h"
 #include "Unloved/Characters/Enemies/Shark/Shark.h"
-#include "Unloved/Objects/Lighting/Light.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
@@ -36,7 +36,9 @@ void Player::UpdateUI(float deltaTime) {
     int height = resolutions.ui.y * viewport->GetSize().y;
     int xLeft = resolutions.ui.x * viewport->GetPosition().x;
     int xRight = xLeft + width;
-    int yTop = resolutions.ui.y * (1.0f - viewport->GetPosition().y - viewport->GetSize().y);
+
+    float viewportTop = viewport->GetPosition().y;
+    int yTop = resolutions.ui.y * viewportTop;
     int yBottom = yTop + height;
     int centerX = xLeft + (width / 2);
     int centerY = yTop + (height / 2);
@@ -284,13 +286,6 @@ void Player::UpdateUI(float deltaTime) {
                 text += "Movement Dir: " + Hell::String::FormatVec3(m_movementDirection) + "\n";
                 text += "Acceleration: " + std::to_string(m_acceleration) + "\n";
                 text += "Y Velocity: " + std::to_string(m_yVelocity) + "\n";
-            }
-
-            // Lights
-            if (false) {
-                for (Light& Light : Unloved::World::GetLights()) {
-                    text += "Light: " + Hell::String::FormatBool(Light.IsDirtyForShadowMaps()) + "\n";
-                }
             }
 
             // Physx Object Count

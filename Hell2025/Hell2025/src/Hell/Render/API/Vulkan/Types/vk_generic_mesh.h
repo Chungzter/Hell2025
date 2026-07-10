@@ -11,7 +11,6 @@ struct VulkanGenericMesh {
     void UpdateVertexData(const void* vertices, size_t vertexCount, const VertexLayoutDescription& layout);
     void UpdateIndexData(const std::vector<uint32_t>& indices);
     void CleanUp();
-    void Bind(VkCommandBuffer commandBuffer) const;
 
     size_t GetVertexCount() const { return m_vertexCount; }
     size_t GetIndexCount() const  { return m_indexCount; }

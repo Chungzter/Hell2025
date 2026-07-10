@@ -25,16 +25,16 @@ namespace VulkanRenderer {
             }
         }
 
-        if (VulkanResourceManager::AllocatedImageExists("GBufferRE.Visibility")) {
-            AllocatedImage* visibilityImage = VulkanResourceManager::GetAllocatedImage("GBufferRE.Visibility");
+        if (VulkanResourceManager::AllocatedImageExists("Visibility")) {
+            AllocatedImage* visibilityImage = VulkanResourceManager::GetAllocatedImage("Visibility");
             if (visibilityImage) {
                 staticDescriptorSet->WriteImage(DESC_IDX_UINT_TEXTURES, visibilityImage->GetImageView(), VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VULKAN_UINT_TEXTURE_IDX_GBUFFER_VISIBILITY);
                 dirty = true;
             }
         }
 
-        if (VulkanResourceManager::AllocatedImageExists("GBufferRE.Depth")) {
-            AllocatedImage* depthImage = VulkanResourceManager::GetAllocatedImage("GBufferRE.Depth");
+        if (VulkanResourceManager::AllocatedImageExists("Depth")) {
+            AllocatedImage* depthImage = VulkanResourceManager::GetAllocatedImage("Depth");
             if (depthImage) {
                 staticDescriptorSet->WriteImage(DESC_IDX_TEXTURES, depthImage->GetDepthOnlyImageView(), VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VULKAN_TEXTURE_IDX_GBUFFER_DEPTH);
                 dirty = true;
@@ -57,10 +57,26 @@ namespace VulkanRenderer {
             }
         }
 
+        if (VulkanResourceManager::AllocatedImageExists("VelocityXYOcclusionSubSurface")) {
+            AllocatedImage* velocityImage = VulkanResourceManager::GetAllocatedImage("VelocityXYOcclusionSubSurface");
+            if (velocityImage) {
+                staticDescriptorSet->WriteImage(DESC_IDX_TEXTURES, velocityImage->GetImageView(), VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VULKAN_TEXTURE_IDX_VELOCITY_XY_OCCLUSION_SUBSURFACE);
+                dirty = true;
+            }
+        }
+
         if (VulkanResourceManager::AllocatedImageExists("Lighting")) {
             AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("Lighting");
             if (lightingImage) {
                 staticDescriptorSet->WriteImage(DESC_IDX_STORAGE_IMAGES_RGBA16F, lightingImage->GetImageView(), VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING);
+                dirty = true;
+            }
+        }
+
+        if (VulkanResourceManager::AllocatedImageExists("HairLighting")) {
+            AllocatedImage* hairLightingImage = VulkanResourceManager::GetAllocatedImage("HairLighting");
+            if (hairLightingImage) {
+                staticDescriptorSet->WriteImage(DESC_IDX_TEXTURES, hairLightingImage->GetImageView(), VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VULKAN_TEXTURE_IDX_HAIR_LIGHTING);
                 dirty = true;
             }
         }

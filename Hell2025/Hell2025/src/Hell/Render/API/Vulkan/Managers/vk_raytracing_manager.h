@@ -11,6 +11,7 @@
 
 namespace VulkanRaytracingManager {
     void CreateTLAS(uint64_t id, const std::vector<VkAccelerationStructureInstanceKHR>& instances);
+    bool BuildBottomLevelAS(uint64_t id, VulkanMeshBuffer& meshBuffer, const Mesh& mesh);
     void BuildBottomLevelASFromMeshes(uint64_t id, VulkanMeshBuffer& meshBuffer, const std::vector<Mesh*>& meshes);
     uint64_t CreateBottomLevelAS(Mesh* mesh);
 

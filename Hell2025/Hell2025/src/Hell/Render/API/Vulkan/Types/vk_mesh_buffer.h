@@ -26,8 +26,6 @@ struct VulkanMeshBuffer {
     void ResizeIndexBuffer(size_t newCapacity, const std::vector<uint32_t>& indices);
     void ResizeVertexWeightBuffer(size_t newCapacity, const std::vector<VertexWeight>& vertexWeights);
 
-    void Bind(VkCommandBuffer commandBuffer) const;
-
     VulkanBuffer* GetVertexBuffer() { return m_vertexBuffer.GetBuffer() == VK_NULL_HANDLE ? nullptr : &m_vertexBuffer; }
     VulkanBuffer* GetIndexBuffer()  { return m_indexBuffer.GetBuffer() == VK_NULL_HANDLE ? nullptr : &m_indexBuffer; }
     VulkanBuffer* GetVertexWeightBuffer() { return m_vertexWeightBuffer.GetBuffer() == VK_NULL_HANDLE ? nullptr : &m_vertexWeightBuffer; }

@@ -54,17 +54,17 @@ void Viewport::UpdateSpaceCoords(SpaceCoords& spaceCoords, uint32_t fullResoluti
 }
 
 void Viewport::Update() {
-    // Pixel bounds
-    m_leftPixel = m_position.x * Hell::BackEnd::GetCurrentWindowWidth();
-    m_rightPixel = m_leftPixel + m_windowSpaceCoords.width;
-    m_topPixel = Hell::BackEnd::GetCurrentWindowHeight() - (m_position.y * Hell::BackEnd::GetCurrentWindowHeight());
-    m_bottomPixel = m_topPixel - m_windowSpaceCoords.height;
-
     // Window space co-ordinates
     m_windowSpaceCoords.width = m_size.x * Hell::BackEnd::GetCurrentWindowWidth();
     m_windowSpaceCoords.height = m_size.y * Hell::BackEnd::GetCurrentWindowHeight();
     m_windowSpaceCoords.localMouseX = Input::GetMouseX();
     m_windowSpaceCoords.localMouseY = Input::GetMouseY();
+
+    // Pixel bounds
+    m_leftPixel = m_position.x * Hell::BackEnd::GetCurrentWindowWidth();
+    m_rightPixel = m_leftPixel + m_windowSpaceCoords.width;
+    m_topPixel = Hell::BackEnd::GetCurrentWindowHeight() - (m_position.y * Hell::BackEnd::GetCurrentWindowHeight());
+    m_bottomPixel = m_topPixel - m_windowSpaceCoords.height;
 
     // Space co-ordinates
     const Resolutions& resolutions = Config::GetResolutions();

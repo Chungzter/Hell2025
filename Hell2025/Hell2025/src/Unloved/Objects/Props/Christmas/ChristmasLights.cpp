@@ -89,7 +89,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         renderItem.meshId = model->GetMeshIndices()[1];;
         renderItem.materialIndex = whiteMaterialIndex;
         //renderItem.useEmissiveMask = 1.0f;                            // CHECK IM NOT IMPORTANT
-        renderItem.shadowBit = SHADOW_BIT_NONE;
+        renderItem.shadowFlags = SHADOW_FLAG_NONE;
         renderItem.emissiveR = 1.0f;
         renderItem.emissiveG = 0.0f;
         renderItem.emissiveB = 0.0f;
@@ -106,7 +106,7 @@ void ChristmasLightSet::RecreateLightRenderItems() {
         renderItem.meshId = model->GetMeshIndices()[0];
         renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
         renderItem.materialIndex = blackMaterialIndex;
-        renderItem.shadowBit = SHADOW_BIT_NONE;
+        renderItem.shadowFlags = SHADOW_FLAG_NONE;
         Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
         RendererUtil::UpdateRenderItemAABB(renderItem);
         m_renderItems.push_back(renderItem);

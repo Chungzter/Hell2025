@@ -48,8 +48,10 @@ namespace Unloved {
         ~Shark() = default;
 
         void Init();
+        void UpdateMovement(float deltaTime);
         void Update(float deltaTime);
         void SetPosition(const glm::vec3& position);
+        void SetPatrolCenter(const glm::vec3& position);
         void CleanUp();
         void DrawSpinePoints();
         void HuntPlayer(uint64_t playerId);

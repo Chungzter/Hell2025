@@ -4,9 +4,10 @@
 #include "World/LegacyWorld.h"
 #include "Unloved/World/World.h"
 namespace OpenGL::Renderer {
-    using namespace Unloved;
 
-    std::vector<GPUChristmasLight> g_gpuLights;
+    namespace {
+        std::vector<Unloved::GPUChristmasLight> g_christmasLights;
+    }
 
     void ComputeTileWorldBounds() {
         ProfilerOpenGLZoneFunction();
@@ -58,17 +59,27 @@ namespace OpenGL::Renderer {
         ProfilerOpenGLZoneFunction();
 
         // Clear the lights from last frame, coz they change
-        g_gpuLights.clear();
+        g_christmasLights.clear();
 
         // Gather all the Christmas lights from ALL the ChristmasLightSets
-        Hell::SlotMap<ChristmasLightSet>& christmasLightSets = Unloved::World::GetChristmasLightSets();
-
-        for (ChristmasLightSet& christmasLightSet : christmasLightSets) {
-            const std::vector<GPUChristmasLight>& gpuLights = christmasLightSet.GetGPUChristmasLights();
-            g_gpuLights.insert(g_gpuLights.end(), gpuLights.begin(), gpuLights.end());
+        for (Unloved::ChristmasLightSet& christmasLightSet : Unloved::World::GetChristmasLightSets()) {
+            const std::vector<Unloved::GPUChristmasLight>& gpuLights = christmasLightSet.GetGPUChristmasLights();
+            g_christmasLights.insert(g_christmasLights.end(), gpuLights.begin(), gpuLights.end());
         }
 
-        OpenGL::UpdateSSBO("ChristmasLightInstances", g_gpuLights.size() * sizeof(GPUChristmasLight), (void*)&g_gpuLights[0]);
+        // If no Christmas lights found, then initialize the SSBOs to zero
+        if (g_christmasLights.empty()) {
+            OpenGL::ClearSSBO("TileChristmasLights");
+            OpenGL::ClearSSBO("ChristmasLightInstances");
+            OpenGL::ClearSSBO("ChristmasLightIndices");
+            OpenGL::ClearSSBO("ChristmasLightCounter");
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    
+            return;
+        }
+
+
+        OpenGL::UpdateSSBO("ChristmasLightInstances", g_christmasLights.size() * sizeof(Unloved::GPUChristmasLight), g_christmasLights.data());
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         // Debug draw the lights as points
@@ -80,7 +91,7 @@ namespace OpenGL::Renderer {
         if (!shader) return;
 
         OpenGL::BindShader("ChristmasLightCulling");
-        OpenGL::SetUniformInt("u_christmasLightCount", g_gpuLights.size());
+        OpenGL::SetUniformInt("u_christmasLightCount", g_christmasLights.size());
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
         OpenGL::SetUniformInt("u_tileYCount", GetTileCountY());
 
@@ -102,8 +113,8 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindShader("BloodDecalsCulling");
         OpenGL::SetUniformInt("u_decalCount", static_cast<int>(Unloved::BloodSystem::GetBloodScreenSpaceDecals().size()));
-        OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
-        OpenGL::SetUniformInt("u_tileYCount", GetTileCountY());
+        OpenGL::SetUniformInt("u_tileXCount", static_cast<int>(GetTileCountX()));
+        OpenGL::SetUniformInt("u_tileYCount", static_cast<int>(GetTileCountY()));
 
         OpenGL::BindSSBO(7, "TileWorldBounds");
         OpenGL::BindSSBO(8, "TileBloodDecals");

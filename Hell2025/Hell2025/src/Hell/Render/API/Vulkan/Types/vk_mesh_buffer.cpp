@@ -118,18 +118,6 @@ void VulkanMeshBuffer::ResizeVertexWeightBuffer(size_t newCapacity, const std::v
     m_vertexWeightBuffer = std::move(newBuffer);
 }
 
-void VulkanMeshBuffer::Bind(VkCommandBuffer commandBuffer) const {
-    if (!GetVertexBuffer() || !GetIndexBuffer()) {
-        Logging::Error() << "VulkanMeshBuffer::Bind(..) called without valid vertex and index buffers\n";
-        return;
-    }
-
-    const VkBuffer vertexBuffer = m_vertexBuffer.GetBuffer();
-    const VkDeviceSize vertexOffset = 0;
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &vertexOffset);
-    vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-}
-
 uint64_t VulkanMeshBuffer::GetVertexBufferAddress() const {
     return GetVertexBuffer() ? m_vertexBuffer.GetDeviceAddress() : 0;
 }

@@ -45,6 +45,7 @@ struct MeshNode {
     bool forceDynamic;
     bool castShadows;
     bool castCSMShadows;
+    bool excludeFromVulkanTLAS = false;
     bool ownsOpenableId = false;      // Only nodes with this flag set to true receive the transform from the openable ID
     glm::vec3 emissiveColor = glm::vec3(0.0f);
     glm::vec3 tintColor = glm::vec3(1.0f);
@@ -83,6 +84,10 @@ struct MeshNodes {
     void SleepAllPhysics();
     void WakeAllPhysics();
     void AddForceToPhsyics(const glm::vec3 force);
+    void AddVelocityChangeToPhysics(const glm::vec3 velocityChange);
+    void AddImpulseToPhysics(const glm::vec3 impulse);
+    void AddImpulseAtPositionToPhysics(const glm::vec3 impulse, const glm::vec3 position);
+    void AddAngularVelocityChangeAtPositionToPhysics(const glm::vec3 velocityChange, const glm::vec3 position);
     void EnableCSMShadows();
     void EnablePointLightShadows();
     void DisablePointLightShadows();

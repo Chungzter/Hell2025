@@ -12,12 +12,11 @@
 */
 
 #include "Hell/Backend/BackEnd.h"
-#include "Unloved/Unloved.h"
-#include "Unloved/Render/Renderer.h"
-#include <iostream>
 #include "Hell/Logging.h"
 
-#include "Hell/AssetLoader/AssetLoader.h"
+#include "Unloved/Unloved.h"
+
+#include <iostream>
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
@@ -26,7 +25,7 @@ int main() {
     std::cout << "We are all alone on life's journey, held captive by the limitations of human consciousness.\n";
 
     // Engine Init
-    if (!Hell::BackEnd::Init(API::VULKAN, WindowedMode::WINDOWED, "Unloved")) {
+    if (!Hell::BackEnd::Init(API::OPENGL, WindowedMode::WINDOWED, "Unloved")) {
         return -1;
     }
 

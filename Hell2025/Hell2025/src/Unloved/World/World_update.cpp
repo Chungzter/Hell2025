@@ -40,6 +40,14 @@ namespace Unloved::World {
         Unloved::WorldBVH::UpdateBvhs();
     }
 
+    void UpdateEnemyMovement() {
+        const float deltaTime = Hell::Time::DeltaTime();
+
+        for (Dobermann& object : GetDobermanns()) object.UpdateMovement(deltaTime);
+        for (Kangaroo& object : GetKangaroos())   object.UpdateMovement(deltaTime);
+        for (Shark& object : GetSharks())         object.UpdateMovement(deltaTime);
+    }
+
     void UpdateObjects() {
         const float deltaTime = Hell::Time::DeltaTime();
 
@@ -47,13 +55,11 @@ namespace Unloved::World {
         for (BulletCasing& object : GetBulletCasings())             object.Update(deltaTime);
         for (ChristmasLightSet& object : GetChristmasLightSets())   object.Update(deltaTime);
         for (ChristmasTree& object : GetChristmasTrees())           object.Update(deltaTime);
-        for (Dobermann& object : GetDobermanns())                   object.Update(deltaTime);
         for (Door& object : GetDoors())                             object.Update(deltaTime);
         for (Fence& object : GetFences())                           object.Update();
         for (Fireplace& object : GetFireplaces())                   object.Update(deltaTime);
         for (GameObject& object : GetGameObjects())                 object.Update(deltaTime);
         for (GenericObject& object : GetGenericObjects())           object.Update(deltaTime);
-        for (Kangaroo& object : GetKangaroos())                     object.Update(deltaTime);
         for (Ladder& object : GetLadders())                         object.Update(deltaTime);
         for (Mermaid& object : GetMermaids())                       object.Update(deltaTime);
         for (Piano& object : GetPianos())                           object.Update(deltaTime);
@@ -61,10 +67,13 @@ namespace Unloved::World {
         for (PictureFrame& object : GetPictureFrames())             object.Update();
         for (PowerPoleSet& object : GetPowerPoleSets())             object.Update();
         for (Road& object : LegacyWorld::GetRoads())                object.Update();
-        for (Shark& object : GetSharks())                           object.Update(deltaTime);
         for (Staircase& object : GetStaircases())                   object.Update(deltaTime);
         for (TrimSet& object : GetTrimSets())                       object.Update();
         for (Window& object : GetWindows())                         object.Update(deltaTime);
+
+        for (Dobermann& object : GetDobermanns())                   object.Update(deltaTime);
+        for (Kangaroo& object : GetKangaroos())                     object.Update(deltaTime);
+        for (Shark& object : GetSharks())                           object.Update(deltaTime);
 
         // These must run in this order otherwise various dirty flags are stale
         for (DDGIVolume& object : GetDDGIVolumes())                 object.Update();

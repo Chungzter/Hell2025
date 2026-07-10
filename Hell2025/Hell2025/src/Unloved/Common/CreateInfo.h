@@ -101,7 +101,7 @@ struct DecalCreateInfo {
 
 struct DobermannCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 eulerDirection = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Dobermann";
 };
@@ -238,6 +238,7 @@ struct MeshNodeCreateInfo {
     DecalType decalType = DecalType::PLASTER;
     bool forceDynamic = false;
 	bool castShadows = true;
+    bool excludeFromVulkanTLAS = false;
     bool addtoNavMesh = false;
     glm::vec3 emissiveColor = glm::vec3(0.0f);
     glm::vec3 tintColor = glm::vec3(1.0f);
@@ -369,6 +370,7 @@ struct WindowCreateInfo {
 struct CreateInfoCollection {
     std::vector<ChristmasLightsCreateInfo> christmasLights;
     std::vector<DDGIVolumeCreateInfo> ddgiVolumes;
+    std::vector<DobermannCreateInfo> dobermanns;
     std::vector<DoorCreateInfo> doors;
     std::vector<FenceCreateInfo> fences;
     std::vector<FireplaceCreateInfo> fireplaces;

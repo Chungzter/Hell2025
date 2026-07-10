@@ -11,6 +11,8 @@ struct Mermaid {
     void Init(uint64_t id, MermaidCreateInfo createInfo, SpawnOffset spawnOffset);
     void Update(float deltaTime);
     void CleanUp();
+    void SetPosition(const glm::vec3& position);
+    void SetRotation(const glm::vec3& rotation);
 
     Unloved::MeshNodes& GetMeshNodes()                                            { return m_meshNodes; }
     const MermaidCreateInfo& GetCreateInfo() const                       { return m_createInfo; }

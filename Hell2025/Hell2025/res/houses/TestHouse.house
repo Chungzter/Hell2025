@@ -155,6 +155,34 @@
     }
   ],
   "DeathmatchSpawns": [],
+  "Dobermanns": [
+    {
+      "EditorName": "Dobermann",
+      "Position": [
+        3.5220298767089844,
+        0.0,
+        -0.6598702669143677
+      ],
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "EditorName": "Dobermann 2",
+      "Position": [
+        6.978081703186035,
+        0.0008630752563476563,
+        3.6654419898986816
+      ],
+      "Rotation": [
+        0.0,
+        0.41061490774154663,
+        0.0
+      ]
+    }
+  ],
   "Doors": [
     {
       "DeadLockedAtStart": false,
@@ -1186,7 +1214,21 @@
       "Type": "WALL_LAMP"
     }
   ],
-  "Mermaids": [],
+  "Mermaids": [
+    {
+      "EditorName": "Mermaid Shop Owner",
+      "Position": [
+        2.219637870788574,
+        -0.02131962776184082,
+        0.7106345891952515
+      ],
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
   "Pianos": [
     {
       "Position": [
@@ -1743,7 +1785,16 @@
     }
   ],
   "PowerPoleSets": [],
-  "Sharks": [],
+  "Sharks": [
+    {
+      "EditorName": "Shark",
+      "Position": [
+        -23.501968383789063,
+        -0.0099945068359375,
+        0.5218887329101563
+      ]
+    }
+  ],
   "Staircases": [
     {
       "EditorName": "Staircase",

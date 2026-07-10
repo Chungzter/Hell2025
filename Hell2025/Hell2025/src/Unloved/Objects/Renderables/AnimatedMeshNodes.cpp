@@ -22,7 +22,7 @@ void AnimatedMeshNodes::SetSkinnedModel(uint64_t parentId, std::string name) {
 
         m_skinnedModel = ptr;
         m_nodes.clear();
-        m_woundMaskTextureIndices.resize(m_skinnedModel->GetMeshCount());
+        m_woundMaskArrayIndices.resize(m_skinnedModel->GetMeshCount());
 
         int meshCount = m_skinnedModel->GetMeshCount();
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
@@ -37,14 +37,14 @@ void AnimatedMeshNodes::SetSkinnedModel(uint64_t parentId, std::string name) {
             node.meshId = meshId;
             node.meshName = mesh->name;
             node.deforming = metadata->requiresSkinning;
-            node.baseSkinningVertex = metadata->baseVertexWeight;
             node.vertexCount = mesh->vertexCount;
             node.indexCount = mesh->indexCount;
             node.baseVertex = mesh->baseVertex;
             node.baseIndex = mesh->baseIndex;
+            node.excludeFromVulkanTLAS = m_excludeFromVulkanTLAS;
             node.meshId = meshId;
 
-            m_woundMaskTextureIndices[i] = -1;
+            m_woundMaskArrayIndices[i] = -1;
         }
     }
     else {
@@ -80,7 +80,7 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
         renderItem.ignoredViewportIndex = m_ignoredViewportIndex;
         renderItem.exclusiveViewportIndex = m_exclusiveViewportIndex;
         renderItem.baseVertexWeight = metadata->baseVertexWeight;
-        renderItem.woundMaskTextureIndex = m_woundMaskTextureIndices[i];
+        renderItem.woundMaskTextureIndex = m_woundMaskArrayIndices[i];
         renderItem.baseVertex = mesh->baseVertex;
         renderItem.baseIndex = mesh->baseIndex;
         renderItem.vertexCount = mesh->vertexCount;
@@ -89,6 +89,7 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
 
         Hell::Bit::SetState(renderItem.miscFlags, MISC_FLAG_DYNAMIC_OBJECT, true);
         Hell::Bit::SetState(renderItem.miscFlags, MISC_FLAG_RESEVERED, false);
+        renderItem.shadowFlags = SHADOW_FLAG_POINT_LIGHT;
 
         Hell::Bit::PackUint64(m_parentId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
 
@@ -121,7 +122,7 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
     }
 }
 
-void AnimatedMeshNodes::SetMeshWoundMaskTextureIndex(const std::string& meshName, int32_t woundMaskTextureIndex) {
+void AnimatedMeshNodes::SetMeshWoundMaskArrayIndex(const std::string& meshName, int32_t woundMaskTextureIndex) {
     std::vector<uint32_t>& meshIndices = m_skinnedModel->GetMeshIndices();
     Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
 
@@ -129,7 +130,7 @@ void AnimatedMeshNodes::SetMeshWoundMaskTextureIndex(const std::string& meshName
         uint32_t meshId = meshIndices[i];
         Mesh* skinnedMesh = meshBuffer.GetMeshById(meshId);
         if (skinnedMesh && skinnedMesh->name == meshName) {
-            m_woundMaskTextureIndices[i] = woundMaskTextureIndex;
+            m_woundMaskArrayIndices[i] = woundMaskTextureIndex;
             return;
         }
     }
@@ -165,23 +166,6 @@ void AnimatedMeshNodes::SetMeshMaterialByMeshIndex(int meshIndex, const std::str
     }
 }
 
-
-void AnimatedMeshNodes::SetMeshToRenderAsGlassByMeshIndex(const std::string& meshName) {
-    for (AnimatedMeshNode& node : m_nodes) {
-        if (node.meshName == meshName) {
-            node.renderAsGlass = true;
-        }
-    }
-}
-
-void AnimatedMeshNodes::SetMeshEmissiveColorTextureByMeshName(const std::string& meshName, const std::string& textureName) {
-    for (AnimatedMeshNode& node : m_nodes) {
-        if (node.meshName == meshName) {
-            node.emissiveColorTexutreIndex = Hell::ResourceManager::GetTextureBindlessIndexByName(textureName);
-        }
-    }
-}
-
 void AnimatedMeshNodes::SetMeshWoundMaterialByMeshName(const std::string& meshName, const std::string& textureName) {
     for (AnimatedMeshNode& node : m_nodes) {
         if (node.meshName == meshName) {
@@ -199,6 +183,14 @@ void AnimatedMeshNodes::SetAllMeshMaterials(const std::string& materialName) {
 void AnimatedMeshNodes::SetAllMeshBlendingModes(BlendingMode blendingMode) {
     for (AnimatedMeshNode& node : m_nodes) {
         node.blendingMode = blendingMode;
+    }
+}
+
+void AnimatedMeshNodes::SetExcludeFromVulkanTLAS(bool exclude) {
+    m_excludeFromVulkanTLAS = exclude;
+
+    for (AnimatedMeshNode& node : m_nodes) {
+        node.excludeFromVulkanTLAS = exclude;
     }
 }
 

@@ -134,6 +134,32 @@ namespace Unloved::Renderer {
         SetRendererOverrideState(static_cast<RendererOverrideState>(i));
     }
 
+    bool OverrideStateUsesDebugViewPass() {
+        const RendererSettings& rendererSettings = GetCurrentRendererSettings();
+
+        switch (rendererSettings.rendererOverrideState) {
+            case RendererOverrideState::BASE_COLOR:
+            case RendererOverrideState::NORMALS:
+            case RendererOverrideState::RMA:
+            case RendererOverrideState::ROUGHNESS:
+            case RendererOverrideState::METALIC:
+            case RendererOverrideState::AO:
+            case RendererOverrideState::CAMERA_NDOTL:
+            case RendererOverrideState::TILE_HEATMAP_LIGHTS:
+            case RendererOverrideState::TILE_HEATMAP_BLOOD_DECALS:
+            case RendererOverrideState::TILE_HEATMAP_CHRISTMAS_LIGHTS:
+            case RendererOverrideState::INDIRECT_DIFFUSE:
+            case RendererOverrideState::VELOCITY:
+            case RendererOverrideState::VIS_BUFFER:
+            case RendererOverrideState::DEPTH:
+            case RendererOverrideState::WORLD_POSITION:
+            case RendererOverrideState::EMISSIVE:
+                return true;
+            default:
+                return false;
+        }
+    }
+
 	void NextProbeDebugState() {
 		RendererSettings& rendererSettings = GetCurrentRendererSettings();
 		int i = static_cast<int>(rendererSettings.probeDebugState);

@@ -10,6 +10,9 @@
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"
+#include "Unloved/Characters/Enemies/Shark/Shark.h"
+#include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
 #include "Unloved/Editor/Gizmo.h"
 #include "Unloved/ObjectId.h"
 #include "Unloved/Session/Session.h"
@@ -241,6 +244,20 @@ namespace Unloved::Editor {
 
             if (Light* light = Unloved::World::GetLightByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(light->GetPosition());
+            }
+
+            if (Dobermann* dobermann = Unloved::World::GetDobermannByObjectId(GetSelectedObjectId())) {
+                Gizmo::SetPosition(dobermann->GetCreateInfo().position);
+                Gizmo::SetRotation(dobermann->GetCreateInfo().rotation);
+            }
+
+            if (Mermaid* mermaid = Unloved::World::GetMermaidByObjectId(GetSelectedObjectId())) {
+                Gizmo::SetPosition(mermaid->GetPosition());
+                Gizmo::SetRotation(mermaid->GetCreateInfo().rotation);
+            }
+
+            if (Shark* shark = Unloved::World::GetSharkByObjectId(GetSelectedObjectId())) {
+                Gizmo::SetPosition(shark->GetCreateInfo().position);
             }
 
             if (GetSelectedObjectType() == ObjectType::PICTURE_FRAME) {
