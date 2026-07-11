@@ -395,7 +395,8 @@ namespace Bible {
         tokarev.animationCancelFrames.reloadFromEmpty = 40.0f;
         tokarev.animationCancelFrames.draw = 75.0f;
         tokarev.pistolSlideBoneName = "Slide";
-        tokarev.pistolSlideOffset = 5;
+        //tokarev.pistolSlideOffset = 5;
+        tokarev.pistolSlideOffset = 0.05;
         tokarev.reloadMagInFrameNumber = 20;
         tokarev.reloadEmptyMagInFrameNumber = 20;
         tokarev.emptyReloadRequiresSlideOffset = true;

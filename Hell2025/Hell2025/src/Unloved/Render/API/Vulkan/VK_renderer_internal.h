@@ -72,10 +72,12 @@ namespace VulkanRenderer {
     void LightingForwardBlendedPass(VkCommandBuffer commandBuffer);
     void SkyboxPass(VkCommandBuffer commandBuffer);
     void DebugViewPass(VkCommandBuffer commandBuffer);
+    void DebugTileViewPass(VkCommandBuffer commandBuffer);
     void HairPass(VkCommandBuffer commandBuffer);
     void PostProcessingPass(VkCommandBuffer commandBuffer);
+    void ComputeTileWorldBounds(VkCommandBuffer commandBuffer);
+    void LightCullingPass(VkCommandBuffer commandBuffer);
 
-    // Present Pass
     void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView);
 
     bool BeginRenderState(VkCommandBuffer commandBuffer, const VulkanRenderState& state, VkExtent2D extent);

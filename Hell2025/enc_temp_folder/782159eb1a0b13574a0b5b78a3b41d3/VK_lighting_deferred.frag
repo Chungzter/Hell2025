@@ -331,33 +331,7 @@ float GetShadowVisibility(vec3 rayOrigin, vec3 target) {
     vec3 rayDir = rayVector / rayLength;
 
     const int shadowSampleCount = 1;
-    const float shadowLightSize = 0.05;
-
-    float visibility = 0.0;
-    for (int i = 0; i < shadowSampleCount; i++) {
-        vec3 jitteredRayDir = GetJitterRay(rayDir, shadowLightSize, float(i));
-        visibility += TraceShadowRay(rayOrigin, jitteredRayDir, rayTMin, rayTMax);
-    }
-
-    return visibility / float(shadowSampleCount);
-}
-
-float GetShadowVisibility2(vec3 rayOrigin, vec3 target) {
-    vec3 rayVector = target - rayOrigin;
-    float rayLength = length(rayVector);
-
-    const float rayTMin = 0.001;
-    const float targetBias = 0.01;
-
-    float rayTMax = rayLength - targetBias;
-    if (rayTMax <= rayTMin) {
-        return 1.0;
-    }
-
-    vec3 rayDir = rayVector / rayLength;
-
-    const int shadowSampleCount = 1;
-    const float shadowLightSize = 0.05;
+    const float shadowLightSize = 0.0;
 
     float visibility = 0.0;
     for (int i = 0; i < shadowSampleCount; i++) {
@@ -557,7 +531,7 @@ void main() {
                 continue;
             }
 
-            float visibility = GetShadowVisibility2(worldPos + normal * 0.001, lightPosition);
+            float visibility = GetShadowVisibility(worldPos + normal * 0.001, lightPosition);
 
 
             vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, viewPos) * visibility;
@@ -600,8 +574,6 @@ void main() {
 
     // Final composite
     vec3 finalLighting = directLighting + indirectSpecular + mirrorLighting;
-
-    finalLighting += baseColor.rgb * 0.0025;
 
     out_color = vec4(finalLighting, 1.0);
 }

@@ -64,13 +64,14 @@ namespace OpenGL::Renderer {
         MaterialResolveSkinnedPass();
         MaterialResolveProceduralPass();
 
+        VatBloodPass();
+
         EmissiveForwardPass();
 
         ComputeTileWorldBounds();
         ChristmasLightCullingPass();
         LightCullingPass();
-
-        // TODO: BloodDecalsPass(); // this pass has a pretty different setup to this renderer, think this one through
+        BloodDecalsPass();
 
         UpdateGlobalIllumintation();
 
@@ -119,9 +120,13 @@ namespace OpenGL::Renderer {
 
         SpriteSheetPass(); // Muzzle flash, etc
 
+        InventoryGaussianPass(); // TODO: optimize this. it is likely shit
+
         PostProcessingPassRE();
         DebugViewPass();
         DebugPass();
+
+        ExamineItemPass();
 
         EditorPass();
         OutlinePass();
@@ -164,6 +169,11 @@ namespace OpenGL::Renderer {
         waterFrameBuffer.ClearAttachment("Lighting", 0, 0, 0, 0);
         waterFrameBuffer.ClearAttachmentUI("OceanFlags", 0, 0, 0, 0);
         waterFrameBuffer.ClearAttachmentUI("OceanMask", 0, 0, 0, 0);
+
+        // Decal mask
+        OpenGLFrameBuffer& miscFullSizeFBO = OpenGL::ResourceManager::GetFrameBuffer("MiscFullSize");
+        miscFullSizeFBO.Bind();
+        miscFullSizeFBO.ClearTexImage("BloodScreenSpaceDecalMask", 0, 0, 0, 0);
 	}
 
 	void BindShadowMapsRE() {

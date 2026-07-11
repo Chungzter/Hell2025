@@ -149,15 +149,15 @@ void main() {
 
 
 
-//
-//  vec4 color = imageLoad(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px);
-//
-//
-//  color.rgb = vec3(depth);
-//
-//  color.rgb = vec3(worldSpaceMax);
-//
-//  imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px, color);
+
+    vec4 color = imageLoad(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px);
+
+
+    color.rgb = vec3(depth);
+
+    color.rgb = vec3(worldSpaceMax);
+
+    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px, color);
 
     // Lines
 	//if (gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 0 || gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 1) {

@@ -70,3 +70,10 @@ struct PushConstantsHair {
     int flashlightCookieTextureIndex;
     uint rayQueryEnabled;
 };
+
+struct PushConstantsTileWorldBounds {
+    PushConstantsFrameResources frame;
+    uint64_t tileWorldBoundsDeviceAddress;
+    int tileXCount;
+    int tileYCount;
+};

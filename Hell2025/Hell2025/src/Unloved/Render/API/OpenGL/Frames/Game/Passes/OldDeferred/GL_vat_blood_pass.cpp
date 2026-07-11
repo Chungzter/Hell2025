@@ -29,8 +29,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("VatBlood");
 
         gBuffer->Bind();
-        //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
-        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
 
         static int textureIndexBloodPos4 = Hell::ResourceManager::GetTextureBindlessIndexByName("blood_pos4");
         static int textureIndexBloodPos6 = Hell::ResourceManager::GetTextureBindlessIndexByName("blood_pos6");

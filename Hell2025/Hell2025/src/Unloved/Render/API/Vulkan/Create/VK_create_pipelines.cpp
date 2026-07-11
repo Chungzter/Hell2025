@@ -136,6 +136,7 @@ namespace {
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("TileLightCulling");
         pipeline.SetShader("TileLightCulling");
         pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsTileWorldBounds), VK_SHADER_STAGE_COMPUTE_BIT);
         pipeline.Build();
     }
 

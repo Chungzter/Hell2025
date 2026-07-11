@@ -74,3 +74,11 @@ struct PushConstantsHair {
     int32_t flashlightCookieTextureIndex = -1;
     uint32_t rayQueryEnabled = 0; // TODO: remove me, you are no longer checking it in GLSL. u should check c++ side and early return if TLAS build fails
 };
+
+struct PushConstantsTileWorldBounds {
+    PushConstantsFrameResources frame;
+
+    uint64_t tileWorldBoundsDeviceAddress;
+    int32_t tileXCount;
+    int32_t tileYCount;
+};

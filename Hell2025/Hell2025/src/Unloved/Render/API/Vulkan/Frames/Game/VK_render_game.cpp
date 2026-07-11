@@ -14,6 +14,9 @@ namespace VulkanRenderer {
 
         VisibilityPass(frame.commandBuffer);
         MaterialResolvePass(frame.commandBuffer);
+
+        LightCullingPass(frame.commandBuffer);
+
         LightingPass(frame.commandBuffer);
         LightingForwardBlendedPass(frame.commandBuffer);
         SkyboxPass(frame.commandBuffer);
@@ -21,6 +24,9 @@ namespace VulkanRenderer {
         PostProcessingPass(frame.commandBuffer);
 
         DebugViewPass(frame.commandBuffer);
+        DebugTileViewPass(frame.commandBuffer);
+
+        ComputeTileWorldBounds(frame.commandBuffer);
 
         BlitImage(frame.commandBuffer, "Lighting", "FinalImage", VK_FILTER_LINEAR);
         BlitImage(frame.commandBuffer, "FinalImage", "Present", VK_FILTER_NEAREST);

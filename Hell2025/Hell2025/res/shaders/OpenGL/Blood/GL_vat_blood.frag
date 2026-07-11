@@ -1,15 +1,34 @@
 #version 450
-layout (location = 0) out vec4 BaseColorOut;
-layout (location = 1) out vec4 NormalOut;
-layout (location = 2) out vec4 RMAOut;
-layout (location = 3) out vec4 EmissiveOut;
+
+#include "../../common/normal_encoding.glsl"
+
+layout (location = 0) out vec4 BaseColorMetallicOut;
+layout (location = 1) out vec4 NormalXYRoughnessMiscOut;
+layout (location = 2) out vec4 VelocityXYOcclusionSubSurfaceOut;
 
 in vec4 WorldPos;
 in vec3 Normal;
 
 void main() {
-	BaseColorOut = vec4(0.5, 0.0, 0.0, 1.0); 
-    NormalOut = vec4(normalize(Normal), 1);
-	RMAOut = vec4(0.015 , 0.54, 1, 1);
-	EmissiveOut = vec4(0, 0, 0, 1);
+    vec3 baseColor = vec3(0.5, 0.0, 0.0);
+    vec3 normal = normalize(Normal);
+
+    float roughness = 0.015;
+    float metallic = 0.54;
+    float ao = 1.0;
+    vec2 velocity = vec2(0.0);
+
+    // Basecolor / Metallic out
+    BaseColorMetallicOut.rgb = baseColor;
+    BaseColorMetallicOut.a = metallic;
+
+    // NormalXY / Roughness out
+    NormalXYRoughnessMiscOut.rg = EncodeNormal(normal);
+    NormalXYRoughnessMiscOut.b = roughness;
+    NormalXYRoughnessMiscOut.a = 0.0; // Misc 4 bit value
+
+    // Velocity / Occlusion / Subsurface out
+    VelocityXYOcclusionSubSurfaceOut.rg = velocity;
+    VelocityXYOcclusionSubSurfaceOut.b = ao;
+    VelocityXYOcclusionSubSurfaceOut.a = 0.0; // Subsurface. Not quite sure what this is yet
 }

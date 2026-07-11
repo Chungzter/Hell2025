@@ -14,6 +14,7 @@
 #include "../../common/util.glsl"
 
 layout (location = 0) out vec4 DecalMaskOut;
+
 layout(binding = 0) uniform sampler2D GBufferRMATexture;
 layout(binding = 1) uniform sampler2D GBufferNormalXYRoughnessMiscTexture;
 layout(binding = 2) uniform sampler2D u_depthTexture;

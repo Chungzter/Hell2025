@@ -24,6 +24,6 @@ void main() {
 
     // Lines
 	if (gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 0 || gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 1) {
-    //    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel, vec4(0, 0, 0, 1));
+        imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel, vec4(0, 0, 0, 1));
 	}
 }
