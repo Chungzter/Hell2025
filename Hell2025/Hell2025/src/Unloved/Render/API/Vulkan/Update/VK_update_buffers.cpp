@@ -13,6 +13,14 @@
 
 namespace VulkanRenderer {
 
+    template <typename T>
+    void UpdateVectorBuffer(uint64_t bufferId, const std::vector<T>& data) {
+        VulkanBuffer* buffer = VulkanResourceManager::GetBuffer(bufferId);
+        VkDeviceSize size = sizeof(T) * data.size();
+        EnsureBufferSize(buffer, size);
+        UpdateBuffer(buffer, data.data(), size);
+    }
+
     void UpdateBuffers() {
         const VulkanFrameData& frameData = GetCurrentFrameData();
 
@@ -48,13 +56,15 @@ namespace VulkanRenderer {
         EnsureBufferSize(rendererDataBuffer, rendererDataBufferSize);
         UpdateBuffer(rendererDataBuffer, &rendererData, rendererDataBufferSize);
 
-        // Skinning transforms
+        // Skinning
 
+        const std::vector<SkinningDispatchGroup>& skinningDispatchGroups= Unloved::RenderDataManager::GetSkinningDispatchGroups();
+        const std::vector<SkinningJob>& skinningJobs = Unloved::RenderDataManager::GetSkinningJobs();
         const std::vector<glm::mat4>& skinningTransforms = Unloved::RenderDataManager::GetSkinningTransforms();
-        VulkanBuffer* skinningTransformsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.skinningTransforms);
-        VkDeviceSize skinningTransformsBufferSize = sizeof(glm::mat4) * skinningTransforms.size();
-        EnsureBufferSize(skinningTransformsBuffer, skinningTransformsBufferSize);
-        UpdateBuffer(skinningTransformsBuffer, skinningTransforms.data(), skinningTransformsBufferSize);
+
+        UpdateVectorBuffer(frameData.buffers.skinningDispatchGroups, skinningDispatchGroups);
+        UpdateVectorBuffer(frameData.buffers.skinningJobs, skinningJobs);
+        UpdateVectorBuffer(frameData.buffers.skinningTransforms, skinningTransforms);
 
         // Viewport data
 

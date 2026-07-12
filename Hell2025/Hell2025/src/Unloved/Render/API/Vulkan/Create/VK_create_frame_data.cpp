@@ -32,6 +32,8 @@ namespace VulkanRenderer {
             frameData.buffers.lights = VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.materials = VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.drawCommands = VulkanResourceManager::CreateBuffer(sizeof(DrawIndexedIndirectCommand) * MAX_INDIRECT_DRAW_COMMAND_COUNT, usageIndirect, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.skinningDispatchGroups= VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.skinningJobs = VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.skinningTransforms = VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.skinnedVertices = VulkanResourceManager::CreateBuffer(dummySize, usageSkinnedVertices, VMA_MEMORY_USAGE_GPU_ONLY);
             frameData.buffers.rayQueryInstances = VulkanResourceManager::CreateBuffer(1, usageRayQueryInstances, VMA_MEMORY_USAGE_AUTO, vmaFlags);

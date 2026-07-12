@@ -118,24 +118,86 @@ vec3 GetJitterRay(vec3 dir, float lightSize, float sampleIndex) {
     return normalize(n + tangent * disk.x + bitangent * disk.y);
 }
 
-float GetReflectionWeight(vec3 baseColor, vec3 normal, vec3 worldPos, vec3 viewPos, float roughness, float metallic) {
-    float gloss = 1.0 - roughness;
-    if (gloss < 0.15) {
+float GetSingleRaySpecularTraceWeight(vec3 fresnel, float roughness) {
+    if (MaxComponent(fresnel) < 0.02 || roughness >= 0.85) {
         return 0.0;
     }
 
-    vec3 viewDir = normalize(viewPos - worldPos);
+    // Without a denoiser, wide glossy lobes are better handled by probes/IBL later.
+    return 1.0 - smoothstep(0.35, 0.85, roughness);
+}
+
+vec3 ImportanceSampleGGX(vec2 xi, vec3 normal, float roughness) {
+    float a = roughness * roughness;
+    float phi = 2.0 * PI * xi.x;
+    float cosTheta = sqrt((1.0 - xi.y) / (1.0 + (a * a - 1.0) * xi.y));
+    float sinTheta = sqrt(max(1.0 - cosTheta * cosTheta, 0.0));
+
+    vec3 halfVector = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+    vec3 up = abs(normal.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangent = normalize(cross(up, normal));
+    vec3 bitangent = cross(normal, tangent);
+
+    return normalize(tangent * halfVector.x + bitangent * halfVector.y + normal * halfVector.z);
+}
+
+bool GetIndirectSpecularRaySample(vec3 normal, vec3 viewDir, vec3 linearBaseColor, float roughness, float metallic, out vec3 rayDirection, out vec3 rayWeight) {
+    rayDirection = vec3(0.0);
+    rayWeight = vec3(0.0);
+
     float noV = clamp(dot(normal, viewDir), 0.0, 1.0);
-    vec3 f0 = mix(vec3(0.04), baseColor, metallic);
+    if (noV <= 0.0) {
+        return false;
+    }
+
+    vec3 f0 = mix(vec3(0.04), linearBaseColor, metallic);
     vec3 fresnel = FresnelSchlick(noV, f0);
+    float traceWeight = GetSingleRaySpecularTraceWeight(fresnel, roughness);
+    if (traceWeight <= 0.0) {
+        return false;
+    }
 
-    float roughnessWeight = clamp((1.0 - roughness) * 2.5, 0.0, 1.0);
-    roughnessWeight *= roughnessWeight;
+    if (roughness < 0.03) {
+        rayDirection = normalize(reflect(-viewDir, normal));
+        rayWeight = fresnel * traceWeight;
+        return dot(normal, rayDirection) > 0.0;
+    }
 
-    // Dielectrics can still reflect at grazing angles, but metals get the useful cheap path first
-    float metallicBoost = mix(0.25, 1.0, metallic);
-    float weight = 0.85 * roughnessWeight * metallicBoost;
-    return MaxComponent(fresnel) * weight < 0.02 ? 0.0 : weight;
+    vec2 xi = Hash22(gl_FragCoord.xy + normal.xy * 173.13 + vec2(roughness * 41.7, metallic * 89.1));
+    vec3 halfVector = ImportanceSampleGGX(xi, normal, max(roughness, 0.03));
+    rayDirection = normalize(reflect(-viewDir, halfVector));
+
+    float noL = clamp(dot(normal, rayDirection), 0.0, 1.0);
+    float noH = clamp(dot(normal, halfVector), 0.0, 1.0);
+    float voH = clamp(dot(viewDir, halfVector), 0.0, 1.0);
+    if (noL <= 0.0 || noH <= 0.0 || voH <= 0.0) {
+        return false;
+    }
+
+    float pdf = DistributionGGX(normal, halfVector, roughness) * noH / max(4.0 * voH, 0.0001);
+    if (pdf <= 0.0001) {
+        return false;
+    }
+
+    vec3 specularBRDF = microfacetBRDFSpecularOnly(rayDirection, viewDir, normal, linearBaseColor, metallic, 1.0, roughness);
+    rayWeight = specularBRDF * noL / pdf * traceWeight;
+    return MaxComponent(rayWeight) > 0.001;
+}
+
+vec3 GetDirectLightingForRayHit(vec3 lightPos, vec3 lightColor, float radius, float strength, vec3 normal, vec3 worldPos, vec3 linearBaseColor, float roughness, float metallic, vec3 receiverWorldPos) {
+    vec3 toLight = lightPos - worldPos;
+    float dist = length(toLight);
+    vec3 lightDir = toLight / max(dist, 0.0001);
+    vec3 viewDir = normalize(receiverWorldPos - worldPos);
+    float attenuation = smoothstep(radius, 0.0, dist) * strength;
+    float ndotl = max(dot(normal, lightDir), 0.0);
+
+    if (ndotl <= 0.0 || attenuation <= 0.0) {
+        return vec3(0.0);
+    }
+
+    vec3 brdf = microfacetBRDF(lightDir, viewDir, normal, linearBaseColor, metallic, 1.0, roughness);
+    return brdf * ndotl * attenuation * clamp(lightColor, 0.0, 1.0);
 }
 
 bool SampleRayQueryBaseColor(RayQueryGeometryData geometryData, uint primitiveIndex, vec2 barycentrics, out vec4 baseColor) {
@@ -180,8 +242,10 @@ bool SampleRayQueryBaseColor(RayQueryGeometryData geometryData, uint primitiveIn
     return true;
 }
 
-bool SampleRayQuerySurface(RayQueryGeometryData geometryData, uint primitiveIndex, vec2 barycentrics, mat4x3 objectToWorld, vec3 rayDirection, out vec4 baseColor, out vec3 worldPos, out vec3 worldNormal) {
+bool SampleRayQuerySurface(RayQueryGeometryData geometryData, uint primitiveIndex, vec2 barycentrics, mat4x3 objectToWorld, vec3 rayDirection, out vec4 baseColor, out float roughness, out float metallic, out vec3 worldPos, out vec3 worldNormal) {
     baseColor = vec4(0.0);
+    roughness = 1.0;
+    metallic = 0.0;
     worldPos = vec3(0.0);
     worldNormal = vec3(0.0, 1.0, 0.0);
 
@@ -219,6 +283,13 @@ bool SampleRayQuerySurface(RayQueryGeometryData geometryData, uint primitiveInde
 
     uint textureIndex = uint(material.basecolor);
     baseColor = textureLod(sampler2D(textures[nonuniformEXT(textureIndex)], textureSamplers[nonuniformEXT(textureIndex)]), uv, 0.0);
+
+    if (material.rma >= 0) {
+        uint rmaTextureIndex = uint(material.rma);
+        vec4 rma = textureLod(sampler2D(textures[nonuniformEXT(rmaTextureIndex)], textureSamplers[nonuniformEXT(rmaTextureIndex)]), uv, 0.0);
+        roughness = rma.r;
+        metallic = rma.g;
+    }
 
     vec3 objectPos =
         vec3(v0.vx, v0.vy, v0.vz) * weights.x +
@@ -331,7 +402,7 @@ float GetShadowVisibility(vec3 rayOrigin, vec3 target) {
     vec3 rayDir = rayVector / rayLength;
 
     const int shadowSampleCount = 1;
-    const float shadowLightSize = 0.05;
+    const float shadowLightSize = 0.0;
 
     float visibility = 0.0;
     for (int i = 0; i < shadowSampleCount; i++) {
@@ -342,63 +413,39 @@ float GetShadowVisibility(vec3 rayOrigin, vec3 target) {
     return visibility / float(shadowSampleCount);
 }
 
-float GetShadowVisibility2(vec3 rayOrigin, vec3 target) {
-    vec3 rayVector = target - rayOrigin;
-    float rayLength = length(rayVector);
+//vec3 DirectLighting(vec3 worldPos, vec3 normal, vec3 baseColor) {
+//    LightBuffer lightBuffer = LightBuffer(pushConstant.data.frame.lightsDeviceAddress);
+//    vec3 lighting = vec3(0.0);
+//
+//    // Hardcoded light loop until tiled deferred is back
+//    for (int i = 0; i < LIGHT_COUNT; i++) {
+//        Light light = lightBuffer.lights[i];
+//        if (light.radius <= 0.0 || light.strength <= 0.0) {
+//            continue;
+//        }
+//
+//        vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+//        vec3 toLight = lightPosition - worldPos;
+//        float dist = length(toLight);
+//        vec3 lightDir = toLight / max(dist, 0.0001);
+//        float attenuation = smoothstep(light.radius, 0.0, dist) * light.strength;
+//        float ndotl = max(dot(normal, lightDir), 0.0);
+//        if (ndotl <= 0.0 || attenuation <= 0.0) {
+//            continue;
+//        }
+//
+//        float visibility = GetShadowVisibility(worldPos + normal * 0.001, lightPosition);
+//        lighting += visibility * ndotl * attenuation * clamp(vec3(light.colorR, light.colorG, light.colorB), 0.0, 1.0);
+//    }
+//
+//    return lighting * baseColor;
+//}
 
-    const float rayTMin = 0.001;
-    const float targetBias = 0.01;
-
-    float rayTMax = rayLength - targetBias;
-    if (rayTMax <= rayTMin) {
-        return 1.0;
-    }
-
-    vec3 rayDir = rayVector / rayLength;
-
-    const int shadowSampleCount = 1;
-    const float shadowLightSize = 0.05;
-
-    float visibility = 0.0;
-    for (int i = 0; i < shadowSampleCount; i++) {
-        vec3 jitteredRayDir = GetJitterRay(rayDir, shadowLightSize, float(i));
-        visibility += TraceShadowRay(rayOrigin, jitteredRayDir, rayTMin, rayTMax);
-    }
-
-    return visibility / float(shadowSampleCount);
-}
-
-vec3 DirectLighting(vec3 worldPos, vec3 normal, vec3 baseColor) {
-    LightBuffer lightBuffer = LightBuffer(pushConstant.data.frame.lightsDeviceAddress);
-    vec3 lighting = vec3(0.0);
-
-    // Hardcoded light loop until tiled deferred is back
-    for (int i = 0; i < LIGHT_COUNT; i++) {
-        Light light = lightBuffer.lights[i];
-        if (light.radius <= 0.0 || light.strength <= 0.0) {
-            continue;
-        }
-
-        vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
-        vec3 toLight = lightPosition - worldPos;
-        float dist = length(toLight);
-        vec3 lightDir = toLight / max(dist, 0.0001);
-        float attenuation = smoothstep(light.radius, 0.0, dist) * light.strength;
-        float ndotl = max(dot(normal, lightDir), 0.0);
-        if (ndotl <= 0.0 || attenuation <= 0.0) {
-            continue;
-        }
-
-        float visibility = GetShadowVisibility(worldPos + normal * 0.001, lightPosition);
-        lighting += visibility * ndotl * attenuation * clamp(vec3(light.colorR, light.colorG, light.colorB), 0.0, 1.0);
-    }
-
-    return lighting * baseColor;
-}
-
-bool RayQueryReflectedSurface(vec3 rayOrigin, vec3 rayDirection, out vec3 reflectedBaseColor, out vec3 reflectedWorldPos, out vec3 reflectedNormal) {
+bool RayQueryReflectedSurface(vec3 rayOrigin, vec3 rayDirection, out vec3 reflectedBaseColor, out float reflectedRoughness, out float reflectedMetallic, out vec3 reflectedWorldPos, out vec3 reflectedNormal) {
     // Finds first non-mirror surface in the reflection ray.
     reflectedBaseColor = vec3(0.0);
+    reflectedRoughness = 1.0;
+    reflectedMetallic = 0.0;
     reflectedWorldPos = vec3(0.0);
     reflectedNormal = vec3(0.0, 1.0, 0.0);
 
@@ -472,7 +519,7 @@ bool RayQueryReflectedSurface(vec3 rayOrigin, vec3 rayDirection, out vec3 reflec
     mat4x3 objectToWorld = rayQueryGetIntersectionObjectToWorldEXT(rayQuery, true);
 
     vec4 hitBaseColor;
-    if (!SampleRayQuerySurface(geometryData, primitiveIndex, barycentrics, objectToWorld, rayDirection, hitBaseColor, reflectedWorldPos, reflectedNormal)) {
+    if (!SampleRayQuerySurface(geometryData, primitiveIndex, barycentrics, objectToWorld, rayDirection, hitBaseColor, reflectedRoughness, reflectedMetallic, reflectedWorldPos, reflectedNormal)) {
         return false;
     }
 
@@ -480,21 +527,46 @@ bool RayQueryReflectedSurface(vec3 rayOrigin, vec3 rayDirection, out vec3 reflec
     return true;
 }
 
-bool RaytracedReflectionRadiance(vec3 worldPos, vec3 normal, vec3 viewPos, out vec3 reflectedRadiance) {
-    reflectedRadiance = vec3(0.0);
-
-    vec3 viewDir = normalize(worldPos - viewPos);
-    vec3 reflectionDir = normalize(reflect(viewDir, normal));
+bool TraceRaytracedRadiance(vec3 rayOrigin, vec3 rayDirection, vec3 receiverWorldPos, out vec3 radiance) {
+    radiance = vec3(0.0);
 
     vec3 reflectedBaseColor = vec3(0.0);
+    float reflectedRoughness = 1.0;
+    float reflectedMetallic = 0.0;
     vec3 reflectedWorldPos = vec3(0.0);
     vec3 reflectedNormal = vec3(0.0, 1.0, 0.0);
 
-    if (!RayQueryReflectedSurface(worldPos + normal * 0.01, reflectionDir, reflectedBaseColor, reflectedWorldPos, reflectedNormal)) {
+    if (!RayQueryReflectedSurface(rayOrigin, rayDirection, reflectedBaseColor, reflectedRoughness, reflectedMetallic, reflectedWorldPos, reflectedNormal)) {
         return false;
     }
 
-    reflectedRadiance = DirectLighting(reflectedWorldPos, reflectedNormal, reflectedBaseColor);
+    vec3 reflectedLinearBaseColor = pow(reflectedBaseColor, vec3(2.2));
+
+    LightBuffer lightBuffer = LightBuffer(pushConstant.data.frame.lightsDeviceAddress);
+    for (int i = 0; i < LIGHT_COUNT; i++) {
+        Light light = lightBuffer.lights[i];
+        if (light.radius <= 0.0 || light.strength <= 0.0) {
+            continue;
+        }
+
+        vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+        vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
+        float visibility = GetShadowVisibility(reflectedWorldPos + reflectedNormal * 0.001, lightPosition);
+
+        radiance += GetDirectLightingForRayHit(
+            lightPosition,
+            lightColor,
+            light.radius,
+            light.strength,
+            reflectedNormal,
+            reflectedWorldPos,
+            reflectedLinearBaseColor,
+            reflectedRoughness,
+            reflectedMetallic,
+            receiverWorldPos) * visibility;
+    }
+
+    radiance += reflectedLinearBaseColor * 0.01;
     return true;
 }
 
@@ -557,7 +629,7 @@ void main() {
                 continue;
             }
 
-            float visibility = GetShadowVisibility2(worldPos + normal * 0.001, lightPosition);
+            float visibility = GetShadowVisibility(worldPos + normal * 0.001, lightPosition);
 
 
             vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, viewPos) * visibility;
@@ -571,18 +643,15 @@ void main() {
     vec3 indirectSpecular = vec3(0.0);
 
     if (!isMirrorSurface) {
-        float materialReflectionWeight = GetReflectionWeight(baseColor, normal, worldPos, viewportData.viewPos.xyz, roughness, metallic);
+        vec3 viewDirToCamera = normalize(viewPos - worldPos);
+        vec3 specularRayDirection = vec3(0.0);
+        vec3 specularRayWeight = vec3(0.0);
 
-        if (materialReflectionWeight > 0.0) {
+        if (GetIndirectSpecularRaySample(normal, viewDirToCamera, linearBaseColor, roughness, metallic, specularRayDirection, specularRayWeight)) {
             vec3 reflectedRadiance = vec3(0.0);
 
-            if (RaytracedReflectionRadiance(worldPos, normal, viewportData.viewPos.xyz, reflectedRadiance)) {
-                vec3 viewDirToCamera = normalize(viewportData.viewPos.xyz - worldPos);
-                float noV = clamp(dot(normal, viewDirToCamera), 0.0, 1.0);
-                vec3 fresnel = FresnelSchlick(noV, mix(vec3(0.04), baseColor, metallic));
-                vec3 reflectionWeight = fresnel * materialReflectionWeight;
-
-                indirectSpecular = reflectedRadiance * reflectionWeight;
+            if (TraceRaytracedRadiance(worldPos + normal * 0.01, specularRayDirection, worldPos, reflectedRadiance)) {
+                indirectSpecular = reflectedRadiance * specularRayWeight;
             }
         }
     }
@@ -591,15 +660,19 @@ void main() {
     vec3 mirrorLighting = vec3(0.0);
 
     if (isMirrorSurface) {
+        vec3 viewDirToCamera = normalize(viewPos - worldPos);
+        vec3 reflectionDir = normalize(reflect(-viewDirToCamera, normal));
         vec3 reflectedRadiance = vec3(0.0);
 
-        if (RaytracedReflectionRadiance(worldPos, normal, viewportData.viewPos.xyz, reflectedRadiance)) {
+        if (TraceRaytracedRadiance(worldPos + normal * 0.01, reflectionDir, worldPos, reflectedRadiance)) {
             mirrorLighting = reflectedRadiance;
         }
     }
 
+    vec3 ambient = linearBaseColor * 0.01;
+
     // Final composite
-    vec3 finalLighting = directLighting + indirectSpecular + mirrorLighting;
+    vec3 finalLighting = directLighting + indirectSpecular + mirrorLighting + ambient;
 
     finalLighting += baseColor.rgb * 0.0025;
 

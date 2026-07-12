@@ -42,6 +42,7 @@ namespace Unloved::RenderDataManager {
     void SubmitDecalPaintingInfo(DecalPaintingInfo decalPaintingInfo);
 
     const std::vector<SkinningJob>& GetSkinningJobs();
+    const std::vector<SkinningDispatchGroup>& GetSkinningDispatchGroups();
     const std::vector<SkinnedRayTracingGroup>& GetSkinnedRayTracingGroups();
     const std::vector<StaticRayTracingInstance>& GetStaticRayTracingInstances();
 

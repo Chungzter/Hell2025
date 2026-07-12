@@ -226,17 +226,28 @@ struct GpuParticle {
     uint32_t exists = 0;
 };
 
+// Skinning
+
 struct SkinningJob {
     uint32_t vertexCount;
     uint32_t indexCount;
-    uint32_t baseVertex;
-    uint32_t baseIndex;
+    uint32_t sourceBaseVertex;
+    uint32_t sourceBaseIndex;
 
-    uint32_t baseVertexWeight;
-    uint32_t baseSkinningVertex;
-    uint32_t baseSkinningTransformIndex;
+    uint32_t sourceVertexWeightOffset;
+    uint32_t skinnedBaseVertex;
+    uint32_t skinningTransformOffset;
+    uint32_t padding;
+};
+
+struct SkinningDispatchGroup {
+    uint32_t jobIndex;
+    uint32_t vertexOffset;
+    uint32_t padding0;
     uint32_t padding1;
 };
+
+// Vulkan raytracing
 
 struct RayTracingGeometryRange {
     uint32_t baseVertex;

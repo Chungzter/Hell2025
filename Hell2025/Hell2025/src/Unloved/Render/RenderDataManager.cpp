@@ -100,11 +100,14 @@ namespace Unloved::RenderDataManager {
     std::vector<float> g_shadowCascadeLevels{ 5.0f, 10.0f, 20.0f, 40.0f }; // WARNING! YOU have a duplicate of this in GL_renderer.h
 
     std::vector<SkinningJob> g_skinningJobs;
+    std::vector<SkinningDispatchGroup> g_skinningDispatchGroups;
+
     std::vector<SkinnedRayTracingGroup> g_skinnedRayTracingGroups;
     std::vector<StaticRayTracingInstance> g_staticRayTracingInstances;
 
-    const std::vector<SkinningJob>& GetSkinningJobs()                   { return g_skinningJobs; }
-    const std::vector<SkinnedRayTracingGroup>& GetSkinnedRayTracingGroups() { return g_skinnedRayTracingGroups; }
+    const std::vector<SkinningJob>& GetSkinningJobs()                           { return g_skinningJobs; }
+    const std::vector<SkinningDispatchGroup>& GetSkinningDispatchGroups()       { return g_skinningDispatchGroups; }
+    const std::vector<SkinnedRayTracingGroup>& GetSkinnedRayTracingGroups()     { return g_skinnedRayTracingGroups; }
     const std::vector<StaticRayTracingInstance>& GetStaticRayTracingInstances() { return g_staticRayTracingInstances; }
 
     void CreateGPULights();
@@ -114,7 +117,10 @@ namespace Unloved::RenderDataManager {
     void UpdateDrawCommandsSet();
     void UpdatePointLightShadowMapDrawCommands();
 
-    void CreateSkinningData();
+    // Compute skinning
+    void CreateSkinningData(); // name me better
+    void CreateSkinningDistpachGroups();
+
     void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters = false);
     void CreateDrawCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum = nullptr);
     void CreateDrawCommandsNonDeformingSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum = nullptr);
@@ -134,11 +140,13 @@ namespace Unloved::RenderDataManager {
     void DecodeBaseInstance(int baseInstance, int& playerIndex, int& instanceOffset);
 
     void BeginFrame() {
+        // Compute skinning
         g_skinningJobs.clear();
+        g_skinningDispatchGroups.clear();
         g_skinningTransforms.clear();
         g_baseSkinnedVertex = 0;
 
-        // Ray query (Vulkan only)
+        // Vulkan raytracing
         g_skinnedRayTracingGroups.clear();
         g_staticRayTracingInstances.clear();
 
@@ -184,6 +192,7 @@ namespace Unloved::RenderDataManager {
 
     void Update() {
         CreateGPULights();
+        CreateSkinningDistpachGroups();
 
         UpdateViewportData();
         UpdateRendererData();
@@ -930,6 +939,26 @@ namespace Unloved::RenderDataManager {
         }
     }
 
+    void CreateSkinningDistpachGroups() {
+        constexpr uint32_t SKINNING_WORKGROUP_SIZE = 128;
+
+        g_skinningDispatchGroups.clear();
+
+        // One dispatch group skins one chunk of one skinning job
+        for (uint32_t jobIndex = 0; jobIndex < g_skinningJobs.size(); jobIndex++) {
+            const SkinningJob& skinningJob = g_skinningJobs[jobIndex];
+
+            // Split the job into fixed size vertex chunks
+            for (uint32_t vertexOffset = 0; vertexOffset < skinningJob.vertexCount; vertexOffset += SKINNING_WORKGROUP_SIZE) {
+                SkinningDispatchGroup& group = g_skinningDispatchGroups.emplace_back();
+                group.jobIndex = jobIndex;
+                group.vertexOffset = vertexOffset;
+                group.padding0 = 0;
+                group.padding1 = 0;
+            }
+        }
+    }
+
     void CreateSkinningData() {
         auto& set = g_drawCommandsSet;
 
@@ -1422,13 +1451,13 @@ namespace Unloved::RenderDataManager {
                 }
 
                 SkinningJob& skinningJob = g_skinningJobs.emplace_back();
-                skinningJob.baseVertex = node.baseVertex;
-                skinningJob.baseIndex = node.baseIndex;
+                skinningJob.sourceBaseVertex = node.baseVertex;
+                skinningJob.sourceBaseIndex = node.baseIndex;
                 skinningJob.vertexCount = node.vertexCount;
-                skinningJob.indexCount = node.baseIndex;
-                skinningJob.baseSkinningVertex = g_baseSkinnedVertex;
-                skinningJob.baseSkinningTransformIndex = baseSkinningTransformIndex;
-                skinningJob.baseVertexWeight = node.baseVertexWeight;
+                skinningJob.indexCount = node.indexCount;
+                skinningJob.skinnedBaseVertex = g_baseSkinnedVertex;
+                skinningJob.skinningTransformOffset = baseSkinningTransformIndex;
+                skinningJob.sourceVertexWeightOffset = node.baseVertexWeight;
 
                 // Assign a new base vertex to be used by compute skinning
                 renderItem.baseSkinningTransformIndex = baseSkinningTransformIndex;

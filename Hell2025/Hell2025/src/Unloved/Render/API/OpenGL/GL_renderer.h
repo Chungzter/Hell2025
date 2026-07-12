@@ -48,6 +48,7 @@ namespace OpenGL::Renderer {
 
     // Create
     void CreateFramebuffers();
+    void CreateShaders();
     void CreateSSBOs();
     void CreateTextureArrays();
 

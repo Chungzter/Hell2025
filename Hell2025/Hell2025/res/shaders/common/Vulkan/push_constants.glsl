@@ -16,16 +16,13 @@ struct PushConstantsVisibility {
 struct PushConstantsSkinning {
     uint64_t outputVerticesDeviceAddress;
     uint64_t inputVerticesDeviceAddress;
+    uint64_t skinningDispatchGroupsDeviceAddress;
+    uint64_t skinningJobsDeviceAddress;
+
     uint64_t skinningTransformsDeviceAddress;
     uint64_t vertexWeightsDeviceAddress;
-    uint vertexCount;
-    uint baseInputVertex;
-    uint baseInputVertexWeight;
-    uint baseOutputVertex;
-    uint baseTransformIndex;
     uint padding0;
     uint padding1;
-    uint padding2;
 };
 
 struct PushConstantsFrameResources {

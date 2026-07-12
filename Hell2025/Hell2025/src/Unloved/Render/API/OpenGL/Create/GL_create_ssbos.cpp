@@ -37,6 +37,7 @@ namespace OpenGL::Renderer{
         OpenGL::ResourceManager::CreateSSBO("Lights").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
 
         // Skinning
+        OpenGL::ResourceManager::CreateSSBO("SkinningDispatchGroups").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("SkinningJobs").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("SkinningTransforms").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
 

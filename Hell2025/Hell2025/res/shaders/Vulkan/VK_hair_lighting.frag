@@ -73,6 +73,8 @@ struct RayQueryGeometryData {
     uint indexCount;
     uint blendingMode;
     int materialIndex;
+    uint shadowBit;
+    uint padding0;
 };
 
 layout(buffer_reference, scalar) readonly buffer VertexBuffer {
