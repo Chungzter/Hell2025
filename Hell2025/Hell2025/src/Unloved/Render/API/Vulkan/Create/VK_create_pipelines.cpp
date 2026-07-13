@@ -79,6 +79,16 @@ namespace {
         pipeline.Build();
     }
 
+    void CreateSpriteSheetPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("SpriteSheet");
+        pipeline.SetShader("SpriteSheet");
+        pipeline.SetRenderState("SpriteSheet");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsSpriteSheet), VK_SHADER_STAGE_VERTEX_BIT);
+        pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
+        pipeline.Build();
+    }
+
     // Loading Screen
 
     void CreateLoadingScreenPipeline() {
@@ -237,6 +247,7 @@ namespace VulkanRenderer {
         CreateLightingDeferredPipeline();
         CreateLightingForwardBlendedPipeline();
         CreateSkyboxPipeline();
+        CreateSpriteSheetPipeline();
 
         // Misc
         CreateComputeRedTestPipeline();

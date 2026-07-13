@@ -4,6 +4,7 @@
 namespace Audio = Hell::Audio;
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/Systems/DDGI/DDGIManager.h"
 
 namespace Unloved::Renderer {
     struct RendererSettingsSet {
@@ -84,6 +85,7 @@ namespace Unloved::Renderer {
         Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
         rendererSettings.irradianceUsesSH = !rendererSettings.irradianceUsesSH;
+        Unloved::DDGIManager::ResetProbes();
 
         std::string onOff = rendererSettings.irradianceUsesSH ? "SPHERICAL HARMONICS" : "OCTAL MAPPING";
         Debug::BlitQuickDebugMessage("Irradiance path: " + onOff);

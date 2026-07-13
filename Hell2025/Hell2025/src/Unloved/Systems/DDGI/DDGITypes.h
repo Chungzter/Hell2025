@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Hell/Math/GLM.h"
+#include "Hell/Render/VertexAttributes.h"
 
 #include <cstdint>
+#include <vector>
 
 #define PROBE_DISTANCE_OCTA_SIZE 16
 #define PROBE_DISTANCE_TEXEL_COUNT (PROBE_DISTANCE_OCTA_SIZE * PROBE_DISTANCE_OCTA_SIZE)
@@ -34,3 +36,25 @@ struct DDGIVolumeGPU {
     glm::vec3 worldBoundsMax{};
     float padding1{};
 };
+
+namespace Unloved {
+
+struct DDGISurfaceTriangle {
+    glm::vec3 v0 = glm::vec3(0.0f);
+    glm::vec3 v1 = glm::vec3(0.0f);
+    glm::vec3 v2 = glm::vec3(0.0f);
+    glm::vec2 uv0 = glm::vec2(0.0f);
+    glm::vec2 uv1 = glm::vec2(0.0f);
+    glm::vec2 uv2 = glm::vec2(0.0f);
+    glm::vec3 normal = glm::vec3(0.0f);
+    int baseColorTextureIndex = -1;
+    int rmaTextureIndex = -1;
+};
+
+struct DDGIHouseGeometry {
+    std::vector<DDGISurfaceTriangle> surfaceTriangles;
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+};
+
+}

@@ -28,6 +28,8 @@ struct PointLightShadowMapDrawCommands {
 struct DrawCommandsSet {
     std::vector<RenderItem> glass[4];
 
+    std::vector<DrawIndexedIndirectCommand> spriteSheets[4];
+
     std::vector<DrawIndexedIndirectCommand> alphaDiscard[4];
     std::vector<DrawIndexedIndirectCommand> blended[4];
     std::vector<DrawIndexedIndirectCommand> hair[4];

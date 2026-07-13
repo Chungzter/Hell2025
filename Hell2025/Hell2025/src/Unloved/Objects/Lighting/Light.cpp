@@ -25,6 +25,7 @@ Light::Light(uint64_t id, const LightCreateInfo& createInfo, const SpawnOffset& 
 
 	m_objectId = id;
     ConfigureMeshNodes();
+    ForceDirty();
 }
 
 void Light::Update(float deltaTime) {
@@ -54,7 +55,7 @@ void Light::RaycastWorldBounds() {
         glm::vec3 p1 = rayOrigin;
         glm::vec3 p2 = p1 + (rayDir * rayLength);
 
-        BvhRayResult rayResult = Unloved::WorldBVH::ClosestHouseLightOccluderHit(rayOrigin, rayDir, rayLength);
+        BvhRayResult rayResult = Unloved::WorldBVH::ClosestHouseLightOcclusionHit(rayOrigin, rayDir, rayLength);
 
         if (rayResult.hitFound) {
             //DebugDraw::DrawLine(p1, rayResult.hitPosition, GREEN);

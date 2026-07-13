@@ -1,26 +1,18 @@
 #version 460 core
+#extension GL_ARB_bindless_texture : require
+#include "../common/OpenGL/binding_indices.glsl"
+
 layout (location = 0) out vec4 FragOut;
-layout (binding = 0) uniform sampler2D Texture;
 in vec2 TexCoord;
 in vec2 TexCoordNext;
-in vec4 WorldPos;
+flat in int TextureIndex;
+flat in float MixFactor;
 
-uniform float u_mixFactor;
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
-uniform vec4 u_worldBoundsMin;
-uniform vec4 u_worldBoundsMax;
-uniform bool u_useFireClipHeight;
 void main() {
-
-    if (u_useFireClipHeight && WorldPos.y > 31.62) discard;
-
-    //if (WorldPos.y > u_worldBoundsMax.y) discard;
-
-    vec4 color = texture2D(Texture, TexCoord);
-    vec4 colorNext = texture2D(Texture, TexCoordNext);
-    FragOut = mix(color, colorNext, u_mixFactor);
-    
-    //FragOut.rgb = pow(FragOut.rgb, vec3(2.2));
-    //FragOut.rgb = vec3(TexCoord, 0);
-    //FragOut.a = 1.0;
+    sampler2D spriteSheetTexture = sampler2D(textureSamplers[TextureIndex]);
+    vec4 color = texture(spriteSheetTexture, TexCoord);
+    vec4 colorNext = texture(spriteSheetTexture, TexCoordNext);
+    FragOut = mix(color, colorNext, MixFactor);
 }

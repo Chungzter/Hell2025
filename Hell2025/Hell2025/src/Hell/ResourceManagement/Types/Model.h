@@ -18,7 +18,7 @@ struct Model {
     void SetModelId(uint32_t modelId);
     void SetName(std::string modelName);
     void SetAABB(glm::vec3 aabbMin, glm::vec3 aabbMax);
-    int32_t GetGlobalMeshIndexByMeshName(const std::string& meshName);
+    int32_t GetGlobalMeshIndexByMeshName(const std::string& meshName) const;
     const glm::mat4& GetBoneLocalMatrix(const std::string& boneName) const;
 
     uint32_t GetModelId() const                              { return m_modelId; }

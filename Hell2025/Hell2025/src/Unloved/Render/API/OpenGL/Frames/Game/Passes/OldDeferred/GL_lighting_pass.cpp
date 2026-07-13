@@ -5,7 +5,6 @@
 
 #include "Unloved/Config/Config.h"
 #include "Unloved/Session/Session.h"
-#include "Unloved/Systems/DDGI/GlobalIllumination.h"
 #include "Unloved/Render/RendererConstants.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 

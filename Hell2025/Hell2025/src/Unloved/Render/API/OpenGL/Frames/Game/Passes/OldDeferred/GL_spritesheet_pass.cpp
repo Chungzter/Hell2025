@@ -1,103 +1,48 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
-#include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
-#include "World/LegacyWorld.h"
-#include "Unloved/World/World.h"
-
-#include "Unloved/Session/Session.h"
-#include "Unloved/Render/Renderer.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "res/shaders/common/OpenGL/binding_indices.glsl"
 
 namespace OpenGL::Renderer {
     using namespace Unloved;
 
-
     void SpriteSheetPass() {
         ProfilerOpenGLZoneFunction();
-
-        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
 
         Mesh* mesh = Hell::ResourceManager::GetQuadMesh();
         if (!mesh) return;
 
-        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBuffer" : "GBuffer";
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
 
         gBuffer.Bind();
         gBuffer.DrawBuffer("Lighting");
 
         OpenGL::BindShader("SpriteSheet");
-        OpenGL::RasterizerStateManager::ForceRasterizerState("SpriteSheetPass");
+        OpenGL::BindSSBO(SSBO_IDX_SPRITE_SHEET_INSTANCE_DATA, "SpriteSheetInstanceData");
+
+        OpenGLRasterizerState rasterizerState;
+        rasterizerState.depthTestEnabled = true;
+        rasterizerState.blendEnable = true;
+        rasterizerState.cullfaceEnable = false;
+        rasterizerState.depthMask = false;
+        rasterizerState.depthFunc = GL_GREATER;
+        rasterizerState.blendFuncSrcfactor = GL_SRC_ALPHA;
+        rasterizerState.blendFuncDstfactor = GL_ONE;
+        OpenGL::RasterizerStateManager::SetRasterizerState(rasterizerState);
 
         glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 
+        const DrawCommandsSet& drawCommandsSet = Unloved::RenderDataManager::GetDrawInfoSet();
+
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
-            if (!viewport->IsVisible()) continue;
+            if (!viewport || !viewport->IsVisible()) continue;
 
             OpenGL::Renderer::SetViewport(&gBuffer, viewport);
-
-            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
-            if (!player) continue;
-
-            const std::vector<SpriteSheetRenderItem>& renderItems = player->GetSpriteSheetRenderItems();
-            for (const SpriteSheetRenderItem& renderItem : renderItems) {
-
-                Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.textureIndex);
-                if (!texture) {
-                    std::cout << "Spritesheet pass had a null ptr texture from index " << renderItem.textureIndex << "\n";
-                    continue;
-                }
-
-                OpenGL::SetUniformInt("u_rowCount", renderItem.rowCount);
-                OpenGL::SetUniformInt("u_columnCount", renderItem.columnCount);
-                OpenGL::SetUniformInt("u_frameIndex", renderItem.frameIndex);
-                OpenGL::SetUniformInt("u_frameNextIndex", renderItem.frameIndexNext);
-                OpenGL::SetUniformFloat("u_mixFactor", renderItem.mixFactor);
-                OpenGL::SetUniformVec4("u_position", renderItem.position);
-                OpenGL::SetUniformVec4("u_rotation", renderItem.rotation);
-                OpenGL::SetUniformVec4("u_scale", renderItem.scale);
-                OpenGL::SetUniformBool("u_billboard", renderItem.isBillboard != 0);
-                OpenGL::SetUniformFloat("u_uOffset", renderItem.uOffset);
-                OpenGL::SetUniformFloat("u_vOffset", renderItem.vOffset);
-                OpenGL::SetUniformVec4("u_worldBoundsMin", renderItem.aabbMin);
-                OpenGL::SetUniformVec4("u_worldBoundsMax", renderItem.aabbMax);
-                OpenGL::SetUniformBool("u_useFireClipHeight", false);
-
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, texture->GetGLTexture().GetHandle());
-                glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), 1, mesh->baseVertex, i);
-            }
-
-            // No depth test for fire
-            //glDisable(GL_DEPTH_TEST);
-            for (Fireplace& fireplace : Unloved::World::GetFireplaces()) {
-                const SpriteSheetRenderItem& renderItem = fireplace.GetFireSpriteSheetRenderItem();
-                Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(renderItem.textureIndex);
-                if (!texture) continue;
-
-                OpenGL::SetUniformInt("u_rowCount", renderItem.rowCount);
-                OpenGL::SetUniformInt("u_columnCount", renderItem.columnCount);
-                OpenGL::SetUniformInt("u_frameIndex", renderItem.frameIndex);
-                OpenGL::SetUniformInt("u_frameNextIndex", renderItem.frameIndexNext);
-                OpenGL::SetUniformFloat("u_mixFactor", renderItem.mixFactor);
-                OpenGL::SetUniformVec4("u_position", renderItem.position);
-                OpenGL::SetUniformVec4("u_rotation", renderItem.rotation);
-                OpenGL::SetUniformVec4("u_scale", renderItem.scale);
-                OpenGL::SetUniformBool("u_billboard", renderItem.isBillboard != 0);
-                OpenGL::SetUniformFloat("u_uOffset", renderItem.uOffset);
-                OpenGL::SetUniformFloat("u_vOffset", renderItem.vOffset);
-                OpenGL::SetUniformVec4("u_worldBoundsMin", renderItem.aabbMin);
-                OpenGL::SetUniformVec4("u_worldBoundsMax", renderItem.aabbMax);
-                OpenGL::SetUniformBool("u_useFireClipHeight", fireplace.m_useFireClipHeight);
-
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, texture->GetGLTexture().GetHandle());
-                glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), 1, mesh->baseVertex, i);
-            }
+            OpenGL::Renderer::MultiDrawIndirect(drawCommandsSet.spriteSheets[i]);
         }
     }
 }

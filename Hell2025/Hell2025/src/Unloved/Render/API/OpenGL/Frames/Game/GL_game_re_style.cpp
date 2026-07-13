@@ -119,6 +119,7 @@ namespace OpenGL::Renderer {
         if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
 
         SpriteSheetPass(); // Muzzle flash, etc
+        FirePass();
 
         InventoryGaussianPass(); // TODO: optimize this. it is likely shit
 

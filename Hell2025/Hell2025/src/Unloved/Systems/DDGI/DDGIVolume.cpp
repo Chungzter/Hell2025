@@ -5,7 +5,7 @@
 
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Objects/House/Door.h"
-#include "Unloved/Systems/WorldBVH/WorldBVH.h"
+#include "Unloved/Systems/DDGI/DDGIGeometryBuilder.h"
 #include "Unloved/World/World.h"
 
 #include <iostream> // TODO: get me out of here
@@ -24,12 +24,11 @@ DDGIVolume::DDGIVolume(uint64_t id, DDGIVolumeCreateInfo& createInfo, SpawnOffse
 }
 
 void DDGIVolume::Update() {
-    if (m_raytracingDataDirty) {
-        CreateRaytracingData();
-        m_raytracingDataDirty = false;
+    if (m_ddgiGeometryDirty) {
+        RebuildDDGIGeometry();
+        m_ddgiGeometryDirty = false;
     }
 
-    //CreateDoorBvh();
     // Also in here, find a way to do an Immediate style upload of the point cloud data + compute point light base color
     // This will be handy for Vulkan also.
 
@@ -37,30 +36,29 @@ void DDGIVolume::Update() {
 }
 
 void DDGIVolume::CleanUp() {
-    CleanUpRaytracingData();
+    CleanUpDDGIGeometry();
 }
 
-void DDGIVolume::CleanUpRaytracingData() {
-    Hell::Bvh::DestroyMeshBvh(m_doorBvhId);
+void DDGIVolume::CleanUpDDGIGeometry() {
     Hell::Bvh::DestroyMeshBvh(m_houseBvhId);
     Hell::Bvh::DestroySceneBvh(m_sceneBvhId);
 
-    m_doorBvhId = 0;
     m_houseBvhId = 0;
     m_sceneBvhId = 0;
     m_probePointIndexPoolSize = 0;
 
-    m_triangles.clear();
+    m_pointCloudSeedTriangles.clear();
     m_pointCloud.CleanUp();
 
 }
 
-void DDGIVolume::CreateRaytracingData() {
-    CleanUpRaytracingData();
+void DDGIVolume::RebuildDDGIGeometry() {
+    CleanUpDDGIGeometry();
 
-    CreateTriangleData();
-    CreateHouseBvh();
-    CreateDoorBvh(); // Probably rewrite this so doors internally manager their own BVH, that way stained glass ones can have holes
+    DDGIHouseGeometry houseGeometry = Unloved::DDGIGeometryBuilder::BuildHouseGeometry(m_boundsMin, m_boundsMax);
+    RebuildPointCloudSeedTriangles(houseGeometry);
+    RebuildDDGIHouseBvh(houseGeometry);
+    Unloved::DDGIGeometryBuilder::CreateDoorProxyBvh();
 
     m_sceneBvhId = Hell::Bvh::CreateSceneBvh();
     if (SceneBvh* sceneBvh = Hell::Bvh::GetSceneBvhById(m_sceneBvhId)) {
@@ -68,24 +66,23 @@ void DDGIVolume::CreateRaytracingData() {
         if (MeshBvh* houseMeshBvh = Hell::Bvh::GetMeshBvhById(m_houseBvhId)) {
             meshBvhs.push_back({ m_houseBvhId, houseMeshBvh });
         }
-        if (MeshBvh* doorMeshBvh = Hell::Bvh::GetMeshBvhById(m_doorBvhId)) {
-            meshBvhs.push_back({ m_doorBvhId, doorMeshBvh });
+        const uint64_t ddgiDoorProxyBvhId = Unloved::DDGIGeometryBuilder::GetDoorProxyBvhId();
+        if (MeshBvh* doorMeshBvh = Hell::Bvh::GetMeshBvhById(ddgiDoorProxyBvhId)) {
+            meshBvhs.push_back({ ddgiDoorProxyBvhId, doorMeshBvh });
         }
         sceneBvh->AddMeshBvhs(meshBvhs);
     }
 
-    CreatePointCloud();
+    RebuildPointCloud();
     CalculateProbePointIndexPoolSize();
 }
 
-void DDGIVolume::CreateTriangleData() {
-    m_triangles.clear();
-    std::vector<HouseOccluderTriangle> houseOccluderTriangles;
-    Unloved::WorldBVH::CreateHouseOccluderTriangles(m_boundsMin, m_boundsMax, houseOccluderTriangles);
-    m_triangles.reserve(houseOccluderTriangles.size());
+void DDGIVolume::RebuildPointCloudSeedTriangles(const DDGIHouseGeometry& houseGeometry) {
+    m_pointCloudSeedTriangles.clear();
+    m_pointCloudSeedTriangles.reserve(houseGeometry.surfaceTriangles.size());
 
-    for (const HouseOccluderTriangle& sourceTriangle : houseOccluderTriangles) {
-        Triangle& triangle = m_triangles.emplace_back();
+    for (const DDGISurfaceTriangle& sourceTriangle : houseGeometry.surfaceTriangles) {
+        Triangle& triangle = m_pointCloudSeedTriangles.emplace_back();
         triangle.v0 = sourceTriangle.v0;
         triangle.v1 = sourceTriangle.v1;
         triangle.v2 = sourceTriangle.v2;
@@ -99,103 +96,21 @@ void DDGIVolume::CreateTriangleData() {
 
 }
 
-void DDGIVolume::CreateHouseBvh() {
+void DDGIVolume::RebuildDDGIHouseBvh(const DDGIHouseGeometry& houseGeometry) {
     if (m_houseBvhId != 0) {
         Hell::Bvh::DestroyMeshBvh(m_houseBvhId);
         m_houseBvhId = 0;
     }
 
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-    Unloved::WorldBVH::CreateHouseOccluderGeometry(m_boundsMin, m_boundsMax, vertices, indices);
-
-    if (vertices.empty() || indices.empty()) {
+    if (houseGeometry.vertices.empty() || houseGeometry.indices.empty()) {
         return;
     }
 
-    m_houseBvhId = Hell::Bvh::CreateMeshBvhFromVertexData(vertices, indices);
+    m_houseBvhId = Hell::Bvh::CreateMeshBvhFromVertexData(houseGeometry.vertices, houseGeometry.indices);
 }
 
-void DDGIVolume::CreateDoorBvh() { 
-    // ATTENTION:
-    // Probably rewrite this so doors internally manager their own BVH, that way stained glass ones can have holes
-    // You'll need a function that gets PxBox vertices from PxShape box and computes normals, that'd do it.
-
-    float w = DOOR_DEPTH;
-    float h = DOOR_HEIGHT;
-    float d = DOOR_WIDTH;
-
-    std::vector<Vertex> vertices;
-    vertices.reserve(24);
-
-    float paddingPosX = 0.01f;
-    float paddingPosY = 0.03f;
-    float paddingPosZ = 0.02f;
-    float paddingNegX = 0.08f;
-    float paddingNegY = 0.03f;
-    float paddingNegZ = 0.02f;
-
-    // Corners
-    glm::vec3 p0 = glm::vec3(0 + paddingPosX, 0 - paddingNegY, 0 + paddingPosZ); // front bottom right
-    glm::vec3 p1 = glm::vec3(-w - paddingNegX, 0 - paddingNegY, 0 + paddingPosZ); // front bottom left
-    glm::vec3 p2 = glm::vec3(-w - paddingNegX, h + paddingPosY, 0 + paddingPosZ); // front top left
-    glm::vec3 p3 = glm::vec3(0 + paddingPosX, h + paddingPosY, 0 + paddingPosZ); // front top right
-    glm::vec3 p4 = glm::vec3(0 + paddingPosX, 0 - paddingNegY, -d - paddingNegZ); // back bottom right
-    glm::vec3 p5 = glm::vec3(-w - paddingNegX, 0 - paddingNegY, -d - paddingNegZ); // back bottom left
-    glm::vec3 p6 = glm::vec3(-w - paddingNegX, h + paddingPosY, -d - paddingNegZ); // back top left
-    glm::vec3 p7 = glm::vec3(0 + paddingPosX, h + paddingPosY, -d - paddingNegZ); // back top right
-
-    // front face
-    vertices.emplace_back(Vertex(p0, glm::vec3(0, 0, 1)));
-    vertices.emplace_back(Vertex(p3, glm::vec3(0, 0, 1)));
-    vertices.emplace_back(Vertex(p2, glm::vec3(0, 0, 1)));
-    vertices.emplace_back(Vertex(p1, glm::vec3(0, 0, 1)));
-
-    // back face
-    vertices.emplace_back(Vertex(p5, glm::vec3(0, 0, -1)));
-    vertices.emplace_back(Vertex(p6, glm::vec3(0, 0, -1)));
-    vertices.emplace_back(Vertex(p7, glm::vec3(0, 0, -1)));
-    vertices.emplace_back(Vertex(p4, glm::vec3(0, 0, -1)));
-
-    // left face
-    vertices.emplace_back(Vertex(p1, glm::vec3(-1, 0, 0)));
-    vertices.emplace_back(Vertex(p2, glm::vec3(-1, 0, 0)));
-    vertices.emplace_back(Vertex(p6, glm::vec3(-1, 0, 0)));
-    vertices.emplace_back(Vertex(p5, glm::vec3(-1, 0, 0)));
-
-    // right face
-    vertices.emplace_back(Vertex(p4, glm::vec3(1, 0, 0)));
-    vertices.emplace_back(Vertex(p7, glm::vec3(1, 0, 0)));
-    vertices.emplace_back(Vertex(p3, glm::vec3(1, 0, 0)));
-    vertices.emplace_back(Vertex(p0, glm::vec3(1, 0, 0)));
-
-    // top face
-    vertices.emplace_back(Vertex(p3, glm::vec3(0, 1, 0)));
-    vertices.emplace_back(Vertex(p7, glm::vec3(0, 1, 0)));
-    vertices.emplace_back(Vertex(p6, glm::vec3(0, 1, 0)));
-    vertices.emplace_back(Vertex(p2, glm::vec3(0, 1, 0)));
-
-    // bottom face
-    vertices.emplace_back(Vertex(p1, glm::vec3(0, -1, 0)));
-    vertices.emplace_back(Vertex(p5, glm::vec3(0, -1, 0)));
-    vertices.emplace_back(Vertex(p4, glm::vec3(0, -1, 0)));
-    vertices.emplace_back(Vertex(p0, glm::vec3(0, -1, 0)));
-
-    // Indices
-    std::vector<uint32_t> indices = {
-        0, 1, 2, 2, 3, 0,       // front
-        4, 5, 6, 6, 7, 4,       // back
-        8, 9, 10, 10, 11, 8,    // left
-        12, 13, 14, 14, 15, 12, // right
-        16, 17, 18, 18, 19, 16, // top
-        20, 21, 22, 22, 23, 20  // bottom
-    };
-
-    m_doorBvhId = Hell::Bvh::CreateMeshBvhFromVertexData(vertices, indices);
-}
-
-void DDGIVolume::CreatePointCloud() {
-    m_pointCloud.Create(m_triangles, GetBoundsMin(), GetBoundsMax(), GetPointCloudSpacing(), 3.0f);
+void DDGIVolume::RebuildPointCloud() {
+    m_pointCloud.Create(m_pointCloudSeedTriangles, GetBoundsMin(), GetBoundsMax(), GetPointCloudSpacing(), 3.0f);
     m_pointCloudNeedsGpuUpload = true;
 }
 
@@ -245,7 +160,7 @@ void DDGIVolume::CalculateProbePointIndexPoolSize() {
     }
 }
 
-void DDGIVolume::UpdateSceneBvh() {
+void DDGIVolume::UpdateDDGISceneBvh() {
     std::vector<PrimitiveInstance> instances;
 
     MeshBvh* houseMeshBvh = Hell::Bvh::GetMeshBvhById(m_houseBvhId);
@@ -263,24 +178,27 @@ void DDGIVolume::UpdateSceneBvh() {
     instance.meshBvhId = m_houseBvhId;
     instance.worldAabbCenter = (instance.worldAabbBoundsMin + instance.worldAabbBoundsMax) * 0.5f;
 
-    // Add all the doors
-    for (Door& door : Unloved::World::GetDoors()) {
-        // Bit of a hack but get the hinges matrix, then zero out the y translation to match the doors main model matrix
-        MeshNode* meshNode = door.GetMeshNodes().GetMeshNodeByMeshName("Door_Hinges");
-        glm::mat4 worldMatrix = meshNode->worldMatrix;
-        worldMatrix[3][1] = door.GetDoorModelMatrix()[3][1];
+    const uint64_t ddgiDoorProxyBvhId = Unloved::DDGIGeometryBuilder::GetDoorProxyBvhId();
+    if (ddgiDoorProxyBvhId != 0) {
+        // Add all the doors
+        for (Door& door : Unloved::World::GetDoors()) {
+            // Bit of a hack but get the hinges matrix, then zero out the y translation to match the doors main model matrix
+            MeshNode* meshNode = door.GetMeshNodes().GetMeshNodeByMeshName("Door_Hinges");
+            glm::mat4 worldMatrix = meshNode->worldMatrix;
+            worldMatrix[3][1] = door.GetDoorModelMatrix()[3][1];
 
-        // The PhysX aabb is tighter than the one your MeshNode holds, so use that
-        const AABB& aabb = door.GetPhsyicsAABB();
+            // The PhysX aabb is tighter than the one your MeshNode holds, so use that
+            const AABB& aabb = door.GetPhsyicsAABB();
 
-        PrimitiveInstance& instance = instances.emplace_back();
-        instance.worldAabbBoundsMin = aabb.GetBoundsMin();
-        instance.worldAabbBoundsMax = aabb.GetBoundsMax();
-        instance.objectId = door.GetObjectId();
-        instance.worldTransform = worldMatrix;
-        instance.inverseWorldTransform = glm::inverse(instance.worldTransform);
-        instance.meshBvhId = m_doorBvhId;
-        instance.worldAabbCenter = (instance.worldAabbBoundsMin + instance.worldAabbBoundsMax) * 0.5f;
+            PrimitiveInstance& instance = instances.emplace_back();
+            instance.worldAabbBoundsMin = aabb.GetBoundsMin();
+            instance.worldAabbBoundsMax = aabb.GetBoundsMax();
+            instance.objectId = door.GetObjectId();
+            instance.worldTransform = worldMatrix;
+            instance.inverseWorldTransform = glm::inverse(instance.worldTransform);
+            instance.meshBvhId = ddgiDoorProxyBvhId;
+            instance.worldAabbCenter = (instance.worldAabbBoundsMin + instance.worldAabbBoundsMax) * 0.5f;
+        }
     }
 
     SceneBvh* sceneBvh = Hell::Bvh::GetSceneBvhById(m_sceneBvhId);
@@ -322,7 +240,7 @@ void DDGIVolume::UpdateMembers() {
     m_probeCountY = (int)std::ceil(m_worldSpaceHeight / m_createInfo.probeSpacing) + 1;
     m_probeCountZ = (int)std::ceil(m_worldSpaceDepth / m_createInfo.probeSpacing) + 1;
 
-    m_raytracingDataDirty = true;
+    m_ddgiGeometryDirty = true;
 }
 
 void DDGIVolume::Init(const glm::vec3& aabbMin, const glm::vec3& aabbMax, float probeSpacing) {

@@ -28,6 +28,7 @@ namespace VulkanRenderer {
         // Lighting
         VulkanResourceManager::CreateShader("LightingDeferred", { "VK_fullscreen_triangle.vert", "VK_lighting_deferred.frag" });
         VulkanResourceManager::CreateShader("LightingForward", { "VK_lighting_forward.vert", "VK_lighting_forward.frag" });
+        VulkanResourceManager::CreateShader("SpriteSheet", { "VK_sprite_sheet.vert", "VK_sprite_sheet.frag" });
 
         // Post Processing
         VulkanResourceManager::CreateShader("PostProcessing", { "VK_post_processing.comp" });

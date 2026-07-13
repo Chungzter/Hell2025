@@ -197,6 +197,15 @@ void VulkanPipeline::SetColorBlending(bool enabled) {
     m_colorBlending = enabled; 
 }
 
+void VulkanPipeline::SetColorBlendFactors(VkBlendFactor srcColorFactor, VkBlendFactor dstColorFactor, VkBlendOp colorOp, VkBlendFactor srcAlphaFactor, VkBlendFactor dstAlphaFactor, VkBlendOp alphaOp) {
+    m_srcColorBlendFactor = srcColorFactor;
+    m_dstColorBlendFactor = dstColorFactor;
+    m_colorBlendOp = colorOp;
+    m_srcAlphaBlendFactor = srcAlphaFactor;
+    m_dstAlphaBlendFactor = dstAlphaFactor;
+    m_alphaBlendOp = alphaOp;
+}
+
 void VulkanPipeline::SetDepthTest(bool enabled, bool writeEnabled) {
     m_depthTest = enabled;
     m_depthWrite = writeEnabled;
@@ -317,6 +326,14 @@ void VulkanPipeline::SetRenderState(const VulkanRenderState* state) {
     SetFrontFace(state->rasterizer.frontFace);
     SetCullMode(state->rasterizer.cullFaceEnabled ? state->rasterizer.cullMode : VK_CULL_MODE_NONE);
     SetColorBlending(state->rasterizer.blendEnabled);
+    SetColorBlendFactors(
+        state->rasterizer.srcColorBlendFactor,
+        state->rasterizer.dstColorBlendFactor,
+        state->rasterizer.colorBlendOp,
+        state->rasterizer.srcAlphaBlendFactor,
+        state->rasterizer.dstAlphaBlendFactor,
+        state->rasterizer.alphaBlendOp
+    );
 }
 
 void VulkanPipeline::SetRenderState(const std::string& name) {
@@ -445,12 +462,12 @@ bool VulkanPipeline::Build() {
     colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     colorBlendAttachment.blendEnable = m_colorBlending ? VK_TRUE : VK_FALSE;
     if (m_colorBlending) {
-        colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-        colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-        colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-        colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachment.srcColorBlendFactor = m_srcColorBlendFactor;
+        colorBlendAttachment.dstColorBlendFactor = m_dstColorBlendFactor;
+        colorBlendAttachment.colorBlendOp = m_colorBlendOp;
+        colorBlendAttachment.srcAlphaBlendFactor = m_srcAlphaBlendFactor;
+        colorBlendAttachment.dstAlphaBlendFactor = m_dstAlphaBlendFactor;
+        colorBlendAttachment.alphaBlendOp = m_alphaBlendOp;
     }
 
     std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments(

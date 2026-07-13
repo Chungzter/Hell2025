@@ -80,6 +80,7 @@ namespace OpenGL::Renderer {
     void DownSampleFinalImage();
     void EditorPass();
     void EmissivePass();
+    void FirePass();
     void FurPass();
     void GeometryPass();
     void MetaBallsPass();

@@ -116,8 +116,6 @@ Fireplace::Fireplace(uint64_t id, const FireplaceCreateInfo& createInfo, const S
 		m_meshNodes.SetMaterialByMeshName("FireplaceBrick_WallExtended", "FireplaceB_BrickWall1");
 
 		m_meshNodes.SetBlendingModeByMeshName("FireplaceBrick_StoveGlass", BlendingMode::GLASS);
-
-        m_useFireClipHeight = true;
 	}
 
 }
@@ -178,18 +176,7 @@ void Fireplace::UpdateWorldMatrix() {
 }
 
 void Fireplace::ConfigureFire() {
-    SpriteSheetObjectCreateInfo createInfo;
-    createInfo.position = m_firePosition;
-    createInfo.rotation = glm::vec3(0.0f, HELL_PI * 0.5f, 0.0f);
-    createInfo.scale = glm::vec3(1.0f);
-    createInfo.uvOffset = glm::vec2(0.0f, 0.75f);
-    createInfo.loop = true;
-    createInfo.billboard = true;
-    createInfo.renderingEnabled = true;
-    createInfo.animationSpeed = 30.0f;
-    createInfo.textureName = "FireplaceFire_8x8";
-
-    m_fireSpriteSheetObject = SpriteSheetObject(createInfo);
+    
 }
 
 void Fireplace::SetPosition(const glm::vec3& position) {
@@ -220,7 +207,6 @@ void Fireplace::SetRotation(const glm::vec3& rotation) {
 
 void Fireplace::Update(float deltaTime) {
     m_meshNodes.Update(m_worldMatrix);
-    m_fireSpriteSheetObject.Update(deltaTime);
 
     //DebugDraw::DrawPoint(m_firePosition, RED);
 

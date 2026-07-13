@@ -16,18 +16,10 @@ void main() {
 
     if (probeIdx >= uint(volume.totalProbes)) return;
 
-    // Exit early if irrelevant and reset cooldown (THIS PROBABLY ISN'T SAFE. KEEPING IT HERE FOR FUTURE REFERENCE)
-    //if (!probeStates[probeIdx].isRelevant) {
-    //    probeStates[probeIdx].irradianceCooldown = 0u;
-    //    return;
-    //}
-
-    // Load into local register to prevent multiple global memory accesses
     uint currentCooldown = probeStates[probeIdx].irradianceCooldown;
 
-    // decrement local counter
-    if (currentCooldown > 0u) {
-        currentCooldown--;
+    if (currentCooldown == PROBE_MAX_IRRADIANCE_COOLDOWN) {
+        return;
     }
 
     uint offset = probePointOffsets[probeIdx];

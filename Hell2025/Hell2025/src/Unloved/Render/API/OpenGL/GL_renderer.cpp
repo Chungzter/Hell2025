@@ -143,15 +143,6 @@ namespace OpenGL::Renderer {
         hairPassLighting->blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
         hairPassLighting->pointSize = 8;
 
-        OpenGLRasterizerState* spriteSheet = OpenGL::RasterizerStateManager::CreateRasterizerState("SpriteSheetPass");
-        spriteSheet->depthTestEnabled = true;
-        spriteSheet->blendEnable = true;
-        spriteSheet->cullfaceEnable = false;
-        spriteSheet->depthMask = false;
-        spriteSheet->depthFunc = GL_GREATER;
-        spriteSheet->blendFuncSrcfactor = GL_SRC_ALPHA;
-        spriteSheet->blendFuncDstfactor = GL_ONE; // was GL_ONE_MINUS_SRC_ALPHA
-
         OpenGLRasterizerState* skybox = OpenGL::RasterizerStateManager::CreateRasterizerState("SkyBox");
         skybox->depthTestEnabled = false;
         skybox->blendEnable = false;
@@ -236,6 +227,7 @@ namespace OpenGL::Renderer {
         const std::vector<BloodDecalInstanceData>& bloodScreenSpaceDecalInstances = Unloved::RenderDataManager::GetBloodScreenSpaceDecalInstanceData();
         const std::vector<GPULight>& gpuLights = Unloved::RenderDataManager::GetGPULights();
         const std::vector<RenderItem>& instanceData = Unloved::RenderDataManager::GetInstanceData();
+        const std::vector<SpriteSheetRenderItem>& spriteSheetInstanceData = Unloved::RenderDataManager::GetSpriteSheetInstanceData();
         const std::vector<ViewportData>& playerData = Unloved::RenderDataManager::GetViewportData();
         const std::vector<glm::mat4>&oceanPatchTransforms = Unloved::RenderDataManager::GetOceanPatchTransforms();
 
@@ -245,6 +237,7 @@ namespace OpenGL::Renderer {
         OpenGL::UpdateSSBO("BloodDecalInstances", bloodScreenSpaceDecalInstances.size() * sizeof(BloodDecalInstanceData), bloodScreenSpaceDecalInstances.data());
         OpenGL::UpdateSSBO("ChristmasLightCounter", sizeof(uint32_t), &zero);
         OpenGL::UpdateSSBO("InstanceData", instanceData.size() * sizeof(RenderItem), instanceData.data());
+        OpenGL::UpdateSSBO("SpriteSheetInstanceData", spriteSheetInstanceData.size() * sizeof(SpriteSheetRenderItem), spriteSheetInstanceData.data());
         OpenGL::UpdateSSBO("Lights", gpuLights.size() * sizeof(GPULight), gpuLights.data());
         OpenGL::UpdateSSBO("RendererData", sizeof(RendererData), (void*)&rendererData);
         OpenGL::UpdateSSBO("ViewportData", playerData.size() * sizeof(ViewportData), playerData.data());

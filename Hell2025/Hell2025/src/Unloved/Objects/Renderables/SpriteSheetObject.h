@@ -1,5 +1,4 @@
 #pragma once
-#include "Hell/Math/AABB.h"
 #include "Hell/ResourceManagement/Types/SpriteSheetTexture.h"
 
 #include "Unloved/Common/CreateInfo.h"
@@ -25,7 +24,6 @@ public:
     void SetSpeed(float speed);
     void EnableRendering();
     void DisableRendering();
-    void SetAABBBounds(const AABB& aabb);
 
     const bool IsRenderingEnabled()                 { return m_renderingEnabled; }
     const bool IsBillboard()                        { return m_billboard; }
@@ -60,6 +58,5 @@ private:
     float m_vOffset = 0.0f;
     SpriteSheetTexture* m_spriteSheetTexture;
     SpriteSheetRenderItem m_renderItem;
-    AABB m_worldBounds;
 };
 }

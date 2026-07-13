@@ -11,8 +11,8 @@
 #include "Unloved/Render/RenderDataManager.h"
 
 #include "Unloved/Debug/DebugDraw.h"
-#include "Unloved/Systems/DDGI/GlobalIllumination.h"
 #include "Unloved/Systems/DirtyTracker/DirtyTracker.h"
+#include "Unloved/Systems/DDGI/DDGIManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Session/Session.h" // For Session::GetSessionTime(). It's a hack to prevent colorful probe glitch at start
 #include "Unloved/World/World.h"
@@ -88,30 +88,39 @@ namespace OpenGL::Renderer {
 
     //void RenderSceneBvhTris(Unloved::DDGIVolume& ddgiVolume);
 
+    void ResetDDGIProbes(Unloved::DDGIVolume& ddgiVolume) {
+        OpenGL::ReserveSSBO("ProbeSHColor", sizeof(ProbeColor) * ddgiVolume.GetTotalProbeCount());
+        OpenGL::ClearSSBO("ProbeSHColor");
+
+        OpenGLTextureArray& probeIrradianceTexture = GetProbeIrradianceTextureArray();
+        probeIrradianceTexture.Clear(0.0f, 0.0f, 0.0f, 0.0f);
+
+        ResetProbeStates(ddgiVolume);
+    }
+
     void UpdateGlobalIllumintation() {
-        if (Unloved::World::GetDDGIVolumes().empty()) return;
+        Hell::SlotMap<Unloved::DDGIVolume>& ddgiVolumes = Unloved::DDGIManager::GetVolumes();
+        if (ddgiVolumes.empty()) return;
 
-        uint64_t id = 0;
-        for (Unloved::DDGIVolume& volume : Unloved::World::GetDDGIVolumes()) {
-            id = volume.GetObjectId();
-            break;
-        }
-
-        Unloved::DDGIVolume& ddgiVolume = *Unloved::World::GetDDGIVolumeByObjectId(id);
+        Unloved::DDGIVolume& ddgiVolume = ddgiVolumes[0];
         const Unloved::PointCloud& pointCloud = ddgiVolume.GetPointClound();
+        const uint32_t totalProbeCount = ddgiVolume.GetTotalProbeCount();
+
+        // Reserve space before any reset/clear. Otherwise a later resize can replace cleared data with undefined buffer contents.
+        OpenGL::ReserveSSBO("ProbeSHColor", sizeof(ProbeColor) * totalProbeCount);
+        OpenGL::ReserveSSBO("ProbeDistanceIndices", sizeof(uint32_t) * totalProbeCount);
+        OpenGL::ReserveSSBO("ProbeIrradianceIndices", sizeof(uint32_t) * totalProbeCount);
+        OpenGL::ReserveSSBO("ProbeStates", sizeof(ProbeState) * totalProbeCount);
 
         if (ddgiVolume.PointCloudNeedsGPUUpload()) {
             UploadPointCloud(ddgiVolume);
             ComputeProbePointIndices(ddgiVolume);
             ComputePointCloudBaseColor(ddgiVolume);
-            ResetProbeStates(ddgiVolume);
-
+            ResetDDGIProbes(ddgiVolume);
             ddgiVolume.MarkPointCloudAsUploaded();
-
-            OpenGL::ClearSSBO("ProbeSHColor"); // You never used to have to do this. Find out why!
         }
 
-        ddgiVolume.UpdateSceneBvh();
+        ddgiVolume.UpdateDDGISceneBvh();
 
         uint64_t sceneBvhId = ddgiVolume.GetSceneBvhId();
         SceneBvh* sceneBvh = Hell::Bvh::GetSceneBvhById(sceneBvhId);
@@ -135,11 +144,9 @@ namespace OpenGL::Renderer {
         OpenGL::UpdateSSBO("DDGIVolume", sizeof(DDGIVolumeGPU), &ddgiVolumeGPU);
         OpenGL::UpdateSSBO("DirtyDoorAABBs", dirtyDoorABBBs.size() * sizeof(GPUAABB), dirtyDoorABBBs.data());
 
-        // Reserve space for GPU updated SSBOS
-        OpenGL::ReserveSSBO("ProbeSHColor", sizeof(ProbeColor) * ddgiVolume.GetTotalProbeCount());
-        OpenGL::ReserveSSBO("ProbeDistanceIndices", sizeof(uint32_t) * ddgiVolume.GetTotalProbeCount());
-        OpenGL::ReserveSSBO("ProbeIrradianceIndices", sizeof(uint32_t) * ddgiVolume.GetTotalProbeCount());
-        OpenGL::ReserveSSBO("ProbeStates", sizeof(ProbeState) * ddgiVolume.GetTotalProbeCount());
+        if (Unloved::DDGIManager::ConsumeProbeResetRequest()) {
+            ResetDDGIProbes(ddgiVolume);
+        }
 
         // Raytracing SSBOs stay persistently bound for whole GI pass
         OpenGL::BindSSBO(0, "EntityInstances");
@@ -176,7 +183,7 @@ namespace OpenGL::Renderer {
         for (uint32_t i = 0; i < ddgiVolume.GetTotalProbeCount(); i++) {
             ProbeState& probeState = probeStates.emplace_back();
             probeState.isActive = true;
-            probeState.isRelevant = true;
+            probeState.isRelevant = false;
             probeState.distanceCooldown = PROBE_MAX_DISTANCE_COOLDOWN;
             probeState.irradianceCooldown = PROBE_MAX_IRRADIANCE_COOLDOWN;
             probeState.relocationOffset = glm::vec3(0.0f);

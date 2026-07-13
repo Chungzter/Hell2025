@@ -11,6 +11,8 @@
 #include "Unloved/Objects/Lighting/Light.h"
 #include "Unloved/World/World.h"
 
+#include <unordered_map>
+
 namespace Unloved::DirtyTracker {
 
     void CalculateDirtyDoorAABBs();
@@ -34,6 +36,7 @@ namespace Unloved::DirtyTracker {
     const std::vector<uint64_t>& GetDirtyLightIds() { return g_dirtyLightIds; }
 
     std::vector<GPUAABB> g_dirtyDoorAABBs;
+    std::unordered_map<uint64_t, AABB> g_previousDoorAABBs;
 
     void BeginFrame() {
         g_dirtyDoorIds.clear();
@@ -118,14 +121,26 @@ namespace Unloved::DirtyTracker {
         g_dirtyDoorAABBs.clear();
 
         for (Door& door : Unloved::World::GetDoors()) {
+            const uint64_t doorId = door.GetObjectId();
+            const AABB& currentAABB = door.GetPhsyicsAABB();
+
             if (door.IsDirty()) {
+                AABB dirtyAABB = currentAABB;
+
+                auto previousAABB = g_previousDoorAABBs.find(doorId);
+                if (previousAABB != g_previousDoorAABBs.end()) {
+                    dirtyAABB.Grow(previousAABB->second);
+                }
+
                 GPUAABB aabb;
-                aabb.boundsMin = glm::vec4(door.GetPhsyicsAABB().GetBoundsMin(), 0.0f);
-                aabb.boundsMax = glm::vec4(door.GetPhsyicsAABB().GetBoundsMax(), 0.0f);
+                aabb.boundsMin = glm::vec4(dirtyAABB.GetBoundsMin(), 0.0f);
+                aabb.boundsMax = glm::vec4(dirtyAABB.GetBoundsMax(), 0.0f);
                 g_dirtyDoorAABBs.push_back(aabb);
 
-                //DebugDraw::DrawAABB(door.GetPhsyicsAABB(), YELLOW);
+                //DebugDraw::DrawAABB(dirtyAABB, YELLOW);
             }
+
+            g_previousDoorAABBs[doorId] = currentAABB;
         }
     }
 
@@ -134,6 +149,11 @@ namespace Unloved::DirtyTracker {
 
             // Begin false
             light.SetRaytracingDirtyFlag(false);
+
+            if (light.IsForcedDirty()) {
+                light.SetRaytracingDirtyFlag(true);
+                continue;
+            }
 
             // Was the light a fireplace??? These don't save to file <------------------ VERY HACKY
             if (!light.GetCreateInfo().saveToFile) {

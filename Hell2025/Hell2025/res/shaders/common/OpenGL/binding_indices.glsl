@@ -6,6 +6,9 @@
 #define SSBO_IDX_INSTANCE_DATA  4
 #define SSBO_IDX_LIGHTS         5
 
+// Pass local SSBO bindings
+#define SSBO_IDX_SPRITE_SHEET_INSTANCE_DATA 6
+
 #define TEX_IDX_SHADOW_MAP_FLASHLIGHT 0
 #define TEX_IDX_SHADOW_MAP_HI_RES     1
 #define TEX_IDX_SHADOW_MAP_LOW_RES    2

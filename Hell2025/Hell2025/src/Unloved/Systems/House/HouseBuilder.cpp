@@ -28,7 +28,7 @@ void RebuildAll() {
     RecreateAllHangingLightCords();
     RecreateAllWallTrims();
 
-    WorldBVH::UpdateHouseLightOccluderBvh();
+    WorldBVH::RebuildHouseLightOcclusionBvh();
 
     for (Light& light : Unloved::World::GetLights()) {
         light.RaycastWorldBounds();

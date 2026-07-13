@@ -1,4 +1,5 @@
 #include "SpriteSheetObject.h"
+#include "Hell/Math/Transform.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 namespace Unloved {
@@ -19,9 +20,6 @@ void SpriteSheetObject::Init(const SpriteSheetObjectCreateInfo& createInfo) {
     m_spriteSheetTexture = Hell::ResourceManager::GetSpriteSheetTexturePtr(m_textureName);
     m_uOffset = createInfo.uvOffset.x;
     m_vOffset = createInfo.uvOffset.y;
-
-    // FIX  ME
-    m_worldBounds = AABB(glm::vec3(-9999999), glm::vec3(9999999));
 }
 
 void SpriteSheetObject::Update(float deltaTime) {
@@ -53,20 +51,28 @@ void SpriteSheetObject::Update(float deltaTime) {
 
     // Construct render item
     if (m_renderingEnabled) {
-        m_renderItem.frameIndex = m_frameIndex;
-        m_renderItem.frameIndexNext = m_frameIndexNext;
-        m_renderItem.columnCount = m_spriteSheetTexture->GetColumnCount();
-        m_renderItem.rowCount = m_spriteSheetTexture->GetRowCount();
+        const int columnCount = m_spriteSheetTexture->GetColumnCount();
+        const int rowCount = m_spriteSheetTexture->GetRowCount();
+        const float frameWidth = 1.0f / columnCount;
+        const float frameHeight = 1.0f / rowCount;
+
+        const int frameX = m_frameIndex % columnCount;
+        const int frameY = (m_frameIndex - (m_frameIndex % columnCount)) / columnCount;
+        const int frameNextX = m_frameIndexNext % columnCount;
+        const int frameNextY = (m_frameIndexNext - (m_frameIndexNext % columnCount)) / columnCount;
+
+        Hell::Transform transform;
+        transform.position = m_position;
+        transform.rotation = m_rotation;
+        transform.scale = m_scale;
+
+        m_renderItem.modelMatrix = transform.to_mat4();
+        m_renderItem.uvFrame = glm::vec4(frameX * frameWidth, frameY * frameHeight, frameWidth, frameHeight);
+        m_renderItem.uvFrameNext = glm::vec4(frameNextX * frameWidth, frameNextY * frameHeight, frameWidth, frameHeight);
+        m_renderItem.localOffset = glm::vec4(m_uOffset * 0.5f, m_vOffset * 0.5f, 0.0f, 0.0f);
         m_renderItem.mixFactor = m_mixFactor;
         m_renderItem.textureIndex = m_spriteSheetTexture->GetTextureIndex();
         m_renderItem.isBillboard = (int)m_billboard;
-        m_renderItem.position = glm::vec4(m_position, 1.0);
-        m_renderItem.rotation = glm::vec4(m_rotation, 0.0);
-        m_renderItem.scale = glm::vec4(m_scale, 0.0);
-        m_renderItem.uOffset = m_uOffset;
-        m_renderItem.vOffset = m_vOffset;
-        m_renderItem.aabbMin = glm::vec4(m_worldBounds.GetBoundsMin(), 1.0);
-        m_renderItem.aabbMax = glm::vec4(m_worldBounds.GetBoundsMax(), 0.0);
     }
 }
 
@@ -104,9 +110,5 @@ void SpriteSheetObject::EnableRendering() {
 
 void SpriteSheetObject::DisableRendering() {
     m_renderingEnabled = false;
-}
-
-void SpriteSheetObject::SetAABBBounds(const AABB& aabb) {
-    m_worldBounds = aabb;
 }
 }

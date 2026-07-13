@@ -13,7 +13,7 @@ restrict layout(std430, binding = 5)  buffer ProbeColorBuffer                  {
 restrict layout(std430, binding = 6)  readonly buffer ProbeVisibilityCounter  { uint probeVisibilityCounter; };
 restrict layout(std430, binding = 7)  readonly buffer VisibleProbeList         { uint packedIndices[]; };
 restrict layout(std430, binding = 8)  readonly buffer DDGIVolumeBuffer         { DDGIVolume volume; };
-restrict layout(std430, binding = 9)  readonly buffer ProbeStateBuffer         { ProbeState probeStates[]; };
+restrict layout(std430, binding = 9)  buffer ProbeStateBuffer                  { ProbeState probeStates[]; };
 restrict layout(std430, binding = 10) readonly buffer BakedIndicesBuffer       { uint bakedIndices[]; };
 restrict layout(std430, binding = 11) readonly buffer BakedOffsetsBuffer       { uint bakedOffsets[]; };
 restrict layout(std430, binding = 12) readonly buffer BakedCountsBuffer        { uint bakedCounts[]; };
@@ -184,5 +184,9 @@ void main() {
         sh(pIdx, probePos, threadIdx);
     } else {
         octral(pIdx, probePos, threadIdx);
+    }
+
+    if (threadIdx == 0u && probeStates[pIdx].irradianceCooldown > 0u) {
+        probeStates[pIdx].irradianceCooldown--;
     }
 }

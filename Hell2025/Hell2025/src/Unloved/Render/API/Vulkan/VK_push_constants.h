@@ -63,6 +63,12 @@ struct PushConstantsDeferredLighting {
     uint32_t padding0 = 0;
 };
 
+struct PushConstantsSpriteSheet {
+    PushConstantsFrameResources frame;
+
+    uint64_t spriteSheetRenderItemsDeviceAddress = 0;
+};
+
 struct PushConstantsHair {
     PushConstantsFrameResources frame;
 

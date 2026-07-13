@@ -1,70 +1,50 @@
 #version 460 core
 #include "../common/types.glsl"
-#include "../common/util.glsl"
+#include "../common/constants.glsl"
+#include "../common/OpenGL/binding_indices.glsl"
 
 layout (location = 0) in vec3 vPosition;
 layout (location = 1) in vec3 vNormal;
 layout (location = 2) in vec2 vTexCoord;
 
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 
-uniform int u_rowCount;
-uniform int u_columnCount;
-uniform bool u_billboard;
-uniform vec4 u_position;
-uniform vec4 u_rotation;
-uniform vec4 u_scale;
-uniform int u_frameIndex;
-uniform int u_frameNextIndex;
-uniform float u_uOffset;
-uniform float u_vOffset;
+readonly restrict layout(std430, binding = SSBO_IDX_SPRITE_SHEET_INSTANCE_DATA) buffer spriteSheetRenderItemsBuffer {
+    SpriteSheetRenderItem spriteSheetRenderItems[];
+};
 
 out vec2 TexCoord;
 out vec2 TexCoordNext;
-out vec4 WorldPos;
+flat out int TextureIndex;
+flat out float MixFactor;
 
 void main() {
+    int viewportIndex = gl_BaseInstance >> VIEWPORT_INDEX_SHIFT;
+    int instanceOffset = gl_BaseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
+    int globalInstanceIndex = instanceOffset + gl_InstanceID;
+
+    SpriteSheetRenderItem renderItem = spriteSheetRenderItems[globalInstanceIndex];
 
     // correct flipped uvs in quad model
     vec2 uv = vTexCoord;
     uv.y = 1.0 - uv.y;
 
-    float frameWidth = 1.0 / u_columnCount;
-    float frameHeight = 1.0 / u_rowCount;
+    TexCoord = renderItem.uvFrame.xy + uv * renderItem.uvFrame.zw;
+    TexCoordNext = renderItem.uvFrameNext.xy + uv * renderItem.uvFrameNext.zw;
+    TextureIndex = renderItem.textureIndex;
+    MixFactor = renderItem.mixFactor;
 
-    int frameX = u_frameIndex % u_columnCount;
-    int frameY = (u_frameIndex - (u_frameIndex % u_columnCount)) / u_columnCount;
-    vec2 frameOffset = vec2(frameX * frameWidth, frameY * frameHeight);
-    TexCoord = frameOffset + uv * vec2(frameWidth, frameHeight);
-
-    int frameNextX = u_frameNextIndex % u_columnCount;
-    int frameNextY = (u_frameNextIndex - (u_frameNextIndex % u_columnCount)) / u_columnCount;
-    vec2 frameNextOffset = vec2(frameNextX * frameWidth, frameNextY * frameHeight);
-    TexCoordNext = frameNextOffset + uv * vec2(frameWidth, frameHeight);
-
-    int viewportIndex = gl_BaseInstance;
 	mat4 projectionView = viewportData[viewportIndex].projectionViewReverseZ;
 	mat4 inverseView = viewportData[viewportIndex].inverseView;
 
-    // Compute model matrix
-    vec3 position = u_position.xyz;
-    vec3 rotation = u_rotation.xyz;
-    vec3 scale = u_scale.xyz;
-    mat4 modelMatrix = ToMat4(position, rotation, scale);
+    mat4 modelMatrix = renderItem.modelMatrix;
 
-    if (u_billboard) {
-        vec3 worldPosition = (modelMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-
-        // Extract scale from model matrix
-        vec3 scale2 = vec3(
-            length(modelMatrix[0].xyz),
-            length(modelMatrix[1].xyz),
-            length(modelMatrix[2].xyz)
-        );
-
-        mat4 localMatrix = ToMat4(vec3(0,0,0), rotation, scale);
+    if (renderItem.isBillboard != 0) {
+        vec3 worldPosition = modelMatrix[3].xyz;
+        mat4 localMatrix = modelMatrix;
+        localMatrix[3] = vec4(0.0, 0.0, 0.0, 1.0);
 
         // Camera basis vectors
         vec3 cameraRight = normalize(inverseView[0].xyz);
@@ -82,9 +62,9 @@ void main() {
     }
 
     // Apply offset
-    vec3 localPosition = vPosition + vec3(u_uOffset * 0.5, u_vOffset * 0.5, 0.0);
-    WorldPos = modelMatrix * vec4(localPosition, 1.0);
+    vec3 localPosition = vPosition + renderItem.localOffset.xyz;
+    vec4 worldPos = modelMatrix * vec4(localPosition, 1.0);
 
     // Final position
-    gl_Position = projectionView * WorldPos;
+    gl_Position = projectionView * worldPos;
 }

@@ -35,6 +35,7 @@ namespace Unloved::RenderDataManager {
 
     void SubmitRenderItem(const RenderItem& renderItem);
     void SubmitRenderItems(const std::vector<RenderItem>& renderItems);
+    void SubmitSpriteSheetRenderItem(const SpriteSheetRenderItem& renderItem);
 
     // House submissions
     void SubmitRenderItemProcedural(const RenderItem& renderItem);
@@ -53,6 +54,7 @@ namespace Unloved::RenderDataManager {
     const std::vector<GPULight>& GetGPULights();
     const std::vector<DecalPaintingInfo>& GetDecalPaintingInfo();
     const std::vector<RenderItem>& GetInstanceData();
+    const std::vector<SpriteSheetRenderItem>& GetSpriteSheetInstanceData();
     const std::vector<RenderItem>& GetCombinedSkinnedRenderItems();
     uint32_t GetRequiredSkinnedVertexCount();
 

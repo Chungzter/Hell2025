@@ -14,6 +14,7 @@ struct VulkanFrameData {
         uint64_t rendererData = 0;
         uint64_t lights = 0;
         uint64_t materials = 0;
+        uint64_t spriteSheetInstanceData = 0;
         uint64_t drawCommands = 0;
         uint64_t skinningDispatchGroups = 0;
         uint64_t skinningJobs = 0;

@@ -28,8 +28,6 @@ struct Fireplace {
     void SetPositionZ(float z);
     void SetRotation(const glm::vec3& rotation);
 
-    bool m_useFireClipHeight = false; // Remove me
-
     uint64_t GetObjectId()                                      { return m_id; }
     AABB GetWallsAABB()                                         { return m_wallsAabb; }
 	MeshNodes& GetMeshNodes()                                   { return m_meshNodes; }
@@ -43,7 +41,6 @@ struct Fireplace {
     const glm::vec3 GetWorldForward() const                     { return m_worldForward; }
     const glm::vec3 GetWorldRight() const                       { return m_worldRight; }
     const BlockingVolume& GetBlockingVolume() const             { return m_blockingVolume; }
-    const SpriteSheetRenderItem GetFireSpriteSheetRenderItem()  { return m_fireSpriteSheetObject.GetRenderItem(); }
 
 private:
     void ConfigureFire();
@@ -61,7 +58,6 @@ private:
     float m_wallDepth = 0.0f;
     float m_wallWidth = 0.0f;
 
-    SpriteSheetObject m_fireSpriteSheetObject;
     glm::vec3 m_firePosition = glm::vec3(0.0f);
 
     uint64_t m_lightId = 0;

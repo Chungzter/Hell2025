@@ -1,15 +1,12 @@
 #include "Player.h"
 
-#include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RenderDataManager.h"
 
 #include <iostream> // TODO: cleanup logging
 
 namespace Unloved {
 
 void Player::UpdateSpriteSheets(float deltaTime) {
-    // Clear any render items from previous frame
-    m_spriteSheetRenderItems.clear();
-
     // Muzzle flash
     if (ViewportIsVisible() && GetCurrentWeaponType() != WeaponType::MELEE) {
         AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
@@ -25,7 +22,10 @@ void Player::UpdateSpriteSheets(float deltaTime) {
         //DebugDraw::DrawPoint(boneWorldPosition, YELLOW);
 
         if (m_muzzleFlash.IsRenderingEnabled() && m_muzzleFlash.GetTimeAsPercentage() < 0.1325f) {
-            m_spriteSheetRenderItems.push_back(m_muzzleFlash.GetRenderItem());
+            SpriteSheetRenderItem renderItem = m_muzzleFlash.GetRenderItem();
+            renderItem.exclusiveViewportIndex = m_viewportIndex;
+
+            RenderDataManager::SubmitSpriteSheetRenderItem(renderItem);
         }
     }
 }

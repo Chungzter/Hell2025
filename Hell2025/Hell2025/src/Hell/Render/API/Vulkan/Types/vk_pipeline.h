@@ -32,6 +32,7 @@ struct  VulkanPipeline {
     void SetFrontFace(VkFrontFace frontFace);
     void SetCullMode(VkCullModeFlags cullMode);
     void SetColorBlending(bool enabled);
+    void SetColorBlendFactors(VkBlendFactor srcColorFactor, VkBlendFactor dstColorFactor, VkBlendOp colorOp, VkBlendFactor srcAlphaFactor, VkBlendFactor dstAlphaFactor, VkBlendOp alphaOp);
     void SetDepthTest(bool enabled, bool writeEnabled = true);
     void SetDepthCompareOp(VkCompareOp compareOp);
     void SetStencilTest(bool enabled, VkCompareOp compareOp, VkStencilOp failOp, VkStencilOp depthFailOp, VkStencilOp passOp, uint32_t readMask, uint32_t writeMask);
@@ -71,6 +72,13 @@ private:
     VkCullModeFlags m_cullMode = VK_CULL_MODE_BACK_BIT;
     VkFrontFace m_frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     bool m_colorBlending = false;
+    VkBlendFactor m_srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    VkBlendFactor m_dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    VkBlendOp m_colorBlendOp = VK_BLEND_OP_ADD;
+    VkBlendFactor m_srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    VkBlendFactor m_dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    VkBlendOp m_alphaBlendOp = VK_BLEND_OP_ADD;
+
     bool m_depthTest = true;
     bool m_depthWrite = true;
     VkCompareOp m_depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;

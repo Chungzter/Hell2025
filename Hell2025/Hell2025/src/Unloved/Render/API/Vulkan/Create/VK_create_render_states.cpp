@@ -138,6 +138,26 @@ namespace {
         state.rasterizer.cullFaceEnabled = false;
     }
 
+    void CreateSpriteSheetRenderState() {
+        VulkanRenderState& state = VulkanResourceManager::CreateRenderState("SpriteSheet");
+
+        VulkanRenderTargetInfo& lighting = state.AddColorTarget("Lighting");
+        lighting.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        VulkanRenderTargetInfo& depth = state.SetDepthTarget("Depth");
+        depth.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        state.rasterizer.depthTestEnabled = true;
+        state.rasterizer.depthWriteEnabled = false;
+        state.rasterizer.depthCompareOp = VK_COMPARE_OP_GREATER;
+        state.rasterizer.blendEnabled = true;
+        state.rasterizer.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        state.rasterizer.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+        state.rasterizer.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        state.rasterizer.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        state.rasterizer.cullFaceEnabled = false;
+    }
+
     void CreateSkyboxRenderState() {
         VulkanRenderState& state = VulkanResourceManager::CreateRenderState("Skybox");
 
@@ -228,6 +248,7 @@ namespace VulkanRenderer {
         CreateMaterialResolveRenderState();
         CreateLightingDeferredRenderState();
         CreateLightingForwardBlendedRenderState();
+        CreateSpriteSheetRenderState();
         CreateSkyboxRenderState();
 
         //CreateHairDepthPrepRenderState();

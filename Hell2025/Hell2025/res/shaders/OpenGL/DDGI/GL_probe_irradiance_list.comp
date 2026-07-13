@@ -13,13 +13,8 @@ void main() {
 
     if (pIdx >= uint(volume.totalProbes)) return;
 
-    // If this probe is relevant and has an irradiance 
-    // cooldown greater than 0 then it needs an update
-
     if (probeStates[pIdx].isRelevant && 
-        probeStates[pIdx].irradianceCooldown > 0u 
-        //probeStates[pIdx].irradianceCooldown != PROBE_MAX_IRRADIANCE_COOLDOWN
-        ){ 
+        probeStates[pIdx].irradianceCooldown > 0u) {
 
         // Get a unique slot in the index list
         uint slot = atomicAdd(irradianceCounter, 1);

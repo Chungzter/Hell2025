@@ -30,8 +30,8 @@ struct DDGIVolume {
     void SetExtents(const glm::vec3& extents);
     void SetProbeSpacing(float spacing);
     void DebugDraw();
-    void CreateRaytracingData();
-    void UpdateSceneBvh();
+    void RebuildDDGIGeometry();
+    void UpdateDDGISceneBvh();
 
     void MarkPointCloudAsUploaded() { m_pointCloudNeedsGpuUpload = false; }
 
@@ -65,11 +65,10 @@ struct DDGIVolume {
 
 private:
     void UpdateMembers();
-    void CleanUpRaytracingData();
-    void CreateTriangleData();
-    void CreateHouseBvh();
-    void CreateDoorBvh();
-    void CreatePointCloud();
+    void CleanUpDDGIGeometry();
+    void RebuildPointCloudSeedTriangles(const DDGIHouseGeometry& houseGeometry);
+    void RebuildDDGIHouseBvh(const DDGIHouseGeometry& houseGeometry);
+    void RebuildPointCloud();
     void CalculateProbePointIndexPoolSize();
     glm::vec3 GetProbeBaseWorldPosition(const glm::ivec3& probeCoords) const; // Used only for rendering probe base world position debug points
 
@@ -85,13 +84,12 @@ private:
     int m_probeCountY = 0;
     int m_probeCountZ = 0;
     bool m_pointCloudNeedsGpuUpload = false;
-    bool m_raytracingDataDirty = false;
+    bool m_ddgiGeometryDirty = false;
 
-    std::vector<Triangle> m_triangles;
+    std::vector<Triangle> m_pointCloudSeedTriangles;
     PointCloud m_pointCloud;
 
     uint64_t m_houseBvhId = 0;
-    uint64_t m_doorBvhId = 0;
     uint64_t m_sceneBvhId = 0;
 
     uint32_t m_probePointIndexPoolSize;

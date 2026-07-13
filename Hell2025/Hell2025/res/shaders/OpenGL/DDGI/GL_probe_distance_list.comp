@@ -14,8 +14,8 @@ void main() {
 
     if (pIdx >= uint(volume.totalProbes)) return;
 
-    // Check if this probe was marked as visible
-    if (probeStates[pIdx].distanceCooldown > 0) {
+    if (probeStates[pIdx].isRelevant &&
+        probeStates[pIdx].distanceCooldown > 0u) {
         
         // Get a unique slot in the packed list
         uint slot = atomicAdd(distanceCounter, 1);

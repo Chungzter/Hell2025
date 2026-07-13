@@ -522,7 +522,6 @@ private:
 
         //PxController* m_characterController = NULL;
 
-        std::vector<SpriteSheetRenderItem> m_spriteSheetRenderItems;
         AABB m_characterControllerAABB;
 
         void UpdateWalkingMovement(float deltaTime);
@@ -538,7 +537,6 @@ private:
         const bool IsDead()                                                     { return !m_alive; }
         const bool IsRunning()                                                  { return m_running; }
         const bool AreFeetAboveHeightField()                                    { return m_feetAboveHeightField; }
-        const std::vector<SpriteSheetRenderItem>& GetSpriteSheetRenderItems()   { return m_spriteSheetRenderItems; }
         const glm::vec3 GetFlashlightPosition()                                 { return m_flashlightPosition; }
         const glm::vec3 GetFlashlightDirection()                                { return m_flashlightDirection; };
         const glm::mat4 GetFlashlightProjectionView()                           { return m_flashlightProjectionView; };

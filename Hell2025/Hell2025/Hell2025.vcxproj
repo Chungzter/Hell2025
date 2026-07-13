@@ -251,6 +251,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_shaders.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_ssbos.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_texture_arrays.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_fire_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_debug.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_hair_pass.cpp" />
@@ -409,6 +410,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\ResourceManagement\MaterialBuilder.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\ResourceID.cpp" />
     <ClCompile Include="src\Unloved\Bible\Bible.cpp" />
+    <ClCompile Include="src\Unloved\Systems\DDGI\DDGIGeometryBuilder.cpp" />
+    <ClCompile Include="src\Unloved\Systems\DDGI\DDGIManager.cpp" />
     <ClCompile Include="src\Unloved\Systems\DDGI\DDGIVolume.cpp" />
     <ClCompile Include="src\Unloved\Systems\DDGI\PointCloud.cpp" />
     <ClCompile Include="src\Unloved\Systems\DirtyTracker\DirtyTracker.cpp" />
@@ -503,7 +506,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Player\Player_character_model.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_ragdoll.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_weapon_attachments.cpp" />
-    <ClCompile Include="src\Unloved\Systems\DDGI\GlobalIllumination.cpp" />
     <ClCompile Include="src\Unloved\Systems\Animator\Animator.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\Christmas\ChristmasLights.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\Christmas\ChristmasTree.cpp" />
@@ -679,6 +681,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\Vulkan\VK_visibility.vert" />
     <None Include="res\shaders\Vulkan\VK_lighting_forward.vert" />
     <None Include="res\shaders\Vulkan\VK_lighting_forward.frag" />
+    <None Include="res\shaders\Vulkan\VK_sprite_sheet.vert" />
+    <None Include="res\shaders\Vulkan\VK_sprite_sheet.frag" />
     <None Include="res\shaders\Vulkan\VK_debug_view.frag" />
     <None Include="res\shaders\Vulkan\VK_visibility_skinned.vert" />
     <None Include="res\shaders\OpenGL\GL_blood_screenspace_decals.frag" />
@@ -782,6 +786,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Systems\Particles\ParticleManager.h" />
     <ClInclude Include="src\Unloved\Debug\DebugDraw.h" />
     <ClInclude Include="src\Unloved\Debug\FeatureTest.h" />
+    <ClInclude Include="src\Unloved\Systems\DDGI\DDGIGeometryBuilder.h" />
+    <ClInclude Include="src\Unloved\Systems\DDGI\DDGIManager.h" />
     <ClInclude Include="src\Unloved\Systems\DDGI\DDGITypes.h" />
     <ClInclude Include="src\Unloved\Systems\DDGI\DDGIVolume.h" />
     <ClInclude Include="src\Unloved\Systems\DDGI\PointCloud.h" />
@@ -894,7 +900,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollData.h" />
     <ClInclude Include="src\Hell\Physics\Ragdoll\Ragdoll.h" />
     <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollTypes.h" />
-    <ClInclude Include="src\Unloved\Systems\DDGI\GlobalIllumination.h" />
     <ClInclude Include="src\Unloved\Systems\Animator\Animator.h" />
     <ClInclude Include="src\Unloved\Objects\Props\Christmas\ChristmasLights.h" />
     <ClInclude Include="src\Unloved\Objects\Props\Christmas\ChristmasTree.h" />

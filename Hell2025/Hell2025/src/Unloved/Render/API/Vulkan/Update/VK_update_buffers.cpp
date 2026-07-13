@@ -48,6 +48,14 @@ namespace VulkanRenderer {
         EnsureBufferSize(materialsBuffer, materialsBufferSize);
         UpdateBuffer(materialsBuffer, materials.data(), materialsBufferSize);
 
+        // Sprite sheet instances
+
+        const std::vector<SpriteSheetRenderItem>& spriteSheetInstanceData = Unloved::RenderDataManager::GetSpriteSheetInstanceData();
+        VulkanBuffer* spriteSheetInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.spriteSheetInstanceData);
+        VkDeviceSize spriteSheetInstanceDataBufferSize = sizeof(SpriteSheetRenderItem) * spriteSheetInstanceData.size();
+        EnsureBufferSize(spriteSheetInstanceDataBuffer, spriteSheetInstanceDataBufferSize);
+        UpdateBuffer(spriteSheetInstanceDataBuffer, spriteSheetInstanceData.data(), spriteSheetInstanceDataBufferSize);
+
         // Renderer data
 
         const RendererData& rendererData = Unloved::RenderDataManager::GetRendererData();

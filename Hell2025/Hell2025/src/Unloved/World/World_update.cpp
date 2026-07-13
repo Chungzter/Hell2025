@@ -29,7 +29,7 @@
 #include "Unloved/Objects/Traversal/Staircase.h"
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Unloved/Session/Session.h"
-#include "Unloved/Systems/DDGI/DDGIVolume.h"
+#include "Unloved/Systems/DDGI/DDGIManager.h"
 #include "Unloved/Systems/P90Mag/P90MagManager.h"
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
 
@@ -76,7 +76,7 @@ namespace Unloved::World {
         for (Shark& object : GetSharks())                           object.Update(deltaTime);
 
         // These must run in this order otherwise various dirty flags are stale
-        for (DDGIVolume& object : GetDDGIVolumes())                 object.Update();
+        DDGIManager::Update();
         for (Light& object : GetLights())                           object.Update(deltaTime);
         for (Decal& object : GetDecals())                           object.Update();
 

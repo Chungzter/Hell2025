@@ -92,6 +92,9 @@ namespace Unloved::RenderDataManager {
     std::vector<RenderItem> g_skinnedNonDeformingSkinnedMeshRenderItemsBlended;
     std::vector<RenderItem> g_skinnedNonDeformingSkinnedMeshRenderItemsHair;
 
+    std::vector<SpriteSheetRenderItem> g_spriteSheetRenderItems;
+    std::vector<SpriteSheetRenderItem> g_spriteSheetInstanceData;
+
     std::vector<RenderItem> g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent;
     uint32_t g_baseSkinnedVertex = 0;
     int32_t g_blackTextureIndex = -1;
@@ -106,6 +109,7 @@ namespace Unloved::RenderDataManager {
     std::vector<RayQueryMultiMeshBLAS> g_rayQueryMultiMeshBLASes;
     std::vector<RayQueryBLASInstance> g_rayQueryBLASInstances;
     uint64_t g_proceduralRayQueryBLASId = 0;
+
 
     const std::vector<SkinningJob>& GetSkinningJobs()                           { return g_skinningJobs; }
     const std::vector<SkinningDispatchGroup>& GetSkinningDispatchGroups()       { return g_skinningDispatchGroups; }
@@ -134,6 +138,7 @@ namespace Unloved::RenderDataManager {
 
     void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex);
 	void CreateHouseMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
+    void CreateSpriteSheetDrawCommands();
 
     void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, uint32_t faceIndex, Light* light, BlendingMode blendingModeFilter);
     void CreateMoonLightShadowMapDrawCommands();
@@ -170,6 +175,9 @@ namespace Unloved::RenderDataManager {
 		g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent.clear();
 
 		g_renderItemsProcedural.clear();
+
+        g_spriteSheetRenderItems.clear();
+        g_spriteSheetInstanceData.clear();
 
         g_renderItems.clear();
 		g_renderItemsMirror.clear();
@@ -443,6 +451,63 @@ namespace Unloved::RenderDataManager {
 		return g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent;
 	}
 
+    void CreateSpriteSheetDrawCommands() {
+        g_spriteSheetInstanceData.clear();
+
+        Mesh* quadMesh = Hell::ResourceManager::GetQuadMesh();
+        if (!quadMesh) return;
+
+        auto& set = g_drawCommandsSet;
+
+        for (int viewportIndex = 0; viewportIndex < 4; viewportIndex++) {
+            std::vector<DrawIndexedIndirectCommand>& commands = set.spriteSheets[viewportIndex];
+            commands.clear();
+
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(viewportIndex);
+            if (!viewport || !viewport->IsVisible()) continue;
+
+            const int instanceStart = static_cast<int>(g_spriteSheetInstanceData.size());
+            const glm::vec3 cameraPosition = glm::vec3(g_viewportData[viewportIndex].viewPos);
+
+            for (const SpriteSheetRenderItem& renderItem : g_spriteSheetRenderItems) {
+                if (renderItem.exclusiveViewportIndex != -1 && renderItem.exclusiveViewportIndex != viewportIndex) continue;
+
+                glm::vec3 position = glm::vec3(renderItem.modelMatrix[3]);
+                glm::vec3 toCamera = position - cameraPosition;
+                float distanceSquared = glm::dot(toCamera, toCamera);
+
+                size_t insertIndex = g_spriteSheetInstanceData.size();
+                g_spriteSheetInstanceData.push_back(renderItem);
+
+                while (insertIndex > static_cast<size_t>(instanceStart)) {
+                    const SpriteSheetRenderItem& previousRenderItem = g_spriteSheetInstanceData[insertIndex - 1];
+                    glm::vec3 previousPosition = glm::vec3(previousRenderItem.modelMatrix[3]);
+                    glm::vec3 previousToCamera = previousPosition - cameraPosition;
+                    float previousDistanceSquared = glm::dot(previousToCamera, previousToCamera);
+
+                    if (previousDistanceSquared >= distanceSquared) {
+                        break;
+                    }
+
+                    g_spriteSheetInstanceData[insertIndex] = previousRenderItem;
+                    insertIndex--;
+                }
+
+                g_spriteSheetInstanceData[insertIndex] = renderItem;
+            }
+
+            const uint32_t instanceCount = static_cast<uint32_t>(g_spriteSheetInstanceData.size() - instanceStart);
+            if (instanceCount == 0) continue;
+
+            DrawIndexedIndirectCommand& command = commands.emplace_back();
+            command.indexCount = quadMesh->indexCount;
+            command.instanceCount = instanceCount;
+            command.firstIndex = quadMesh->baseIndex;
+            command.baseVertex = quadMesh->baseVertex;
+            command.baseInstance = EncodeBaseInstance(viewportIndex, instanceStart);
+        }
+    }
+
 
     void FrustumCullGlassRenderItemsPerViewport() {
         auto& set = g_drawCommandsSet;
@@ -491,6 +556,7 @@ namespace Unloved::RenderDataManager {
             set.plastic[i].clear();
             set.procedural[i].clear();
             set.emissive[i].clear();
+            set.spriteSheets[i].clear();
 
             g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i].clear();
             g_flashLightShadowMapDrawInfo.heightMapChunkIndices[i].clear();
@@ -538,6 +604,7 @@ namespace Unloved::RenderDataManager {
             }
         }
 
+        CreateSpriteSheetDrawCommands();
 
         CreateSkinningData();
 
@@ -1171,6 +1238,10 @@ namespace Unloved::RenderDataManager {
         return g_instanceData;
     }
 
+    const std::vector<SpriteSheetRenderItem>& GetSpriteSheetInstanceData() {
+        return g_spriteSheetInstanceData;
+    }
+
     const DrawCommandsSet& GetDrawInfoSet() {
         return g_drawCommandsSet;
     }
@@ -1512,5 +1583,9 @@ namespace Unloved::RenderDataManager {
         for (const RenderItem& renderItem : renderItems) {
             SubmitRenderItem(renderItem);
         }
+    }
+
+    void SubmitSpriteSheetRenderItem(const SpriteSheetRenderItem& renderItem) {
+        g_spriteSheetRenderItems.push_back(renderItem);
     }
 }

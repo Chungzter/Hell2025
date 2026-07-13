@@ -16,7 +16,6 @@
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 #include "Unloved/Systems/Blood/BloodSystem.h"
-#include "Unloved/Systems/DDGI/GlobalIllumination.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
 #include "Unloved/Systems/House/HouseManager.h"
 #include "Unloved/Systems/Ocean/Ocean.h"

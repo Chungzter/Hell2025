@@ -121,6 +121,18 @@ struct RenderItem {
     int padding;
 };
 
+struct SpriteSheetRenderItem {
+    mat4 modelMatrix;
+    vec4 uvFrame;
+    vec4 uvFrameNext;
+    vec4 localOffset;
+
+    int textureIndex;
+    int isBillboard;
+    float mixFactor;
+    int exclusiveViewportIndex;
+};
+
 struct Light {
     float posX;
     float posY;

@@ -35,13 +35,13 @@ void main() {
     bool needsUpdate = false;
     for (int i = 0; i < u_lightCount; i++) {
         Light light = lights[i];
-        
+
         // Is light dirty?
         if (light.isDirtyForRaytracing == 0) continue;
 
         // Light was dirty. so now check the point is within the light's tight aabb bounds
         // AABB lightAABB = lightsAABB[i];
-    
+
         //if (PointInAABBBounds(pointPosition.xyz, lightAABB.boundsMin.xyz, lightAABB.boundsMax.xyz)) {
         //    needsUpdate = true;
         //    break;
@@ -54,8 +54,6 @@ void main() {
             break;
         }
     }
-
-    //needsUpdate = true;
     
     /// Don't raytracing if you don't need to
     if (!needsUpdate) { 

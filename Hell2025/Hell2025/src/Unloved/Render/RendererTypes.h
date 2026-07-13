@@ -128,26 +128,15 @@ struct RenderItem {
 };
 
 struct SpriteSheetRenderItem {
-    glm::vec4 position;
-    glm::vec4 rotation;
-    glm::vec4 scale;
-    glm::vec4 aabbMin;
-    glm::vec4 aabbMax;
+    glm::mat4 modelMatrix = glm::mat4(1);
+    glm::vec4 uvFrame = glm::vec4(0);
+    glm::vec4 uvFrameNext = glm::vec4(0);
+    glm::vec4 localOffset = glm::vec4(0);
 
-    float uOffset;
-    float vOffset;
-    int textureIndex;
-    int frameIndex;
-
-    int frameIndexNext;
-    int rowCount;
-    int columnCount;
-    int isBillboard;
-
-    float mixFactor;
-    float padding0;
-    float padding1;
-    float padding2;
+    int textureIndex = -1;
+    int isBillboard = 0;
+    float mixFactor = 0.0f;
+    int32_t exclusiveViewportIndex = -1;
 };
 
 struct GPULight {

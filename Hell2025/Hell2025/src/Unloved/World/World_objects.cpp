@@ -33,6 +33,7 @@
 #include "Unloved/Objects/Spawns/SpawnPoint.h"
 #include "Unloved/Objects/Traversal/Ladder.h"
 #include "Unloved/Objects/Traversal/Staircase.h"
+#include "Unloved/Systems/DDGI/DDGIManager.h"
 #include "Unloved/Systems/DDGI/DDGIVolume.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
 
@@ -43,7 +44,6 @@ namespace Unloved::World {
     Hell::SlotMap<ChristmasLightSet> g_christmasLightSets;
     Hell::SlotMap<ChristmasTree> g_christmasTrees;
     Hell::SlotMap<Decal> g_decals;
-    Hell::SlotMap<DDGIVolume> g_ddgiVolumes;
     Hell::SlotMap<Dobermann> g_dobermanns;
     Hell::SlotMap<Door> g_doors;
     Hell::SlotMap<Fence> g_fences;
@@ -73,7 +73,7 @@ namespace Unloved::World {
     Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets()   { return g_christmasLightSets; }
     Hell::SlotMap<ChristmasTree>& GetChristmasTrees()           { return g_christmasTrees; }
     Hell::SlotMap<Decal>& GetDecals()                           { return g_decals; }
-    Hell::SlotMap<DDGIVolume>& GetDDGIVolumes()                 { return g_ddgiVolumes; }
+    Hell::SlotMap<DDGIVolume>& GetDDGIVolumes()                 { return DDGIManager::GetVolumes(); }
     Hell::SlotMap<Dobermann>& GetDobermanns()                   { return g_dobermanns; }
     Hell::SlotMap<Door>& GetDoors()                             { return g_doors; }
     Hell::SlotMap<Fence>& GetFences()                           { return g_fences; }
@@ -164,14 +164,11 @@ namespace Unloved::World {
     // DDGI Volumes
 
     uint64_t AddDDGIVolume(DDGIVolumeCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetDDGIVolumes());
-        const uint64_t id = Unloved::GetNextObjectId(ObjectType::DDGI_VOLUME);
-        GetDDGIVolumes().emplace_with_id(id, id, createInfo, spawnOffset);
-        return id;
+        return DDGIManager::AddVolume(createInfo, spawnOffset);
     }
 
     DDGIVolume* GetDDGIVolumeByObjectId(uint64_t objectId) {
-        return GetDDGIVolumes().get(objectId);
+        return DDGIManager::GetVolumeByObjectId(objectId);
     }
 
     // Dobermanns
@@ -869,7 +866,7 @@ namespace Unloved::World {
         case ObjectType::CHRISTMAS_LIGHTS:        removed = RemoveFromSlotMap(GetChristmasLightSets(), objectId); break;
         case ObjectType::TREE:                    removed = RemoveFromSlotMap(GetChristmasTrees(), objectId); break;
         case ObjectType::DECAL:                   removed = RemoveFromSlotMap(GetDecals(), objectId); break;
-        case ObjectType::DDGI_VOLUME:             removed = RemoveFromSlotMap(GetDDGIVolumes(), objectId); break;
+        case ObjectType::DDGI_VOLUME:             removed = DDGIManager::RemoveVolume(objectId); break;
         case ObjectType::DOBERMANN:               removed = RemoveFromSlotMap(GetDobermanns(), objectId); break;
         case ObjectType::DOOR:                    removed = RemoveFromSlotMap(GetDoors(), objectId); break;
         case ObjectType::FENCE:                   removed = RemoveFromSlotMap(GetFences(), objectId); break;
@@ -964,7 +961,7 @@ namespace Unloved::World {
         CleanUpSlotMap(g_christmasLightSets);
         CleanUpSlotMap(g_christmasTrees);
         CleanUpSlotMap(g_decals);
-        CleanUpSlotMap(g_ddgiVolumes);
+        DDGIManager::CleanUp();
         CleanUpSlotMap(g_dobermanns);
         CleanUpSlotMap(g_doors);
         CleanUpSlotMap(g_fences);

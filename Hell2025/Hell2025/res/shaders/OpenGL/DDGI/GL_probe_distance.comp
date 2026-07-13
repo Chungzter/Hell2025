@@ -80,6 +80,10 @@ void main() {
         }
         shared_isActive = (float(backfaceCount) / float(BACKFACE_CLASSIFICATION_RAYS) <= 0.25);
         probeStates[pIdx].isActive = shared_isActive;
+
+        if (probeStates[pIdx].distanceCooldown > 0u) {
+            probeStates[pIdx].distanceCooldown--;
+        }
     }
 
     barrier();
