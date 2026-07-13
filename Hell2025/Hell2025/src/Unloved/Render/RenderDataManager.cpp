@@ -102,13 +102,16 @@ namespace Unloved::RenderDataManager {
     std::vector<SkinningJob> g_skinningJobs;
     std::vector<SkinningDispatchGroup> g_skinningDispatchGroups;
 
-    std::vector<SkinnedRayTracingGroup> g_skinnedRayTracingGroups;
-    std::vector<StaticRayTracingInstance> g_staticRayTracingInstances;
+    std::vector<TransientRayQueryBLASInstance> g_transientRayQueryBLASInstances;
+    std::vector<RayQueryMultiMeshBLAS> g_rayQueryMultiMeshBLASes;
+    std::vector<RayQueryBLASInstance> g_rayQueryBLASInstances;
+    uint64_t g_proceduralRayQueryBLASId = 0;
 
     const std::vector<SkinningJob>& GetSkinningJobs()                           { return g_skinningJobs; }
     const std::vector<SkinningDispatchGroup>& GetSkinningDispatchGroups()       { return g_skinningDispatchGroups; }
-    const std::vector<SkinnedRayTracingGroup>& GetSkinnedRayTracingGroups()     { return g_skinnedRayTracingGroups; }
-    const std::vector<StaticRayTracingInstance>& GetStaticRayTracingInstances() { return g_staticRayTracingInstances; }
+    const std::vector<TransientRayQueryBLASInstance>& GetTransientRayQueryBLASInstances() { return g_transientRayQueryBLASInstances; }
+    const std::vector<RayQueryMultiMeshBLAS>& GetRayQueryMultiMeshBLASes()             { return g_rayQueryMultiMeshBLASes; }
+    const std::vector<RayQueryBLASInstance>& GetRayQueryBLASInstances()                   { return g_rayQueryBLASInstances; }
 
     void CreateGPULights();
     void UpdateOceanPatchTransforms();
@@ -147,8 +150,9 @@ namespace Unloved::RenderDataManager {
         g_baseSkinnedVertex = 0;
 
         // Vulkan raytracing
-        g_skinnedRayTracingGroups.clear();
-        g_staticRayTracingInstances.clear();
+        g_transientRayQueryBLASInstances.clear();
+        g_rayQueryMultiMeshBLASes.clear();
+        g_rayQueryBLASInstances.clear();
 
         // Skinned (deforming)
         g_combinedSkinnedRenderItems.clear();
@@ -1212,14 +1216,11 @@ namespace Unloved::RenderDataManager {
             gpuLight.posZ = light.GetPosition().z;
             gpuLight.radius = light.GetRadius();
             gpuLight.strength = light.GetStrength();
-            gpuLight.shadowMapDirty = true;
-            gpuLight.lightIndex = lightIndex;
             gpuLight.isDirtyForRaytracing = light.IsDirtyForRaytracing();
             gpuLight.hiResShadowMapIndex = ShadowMapManager::GetHiResShadowMapIndex(light.GetObjectId());
             gpuLight.lowResShadowMapIndex = ShadowMapManager::GetLowResShadowMapIndex(light.GetObjectId());
-
-            // Pack in the light ID
-            Hell::Bit::PackUint64(light.GetObjectId(), gpuLight.lightIdLowerBit, gpuLight.lightIdUpperBit);
+            gpuLight.worldBoundsMin = glm::vec4(light.GetWorldBoundsMin(), 0.0f);
+            gpuLight.worldBoundsMax = glm::vec4(light.GetWorldBoundsMax(), 0.0f);
 
             // todo: remove me when u can
             lightIndex++;
@@ -1283,20 +1284,31 @@ namespace Unloved::RenderDataManager {
             VulkanMeshBuffer* vulkanMeshBuffer = vulkanMeshBufferId != 0 && VulkanResourceManager::MeshBufferExists(vulkanMeshBufferId) ? VulkanResourceManager::GetMeshBuffer(vulkanMeshBufferId) : nullptr;
             uint64_t vertexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetVertexBufferAddress() : 0;
             uint64_t indexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetIndexBufferAddress() : 0;
+            VulkanBuffer* vertexBuffer = vulkanMeshBuffer ? vulkanMeshBuffer->GetVertexBuffer() : nullptr;
+            VulkanBuffer* indexBuffer = vulkanMeshBuffer ? vulkanMeshBuffer->GetIndexBuffer() : nullptr;
 
-            if (mesh && mesh->vulkanBlasId != 0 && vertexBufferDeviceAddress != 0 && indexBufferDeviceAddress != 0 && mesh->vertexCount != 0 && mesh->indexCount >= 3) {
-                StaticRayTracingInstance& instance = g_staticRayTracingInstances.emplace_back();
-                instance.vulkanBlasId = mesh->vulkanBlasId;
-                instance.vertexBufferDeviceAddress = vertexBufferDeviceAddress;
-                instance.indexBufferDeviceAddress = indexBufferDeviceAddress;
-                instance.modelMatrix = glm::mat4(1.0f);
-                instance.range.baseVertex = renderItem.baseVertex;
-                instance.range.baseIndex = renderItem.baseIndex;
-                instance.range.vertexCount = mesh->vertexCount;
-                instance.range.indexCount = mesh->indexCount;
-                instance.range.blendingMode = renderItem.blendingMode;
-                instance.range.materialIndex = renderItem.materialIndex;
-                instance.range.shadowBit = renderItem.shadowFlags;
+            if (mesh && vertexBufferDeviceAddress != 0 && indexBufferDeviceAddress != 0 && mesh->vertexCount != 0 && mesh->indexCount >= 3) {
+                if (g_proceduralRayQueryBLASId == 0 || !VulkanResourceManager::AccelerationStructureExists(g_proceduralRayQueryBLASId)) {
+                    g_proceduralRayQueryBLASId = VulkanResourceManager::CreateAccelerationStructure();
+                }
+
+                RayQueryMultiMeshBLAS& multiMeshBLAS = g_rayQueryMultiMeshBLASes.empty() ? g_rayQueryMultiMeshBLASes.emplace_back() : g_rayQueryMultiMeshBLASes[0];
+                multiMeshBLAS.vulkanBlasId = g_proceduralRayQueryBLASId;
+                multiMeshBLAS.vertexBufferDeviceAddress = vertexBufferDeviceAddress;
+                multiMeshBLAS.indexBufferDeviceAddress = indexBufferDeviceAddress;
+                multiMeshBLAS.vertexBufferByteSize = vertexBuffer ? vertexBuffer->GetSize() : 0;
+                multiMeshBLAS.indexBufferByteSize = indexBuffer ? indexBuffer->GetSize() : 0;
+                multiMeshBLAS.sourceGeometryVersion = meshBuffer.GetVersion();
+                multiMeshBLAS.modelMatrix = glm::mat4(1.0f);
+
+                RayQueryMeshInstance& meshInstance = multiMeshBLAS.meshInstances.emplace_back();
+                meshInstance.mesh.baseVertex = renderItem.baseVertex;
+                meshInstance.mesh.baseIndex = renderItem.baseIndex;
+                meshInstance.mesh.vertexCount = mesh->vertexCount;
+                meshInstance.mesh.indexCount = mesh->indexCount;
+                meshInstance.material.blendingMode = renderItem.blendingMode;
+                meshInstance.material.materialIndex = renderItem.materialIndex;
+                meshInstance.material.shadowBit = renderItem.shadowFlags;
             }
         }
 	}
@@ -1313,103 +1325,6 @@ namespace Unloved::RenderDataManager {
         g_skinnedRenderItemsDefault.insert(g_skinnedRenderItemsDefault.begin(), renderItems.begin(), renderItems.end());
     }
 
-
-    //void PrepareAnimatedMeshNodesForVulkan(const AnimatedMeshNodes& animatedMeshNodes) {
-    //    if (!animatedMeshNodes.RenderingEnabled()) return;
-    //
-    //    // Get parent
-    //    AnimatedGameObject* animatedGameObject = Unloved::World::GetAnimatedGameObjectByObjectId(animatedMeshNodes.m_parentId);
-    //    if (!animatedGameObject) return;
-    //
-    //    // Cache the base indices before they're mutated
-    //    uint32_t baseSkinningTransformIndex = g_skinningTransforms.size();
-    //
-    //    // Append skinning matrices to global array
-    //    g_skinningTransforms.insert(g_skinningTransforms.end(), animatedGameObject->GetBoneSkinningMatrices().begin(), animatedGameObject->GetBoneSkinningMatrices().end());
-    //
-    //    // Ray query group (Vulkan ONLY)
-    //    SkinnedRayTracingGroup& group = g_skinnedRayTracingGroups.emplace_back();
-    //    group.modelMatrix = animatedGameObject->GetModelMatrix();
-    //
-    //    for (const AnimatedMeshNode& node : animatedMeshNodes.GetNodes()) {
-    //        RenderItem renderItem = node.renderItem;
-    //        if (node.blendingMode == BlendingMode::DO_NOT_RENDER) continue;
-    //
-    //        if (node.excludeFromVulkanTLAS) {
-    //            renderItem.vulkanFlags |= VULKAN_FLAG_EXCLUDE_FROM_TLAS;
-    //        }
-    //
-    //        // Deforming
-    //        if (node.deforming) {
-    //
-    //            // Vulkan raytracing instance
-    //            if (Hell::BackEnd::GetAPI() == API::VULKAN && !Hell::Bit::Contains(renderItem.vulkanFlags, VULKAN_FLAG_EXCLUDE_FROM_TLAS)) {
-    //                RayTracingGeometryRange& range = group.ranges.emplace_back();
-    //                range.baseVertex = g_baseSkinnedVertex;
-    //                range.baseIndex = node.baseIndex;
-    //                range.vertexCount = node.vertexCount;
-    //                range.indexCount = node.indexCount;
-    //                range.blendingMode = static_cast<uint32_t>(node.blendingMode);
-    //                range.materialIndex = node.materialIndex;
-    //                range.shadowBit = renderItem.shadowFlags;
-    //            }
-    //
-    //            // Assign a new base vertex to be used by compute skinning
-    //            renderItem.baseSkinningTransformIndex = baseSkinningTransformIndex;
-    //            renderItem.baseVertex = g_baseSkinnedVertex;
-    //
-    //            g_baseSkinnedVertex += renderItem.vertexCount;
-    //
-    //            switch (node.blendingMode) {
-    //                case BlendingMode::DEFAULT:       g_skinnedRenderItemsDefault.push_back(renderItem);      break;
-    //                case BlendingMode::ALPHA_DISCARD: g_skinnedRenderItemsAlphaDiscard.push_back(renderItem); break;
-    //                case BlendingMode::BLENDED:       g_skinnedRenderItemsBlended.push_back(renderItem);      break;
-    //                case BlendingMode::HAIR:          g_skinnedRenderItemsHair.push_back(renderItem);         break;
-    //                default: break;
-    //            }
-    //        }
-    //        // Non deforming
-    //        else {
-    //            // Vulkan raytracing instance
-    //            if (Hell::BackEnd::GetAPI() == API::VULKAN && !Hell::Bit::Contains(renderItem.vulkanFlags, VULKAN_FLAG_EXCLUDE_FROM_TLAS)) {
-    //                Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
-    //                Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
-    //                uint64_t vulkanMeshBufferId = meshBuffer.GetVulkanId();
-    //                VulkanMeshBuffer* vulkanMeshBuffer = vulkanMeshBufferId != 0 && VulkanResourceManager::MeshBufferExists(vulkanMeshBufferId) ? VulkanResourceManager::GetMeshBuffer(vulkanMeshBufferId) : nullptr;
-    //                uint64_t vertexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetVertexBufferAddress() : 0;
-    //                uint64_t indexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetIndexBufferAddress() : 0;
-    //
-    //                if (mesh && mesh->vulkanBlasId != 0 && vertexBufferDeviceAddress != 0 && indexBufferDeviceAddress != 0 && mesh->vertexCount != 0 && mesh->indexCount >= 3) {
-    //                    StaticRayTracingInstance& instance = g_staticRayTracingInstances.emplace_back();
-    //                    instance.vulkanBlasId = mesh->vulkanBlasId;
-    //                    instance.vertexBufferDeviceAddress = vertexBufferDeviceAddress;
-    //                    instance.indexBufferDeviceAddress = indexBufferDeviceAddress;
-    //                    instance.modelMatrix = renderItem.modelMatrix;
-    //                    instance.range.baseVertex = renderItem.baseVertex;
-    //                    instance.range.baseIndex = renderItem.baseIndex;
-    //                    instance.range.vertexCount = mesh->vertexCount;
-    //                    instance.range.indexCount = mesh->indexCount;
-    //                    instance.range.blendingMode = renderItem.blendingMode;
-    //                    instance.range.materialIndex = renderItem.materialIndex;
-    //                    instance.range.shadowBit = renderItem.shadowFlags;
-    //                }
-    //            }
-    //
-    //            switch (node.blendingMode) {
-    //                case BlendingMode::ALPHA_DISCARD: g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard.push_back(renderItem); break;
-    //                case BlendingMode::BLENDED:       g_skinnedNonDeformingSkinnedMeshRenderItemsBlended.push_back(renderItem);      break;
-    //                case BlendingMode::DEFAULT:       g_skinnedNonDeformingSkinnedMeshRenderItems.push_back(renderItem);             break;
-    //                case BlendingMode::HAIR:          g_skinnedNonDeformingSkinnedMeshRenderItemsHair.push_back(renderItem);         break;
-    //                default: break;
-    //            }
-    //        }
-    //    }
-    //
-    //    if (group.ranges.empty()) {
-    //        g_skinnedRayTracingGroups.pop_back();
-    //    }
-    //}
-
     void SubmitAnimatedMeshNodes(const AnimatedMeshNodes& animatedMeshNodes) {
         if (!animatedMeshNodes.RenderingEnabled()) return;
 
@@ -1424,7 +1339,7 @@ namespace Unloved::RenderDataManager {
         g_skinningTransforms.insert(g_skinningTransforms.end(), animatedGameObject->GetBoneSkinningMatrices().begin(), animatedGameObject->GetBoneSkinningMatrices().end());
 
         // Ray query group (Vulkan ONLY)
-        SkinnedRayTracingGroup& group = g_skinnedRayTracingGroups.emplace_back();
+        TransientRayQueryBLASInstance& group = g_transientRayQueryBLASInstances.emplace_back();
         group.modelMatrix = animatedGameObject->GetModelMatrix();
 
         for (const AnimatedMeshNode& node : animatedMeshNodes.GetNodes()) {
@@ -1440,14 +1355,14 @@ namespace Unloved::RenderDataManager {
 
                 // Vulkan raytracing instance
                 if (Hell::BackEnd::GetAPI() == API::VULKAN && !Hell::Bit::Contains(renderItem.vulkanFlags, VULKAN_FLAG_EXCLUDE_FROM_TLAS)) {
-                    RayTracingGeometryRange& range = group.ranges.emplace_back();
-                    range.baseVertex = g_baseSkinnedVertex;
-                    range.baseIndex = node.baseIndex;
-                    range.vertexCount = node.vertexCount;
-                    range.indexCount = node.indexCount;
-                    range.blendingMode = static_cast<uint32_t>(node.blendingMode);
-                    range.materialIndex = node.materialIndex;
-                    range.shadowBit = renderItem.shadowFlags;
+                    RayQueryMeshInstance& meshInstance = group.meshInstances.emplace_back();
+                    meshInstance.mesh.baseVertex = g_baseSkinnedVertex;
+                    meshInstance.mesh.baseIndex = node.baseIndex;
+                    meshInstance.mesh.vertexCount = node.vertexCount;
+                    meshInstance.mesh.indexCount = node.indexCount;
+                    meshInstance.material.blendingMode = static_cast<uint32_t>(node.blendingMode);
+                    meshInstance.material.materialIndex = node.materialIndex;
+                    meshInstance.material.shadowBit = renderItem.shadowFlags;
                 }
 
                 SkinningJob& skinningJob = g_skinningJobs.emplace_back();
@@ -1485,18 +1400,20 @@ namespace Unloved::RenderDataManager {
                     uint64_t indexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetIndexBufferAddress() : 0;
 
                     if (mesh && mesh->vulkanBlasId != 0 && vertexBufferDeviceAddress != 0 && indexBufferDeviceAddress != 0 && mesh->vertexCount != 0 && mesh->indexCount >= 3) {
-                        StaticRayTracingInstance& instance = g_staticRayTracingInstances.emplace_back();
-                        instance.vulkanBlasId = mesh->vulkanBlasId;
-                        instance.vertexBufferDeviceAddress = vertexBufferDeviceAddress;
-                        instance.indexBufferDeviceAddress = indexBufferDeviceAddress;
-                        instance.modelMatrix = renderItem.modelMatrix;
-                        instance.range.baseVertex = renderItem.baseVertex;
-                        instance.range.baseIndex = renderItem.baseIndex;
-                        instance.range.vertexCount = mesh->vertexCount;
-                        instance.range.indexCount = mesh->indexCount;
-                        instance.range.blendingMode = renderItem.blendingMode;
-                        instance.range.materialIndex = renderItem.materialIndex;
-                        instance.range.shadowBit = renderItem.shadowFlags;
+                        RayQueryBLASInstance& blasInstance = g_rayQueryBLASInstances.emplace_back();
+                        blasInstance.vulkanBlasId = mesh->vulkanBlasId;
+                        blasInstance.vertexBufferDeviceAddress = vertexBufferDeviceAddress;
+                        blasInstance.indexBufferDeviceAddress = indexBufferDeviceAddress;
+                        blasInstance.modelMatrix = renderItem.modelMatrix;
+
+                        RayQueryMeshInstance& meshInstance = blasInstance.meshInstance;
+                        meshInstance.mesh.baseVertex = renderItem.baseVertex;
+                        meshInstance.mesh.baseIndex = renderItem.baseIndex;
+                        meshInstance.mesh.vertexCount = mesh->vertexCount;
+                        meshInstance.mesh.indexCount = mesh->indexCount;
+                        meshInstance.material.blendingMode = renderItem.blendingMode;
+                        meshInstance.material.materialIndex = renderItem.materialIndex;
+                        meshInstance.material.shadowBit = renderItem.shadowFlags;
                     }
                 }
 
@@ -1510,8 +1427,8 @@ namespace Unloved::RenderDataManager {
             }
         }
 
-        if (group.ranges.empty()) {
-            g_skinnedRayTracingGroups.pop_back();
+        if (group.meshInstances.empty()) {
+            g_transientRayQueryBLASInstances.pop_back();
         }
     }
 
@@ -1573,18 +1490,20 @@ namespace Unloved::RenderDataManager {
             uint64_t indexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetIndexBufferAddress() : 0;
 
             if (mesh && mesh->vulkanBlasId != 0 && vertexBufferDeviceAddress != 0 && indexBufferDeviceAddress != 0 && mesh->vertexCount != 0 && mesh->indexCount >= 3) {
-                StaticRayTracingInstance& instance = g_staticRayTracingInstances.emplace_back();
-                instance.vulkanBlasId = mesh->vulkanBlasId;
-                instance.vertexBufferDeviceAddress = vertexBufferDeviceAddress;
-                instance.indexBufferDeviceAddress = indexBufferDeviceAddress;
-                instance.modelMatrix = renderItem.modelMatrix;
-                instance.range.baseVertex = renderItem.baseVertex;
-                instance.range.baseIndex = renderItem.baseIndex;
-                instance.range.vertexCount = mesh->vertexCount;
-                instance.range.indexCount = mesh->indexCount;
-                instance.range.blendingMode = renderItem.blendingMode;
-                instance.range.materialIndex = renderItem.materialIndex;
-                instance.range.shadowBit = renderItem.shadowFlags;
+                RayQueryBLASInstance& blasInstance = g_rayQueryBLASInstances.emplace_back();
+                blasInstance.vulkanBlasId = mesh->vulkanBlasId;
+                blasInstance.vertexBufferDeviceAddress = vertexBufferDeviceAddress;
+                blasInstance.indexBufferDeviceAddress = indexBufferDeviceAddress;
+                blasInstance.modelMatrix = renderItem.modelMatrix;
+
+                RayQueryMeshInstance& meshInstance = blasInstance.meshInstance;
+                meshInstance.mesh.baseVertex = renderItem.baseVertex;
+                meshInstance.mesh.baseIndex = renderItem.baseIndex;
+                meshInstance.mesh.vertexCount = mesh->vertexCount;
+                meshInstance.mesh.indexCount = mesh->indexCount;
+                meshInstance.material.blendingMode = renderItem.blendingMode;
+                meshInstance.material.materialIndex = renderItem.materialIndex;
+                meshInstance.material.shadowBit = renderItem.shadowFlags;
             }
         }
     }

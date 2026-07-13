@@ -238,7 +238,7 @@ namespace Debug {
     }
 
     void DisplayProfilingInfo() {
-        float scale = 1.4f;
+        float scale = 1.25f;
         int margin = 35;
         TextureFilter textureFilter = TextureFilter::LINEAR;
 

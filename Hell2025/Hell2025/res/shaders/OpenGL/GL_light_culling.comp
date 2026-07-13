@@ -1,5 +1,6 @@
 #version 460
 #include "../common/constants.glsl"
+#include "../common/intersect.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 
@@ -16,18 +17,6 @@ uniform int u_tileXCount;
 uniform int u_tileYCount;
 
 shared uint tilelightCount;
-
-bool SphereVsAABB(vec3 aabbMin, vec3 aabbMax, vec3 sphereOrigin, float sphereRadius) {
-    vec3 closestPoint = clamp(sphereOrigin, aabbMin, aabbMax);
-    float distanceSquared = dot(closestPoint - sphereOrigin, closestPoint - sphereOrigin);
-    return distanceSquared <= (sphereRadius * sphereRadius);
-}
-
-bool AABBsIntersect(vec3 minA, vec3 maxA, vec3 minB, vec3 maxB) {
-    return !(minA.x > maxB.x || maxA.x < minB.x ||
-             minA.y > maxB.y || maxA.y < minB.y ||
-             minA.z > maxB.z || maxA.z < minB.z);
-}
 
 uint OrderPreservingFloatMap(float value) {
     uint uvalue = floatBitsToUint(value);
@@ -83,20 +72,21 @@ void main() {
 				vec3 lightPos = vec3(lights[lightIndex].posX, lights[lightIndex].posY, lights[lightIndex].posZ);
 				float lightRadius = lights[lightIndex].radius;			
 
-				//vec3 lightAabbMin = vec3(lightVolumeData[lightIndex].aabbMinX, lightVolumeData[lightIndex].aabbMinY, lightVolumeData[lightIndex].aabbMinZ);
-				//vec3 lightAabbMax = vec3(lightVolumeData[lightIndex].aabbMaxX, lightVolumeData[lightIndex].aabbMaxY, lightVolumeData[lightIndex].aabbMaxZ);	
-				
-                vec3 lightAabbMin = lightPos - lightRadius;
-                vec3 lightAabbMax = lightPos + lightRadius;
-                
-                if (AABBsIntersect(worldSpaceMin, worldSpaceMax, lightAabbMin, lightAabbMax) && SphereVsAABB(worldSpaceMin, worldSpaceMax, lightPos, lightRadius)) {
-				    uint index = atomicAdd(tilelightCount, 1);
+                vec3 lightAabbMin = lights[lightIndex].worldBoundsMin.xyz;
+                vec3 lightAabbMax = lights[lightIndex].worldBoundsMax.xyz;
+
+                // First broad reject using your tight light bounds
+                if (AABBsIntersect(worldSpaceMin, worldSpaceMax, lightAabbMin, lightAabbMax) &&
+
+                    // Then reject AABB corner false positives using the actual spherical light radius
+                    SphereVsAABB(worldSpaceMin, worldSpaceMax, lightPos, lightRadius)) {
+                    uint index = atomicAdd(tilelightCount, 1);
 
                     const uint MAX_LIGHTS_PER_TILE = 127;
                     if (index < MAX_LIGHTS_PER_TILE) {
                         tilelights[tileIndex].lightIndices[index] = int(lightIndex);
                     }
-				}
+                }
 			}
 		}
 	}

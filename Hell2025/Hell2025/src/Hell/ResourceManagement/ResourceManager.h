@@ -45,6 +45,12 @@ namespace Hell::ResourceManager {
     IESProfile& GetIESProfile(const std::string& name);
     IESProfile* GetIESProfilePtr(const std::string& name);
 
+    Mesh* GetModelMeshByName(const std::string& modelName, const std::string& meshName);
+    uint32_t GetModelMeshIdByName(const std::string& modelName, const std::string& meshName);
+
+    Mesh* GetQuadMesh();
+    uint32_t GetQuadMeshId();
+
     Material& CreateMaterial(const std::string& name);
     std::vector<Material>& GetMaterials();
     std::vector<std::string> GetMaterialNames();

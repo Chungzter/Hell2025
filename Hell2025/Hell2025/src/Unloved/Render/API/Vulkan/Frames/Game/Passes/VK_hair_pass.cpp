@@ -54,11 +54,11 @@ namespace VulkanRenderer {
             return pushConstants;
         }
 
-        PushConstantsHair CreateHairPushConstants(VulkanBuffer* rayQueryInstanceDataBuffer, VulkanBuffer* rayQueryGeometryDataBuffer) {
+        PushConstantsHair CreateHairPushConstants(VulkanBuffer* rayQueryBLASInstanceDataBuffer, VulkanBuffer* rayQueryMeshInstanceDataBuffer) {
             PushConstantsHair pushConstants{};
             pushConstants.frame = CreatePushConstantsFrameResources();
-            pushConstants.rayQueryInstanceDataDeviceAddress = rayQueryInstanceDataBuffer->GetDeviceAddress();
-            pushConstants.rayQueryGeometryDataDeviceAddress = rayQueryGeometryDataBuffer->GetDeviceAddress();
+            pushConstants.rayQueryBLASInstanceDataDeviceAddress = rayQueryBLASInstanceDataBuffer->GetDeviceAddress();
+            pushConstants.rayQueryMeshInstanceDataDeviceAddress = rayQueryMeshInstanceDataBuffer->GetDeviceAddress();
             pushConstants.flashlightCookieTextureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("Flashlight2", true);
             pushConstants.rayQueryEnabled = 1;
             return pushConstants;
@@ -187,8 +187,8 @@ namespace VulkanRenderer {
         VulkanBuffer* rendererDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rendererData);
         VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
         VulkanBuffer* gpuLightsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.lights);
-        VulkanBuffer* rayQueryInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryInstanceData);
-        VulkanBuffer* rayQueryGeometryDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryGeometryData);
+        VulkanBuffer* rayQueryBLASInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryBLASInstanceData);
+        VulkanBuffer* rayQueryMeshInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryMeshInstanceData);
         VulkanBuffer* skinnedVertexBuffer = frameData.buffers.skinnedVertices != 0 ? VulkanResourceManager::GetBuffer(frameData.buffers.skinnedVertices) : nullptr;
 
         if (!hairLightingImage) return;
@@ -202,8 +202,8 @@ namespace VulkanRenderer {
         if (!rendererDataBuffer) return;
         if (!materialsBuffer) return;
         if (!gpuLightsBuffer) return;
-        if (!rayQueryInstanceDataBuffer) return;
-        if (!rayQueryGeometryDataBuffer) return;
+        if (!rayQueryBLASInstanceDataBuffer) return;
+        if (!rayQueryMeshInstanceDataBuffer) return;
         if (!skinnedVertexBuffer) return;
         if (!meshBuffer->GetVertexBuffer()) return;
         if (!meshBuffer->GetIndexBuffer()) return;
@@ -215,7 +215,7 @@ namespace VulkanRenderer {
         VkExtent2D extent = hairLightingImage->GetExtent2D();
         if (!BeginRenderState(commandBuffer, *renderState, extent)) return;
 
-        PushConstantsHair pushConstants = CreateHairPushConstants(rayQueryInstanceDataBuffer, rayQueryGeometryDataBuffer);
+        PushConstantsHair pushConstants = CreateHairPushConstants(rayQueryBLASInstanceDataBuffer, rayQueryMeshInstanceDataBuffer);
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
         VkDescriptorSet descriptorSets[] = { staticDescriptorSet->GetHandle(), rayQueryDescriptorSet->GetHandle() };

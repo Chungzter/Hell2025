@@ -15,7 +15,7 @@ namespace VulkanRenderer {
     namespace TransientBLASBuilder {
         void BeginFrame();
         void ReleaseFrameSlots(VulkanFrameData& frameData);
-        void AddSkinnedRayTracingGroups(VulkanFrameData& frameData, VulkanMeshBuffer& assetMeshBuffer, VulkanBuffer& skinnedVertexBuffer, const std::vector<SkinnedRayTracingGroup>& groups, RayTracingScene& scene);
+        void AddTransientRayQueryBLASInstances(VulkanFrameData& frameData, VulkanMeshBuffer& assetMeshBuffer, VulkanBuffer& skinnedVertexBuffer, const std::vector<TransientRayQueryBLASInstance>& instances, RayQueryScene& scene);
 
         VkDeviceSize GetScratchSize();
         bool RecordBuilds(VkCommandBuffer commandBuffer, VulkanFrameData& frameData, uint64_t scratchBaseAddress);

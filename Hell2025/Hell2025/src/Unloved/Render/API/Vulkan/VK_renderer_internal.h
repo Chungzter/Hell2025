@@ -77,6 +77,7 @@ namespace VulkanRenderer {
     void PostProcessingPass(VkCommandBuffer commandBuffer);
     void ComputeTileWorldBounds(VkCommandBuffer commandBuffer);
     void LightCullingPass(VkCommandBuffer commandBuffer);
+    void SpriteSheetPass(VkCommandBuffer commandBuffer);
 
     void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView);
 

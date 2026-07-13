@@ -44,6 +44,7 @@ void MeshBuffer::Initialize() {
 
 void MeshBuffer::Reset() {
     DestroyAllVulkanBlas();
+    m_version++;
 
     m_meshes.clear();
     m_meshIdsByName.clear();
@@ -125,7 +126,11 @@ uint32_t MeshBuffer::AddMesh(const std::vector<Vertex>& vertices, const std::vec
     mesh.aabbMax = aabbMax;
     mesh.extents = aabbMax - aabbMin;
     mesh.boundingSphereRadius = std::max(mesh.extents.x, std::max(mesh.extents.y, mesh.extents.z)) * 0.5f;
-    CreateVulkanBlas(mesh);
+    if (m_createVulkanBlasForNewMeshes) {
+        CreateVulkanBlas(mesh);
+    }
+
+    m_version++;
 
     return m_nextMeshId;
 }
@@ -510,6 +515,7 @@ void MeshBuffer::RemoveMesh(uint32_t meshId) {
     // Remove the mesh
     m_skinnedMeshMetadata.erase(meshId);
     m_meshes.erase(it);
+    m_version++;
 }
 
 void MeshBuffer::CreateVulkanBlas(Mesh& mesh) {

@@ -36,6 +36,8 @@ struct MeshBuffer {
     uint32_t AddMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name = UNDEFINED_STRING);
     uint32_t AddSkinnedMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::vector<VertexWeight>& vertexWeights, SkinnedMeshMetadata metadata, const std::string& name = UNDEFINED_STRING);
 
+    void SetCreateVulkanBlasForNewMeshes(bool value) { m_createVulkanBlasForNewMeshes = value; }
+
     Mesh* GetMeshById(uint32_t meshId);
     Mesh* GetMeshByName(const std::string& name);
     uint32_t GetMeshIdByName(const std::string& name);
@@ -62,6 +64,7 @@ struct MeshBuffer {
 
     uint64_t GetOpenGLId() const { return m_openGLId; }
     uint64_t GetVulkanId() const { return m_vulkanId; }
+    uint64_t GetVersion() const  { return m_version; }
 
 private:
     struct MemoryBlock {
@@ -97,10 +100,12 @@ private:
     size_t m_vertexWeightCapacity = 0;
     size_t m_minCapacity = 1024;
     bool m_initialized = false;
+    bool m_createVulkanBlasForNewMeshes = true;
     float m_growthMultiplier = 1.0f;
 
     uint64_t m_openGLId = 0;
     uint64_t m_vulkanId = 0;
+    uint64_t m_version = 0;
 };
 
 }

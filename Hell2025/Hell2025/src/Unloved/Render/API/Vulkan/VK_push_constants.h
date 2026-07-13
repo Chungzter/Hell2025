@@ -57,8 +57,8 @@ struct PushConstantsMaterialResolve {
 struct PushConstantsDeferredLighting {
     PushConstantsFrameResources frame;
 
-    uint64_t rayQueryInstanceDataDeviceAddress = 0;
-    uint64_t rayQueryGeometryDataDeviceAddress = 0;
+    uint64_t rayQueryBLASInstanceDataDeviceAddress = 0;
+    uint64_t rayQueryMeshInstanceDataDeviceAddress = 0;
     uint32_t rayQueryEnabled = 0;
     uint32_t padding0 = 0;
 };
@@ -66,8 +66,8 @@ struct PushConstantsDeferredLighting {
 struct PushConstantsHair {
     PushConstantsFrameResources frame;
 
-    uint64_t rayQueryInstanceDataDeviceAddress = 0;
-    uint64_t rayQueryGeometryDataDeviceAddress = 0;
+    uint64_t rayQueryBLASInstanceDataDeviceAddress = 0;
+    uint64_t rayQueryMeshInstanceDataDeviceAddress = 0;
     int32_t flashlightCookieTextureIndex = -1;
     uint32_t rayQueryEnabled = 0; // TODO: remove me, you are no longer checking it in GLSL. u should check c++ side and early return if TLAS build fails
 };

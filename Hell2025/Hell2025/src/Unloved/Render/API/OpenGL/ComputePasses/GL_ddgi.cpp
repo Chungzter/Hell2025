@@ -418,13 +418,6 @@ namespace OpenGL::Renderer {
     }
 
 	void ComputePointCloudBaseColor(Unloved::DDGIVolume& ddgiVolume) {
-		// TODO:
-		// If RenderDoc was detected then you gotta do this differently
-		if (Hell::BackEnd::RenderDocFound()) {
-			Logging::Fatal() << "GlobalIllumination::CalculatePointCloudBaseColor() does not work without BIndless yet you fool.\n";
-            return;
-		}
-
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("PointCloudBaseColor");
         if (!shader) return;
 

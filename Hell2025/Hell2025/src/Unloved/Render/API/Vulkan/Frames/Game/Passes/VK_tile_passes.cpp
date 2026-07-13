@@ -16,11 +16,13 @@ namespace VulkanRenderer {
         AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("Lighting");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("TileWorldBounds");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
+        VulkanBuffer* tileWorldBoundsBuffer = VulkanResourceManager::GetBuffer(GetCurrentFrameData().buffers.tileWorldBounds);
 
         if (!depthImage) return;
         if (!lightingImage) return;
         if (!pipeline) return;
         if (!staticDescriptorSet) return;
+        if (!tileWorldBoundsBuffer) return;
 
         VkExtent2D extent = depthImage->GetExtent2D();
         depthImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
@@ -31,6 +33,14 @@ namespace VulkanRenderer {
 
         uint32_t groupCountX = (extent.width + TILE_SIZE - 1) / TILE_SIZE;
         uint32_t groupCountY = (extent.height + TILE_SIZE - 1) / TILE_SIZE;
+
+        PushConstantsTileWorldBounds pushConstants{};
+        pushConstants.frame = CreatePushConstantsFrameResources();
+        pushConstants.tileWorldBoundsDeviceAddress = tileWorldBoundsBuffer->GetDeviceAddress();
+        pushConstants.tileXCount = static_cast<int32_t>(groupCountX);
+        pushConstants.tileYCount = static_cast<int32_t>(groupCountY);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsTileWorldBounds), &pushConstants);
+
         vkCmdDispatch(commandBuffer, groupCountX, groupCountY, 1);
     }
 

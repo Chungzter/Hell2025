@@ -132,11 +132,6 @@ struct Light {
     float strength;
     float radius;
 
-    int lightIndex; // Legacy. removing soon
-    int shadowMapDirty; // true or false
-    int useIes;         // true or false
-    int iesIndex;
-
     float iesVScale;
     float iesVBias;
     float iesHScale;
@@ -151,10 +146,8 @@ struct Light {
     int hiResShadowMapIndex;
     int lowResShadowMapIndex;
 
-    uint lightIdUpperBit;
-    uint lightIdLowerBit;
-    uint padding1;
-    uint padding2;
+    vec4 worldBoundsMin;
+    vec4 worldBoundsMax;
 };
 
 struct TileLights {

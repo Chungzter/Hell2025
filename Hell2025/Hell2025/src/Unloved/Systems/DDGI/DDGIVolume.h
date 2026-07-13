@@ -5,7 +5,6 @@
 #include "Unloved/Common/Types.h"
 
 #include "Unloved/Common/CreateInfo.h"
-#include "Unloved/Objects/Renderables/MeshBufferOLD.h"
 #include "Unloved/Systems/DDGI/DDGITypes.h"
 #include "Unloved/Systems/DDGI/PointCloud.h"
 
@@ -40,9 +39,6 @@ struct DDGIVolume {
     DDGIVolumeGPU GetGPUData() const;
     const std::vector<BvhNode>& GetSceneNodes();
 
-    uint32_t m_pointcloudVAO = 0;
-    uint32_t m_pointcloudVBO = 0;
-
     uint64_t& GetObjectId()                                                    { return m_id; }
     DDGIVolumeCreateInfo& GetCreateInfo()                                      { return m_createInfo; }
     const PointCloud& GetPointClound() const                                   { return m_pointCloud; }
@@ -66,8 +62,6 @@ struct DDGIVolume {
     uint64_t GetSceneBvhId() const                                             { return m_sceneBvhId; }
     uint32_t GetPointCloudCount() const                                        { return m_pointCloud.GetPointCount(); }
     uint32_t GetProbePointIndexPoolSize() const                                { return m_probePointIndexPoolSize; }
-
-    MeshBufferOLD m_staticMeshBuffer;
 
 private:
     void UpdateMembers();
@@ -103,4 +97,4 @@ private:
     uint32_t m_probePointIndexPoolSize;
 };
 
-} // namespace Unloved
+}

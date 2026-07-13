@@ -219,6 +219,33 @@ namespace Hell::ResourceManager {
         return &it->second;
     }
 
+    // Mesh
+
+    Mesh* GetModelMeshByName(const std::string& modelName, const std::string& meshName) {
+        const uint32_t meshId = GetModelMeshIdByName(modelName, meshName);
+        if (meshId == 0) return nullptr;
+
+        return GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
+    }
+
+    uint32_t GetModelMeshIdByName(const std::string& modelName, const std::string& meshName) {
+        Model* model = GetModelByName(modelName);
+        if (!model) return 0;
+
+        const int32_t meshId = model->GetGlobalMeshIndexByMeshName(meshName);
+        if (meshId < 0) return 0;
+
+        return static_cast<uint32_t>(meshId);
+    }
+
+    Mesh* GetQuadMesh() {
+        return GetModelMeshByName("Primitives", "Quad");
+    }
+
+    uint32_t GetQuadMeshId() {
+        return GetModelMeshIdByName("Primitives", "Quad");
+    }
+
     // Ragdoll Data
 
     RagdollData& CreateRagdollData(const std::string& name) {
@@ -349,6 +376,9 @@ namespace Hell::ResourceManager {
         }
 
         auto result = g_meshBuffers.emplace(name, MeshBuffer(name));
+        if (name == "Procedural") {
+            result.first->second.SetCreateVulkanBlasForNewMeshes(false);
+        }
         return result.first->second;
     }
 

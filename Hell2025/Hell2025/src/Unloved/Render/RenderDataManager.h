@@ -43,8 +43,9 @@ namespace Unloved::RenderDataManager {
 
     const std::vector<SkinningJob>& GetSkinningJobs();
     const std::vector<SkinningDispatchGroup>& GetSkinningDispatchGroups();
-    const std::vector<SkinnedRayTracingGroup>& GetSkinnedRayTracingGroups();
-    const std::vector<StaticRayTracingInstance>& GetStaticRayTracingInstances();
+    const std::vector<TransientRayQueryBLASInstance>& GetTransientRayQueryBLASInstances();
+    const std::vector<RayQueryMultiMeshBLAS>& GetRayQueryMultiMeshBLASes();
+    const std::vector<RayQueryBLASInstance>& GetRayQueryBLASInstances();
 
     const RendererData& GetRendererData();
     const std::vector<glm::mat4>& GetOceanPatchTransforms();

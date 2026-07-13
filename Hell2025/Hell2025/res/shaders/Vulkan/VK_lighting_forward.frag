@@ -50,24 +50,32 @@ struct PackedVertex {
     float tx, ty, tz;
 };
 
-struct RayQueryInstanceData {
-    uint geometryDataOffset;
-    uint geometryDataCount;
+struct RayQueryBLASInstanceData {
+    uint meshInstanceDataOffset;
+    uint meshInstanceDataCount;
     uint padding0;
     uint padding1;
 };
 
-struct RayQueryGeometryData {
-    uint64_t vertexBufferDeviceAddress;
-    uint64_t indexBufferDeviceAddress;
+struct RayQueryMesh {
     uint baseVertex;
     uint baseIndex;
     uint vertexCount;
     uint indexCount;
+};
+
+struct RayQueryMaterial {
     uint blendingMode;
     int materialIndex;
     uint shadowBit;
     uint padding0;
+};
+
+struct RayQueryMeshInstanceData {
+    uint64_t vertexBufferDeviceAddress;
+    uint64_t indexBufferDeviceAddress;
+    RayQueryMesh mesh;
+    RayQueryMaterial material;
 };
 
 layout(buffer_reference, scalar) readonly buffer VertexBuffer {
@@ -78,12 +86,12 @@ layout(buffer_reference, scalar) readonly buffer IndexBuffer {
     uint indices[];
 };
 
-layout(buffer_reference, scalar) readonly buffer RayQueryInstanceDataBuffer {
-    RayQueryInstanceData instanceData[];
+layout(buffer_reference, scalar) readonly buffer RayQueryBLASInstanceDataBuffer {
+    RayQueryBLASInstanceData blasInstanceData[];
 };
 
-layout(buffer_reference, scalar) readonly buffer RayQueryGeometryDataBuffer {
-    RayQueryGeometryData geometryData[];
+layout(buffer_reference, scalar) readonly buffer RayQueryMeshInstanceDataBuffer {
+    RayQueryMeshInstanceData meshInstanceData[];
 };
 
 layout(push_constant, scalar) uniform PushConstants {
@@ -93,40 +101,40 @@ layout(push_constant, scalar) uniform PushConstants {
 const int MAX_GPU_LIGHTS = 16;
 const float ALPHA_TEST_THRESHOLD = 0.25;
 
-bool RayQueryGeometryUsesAlphaMask(uint blendingMode) {
+bool RayQueryMaterialUsesAlphaMask(uint blendingMode) {
     return blendingMode == BLENDING_MODE_ALPHA_DISCARD || blendingMode == BLENDING_MODE_HAIR || blendingMode == BLENDING_MODE_HAIR_UNDER_LAYER;
 }
 
 bool RayQueryHitFailsAlphaMask(uint blendingMode, vec4 baseColor) {
-    return RayQueryGeometryUsesAlphaMask(blendingMode) && baseColor.a < ALPHA_TEST_THRESHOLD;
+    return RayQueryMaterialUsesAlphaMask(blendingMode) && baseColor.a < ALPHA_TEST_THRESHOLD;
 }
 
-bool RayQueryGeometrySkipsLineOfSight(uint blendingMode) {
+bool RayQueryMaterialSkipsLineOfSight(uint blendingMode) {
     return blendingMode == BLENDING_MODE_BLENDED;
 }
 
-bool SampleRayQueryBaseColor(RayQueryGeometryData geometryData, uint primitiveIndex, vec2 barycentrics, out vec4 baseColor) {
+bool SampleRayQueryBaseColor(RayQueryMeshInstanceData meshInstanceData, uint primitiveIndex, vec2 barycentrics, out vec4 baseColor) {
     baseColor = vec4(0.0);
 
-    if (geometryData.materialIndex < 0) {
+    if (meshInstanceData.material.materialIndex < 0) {
         return false;
     }
 
     uint localIndexOffset = primitiveIndex * 3u;
-    if (localIndexOffset + 2u >= geometryData.indexCount) {
+    if (localIndexOffset + 2u >= meshInstanceData.mesh.indexCount) {
         return false;
     }
 
-    IndexBuffer indexBuffer = IndexBuffer(geometryData.indexBufferDeviceAddress);
-    uint i0 = indexBuffer.indices[geometryData.baseIndex + localIndexOffset + 0u] + geometryData.baseVertex;
-    uint i1 = indexBuffer.indices[geometryData.baseIndex + localIndexOffset + 1u] + geometryData.baseVertex;
-    uint i2 = indexBuffer.indices[geometryData.baseIndex + localIndexOffset + 2u] + geometryData.baseVertex;
-    uint vertexEnd = geometryData.baseVertex + geometryData.vertexCount;
+    IndexBuffer indexBuffer = IndexBuffer(meshInstanceData.indexBufferDeviceAddress);
+    uint i0 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 0u] + meshInstanceData.mesh.baseVertex;
+    uint i1 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 1u] + meshInstanceData.mesh.baseVertex;
+    uint i2 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 2u] + meshInstanceData.mesh.baseVertex;
+    uint vertexEnd = meshInstanceData.mesh.baseVertex + meshInstanceData.mesh.vertexCount;
     if (i0 >= vertexEnd || i1 >= vertexEnd || i2 >= vertexEnd) {
         return false;
     }
 
-    VertexBuffer vertexBuffer = VertexBuffer(geometryData.vertexBufferDeviceAddress);
+    VertexBuffer vertexBuffer = VertexBuffer(meshInstanceData.vertexBufferDeviceAddress);
     PackedVertex v0 = vertexBuffer.vertices[i0];
     PackedVertex v1 = vertexBuffer.vertices[i1];
     PackedVertex v2 = vertexBuffer.vertices[i2];
@@ -135,7 +143,7 @@ bool SampleRayQueryBaseColor(RayQueryGeometryData geometryData, uint primitiveIn
     vec2 uv = vec2(v0.u, v0.v) * weights.x + vec2(v1.u, v1.v) * weights.y + vec2(v2.u, v2.v) * weights.z;
 
     MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
-    Material material = materialBuffer.materials[geometryData.materialIndex];
+    Material material = materialBuffer.materials[meshInstanceData.material.materialIndex];
     if (material.basecolor < 0) {
         return false;
     }
@@ -168,30 +176,30 @@ float RayQueryLineOfSight(vec3 rayOrigin, vec3 target) {
             continue;
         }
 
-        RayQueryInstanceDataBuffer rayQueryInstanceDataBuffer = RayQueryInstanceDataBuffer(pushConstant.data.rayQueryInstanceDataDeviceAddress);
-        RayQueryGeometryDataBuffer rayQueryGeometryDataBuffer = RayQueryGeometryDataBuffer(pushConstant.data.rayQueryGeometryDataDeviceAddress);
+        RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pushConstant.data.rayQueryBLASInstanceDataDeviceAddress);
+        RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pushConstant.data.rayQueryMeshInstanceDataDeviceAddress);
 
         uint instanceIndex = rayQueryGetIntersectionInstanceCustomIndexEXT(rayQuery, false);
-        RayQueryInstanceData instanceData = rayQueryInstanceDataBuffer.instanceData[instanceIndex];
+        RayQueryBLASInstanceData blasInstanceData = rayQueryBLASInstanceDataBuffer.blasInstanceData[instanceIndex];
 
         uint geometryIndex = rayQueryGetIntersectionGeometryIndexEXT(rayQuery, false);
-        if (geometryIndex >= instanceData.geometryDataCount) {
+        if (geometryIndex >= blasInstanceData.meshInstanceDataCount) {
             rayQueryConfirmIntersectionEXT(rayQuery);
             return 0.0;
         }
 
-        RayQueryGeometryData geometryData = rayQueryGeometryDataBuffer.geometryData[instanceData.geometryDataOffset + geometryIndex];
-        if (RayQueryGeometrySkipsLineOfSight(geometryData.blendingMode)) {
+        RayQueryMeshInstanceData meshInstanceData = rayQueryMeshInstanceDataBuffer.meshInstanceData[blasInstanceData.meshInstanceDataOffset + geometryIndex];
+        if (RayQueryMaterialSkipsLineOfSight(meshInstanceData.material.blendingMode)) {
             continue;
         }
 
-        bool alphaMask = RayQueryGeometryUsesAlphaMask(geometryData.blendingMode);
+        bool alphaMask = RayQueryMaterialUsesAlphaMask(meshInstanceData.material.blendingMode);
         if (alphaMask) {
             uint primitiveIndex = rayQueryGetIntersectionPrimitiveIndexEXT(rayQuery, false);
             vec2 barycentrics = rayQueryGetIntersectionBarycentricsEXT(rayQuery, false);
 
             vec4 hitBaseColor;
-            if (SampleRayQueryBaseColor(geometryData, primitiveIndex, barycentrics, hitBaseColor) && RayQueryHitFailsAlphaMask(geometryData.blendingMode, hitBaseColor)) {
+            if (SampleRayQueryBaseColor(meshInstanceData, primitiveIndex, barycentrics, hitBaseColor) && RayQueryHitFailsAlphaMask(meshInstanceData.material.blendingMode, hitBaseColor)) {
                 continue;
             }
         }

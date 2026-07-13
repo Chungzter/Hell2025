@@ -16,16 +16,11 @@ namespace OpenGL::Renderer {
 
 
     void SpriteSheetPass() {
-        //ProfilerOpenGLZoneFunction();
+        ProfilerOpenGLZoneFunction();
 
         const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
-        OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("SpriteSheet");
-        Model* primitives = Hell::ResourceManager::GetModelByName("Primitives");
-        if (!primitives || primitives->GetMeshIndices().empty()) return;
-        if (primitives->GetMeshCount() == 0) return;
 
-        uint32_t meshId = primitives->GetMeshIndices()[0];
-        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
+        Mesh* mesh = Hell::ResourceManager::GetQuadMesh();
         if (!mesh) return;
 
         std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBuffer" : "GBuffer";
@@ -33,6 +28,7 @@ namespace OpenGL::Renderer {
 
         gBuffer.Bind();
         gBuffer.DrawBuffer("Lighting");
+
         OpenGL::BindShader("SpriteSheet");
         OpenGL::RasterizerStateManager::ForceRasterizerState("SpriteSheetPass");
 
@@ -64,7 +60,7 @@ namespace OpenGL::Renderer {
                 OpenGL::SetUniformVec4("u_position", renderItem.position);
                 OpenGL::SetUniformVec4("u_rotation", renderItem.rotation);
                 OpenGL::SetUniformVec4("u_scale", renderItem.scale);
-                OpenGL::SetUniformInt("u_billboard", false); // check this shit, on the muzzleflash createinfo coz u have wrong uniform name here!!!!!!!
+                OpenGL::SetUniformBool("u_billboard", renderItem.isBillboard != 0);
                 OpenGL::SetUniformFloat("u_uOffset", renderItem.uOffset);
                 OpenGL::SetUniformFloat("u_vOffset", renderItem.vOffset);
                 OpenGL::SetUniformVec4("u_worldBoundsMin", renderItem.aabbMin);
@@ -91,13 +87,12 @@ namespace OpenGL::Renderer {
                 OpenGL::SetUniformVec4("u_position", renderItem.position);
                 OpenGL::SetUniformVec4("u_rotation", renderItem.rotation);
                 OpenGL::SetUniformVec4("u_scale", renderItem.scale);
-                OpenGL::SetUniformInt("u_billboard", renderItem.isBillboard);
+                OpenGL::SetUniformBool("u_billboard", renderItem.isBillboard != 0);
                 OpenGL::SetUniformFloat("u_uOffset", renderItem.uOffset);
                 OpenGL::SetUniformFloat("u_vOffset", renderItem.vOffset);
                 OpenGL::SetUniformVec4("u_worldBoundsMin", renderItem.aabbMin);
                 OpenGL::SetUniformVec4("u_worldBoundsMax", renderItem.aabbMax);
                 OpenGL::SetUniformBool("u_useFireClipHeight", fireplace.m_useFireClipHeight);
-
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, texture->GetGLTexture().GetHandle());

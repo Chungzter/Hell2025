@@ -84,7 +84,7 @@ void Model::SetAABB(glm::vec3 aabbMin, glm::vec3 aabbMax) {
     m_aabbMax = aabbMax;
 }
 
-int32_t Model::GetGlobalMeshIndexByMeshName(const std::string& meshName) {
+int32_t Model::GetGlobalMeshIndexByMeshName(const std::string& meshName) const {
     auto it = m_meshNameToGlobalMeshIndexMap.find(meshName);
     if (it == m_meshNameToGlobalMeshIndexMap.end()) return -1;
     return (int32_t)it->second;

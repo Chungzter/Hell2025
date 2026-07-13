@@ -129,6 +129,7 @@ namespace {
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("TileWorldBounds");
         pipeline.SetShader("TileWorldBounds");
         pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsTileWorldBounds), VK_SHADER_STAGE_COMPUTE_BIT);
         pipeline.Build();
     }
 

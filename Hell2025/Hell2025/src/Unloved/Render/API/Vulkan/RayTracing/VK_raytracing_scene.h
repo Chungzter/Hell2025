@@ -12,32 +12,26 @@
 #include <vector>
 
 namespace VulkanRenderer {
-    struct RayTracingInstanceData {
-        uint32_t geometryDataOffset = 0;
-        uint32_t geometryDataCount = 0;
+    struct RayQueryBLASInstanceData {
+        uint32_t meshInstanceDataOffset = 0;
+        uint32_t meshInstanceDataCount = 0;
         uint32_t padding0 = 0;
         uint32_t padding1 = 0;
     };
 
-    struct RayTracingGeometryData {
+    struct RayQueryMeshInstanceData {
         uint64_t vertexBufferDeviceAddress = 0;
         uint64_t indexBufferDeviceAddress = 0;
-        uint32_t baseVertex = 0;
-        uint32_t baseIndex = 0;
-        uint32_t vertexCount = 0;
-        uint32_t indexCount = 0;
-        uint32_t blendingMode = 0;
-        int32_t materialIndex = -1;
-        uint32_t shadowBit = 0;
-        uint32_t padding0 = 0;
+        RayQueryMesh mesh;
+        RayQueryMaterial material;
     };
 
-    struct RayTracingScene {
+    struct RayQueryScene {
         void Clear();
-        void Reserve(size_t instanceCount, size_t geometryDataCount);
+        void Reserve(size_t blasInstanceCount, size_t meshInstanceDataCount);
 
-        void AddInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayTracingGeometryRange& range);
-        void AddInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const std::vector<RayTracingGeometryRange>& ranges);
+        void AddBLASInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayQueryMeshInstance& meshInstance);
+        void AddBLASInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const std::vector<RayQueryMeshInstance>& meshInstances);
 
         bool HasInstances() const;
         uint32_t GetInstanceCount() const;
@@ -49,15 +43,15 @@ namespace VulkanRenderer {
         bool BindDescriptor(VulkanFrameData& frameData, VulkanDescriptorSet* descriptorSet, uint32_t binding);
 
     private:
-        RayTracingGeometryData CreateGeometryData(uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayTracingGeometryRange& range) const;
+        RayQueryMeshInstanceData CreateMeshInstanceData(uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayQueryMeshInstance& meshInstance) const;
         VkAccelerationStructureInstanceKHR CreateTLASInstance(uint64_t accelerationStructureAddress, VkTransformMatrixKHR transform, uint32_t instanceCustomIndex) const;
 
         std::vector<VkAccelerationStructureInstanceKHR> m_instances;
-        std::vector<RayTracingInstanceData> m_instanceData;
-        std::vector<RayTracingGeometryData> m_geometryData;
+        std::vector<RayQueryBLASInstanceData> m_blasInstanceData;
+        std::vector<RayQueryMeshInstanceData> m_meshInstanceData;
 
         VulkanBuffer* m_instanceBuffer = nullptr;
-        VulkanBuffer* m_instanceDataBuffer = nullptr;
-        VulkanBuffer* m_geometryDataBuffer = nullptr;
+        VulkanBuffer* m_blasInstanceDataBuffer = nullptr;
+        VulkanBuffer* m_meshInstanceDataBuffer = nullptr;
     };
 }

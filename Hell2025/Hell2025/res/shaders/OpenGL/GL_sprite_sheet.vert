@@ -12,7 +12,7 @@ readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
 
 uniform int u_rowCount;
 uniform int u_columnCount;
-uniform int u_billboard;
+uniform bool u_billboard;
 uniform vec4 u_position;
 uniform vec4 u_rotation;
 uniform vec4 u_scale;
@@ -44,7 +44,6 @@ void main() {
     vec2 frameNextOffset = vec2(frameNextX * frameWidth, frameNextY * frameHeight);
     TexCoordNext = frameNextOffset + uv * vec2(frameWidth, frameHeight);
 
-    bool billboard = true;
     int viewportIndex = gl_BaseInstance;
 	mat4 projectionView = viewportData[viewportIndex].projectionViewReverseZ;
 	mat4 inverseView = viewportData[viewportIndex].inverseView;
@@ -55,7 +54,7 @@ void main() {
     vec3 scale = u_scale.xyz;
     mat4 modelMatrix = ToMat4(position, rotation, scale);
 
-    if (u_billboard == 0) {
+    if (u_billboard) {
         vec3 worldPosition = (modelMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
 
         // Extract scale from model matrix

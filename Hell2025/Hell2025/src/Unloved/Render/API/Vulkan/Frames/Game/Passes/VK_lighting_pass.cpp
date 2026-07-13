@@ -42,8 +42,8 @@ namespace VulkanRenderer {
         const VulkanFrameData& frameData = GetCurrentFrameData();
         VulkanDescriptorSet* rayQueryDescriptorSet = rayQueryDescriptorSetResource ? &rayQueryDescriptorSetResource->GetSet(GetCurrentFrameIndex()) : nullptr;
         PushConstantsFrameResources frameResources = CreatePushConstantsFrameResources();
-        VulkanBuffer* rayQueryInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryInstanceData);
-        VulkanBuffer* rayQueryGeometryDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryGeometryData);
+        VulkanBuffer* rayQueryBLASInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryBLASInstanceData);
+        VulkanBuffer* rayQueryMeshInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryMeshInstanceData);
 
         if (!pipeline) return;
         if (!renderState) return;
@@ -56,8 +56,8 @@ namespace VulkanRenderer {
         if (frameResources.rendererDataDeviceAddress == 0) return;
         if (frameResources.materialsDeviceAddress == 0) return;
         if (frameResources.lightsDeviceAddress == 0) return;
-        if (!rayQueryInstanceDataBuffer) return;
-        if (!rayQueryGeometryDataBuffer) return;
+        if (!rayQueryBLASInstanceDataBuffer) return;
+        if (!rayQueryMeshInstanceDataBuffer) return;
 
         VkExtent2D extent = lightingImage->GetExtent2D();
         baseColorImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
@@ -80,8 +80,8 @@ namespace VulkanRenderer {
 
         PushConstantsDeferredLighting pushConstants{};
         pushConstants.frame = frameResources;
-        pushConstants.rayQueryInstanceDataDeviceAddress = rayQueryInstanceDataBuffer->GetDeviceAddress();
-        pushConstants.rayQueryGeometryDataDeviceAddress = rayQueryGeometryDataBuffer->GetDeviceAddress();
+        pushConstants.rayQueryBLASInstanceDataDeviceAddress = rayQueryBLASInstanceDataBuffer->GetDeviceAddress();
+        pushConstants.rayQueryMeshInstanceDataDeviceAddress = rayQueryMeshInstanceDataBuffer->GetDeviceAddress();
         pushConstants.rayQueryEnabled = 1;
         vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsDeferredLighting), &pushConstants);
 

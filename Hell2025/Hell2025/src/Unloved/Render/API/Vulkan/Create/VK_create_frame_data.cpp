@@ -37,8 +37,8 @@ namespace VulkanRenderer {
             frameData.buffers.skinningTransforms = VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.skinnedVertices = VulkanResourceManager::CreateBuffer(dummySize, usageSkinnedVertices, VMA_MEMORY_USAGE_GPU_ONLY);
             frameData.buffers.rayQueryInstances = VulkanResourceManager::CreateBuffer(1, usageRayQueryInstances, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.rayQueryInstanceData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.rayQueryGeometryData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.rayQueryBLASInstanceData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.rayQueryMeshInstanceData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.rayQueryScratch = VulkanResourceManager::CreateBuffer(1, usageRayQueryScratch, VMA_MEMORY_USAGE_AUTO);
             frameData.buffers.uiRenderItems = VulkanResourceManager::CreateBuffer(dummySize * VULKAN_MAX_UI_RENDER_ITEMS, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.genericMeshes.ui = VulkanResourceManager::CreateGenericMesh();

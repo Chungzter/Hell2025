@@ -97,30 +97,6 @@ void DDGIVolume::CreateTriangleData() {
         triangle.rmaTextureIndex = sourceTriangle.rmaTextureIndex;
     }
 
-    // Debug
-    int i = 0;
-    std::vector<Vertex> vertices;
-    vertices.reserve(m_triangles.size() * 3);
-    std::vector<uint32_t> indices;
-    indices.reserve(m_triangles.size() * 3);
-    for (Triangle& triangle : m_triangles) {
-        Vertex& v0 = vertices.emplace_back();
-        v0.position = triangle.v0;
-        v0.normal = triangle.normal;
-        indices.push_back(i++);
-
-        Vertex& v1 = vertices.emplace_back();
-        v1.position = triangle.v1;
-        v1.normal = triangle.normal;
-        indices.push_back(i++);
-
-        Vertex& v2 = vertices.emplace_back();
-        v2.position = triangle.v2;
-        v2.normal = triangle.normal;
-        indices.push_back(i++);
-    }
-    m_staticMeshBuffer.AddMesh(vertices, indices, "FUCK");
-    m_staticMeshBuffer.UpdateBuffers();
 }
 
 void DDGIVolume::CreateHouseBvh() {

@@ -258,6 +258,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_lighting_forward_blended_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_post_processing_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_skybox_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_sprite_sheet_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_tile_passes.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\RayTracing\VK_acceleration_structure_utils.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\RayTracing\VK_raytracing_scene.cpp" />
@@ -655,6 +656,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\common\distance_fog.glsl" />
+    <None Include="res\shaders\common\intersect.glsl" />
     <None Include="res\shaders\common\OpenGL\binding_indices.glsl" />
     <None Include="res\shaders\common\flags.glsl" />
     <None Include="res\shaders\common\viewport.glsl" />

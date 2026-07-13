@@ -161,11 +161,6 @@ struct GPULight {
     float strength;
     float radius;
 
-    int lightIndex; // Legacy. Replacing soon
-    int shadowMapDirty = 1; // true or false
-    int useIes = 0;         // true or false
-    int iesIndex;
-
     float iesVScale;
     float iesVBias;
     float iesHScale;
@@ -185,10 +180,8 @@ struct GPULight {
     int hiResShadowMapIndex;
     int lowResShadowMapIndex;
 
-    uint32_t lightIdUpperBit = 0;
-    uint32_t lightIdLowerBit = 0;
-    uint32_t padding1;
-    uint32_t padding2;
+    glm::vec4 worldBoundsMin = glm::vec4(0.0f);
+    glm::vec4 worldBoundsMax = glm::vec4(0.0f);
 };
 
 struct GPUAABB {
@@ -247,26 +240,45 @@ struct SkinningDispatchGroup {
     uint32_t padding1;
 };
 
-// Vulkan raytracing
+// Vulkan ray queries
 
-struct RayTracingGeometryRange {
+struct RayQueryMesh {
     uint32_t baseVertex;
     uint32_t baseIndex;
     uint32_t vertexCount;
     uint32_t indexCount;
+};
+
+struct RayQueryMaterial {
     uint32_t blendingMode;
     int32_t materialIndex;
     uint32_t shadowBit = 0;
     uint32_t padding0 = 0;
 };
 
-struct SkinnedRayTracingGroup {
-    std::vector<RayTracingGeometryRange> ranges;
-    glm::mat4 modelMatrix;
+struct RayQueryMeshInstance {
+    RayQueryMesh mesh;
+    RayQueryMaterial material;
 };
 
-struct StaticRayTracingInstance {
-    RayTracingGeometryRange range;
+struct TransientRayQueryBLASInstance {
+    std::vector<RayQueryMeshInstance> meshInstances;
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+};
+
+struct RayQueryMultiMeshBLAS {
+    std::vector<RayQueryMeshInstance> meshInstances;
+    uint64_t vulkanBlasId = 0;
+    uint64_t vertexBufferDeviceAddress = 0;
+    uint64_t indexBufferDeviceAddress = 0;
+    uint64_t vertexBufferByteSize = 0;
+    uint64_t indexBufferByteSize = 0;
+    uint64_t sourceGeometryVersion = 0;
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+};
+
+struct RayQueryBLASInstance {
+    RayQueryMeshInstance meshInstance;
     uint64_t vulkanBlasId = 0;
     uint64_t vertexBufferDeviceAddress = 0;
     uint64_t indexBufferDeviceAddress = 0;

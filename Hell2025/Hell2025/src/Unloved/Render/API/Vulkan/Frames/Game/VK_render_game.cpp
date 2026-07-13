@@ -21,6 +21,8 @@ namespace VulkanRenderer {
         LightingForwardBlendedPass(frame.commandBuffer);
         SkyboxPass(frame.commandBuffer);
         // HairPass(frame.commandBuffer);
+        SpriteSheetPass(frame.commandBuffer); // Muzzle flash, etc
+
         PostProcessingPass(frame.commandBuffer);
 
         DebugViewPass(frame.commandBuffer);

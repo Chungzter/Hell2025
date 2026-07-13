@@ -12,82 +12,82 @@
 
 namespace VulkanRenderer {
 
-    void RayTracingScene::Clear() {
+    void RayQueryScene::Clear() {
         m_instances.clear();
-        m_instanceData.clear();
-        m_geometryData.clear();
+        m_blasInstanceData.clear();
+        m_meshInstanceData.clear();
         m_instanceBuffer = nullptr;
-        m_instanceDataBuffer = nullptr;
-        m_geometryDataBuffer = nullptr;
+        m_blasInstanceDataBuffer = nullptr;
+        m_meshInstanceDataBuffer = nullptr;
     }
 
-    void RayTracingScene::Reserve(size_t instanceCount, size_t geometryDataCount) {
-        m_instances.reserve(instanceCount);
-        m_instanceData.reserve(instanceCount);
-        m_geometryData.reserve(geometryDataCount);
+    void RayQueryScene::Reserve(size_t blasInstanceCount, size_t meshInstanceDataCount) {
+        m_instances.reserve(blasInstanceCount);
+        m_blasInstanceData.reserve(blasInstanceCount);
+        m_meshInstanceData.reserve(meshInstanceDataCount);
     }
 
-    void RayTracingScene::AddInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayTracingGeometryRange& range) {
-        uint32_t instanceCustomIndex = static_cast<uint32_t>(m_instanceData.size());
+    void RayQueryScene::AddBLASInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayQueryMeshInstance& meshInstance) {
+        uint32_t instanceCustomIndex = static_cast<uint32_t>(m_blasInstanceData.size());
 
-        RayTracingInstanceData& data = m_instanceData.emplace_back();
-        data.geometryDataOffset = static_cast<uint32_t>(m_geometryData.size());
-        data.geometryDataCount = 1;
+        RayQueryBLASInstanceData& data = m_blasInstanceData.emplace_back();
+        data.meshInstanceDataOffset = static_cast<uint32_t>(m_meshInstanceData.size());
+        data.meshInstanceDataCount = 1;
 
-        m_geometryData.push_back(CreateGeometryData(vertexBufferAddress, indexBufferAddress, range));
+        m_meshInstanceData.push_back(CreateMeshInstanceData(vertexBufferAddress, indexBufferAddress, meshInstance));
         m_instances.push_back(CreateTLASInstance(blasDeviceAddress, transform, instanceCustomIndex));
     }
 
-    void RayTracingScene::AddInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const std::vector<RayTracingGeometryRange>& ranges) {
-        if (ranges.empty()) return;
+    void RayQueryScene::AddBLASInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const std::vector<RayQueryMeshInstance>& meshInstances) {
+        if (meshInstances.empty()) return;
 
-        uint32_t instanceCustomIndex = static_cast<uint32_t>(m_instanceData.size());
+        uint32_t instanceCustomIndex = static_cast<uint32_t>(m_blasInstanceData.size());
 
-        RayTracingInstanceData& data = m_instanceData.emplace_back();
-        data.geometryDataOffset = static_cast<uint32_t>(m_geometryData.size());
-        data.geometryDataCount = static_cast<uint32_t>(ranges.size());
+        RayQueryBLASInstanceData& data = m_blasInstanceData.emplace_back();
+        data.meshInstanceDataOffset = static_cast<uint32_t>(m_meshInstanceData.size());
+        data.meshInstanceDataCount = static_cast<uint32_t>(meshInstances.size());
 
-        m_geometryData.reserve(m_geometryData.size() + ranges.size());
-        for (const RayTracingGeometryRange& range : ranges) {
-            m_geometryData.push_back(CreateGeometryData(vertexBufferAddress, indexBufferAddress, range));
+        m_meshInstanceData.reserve(m_meshInstanceData.size() + meshInstances.size());
+        for (const RayQueryMeshInstance& meshInstance : meshInstances) {
+            m_meshInstanceData.push_back(CreateMeshInstanceData(vertexBufferAddress, indexBufferAddress, meshInstance));
         }
 
         m_instances.push_back(CreateTLASInstance(blasDeviceAddress, transform, instanceCustomIndex));
     }
 
-    bool RayTracingScene::HasInstances() const {
+    bool RayQueryScene::HasInstances() const {
         return !m_instances.empty();
     }
 
-    uint32_t RayTracingScene::GetInstanceCount() const {
+    uint32_t RayQueryScene::GetInstanceCount() const {
         return static_cast<uint32_t>(m_instances.size());
     }
 
-    VkDeviceSize RayTracingScene::GetTLASScratchSize(const VulkanFrameData& frameData) const {
+    VkDeviceSize RayQueryScene::GetTLASScratchSize(const VulkanFrameData& frameData) const {
         return static_cast<VkDeviceSize>(frameData.accelerationStructures.rayQueryTLASScratchSize);
     }
 
-    bool RayTracingScene::Upload(VkCommandBuffer commandBuffer, VulkanFrameData& frameData) {
+    bool RayQueryScene::Upload(VkCommandBuffer commandBuffer, VulkanFrameData& frameData) {
         if (m_instances.empty()) return false;
 
         VkDeviceSize instanceBufferSize = sizeof(VkAccelerationStructureInstanceKHR) * m_instances.size();
-        VkDeviceSize instanceDataSize = sizeof(RayTracingInstanceData) * m_instanceData.size();
-        VkDeviceSize geometryDataSize = sizeof(RayTracingGeometryData) * m_geometryData.size();
+        VkDeviceSize blasInstanceDataSize = sizeof(RayQueryBLASInstanceData) * m_blasInstanceData.size();
+        VkDeviceSize meshInstanceDataSize = sizeof(RayQueryMeshInstanceData) * m_meshInstanceData.size();
 
         if (!EnsureBufferSize(frameData.buffers.rayQueryInstances, instanceBufferSize)) return false;
-        if (!EnsureBufferSize(frameData.buffers.rayQueryInstanceData, instanceDataSize)) return false;
-        if (!EnsureBufferSize(frameData.buffers.rayQueryGeometryData, geometryDataSize)) return false;
+        if (!EnsureBufferSize(frameData.buffers.rayQueryBLASInstanceData, blasInstanceDataSize)) return false;
+        if (!EnsureBufferSize(frameData.buffers.rayQueryMeshInstanceData, meshInstanceDataSize)) return false;
 
         m_instanceBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryInstances);
-        m_instanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryInstanceData);
-        m_geometryDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryGeometryData);
+        m_blasInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryBLASInstanceData);
+        m_meshInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryMeshInstanceData);
         if (!m_instanceBuffer) return false;
-        if (!m_instanceDataBuffer) return false;
-        if (!m_geometryDataBuffer) return false;
+        if (!m_blasInstanceDataBuffer) return false;
+        if (!m_meshInstanceDataBuffer) return false;
 
         m_instanceBuffer->UpdateData(m_instances.data(), instanceBufferSize);
-        m_instanceDataBuffer->UpdateData(m_instanceData.data(), instanceDataSize);
-        m_geometryDataBuffer->UpdateData(m_geometryData.data(), geometryDataSize);
+        m_blasInstanceDataBuffer->UpdateData(m_blasInstanceData.data(), blasInstanceDataSize);
+        m_meshInstanceDataBuffer->UpdateData(m_meshInstanceData.data(), meshInstanceDataSize);
 
         VkBufferMemoryBarrier instanceUploadBarrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
         instanceUploadBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
@@ -109,16 +109,16 @@ namespace VulkanRenderer {
             barrier.offset = 0;
         }
 
-        metadataUploadBarriers[0].buffer = m_instanceDataBuffer->GetBuffer();
-        metadataUploadBarriers[0].size = instanceDataSize;
-        metadataUploadBarriers[1].buffer = m_geometryDataBuffer->GetBuffer();
-        metadataUploadBarriers[1].size = geometryDataSize;
+        metadataUploadBarriers[0].buffer = m_blasInstanceDataBuffer->GetBuffer();
+        metadataUploadBarriers[0].size = blasInstanceDataSize;
+        metadataUploadBarriers[1].buffer = m_meshInstanceDataBuffer->GetBuffer();
+        metadataUploadBarriers[1].size = meshInstanceDataSize;
         vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, static_cast<uint32_t>(metadataUploadBarriers.size()), metadataUploadBarriers.data(), 0, nullptr);
 
         return true;
     }
 
-    bool RayTracingScene::ResizeTLAS(VulkanFrameData& frameData, uint32_t instanceCapacity) {
+    bool RayQueryScene::ResizeTLAS(VulkanFrameData& frameData, uint32_t instanceCapacity) {
         if (!m_instanceBuffer) return false;
         if (frameData.accelerationStructures.rayQueryTLAS == 0) return false;
 
@@ -130,12 +130,12 @@ namespace VulkanRenderer {
         return true;
     }
 
-    void RayTracingScene::RecordTLASBuild(VkCommandBuffer commandBuffer, VulkanFrameData& frameData, uint64_t scratchBaseAddress) {
+    void RayQueryScene::RecordTLASBuild(VkCommandBuffer commandBuffer, VulkanFrameData& frameData, uint64_t scratchBaseAddress) {
         if (!m_instanceBuffer) return;
         RecordTopLevelBuild(commandBuffer, frameData.accelerationStructures.rayQueryTLAS, m_instanceBuffer->GetDeviceAddress(), GetInstanceCount(), scratchBaseAddress);
     }
 
-    bool RayTracingScene::BindDescriptor(VulkanFrameData& frameData, VulkanDescriptorSet* descriptorSet, uint32_t binding) {
+    bool RayQueryScene::BindDescriptor(VulkanFrameData& frameData, VulkanDescriptorSet* descriptorSet, uint32_t binding) {
         if (!descriptorSet) return false;
 
         VulkanAccelerationStructure* tlas = VulkanResourceManager::GetAccelerationStructure(frameData.accelerationStructures.rayQueryTLAS);
@@ -146,22 +146,17 @@ namespace VulkanRenderer {
         return true;
     }
 
-    RayTracingGeometryData RayTracingScene::CreateGeometryData(uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayTracingGeometryRange& range) const {
-        RayTracingGeometryData data{};
+    RayQueryMeshInstanceData RayQueryScene::CreateMeshInstanceData(uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayQueryMeshInstance& meshInstance) const {
+        RayQueryMeshInstanceData data{};
         data.vertexBufferDeviceAddress = vertexBufferAddress;
         data.indexBufferDeviceAddress = indexBufferAddress;
-        data.baseVertex = range.baseVertex;
-        data.baseIndex = range.baseIndex;
-        data.vertexCount = range.vertexCount;
-        data.indexCount = range.indexCount;
-        data.blendingMode = range.blendingMode;
-        data.materialIndex = range.materialIndex;
-        data.shadowBit = range.shadowBit;
+        data.mesh = meshInstance.mesh;
+        data.material = meshInstance.material;
         return data;
     }
 
-    VkAccelerationStructureInstanceKHR RayTracingScene::CreateTLASInstance(uint64_t accelerationStructureAddress, VkTransformMatrixKHR transform, uint32_t instanceCustomIndex) const {
-        // instanceCustomIndex is the shader lookup into RayTracingInstanceData
+    VkAccelerationStructureInstanceKHR RayQueryScene::CreateTLASInstance(uint64_t accelerationStructureAddress, VkTransformMatrixKHR transform, uint32_t instanceCustomIndex) const {
+        // instanceCustomIndex is the shader lookup into RayQueryBLASInstanceData
         VkAccelerationStructureInstanceKHR instance{};
         instance.transform = transform;
         instance.instanceCustomIndex = instanceCustomIndex;

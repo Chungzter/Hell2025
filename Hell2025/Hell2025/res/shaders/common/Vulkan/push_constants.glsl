@@ -53,8 +53,8 @@ struct PushConstantsMaterialResolve {
 struct PushConstantsDeferredLighting {
     PushConstantsFrameResources frame;
 
-    uint64_t rayQueryInstanceDataDeviceAddress;
-    uint64_t rayQueryGeometryDataDeviceAddress;
+    uint64_t rayQueryBLASInstanceDataDeviceAddress;
+    uint64_t rayQueryMeshInstanceDataDeviceAddress;
     uint rayQueryEnabled;
     uint padding0;
 };
@@ -62,8 +62,8 @@ struct PushConstantsDeferredLighting {
 struct PushConstantsHair {
     PushConstantsFrameResources frame;
 
-    uint64_t rayQueryInstanceDataDeviceAddress;
-    uint64_t rayQueryGeometryDataDeviceAddress;
+    uint64_t rayQueryBLASInstanceDataDeviceAddress;
+    uint64_t rayQueryMeshInstanceDataDeviceAddress;
     int flashlightCookieTextureIndex;
     uint rayQueryEnabled;
 };

@@ -71,6 +71,11 @@ void Light::RaycastWorldBounds() {
     minFound = glm::max(minFound, rayOrigin - glm::vec3(GetRadius()));
     maxFound = glm::min(maxFound, rayOrigin + glm::vec3(GetRadius()));
 
+    // Apply threshold
+    float threshold = 0.025f;
+    minFound -= glm::vec3(threshold);
+    maxFound += glm::vec3(threshold);
+
     // Store it
     m_worldBoundsMin = minFound;
     m_worldBoundsMax = maxFound;
