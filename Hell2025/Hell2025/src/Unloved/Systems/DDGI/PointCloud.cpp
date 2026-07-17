@@ -5,7 +5,6 @@
 
 #include "Unloved/Debug/DebugDraw.h"
 
-// TODO: Move me Util.h and add division by zero checks
 namespace Unloved {
 
 float RoundUp(float value, float spacing) { return std::ceil(value / spacing) * spacing; }
@@ -42,11 +41,11 @@ void PointCloud::Create(const std::vector<Triangle>& triangles, const glm::vec3&
         max.x = RoundUp(max.x, pointCloudSpacing) + pointCloudSpacing * 0.5f;
         max.y = RoundUp(max.y, pointCloudSpacing) + pointCloudSpacing * 0.5f;
 
-        float theshold = 0.05f;
-        min.x += theshold;
-        min.y += theshold;
-        max.x -= theshold;
-        max.y -= theshold;
+        float threshold = 0.05f;
+        min.x += threshold;
+        min.y += threshold;
+        max.x -= threshold;
+        max.y -= threshold;
 
         // Generate points within the volume bounding box
         for (float x = min.x; x <= max.x; x += pointCloudSpacing) {
@@ -90,6 +89,10 @@ void PointCloud::Create(const std::vector<Triangle>& triangles, const glm::vec3&
     struct PointRef {
         uint32_t cellIndex;
         uint32_t originalIndex;
+
+        bool operator<(const PointRef& other) const {
+            return cellIndex < other.cellIndex;
+        }
     };
 
     std::vector<PointRef> pointRefs;
@@ -102,7 +105,7 @@ void PointCloud::Create(const std::vector<Triangle>& triangles, const glm::vec3&
     }
 
     // Sort points so spatial cells are contiguous in memory
-    std::sort(pointRefs.begin(), pointRefs.end(), [](const PointRef& a, const PointRef& b) { return a.cellIndex < b.cellIndex; });
+    std::sort(pointRefs.begin(), pointRefs.end());
 
     std::vector<CloudPoint> sortedPoints;
     std::vector<CloudPointTextureInfo> sortedTextureInfo;
@@ -154,20 +157,6 @@ void PointCloud::CleanUp() {
 }
 
 void PointCloud::Update() {
-    // TODO
-    // m_gridCellDirtyFlags from cpu, it's all gpu side now 
-
-    // Mark all non dirty
-    //std::fill(m_gridCellDirtyFlags.begin(), m_gridCellDirtyFlags.end(), 0);
-    //
-    //int i = 0;
-    //for (Light& light : Unloved::World::GetLights()) {
-    //    if (i == 3) {
-    //        DirtyCellsInSphere(light.GetPosition(), light.GetRadius());
-    //        Renderer::DrawSphere(light.GetPosition(), light.GetRadius(), WHITE);
-    //    }
-    //    i++;
-    //}
 }
 
 void PointCloud::DebugDrawGrid() const {

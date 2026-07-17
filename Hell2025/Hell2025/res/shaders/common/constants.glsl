@@ -5,6 +5,11 @@
 #define HEIGHTMAP_SCALE_XZ 0.25
 #define TILE_SIZE 24
 
+// Blood decal projector dimensions in local space. The model matrix supplies
+// the uniform world scale; aspectScale stretches the two surface axes.
+const float BLOOD_DECAL_DEPTH_SCALE = 0.2;
+const float BLOOD_DECAL_MIN_NORMAL_ALIGNMENT = 0.0871557; // cos(85 degrees)
+
 #define BLENDING_MODE_ALPHA_DISCARD    0u
 #define BLENDING_MODE_BLENDED          1u
 #define BLENDING_MODE_DEFAULT          2u

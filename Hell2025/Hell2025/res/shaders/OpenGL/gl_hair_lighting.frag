@@ -3,7 +3,7 @@
     #define ENABLE_BINDLESS 1
 #endif
 
-#include "../common/OpenGL/binding_indices.glsl"
+#include "../common/OpenGL/GL_binding_indices.glsl"
 
 #if ENABLE_BINDLESS
     #extension GL_ARB_bindless_texture : enable        

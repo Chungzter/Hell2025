@@ -4,12 +4,13 @@
 #extension GL_EXT_scalar_block_layout : require
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
-#include "../common/Vulkan/binding_indices.glsl"
-#include "../common/Vulkan/push_constants.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
 
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
+#include "../common/viewport.glsl"
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
@@ -160,7 +161,7 @@ void main() {
 
     vec2 uv = (vec2(pixelCoords) + 0.5) / outputSize;
     vec3 rawLighting = color.rgb;
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, ivec2(outputSize), rendererDataBuffer.rendererData.splitscreenMode);
+    uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(pixelCoords, outputSize, rendererDataBuffer.rendererData.splitscreenMode);
 
     ViewportData viewportData = viewportDataBuffer.viewportDataArr[viewportIndex];
 
@@ -179,7 +180,7 @@ void main() {
      //finalColor = ogLook;
 
      // vignette setup
-     vec2 viewportUV = (uv - vec2(viewportData.posX, viewportData.posY)) / vec2(viewportData.sizeX, viewportData.sizeY);
+     vec2 viewportUV = ViewportUVFromPixel_VK(pixelCoords, outputSize, viewportData);
      finalColor = ApplyVignette(finalColor, viewportData.vignetteColor.rgb, viewportData.intensityScalar * 0.5, viewportUV);
 
 

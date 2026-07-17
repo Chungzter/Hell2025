@@ -113,6 +113,7 @@ namespace OpenGL::Renderer {
     void ChristmasLightsPass();
     void ExamineItemPass();
     void DepthPeeledTransparencyPass();
+    void VATPass();
 
     void ComputeLightAABBs();
     void ReserveLightAABBSSBOStorage();
@@ -151,7 +152,6 @@ namespace OpenGL::Renderer {
 
     // Global illumination
     void UpdateGlobalIllumintation();
-    OpenGLTextureArray& GetProbeDistanceTextureArray();
 
     // Utility passes
     void RecalculateAllHeightMapData(bool blitWorldMap);

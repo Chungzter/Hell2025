@@ -47,6 +47,7 @@ namespace OpenGL {
     void ClearSSBORange(const std::string& name, size_t offset, size_t size);
     void ReserveSSBO(const std::string& name, size_t size);
     void UpdateSSBO(const std::string& name, size_t size, const void* data);
+    void UpdateSSBORange(const std::string& name, size_t offset, size_t size, const void* data);
     void UploadSSBOStatic(const std::string& name, size_t size, const void* data);
 
     // Textures

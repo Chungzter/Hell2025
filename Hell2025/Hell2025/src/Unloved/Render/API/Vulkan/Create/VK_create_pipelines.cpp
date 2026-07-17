@@ -34,6 +34,152 @@ namespace {
         pipeline.Build();
     }
 
+    void CreateDDGIRaytraceScenePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIRaytraceScene");
+        pipeline.SetShader("DDGIRaytraceScene");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddDescriptorSetLayout("DDGIRayQueryDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIRaytraceScene), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIPointCloudBaseColorPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIPointCloudBaseColor");
+        pipeline.SetShader("DDGIPointCloudBaseColor");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIPointCloudBaseColor), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIPointCloudLightingPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIPointCloudLighting");
+        pipeline.SetShader("DDGIPointCloudLighting");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddDescriptorSetLayout("DDGIRayQueryDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIPointCloudLighting), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbePointIndicesPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbePointIndices");
+        pipeline.SetShader("DDGIProbePointIndices");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbePointIndices), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeStateUpdatePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeStateUpdate");
+        pipeline.SetShader("DDGIProbeStateUpdate");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeStateUpdate), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeRelevancePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeRelevance");
+        pipeline.SetShader("DDGIProbeRelevance");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeRelevance), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeDistanceListPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeDistanceList");
+        pipeline.SetShader("DDGIProbeDistanceList");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeDistanceList), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeDistanceDispatchArgsPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeDistanceDispatchArgs");
+        pipeline.SetShader("DDGIProbeDistanceDispatchArgs");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeDistanceDispatchArgs), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeDistancePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeDistance");
+        pipeline.SetShader("DDGIProbeDistance");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddDescriptorSetLayout("DDGIRayQueryDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeDistance), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeDistanceBorderPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeDistanceBorder");
+        pipeline.SetShader("DDGIProbeDistanceBorder");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeBorder), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeIrradianceDirtyPointCheckPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeIrradianceDirtyPointCheck");
+        pipeline.SetShader("DDGIProbeIrradianceDirtyPointCheck");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeIrradianceDirtyPointCheck), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeIrradianceListPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeIrradianceList");
+        pipeline.SetShader("DDGIProbeIrradianceList");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeIrradianceList), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeIrradianceDispatchArgsPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeIrradianceDispatchArgs");
+        pipeline.SetShader("DDGIProbeIrradianceDispatchArgs");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeIrradianceDispatchArgs), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeIrradiancePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeIrradiance");
+        pipeline.SetShader("DDGIProbeIrradiance");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddDescriptorSetLayout("DDGIRayQueryDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeIrradiance), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeIrradianceBorderPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeIrradianceBorder");
+        pipeline.SetShader("DDGIProbeIrradianceBorder");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeBorder), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeIrradianceTexturePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeIrradianceTexture");
+        pipeline.SetShader("DDGIProbeIrradianceTexture");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeIrradianceTexture), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateDDGIPointCloudDebugPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIPointCloudDebug");
+        pipeline.SetShader("DDGIPointCloudDebug");
+        pipeline.SetRenderState("Debug3D");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIPointCloudDebug), VK_SHADER_STAGE_VERTEX_BIT);
+        pipeline.SetTopology(VK_PRIMITIVE_TOPOLOGY_POINT_LIST);
+        pipeline.SetCullMode(VK_CULL_MODE_NONE);
+        pipeline.Build();
+    }
+
+    void CreateDDGIProbeDebugPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DDGIProbeDebug");
+        pipeline.SetShader("DDGIProbeDebug");
+        pipeline.SetRenderState("DDGIProbeDebug");
+        pipeline.AddPushConstant(sizeof(PushConstantsDDGIProbeDebug), VK_SHADER_STAGE_VERTEX_BIT);
+        pipeline.SetTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+        pipeline.SetCullMode(VK_CULL_MODE_NONE);
+        pipeline.SetVertexDescription<Vertex>();
+        pipeline.Build();
+    }
+
     void CreateDebugViewPipeline() {
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugView");
         pipeline.SetShader("DebugView");
@@ -42,6 +188,50 @@ namespace {
         pipeline.AddColorAttachmentFormat(VK_FORMAT_R16G16B16A16_SFLOAT);
         pipeline.SetDepthTest(false, false);
         pipeline.SetCullMode(VK_CULL_MODE_NONE);
+        pipeline.Build();
+    }
+
+    void CreateDebugVertex3DLinePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugVertex3DLine");
+        pipeline.SetShader("DebugVertex3D");
+        pipeline.SetRenderState("Debug3D");
+        pipeline.AddPushConstant(sizeof(PushConstantsDebug3D), VK_SHADER_STAGE_VERTEX_BIT);
+        pipeline.SetTopology(VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
+        pipeline.SetCullMode(VK_CULL_MODE_NONE);
+        pipeline.SetVertexDescription<DebugVertex3D>();
+        pipeline.Build();
+    }
+
+    void CreateDebugVertex3DPointPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugVertex3DPoint");
+        pipeline.SetShader("DebugVertex3D");
+        pipeline.SetRenderState("Debug3D");
+        pipeline.AddPushConstant(sizeof(PushConstantsDebug3D), VK_SHADER_STAGE_VERTEX_BIT);
+        pipeline.SetTopology(VK_PRIMITIVE_TOPOLOGY_POINT_LIST);
+        pipeline.SetCullMode(VK_CULL_MODE_NONE);
+        pipeline.SetVertexDescription<DebugVertex3D>();
+        pipeline.Build();
+    }
+
+    void CreateDebugVertex2DLinePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugVertex2DLine");
+        pipeline.SetShader("DebugVertex2D");
+        pipeline.SetRenderState("Debug2D");
+        pipeline.AddPushConstant(sizeof(PushConstantsDebug2D), VK_SHADER_STAGE_VERTEX_BIT);
+        pipeline.SetTopology(VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
+        pipeline.SetCullMode(VK_CULL_MODE_NONE);
+        pipeline.SetVertexDescription<DebugVertex2D>();
+        pipeline.Build();
+    }
+
+    void CreateDebugVertex2DPointPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugVertex2DPoint");
+        pipeline.SetShader("DebugVertex2D");
+        pipeline.SetRenderState("Debug2D");
+        pipeline.AddPushConstant(sizeof(PushConstantsDebug2D), VK_SHADER_STAGE_VERTEX_BIT);
+        pipeline.SetTopology(VK_PRIMITIVE_TOPOLOGY_POINT_LIST);
+        pipeline.SetCullMode(VK_CULL_MODE_NONE);
+        pipeline.SetVertexDescription<DebugVertex2D>();
         pipeline.Build();
     }
 
@@ -147,7 +337,7 @@ namespace {
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("TileLightCulling");
         pipeline.SetShader("TileLightCulling");
         pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
-        pipeline.AddPushConstant(sizeof(PushConstantsTileWorldBounds), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.AddPushConstant(sizeof(PushConstantsTileLightCulling), VK_SHADER_STAGE_COMPUTE_BIT);
         pipeline.Build();
     }
 
@@ -234,7 +424,29 @@ namespace VulkanRenderer {
     void CreatePipelines() {
         // Debug
         CreateDebugTileView();
+        CreateDDGIRaytraceScenePipeline();
+        CreateDDGIPointCloudBaseColorPipeline();
+        CreateDDGIPointCloudLightingPipeline();
+        CreateDDGIProbePointIndicesPipeline();
+        CreateDDGIProbeStateUpdatePipeline();
+        CreateDDGIProbeRelevancePipeline();
+        CreateDDGIProbeDistanceListPipeline();
+        CreateDDGIProbeDistanceDispatchArgsPipeline();
+        CreateDDGIProbeDistancePipeline();
+        CreateDDGIProbeDistanceBorderPipeline();
+        CreateDDGIProbeIrradianceDirtyPointCheckPipeline();
+        CreateDDGIProbeIrradianceListPipeline();
+        CreateDDGIProbeIrradianceDispatchArgsPipeline();
+        CreateDDGIProbeIrradiancePipeline();
+        CreateDDGIProbeIrradianceBorderPipeline();
+        CreateDDGIProbeIrradianceTexturePipeline();
+        CreateDDGIPointCloudDebugPipeline();
+        CreateDDGIProbeDebugPipeline();
         CreateDebugViewPipeline();
+        CreateDebugVertex3DLinePipeline();
+        CreateDebugVertex3DPointPipeline();
+        CreateDebugVertex2DLinePipeline();
+        CreateDebugVertex2DPointPipeline();
 
         // Loading screen
         CreateLoadingScreenPipeline();

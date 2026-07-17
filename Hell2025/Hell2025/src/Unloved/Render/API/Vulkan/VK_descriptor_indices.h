@@ -1,3 +1,3 @@
 #pragma once
 
-#include "res/shaders/common/Vulkan/binding_indices.glsl"
+#include "res/shaders/common/Vulkan/VK_binding_indices.glsl"

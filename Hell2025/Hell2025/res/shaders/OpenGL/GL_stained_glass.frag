@@ -1,5 +1,5 @@
 #version 460 core
-#include "../common/OpenGL/binding_indices.glsl"
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"

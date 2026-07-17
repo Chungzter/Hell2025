@@ -5,7 +5,6 @@
 layout (location = 0) in vec3 a_position;
 layout (location = 1) in vec3 a_normal;
 
-layout(std430, binding = 6) readonly buffer ProbeColorBuffer  { ProbeColor probeColors[]; };
 layout(std430, binding = 7) readonly buffer DDGIVolumeBuffer  { DDGIVolume volume; };
 layout(std430, binding = 8) readonly buffer ProbeStatesBuffer { ProbeState probeStates[]; };
 
@@ -19,7 +18,8 @@ void main() {
     v_probeIndex = gl_InstanceID;
 
     ivec3 probeCoords = DDGIGetProbeCoords(v_probeIndex, volume);
-    vec3 probePos = DDGIGetProbeWorldPosition(probeCoords, volume, probeStates[v_probeIndex]);
+    uint globalProbeIndex = volume.probeOffset + uint(v_probeIndex);
+    vec3 probePos = DDGIGetProbeWorldPosition(probeCoords, volume, probeStates[globalProbeIndex]);
 
     v_voxelCoord = probeCoords;
 

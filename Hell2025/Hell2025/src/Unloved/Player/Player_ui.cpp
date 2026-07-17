@@ -213,10 +213,16 @@ void Player::UpdateUI(float deltaTime) {
 
             // Camera matrices
             if (false) {
+                const ViewportData& viewportData = RenderDataManager::GetViewportData()[0];
+
+                text += "Root:\n";
+                text += Hell::String::FormatMat4(viewWeapon->GetInverseBindTransformByBoneName("root"), 10) + "\n\n";
                 text += "Camera Inverse Bind Transform:\n";
                 text += Hell::String::FormatMat4(viewWeapon->GetInverseBindTransformByBoneName("camera"), 10) + "\n\n";
                 text += "Camera Animated Transform:\n";
                 text += Hell::String::FormatMat4(viewWeapon->GetAnimatedTransformByBoneName("camera"), 10) + "\n\n";
+                text += "View Matrix:\n";
+                text += Hell::String::FormatMat4(viewportData.view, 10) + "\n\n";
             }
 
             // Kangaroos
@@ -262,7 +268,7 @@ void Player::UpdateUI(float deltaTime) {
 
 
             // Render items
-            if (true) {
+            if (false) {
                 text += "RenderItems ALPHA_DISCARD: " + std::to_string(RenderDataManager::GetRenderItemsAlphaDiscard().size()) + "\n";
                 text += "RenderItems BLENDED: " + std::to_string(RenderDataManager::GetRenderItemsBlended().size()) + "\n";
                 text += "RenderItems DEFAULT: " + std::to_string(RenderDataManager::GetRenderItems().size()) + "\n";

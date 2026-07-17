@@ -21,7 +21,7 @@ void main() {
     BaseColorMetallicOut.a = metallic;
 
     // NormalXY / Roughness out
-    NormalXYRoughnessMiscOut.rg = EncodeNormal(v_normal);
+    NormalXYRoughnessMiscOut.rg = EncodeOct(v_normal);
     NormalXYRoughnessMiscOut.b = roughness;
     NormalXYRoughnessMiscOut.a = 0.0; // Misc 4 bit value
 

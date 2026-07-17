@@ -6,9 +6,11 @@
 #include "Hell/ResourceManagement/Types/Material.h"
 #include "Hell/ResourceManagement/Types/MeshBuffer.h"
 #include "Hell/ResourceManagement/Types/MidiFile.h"
+#include "Hell/ResourceManagement/Types/PointAnimation.h"
 #include "Hell/ResourceManagement/Types/SoundFont.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
 #include "Hell/ResourceManagement/Types/TextureArray.h"
+#include "Hell/ResourceManagement/Types/VAT.h"
 #include "Hell/ResourceManagement/Types/Model.h"
 #include "Hell/ResourceManagement/Types/SkinnedModel.h"
 #include "Hell/ResourceManagement/Types/SpriteSheetTexture.h"
@@ -44,6 +46,16 @@ namespace Hell::ResourceManager {
     IESProfile& CreateIESProfile(IESProfile&& iesProfile);
     IESProfile& GetIESProfile(const std::string& name);
     IESProfile* GetIESProfilePtr(const std::string& name);
+
+    Vat& CreateVAT(const std::string& name);
+    Vat& CreateVAT(Vat&& vat);
+    Vat& GetVAT(const std::string& name);
+    Vat* GetVATPtr(const std::string& name);
+
+    PointAnimation& CreatePointAnimation(const std::string& name);
+    PointAnimation& CreatePointAnimation(PointAnimation&& pointAnimation);
+    PointAnimation& GetPointAnimation(const std::string& name);
+    PointAnimation* GetPointAnimationPtr(const std::string& name);
 
     Mesh* GetModelMeshByName(const std::string& modelName, const std::string& meshName);
     uint32_t GetModelMeshIdByName(const std::string& modelName, const std::string& meshName);
@@ -106,4 +118,5 @@ namespace Hell::ResourceManager {
     TextureArray& CreateTextureArray(const std::string& name);
     TextureArray& GetTextureArray(const std::string& name);
     TextureArray* GetTextureArrayPtr(const std::string& name);
+    void RemoveTextureArrayByName(const std::string& name);
 }

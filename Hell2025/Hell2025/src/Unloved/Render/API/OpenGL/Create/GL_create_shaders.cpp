@@ -11,6 +11,9 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("BlurVertical", { "GL_blur_vertical.vert", "GL_blur.frag" });
         OpenGL::ResourceManager::LoadShader("ComputeSkinning", { "GL_compute_skinning.comp" });
         OpenGL::ResourceManager::LoadShader("TileWorldBounds", { "GL_tile_world_bounds.comp" });
+        OpenGL::ResourceManager::LoadShader("VAT", { "GL_vat.vert", "GL_vat.frag" });
+
+        OpenGL::ResourceManager::LoadShader("DecalTest", { "GL_decal_test.vert", "GL_decal_test.frag" });
 
         OpenGL::ResourceManager::LoadShader("DownSample2xBox", { "GL_down_sample_2x_box.comp" });
         OpenGL::ResourceManager::LoadShader("EditorMesh", { "GL_editor_mesh.vert", "GL_editor_mesh.frag" });
@@ -131,7 +134,7 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("Water", "OceanPositionReadback", { "GL_ocean_position_readback.comp" });
 
         // Post processing
-        OpenGL::ResourceManager::LoadShader("PostProcessing", "FXAA", { "GL_fxaa.comp" });
+        OpenGL::ResourceManager::LoadShader("FXAA", { "RE/GL_fullscreen_triangle.vert", "GL_fxaa.frag" });
         OpenGL::ResourceManager::LoadShader("PostProcessing", "TAA", { "GL_taa.comp" });
         OpenGL::ResourceManager::LoadShader("PostProcessing", "PostProcessing", { "GL_post_processing.comp" });
 

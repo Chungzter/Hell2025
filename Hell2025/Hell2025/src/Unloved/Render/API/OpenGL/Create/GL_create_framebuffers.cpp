@@ -28,19 +28,10 @@ namespace OpenGL::Renderer {
         hairFboRE.CreateAttachment("Lighting", GL_RGBA16F);
         hairFboRE.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+        OpenGLFrameBuffer& indirectDiffuseFbo = OpenGL::ResourceManager::CreateFrameBuffer("IndirectDiffuse");
+        indirectDiffuseFbo.Create(resolutions.gBufferHalfRes);
+        indirectDiffuseFbo.CreateAttachment("Color", GL_R11F_G11F_B10F);
+        indirectDiffuseFbo.CreateAttachment("Surface", GL_RGBA16F, GL_NEAREST, GL_NEAREST);
 
         OpenGL::ResourceManager::CreateSSBO("BubblePositions").Create(sizeof(glm::vec4) * 100, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("BubblePositionCount").Create(sizeof(uint64_t), GL_DYNAMIC_STORAGE_BIT);
@@ -97,10 +88,6 @@ namespace OpenGL::Renderer {
         emissiveBlurFbo.Create(resolutions.gBuffer.x, resolutions.gBuffer.y);
         emissiveBlurFbo.CreateAttachment("ColorA", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
         emissiveBlurFbo.CreateAttachment("ColorB", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
-
-        OpenGLFrameBuffer& indirectDiffuseFbo = OpenGL::ResourceManager::CreateFrameBuffer("IndirectDiffuse");
-        indirectDiffuseFbo.Create(resolutions.gBuffer);
-        indirectDiffuseFbo.CreateAttachment("Color", GL_R11F_G11F_B10F);
 
         OpenGLFrameBuffer& depthPeeledTransparencyFbo = OpenGL::ResourceManager::CreateFrameBuffer("DepthPeeledTransparency");
         depthPeeledTransparencyFbo.Create(resolutions.gBuffer);

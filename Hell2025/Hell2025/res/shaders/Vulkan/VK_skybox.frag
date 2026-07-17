@@ -6,8 +6,8 @@
 
 #include "../common/util.glsl"
 #include "../common/viewport.glsl"
-#include "../common/Vulkan/binding_indices.glsl"
-#include "../common/Vulkan/push_constants.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
 #include "../common/post_processing.glsl"
 
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform textureCube textures[];

@@ -17,6 +17,7 @@
 
 #include <glm/common.hpp>
 #include <glm/geometric.hpp>
+#include <glm/matrix.hpp>
 
 namespace {
     using MadmannVec3 = bvh::v2::Vec<float, 3>;
@@ -30,6 +31,11 @@ namespace {
 
     MadmannVec3 GlmVec3ToMadmannVec3(const glm::vec3& vec) {
         return MadmannVec3(vec.x, vec.y, vec.z);
+    }
+
+    glm::vec3 TransformNormalToWorldSpace(const GpuPrimitiveInstance& instance, const glm::vec3& localNormal) {
+        const glm::mat3 normalMatrix = glm::transpose(glm::mat3(instance.inverseWorldTransform));
+        return glm::normalize(normalMatrix * localNormal);
     }
 
     RayData ComputeRayData(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float minDistance, float maxDistance) {
@@ -69,26 +75,29 @@ namespace {
         return tmin <= tmax;
     }
 
-    bool IntersectTri(glm::vec3 rayOrigin, glm::vec3 rayDir, float minDistance, float maxDistance, glm::vec3 p0, glm::vec3 e1, glm::vec3 e2, glm::vec3 normal, float& t) {
-        const glm::vec3 c = p0 - rayOrigin;
-        const glm::vec3 r = glm::cross(rayDir, c);
-        const float det = glm::dot(normal, rayDir);
+    bool IntersectTri(glm::vec3 rayOrigin, glm::vec3 rayDir, float minDistance, float maxDistance, glm::vec3 p0, glm::vec3 e1, glm::vec3 e2, float& t) {
+        const glm::vec3 p = glm::cross(rayDir, e2);
+        const float det = glm::dot(e1, p);
 
-        if (det == 0.0f) {
+        if (std::abs(det) < 0.000001f) {
             return false;
         }
 
         const float invDet = 1.0f / det;
-        const float u = glm::dot(r, e2) * invDet;
-        const float v = glm::dot(r, e1) * invDet;
-        const float w = 1.0f - u - v;
-
-        if (u >= 0.0f && v >= 0.0f && w >= 0.0f) {
-            t = glm::dot(normal, c) * invDet;
-            return t >= minDistance && t < maxDistance;
+        const glm::vec3 s = rayOrigin - p0;
+        const float u = glm::dot(s, p) * invDet;
+        if (u < 0.0f || u > 1.0f) {
+            return false;
         }
 
-        return false;
+        const glm::vec3 q = glm::cross(s, e1);
+        const float v = glm::dot(rayDir, q) * invDet;
+        if (v < 0.0f || u + v > 1.0f) {
+            return false;
+        }
+
+        t = glm::dot(e2, q) * invDet;
+        return t >= minDistance && t < maxDistance;
     }
 
     void UnpackTriangle(const BVHTriangle& triangle, glm::vec3& p0, glm::vec3& e1, glm::vec3& e2, glm::vec3& normal) {
@@ -150,7 +159,7 @@ namespace {
                     UnpackTriangle(sceneBvh.m_triangles[triangleIndex], p0, e1, e2, normal);
 
                     float localT = 0.0f;
-                    if (!IntersectTri(localOrigin, localDir, localMinDistance, localMaxDistance, p0, e1, e2, normal, localT)) {
+                    if (!IntersectTri(localOrigin, localDir, localMinDistance, localMaxDistance, p0, e1, e2, localT)) {
                         continue;
                     }
 
@@ -168,7 +177,7 @@ namespace {
                     rayResult.customId = instance.customId;
                     rayResult.globalMeshIndex = instance.globalMeshIndex;
                     rayResult.localMeshNodeIndex = instance.localMeshNodeIndex;
-                    rayResult.hitNormal = -glm::vec3(instance.worldTransform * glm::vec4(normal, 0.0f));
+                    rayResult.hitNormal = TransformNormalToWorldSpace(instance, normal);
                     Hell::Bit::UnpackUint64(instance.objectIdLowerBit, instance.objectIdUpperBit, rayResult.objectId);
                     return rayResult;
                 }
@@ -227,7 +236,7 @@ namespace {
                     UnpackTriangle(sceneBvh.m_triangles[triangleIndex], p0, e1, e2, normal);
 
                     float localT = 0.0f;
-                    if (!IntersectTri(localOrigin, localDir, rayData.minDistance, rayData.maxDistance, p0, e1, e2, normal, localT)) {
+                    if (!IntersectTri(localOrigin, localDir, rayData.minDistance, rayData.maxDistance, p0, e1, e2, localT)) {
                         continue;
                     }
 
@@ -247,7 +256,7 @@ namespace {
                         closestRayResult.customId = instance.customId;
                         closestRayResult.globalMeshIndex = instance.globalMeshIndex;
                         closestRayResult.localMeshNodeIndex = instance.localMeshNodeIndex;
-                        closestRayResult.hitNormal = -glm::vec3(instance.worldTransform * glm::vec4(normal, 0.0f));
+                        closestRayResult.hitNormal = TransformNormalToWorldSpace(instance, normal);
                         Hell::Bit::UnpackUint64(instance.objectIdLowerBit, instance.objectIdUpperBit, closestRayResult.objectId);
 
                         rayData.maxDistance = localT;

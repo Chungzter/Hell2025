@@ -5,19 +5,7 @@
 #include "Hell/Common/Enum.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include <fstream>
-
-#include <iostream> // TODO: cleanup logging
-
 namespace nlohmann {
-    void to_json(nlohmann::json& j, const glm::vec3& v) {
-        j = json::array({ v.x, v.y, v.z });
-    }
-
-    void to_json(nlohmann::json& j, const glm::vec2& v) {
-        j = json::array({ v.x, v.y });
-    }
-
     void to_json(nlohmann::json& j, const Unloved::SequencePoint& sequencePoint) {
         j = nlohmann::json{
             {"Position", sequencePoint.position},
@@ -475,26 +463,6 @@ namespace nlohmann {
         spawnPoint.camEuler = j.value("CamEuler", glm::vec3(0.0f));
     }
 
-    void from_json(const nlohmann::json& j, glm::vec2& v) {
-        try {
-            std::array<float, 2> arr = j.get<std::array<float, 2>>();
-            v = glm::vec2(arr[0], arr[1]);
-        }
-        catch (const nlohmann::json::exception& e) {
-            v = glm::vec2(0.0f, 0.0f);
-        }
-    }
-
-    void from_json(const nlohmann::json& j, glm::vec3& v) {
-        try {
-            std::array<float, 3> arr = j.get<std::array<float, 3>>();
-            v = glm::vec3(arr[0], arr[1], arr[2]);
-        }
-        catch (const nlohmann::json::exception& e) {
-            v = glm::vec3(0.0f, 0.0f, 0.0f);
-        }
-    }
-
     void from_json(const nlohmann::json& j, std::map<Hell::ivecXZ, std::string>& mapData) {
         mapData.clear();
         for (const auto& item : j) {
@@ -506,56 +474,16 @@ namespace nlohmann {
         }
     }
 
-    void from_json(const json& j, glm::mat4& m) {
-        std::array<float, 16> a = j.get<std::array<float, 16>>();
-        m = glm::make_mat4(a.data());
-    }
-
-    void from_json(const json& j, glm::quat& q) {
-        if (j.is_array() && j.size() == 4) {
-            auto a = j.get<std::array<float, 4>>();
-            q = glm::quat{ a[3], a[0], a[1], a[2] };
-        }
-        else {
-            q = glm::quat{ 1.0f, 0.0f, 0.0f, 0.0f };
-        }
-    }
 }
 
 namespace JSON {
 
     bool LoadJsonFromFile(nlohmann::json& json, const std::string filepath) {
-        // Open the file
-        std::ifstream file(filepath);
-        if (!file) {
-            std::cout << "JSON::LoadJsonFromFile() failed to open file: " << filepath << "\n";
-            return false;
-        }
-
-        // Read the entire file into a string stream
-        std::stringstream buffer;
-        buffer << file.rdbuf();
-        file.close();
-
-        // Try to parse the JSON
-        try {
-            json = nlohmann::json::parse(buffer.str());
-            return true;
-        }
-        catch (const nlohmann::json::parse_error& e) {
-            std::cerr << "JSON::LoadJsonFromFile() failed to parse the file " << filepath << ": " << e.what() << "\n";
-            return false;
-        }
-
+        return Hell::Json::LoadFromFile(json, filepath);
     }
 
     void SaveToFile(nlohmann::json& json, const std::string& filepath) {
-        std::ofstream file(filepath);
-        if (file.is_open()) {
-            file << json.dump(4);
-            file.close();
-            std::cout << "Saved " << filepath << "\n";
-        }
+        Hell::Json::SaveToFile(json, filepath);
     }
 
     CreateInfoCollection CreateInfoCollectionFromJSONString(const std::string& jsonString) {

@@ -35,6 +35,16 @@ void OpenGLSSBO::Update(size_t size, const void* data) {
     glNamedBufferSubData(m_handle, 0, (GLsizeiptr)size, data);
 }
 
+void OpenGLSSBO::UpdateRange(size_t offset, size_t size, const void* data) {
+    if (size == 0 || data == nullptr) {
+        return;
+    }
+
+    Reserve(offset + size);
+
+    glNamedBufferSubData(m_handle, (GLintptr)offset, (GLsizeiptr)size, data);
+}
+
 void OpenGLSSBO::UploadStatic(size_t size, const void* data) {
     if (size == 0 || data == nullptr) {
         return;
@@ -90,6 +100,7 @@ void OpenGLSSBO::Clear() const {
 
 void OpenGLSSBO::ClearRange(size_t offset, size_t size) const {
     if (m_handle == 0) return;
+    if (offset >= m_bufferSize || size == 0) return;
 
     // Clamp clear size to buffer bounds
     size_t actualSize = (offset + size > m_bufferSize) ? (m_bufferSize - offset) : size;

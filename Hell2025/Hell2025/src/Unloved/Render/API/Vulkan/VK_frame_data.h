@@ -24,13 +24,32 @@ struct VulkanFrameData {
         uint64_t rayQueryBLASInstanceData = 0;
         uint64_t rayQueryMeshInstanceData = 0;
         uint64_t rayQueryScratch = 0;
+        uint64_t ddgiRayQueryScratch = 0;
         uint64_t uiRenderItems = 0;
         uint64_t tileLights = 0;
         uint64_t tileWorldBounds = 0;
     } buffers;
 
+    struct DDGI {
+        uint64_t dirtyDoorAABBs = 0;
+        uint32_t dirtyDoorAABBCount = 0;
+        uint64_t probeIndexCounter = 0;
+
+        uint64_t probeDistanceCounter = 0;
+        uint64_t probeDistanceIndices = 0;
+        uint64_t probeDistanceDispatchArgs = 0;
+
+        uint64_t probeIrradianceCounter = 0;
+        uint64_t probeIrradianceIndices = 0;
+        uint64_t probeIrradianceDispatchArgs = 0;
+    } ddgi;
+
     struct GenericMeshes {
         uint64_t ui = 0;
+        uint64_t debugLines2D = 0;
+        uint64_t debugLines3D = 0;
+        uint64_t debugPoints2D = 0;
+        uint64_t debugPoints3D = 0;
     } genericMeshes;
 
     struct AccelerationStructures {

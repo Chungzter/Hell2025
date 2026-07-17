@@ -14,7 +14,7 @@ namespace Audio = Hell::Audio;
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
-#include "res/shaders/common/OpenGL/binding_indices.glsl"
+#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 
 namespace OpenGL::Renderer {

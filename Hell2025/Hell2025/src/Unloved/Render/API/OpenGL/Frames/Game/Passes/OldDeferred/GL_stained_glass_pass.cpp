@@ -8,7 +8,7 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "res/shaders/common/OpenGL/binding_indices.glsl"
+#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 namespace OpenGL::Renderer {
 
@@ -24,8 +24,7 @@ namespace OpenGL::Renderer {
         OpenGLFrameBuffer* miscFullSizeFrameBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("MiscFullSize");
         OpenGLShadowMap* flashLightShadowMapsFBO = OpenGL::ResourceManager::GetShadowMapPtr("FlashlightShadowMaps");
 
-        std::string gBufferName = (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) ? "GBuffer" : "GBuffer";
-        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer(gBufferName);
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
 
         if (!shader) return;
         if (!compositeShader) return;

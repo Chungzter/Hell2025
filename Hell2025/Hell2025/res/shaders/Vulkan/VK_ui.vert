@@ -3,8 +3,8 @@
 #extension GL_EXT_scalar_block_layout : require
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
-#include "../common/Vulkan/types.glsl"
-#include "../common/Vulkan/push_constants.glsl"
+#include "../common/Vulkan/VK_types.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsUI data;

@@ -50,5 +50,6 @@ enum class RendererOverrideState {
     DEPTH,
     WORLD_POSITION,
     EMISSIVE,
+    DDGI_RAYTRACE,
     STATE_COUNT,
 };

@@ -4,7 +4,7 @@
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "res/shaders/common/OpenGL/binding_indices.glsl"
+#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 namespace OpenGL::Renderer {
     using namespace Unloved;
@@ -25,13 +25,15 @@ namespace OpenGL::Renderer {
 
         OpenGLRasterizerState rasterizerState;
         rasterizerState.depthTestEnabled = true;
-        rasterizerState.blendEnable = true;
-        rasterizerState.cullfaceEnable = false;
         rasterizerState.depthMask = false;
-        rasterizerState.depthFunc = GL_GREATER;
+        rasterizerState.depthFunc = GL_GEQUAL;
+        rasterizerState.blendEnable = true;
         rasterizerState.blendFuncSrcfactor = GL_SRC_ALPHA;
         rasterizerState.blendFuncDstfactor = GL_ONE;
-        OpenGL::RasterizerStateManager::SetRasterizerState(rasterizerState);
+        rasterizerState.cullfaceEnable = false;
+        rasterizerState.colorMask = true;
+        rasterizerState.stencilTestEnabled = false;
+        OpenGL::RasterizerStateManager::ForceRasterizerState(rasterizerState);
 
         glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 

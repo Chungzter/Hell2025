@@ -5,11 +5,13 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
 #include "../common/normal_encoding.glsl"
+#include "../common/post_processing.glsl"
 #include "../common/util.glsl"
 #include "../common/reconstruction.glsl"
+#include "../common/renderer_override_modes.glsl"
 #include "../common/viewport.glsl"
-#include "../common/Vulkan/binding_indices.glsl"
-#include "../common/Vulkan/push_constants.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
 
 layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
@@ -23,24 +25,6 @@ layout(buffer_reference, scalar) readonly buffer RendererDataBuffer { RendererDa
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDebugView data;
 } pushConstant;
-
-#define OVERRIDE_NONE 0
-#define OVERRIDE_BASE_COLOR 1
-#define OVERRIDE_NORMALS 2
-#define OVERRIDE_RMA 3
-#define OVERRIDE_ROUGHNESS 4
-#define OVERRIDE_METALLIC 5
-#define OVERRIDE_AO 6
-#define OVERRIDE_CAMERA_NDOTL 7
-#define OVERRIDE_TILE_HEATMAP_LIGHTS 8
-#define OVERRIDE_TILE_HEATMAP_BLOOD_DECALS 9
-#define OVERRIDE_TILE_HEATMAP_CHRISTMAS_LIGHTS 10
-#define OVERRIDE_INDIRECT_DIFFUSE 11
-#define OVERRIDE_VELOCITY 12
-#define OVERRIDE_VIS_BUFFER 13
-#define OVERRIDE_DEPTH 14
-#define OVERRIDE_WORLD_POSITION 15
-#define OVERRIDE_EMISSIVE 16
 
 vec3 IntegerToColor(uint x) {
     x = ((x >> 16) ^ x) * 0x45d9f3bu;
@@ -66,7 +50,7 @@ vec3 GetBaseColor(ivec2 px) {
 }
 
 vec3 GetNormal(ivec2 px) {
-    return DecodeNormal(GetNormalXYRoughnessMisc(px).rg);
+    return DecodeOct(GetNormalXYRoughnessMisc(px).rg);
 }
 
 vec3 GetRoughness(ivec2 px) {
@@ -89,7 +73,7 @@ vec3 GetCameraNdotL(ivec2 px, ivec2 outputImageSize, RendererData rendererData, 
     uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, outputImageSize, rendererData.splitscreenMode);
     ViewportData viewportData = viewportDataBuffer.viewportDataArr[viewportIndex];
 
-    vec3 normal = DecodeNormal(GetNormalXYRoughnessMisc(px).rg);
+    vec3 normal = DecodeOct(GetNormalXYRoughnessMisc(px).rg);
     vec3 lightDir = normalize(viewportData.inverseView[2].xyz);
     float ndotl = max(dot(normal, lightDir), 0.0);
 
@@ -99,6 +83,16 @@ vec3 GetCameraNdotL(ivec2 px, ivec2 outputImageSize, RendererData rendererData, 
 vec3 GetVelocity(ivec2 px) {
     vec2 velocity = GetVelocityXYOcclusionSubSurface(px).rg;
     return vec3(velocity * 20.0 + 0.5, 0.5);
+}
+
+vec3 GetIndirectDiffuse(ivec2 px, ivec2 outputImageSize) {
+    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+    vec3 indirectDiffuseTexture = texture(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_DIFFUSE], samplers[VULKAN_SAMPLER_IDX_LINEAR]), screenUV).rgb;
+    vec3 result = Tonemap_ACES(indirectDiffuseTexture);
+    result = pow(result, vec3(1.0 / 2.2));
+    result = clamp(result, 0.0, 1.0);
+    result = mix(result, Tonemap_ACES(result), 0.125);
+    return result;
 }
 
 vec3 GetVisBuffer(ivec2 px) {
@@ -175,12 +169,8 @@ void main() {
     else if (rendererData.rendererOverrideState == OVERRIDE_WORLD_POSITION) {
         finalColor = GetWorldPosition(px, outputImageSize, rendererData, viewportDataBuffer);
     }
-    else if (rendererData.rendererOverrideState == OVERRIDE_INDIRECT_DIFFUSE ||
-             rendererData.rendererOverrideState == OVERRIDE_EMISSIVE ||
-             rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_LIGHTS ||
-             rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_BLOOD_DECALS ||
-             rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_CHRISTMAS_LIGHTS) {
-        finalColor = vec3(1.0, 0.0, 1.0);
+    else if (rendererData.rendererOverrideState == OVERRIDE_INDIRECT_DIFFUSE) {
+        finalColor = GetIndirectDiffuse(px, outputImageSize);
     }
 
     out_color = vec4(finalColor, 1.0);

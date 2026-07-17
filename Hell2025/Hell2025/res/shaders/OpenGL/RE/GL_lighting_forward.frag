@@ -1,5 +1,5 @@
 #version 460
-#include "../../common/OpenGL/binding_indices.glsl"
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 
 #ifndef ENABLE_BINDLESS
     #define ENABLE_BINDLESS 1
@@ -25,6 +25,7 @@ layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow 
 
 layout (binding = 5) uniform sampler2D u_indirectDiffuseTexture;
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
+layout (binding = 10) uniform sampler2D u_indirectDiffuseSurfaceTexture;
 layout (binding = 11) uniform sampler2D hairFlowMap;
 layout (binding = 12) uniform sampler2D hairIDMap;
 layout (binding = 13) uniform sampler2D hairRootMap;
@@ -32,6 +33,7 @@ layout (binding = 13) uniform sampler2D hairRootMap;
 #include "../../common/lighting.glsl"
 #include "../../common/normal_encoding.glsl"
 #include "../../common/post_processing.glsl"
+#include "../../common/ddgi_upsample.glsl"
 
 readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
 readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
@@ -153,18 +155,17 @@ void main() {
         directLighting += directLight;
     }
 
-
-    bool u_sampleProbes = true;
-
-    vec2 resolution = vec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
-    vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / resolution;
-    vec3 probeIrradiance = texture(u_indirectDiffuseTexture, screenUV).rgb;
-    
     vec3 indirectDiffuse = vec3(0.0);
-    vec3 diffuseAlbedo = gammaBaseColor.rgb * (1.0 - metallic);
-    float indirectDiffuseScale = 1.0;
 
-    if (u_sampleProbes) {
+    // Indirect diffuse
+    if (rendererData.enableIrradianceProbeSampling) {
+        vec2 resolution = vec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
+        vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / resolution;
+        ivec2 outputImageSize = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
+        ivec4 viewportRect = ivec4(vd.xOffset, vd.yOffset, vd.width, vd.height);
+        vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral(u_indirectDiffuseTexture, u_indirectDiffuseSurfaceTexture, screenUV, normal, distance(WorldPos.xyz, viewPos), outputImageSize, viewportRect);
+        vec3 diffuseAlbedo = gammaBaseColor.rgb * (1.0 - metallic);
+        float indirectDiffuseScale = 1.0;
         indirectDiffuse = probeIrradiance * diffuseAlbedo * indirectDiffuseScale;
     }
 
@@ -181,7 +182,7 @@ void main() {
 
     NormalOut = vec4(normalize(normal) * 0.5 + 0.5, 1.0);
 
-    RENormalOut.rg = EncodeNormal(normal);
+    RENormalOut.rg = EncodeOct(normal);
     RENormalOut.b = metallic;
     RENormalOut.a = 0.0; // Misc 4 bit value
 

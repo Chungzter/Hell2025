@@ -6,7 +6,7 @@
 
 #include "../common/constants.glsl"
 #include "../common/types.glsl"
-#include "../common/Vulkan/push_constants.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsVisibility data;

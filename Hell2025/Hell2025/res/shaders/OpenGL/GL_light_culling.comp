@@ -2,49 +2,22 @@
 #include "../common/constants.glsl"
 #include "../common/intersect.glsl"
 #include "../common/types.glsl"
-#include "../common/util.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
 readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportData[]; };
 readonly restrict layout(std430, binding = 5) buffer lightsBuffer { Light lights[]; };
 layout(std430, binding = 6) buffer tileLightsBuffer { TileLights tilelights[]; };
 layout(std430, binding = 7) buffer tileWorldBoundsBuffer { TileWorldBounds tileWorldBounds[]; };
 
-uniform int u_lightCount;
-uniform int u_tileXCount;
-uniform int u_tileYCount;
-
 shared uint tilelightCount;
-
-uint OrderPreservingFloatMap(float value) {
-    uint uvalue = floatBitsToUint(value);
-    uint mask = -int(uvalue >> 31) | 0x80000000;
-    return uvalue ^ mask;
-}
-
-float InverseOrderPreservingFloatMap(uint value) {
-    uint mask = ((value >> 31) - 1) | 0x80000000;
-    return uintBitsToFloat(value ^ mask);
-}
 
 shared vec3 worldSpaceMin;
 shared vec3 worldSpaceMax;
 shared float validDepthSampleCount;
 
 void main() {
-	const int tileSize = TILE_SIZE;	
-    
-	ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);    
-    vec2 resolution = vec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
-    
-    // Don't process out of bounds pixels
-    if (pixelCoords.x >= resolution.x || pixelCoords.y >= resolution.y) {
-        return;
-    }   
-    
-	uint tileIndex = gl_WorkGroupID.y * u_tileXCount + gl_WorkGroupID.x;
+	uint tileIndex = gl_WorkGroupID.y * uint(rendererData.tileCountX) + gl_WorkGroupID.x;
     
 	// Defaults
 	if (gl_LocalInvocationIndex == 0) {		
@@ -62,13 +35,13 @@ void main() {
 
 	// Light culling
 	if (validDepthSampleCount > 0) {
-		int invocationCount = tileSize * tileSize;
-		int loopCount = (u_lightCount + invocationCount - 1) / invocationCount;
+		uint invocationCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
+		uint loopCount = (rendererData.lightCount + invocationCount - 1u) / invocationCount;
 		
-        for (int i = 0; i < loopCount; i++) {		
+        for (uint i = 0u; i < loopCount; i++) {
 			uint lightIndex = gl_LocalInvocationIndex + i * invocationCount;
 			
-            if (lightIndex < u_lightCount) {
+            if (lightIndex < rendererData.lightCount) {
 				vec3 lightPos = vec3(lights[lightIndex].posX, lights[lightIndex].posY, lights[lightIndex].posZ);
 				float lightRadius = lights[lightIndex].radius;			
 
@@ -84,7 +57,7 @@ void main() {
 
                     const uint MAX_LIGHTS_PER_TILE = 127;
                     if (index < MAX_LIGHTS_PER_TILE) {
-                        tilelights[tileIndex].lightIndices[index] = int(lightIndex);
+                        tilelights[tileIndex].lightIndices[index] = lightIndex;
                     }
                 }
 			}

@@ -3,7 +3,7 @@
 #extension GL_ARB_bindless_texture : enable
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
-#include "../common/OpenGL/binding_indices.glsl"
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"

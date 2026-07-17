@@ -1,4 +1,7 @@
 
+#ifndef COMMON_TYPES_GLSL
+#define COMMON_TYPES_GLSL
+
 struct ViewportData {
     mat4 projectionReverseZ;
     mat4 inverseProjectionReverseZ;
@@ -76,6 +79,8 @@ struct RendererData {
     int tileCountX;
 
     int tileCountY;
+    uint lightCount;
+    bool enableIrradianceProbeSampling;
 };
 
 struct RenderItem {
@@ -187,8 +192,8 @@ struct BloodDecal {
     mat4 inverseModelMatrix;
     int type;
     int textureIndex;
-    int padding1;
-    int padding2;
+    float aspectScaleX;
+    float aspectScaleY;
 };
 
 struct ChristmasLight {
@@ -248,13 +253,15 @@ struct DispatchIndirectArgs {
     uint num_groups_z;
 };
 
-const int PROBE_DISTANCE_OCTA_SIZE = 16;
 const int INTERIOR_SIZE = 14;
 //const int PROBE_NUM_IRRADIANCE_INTERIOR_TEXELS = 14;
 const int PROBE_NUM_DISTANCE_INTERIOR_TEXELS = 14;
 
-//#define PROBE_DISTANCE_OCTA_SIZE 16
-#define PROBE_DISTANCE_TEXEL_COUNT (PROBE_DISTANCE_OCTA_SIZE * PROBE_DISTANCE_OCTA_SIZE)
+#ifndef PROBE_DISTANCE_OCTA_SIZE
+    #define PROBE_DISTANCE_OCTA_SIZE 16
+#endif
+
+const int PROBE_DISTANCE_TEXEL_COUNT = PROBE_DISTANCE_OCTA_SIZE * PROBE_DISTANCE_OCTA_SIZE;
 //#define RAYS_PER_PROBE 256
 
 const int PROBE_MAX_DISTANCE_COOLDOWN = 20;
@@ -263,10 +270,6 @@ const float PROBE_MAX_RAY_DISTANCE = 1.5;
 const float PROBE_NORMAL_BIAS = 0.075;
 const float PROBE_VIEW_BIAS = 0.1;
 const float IRRADIANCE_DAMPENING = 0.0325;
-
-struct ProbeColor {
-    vec4 sh[9];
-};
 
 struct ProbeState {
     vec3 relocationOffset;
@@ -287,6 +290,10 @@ struct DDGIVolume {
     float padding0;
     vec3 worldBoundsMax;
     float padding1;
+    uint probeOffset;
+    uint padding2;
+    uint padding3;
+    uint padding4;
 };
 
 struct AABB {
@@ -314,3 +321,5 @@ struct Material {
     int padding;
     int padding2;
 };
+
+#endif

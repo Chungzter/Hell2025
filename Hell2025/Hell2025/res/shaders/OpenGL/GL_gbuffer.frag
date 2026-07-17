@@ -153,7 +153,7 @@ void main() {
     BaseColorMetallicOut.a = metallic;
 
     // NormalXY / Roughness out
-    NormalXYRoughnessMiscOut.rg = EncodeNormal(normal);
+    NormalXYRoughnessMiscOut.rg = EncodeOct(normal);
     NormalXYRoughnessMiscOut.b = roughness;
     NormalXYRoughnessMiscOut.a = EncodeMiscFlags(MiscFlags);
 

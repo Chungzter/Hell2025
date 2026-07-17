@@ -3,6 +3,7 @@
 #include "../../common/constants.glsl"
 #include "../../common/normal_encoding.glsl"
 #include "../../common/post_processing.glsl"
+#include "../../common/renderer_override_modes.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
 
@@ -32,24 +33,6 @@ layout (binding = 12) uniform sampler2D u_emissiveTexture;
 readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
-#define NONE 0
-#define BASE_COLOR 1
-#define NORMALS 2
-#define RMA 3
-#define ROUGHNESS 4
-#define METALLIC 5
-#define AO 6
-#define CAMERA_NDOTL 7
-#define TILE_HEATMAP_LIGHTS 8,
-#define TILE_HEATMAP_BLOOD_DECALS 9
-#define TILE_HEATMAP_CHRISTMAS_LIGHTS 10
-#define INDIRECT_DIFFUSE 11
-#define VELOCITY 12
-#define VIS_BUFFER 13
-#define DEPTH 14
-#define WORLD_POSITION 15
-#define EMISSIVE 16
-
 vec3 IntegerToColor(uint x) {
     x = ((x >> 16) ^ x) * 0x45d9f3bE;
     x = ((x >> 16) ^ x) * 0x45d9f3bE;
@@ -68,7 +51,7 @@ vec3 GetBaseColor(ivec2 px) {
 vec3 GetNormal(ivec2 px) {
     //#if defined(RE_ENABLED)
         vec4 normalXYRoughnessMisc = texelFetch(NormalXYRoughnessMisc, px, 0);
-        return DecodeNormal(normalXYRoughnessMisc.rg);
+        return DecodeOct(normalXYRoughnessMisc.rg);
     //#else
     //    return texelFetch(GBufferNormalTexture, px, 0).rgb;
     //#endif
@@ -208,19 +191,19 @@ void main() {
 
     vec3 finalColor = vec3(0, 0, 0);
 
-    if (rendererData.rendererOverrideState == BASE_COLOR)       finalColor = GetBaseColor(px);
-    if (rendererData.rendererOverrideState == NORMALS)          finalColor = GetNormal(px);
-    if (rendererData.rendererOverrideState == RMA)              finalColor = GetRMA(px);
-    if (rendererData.rendererOverrideState == ROUGHNESS)        finalColor = GetRoughness(px);
-    if (rendererData.rendererOverrideState == METALLIC)         finalColor = GetMetallic(px);
-    if (rendererData.rendererOverrideState == AO)               finalColor = GetAO(px);
-    if (rendererData.rendererOverrideState == CAMERA_NDOTL)     finalColor = GetCameraNdotL(px);
-    if (rendererData.rendererOverrideState == INDIRECT_DIFFUSE) finalColor = GetIndirectDiffuse(px);
-    if (rendererData.rendererOverrideState == VELOCITY)         finalColor = GetVelocity(px);
-    if (rendererData.rendererOverrideState == VIS_BUFFER)       finalColor = GetVisBuffer(px);
-    if (rendererData.rendererOverrideState == DEPTH)            finalColor = GetDepth(px);
-    if (rendererData.rendererOverrideState == WORLD_POSITION)   finalColor = GetWorldPosition(px);
-    if (rendererData.rendererOverrideState == EMISSIVE)         finalColor = GetEmissive(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_BASE_COLOR)       finalColor = GetBaseColor(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_NORMALS)          finalColor = GetNormal(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_RMA)              finalColor = GetRMA(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_ROUGHNESS)        finalColor = GetRoughness(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_METALLIC)         finalColor = GetMetallic(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_AO)               finalColor = GetAO(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_CAMERA_NDOTL)     finalColor = GetCameraNdotL(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_INDIRECT_DIFFUSE) finalColor = GetIndirectDiffuse(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_VELOCITY)         finalColor = GetVelocity(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_VIS_BUFFER)       finalColor = GetVisBuffer(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_DEPTH)            finalColor = GetDepth(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_WORLD_POSITION)   finalColor = GetWorldPosition(px);
+    if (rendererData.rendererOverrideState == OVERRIDE_EMISSIVE)         finalColor = GetEmissive(px);
 
     imageStore(u_outputImage, px, vec4(finalColor, 1));
 

@@ -61,6 +61,12 @@ bool AABB::IntersectsAABB(const AABB& other) const {
         (boundsMin.z <= other.boundsMax.z && boundsMax.z >= other.boundsMin.z);
 }
 
+bool AABB::IntersectsAABB(const glm::vec3& otherBoundsMin, const glm::vec3& otherBoundsMax) const {
+    return (boundsMin.x <= otherBoundsMax.x && boundsMax.x >= otherBoundsMin.x) &&
+        (boundsMin.y <= otherBoundsMax.y && boundsMax.y >= otherBoundsMin.y) &&
+        (boundsMin.z <= otherBoundsMax.z && boundsMax.z >= otherBoundsMin.z);
+}
+
 bool AABB::IntersectsAABB(const AABB& other, float threshold) const {
     glm::vec3 inflatedMinA = boundsMin - glm::vec3(threshold);
     glm::vec3 inflatedMaxA = boundsMax + glm::vec3(threshold);

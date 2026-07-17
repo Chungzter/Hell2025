@@ -113,6 +113,7 @@ namespace OpenGL::Renderer {
 
         BindShadowMapsRE();
         BindTextureUnit(5, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
+        BindTextureUnit(10, indirectDiffuseFbo.GetColorAttachmentHandleByName("Surface"));
 
         OpenGLRasterizerState maskedState;
         maskedState.blendEnable = false;

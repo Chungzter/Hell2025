@@ -103,6 +103,7 @@ namespace VulkanDeviceManager {
                 !checkFeatures.features.multiDrawIndirect ||
                 !checkFeatures.features.geometryShader ||
                 !checkFeatures.features.shaderClipDistance ||
+                !checkFeatures.features.shaderStorageImageArrayDynamicIndexing ||
                 !supportedFeatures11.shaderDrawParameters ||
                 !supportedFeatures12.descriptorBindingStorageImageUpdateAfterBind ||
                 !supportedFeatures12.scalarBlockLayout ||
@@ -143,6 +144,7 @@ namespace VulkanDeviceManager {
             features.multiDrawIndirect = VK_TRUE;
             features.geometryShader = VK_TRUE;
             features.shaderClipDistance = VK_TRUE;
+            features.shaderStorageImageArrayDynamicIndexing = VK_TRUE;
 
             VkPhysicalDeviceVulkan11Features features11{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES };
             features11.shaderDrawParameters = VK_TRUE;

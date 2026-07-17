@@ -11,7 +11,7 @@
 #include "World/LegacyWorld.h"
 #include "Unloved/Render/Renderer.h"
 
-#include "res/shaders/common/OpenGL/binding_indices.glsl"
+#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 namespace OpenGL::Renderer {
 
@@ -59,7 +59,6 @@ namespace OpenGL::Renderer {
         OpenGL::SetUniformFloat("u_viewportHeight", gBuffer->GetHeight());
         OpenGL::SetUniformInt("u_tileXCount", gBuffer->GetWidth() / TILE_SIZE);
         OpenGL::SetUniformInt("u_tileYCount", gBuffer->GetHeight() / TILE_SIZE);
-        OpenGL::SetUniformBool("u_sampleProbes", Unloved::Renderer::GetCurrentRendererSettings().enableIrradianceProbeSampling);
 
         if (Unloved::LegacyWorld::HasOcean()) {
             OpenGL::SetUniformFloat("u_oceanHeight", Ocean::GetOceanOriginY());
@@ -97,6 +96,7 @@ namespace OpenGL::Renderer {
         glBindTextureUnit(TEX_IDX_SHADOW_MAP_CSM, shadowMapArray->GetDepthTexture());
 
         glBindTextureUnit(10, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
+        glBindTextureUnit(11, indirectDiffuseFbo->GetColorAttachmentHandleByName("Surface"));
 
         OpenGL::BindSSBO(9, "TileChristmasLights");
         OpenGL::BindSSBO(10, "ChristmasLightInstances");

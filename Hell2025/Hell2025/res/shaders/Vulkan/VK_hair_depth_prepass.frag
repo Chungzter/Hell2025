@@ -1,7 +1,7 @@
 #version 460
 #extension GL_EXT_nonuniform_qualifier : require
 
-#include "../common/Vulkan/binding_indices.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/alpha_to_coverage.glsl"
 
 layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];

@@ -75,7 +75,6 @@ namespace OpenGL::Renderer{
         OpenGL::ResourceManager::CreateSSBO("ProbePointIndices").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("ProbePointOffsets").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("ProbePointCounts").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("ProbeSHColor").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("ProbeStates").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
 
         OpenGL::ResourceManager::CreateSSBO("LightAABBs").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);

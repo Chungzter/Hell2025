@@ -6,6 +6,8 @@
 
 namespace Hell {
 
+    struct LocalFrame;
+
     struct Transform {
         glm::vec3 position = glm::vec3(0);
         glm::vec3 rotation = glm::vec3(0);
@@ -20,6 +22,7 @@ namespace Hell {
 
     struct QuatTransform {
         QuatTransform() = default;
+        QuatTransform(const glm::vec3& position, const LocalFrame& localFrame, const glm::vec3& scale = glm::vec3(1.0f));
         explicit QuatTransform(glm::mat4 matrix);
 
         glm::mat4 ToMat4() const;

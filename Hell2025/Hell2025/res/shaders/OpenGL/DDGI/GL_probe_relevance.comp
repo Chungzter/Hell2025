@@ -4,6 +4,7 @@
 #include "../../common/normal_encoding.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -14,9 +15,6 @@ layout(std430, binding = 7) readonly buffer viewportDataBuffer { ViewportData vi
 
 layout (binding = 2) uniform sampler2D u_normalTexture;
 layout (binding = 3) uniform sampler2D u_depthTexture;
-
-uniform bool u_octNormals;
-uniform vec3 u_viewPos; // THIS MUST BE COMPUTED FROM SCREEN COORDS FOR PLAYESR 2, 3, & 4 to work
 
 void main() {
     ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy) * 4; // scale by 4 for quarter-res sampling
@@ -32,31 +30,23 @@ void main() {
     float probeSpacing = volume.probeSpacing;
     int totalProbes = volume.totalProbes;
 
-    // Normal
-    vec3 fragNormal = texelFetch(u_normalTexture, pixelCoords, 0).xyz;
-
-    // Unpack oct normals if needed
-    if (u_octNormals) {
-        fragNormal = DecodeNormal(fragNormal.rg);
-    }
+    vec3 fragNormal = DecodeOct(texelFetch(u_normalTexture, pixelCoords, 0).rg);
 
     if (dot(fragNormal, fragNormal) < 0.0001) return;
 
     // Viewport UV
-    ivec2 px = ivec2(gl_GlobalInvocationID.xy) * 4; // scale by 4 for quarter-res sampling
-    ivec2 resolution = textureSize(u_depthTexture, 0);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(resolution);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData[viewportIndex]);
+    ViewportData viewport = viewportData[viewportIndex];
+    vec2 viewportUV = ViewportUVFromPixel_GL(pixelCoords, gBufferSize, viewport);
 
     // Position from depth
-    float depth = texelFetch(u_depthTexture, px, 0).r;
+    float depth = texelFetch(u_depthTexture, pixelCoords, 0).r;
     vec2 clipXY = viewportUV * 2.0 - 1.0;
     clipXY.y = -clipXY.y;
     vec4 clip = vec4(clipXY, depth, 1.0);
-    vec4 worldH = viewportData[viewportIndex].inverseProjectionViewReverseZ * clip;
+    vec4 worldH = viewport.inverseProjectionViewReverseZ * clip;
     vec3 fragPosition = worldH.xyz / worldH.w;
 
-    vec3 surfaceBias = DDGIGetSurfaceBias(fragPosition, fragNormal, u_viewPos); // Uses PROBE_NORMAL_BIAS and PROBE_VIEW_BIAS
+    vec3 surfaceBias = DDGIGetSurfaceBias(fragPosition, fragNormal, viewport.viewPos.xyz);
     vec3 biasedWorldPosition = fragPosition + surfaceBias;
 
     ivec3 base = DDGIGetBaseProbeGridCoords(biasedWorldPosition, volume);
@@ -70,7 +60,7 @@ void main() {
             for (int dx = 0; dx <= 1; dx++) {
                 ivec3 pCoords = base + ivec3(dx, dy, dz);
                 int pIdx = DDGIGetProbeIndex(pCoords, probeCounts);
-                probeStates[pIdx].isRelevant = true;
+                probeStates[volume.probeOffset + uint(pIdx)].isRelevant = true;
             }
         }
     }

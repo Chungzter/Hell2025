@@ -183,6 +183,47 @@ namespace {
         state.rasterizer.stencilRef = 0; // This is any non-rendered pixel
     }
 
+    void CreateDebug3DRenderState() {
+        VulkanRenderState& state = VulkanResourceManager::CreateRenderState("Debug3D");
+
+        VulkanRenderTargetInfo& lighting = state.AddColorTarget("Lighting");
+        lighting.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        VulkanRenderTargetInfo& depth = state.SetDepthTarget("Depth");
+        depth.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        state.rasterizer.depthTestEnabled = true;
+        state.rasterizer.depthWriteEnabled = false;
+        state.rasterizer.depthCompareOp = VK_COMPARE_OP_GREATER;
+        state.rasterizer.cullFaceEnabled = false;
+    }
+
+    void CreateDDGIProbeDebugRenderState() {
+        VulkanRenderState& state = VulkanResourceManager::CreateRenderState("DDGIProbeDebug");
+
+        VulkanRenderTargetInfo& lighting = state.AddColorTarget("Lighting");
+        lighting.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        VulkanRenderTargetInfo& depth = state.SetDepthTarget("Depth");
+        depth.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        state.rasterizer.depthTestEnabled = true;
+        state.rasterizer.depthWriteEnabled = true;
+        state.rasterizer.depthCompareOp = VK_COMPARE_OP_GREATER;
+        state.rasterizer.cullFaceEnabled = false;
+    }
+
+    void CreateDebug2DRenderState() {
+        VulkanRenderState& state = VulkanResourceManager::CreateRenderState("Debug2D");
+
+        VulkanRenderTargetInfo& lighting = state.AddColorTarget("Lighting");
+        lighting.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        state.rasterizer.depthTestEnabled = false;
+        state.rasterizer.depthWriteEnabled = false;
+        state.rasterizer.cullFaceEnabled = false;
+    }
+
     //void CreateHairDepthPrepRenderState() {
     //    VulkanRenderState& state = VulkanResourceManager::CreateRenderState("HairDepthPrep");
     //
@@ -250,6 +291,9 @@ namespace VulkanRenderer {
         CreateLightingForwardBlendedRenderState();
         CreateSpriteSheetRenderState();
         CreateSkyboxRenderState();
+        CreateDebug3DRenderState();
+        CreateDDGIProbeDebugRenderState();
+        CreateDebug2DRenderState();
 
         //CreateHairDepthPrepRenderState();
         //CreateHairDepthPrePassRenderState();

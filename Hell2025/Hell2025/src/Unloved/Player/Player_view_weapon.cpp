@@ -79,10 +79,10 @@ void Player::UpdateViewWeapon(float deltaTime) {
         GetCurrentWeaponInfo()->itemInfoName == "Glock" ||
         GetCurrentWeaponInfo()->itemInfoName == "GoldenGlock" ||
         GetCurrentWeaponInfo()->itemInfoName == "SPAS" ||
-        GetCurrentWeaponInfo()->itemInfoName == "P90"
+        GetCurrentWeaponInfo()->itemInfoName == "P90" ||
+        GetCurrentWeaponInfo()->itemInfoName == "AKS74U"
         ) {
         weaponScale *= 100.0;
-        //weaponScale = 1.0;
     }
 
     //if (Input::KeyPressed(HELL_KEY_E) && GetCurrentWeaponInfo()->itemInfoName == "P90") {
@@ -134,16 +134,7 @@ void Player::UpdateViewWeapon(float deltaTime) {
         m_weaponSwayY = 0.0f;
     }
 
-    // HACK because the AK is backwards
-    glm::mat4 hackMatrix = glm::mat4(1.0f);
-    if (GetCurrentWeaponInfo()->itemInfoName == "AKS74U") {
-        Transform hackTransform;
-        hackTransform.rotation.x += HELL_PI * 0.5f;
-        hackTransform.rotation.z += HELL_PI;
-        hackMatrix = hackTransform.to_mat4();
-    }
-
-    viewWeapon->SetCameraMatrix(transform.to_mat4() * glm::inverse(cameraInverseBindTransform) * hackMatrix * glm::inverse(dmMaster));
+    viewWeapon->SetCameraMatrix(transform.to_mat4() * glm::inverse(cameraInverseBindTransform) * glm::inverse(dmMaster));
     viewWeapon->EnableModelMatrixOverride();
 }
 

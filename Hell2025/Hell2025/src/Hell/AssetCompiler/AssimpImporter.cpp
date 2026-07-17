@@ -10,6 +10,7 @@
 #include <assimp/PostProcess.h>
 #include <numeric>
 
+#include <cmath>
 #include <map>
 #include <unordered_map>
 #include <string>
@@ -32,17 +33,11 @@ namespace {
 
 namespace Hell::AssetCompiler {
 
-    ModelData ImportModel(const std::string& filepath) {
+    static ModelData ImportStaticModel(const std::string& filepath, unsigned int flags, bool generateTangents = true) {
         ModelData modelData;
         Assimp::Importer importer;
         importer.SetPropertyBool(AI_CONFIG_PP_FD_REMOVE, true);
-        const aiScene* scene = importer.ReadFile(filepath,
-            aiProcess_Triangulate |
-            aiProcess_JoinIdenticalVertices |
-            aiProcess_ImproveCacheLocality |
-            aiProcess_RemoveRedundantMaterials |
-            aiProcess_FlipUVs
-        );
+        const aiScene* scene = importer.ReadFile(filepath, flags);
         if (!scene) {
             std::cout << "LoadAndExportCustomFormat() failed to loaded model " << filepath << "\n";
             std::cerr << "Assimp Error: " << importer.GetErrorString() << "\n";
@@ -110,21 +105,26 @@ namespace Hell::AssetCompiler {
                 vertex.normal = glm::normalize(vertex.normal);
             }
 
-            // Generate Tangents
-            for (int j = 0; j < meshData.indices.size(); j += 3) {
-                Vertex* vert0 = &meshData.vertices[meshData.indices[j]];
-                Vertex* vert1 = &meshData.vertices[meshData.indices[j + 1]];
-                Vertex* vert2 = &meshData.vertices[meshData.indices[j + 2]];
-                glm::vec3 deltaPos1 = vert1->position - vert0->position;
-                glm::vec3 deltaPos2 = vert2->position - vert0->position;
-                glm::vec2 deltaUV1 = vert1->uv - vert0->uv;
-                glm::vec2 deltaUV2 = vert2->uv - vert0->uv;
-                float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
-                glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
-                glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
-                vert0->tangent = tangent;
-                vert1->tangent = tangent;
-                vert2->tangent = tangent;
+            if (generateTangents) {
+                // Generate Tangents
+                for (int j = 0; j < meshData.indices.size(); j += 3) {
+                    Vertex* vert0 = &meshData.vertices[meshData.indices[j]];
+                    Vertex* vert1 = &meshData.vertices[meshData.indices[j + 1]];
+                    Vertex* vert2 = &meshData.vertices[meshData.indices[j + 2]];
+                    glm::vec3 deltaPos1 = vert1->position - vert0->position;
+                    glm::vec3 deltaPos2 = vert2->position - vert0->position;
+                    glm::vec2 deltaUV1 = vert1->uv - vert0->uv;
+                    glm::vec2 deltaUV2 = vert2->uv - vert0->uv;
+                    const float determinant = deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x;
+                    if (std::abs(determinant) < 1e-8f) {
+                        continue;
+                    }
+                    float r = 1.0f / determinant;
+                    glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+                    vert0->tangent = tangent;
+                    vert1->tangent = tangent;
+                    vert2->tangent = tangent;
+                }
             }
 
             modelData.aabbMin = glm::min(modelData.aabbMin, meshData.aabbMin);
@@ -132,6 +132,23 @@ namespace Hell::AssetCompiler {
         }
         importer.FreeScene();
         return modelData;
+    }
+
+    ModelData ImportModel(const std::string& filepath) {
+        return ImportStaticModel(filepath,
+            aiProcess_Triangulate |
+            aiProcess_JoinIdenticalVertices |
+            aiProcess_ImproveCacheLocality |
+            aiProcess_RemoveRedundantMaterials |
+            aiProcess_FlipUVs
+        );
+    }
+
+    ModelData ImportVatCarrierModel(const std::string& filepath) {
+        return ImportStaticModel(filepath,
+            aiProcess_Triangulate,
+            false
+        );
     }
 
     void GrabSkeleton2(std::vector<Node>& nodes, const aiNode* pNode, int parentIndex) {
@@ -193,7 +210,8 @@ namespace Hell::AssetCompiler {
             modelName == "Tokarev" ||
             modelName == "GoldenGlock" ||
             modelName == "SPAS" ||
-            modelName == "P90") {
+            modelName == "P90" ||
+            modelName == "AKS74U") {
             flags =
                 aiProcess_LimitBoneWeights |
                 aiProcess_Triangulate |

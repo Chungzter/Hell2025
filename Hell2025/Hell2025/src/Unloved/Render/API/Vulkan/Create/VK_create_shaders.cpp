@@ -8,7 +8,27 @@ namespace VulkanRenderer {
 
         // Debug
         VulkanResourceManager::CreateShader("DebugView", { "VK_fullscreen_triangle.vert", "VK_debug_view.frag" });
+        VulkanResourceManager::CreateShader("DebugVertex2D", { "VK_debug_vertex_2D.vert", "VK_debug_vertex.frag" });
+        VulkanResourceManager::CreateShader("DebugVertex3D", { "VK_debug_vertex_3D.vert", "VK_debug_vertex.frag" });
         VulkanResourceManager::CreateShader("DebugTileView", { "VK_debug_tile_view.comp" });
+        VulkanResourceManager::CreateShader("DDGIRaytraceScene", { "VK_ddgi_raytrace_scene.comp" });
+        VulkanResourceManager::CreateShader("DDGIPointCloudBaseColor", { "VK_ddgi_point_cloud_basecolor.comp" });
+        VulkanResourceManager::CreateShader("DDGIPointCloudLighting", { "VK_ddgi_point_cloud_lighting.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbePointIndices", { "VK_ddgi_probe_point_indices.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeStateUpdate", { "VK_ddgi_probe_state_update.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeRelevance", { "VK_ddgi_probe_relevance.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeDistanceList", { "VK_ddgi_probe_distance_list.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeDistanceDispatchArgs", { "VK_ddgi_probe_distance_dispatch_args.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeDistance", { "VK_ddgi_probe_distance.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeDistanceBorder", { "VK_ddgi_probe_distance_border.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeIrradianceDirtyPointCheck", { "VK_ddgi_probe_irradiance_dirty_point_check.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeIrradianceList", { "VK_ddgi_probe_irradiance_list.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeIrradianceDispatchArgs", { "VK_ddgi_probe_irradiance_dispatch_args.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeIrradiance", { "VK_ddgi_probe_irradiance.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeIrradianceBorder", { "VK_ddgi_probe_irradiance_border.comp" });
+        VulkanResourceManager::CreateShader("DDGIProbeIrradianceTexture", { "VK_ddgi_probe_irradiance_texture.comp" });
+        VulkanResourceManager::CreateShader("DDGIPointCloudDebug", { "VK_ddgi_point_cloud_debug.vert", "VK_debug_vertex.frag" });
+        VulkanResourceManager::CreateShader("DDGIProbeDebug", { "VK_ddgi_probe_debug.vert", "VK_debug_vertex.frag" });
 
         // Compute
         VulkanResourceManager::CreateShader("ComputeSkinning", { "VK_compute_skinning.comp" });

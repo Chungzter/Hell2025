@@ -11,8 +11,8 @@ layout(early_fragment_tests) in;
 #include "../common/normal_encoding.glsl"
 #include "../common/util.glsl"
 #include "../common/viewport.glsl"
-#include "../common/Vulkan/binding_indices.glsl"
-#include "../common/Vulkan/push_constants.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
 
 layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
@@ -268,7 +268,7 @@ void main() {
         miscFlags |= MISC_FLAG_MIRROR_SURFACE;
     }
 
-    NormalXYRoughnessMiscOut.rg = EncodeNormal(normal);
+    NormalXYRoughnessMiscOut.rg = EncodeOct(normal);
     NormalXYRoughnessMiscOut.b = roughness;
     NormalXYRoughnessMiscOut.a = EncodeMiscFlags(miscFlags);
 

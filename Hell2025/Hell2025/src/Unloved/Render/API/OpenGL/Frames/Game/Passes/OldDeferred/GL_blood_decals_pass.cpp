@@ -1,17 +1,24 @@
+#include "Hell/Audio.h"
+#include "Hell/Debug/DebugDraw.h"
+#include "Hell/Input.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Session/Session.h"
 #include "Unloved/Viewport/ViewportManager.h"
+
 #include "World/LegacyWorld.h"
-
-
-#include "Hell/ResourceManagement/ResourceManager.h"
 
 namespace OpenGL::Renderer {
     void BloodDecalTileCulling();
     void BloodDecalDraw();
     void BloodDecalComposite();
+    void DecalTestPass();
 
     void BloodDecalsPass() {
+        DecalTestPass();
+
         if (Unloved::RenderDataManager::GetBloodScreenSpaceDecalInstanceData().empty()) {
             return;
         }
@@ -53,6 +60,7 @@ namespace OpenGL::Renderer {
         state.colorMask = true;
         OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 
+        OpenGL::BindSSBO(0, "Samplers");
         OpenGL::BindSSBO(8, "TileBloodDecals");
         OpenGL::BindSSBO(9, "BloodDecalInstances");
         OpenGL::BindSSBO(10, "BloodDecalIndices");
@@ -60,13 +68,6 @@ namespace OpenGL::Renderer {
         //glBindTextureUnit(0, gBuffer->GetColorAttachmentHandleByName("RMA"));
         glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));
         glBindTextureUnit(2, gBuffer->GetDepthAttachmentHandle());
-
-        if (Hell::BackEnd::RenderDocFound()) {
-            glBindTextureUnit(3, Hell::ResourceManager::GetTextureByName("BloodDecal4")->GetGLTexture().GetHandle());
-            glBindTextureUnit(4, Hell::ResourceManager::GetTextureByName("BloodDecal6")->GetGLTexture().GetHandle());
-            glBindTextureUnit(5, Hell::ResourceManager::GetTextureByName("BloodDecal7")->GetGLTexture().GetHandle());
-            glBindTextureUnit(6, Hell::ResourceManager::GetTextureByName("BloodDecal9")->GetGLTexture().GetHandle());
-        }
 
         // Draw full screen triangle
         BindEmptyVAO();
@@ -91,5 +92,103 @@ namespace OpenGL::Renderer {
         glBindImageTexture(2, gBuffer->GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
         glBindTextureUnit(3, miscFullSizeFBO->GetColorAttachmentHandleByName("BloodScreenSpaceDecalMask"));
         OpenGL::DispatchCompute((gBuffer->GetWidth() + 7) / 8, (gBuffer->GetHeight() + 7) / 8, 1);
+    }
+
+
+    void DecalTestPass() {
+        ProfilerOpenGLZoneFunction();
+
+        struct TestDecal {
+            glm::vec3 position = glm::vec3(0.0f);
+            glm::vec3 normal = glm::vec3(0.0f, 0.0f, 1.0f);
+            float scale = 0.5f;
+        };
+
+        static std::vector<TestDecal> decals;
+
+        Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
+        if (!player) return;
+
+        glm::vec3 pos = player->GetInteractHitPosition();
+        glm::vec3 normal = player->GetInteractHitNormal();
+
+        if (Hell::Input::KeyPressed(HELL_KEY_T)) {
+            Hell::Audio::PlayAudio("Spray.wav", 1.0f);
+            TestDecal& decal = decals.emplace_back();
+            decal.position = pos;
+            decal.normal = normal;
+        }
+
+        OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
+        if (!gBuffer) return;
+
+        gBuffer->Bind();
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
+
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+
+        Model* model = Hell::ResourceManager::GetModelByName("Cube");
+        if (!model) return;
+        if (model->GetMeshIndices().empty()) return;
+
+        Mesh* mesh = meshBuffer.GetMeshById(model->GetMeshIndices()[0]);
+        if (!mesh) return;
+
+        BindShader("DecalTest");
+
+        glBindTextureUnit(1, gBuffer->GetDepthAttachmentHandle());
+        OpenGL::BindSSBO(3, "ViewportData");
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.depthFunc = GL_GREATER;
+
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
+
+        // Replace the decal material channels directly in the G-buffer.
+        glColorMaski(0, GL_TRUE,  GL_TRUE,  GL_TRUE,  GL_TRUE);
+        glColorMaski(1, GL_TRUE,  GL_TRUE,  GL_TRUE,  GL_TRUE);
+        glColorMaski(2, GL_FALSE, GL_FALSE, GL_TRUE,  GL_FALSE);
+
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+
+        Texture* texture = Hell::ResourceManager::GetTextureByName("HalfLife");
+        if (!texture) return;
+
+        glBindTextureUnit(0, texture->GetGLTexture().GetHandle());
+
+        for (int i = 0; i < 4; i++) {
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
+            OpenGL::SetUniformInt("u_viewportIndex", i);
+
+            for (TestDecal& decal : decals) {
+
+                Hell::LocalFrame localFrame = Hell::LocalFrame(decal.normal);
+                Hell::QuatTransform transform = Hell::QuatTransform(decal.position, localFrame, glm::vec3(decal.scale));
+
+                const glm::mat4 modelMatrix = transform.ToMat4();
+                const glm::mat4 inverseModelMatrix = glm::inverse(modelMatrix);
+
+                SetUniformMat4("u_modelMatrix", modelMatrix);
+                SetUniformMat4("u_inverseModelMatrix", inverseModelMatrix);
+
+                glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int)* mesh->baseIndex), mesh->baseVertex);
+            }
+        }
+
+        glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glColorMaski(1, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glColorMaski(2, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+        for (TestDecal& decal : decals) {
+            Hell::DebugDraw::DrawPoint(decal.position, RED);
+            Hell::DebugDraw::DrawLine(decal.position, decal.position + (decal.normal * 0.1f), RED);
+        }
     }
 }

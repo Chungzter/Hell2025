@@ -125,7 +125,7 @@ namespace Hell::Bvh {
                     const glm::vec3& p1 = vertices[vertexIndex1].position;
                     const glm::vec3& p2 = vertices[vertexIndex2].position;
 
-                    const glm::vec3 e1 = p0 - p1;
+                    const glm::vec3 e1 = p1 - p0;
                     const glm::vec3 e2 = p2 - p0;
                     const glm::vec3 normal = glm::cross(e1, e2);
 

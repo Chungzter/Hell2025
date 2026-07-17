@@ -29,10 +29,10 @@ bool OrientedDecalIntersectsTile(uint index, vec3 tileMin, vec3 tileMax) {
     vec3 tileExtents = (tileMax - tileMin) * 0.5;
 
     // Transform the Tile Center into the Decal's Local Space
-    vec3 localCenter = (bloodDecals[index].inverseModelMatrix * vec4(tileCenter, 1.0)).xyz;
+    mat4 invModel = bloodDecals[index].inverseModelMatrix;
+    vec3 localCenter = (invModel * vec4(tileCenter, 1.0)).xyz;
 
     // Transform the Tile Axes into Decal Local Space to get the "projection" size
-    mat4 invModel = bloodDecals[index].inverseModelMatrix;
     vec3 vX = abs(vec3(invModel[0][0], invModel[1][0], invModel[2][0]));
     vec3 vY = abs(vec3(invModel[0][1], invModel[1][1], invModel[2][1]));
     vec3 vZ = abs(vec3(invModel[0][2], invModel[1][2], invModel[2][2]));
@@ -40,21 +40,27 @@ bool OrientedDecalIntersectsTile(uint index, vec3 tileMin, vec3 tileMax) {
     // Calculate the projected radius of the tile AABB onto the decal's local axes
     vec3 projectedExtents = tileExtents.x * vX + tileExtents.y * vY + tileExtents.z * vZ;
 
+    vec2 aspectScale = vec2(
+        bloodDecals[index].aspectScaleX,
+        bloodDecals[index].aspectScaleY
+    );
+
+    vec3 decalHalfExtents = vec3(
+        0.5 * aspectScale.x,
+        0.5 * BLOOD_DECAL_DEPTH_SCALE,
+        0.5 * aspectScale.y
+    );
+
     // Check for intersection via separation on all 3 local axes
-    if (abs(localCenter.x) > (0.5 + projectedExtents.x)) return false;
-    if (abs(localCenter.y) > (0.5 + projectedExtents.y)) return false;
-    if (abs(localCenter.z) > (0.5 + projectedExtents.z)) return false;
+    if (abs(localCenter.x) > (decalHalfExtents.x + projectedExtents.x)) return false;
+    if (abs(localCenter.y) > (decalHalfExtents.y + projectedExtents.y)) return false;
+    if (abs(localCenter.z) > (decalHalfExtents.z + projectedExtents.z)) return false;
 
     return true;
 }
 
 
 void main() {
-    ivec2 resolution = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
-    if (gl_GlobalInvocationID.x >= resolution.x || gl_GlobalInvocationID.y >= resolution.y) {
-        return;
-    }
-
     uint tileIndex = gl_WorkGroupID.y * u_tileXCount + gl_WorkGroupID.x;
 
     // Initialize shared memory

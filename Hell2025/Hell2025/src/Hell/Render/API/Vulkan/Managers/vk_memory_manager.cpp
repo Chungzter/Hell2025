@@ -65,8 +65,8 @@ namespace VulkanMemoryManager {
             // Static samplers + texture samplers
             { VK_DESCRIPTOR_TYPE_SAMPLER, (16 + 10000) * sets + 100 },
 
-            // From Binding 1 + uint sampled render targets
-            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, (10000 + 128) * sets },
+            // From sampled textures, uint textures, and sampled texture arrays
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, (10000 + 128 + 100 + 100) * sets },
 
             // From Binding 2
             { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 128 * sets + 100 },

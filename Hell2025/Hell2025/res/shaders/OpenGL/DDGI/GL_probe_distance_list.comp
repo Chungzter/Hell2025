@@ -14,8 +14,10 @@ void main() {
 
     if (pIdx >= uint(volume.totalProbes)) return;
 
-    if (probeStates[pIdx].isRelevant &&
-        probeStates[pIdx].distanceCooldown > 0u) {
+    uint globalProbeIdx = volume.probeOffset + pIdx;
+
+    if (probeStates[globalProbeIdx].isRelevant &&
+        probeStates[globalProbeIdx].distanceCooldown > 0u) {
         
         // Get a unique slot in the packed list
         uint slot = atomicAdd(distanceCounter, 1);

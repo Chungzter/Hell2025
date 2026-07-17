@@ -1,12 +1,14 @@
 #pragma once
 #include "Hell/Math/VecXZ.h"
+#include "Hell/Serialization/Json.h"
 
 #include "Unloved/Common/CreateInfo.h"
 #include "Unloved/Common/Enums.h"
 #include "Unloved/Common/Types.h"
 
-#include <nlohmann/json.hpp>
 #include <glm/glm.hpp>
+
+#include <map>
 
 namespace nlohmann {
     void to_json(nlohmann::json& j, const Unloved::SequencePoint& sequencePoint);
@@ -57,15 +59,7 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, WallCreateInfo& info);
     void from_json(const nlohmann::json& j, WindowCreateInfo& info);
 
-    void to_json(nlohmann::json& j, const glm::vec2& v);
-    void to_json(nlohmann::json& j, const glm::vec3& v);
     void to_json(nlohmann::json& j, const std::map<Hell::ivecXZ, std::string>& map);
-
-    void from_json(const json& j, glm::mat4& m);
-    void from_json(const json& j, glm::quat& q);
-
-    void from_json(const nlohmann::json& j, glm::vec2& v);
-    void from_json(const nlohmann::json& j, glm::vec3& v);
 }
 
 namespace JSON {

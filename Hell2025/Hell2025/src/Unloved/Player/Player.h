@@ -278,11 +278,12 @@ public:
 
     uint64_t GetClosestMirrorId();
 
-    bool InteractFound()                        { return m_interactFound; }
-    uint64_t GetInteractObjectId()              { return m_interactObjectId; }
-    Unloved::Frustum& GetFlashlightFrustum()             { return m_flashlightFrustum; }
-    const glm::vec3& GetInteractHitPosition()   { return m_interactHitPosition; }
-    const std::string& GetName() const          { return m_name; }
+    bool InteractFound()                      { return m_interactFound; }
+    uint64_t GetInteractObjectId()            { return m_interactObjectId; }
+    Unloved::Frustum& GetFlashlightFrustum()  { return m_flashlightFrustum; }
+    const glm::vec3& GetInteractHitPosition() { return m_interactHitPosition; }
+    const glm::vec3& GetInteractHitNormal()   { return m_interactHitNormal; }
+    const std::string& GetName() const        { return m_name; }
 
 
     Unloved::Inventory m_inventory;
@@ -298,6 +299,7 @@ private:
     uint32_t m_interactOpenableId = 0;
     uint32_t m_interactCustomId = 0;
     glm::vec3 m_interactHitPosition = glm::vec3(0.0f);
+    glm::vec3 m_interactHitNormal = glm::vec3(0.0f, 0.0f, 1.0f);
     bool m_rayHitFound = false;
     bool m_interactFound = false;
     int32_t m_deathCount = 0;

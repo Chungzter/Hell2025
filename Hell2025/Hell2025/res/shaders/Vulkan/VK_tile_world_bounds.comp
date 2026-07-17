@@ -8,8 +8,8 @@
 #include "../common/types.glsl"
 #include "../common/reconstruction.glsl"
 #include "../common/viewport.glsl"
-#include "../common/Vulkan/binding_indices.glsl"
-#include "../common/Vulkan/push_constants.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
@@ -18,7 +18,7 @@ layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
 layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
 
 layout(buffer_reference, scalar) readonly buffer RendererDataBuffer { RendererData rendererData; };
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer { ViewportData viewportData; };
+layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer { ViewportData viewportDataArr[]; };
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsTileWorldBounds data;
@@ -50,16 +50,11 @@ float InverseOrderPreservingFloatMap(uint value) {
 
 
 void main() {
-    const int tileSize = TILE_SIZE;
-
     ivec2 px = ivec2(gl_GlobalInvocationID.xy);
-    vec2 resolution = vec2(imageSize(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING]));
-
-    if (px.x >= resolution.x || px.y >= resolution.y) return;
+    ivec2 resolution = imageSize(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING]);
+    bool inBounds = px.x < resolution.x && px.y < resolution.y;
 
     uint tileXCount = pushConstant.data.tileXCount;
-    uint tileYCount = pushConstant.data.tileYCount;
-
     uint tileIndex = gl_WorkGroupID.y * tileXCount + gl_WorkGroupID.x;
 
 	// Defaults
@@ -75,44 +70,29 @@ void main() {
 	barrier();
 
     RendererData rendererData = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress).rendererData;
-    ViewportData viewportData = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress).viewportData;
+    ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
     TileWorldBoundsBuffer tileWorldBounds = TileWorldBoundsBuffer(pushConstant.data.tileWorldBoundsDeviceAddress);
 
-    uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, ivec2(resolution), rendererData.splitscreenMode);
+    if (inBounds) {
+        uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, resolution, rendererData.splitscreenMode);
+        ViewportData viewportData = viewportDataBuffer.viewportDataArr[viewportIndex];
+        vec2 viewportUV = ViewportUVFromPixel_VK(px, resolution, viewportData);
+        float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
 
-    // ATTENTION: This function below is very likely wrong, at a minimum it is wrapped values on y which is gonna fuck u up later 4 sure
-    // ATTENTION: This function below is very likely wrong, at a minimum it is wrapped values on y which is gonna fuck u up later 4 sure
-
-    vec2 viewportUV = ViewportUVFromPixel_VK(px, ivec2(resolution), viewportData);
-
-    // ATTENTION: This function above is very likely wrong, at a minimum it is wrapped values on y which is gonna fuck u up later 4 sure
-    // ATTENTION: This function above is very likely wrong, at a minimum it is wrapped values on y which is gonna fuck u up later 4 sure
-
-
-     mat4 inverseProjectionViewReverseZ = viewportData.inverseProjectionViewReverseZ;
-
-
-    float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
-    vec3 worldSpacePosition = WorldPosFromDepth_VK(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
-
-
-    // Background pixels are irrelevant for anything that uses this tile data, so don't consider them in the tile's worldspace AABB
-	//bool isBackground = (depth >= 0.999999);
-    bool isBackground = (depth <= 0.000001);
-
-	// Atomically store min max depth
-	if (!isBackground) {
-        uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
-		uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);
-		uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);
-		atomicMin(minWorldSpaceXInt, worldSpaceXInt);
-		atomicMin(minWorldSpaceYInt, worldSpaceYInt);
-		atomicMin(minWorldSpaceZInt, worldSpaceZInt);
-		atomicMax(maxWorldSpaceXInt, worldSpaceXInt);
-		atomicMax(maxWorldSpaceYInt, worldSpaceYInt);
-		atomicMax(maxWorldSpaceZInt, worldSpaceZInt);
-		atomicAdd(validDepthSampleCount, 1);
-	}
+        if (depth > 0.000001) {
+            vec3 worldSpacePosition = WorldPosFromDepth_VK(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
+            uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
+            uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);
+            uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);
+            atomicMin(minWorldSpaceXInt, worldSpaceXInt);
+            atomicMin(minWorldSpaceYInt, worldSpaceYInt);
+            atomicMin(minWorldSpaceZInt, worldSpaceZInt);
+            atomicMax(maxWorldSpaceXInt, worldSpaceXInt);
+            atomicMax(maxWorldSpaceYInt, worldSpaceYInt);
+            atomicMax(maxWorldSpaceZInt, worldSpaceZInt);
+            atomicAdd(validDepthSampleCount, 1);
+        }
+    }
     barrier();
 
 	// Get this tiles min max world pos
@@ -130,34 +110,10 @@ void main() {
 	    tileWorldBounds.data[tileIndex].boundsMax = vec4(worldSpaceMax, 0.0);
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
-//  vec4 color = imageLoad(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px);
-//
-//
-//  color.rgb = vec3(depth);
-//
-//  color.rgb = vec3(worldSpaceMax);
-//
-//  imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px, color);
+    //vec4 color = imageLoad(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px);
+    //color.rgb = vec3(worldSpaceMax);
+    //
+    //imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px, color);
 
     // Lines
 	//if (gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 0 || gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 1) {

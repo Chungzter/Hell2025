@@ -2,8 +2,8 @@ float SignAintZero(float value) {
     return value >= 0.0 ? 1.0 : -1.0;
 }
 
-vec3 DecodeNormal(vec2 encodedNormal) {
-    vec2 normalXZ = encodedNormal * 2.0 - 1.0;
+vec3 DecodeOct(vec2 encoded) {
+    vec2 normalXZ = encoded * 2.0 - 1.0;
 
     vec3 normal;
     normal.x = normalXZ.x;
@@ -20,18 +20,18 @@ vec3 DecodeNormal(vec2 encodedNormal) {
     return normalize(normal);
 }
 
-vec2 EncodeNormal(vec3 normal) {
-    normal = normalize(normal);
+vec2 EncodeOct(vec3 direction) {
+    direction = normalize(direction);
 
-    float denominator = abs(normal.x) + abs(normal.y) + abs(normal.z);
-    vec2 encodedNormal = normal.xz / denominator;
+    float denominator = abs(direction.x) + abs(direction.y) + abs(direction.z);
+    vec2 encoded = direction.xz / denominator;
 
-    if (normal.y <= 0.0) {
-        encodedNormal = vec2(
-            (1.0 - abs(encodedNormal.y)) * (encodedNormal.x >= 0.0 ? 1.0 : -1.0),
-            (1.0 - abs(encodedNormal.x)) * (encodedNormal.y >= 0.0 ? 1.0 : -1.0)
+    if (direction.y <= 0.0) {
+        encoded = vec2(
+            (1.0 - abs(encoded.y)) * (encoded.x >= 0.0 ? 1.0 : -1.0),
+            (1.0 - abs(encoded.x)) * (encoded.y >= 0.0 ? 1.0 : -1.0)
         );
     }
 
-    return encodedNormal * 0.5 + 0.5;
+    return encoded * 0.5 + 0.5;
 }

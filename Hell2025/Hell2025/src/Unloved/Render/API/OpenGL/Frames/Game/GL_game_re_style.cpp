@@ -11,6 +11,7 @@
 #include "Unloved/Render/RendererTypes.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Systems/Particles/ParticleManager.h"
+#include "Unloved/Systems/DDGI/DDGIManager.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
@@ -18,7 +19,7 @@
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Render/Renderer.h"
 
-#include "res/shaders/common/OpenGL/binding_indices.glsl"
+#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 namespace Input = Hell::Input;
 
@@ -65,6 +66,7 @@ namespace OpenGL::Renderer {
         MaterialResolveProceduralPass();
 
         VatBloodPass();
+        VATPass();
 
         EmissiveForwardPass();
 
@@ -113,10 +115,16 @@ namespace OpenGL::Renderer {
         ParticlePass();
 
         // DDGI Debug
-        Unloved::DDGIVolume& ddgiVolume = Unloved::LegacyWorld::GetTestDDGIVolume();
-        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
-        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
-        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
+        const auto& rendererSettings = Unloved::Renderer::GetCurrentRendererSettings();
+        if (rendererSettings.debugDrawPointCloud || rendererSettings.debugDrawPointCloudGrid || rendererSettings.debugDrawIrradianceProbes) {
+            Hell::SlotMap<Unloved::DDGIVolume>& ddgiVolumes = Unloved::DDGIManager::GetVolumes();
+
+            for (Unloved::DDGIVolume& ddgiVolume : ddgiVolumes) {
+                if (rendererSettings.debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
+                if (rendererSettings.debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
+                if (rendererSettings.debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
+            }
+        }
 
         SpriteSheetPass(); // Muzzle flash, etc
         FirePass();
@@ -313,6 +321,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindTextureUnit(6, gBuffer.GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
         OpenGL::BindTextureUnit(7, gBuffer.GetDepthAttachmentHandle());
         OpenGL::BindTextureUnit(8, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
+        OpenGL::BindTextureUnit(10, indirectDiffuseFbo.GetColorAttachmentHandleByName("Surface"));
 
         OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         fbo.Bind();
@@ -364,6 +373,7 @@ namespace OpenGL::Renderer {
 		OpenGLShader& opaqueShader = OpenGL::ResourceManager::GetShader("LightingForward");
 		OpenGL::BindShader("LightingForward");
         OpenGL::BindTextureUnit(5, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
+        OpenGL::BindTextureUnit(10, indirectDiffuseFbo.GetColorAttachmentHandleByName("Surface"));
 
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
 		glBindVertexArray(meshBuffer.GetVAO());

@@ -10,6 +10,7 @@ struct OpenGLSSBO {
     void Create(size_t size, GLbitfield flags);
     void Reserve(size_t size);
     void Update(size_t size, const void* data);
+    void UpdateRange(size_t offset, size_t size, const void* data);
     void UploadStatic(size_t size, const void* data);
     void Bind(uint32_t index) const;
     void CleanUp();

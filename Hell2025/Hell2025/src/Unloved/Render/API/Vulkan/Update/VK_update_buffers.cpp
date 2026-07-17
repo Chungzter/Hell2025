@@ -1,11 +1,13 @@
 #include "Unloved/Render/API/Vulkan/VK_renderer_internal.h"
 
+#include "Hell/Debug/DebugDraw.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/UI/UIBackEnd.h"
 
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Render/RendererConstants.h"
+#include "Unloved/Systems/DirtyTracker/DirtyTracker.h"
 
 #include <algorithm>
 #include <array>
@@ -21,8 +23,21 @@ namespace VulkanRenderer {
         UpdateBuffer(buffer, data.data(), size);
     }
 
+    template <typename T>
+    void UpdateGenericMesh(uint64_t meshId, const std::vector<T>& vertices) {
+        VulkanGenericMesh* mesh = VulkanResourceManager::GetGenericMesh(meshId);
+        if (!mesh) return;
+
+        mesh->UpdateVertexData(vertices.empty() ? nullptr : vertices.data(), vertices.size(), T::GetLayout());
+    }
+
     void UpdateBuffers() {
         const VulkanFrameData& frameData = GetCurrentFrameData();
+
+        // DDGI
+
+        const std::vector<GPUAABB>& dirtyDoorAABBs = Unloved::DirtyTracker::GetDirtyDoorAABBs();
+        UpdateVectorBuffer(frameData.ddgi.dirtyDoorAABBs, dirtyDoorAABBs);
 
         // Instance data
 
@@ -81,6 +96,13 @@ namespace VulkanRenderer {
         VkDeviceSize viewportDataBufferSize = sizeof(ViewportData) * viewportData.size();
         EnsureBufferSize(viewportDataBuffer, viewportDataBufferSize);
         UpdateBuffer(viewportDataBuffer, viewportData.data(), viewportDataBufferSize);
+
+        // Debug draw
+
+        UpdateGenericMesh(frameData.genericMeshes.debugLines2D, Hell::DebugDraw::GetLines2D());
+        UpdateGenericMesh(frameData.genericMeshes.debugLines3D, Hell::DebugDraw::GetLines3D());
+        UpdateGenericMesh(frameData.genericMeshes.debugPoints2D, Hell::DebugDraw::GetPoints2D());
+        UpdateGenericMesh(frameData.genericMeshes.debugPoints3D, Hell::DebugDraw::GetPoints3D());
 
     }
 

@@ -372,14 +372,16 @@ namespace Unloved::RenderDataManager {
         g_rendererData.gBufferHeight = (float)resolutions.gBuffer.y;
         g_rendererData.hairBufferWidth = (float)resolutions.hair.x;
         g_rendererData.hairBufferHeight = (float)resolutions.hair.y;
-        g_rendererData.splitscreenMode = (int)Unloved::Session::GetSplitscreenMode();
-        g_rendererData.time = Unloved::Session::GetSessionTime();
+        g_rendererData.splitscreenMode = (int)Session::GetSplitscreenMode();
+        g_rendererData.time = Session::GetSessionTime();
         g_rendererData.rendererOverrideState = (int)rendererSettings.rendererOverrideState;
         g_rendererData.normalizedMouseX = Hell::Math::MapRange(Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0.0f, 1.0f);
         g_rendererData.normalizedMouseY = Hell::Math::MapRange(Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), 0.0f, 1.0f);
-        g_rendererData.tileCountX = resolutions.gBuffer.x / TILE_SIZE;
-        g_rendererData.tileCountY = resolutions.gBuffer.y / TILE_SIZE;
-        g_rendererData.moonLightDir = glm::vec4(Unloved::World::GetMoonlightDirection(), 0.0f);
+        g_rendererData.tileCountX = Renderer::GetTileCountX();
+        g_rendererData.tileCountY = Renderer::GetTileCountY();
+        g_rendererData.lightCount = static_cast<uint32_t>(g_gpuLights.size());
+        g_rendererData.moonLightDir = glm::vec4(World::GetMoonlightDirection(), 0.0f);
+        g_rendererData.enableIrradianceProbeSampling = rendererSettings.enableIrradianceProbeSampling;
     }
 
     void SortRenderItems(std::vector<RenderItem>& renderItems) {
@@ -650,19 +652,50 @@ namespace Unloved::RenderDataManager {
         int instanceCount = static_cast<int>(bloodScreenSpaceDecals.size());
         g_bloodScreenSpaceDecalInstances.resize(instanceCount);
 
+        int bloodDecalTextureIndices[4] = { -1, -1, -1, -1 };
+        glm::vec2 bloodDecalAspectScales[4] = {
+            glm::vec2(1.0f),
+            glm::vec2(1.0f),
+            glm::vec2(1.0f),
+            glm::vec2(1.0f)
+        };
+
+        if (instanceCount > 0) {
+            const char* bloodDecalTextureNames[4] = {
+                "BloodDecal4",
+                "BloodDecal6",
+                "BloodDecal7",
+                "BloodDecal9"
+            };
+
+            for (int type = 0; type < 4; type++) {
+                Texture* texture = Hell::ResourceManager::GetTextureByName(bloodDecalTextureNames[type]);
+                if (!texture) continue;
+
+                float textureWidth = glm::max(static_cast<float>(texture->GetWidth()), 1.0f);
+                float textureHeight = glm::max(static_cast<float>(texture->GetHeight()), 1.0f);
+                float shortestTextureSide = glm::min(textureWidth, textureHeight);
+
+                bloodDecalTextureIndices[type] = texture->GetBindlessIndex();
+                bloodDecalAspectScales[type] = glm::vec2(textureWidth, textureHeight) / shortestTextureSide;
+            }
+        }
+
         for (int i = 0; i < instanceCount; i++) {
             BloodScreenSpaceDecal& decal = bloodScreenSpaceDecals[i];
-            g_bloodScreenSpaceDecalInstances[i].modelMatrix = decal.GetModelMatrix();
-            g_bloodScreenSpaceDecalInstances[i].inverseModelMatrix = decal.GetInverseModelMatrix();
-            g_bloodScreenSpaceDecalInstances[i].type = decal.GetType();
+            BloodDecalInstanceData& instance = g_bloodScreenSpaceDecalInstances[i];
+            instance.modelMatrix = decal.GetModelMatrix();
+            instance.inverseModelMatrix = decal.GetInverseModelMatrix();
+            instance.type = decal.GetType();
+            instance.textureIndex = -1;
+            instance.aspectScaleX = 1.0f;
+            instance.aspectScaleY = 1.0f;
 
-            switch (decal.GetType()) {
-                case 0: g_bloodScreenSpaceDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal4"); break;
-                case 1: g_bloodScreenSpaceDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal6"); break;
-                case 2: g_bloodScreenSpaceDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal7"); break;
-                case 3: g_bloodScreenSpaceDecalInstances[i].textureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BloodDecal9"); break;
-                default: continue;
-            }
+            if (instance.type < 0 || instance.type >= 4) continue;
+
+            instance.textureIndex = bloodDecalTextureIndices[instance.type];
+            instance.aspectScaleX = bloodDecalAspectScales[instance.type].x;
+            instance.aspectScaleY = bloodDecalAspectScales[instance.type].y;
         }
         UpdateOceanPatchTransforms();
     }

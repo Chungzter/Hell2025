@@ -9,7 +9,12 @@
 #include <vector>
 
 struct AllocatedImage;
+struct VulkanDescriptorSet;
 struct VulkanBuffer;
+
+namespace Unloved {
+    struct DDGIVolume;
+}
 
 namespace VulkanRenderer {
     struct SwapchainFrame {
@@ -31,6 +36,7 @@ namespace VulkanRenderer {
     void CreateSamplers();
     void CreateStaticDescriptorSet();
     void CreateRayQueryDescriptorSet();
+    void CreateDDGIRayQueryDescriptorSet();
     PushConstantsFrameResources CreatePushConstantsFrameResources();
 
     void CreatePipelines();
@@ -71,8 +77,19 @@ namespace VulkanRenderer {
     void LightingPass(VkCommandBuffer commandBuffer);
     void LightingForwardBlendedPass(VkCommandBuffer commandBuffer);
     void SkyboxPass(VkCommandBuffer commandBuffer);
+    void DebugPass(VkCommandBuffer commandBuffer);
     void DebugViewPass(VkCommandBuffer commandBuffer);
     void DebugTileViewPass(VkCommandBuffer commandBuffer);
+    void DDGIPointCloudDebugPass(VkCommandBuffer commandBuffer);
+    void DDGIProbeDebugPass(VkCommandBuffer commandBuffer);
+    bool BuildDDGIRayQueryScene(VkCommandBuffer commandBuffer, Unloved::DDGIVolume& ddgiVolume, VulkanDescriptorSet* descriptorSet);
+    void DestroyDDGIRayQueryScene(uint64_t volumeId);
+    void CleanUpDDGIRayQueryScenes();
+    void CleanUpDDGIProbeAtlasBindlessImages();
+    void DDGIPointCloudPass(VkCommandBuffer commandBuffer);
+    void DDGIProbeUpdatePass(VkCommandBuffer commandBuffer);
+    void DDGIIrradianceTexturePass(VkCommandBuffer commandBuffer);
+    void DDGIRaytraceScenePass(VkCommandBuffer commandBuffer);
     void HairPass(VkCommandBuffer commandBuffer);
     void PostProcessingPass(VkCommandBuffer commandBuffer);
     void ComputeTileWorldBounds(VkCommandBuffer commandBuffer);

@@ -198,6 +198,31 @@ namespace Unloved::DDGIGeometryBuilder {
         indices = std::move(geometry.indices);
     }
 
+    std::vector<DDGIDoorProxyInstance> CollectDoorProxyInstances(const glm::vec3& boundsMin, const glm::vec3& boundsMax) {
+        std::vector<DDGIDoorProxyInstance> instances;
+
+        auto& doors = Unloved::World::GetDoors();
+        instances.reserve(doors.size());
+
+        for (Door& door : doors) {
+            const AABB& doorAabb = door.GetPhsyicsAABB();
+            if (!doorAabb.IntersectsAABB(boundsMin, boundsMax)) {
+                continue;
+            }
+
+            MeshNode* meshNode = door.GetMeshNodes().GetMeshNodeByMeshName("Door_Hinges");
+            if (!meshNode) continue;
+
+            DDGIDoorProxyInstance& instance = instances.emplace_back();
+            instance.objectId = door.GetObjectId();
+            instance.worldAabb = doorAabb;
+            instance.worldTransform = meshNode->worldMatrix;
+            instance.worldTransform[3][1] = door.GetDoorModelMatrix()[3][1];
+        }
+
+        return instances;
+    }
+
     void BuildDoorProxyMesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) {
         const float w = DOOR_DEPTH;
         const float h = DOOR_HEIGHT;

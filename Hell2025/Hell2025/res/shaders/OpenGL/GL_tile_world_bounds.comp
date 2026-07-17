@@ -35,15 +35,9 @@ float InverseOrderPreservingFloatMap(uint value) {
 }
 
 void main() {
-	const int tileSize = TILE_SIZE;
-
 	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
-    vec2 resolution = vec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
-
-    // Don't process out of bounds pixels
-    if (px.x >= resolution.x || px.y >= resolution.y) {
-        return;
-    }
+    ivec2 resolution = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
+	bool inBounds = all(lessThan(px, resolution));
 
 	uint tileIndex = gl_WorkGroupID.y * u_tileXCount + gl_WorkGroupID.x;
 
@@ -59,45 +53,37 @@ void main() {
 	}
 	barrier();
 
-	// World position (reconstruction from depth)
-	// uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, ivec2(resolution), rendererData.splitscreenMode);
-	// mat4 inverseProjectionView = viewportData[viewportIndex].inverseProjectionView;
-	// vec2 screenUV = (vec2(px) + 0.5) / resolution;
-	// vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData[viewportIndex]);
-	// float depth = texelFetch(u_depthTexture, px, 0).r;
-	// vec4 clip = vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
-	// vec4 worldH = inverseProjectionView * clip;
-	// vec3 worldSpacePosition = worldH.xyz / max(worldH.w, 1e-6);
+    // Out-of-bounds invocations in a partial edge tile must still participate
+    // in both barriers, but they must not fetch from the depth texture.
+    if (inBounds) {
+        ivec2 outputImageSize = textureSize(u_depthTexture, 0);
+        uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
+        vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+        vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
 
-    ivec2 outputImageSize = textureSize(u_depthTexture, 0);
+        ViewportData viewportData = viewportDataArr[viewportIndex];
+        float depth = texelFetch(u_depthTexture, px, 0).r;
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
+        // Background pixels are irrelevant to the tile's world-space bounds.
+        if (depth > 0.000001) {
+            vec3 worldSpacePosition = ReconstructWorldPos(
+                viewportUV,
+                depth,
+                viewportData.inverseProjectionViewReverseZ
+            );
 
-    ViewportData viewportData = viewportDataArr[viewportIndex];
-    mat4 inverseProjectionViewReverseZ = viewportData.inverseProjectionViewReverseZ;
-
-    float depth = texelFetch(u_depthTexture, px, 0).r;
-    vec3 worldSpacePosition = ReconstructWorldPos(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
-
-	// Background pixels are irrelevant for anything that uses this tile data, so don't consider them in the tile's worldspace AABB
-	//bool isBackground = (depth >= 0.999999);
-    bool isBackground = (depth <= 0.000001);
-
-	// Atomically store min max depth
-	if (!isBackground) {
-        uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
-		uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);
-		uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);
-		atomicMin(minWorldSpaceXInt, worldSpaceXInt);
-		atomicMin(minWorldSpaceYInt, worldSpaceYInt);
-		atomicMin(minWorldSpaceZInt, worldSpaceZInt);
-		atomicMax(maxWorldSpaceXInt, worldSpaceXInt);
-		atomicMax(maxWorldSpaceYInt, worldSpaceYInt);
-		atomicMax(maxWorldSpaceZInt, worldSpaceZInt);
-		atomicAdd(validDepthSampleCount, 1);
-	}
+            uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
+            uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);
+            uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);
+            atomicMin(minWorldSpaceXInt, worldSpaceXInt);
+            atomicMin(minWorldSpaceYInt, worldSpaceYInt);
+            atomicMin(minWorldSpaceZInt, worldSpaceZInt);
+            atomicMax(maxWorldSpaceXInt, worldSpaceXInt);
+            atomicMax(maxWorldSpaceYInt, worldSpaceYInt);
+            atomicMax(maxWorldSpaceZInt, worldSpaceZInt);
+            atomicAdd(validDepthSampleCount, 1);
+        }
+    }
     barrier();
 
 	// Get this tiles min max world pos

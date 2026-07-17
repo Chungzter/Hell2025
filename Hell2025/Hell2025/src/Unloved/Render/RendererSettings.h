@@ -12,7 +12,6 @@ struct RendererSettings {
     bool debugDrawRagdolls = false;
     bool enableIrradianceProbeSampling = true;
     bool enableLighting = true;
-    bool irradianceUsesSH = true;
     RendererOverrideState rendererOverrideState = RendererOverrideState::NONE;
     ProbeDebugState probeDebugState = ProbeDebugState::HIDDEN;
 };

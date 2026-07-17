@@ -28,6 +28,7 @@ namespace VulkanRenderer {
         CreateSamplers();
         CreateStaticDescriptorSet();
         CreateRayQueryDescriptorSet();
+        CreateDDGIRayQueryDescriptorSet();
         CreateFrameData();
         CreateRenderTargets();
         CreatePresentRenderTarget(VulkanSwapchainManager::GetSwapchainExtent());
@@ -41,13 +42,19 @@ namespace VulkanRenderer {
         CreateSkybox();
     }
 
-    void CleanUp() {
+    void WaitIdle() {
         if (VulkanDeviceManager::GetDevice() != VK_NULL_HANDLE) {
             vkDeviceWaitIdle(VulkanDeviceManager::GetDevice());
         }
+    }
+
+    void CleanUp() {
+        WaitIdle();
 
         ProfilerVulkanReset();
         VulkanDeletionQueue::FlushAll();
+        CleanUpDDGIRayQueryScenes();
+        CleanUpDDGIProbeAtlasBindlessImages();
         VulkanResourceManager::Cleanup();
     }
 

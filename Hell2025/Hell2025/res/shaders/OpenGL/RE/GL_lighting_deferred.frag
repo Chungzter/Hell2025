@@ -1,7 +1,7 @@
 #version 460
 
 #extension GL_ARB_bindless_texture : enable
-#include "../../common/OpenGL/binding_indices.glsl"
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/constants.glsl"
 #include "../../common/lighting.glsl"
 #include "../../common/distance_fog.glsl"
@@ -9,6 +9,7 @@
 #include "../../common/post_processing.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
+#include "../../common/ddgi_upsample.glsl"
 
 layout (location = 0) out vec4 LightingOut;
 
@@ -23,6 +24,7 @@ layout (binding = 6) uniform sampler2D u_velocityXYOcclusionSubSurfaceTexture;
 layout (binding = 7) uniform sampler2D u_depthTexture;
 layout (binding = 8) uniform sampler2D u_indirectDiffuseTexture;
 layout (binding = 9) uniform sampler2D u_flashlightCookieTexture;
+layout (binding = 10) uniform sampler2D u_indirectDiffuseSurfaceTexture;
 
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
@@ -48,7 +50,7 @@ void main() {
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
 
     vec4 normalXYRoughnessMisc = texelFetch(u_normalXYRoughnessMiscTexture, px, 0);
-    vec3 normal = DecodeNormal(normalXYRoughnessMisc.rg);
+    vec3 normal = DecodeOct(normalXYRoughnessMisc.rg);
     float roughness = normalXYRoughnessMisc.b;
     float misc = normalXYRoughnessMisc.a;
 
@@ -121,10 +123,11 @@ void main() {
         directLighting += GetFlashlightContribution(i, viewportIndex, flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), GetFlashLightColor(), normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, fragDistance, u_oceanHeight, u_flashlightCookieTexture, u_flashlighShadowMapArrayTexture);
     }
 
+    // Indirect diffuse
     vec3 indirectDiffuse = vec3(0);
-    bool u_sampleProbes = true;
-    if (u_sampleProbes) {
-        vec3 probeIrradiance = texture(u_indirectDiffuseTexture, screenUV).rgb;
+    if (rendererData.enableIrradianceProbeSampling) {
+        ivec4 viewportRect = ivec4(viewportData.xOffset, viewportData.yOffset, viewportData.width, viewportData.height);
+        vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral(u_indirectDiffuseTexture, u_indirectDiffuseSurfaceTexture, screenUV, normal, fragDistance, outputImageSize, viewportRect);
         vec3 diffuseAlbedo = linearBaseColor.rgb * (1.0 - metallic);
         indirectDiffuse = probeIrradiance * diffuseAlbedo;
     }

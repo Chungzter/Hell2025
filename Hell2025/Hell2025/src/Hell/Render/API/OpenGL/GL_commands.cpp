@@ -219,6 +219,13 @@ namespace OpenGL {
         }
     }
 
+    void UpdateSSBORange(const std::string& name, size_t offset, size_t size, const void* data) {
+        OpenGLSSBO* ssbo = GetRequiredSSBO(name, "UpdateSSBORange");
+        if (ssbo && size > 0) {
+            ssbo->UpdateRange(offset, size, data);
+        }
+    }
+
     void UploadSSBOStatic(const std::string& name, size_t size, const void* data) {
         OpenGLSSBO* ssbo = GetRequiredSSBO(name, "UploadSSBOStatic");
         if (ssbo && size > 0) {

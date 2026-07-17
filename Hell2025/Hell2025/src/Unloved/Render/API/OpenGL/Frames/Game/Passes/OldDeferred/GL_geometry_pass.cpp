@@ -337,8 +337,6 @@ namespace OpenGL::Renderer {
             }
         }
 
-
-        //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive", "VelocityXYOcclusionSubSurface" });
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         // Debug draw ragdolls

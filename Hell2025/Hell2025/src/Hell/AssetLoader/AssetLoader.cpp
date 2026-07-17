@@ -422,6 +422,8 @@ namespace Hell::AssetLoader {
         LoadMidiFiles();
         LoadRagdollDataFiles();
         LoadSoundFonts();
+        LoadVATFiles();
+        LoadPointAnimations();
     }
 
     void OnLoadingComplete() {
@@ -562,6 +564,29 @@ namespace Hell::AssetLoader {
             texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
             texture.SetMinFilter(TextureFilter::LINEAR);
             texture.SetMagFilter(TextureFilter::LINEAR);
+
+            CreateTextureLoadJob(texture);
+        }
+
+        // VAT
+        for (FileInfo& fileInfo : File::IterateDirectory("res/VAT/", { "exr" })) {
+            Texture& texture = ResourceManager::CreateTexture(fileInfo.name);
+            texture.SetFileInfo(fileInfo);
+            texture.SetImageDataType(ImageDataType::EXR);
+            texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
+            texture.SetMinFilter(TextureFilter::NEAREST);
+            texture.SetMagFilter(TextureFilter::NEAREST);
+
+            CreateTextureLoadJob(texture);
+        }
+
+        for (FileInfo& fileInfo : File::IterateDirectory("res/VAT/", { "png" })) {
+            Texture& texture = ResourceManager::CreateTexture(fileInfo.name);
+            texture.SetFileInfo(fileInfo);
+            texture.SetImageDataType(ImageDataType::UNCOMPRESSED);
+            texture.SetTextureWrapMode(TextureWrapMode::REPEAT);
+            texture.SetMinFilter(TextureFilter::NEAREST);
+            texture.SetMagFilter(TextureFilter::NEAREST);
 
             CreateTextureLoadJob(texture);
         }

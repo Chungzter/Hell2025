@@ -1,6 +1,6 @@
 #version 460
 
-#include "../common/Vulkan/binding_indices.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
 
 layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];

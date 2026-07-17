@@ -1,6 +1,6 @@
 #version 460 core
 #extension GL_ARB_bindless_texture : require
-#include "../common/OpenGL/binding_indices.glsl"
+#include "../common/OpenGL/GL_binding_indices.glsl"
 
 layout (location = 0) out vec4 FragOut;
 in vec2 TexCoord;

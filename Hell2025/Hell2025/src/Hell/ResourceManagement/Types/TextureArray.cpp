@@ -3,6 +3,7 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 #include "Hell/Render/API/OpenGL/GL_resource_manager.h"
+#include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 
 namespace Hell {
 
@@ -22,7 +23,8 @@ void TextureArray::CleanUp() {
         }
     }
     else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        // TODO
+        VulkanResourceManager::RemoveAllocatedImage(m_name);
+        m_vulkanId = 0;
     }
 }
 
@@ -67,7 +69,7 @@ OpenGLTextureArray& TextureArray::GetGLTextureArray() {
         return OpenGL::ResourceManager::GetTextureArrayById(m_openGLId);
     }
     else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        // TODO
+        // No OpenGL texture exists on Vulkan
     }
 
     Logging::Error() << "TextureArray::GetGLTextureArray() was called but API is not OpenGL\n";
@@ -106,7 +108,10 @@ size_t TextureArray::GetGPUAllocatedByteCount() const {
         }
     }
     else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-        // TODO
+        if (VulkanResourceManager::AllocatedImageExists(m_name)) {
+            AllocatedImage* image = VulkanResourceManager::GetAllocatedImage(m_name);
+            return image ? image->GetGPUAllocatedByteCount() : 0;
+        }
     }
 
     return 0;

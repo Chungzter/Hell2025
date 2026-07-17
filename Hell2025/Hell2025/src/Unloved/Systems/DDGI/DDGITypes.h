@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hell/Math/GLM.h"
+#include "Hell/Math/AABB.h"
 #include "Hell/Render/VertexAttributes.h"
 
 #include <cstdint>
@@ -8,10 +9,6 @@
 
 #define PROBE_DISTANCE_OCTA_SIZE 16
 #define PROBE_DISTANCE_TEXEL_COUNT (PROBE_DISTANCE_OCTA_SIZE * PROBE_DISTANCE_OCTA_SIZE)
-
-struct ProbeColor {
-    glm::vec4 sh[9];
-};
 
 struct ProbeState {
     glm::vec3 relocationOffset = glm::vec3(0.0f);
@@ -35,9 +32,26 @@ struct DDGIVolumeGPU {
 
     glm::vec3 worldBoundsMax{};
     float padding1{};
+
+    uint32_t probeOffset{};
+    uint32_t padding2{};
+    uint32_t padding3{};
+    uint32_t padding4{};
 };
 
 namespace Unloved {
+
+struct DDGIProbeUpdateCandidate {
+    uint64_t volumeId = 0;
+    float nearestCameraDistance = 0.0f;
+    uint32_t framesSinceLastProbeUpdate = 0;
+};
+
+struct DDGIDoorProxyInstance {
+    uint64_t objectId = 0;
+    AABB worldAabb;
+    glm::mat4 worldTransform = glm::mat4(1.0f);
+};
 
 struct DDGISurfaceTriangle {
     glm::vec3 v0 = glm::vec3(0.0f);

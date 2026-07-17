@@ -25,6 +25,7 @@ using AnimatedTransform = Hell::QuatTransform;
 
 struct Resolutions {
     glm::ivec2 gBuffer;
+    glm::ivec2 gBufferHalfRes;
     glm::ivec2 finalImage;
     glm::ivec2 ui;
     glm::ivec2 hair;
@@ -62,7 +63,7 @@ struct BloodDecalInstanceData {
     glm::mat4 inverseModelMatrix;
     int type;
     int textureIndex;
-    int padding1;
-    int padding2;
+    float aspectScaleX;
+    float aspectScaleY;
 };
 

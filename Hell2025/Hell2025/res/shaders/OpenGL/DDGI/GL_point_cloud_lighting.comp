@@ -18,6 +18,7 @@ readonly restrict layout(std430, binding = 7) buffer textureSamplersBuffer { uve
 layout(std430, binding = 8) buffer PointCloudDirtyFlagsBuffer { uint pointCloudDirtyFlags[]; };
 
 uniform int u_lightCount;
+uniform bool u_forceUpdate;
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
@@ -32,26 +33,28 @@ void main() {
 
 
     // Does this point even need updating?
-    bool needsUpdate = false;
-    for (int i = 0; i < u_lightCount; i++) {
-        Light light = lights[i];
+    bool needsUpdate = u_forceUpdate;
+    if (!needsUpdate) {
+        for (int i = 0; i < u_lightCount; i++) {
+            Light light = lights[i];
 
-        // Is light dirty?
-        if (light.isDirtyForRaytracing == 0) continue;
+            // Is light dirty?
+            if (light.isDirtyForRaytracing == 0) continue;
 
-        // Light was dirty. so now check the point is within the light's tight aabb bounds
-        // AABB lightAABB = lightsAABB[i];
+            // Light was dirty. so now check the point is within the light's tight aabb bounds
+            // AABB lightAABB = lightsAABB[i];
 
-        //if (PointInAABBBounds(pointPosition.xyz, lightAABB.boundsMin.xyz, lightAABB.boundsMax.xyz)) {
-        //    needsUpdate = true;
-        //    break;
-        //}
+            //if (PointInAABBBounds(pointPosition.xyz, lightAABB.boundsMin.xyz, lightAABB.boundsMax.xyz)) {
+            //    needsUpdate = true;
+            //    break;
+            //}
 
-        // Above is sketchy. For now do point vs sphere intersection
-        vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
-        if (PointInSphere(pointPosition.xyz, lightPosition, light.radius)) {
-            needsUpdate = true;
-            break;
+            // Above is sketchy. For now do point vs sphere intersection
+            vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+            if (PointInSphere(pointPosition.xyz, lightPosition, light.radius)) {
+                needsUpdate = true;
+                break;
+            }
         }
     }
     
@@ -61,7 +64,7 @@ void main() {
         return;
     }
 
-    uint pointDirty = 0u;
+    uint pointDirty = 1u;
     
     // Accumulate light from all sources
     for (int i = 0; i < u_lightCount; i++) {
@@ -101,7 +104,6 @@ void main() {
             }
 
             directLight += vec3(lightAttenuation * ndotl) * lightcolor * candelas;
-            pointDirty = 1u;
         }
     }
 

@@ -774,6 +774,13 @@ namespace OpenGL::ResourceManager {
         }
     }
 
+    void RemoveSSBOByName(const std::string& name) {
+        auto it = g_ssboIdByName.find(name);
+        if (it == g_ssboIdByName.end()) return;
+
+        RemoveSSBO(it->second);
+    }
+
     // OpenGL Texture
 
     uint64_t CreateTexture() {

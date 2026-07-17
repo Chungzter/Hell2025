@@ -16,7 +16,8 @@ void main() {
 
     if (probeIdx >= uint(volume.totalProbes)) return;
 
-    uint currentCooldown = probeStates[probeIdx].irradianceCooldown;
+    uint globalProbeIdx = volume.probeOffset + probeIdx;
+    uint currentCooldown = probeStates[globalProbeIdx].irradianceCooldown;
 
     if (currentCooldown == PROBE_MAX_IRRADIANCE_COOLDOWN) {
         return;
@@ -57,5 +58,5 @@ void main() {
     }
 
     // execute single global memory write
-    probeStates[probeIdx].irradianceCooldown = currentCooldown;
+    probeStates[globalProbeIdx].irradianceCooldown = currentCooldown;
 }

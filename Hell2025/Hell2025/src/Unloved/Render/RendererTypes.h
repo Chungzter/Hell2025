@@ -81,6 +81,8 @@ struct RendererData {
     float normalizedMouseY;
     int tileCountX;
     int tileCountY;
+    uint32_t lightCount;
+    bool enableIrradianceProbeSampling;
 };
 
 struct RenderItem {
@@ -184,8 +186,8 @@ struct GPUChristmasLight {
 };
 
 struct TileLights {
-    int lightCount;
-    int lightIndices[127];
+    uint32_t lightCount;
+    uint32_t lightIndices[127];
 };
 
 struct TileWorldBounds {

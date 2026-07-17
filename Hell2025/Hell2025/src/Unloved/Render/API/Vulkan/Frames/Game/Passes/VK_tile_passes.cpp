@@ -42,6 +42,17 @@ namespace VulkanRenderer {
         vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsTileWorldBounds), &pushConstants);
 
         vkCmdDispatch(commandBuffer, groupCountX, groupCountY, 1);
+
+        VkBufferMemoryBarrier barrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
+        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.buffer = tileWorldBoundsBuffer->GetBuffer();
+        barrier.offset = 0;
+        barrier.size = tileWorldBoundsBuffer->GetSize();
+
+        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
     }
 
     void LightCullingPass(VkCommandBuffer commandBuffer) {

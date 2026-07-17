@@ -19,7 +19,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindImageTexture(0, scratchFbo.GetColorAttachmentHandleByName("RGBA16F"), GL_WRITE_ONLY, GL_RGBA16F);
         OpenGL::BindImageTexture(1, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_ONLY, GL_RGBA16F);
 
-        OpenGL::DispatchCompute(gBuffer.GetWidth() / 8, gBuffer.GetHeight() / 8, 1);
+        OpenGL::DispatchCompute((gBuffer.GetWidth() + 7) / 8, (gBuffer.GetHeight() + 7) / 8, 1);
+        glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
     }
 
     void FXAA() {
@@ -28,12 +29,22 @@ namespace OpenGL::Renderer {
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& scratchFbo = OpenGL::ResourceManager::GetFrameBuffer("Scratch");
 
+        gBuffer.Bind();
+        gBuffer.SetViewport();
+        gBuffer.DrawBuffer("Lighting");
+
         OpenGL::BindShader("FXAA");
+        OpenGL::BindTextureUnit(0, scratchFbo.GetColorAttachmentHandleByName("RGBA16F"));
 
-        OpenGL::BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_WRITE_ONLY, GL_RGBA16F);
-        OpenGL::BindTextureUnit(1, scratchFbo.GetColorAttachmentHandleByName("RGBA16F"));
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.depthMask = false;
+        state.cullfaceEnable = false;
+        state.blendEnable = false;
+        state.colorMask = true;
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
-        OpenGL::DispatchCompute(gBuffer.GetWidth() / 8, gBuffer.GetHeight() / 8, 1);
+        RenderFullscreenTriangle();
     }
 
     void PostProcessingPass() {

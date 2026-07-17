@@ -3,6 +3,7 @@
 #endif
 
 #include "Transform.h"
+#include "LocalFrame.h"
 
 #include <glm/geometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -29,6 +30,12 @@ namespace Hell {
         glm::vec3 skew;
         glm::vec4 perspective;
         glm::decompose(matrix, scale, rotation, translation, skew, perspective);
+    }
+
+    QuatTransform::QuatTransform(const glm::vec3& position, const LocalFrame& localFrame, const glm::vec3& scale)
+        : translation(position)
+        , rotation(glm::normalize(glm::quat_cast(localFrame.ToRotationMatrix())))
+        , scale(scale) {
     }
 
     glm::mat4 QuatTransform::ToMat4() const {

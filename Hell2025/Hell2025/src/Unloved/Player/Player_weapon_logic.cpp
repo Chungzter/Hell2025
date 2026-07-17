@@ -129,7 +129,7 @@ void Player::GiveDefaultLoadout() {
     m_inventory.GiveWeapon("Glock");
     m_inventory.GiveWeapon("GoldenGlock");
     m_inventory.GiveWeapon("SPAS");
-    m_inventory.GiveWeapon("P90");
+    //m_inventory.GiveWeapon("P90");
     m_inventory.GiveWeapon("AKS74U");
     m_inventory.GiveWeapon("Remington870");
 
@@ -217,7 +217,6 @@ void Player::SwitchWeapon(const std::string& name, WeaponAction weaponAction) {
     WeaponState* state = GetWeaponStateByName(name);
     WeaponInfo* weaponInfo = Bible::GetWeaponInfoByName(name);
     AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
-
     if (!state) return;
     if (!weaponInfo) return;
     if (!viewWeapon) return;

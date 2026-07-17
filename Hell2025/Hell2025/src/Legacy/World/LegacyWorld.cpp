@@ -93,8 +93,6 @@ namespace Unloved::LegacyWorld {
             LoadMapObjects(mapCreateInfo.mapName, spawnOffset);
             LoadMapHouses(mapCreateInfo.mapName, spawnOffset);
 
-            Logging::Warning() << "MAKE SURE YOU REMOVE THIS LINE break IT IS DISABLING THE LOAD OF THE SECOND MAP INSTANCE";
-            break;
             i++;
         }
 
@@ -212,7 +210,7 @@ namespace Unloved::LegacyWorld {
             kangaroo.Respawn();
         }
 
-        // Load two instances of the map
+        // Load the map
         std::vector<MapCreateInfo> mapCreateInfoSet;
 
         MapCreateInfo mapCreateInfo;
@@ -221,12 +219,18 @@ namespace Unloved::LegacyWorld {
         mapCreateInfo.spawnOffsetChunkZ = 0;
         mapCreateInfoSet.push_back(mapCreateInfo);
 
-        //mapCreateInfo.mapName = "Shit";
-        //mapCreateInfo.spawnOffsetChunkX = 8;
-        //mapCreateInfo.spawnOffsetChunkZ = 4;
-        //mapCreateInfoSet.push_back(mapCreateInfo);
-
         LoadMaps(mapCreateInfoSet);
+
+        // Load a second house close to the first one
+        MapData* mapData = MapManager::GetMapDataByName("Shit");
+        if (mapData && !mapData->GetAdditionalMapData().houseLocations.empty()) {
+            const HouseLocation& houseLocation = mapData->GetAdditionalMapData().houseLocations.front();
+
+            SpawnOffset secondHouseSpawnOffset;
+            secondHouseSpawnOffset.translation = houseLocation.position + glm::vec3(0.0f, 0.0f, 10.0f);
+            secondHouseSpawnOffset.yRotation = houseLocation.rotation;
+            LoadHouse("TestHouse", secondHouseSpawnOffset);
+        }
 
         Editor::SetEditorMapName(UNDEFINED_STRING);
 

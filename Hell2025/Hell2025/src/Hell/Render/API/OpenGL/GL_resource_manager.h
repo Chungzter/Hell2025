@@ -99,6 +99,7 @@ namespace OpenGL::ResourceManager {
     OpenGLSSBO& GetSSBOById(uint64_t id);
     OpenGLSSBO* GetSSBOPtrById(uint64_t id);
     void RemoveSSBO(uint64_t id);
+    void RemoveSSBOByName(const std::string& name);
 
     uint64_t CreateTexture();
     OpenGLTexture& GetTexture(uint64_t id);

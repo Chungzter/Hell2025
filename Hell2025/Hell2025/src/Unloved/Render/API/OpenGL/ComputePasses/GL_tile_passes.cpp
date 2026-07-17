@@ -44,12 +44,8 @@ namespace OpenGL::Renderer {
         if (!shader) return;
 
         OpenGL::BindShader("LightCulling");
-        OpenGL::SetUniformInt("u_lightCount", Unloved::World::GetLights().size());
-        OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
-        OpenGL::SetUniformInt("u_tileYCount", GetTileCountY());
 
         OpenGL::BindSSBO(2, "RendererData");
-        OpenGL::BindSSBO(3, "ViewportData");
         OpenGL::BindSSBO(5, "Lights");
         OpenGL::BindSSBO(6, "TileLights");
         OpenGL::BindSSBO(7, "TileWorldBounds");

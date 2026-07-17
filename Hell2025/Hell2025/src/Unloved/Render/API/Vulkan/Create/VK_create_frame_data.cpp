@@ -17,6 +17,8 @@ namespace VulkanRenderer {
     void CreateFrameData() {
         VkBufferUsageFlags usageStorage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
         VkBufferUsageFlags usageIndirect = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+        VkBufferUsageFlags usageDDGIStorage = usageStorage | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        VkBufferUsageFlags usageDDGIIndirect = usageDDGIStorage | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
         VkBufferUsageFlags usageSkinnedVertices = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
         VkBufferUsageFlags usageRayQueryInstances = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
         VkBufferUsageFlags usageRayQueryScratch = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
@@ -41,8 +43,21 @@ namespace VulkanRenderer {
             frameData.buffers.rayQueryBLASInstanceData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.rayQueryMeshInstanceData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.rayQueryScratch = VulkanResourceManager::CreateBuffer(1, usageRayQueryScratch, VMA_MEMORY_USAGE_AUTO);
+            frameData.buffers.ddgiRayQueryScratch = VulkanResourceManager::CreateBuffer(1, usageRayQueryScratch, VMA_MEMORY_USAGE_AUTO);
             frameData.buffers.uiRenderItems = VulkanResourceManager::CreateBuffer(dummySize * VULKAN_MAX_UI_RENDER_ITEMS, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.ddgi.dirtyDoorAABBs = VulkanResourceManager::CreateBuffer(dummySize, usageDDGIStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.ddgi.probeIndexCounter = VulkanResourceManager::CreateBuffer(sizeof(uint32_t), usageDDGIStorage, VMA_MEMORY_USAGE_AUTO);
+            frameData.ddgi.probeDistanceCounter = VulkanResourceManager::CreateBuffer(sizeof(uint32_t), usageDDGIStorage, VMA_MEMORY_USAGE_AUTO);
+            frameData.ddgi.probeDistanceIndices = VulkanResourceManager::CreateBuffer(dummySize, usageDDGIStorage, VMA_MEMORY_USAGE_AUTO);
+            frameData.ddgi.probeDistanceDispatchArgs = VulkanResourceManager::CreateBuffer(sizeof(DispatchIndirectCommand), usageDDGIIndirect, VMA_MEMORY_USAGE_AUTO);
+            frameData.ddgi.probeIrradianceCounter = VulkanResourceManager::CreateBuffer(sizeof(uint32_t), usageDDGIStorage, VMA_MEMORY_USAGE_AUTO);
+            frameData.ddgi.probeIrradianceIndices = VulkanResourceManager::CreateBuffer(dummySize, usageDDGIStorage, VMA_MEMORY_USAGE_AUTO);
+            frameData.ddgi.probeIrradianceDispatchArgs = VulkanResourceManager::CreateBuffer(sizeof(DispatchIndirectCommand), usageDDGIIndirect, VMA_MEMORY_USAGE_AUTO);
             frameData.genericMeshes.ui = VulkanResourceManager::CreateGenericMesh();
+            frameData.genericMeshes.debugLines2D = VulkanResourceManager::CreateGenericMesh();
+            frameData.genericMeshes.debugLines3D = VulkanResourceManager::CreateGenericMesh();
+            frameData.genericMeshes.debugPoints2D = VulkanResourceManager::CreateGenericMesh();
+            frameData.genericMeshes.debugPoints3D = VulkanResourceManager::CreateGenericMesh();
             frameData.accelerationStructures.rayQueryTLAS = VulkanResourceManager::CreateAccelerationStructure();
 
             frameData.buffers.tileLights = VulkanResourceManager::CreateBuffer(tileCount * sizeof(TileLights), usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);

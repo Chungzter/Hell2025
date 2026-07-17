@@ -207,6 +207,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Hell\AssetLoader\PointAnimations.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\VATLoader.cpp" />
+    <ClCompile Include="src\Hell\Serialization\JsonSerialization.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\GL_back_end.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\GL_commands.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\GL_resource_manager.cpp" />
@@ -239,7 +242,11 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_texture.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\vk_tools.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\vk_types.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\PointAnimation.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\VAT.cpp" />
     <ClCompile Include="src\Unloved\LazyKeyPresses.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Renderables\PointAnimationInstance.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Renderables\VATInstance.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_blit_road.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_compute_ftt.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_compute_skinning.cpp" />
@@ -252,8 +259,11 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_ssbos.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_texture_arrays.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_fire_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_VAT_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_debug.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_ddgi_raytrace_scene_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\DDGI\VK_ddgi_point_cloud_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_hair_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_debug_passes.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_lighting_forward_blended_pass.cpp" />
@@ -658,16 +668,30 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\common\distance_fog.glsl" />
+    <None Include="res\shaders\common\ddgi_upsample.glsl" />
     <None Include="res\shaders\common\intersect.glsl" />
     <None Include="res\shaders\common\OpenGL\binding_indices.glsl" />
+    <None Include="res\shaders\common\Vulkan\ddgi_upsample.glsl" />
+    <None Include="res\shaders\common\Vulkan\ray_query.glsl" />
     <None Include="res\shaders\common\flags.glsl" />
     <None Include="res\shaders\common\viewport.glsl" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.frag" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.geom" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.vert" />
+    <None Include="res\shaders\OpenGL\GL_decal_test.frag" />
+    <None Include="res\shaders\OpenGL\GL_decal_test.vert" />
     <None Include="res\shaders\Vulkan\VK_compute_skinning.comp" />
     <None Include="res\shaders\Vulkan\VK_compute_red_test.comp" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_raytrace_scene.comp" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_point_cloud_basecolor.comp" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_point_cloud_lighting.comp" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_point_cloud_debug.vert" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_probe_debug.vert" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_probe_irradiance_texture.comp" />
     <None Include="res\shaders\Vulkan\VK_debug_tile_view.comp" />
+    <None Include="res\shaders\Vulkan\VK_debug_vertex.frag" />
+    <None Include="res\shaders\Vulkan\VK_debug_vertex_2D.vert" />
+    <None Include="res\shaders\Vulkan\VK_debug_vertex_3D.vert" />
     <None Include="res\shaders\Vulkan\VK_fullscreen_triangle.vert" />
     <None Include="res\shaders\Vulkan\VK_material_resolve.frag" />
     <None Include="res\shaders\Vulkan\VK_post_processing.comp" />
@@ -708,12 +732,16 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="src\Hell\Python\BlenderModelExportV3.py" />
     <None Include="src\Hell\Python\BlenderSkinnedModelExport WIP.py" />
     <None Include="src\Hell\Python\BlenderUVWorldSpaceProjection.py" />
+    <None Include="src\Hell\Python\VATJsonExport.py" />
+    <None Include="src\Hell\Python\VATPoints.py" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Work\GLRaytracing\BVH\src\OpenGL\Types\GL_timer.h" />
     <ClInclude Include="res\shaders\common\reconstruction.glsl" />
     <ClInclude Include="res\shaders\OpenGL\RE\test.h" />
+    <ClInclude Include="src\Hell\Common\Color.h" />
     <ClInclude Include="src\Hell\Input.h" />
+    <ClInclude Include="src\Hell\Math\LocalFrame.h" />
     <ClInclude Include="src\Hell\Physics.h" />
     <ClInclude Include="src\Hell\Physics\PhysicsTypes.h" />
     <ClInclude Include="src\Hell\Physics\PhysicsDebug.h" />
@@ -724,6 +752,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Physics\PhysicsResourceManagement.h" />
     <ClInclude Include="src\Hell\Physics\PhysicsUtil.h" />
     <ClInclude Include="src\Hell\Render\DrawCommandTypes.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\PointAnimation.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\VAT.h" />
+    <ClInclude Include="src\Hell\Serialization\Json.h" />
     <ClInclude Include="src\Unloved\Common\Constants.h" />
     <ClInclude Include="src\Unloved\Common\Enums.h" />
     <ClInclude Include="src\Unloved\Common\SequencePoint.h" />
@@ -731,6 +762,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Debug\DebugTypes.h" />
     <ClInclude Include="src\Unloved\Objects\ObjectEnums.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\BoneSegment.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\PointAnimationInstance.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\VATInstance.h" />
     <ClInclude Include="src\Unloved\Physics\PhysicsEnums.h" />
     <ClInclude Include="src\Unloved\ProgramState.h" />
     <ClInclude Include="src\Unloved\Render\RendererEnums.h" />
@@ -863,6 +896,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Config\Config.h" />
     <ClInclude Include="src\Hell\Audio.h" />
     <ClInclude Include="src\Hell\Audio\Audio.h" />
+    <ClInclude Include="src\Hell\Debug\DebugDraw.h" />
     <ClInclude Include="src\Hell\Time.h" />
     <ClInclude Include="src\Hell\Time\Time.h" />
     <ClInclude Include="src\Unloved\ObjectId.h" />

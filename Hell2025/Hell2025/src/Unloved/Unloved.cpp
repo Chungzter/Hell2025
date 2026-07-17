@@ -91,6 +91,7 @@ namespace Unloved {
     }
 
     void CleanUp() {
+        Renderer::WaitIdle();
         Systems::CleanUp();
         World::CleanUp();
         Renderer::CleanUp();

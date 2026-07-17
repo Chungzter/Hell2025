@@ -31,9 +31,11 @@ namespace VulkanResourceManager {
     void RemoveAccelerationStructure(uint64_t id);
 
     // Allocated Images
-    AllocatedImage& CreateAllocatedImage(const std::string& name, uint32_t width, uint32_t height, VkSampleCountFlagBits sampleCount, VkFormat format, VkImageUsageFlags usage);
+    AllocatedImage& CreateAllocatedImage(const std::string& name, uint32_t width, uint32_t height, VkSampleCountFlagBits sampleCount, VkFormat format, VkImageUsageFlags usage, bool allocateMips = false);
+    AllocatedImage& CreateAllocatedImageArray(const std::string& name, uint32_t width, uint32_t height, uint32_t layerCount, VkSampleCountFlagBits sampleCount, VkFormat format, VkImageUsageFlags usage, bool allocateMips = false);
     AllocatedImage* GetAllocatedImage(const std::string& name);
     bool AllocatedImageExists(const std::string& name);
+    void RemoveAllocatedImage(const std::string& name);
 
     // Cubemaps
     VulkanCubemap& CreateCubemap(const std::string& name);
@@ -43,9 +45,13 @@ namespace VulkanResourceManager {
 
     // Buffers
     uint64_t CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags vmaFlags = 0);
+    uint64_t CreateBuffer(const std::string& name, VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags vmaFlags = 0);
+    bool BufferExists(const std::string& name);
     VulkanBuffer* GetBuffer(uint64_t id);
+    VulkanBuffer* GetBuffer(const std::string& name);
     void UploadBufferData(uint64_t id, const void* data, VkDeviceSize size);
     void RemoveBuffer(uint64_t id);
+    void RemoveBuffer(const std::string& name);
 
     // Generic Meshes
     uint64_t CreateGenericMesh();
@@ -63,9 +69,11 @@ namespace VulkanResourceManager {
 
     // Descriptor Sets
     VulkanDescriptorSetResource& CreateDescriptorSet(const std::string& name, VkDescriptorSetLayoutCreateInfo layoutInfo, DescriptorSetLifetime lifetime);
+    bool DescriptorSetExists(const std::string& name);
     VulkanDescriptorSetResource* GetDescriptorSetResource(const std::string& name);
     VulkanDescriptorSet* GetDescriptorSet(const std::string& name);
     VkDescriptorSetLayout GetDescriptorSetLayout(const std::string& name);
+    void RemoveDescriptorSet(const std::string& name);
 
     // Pipelines
     VulkanPipeline& CreatePipeline(const std::string& name);

@@ -1,42 +1,109 @@
 #include "DDGIVolume.h"
 
 #include "Hell/BVH/BVH.h"
-#include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+#include "Hell/Render/API/OpenGL/GL_resource_manager.h"
+#include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 
 #include "Unloved/Debug/DebugDraw.h"
-#include "Unloved/Objects/House/Door.h"
+#include "Unloved/Render/API/Vulkan/VK_renderer.h"
 #include "Unloved/Systems/DDGI/DDGIGeometryBuilder.h"
-#include "Unloved/World/World.h"
 
-#include <iostream> // TODO: get me out of here
+#include <limits>
 
 namespace Unloved {
 
 DDGIVolume::DDGIVolume(uint64_t id, DDGIVolumeCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_id = id;
     m_createInfo = createInfo;
-    m_createInfo.origin += spawnOffset.translation; 
+    m_createInfo.origin += spawnOffset.translation;
     m_createInfo.rotation += glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
 
+    CreateGpuResourceNames();
+    CreateProbeTextureArrays();
     UpdateMembers();
-
-    std::cout << "Total probe count: " << GetTotalProbeCount() << "\n";
 }
 
 void DDGIVolume::Update() {
+    if (m_framesSinceLastProbeUpdate != std::numeric_limits<uint32_t>::max()) {
+        m_framesSinceLastProbeUpdate++;
+    }
+
     if (m_ddgiGeometryDirty) {
         RebuildDDGIGeometry();
         m_ddgiGeometryDirty = false;
     }
-
-    // Also in here, find a way to do an Immediate style upload of the point cloud data + compute point light base color
-    // This will be handy for Vulkan also.
 
     m_pointCloud.Update();
 }
 
 void DDGIVolume::CleanUp() {
     CleanUpDDGIGeometry();
+    CleanUpProbeTextureArrays();
+    CleanUpSSBOs();
+}
+
+void DDGIVolume::CreateGpuResourceNames() {
+    const std::string baseName = "DDGI_" + std::to_string(m_id) + "_";
+
+    m_probeDistanceTextureArrayName = baseName + "ProbeDistance";
+    m_probeIrradianceTextureArrayName = baseName + "ProbeIrradiance";
+    m_pointCloudSSBOName = baseName + "PointCloud";
+    m_pointCloudDirtyFlagsSSBOName = baseName + "PointCloudDirtyFlags";
+    m_pointCloudTextureInfoSSBOName = baseName + "PointCloudTextureInfo";
+    m_pointCloudGridOffsetsSSBOName = baseName + "PointCloudGridOffsets";
+    m_pointCloudGridCountsSSBOName = baseName + "PointCloudGridCounts";
+    m_probePointIndicesSSBOName = baseName + "ProbePointIndices";
+    m_probePointOffsetsSSBOName = baseName + "ProbePointOffsets";
+    m_probePointCountsSSBOName = baseName + "ProbePointCounts";
+    m_sceneBvhSSBOName = baseName + "SceneBvh";
+    m_meshesBvhSSBOName = baseName + "MeshesBvh";
+    m_triangleDataSSBOName = baseName + "TriangleData";
+    m_entityInstancesSSBOName = baseName + "EntityInstances";
+    m_rayQueryDescriptorSetName = baseName + "RayQueryDescriptorSet";
+}
+
+void DDGIVolume::CreateProbeTextureArrays() {
+    Hell::ResourceManager::CreateTextureArray(m_probeDistanceTextureArrayName);
+    Hell::ResourceManager::CreateTextureArray(m_probeIrradianceTextureArrayName);
+}
+
+void DDGIVolume::CleanUpProbeTextureArrays() {
+    if (!m_probeDistanceTextureArrayName.empty()) {
+        Hell::ResourceManager::RemoveTextureArrayByName(m_probeDistanceTextureArrayName);
+        m_probeDistanceTextureArrayName.clear();
+    }
+
+    if (!m_probeIrradianceTextureArrayName.empty()) {
+        Hell::ResourceManager::RemoveTextureArrayByName(m_probeIrradianceTextureArrayName);
+        m_probeIrradianceTextureArrayName.clear();
+    }
+}
+
+void DDGIVolume::CleanUpSSBOs() {
+    OpenGL::ResourceManager::RemoveSSBOByName(m_pointCloudSSBOName);
+    OpenGL::ResourceManager::RemoveSSBOByName(m_pointCloudDirtyFlagsSSBOName);
+    OpenGL::ResourceManager::RemoveSSBOByName(m_pointCloudTextureInfoSSBOName);
+    OpenGL::ResourceManager::RemoveSSBOByName(m_pointCloudGridOffsetsSSBOName);
+    OpenGL::ResourceManager::RemoveSSBOByName(m_pointCloudGridCountsSSBOName);
+    OpenGL::ResourceManager::RemoveSSBOByName(m_probePointIndicesSSBOName);
+    OpenGL::ResourceManager::RemoveSSBOByName(m_probePointOffsetsSSBOName);
+    OpenGL::ResourceManager::RemoveSSBOByName(m_probePointCountsSSBOName);
+    OpenGL::ResourceManager::RemoveSSBOByName(m_sceneBvhSSBOName);
+    OpenGL::ResourceManager::RemoveSSBOByName(m_meshesBvhSSBOName);
+    OpenGL::ResourceManager::RemoveSSBOByName(m_triangleDataSSBOName);
+    OpenGL::ResourceManager::RemoveSSBOByName(m_entityInstancesSSBOName);
+
+    VulkanResourceManager::RemoveBuffer(m_pointCloudSSBOName);
+    VulkanResourceManager::RemoveBuffer(m_pointCloudDirtyFlagsSSBOName);
+    VulkanResourceManager::RemoveBuffer(m_pointCloudTextureInfoSSBOName);
+    VulkanResourceManager::RemoveBuffer(m_pointCloudGridOffsetsSSBOName);
+    VulkanResourceManager::RemoveBuffer(m_pointCloudGridCountsSSBOName);
+    VulkanResourceManager::RemoveBuffer(m_probePointIndicesSSBOName);
+    VulkanResourceManager::RemoveBuffer(m_probePointOffsetsSSBOName);
+    VulkanResourceManager::RemoveBuffer(m_probePointCountsSSBOName);
+    VulkanResourceManager::RemoveDescriptorSet(m_rayQueryDescriptorSetName);
+    VulkanRenderer::DestroyDDGIRayQueryScene(m_id);
 }
 
 void DDGIVolume::CleanUpDDGIGeometry() {
@@ -55,21 +122,25 @@ void DDGIVolume::CleanUpDDGIGeometry() {
 void DDGIVolume::RebuildDDGIGeometry() {
     CleanUpDDGIGeometry();
 
-    DDGIHouseGeometry houseGeometry = Unloved::DDGIGeometryBuilder::BuildHouseGeometry(m_boundsMin, m_boundsMax);
+    DDGIHouseGeometry houseGeometry = DDGIGeometryBuilder::BuildHouseGeometry(m_boundsMin, m_boundsMax);
     RebuildPointCloudSeedTriangles(houseGeometry);
     RebuildDDGIHouseBvh(houseGeometry);
-    Unloved::DDGIGeometryBuilder::CreateDoorProxyBvh();
+    DDGIGeometryBuilder::CreateDoorProxyBvh();
 
     m_sceneBvhId = Hell::Bvh::CreateSceneBvh();
+
     if (SceneBvh* sceneBvh = Hell::Bvh::GetSceneBvhById(m_sceneBvhId)) {
         std::vector<SceneBvhMeshInput> meshBvhs;
+
         if (MeshBvh* houseMeshBvh = Hell::Bvh::GetMeshBvhById(m_houseBvhId)) {
             meshBvhs.push_back({ m_houseBvhId, houseMeshBvh });
         }
-        const uint64_t ddgiDoorProxyBvhId = Unloved::DDGIGeometryBuilder::GetDoorProxyBvhId();
+
+        const uint64_t ddgiDoorProxyBvhId = DDGIGeometryBuilder::GetDoorProxyBvhId();
         if (MeshBvh* doorMeshBvh = Hell::Bvh::GetMeshBvhById(ddgiDoorProxyBvhId)) {
             meshBvhs.push_back({ ddgiDoorProxyBvhId, doorMeshBvh });
         }
+
         sceneBvh->AddMeshBvhs(meshBvhs);
     }
 
@@ -178,23 +249,16 @@ void DDGIVolume::UpdateDDGISceneBvh() {
     instance.meshBvhId = m_houseBvhId;
     instance.worldAabbCenter = (instance.worldAabbBoundsMin + instance.worldAabbBoundsMax) * 0.5f;
 
-    const uint64_t ddgiDoorProxyBvhId = Unloved::DDGIGeometryBuilder::GetDoorProxyBvhId();
+    const uint64_t ddgiDoorProxyBvhId = DDGIGeometryBuilder::GetDoorProxyBvhId();
     if (ddgiDoorProxyBvhId != 0) {
-        // Add all the doors
-        for (Door& door : Unloved::World::GetDoors()) {
-            // Bit of a hack but get the hinges matrix, then zero out the y translation to match the doors main model matrix
-            MeshNode* meshNode = door.GetMeshNodes().GetMeshNodeByMeshName("Door_Hinges");
-            glm::mat4 worldMatrix = meshNode->worldMatrix;
-            worldMatrix[3][1] = door.GetDoorModelMatrix()[3][1];
-
-            // The PhysX aabb is tighter than the one your MeshNode holds, so use that
-            const AABB& aabb = door.GetPhsyicsAABB();
+        const std::vector<DDGIDoorProxyInstance> doorProxyInstances = DDGIGeometryBuilder::CollectDoorProxyInstances(m_boundsMin, m_boundsMax);
+        for (const DDGIDoorProxyInstance& doorProxyInstance : doorProxyInstances) {
 
             PrimitiveInstance& instance = instances.emplace_back();
-            instance.worldAabbBoundsMin = aabb.GetBoundsMin();
-            instance.worldAabbBoundsMax = aabb.GetBoundsMax();
-            instance.objectId = door.GetObjectId();
-            instance.worldTransform = worldMatrix;
+            instance.worldAabbBoundsMin = doorProxyInstance.worldAabb.GetBoundsMin();
+            instance.worldAabbBoundsMax = doorProxyInstance.worldAabb.GetBoundsMax();
+            instance.objectId = doorProxyInstance.objectId;
+            instance.worldTransform = doorProxyInstance.worldTransform;
             instance.inverseWorldTransform = glm::inverse(instance.worldTransform);
             instance.meshBvhId = ddgiDoorProxyBvhId;
             instance.worldAabbCenter = (instance.worldAabbBoundsMin + instance.worldAabbBoundsMax) * 0.5f;
@@ -209,20 +273,14 @@ void DDGIVolume::UpdateDDGISceneBvh() {
 }
 
 void DDGIVolume::DebugDraw() {
-    // Draw volume bounds as AABB
-    if (false) {
-        AABB aabb = AABB(GetBoundsMin(), GetBoundsMax());
-        DebugDraw::DrawAABB(aabb, YELLOW);
-    }
+    AABB aabb = AABB(GetBoundsMin(), GetBoundsMax());
+    DebugDraw::DrawAABB(aabb, YELLOW);
 
-    // Draw probe positions as points
-    if (false) {
-        for (uint32_t x = 0; x < m_probeCountX; x++) {
-            for (uint32_t y = 0; y < m_probeCountY; y++) {
-                for (uint32_t z = 0; z < m_probeCountZ; z++) {
-                    glm::vec3 probePosition = GetProbeBaseWorldPosition(glm::ivec3(x, y, z));
-                    DebugDraw::DrawPoint(probePosition, RED);
-                }
+    for (uint32_t x = 0; x < m_probeCountX; x++) {
+        for (uint32_t y = 0; y < m_probeCountY; y++) {
+            for (uint32_t z = 0; z < m_probeCountZ; z++) {
+                glm::vec3 probePosition = GetProbeBaseWorldPosition(glm::ivec3(x, y, z));
+                DebugDraw::DrawPoint(probePosition, RED);
             }
         }
     }
@@ -258,7 +316,6 @@ void DDGIVolume::Init(const glm::vec3& aabbMin, const glm::vec3& aabbMax, float 
     m_probeCountY = (int)std::ceil(m_worldSpaceHeight / GetProbeSpacing()) + 1;
     m_probeCountZ = (int)std::ceil(m_worldSpaceDepth / GetProbeSpacing()) + 1;
 
-    Logging::Debug() << "Created DDGIVolume " << aabbMin << " boundsMin " << aabbMin << " boundsMax\n";
 }
 
 uint32_t DDGIVolume::GetTotalProbeCount() const {
@@ -277,6 +334,7 @@ DDGIVolumeGPU DDGIVolume::GetGPUData() const {
     volume.padding0 = 0;
     volume.worldBoundsMax = GetOrigin() + halfExtents;
     volume.padding1 = 0;
+    volume.probeOffset = m_probeOffset;
 
     return volume;
 }

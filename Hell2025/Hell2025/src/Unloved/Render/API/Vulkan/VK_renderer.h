@@ -7,6 +7,7 @@
 namespace VulkanRenderer {
     void Init();
     void InitMain();
+    void WaitIdle();
     void CleanUp();
     void HotloadShaders();
     void RenderLoadingScreen();
@@ -17,6 +18,7 @@ namespace VulkanRenderer {
     uint32_t GetCurrentFrameIndex();
 
     void UpdateBindlessTextureDescriptors();
+    void DestroyDDGIRayQueryScene(uint64_t volumeId);
 
     const std::string& GetZoneNames();
     const std::string& GetZoneGPUTimings();

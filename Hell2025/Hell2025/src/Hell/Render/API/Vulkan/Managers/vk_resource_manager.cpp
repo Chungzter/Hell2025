@@ -27,6 +27,7 @@ namespace VulkanResourceManager {
     Hell::SlotMap<VulkanMeshBuffer> g_meshBuffers;
     Hell::SlotMap<VulkanTexture> g_textures;
 
+    std::unordered_map<std::string, uint64_t> g_bufferIdsByName;
     std::unordered_map<std::string, uint64_t> g_meshBufferIdsByName;
 
     namespace {
@@ -54,7 +55,7 @@ namespace VulkanResourceManager {
         for (auto& object : g_accelerationStructures)  { object.Cleanup(); } g_accelerationStructures.clear();
         for (auto& object : g_genericMeshes)           { object.CleanUp(); } g_genericMeshes.clear();
         for (auto& object : g_meshBuffers)             { object.Cleanup(); } g_meshBuffers.clear(); g_meshBufferIdsByName.clear();
-        for (auto& object : g_buffers)                 { object.Cleanup(); } g_buffers.clear();
+        for (auto& object : g_buffers)                 { object.Cleanup(); } g_buffers.clear(); g_bufferIdsByName.clear();
         for (auto& object : g_textures)                { object.Cleanup(); } g_textures.clear();
 
         for (auto& [name, object] : g_descriptorSets)  { object.Cleanup(); } g_descriptorSets.clear();
@@ -288,9 +289,17 @@ namespace VulkanResourceManager {
     
     // Allocated Images
      
-    AllocatedImage& CreateAllocatedImage(const std::string& name, uint32_t width, uint32_t height, VkSampleCountFlagBits sampleCount, VkFormat format, VkImageUsageFlags usage) {
+    AllocatedImage& CreateAllocatedImage(const std::string& name, uint32_t width, uint32_t height, VkSampleCountFlagBits sampleCount, VkFormat format, VkImageUsageFlags usage, bool allocateMips) {
+        return CreateAllocatedImageArray(name, width, height, 1, sampleCount, format, usage, allocateMips);
+    }
+
+    AllocatedImage& CreateAllocatedImageArray(const std::string& name, uint32_t width, uint32_t height, uint32_t layerCount, VkSampleCountFlagBits sampleCount, VkFormat format, VkImageUsageFlags usage, bool allocateMips) {
         if (width == 0 || height == 0) {
             Logging::Error() << "VulkanResourceManager::CreateAllocatedImage(..) zero dimension image '" << name << "' requested.\n";
+            __debugbreak();
+        }
+        if (layerCount == 0) {
+            Logging::Error() << "VulkanResourceManager::CreateAllocatedImageArray(..) zero layer image '" << name << "' requested.\n";
             __debugbreak();
         }
         if (sampleCount == 0) {
@@ -305,7 +314,7 @@ namespace VulkanResourceManager {
         }
 
         VkExtent3D extent{ width, height, 1 };
-        it->second = AllocatedImage(format, extent, sampleCount, usage, name);
+        it->second = AllocatedImage(format, extent, sampleCount, usage, name, layerCount, allocateMips);
         return it->second;
     }
 
@@ -321,6 +330,14 @@ namespace VulkanResourceManager {
 
     bool AllocatedImageExists(const std::string& name) {
         return g_allocatedImages.find(name) != g_allocatedImages.end();
+    }
+
+    void RemoveAllocatedImage(const std::string& name) {
+        auto it = g_allocatedImages.find(name);
+        if (it == g_allocatedImages.end()) return;
+
+        it->second.Cleanup();
+        g_allocatedImages.erase(it);
     }
 
     // Cubemaps
@@ -391,6 +408,31 @@ namespace VulkanResourceManager {
         return id;
     }
 
+    uint64_t CreateBuffer(const std::string& name, VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags vmaFlags) {
+        if (name.empty()) {
+            Logging::Error() << "VulkanResourceManager::CreateBuffer(..) empty resource name requested.\n";
+            __debugbreak();
+        }
+
+        auto it = g_bufferIdsByName.find(name);
+        if (it != g_bufferIdsByName.end()) {
+            if (VulkanBuffer* buffer = g_buffers.get(it->second)) {
+                buffer->Cleanup();
+                g_buffers.erase(it->second);
+            }
+            g_bufferIdsByName.erase(it);
+        }
+
+        const uint64_t id = CreateBuffer(size, usage, memoryUsage, vmaFlags);
+        g_bufferIdsByName[name] = id;
+        return id;
+    }
+
+    bool BufferExists(const std::string& name) {
+        auto it = g_bufferIdsByName.find(name);
+        return it != g_bufferIdsByName.end() && g_buffers.get(it->second) != nullptr;
+    }
+
     VulkanBuffer* GetBuffer(uint64_t id) {
         VulkanBuffer* buffer = g_buffers.get(id);
 
@@ -399,6 +441,16 @@ namespace VulkanResourceManager {
         }
 
         return buffer;
+    }
+
+    VulkanBuffer* GetBuffer(const std::string& name) {
+        auto it = g_bufferIdsByName.find(name);
+        if (it == g_bufferIdsByName.end()) {
+            Logging::Error() << "VulkanResourceManager::GetBuffer(..) no buffer named '" << name << "'.\n";
+            return nullptr;
+        }
+
+        return GetBuffer(it->second);
     }
 
     void UploadBufferData(uint64_t id, const void* data, VkDeviceSize size) {
@@ -412,11 +464,33 @@ namespace VulkanResourceManager {
 
     void RemoveBuffer(uint64_t id) {
         if (VulkanBuffer* buffer = g_buffers.get(id)) {
+            for (auto it = g_bufferIdsByName.begin(); it != g_bufferIdsByName.end(); ) {
+                if (it->second == id) {
+                    it = g_bufferIdsByName.erase(it);
+                }
+                else {
+                    it++;
+                }
+            }
+
             buffer->Cleanup();
             g_buffers.erase(id);
         }
         else {
             Logging::Error() << "VulkanResourceManager::RemoveBuffer(..) no buffer with id '" << id << "'.\n";
+        }
+    }
+
+    void RemoveBuffer(const std::string& name) {
+        auto it = g_bufferIdsByName.find(name);
+        if (it == g_bufferIdsByName.end()) return;
+
+        const uint64_t id = it->second;
+        g_bufferIdsByName.erase(it);
+
+        if (VulkanBuffer* buffer = g_buffers.get(id)) {
+            buffer->Cleanup();
+            g_buffers.erase(id);
         }
     }
 
@@ -570,6 +644,10 @@ namespace VulkanResourceManager {
         return it->second;
     }
 
+    bool DescriptorSetExists(const std::string& name) {
+        return g_descriptorSets.find(name) != g_descriptorSets.end();
+    }
+
     VulkanDescriptorSetResource* GetDescriptorSetResource(const std::string& name) {
         auto it = g_descriptorSets.find(name);
 
@@ -601,6 +679,14 @@ namespace VulkanResourceManager {
         }
 
         return it->second.GetLayout();
+    }
+
+    void RemoveDescriptorSet(const std::string& name) {
+        auto it = g_descriptorSets.find(name);
+        if (it == g_descriptorSets.end()) return;
+
+        it->second.Cleanup();
+        g_descriptorSets.erase(it);
     }
     
     // Pipelines

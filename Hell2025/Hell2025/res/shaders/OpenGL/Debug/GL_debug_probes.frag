@@ -7,7 +7,6 @@ layout (location = 0) out vec4 FragOut;
 layout(binding = 0) uniform sampler2DArray u_distanceAtlas;
 layout(binding = 1) uniform sampler2DArray u_irradianceAtlas;
 
-layout(std430, binding = 6) readonly buffer ProbeColorBuffer  { ProbeColor probeColors[]; };
 layout(std430, binding = 7) readonly buffer DDGIVolumeBuffer  { DDGIVolume volume; };
 layout(std430, binding = 8) readonly buffer ProbeStatesBuffer { ProbeState probeStates[]; };
 
@@ -16,7 +15,6 @@ flat in ivec3 v_voxelCoord;
 in vec3 v_worldPos;
 in vec3 v_normal;
 
-uniform bool u_useSH;
 uniform int u_probeDebugState;
 
 vec3 GetColor(int probeIdx) {
@@ -31,10 +29,6 @@ vec3 GetColor(int probeIdx) {
     return linearIrradiance;
 }
 
-vec3 GetColorSH(int probeIdx) {
-    return ReconstructSH(probeColors[probeIdx], normalize(v_normal));
-}
-
 vec3 GetDistance(int probeIdx) {
     vec2 oct = DDGIGetOctahedralCoordinates(normalize(v_normal));
     vec3 probeUVW = DDGIGetProbeUV(probeIdx, oct, 14, volume);
@@ -46,7 +40,7 @@ vec3 GetDistance(int probeIdx) {
 }
 
 vec3 GetRelevance(int probeIdx) {
-    if (probeStates[probeIdx].isRelevant) {
+    if (probeStates[volume.probeOffset + uint(probeIdx)].isRelevant) {
         return vec3(0, 1, 0);
     }
     else {
@@ -55,7 +49,7 @@ vec3 GetRelevance(int probeIdx) {
 }
 
 vec3 GetActiveState(int probeIdx) {
-    if (probeStates[probeIdx].isActive) {
+    if (probeStates[volume.probeOffset + uint(probeIdx)].isActive) {
         return vec3(0, 1, 1);
     }
     else {
@@ -64,7 +58,7 @@ vec3 GetActiveState(int probeIdx) {
 }
 
 vec3 GetDistanceCooldown(int probeIdx) {
-    uint cooldown = probeStates[probeIdx].distanceCooldown;
+    uint cooldown = probeStates[volume.probeOffset + uint(probeIdx)].distanceCooldown;
     float value = float(cooldown) / float(PROBE_MAX_DISTANCE_COOLDOWN);
     return vec3(value, 0.0, 0.0);
 }
@@ -83,7 +77,7 @@ vec3 GetDisttanceWithCooldown(int probeIdx) {
 }
 
 vec3 GetIrradianceCoolDown(int probeIdx) {
-    uint cooldown = probeStates[probeIdx].irradianceCooldown;
+    uint cooldown = probeStates[volume.probeOffset + uint(probeIdx)].irradianceCooldown;
 
     //if (cooldown == PROBE_MAX_IRRADIANCE_COOLDOWN) {
     //    return vec3(0.0); // This is a hack to match your other hack, that probes at max cooldown actually aren't updated
@@ -96,7 +90,7 @@ vec3 GetIrradianceCoolDown(int probeIdx) {
 void main() {
     int probeIdx = v_probeIndex;
 
-    vec3 color = (u_useSH ? GetColorSH(probeIdx) : GetColor(probeIdx)) * 0.5; // this 0.5 is a bit of a hack, find out why u need it!!!!
+    vec3 color = GetColor(probeIdx) * 0.5; // this 0.5 is a bit of a hack, find out why u need it!!!!
     vec3 dist = GetDistance(probeIdx);
     vec3 relevance = GetRelevance(probeIdx);
     vec3 activeState = GetActiveState(probeIdx);

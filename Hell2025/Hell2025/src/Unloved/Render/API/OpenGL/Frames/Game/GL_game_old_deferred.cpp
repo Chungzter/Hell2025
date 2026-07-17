@@ -4,7 +4,7 @@
 #include "Hell/Input.h"
 #include "Legacy/Timer.hpp"
 #include "Unloved/Render/Renderer.h"
-#include "World/LegacyWorld.h"
+#include "Unloved/Systems/DDGI/DDGIManager.h"
 
 #include "Hell/MemoryTracker/MemoryTracker.h"
 
@@ -34,8 +34,6 @@ namespace OpenGL::Renderer {
 
         ComputeOceanFFTPass();
         OceanHeightReadback();
-
-        Unloved::DDGIVolume& ddgiVolume = Unloved::LegacyWorld::GetTestDDGIVolume();
 
         glDisable(GL_DITHER);
 
@@ -82,7 +80,6 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(6, "TileLights");
         OpenGL::BindSSBO(7, "TileWorldBounds");
 
-        OpenGL::BindSSBO(10, "ProbeSHColor");
         OpenGL::BindSSBO(11, "ProbeStates");
 
         LightingPass();
@@ -113,9 +110,16 @@ namespace OpenGL::Renderer {
             gBuffer.ClearAttachment("Lighting", 0, 0, 0, 0);
         }
 
-        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
-        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
-        if (Unloved::Renderer::GetCurrentRendererSettings().debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
+        const auto& rendererSettings = Unloved::Renderer::GetCurrentRendererSettings();
+        if (rendererSettings.debugDrawPointCloud || rendererSettings.debugDrawPointCloudGrid || rendererSettings.debugDrawIrradianceProbes) {
+            Hell::SlotMap<Unloved::DDGIVolume>& ddgiVolumes = Unloved::DDGIManager::GetVolumes();
+
+            for (Unloved::DDGIVolume& ddgiVolume : ddgiVolumes) {
+                if (rendererSettings.debugDrawPointCloud)       DrawPointCloud(ddgiVolume);
+                if (rendererSettings.debugDrawPointCloudGrid)   DrawPointCloudGrid(ddgiVolume);
+                if (rendererSettings.debugDrawIrradianceProbes) DrawProbes(ddgiVolume);
+            }
+        }
 
         PostProcessingPass();
 

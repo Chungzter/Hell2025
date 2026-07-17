@@ -11,6 +11,7 @@ namespace VulkanRenderer {
         const Resolutions& resolutions = Config::GetResolutions();
 
         VkExtent2D gBufferExtent = { static_cast<uint32_t>(resolutions.gBuffer.x), static_cast<uint32_t>(resolutions.gBuffer.y) };
+        VkExtent2D indirectDiffuseExtent = { static_cast<uint32_t>(resolutions.gBufferHalfRes.x), static_cast<uint32_t>(resolutions.gBufferHalfRes.y) };
         VkExtent2D finalImageExtent = { static_cast<uint32_t>(resolutions.finalImage.x), static_cast<uint32_t>(resolutions.finalImage.y) };
         VkFormat finalImageFormat = VulkanSwapchainManager::GetSwapchainImageFormat();
 
@@ -25,6 +26,10 @@ namespace VulkanRenderer {
         VulkanResourceManager::CreateAllocatedImage("Visibility", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32G32_UINT, usage);
         VulkanResourceManager::CreateAllocatedImage("Lighting", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
         VulkanResourceManager::CreateAllocatedImage("Depth", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, depthUsage);
+
+        // DDGI
+        VulkanResourceManager::CreateAllocatedImage("IndirectDiffuse", indirectDiffuseExtent.width, indirectDiffuseExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectDiffuseSurface", indirectDiffuseExtent.width, indirectDiffuseExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
 
         // Hair
         VulkanResourceManager::CreateAllocatedImage("HairLighting", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_4_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, hairUsage);

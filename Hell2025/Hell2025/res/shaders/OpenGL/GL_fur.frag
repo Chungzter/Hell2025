@@ -1,7 +1,7 @@
 #version 460 core
 #extension GL_ARB_bindless_texture : enable
 #extension GL_EXT_nonuniform_qualifier : enable
-#include "../common/OpenGL/binding_indices.glsl"
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"

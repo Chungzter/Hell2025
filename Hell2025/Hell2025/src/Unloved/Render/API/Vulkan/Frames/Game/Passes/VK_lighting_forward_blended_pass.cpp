@@ -25,6 +25,8 @@ namespace VulkanRenderer {
 
         AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("Lighting");
         AllocatedImage* depthImage = VulkanResourceManager::GetAllocatedImage("Depth");
+        AllocatedImage* indirectDiffuseImage = VulkanResourceManager::GetAllocatedImage("IndirectDiffuse");
+        AllocatedImage* indirectDiffuseSurfaceImage = VulkanResourceManager::GetAllocatedImage("IndirectDiffuseSurface");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("LightingForwardBlended");
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("LightingForwardBlended");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
@@ -42,6 +44,8 @@ namespace VulkanRenderer {
 
         if (!lightingImage) return;
         if (!depthImage) return;
+        if (!indirectDiffuseImage) return;
+        if (!indirectDiffuseSurfaceImage) return;
         if (!pipeline) return;
         if (!renderState) return;
         if (!staticDescriptorSet) return;
@@ -63,6 +67,9 @@ namespace VulkanRenderer {
         std::array<VulkanDrawCommandBatch, 4> skinnedNonDeformingBlendedCommands = WriteDrawCommandsByViewport(drawInfoSet.skinnedNonDeformingBlended);
 
         VkExtent2D extent = lightingImage->GetExtent2D();
+        indirectDiffuseImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
+        indirectDiffuseSurfaceImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
+
         if (!BeginRenderState(commandBuffer, *renderState, extent)) return;
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());

@@ -74,6 +74,7 @@ void Player::UpdateInteract() {
     if (InventoryIsOpen()) return;
 
     m_interactHitPosition = glm::vec3(-9999.0f);
+    m_interactHitNormal = glm::vec3(0.0f, 0.0f, 1.0f);
     bool hitFound = false;
 
     // Replace me with some distance check with closest point from hit object AABB
@@ -82,6 +83,7 @@ void Player::UpdateInteract() {
         m_interactOpenableId = m_bvhRayResult.openableId;
         m_interactCustomId = m_bvhRayResult.customId;
         m_interactHitPosition = m_bvhRayResult.hitPosition;
+        m_interactHitNormal = m_bvhRayResult.hitNormal;
         hitFound = true;
     }
 
@@ -91,6 +93,7 @@ void Player::UpdateInteract() {
         m_interactOpenableId = 0;
         m_interactCustomId = 0;
         m_interactHitPosition = m_physXRayResult.hitPosition;
+        m_interactHitNormal = m_physXRayResult.hitNormal;
         hitFound = true;
     }
 

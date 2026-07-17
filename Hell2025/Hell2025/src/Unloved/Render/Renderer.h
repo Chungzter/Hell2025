@@ -11,6 +11,7 @@
 namespace Unloved::Renderer {
     void Init();
     void InitMain();
+    void WaitIdle();
     void CleanUp();
     void InitWoundMaskArray();
     void RenderLoadingScreen();
@@ -22,6 +23,7 @@ namespace Unloved::Renderer {
     void SetRendererOverrideState(RendererOverrideState state);
     void NextRendererOverrideState();
     bool OverrideStateUsesDebugViewPass();
+    bool OverrideStateUsesDebugTileViewPass();
 
     void SetProbeDebugState(ProbeDebugState state);
 	void NextProbeDebugState();
@@ -35,7 +37,6 @@ namespace Unloved::Renderer {
     void TogglePointCloudGrid();
     void ToggleRagdollRendering();
     void ToggleScreenSpaceReflections();
-    void ToggleSphericalHarmonics();
 
     void NextRendererMode();
 	void SetRendererMode(RendererMode rendererMode);

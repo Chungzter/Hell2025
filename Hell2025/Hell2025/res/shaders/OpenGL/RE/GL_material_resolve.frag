@@ -4,7 +4,7 @@
 layout(early_fragment_tests) in;
 
 #include "../../common/constants.glsl"
-#include "../../common/OpenGL/binding_indices.glsl"
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/lighting.glsl"
 #include "../../common/flags.glsl"
 #include "../../common/normal_encoding.glsl"
@@ -191,7 +191,7 @@ void main() {
     BaseColorMetallicOut.rgb = baseColor.rgb;
     BaseColorMetallicOut.a = metallic;
 
-    NormalXYRoughnessMiscOut.rg = EncodeNormal(normal);
+    NormalXYRoughnessMiscOut.rg = EncodeOct(normal);
     NormalXYRoughnessMiscOut.b = roughness;
     NormalXYRoughnessMiscOut.a = EncodeMiscFlags(renderItem.miscFlags);
 

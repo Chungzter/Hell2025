@@ -14,7 +14,7 @@
 namespace OpenGL::Renderer {
 
     void VatBloodPass() {
-        //ProfilerOpenGLZoneFunction();
+        ProfilerOpenGLZoneFunction();
 
         OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 

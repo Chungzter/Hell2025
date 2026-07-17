@@ -11,12 +11,15 @@ layout(early_fragment_tests) in;
 #include "../common/flags.glsl"
 #include "../common/lighting.glsl"
 #include "../common/types.glsl"
-#include "../common/Vulkan/binding_indices.glsl"
-#include "../common/Vulkan/push_constants.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
 
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
 layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamplers[];
 layout(set = 1, binding = 0) uniform accelerationStructureEXT u_RayQueryAccelerationStructure;
+
+#include "VK_ddgi_upsample.glsl"
 
 layout(location = 0) out vec4 LightingOut;
 
@@ -37,6 +40,10 @@ layout(buffer_reference, scalar) readonly buffer MaterialBuffer {
 
 layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
     ViewportData viewportData[];
+};
+
+layout(buffer_reference, scalar) readonly buffer RendererDataBuffer {
+    RendererData rendererData;
 };
 
 layout(buffer_reference, scalar) readonly buffer LightBuffer {
@@ -269,11 +276,13 @@ vec3 BuildNormal(vec3 vertexNormal, vec3 vertexTangent, vec3 normalMap) {
 void main() {
     RenderItemBuffer renderItemBuffer = RenderItemBuffer(pushConstant.data.frame.renderItemsDeviceAddress);
     MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
+    RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress);
     ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
     LightBuffer lightBuffer = LightBuffer(pushConstant.data.frame.lightsDeviceAddress);
 
     RenderItem renderItem = renderItemBuffer.renderItems[v_globalInstanceIndex];
     Material material = materialBuffer.materials[renderItem.materialIndex];
+    RendererData rendererData = rendererDataBuffer.rendererData;
     ViewportData viewport = viewportDataBuffer.viewportData[v_viewportIndex];
 
     if (material.basecolor < 0 || material.normal < 0 || material.rma < 0) {
@@ -301,7 +310,18 @@ void main() {
 
     vec3 viewPos = viewport.viewPos.xyz;
     vec3 directLighting = ComputeDirectLighting(lightBuffer, v_worldPos.xyz, normal, linearBaseColor, roughness, metallic, viewPos);
-    vec3 finalLitColor = directLighting * ao;
+    vec3 indirectDiffuse = vec3(0.0);
+
+    if (rendererData.enableIrradianceProbeSampling) {
+        ivec2 outputImageSize = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
+        vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / vec2(outputImageSize);
+        ivec4 viewportRect = ivec4(viewport.xOffset, viewport.yOffset, viewport.width, viewport.height);
+        vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral_VK(screenUV, normal, distance(v_worldPos.xyz, viewPos), outputImageSize, viewportRect);
+        vec3 diffuseAlbedo = linearBaseColor.rgb * (1.0 - metallic);
+        indirectDiffuse = probeIrradiance * diffuseAlbedo;
+    }
+
+    vec3 finalLitColor = (directLighting + indirectDiffuse) * ao;
 
     LightingOut.rgb = finalLitColor;
     LightingOut.a = baseColor.a;

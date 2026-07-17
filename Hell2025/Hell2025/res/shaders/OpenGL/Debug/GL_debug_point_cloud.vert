@@ -1,9 +1,7 @@
 #version 460 core
+#include "../../common/types.glsl"
 
-layout(location = 0) in vec4 a_position;
-layout(location = 1) in vec4 a_normal;
-layout(location = 2) in vec4 a_directLighting;
-layout(location = 3) in vec4 a_baseColor;
+layout(std430, binding = 8) readonly buffer PointCloudBuffer { CloudPoint points[]; };
 
 uniform int u_viewportIndex;
 uniform mat4 u_projectionView;
@@ -15,18 +13,19 @@ out vec3 v_worldPos;
 flat out uint v_vertexId;
 
 void main() {
-    vec3 position = a_position.xyz;
+    CloudPoint point = points[gl_VertexID];
+    vec3 position = point.position.xyz;
 
     // Offset along normal to get it out of the wall
-    position += a_normal.xyz * 0.01;
+    position += point.normal.xyz * 0.01;
 
     gl_Position = u_projectionView * vec4(position, 1.0);
 
-    v_worldPos = a_position.xyz;
-    v_normal = a_normal;
-    v_directLighting = a_directLighting;
-    v_baseColor = a_baseColor.rgb;
+    v_worldPos = point.position.xyz;
+    v_normal = point.normal;
+    v_directLighting = point.directLightingRGB_dirty;
+    v_baseColor = point.baseColor.rgb;
     v_vertexId = uint(gl_VertexID);
 
-    v_uv = vec2(a_baseColor.x, a_baseColor.y); // They're temporarily baked in here
+    v_uv = vec2(point.baseColor.x, point.baseColor.y); // They're temporarily baked in here
 }

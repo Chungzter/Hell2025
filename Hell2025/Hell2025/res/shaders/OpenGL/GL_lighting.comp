@@ -6,7 +6,7 @@
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 //#endif
 
-#include "../common/OpenGL/binding_indices.glsl"
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/lighting.glsl"
 #include "../common/distance_fog.glsl"
 #include "../common/normal_encoding.glsl"
@@ -14,6 +14,7 @@ readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uve
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 #include "../common/constants.glsl"
+#include "../common/ddgi_upsample.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
@@ -34,6 +35,7 @@ layout (binding = 7) uniform sampler2D u_depthTexture;
 layout (binding = 8) uniform sampler2D EmissiveTexture;
 layout (binding = 9) uniform sampler2D FlashlightCookieTexture;
 layout (binding = 10) uniform sampler2D IndirectDiffuseTexture;
+layout (binding = 11) uniform sampler2D IndirectDiffuseSurfaceTexture;
 
 uniform float u_viewportWidth;
 uniform float u_viewportHeight;
@@ -55,7 +57,6 @@ uniform int u_probeCount;
 uniform int u_probeCountX;
 uniform int u_probeCountY;
 uniform int u_probeCountZ;
-uniform bool u_sampleProbes;
 
 layout(rgba16f, binding = 0) uniform image2D outputImage;
 
@@ -103,13 +104,19 @@ void main() {
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
 
+    // Reverse-Z depth is cleared to zero. The skybox is rendered into the
+    // lighting target before this pass, so leave untouched background pixels
+    // alone instead of interpreting cleared G-buffer values as geometry.
+    float depth = texelFetch(u_depthTexture, px, 0).r;
+    if (depth <= 0.0) return;
+
     // Inputs
     //vec4 baseColor = texture(BaseColorTexture, screenUV);
     //vec4 normal = texture(NormalTexture, screenUV);
     //vec4 rma = texture(RMATexture, screenUV);
 
     vec4 normalXYRoughnessMisc = texelFetch(u_normalXYRoughnessMiscTexture, px, 0);
-    vec3 normal = DecodeNormal(normalXYRoughnessMisc.rg);
+    vec3 normal = DecodeOct(normalXYRoughnessMisc.rg);
     float roughness = normalXYRoughnessMisc.b;
     float misc = normalXYRoughnessMisc.a;
 
@@ -128,12 +135,6 @@ void main() {
 
     vec3 emssiveColor = texture(EmissiveTexture, screenUV).rgb;
     baseColor.rgb += emssiveColor.rgb;
-
-    // Don't apply lighting to skybox
-    if (normal.x == 0.0 && normal.y == 0.0 && normal.z == 0.0) {
-        //imageStore(outputImage, px, baseColor);
-        return;
-    }
 
     // Gamma-correct the base color
     vec3 gammaBaseColor = pow(baseColor.rgb, vec3(2.2));
@@ -157,7 +158,6 @@ void main() {
     bool thisViewportIsInShop = bool(viewportDataArr[viewportIndex].isInShop);
 
     // Position from depth reconstruction
-    float depth = texelFetch(u_depthTexture, px, 0).r;
     vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionView);
 
     float fragDistance = distance(viewPos, worldPos);
@@ -311,8 +311,9 @@ void main() {
     finalColor = DistanceFog(finalColor, fragDistance);
 
     // Indirect diffuse
-    if (u_sampleProbes) {
-        vec3 probeIrradiance = texture(IndirectDiffuseTexture, screenUV).rgb;
+    if (rendererData.enableIrradianceProbeSampling) {
+        ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+        vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral(IndirectDiffuseTexture, IndirectDiffuseSurfaceTexture, screenUV, normal, fragDistance, outputImageSize, viewportRect);
         vec3 diffuseAlbedo = gammaBaseColor.rgb * (1.0 - metallic);
         float indirectDiffuseScale = 1.0;
         vec3 indirectDiffuse = probeIrradiance * diffuseAlbedo * ao * indirectDiffuseScale;

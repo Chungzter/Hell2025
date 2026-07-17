@@ -23,6 +23,8 @@ namespace Hell::AssetLoader {
     void CreateSpriteSheets();
     void LoadIESFiles();
     void LoadMidiFiles();
+    void LoadPointAnimations();
     void LoadRagdollDataFiles();
     void LoadSoundFonts();
+    void LoadVATFiles();
 }

@@ -14,6 +14,7 @@ struct AABB {
     bool IntersectsSphere(const glm::vec3& sphereCenter, float radius) const;
     bool IntersectsAABB(const AABB& other) const;
     bool IntersectsAABB(const AABB& other, float threshold) const;
+    bool IntersectsAABB(const glm::vec3& otherBoundsMin, const glm::vec3& otherBoundsMax) const;
     bool ContainsPoint(const glm::vec3& point) const;
     glm::vec3 NearestPointTo(const glm::vec3& worldPos) const;
 

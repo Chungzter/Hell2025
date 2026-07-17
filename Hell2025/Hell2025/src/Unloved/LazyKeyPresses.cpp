@@ -41,7 +41,6 @@ void UpdateLazyKeypresses() {
         if (Hell::Input::KeyPressed(HELL_KEY_M))            Renderer::ToggleScreenSpaceReflections();
         if (Hell::Input::KeyPressed(HELL_KEY_O))            Renderer::ToggleDebugDraw();
         if (Hell::Input::KeyPressed(HELL_KEY_L))            Renderer::ToggleLighting();
-        if (Hell::Input::KeyPressed(HELL_KEY_SEMICOLON))    Renderer::ToggleSphericalHarmonics();
         if (Hell::Input::KeyPressed(HELL_KEY_COMMA))        Renderer::TogglePointCloud();
         if (Hell::Input::KeyPressed(HELL_KEY_PERIOD))       Renderer::NextProbeDebugState();
         if (Hell::Input::KeyPressed(HELL_KEY_SLASH))        Renderer::ToggleIrradianceProbeSampling();

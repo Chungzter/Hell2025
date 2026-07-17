@@ -52,6 +52,26 @@ namespace Hell::AssetCompiler {
             }
         }
 
+        void CompileVATModels() {
+            for (FileInfo& fileInfo : File::IterateDirectory("res/VAT", { "fbx" })) {
+                const std::string outputPath = "res/models/" + fileInfo.name + ".model";
+                const uint64_t sourceTimestamp = File::GetLastModifiedTime(fileInfo.path);
+
+                AssetFormats::ModelMetadata metadata;
+                const bool outputIsCurrent =
+                    File::Exists(outputPath) &&
+                    AssetFormats::ReadModelMetadata(outputPath, metadata) &&
+                    metadata.timestamp == sourceTimestamp;
+
+                if (!outputIsCurrent) {
+                    ModelData model = ImportVatCarrierModel(fileInfo.path);
+                    if (!model.meshes.empty()) {
+                        AssetFormats::SaveModel(outputPath, model);
+                    }
+                }
+            }
+        }
+
         void CompileModelBvhs() {
             for (FileInfo& fileInfo : File::IterateDirectory("res/models", { "model" })) {
                 const std::string modelPath = fileInfo.path;
@@ -108,6 +128,7 @@ namespace Hell::AssetCompiler {
     void CompileOutOfDateAssets() {
         CompileTextures();
         CompileModels();
+        CompileVATModels();
         CompileModelBvhs();
         CompileSkinnedModels();
     }

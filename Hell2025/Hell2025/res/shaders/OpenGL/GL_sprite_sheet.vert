@@ -1,7 +1,7 @@
 #version 460 core
 #include "../common/types.glsl"
 #include "../common/constants.glsl"
-#include "../common/OpenGL/binding_indices.glsl"
+#include "../common/OpenGL/GL_binding_indices.glsl"
 
 layout (location = 0) in vec3 vPosition;
 layout (location = 1) in vec3 vNormal;

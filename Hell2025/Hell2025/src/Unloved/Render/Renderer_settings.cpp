@@ -4,7 +4,6 @@
 namespace Audio = Hell::Audio;
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Editor/Editor.h"
-#include "Unloved/Systems/DDGI/DDGIManager.h"
 
 namespace Unloved::Renderer {
     struct RendererSettingsSet {
@@ -81,16 +80,6 @@ namespace Unloved::Renderer {
         Debug::BlitQuickDebugMessage("Nav Mesh: " + onOff);
     }
 
-    void ToggleSphericalHarmonics() {
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
-        RendererSettings& rendererSettings = GetCurrentRendererSettings();
-        rendererSettings.irradianceUsesSH = !rendererSettings.irradianceUsesSH;
-        Unloved::DDGIManager::ResetProbes();
-
-        std::string onOff = rendererSettings.irradianceUsesSH ? "SPHERICAL HARMONICS" : "OCTAL MAPPING";
-        Debug::BlitQuickDebugMessage("Irradiance path: " + onOff);
-    }
-
     void ToggleScreenSpaceReflections() {
         Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
@@ -147,9 +136,6 @@ namespace Unloved::Renderer {
             case RendererOverrideState::METALIC:
             case RendererOverrideState::AO:
             case RendererOverrideState::CAMERA_NDOTL:
-            case RendererOverrideState::TILE_HEATMAP_LIGHTS:
-            case RendererOverrideState::TILE_HEATMAP_BLOOD_DECALS:
-            case RendererOverrideState::TILE_HEATMAP_CHRISTMAS_LIGHTS:
             case RendererOverrideState::INDIRECT_DIFFUSE:
             case RendererOverrideState::VELOCITY:
             case RendererOverrideState::VIS_BUFFER:
@@ -159,6 +145,19 @@ namespace Unloved::Renderer {
                 return true;
             default:
                 return false;
+        }
+    }
+
+    bool OverrideStateUsesDebugTileViewPass() {
+        const RendererSettings& rendererSettings = GetCurrentRendererSettings();
+
+        switch (rendererSettings.rendererOverrideState) {
+        case RendererOverrideState::TILE_HEATMAP_LIGHTS:
+        case RendererOverrideState::TILE_HEATMAP_BLOOD_DECALS:
+        case RendererOverrideState::TILE_HEATMAP_CHRISTMAS_LIGHTS:
+            return true;
+        default:
+            return false;
         }
     }
 

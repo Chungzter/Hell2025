@@ -8,13 +8,13 @@
 layout(early_fragment_tests) in;
 
 #include "../common/hair.glsl"
-#include "../common/Vulkan/binding_indices.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/constants.glsl"
 #include "../common/flags.glsl"
 #include "../common/lighting.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
-#include "../common/Vulkan/push_constants.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
 
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
 layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamplers[];

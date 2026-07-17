@@ -40,28 +40,28 @@ float IntersectNodeDist(vec3 rayOrigin, vec3 rayDirInv, vec3 boundsMin, vec3 bou
     return (tNear <= tFar && tFar > 0.0) ? tNear : 1e27;
 }
 
-// Moller-Trumbore ray-triangle interesction algorithm
+// Moller-Trumbore ray-triangle intersection algorithm
 bool IntersectTriangle(in vec3 rayOrigin, in vec3 rayDir, float minDistance, float maxDistance, in vec3 p0, in vec3 e1, in vec3 e2, in vec3 normal) {
-    vec3 c = p0 - rayOrigin;
-    vec3 r = cross(rayDir, c);
-    float det = dot(normal, rayDir);
+    vec3 p = cross(rayDir, e2);
+    float det = dot(e1, p);
     if (abs(det) < 0.000001) return false;
     
     float invDet = 1.0 / det;
-    float u = dot(r, e2) * invDet;
+    vec3 s = rayOrigin - p0;
+    float u = dot(s, p) * invDet;
     if (u < 0.0 || u > 1.0) return false;
 
-    float v = dot(r, e1) * invDet;
+    vec3 q = cross(s, e1);
+    float v = dot(rayDir, q) * invDet;
     if (v < 0.0 || u + v > 1.0) return false;
 
-    float t = dot(normal, c) * invDet;
+    float t = dot(e2, q) * invDet;
     return (t >= minDistance && t < maxDistance);
 }
 
 bool IntersectTriangleClosestOLD(in vec3 rayOrigin, in vec3 rayDir, float minDistance, inout float maxDistance, in vec3 p0, in vec3 e1, in vec3 e2, in vec3 normal, out vec2 barycentrics) {
-    vec3 c = p0 - rayOrigin;
-    vec3 r = cross(rayDir, c);
-    float det = dot(normal, rayDir);
+    vec3 p = cross(rayDir, e2);
+    float det = dot(e1, p);
     
     // prevent division by zero for rays parallel to the surface
     if (abs(det) < 0.000001) {
@@ -69,19 +69,21 @@ bool IntersectTriangleClosestOLD(in vec3 rayOrigin, in vec3 rayDir, float minDis
     }
     
     float invDet = 1.0 / det;
-    float u = dot(r, e2) * invDet;
+    vec3 s = rayOrigin - p0;
+    float u = dot(s, p) * invDet;
     
     if (u < 0.0 || u > 1.0) {
         return false;
     }
 
-    float v = dot(r, e1) * invDet;
+    vec3 q = cross(s, e1);
+    float v = dot(rayDir, q) * invDet;
     
     if (v < 0.0 || u + v > 1.0) {
         return false;
     }
 
-    float t = dot(normal, c) * invDet;
+    float t = dot(e2, q) * invDet;
     
     if (t >= minDistance && t < maxDistance) {
         maxDistance = t;
@@ -93,9 +95,8 @@ bool IntersectTriangleClosestOLD(in vec3 rayOrigin, in vec3 rayDir, float minDis
 }
 
 bool IntersectTriangleClosest(in vec3 rayOrigin, in vec3 rayDir, float minDistance, inout float maxDistance, in vec3 p0, in vec3 e1, in vec3 e2, in vec3 normal, out vec2 barycentrics) {
-    vec3 c = p0 - rayOrigin;
-    vec3 r = cross(rayDir, c);
-    float det = dot(normal, rayDir);
+    vec3 p = cross(rayDir, e2);
+    float det = dot(e1, p);
     
     // check for parallel ray to avoid nan
     if (abs(det) < 0.000001) {
@@ -105,8 +106,10 @@ bool IntersectTriangleClosest(in vec3 rayOrigin, in vec3 rayDir, float minDistan
     float invDet = 1.0 / det;
     
     // calculate u and v with consistent winding
-    float u = dot(r, e2) * invDet;
-    float v = dot(-r, e1) * invDet;
+    vec3 s = rayOrigin - p0;
+    float u = dot(s, p) * invDet;
+    vec3 q = cross(s, e1);
+    float v = dot(rayDir, q) * invDet;
     
     // discard if outside triangle bounds
     if (u < 0.0 || v < 0.0 || u + v > 1.0) {
@@ -114,7 +117,7 @@ bool IntersectTriangleClosest(in vec3 rayOrigin, in vec3 rayDir, float minDistan
     }
 
     // project distance to plane
-    float t = dot(normal, c) * invDet;
+    float t = dot(e2, q) * invDet;
     
     // update hit if within range and closer than previous
     if (t >= minDistance && t < maxDistance) {
@@ -230,28 +233,26 @@ bool AnyHit(in vec3 rayOrigin, in vec3 rayDir, float minDistance, float maxDista
 }
 
 bool IntersectTriangleClosest(in vec3 rayOrigin, in vec3 rayDir, float minDistance, inout float maxDistance, in vec3 p0, in vec3 e1, in vec3 e2, in vec3 normal, out float signedT, out vec2 barycentrics) {
-    vec3 c = p0 - rayOrigin;
-    vec3 r = cross(rayDir, c);
-    float det = dot(normal, rayDir);
+    vec3 p = cross(rayDir, e2);
+    float det = dot(e1, p);
 
     if (abs(det) < 0.000001) return false;
 
     float invDet = 1.0 / det;
-    float u = dot(r, e2) * invDet;
+    vec3 s = rayOrigin - p0;
+    float u = dot(s, p) * invDet;
     if (u < 0.0 || u > 1.0) return false;
 
-    float v = dot(r, e1) * invDet;
+    vec3 q = cross(s, e1);
+    float v = dot(rayDir, q) * invDet;
     if (v < 0.0 || u + v > 1.0) return false;
 
-    float t = dot(normal, c) * invDet;
-    float absT = abs(t);
+    float t = dot(e2, q) * invDet;
 
-    if (absT >= minDistance && absT < maxDistance) {
-        maxDistance = absT; // Shrink the ray for BVH traversal using absolute distance
+    if (t >= minDistance && t < maxDistance) {
+        maxDistance = t;
         barycentrics = vec2(u, v);
-        // If det > 0, the ray and normal point in the same direction (Backface)
-        //signedT = (det > 0.0) ? -absT : absT; 
-        signedT = (det < 0.0) ? -absT : absT;
+        signedT = (dot(normal, rayDir) > 0.0) ? -t : t;
         return true;
     }
     return false;

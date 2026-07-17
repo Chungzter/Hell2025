@@ -35,6 +35,8 @@ namespace VulkanRenderer {
         AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("Lighting");
         AllocatedImage* baseColorImage = VulkanResourceManager::GetAllocatedImage("BaseColorMetallic");
         AllocatedImage* normalImage = VulkanResourceManager::GetAllocatedImage("NormalXYRoughnessMisc");
+        AllocatedImage* indirectDiffuseImage = VulkanResourceManager::GetAllocatedImage("IndirectDiffuse");
+        AllocatedImage* indirectDiffuseSurfaceImage = VulkanResourceManager::GetAllocatedImage("IndirectDiffuseSurface");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("LightingDeferred");
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("LightingDeferred");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
@@ -52,6 +54,8 @@ namespace VulkanRenderer {
         if (!lightingImage) return;
         if (!baseColorImage) return;
         if (!normalImage) return;
+        if (!indirectDiffuseImage) return;
+        if (!indirectDiffuseSurfaceImage) return;
         if (frameResources.viewportDataDeviceAddress == 0) return;
         if (frameResources.rendererDataDeviceAddress == 0) return;
         if (frameResources.materialsDeviceAddress == 0) return;
@@ -62,6 +66,8 @@ namespace VulkanRenderer {
         VkExtent2D extent = lightingImage->GetExtent2D();
         baseColorImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         normalImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
+        indirectDiffuseImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
+        indirectDiffuseSurfaceImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         if (!BeginRenderState(commandBuffer, *renderState, extent)) return;
 
         VkViewport viewport{};

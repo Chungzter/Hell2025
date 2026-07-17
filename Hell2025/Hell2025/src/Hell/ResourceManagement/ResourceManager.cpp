@@ -20,12 +20,14 @@ namespace Hell::ResourceManager {
         std::unordered_map<std::string, MeshBuffer> g_meshBuffers;
         std::unordered_map<std::string, MidiFile> g_midiFiles;
         std::unordered_map<std::string, uint32_t> g_modelIdsByName;
+        std::unordered_map<std::string, PointAnimation> g_pointAnimations;
         std::unordered_map<std::string, RagdollData> g_ragdollData;
         std::unordered_map<std::string, uint32_t> g_skinnedModelIdsByName;
         std::unordered_map<std::string, SoundFont> g_soundFonts;
         std::unordered_map<std::string, SpriteSheetTexture> g_spriteSheetTextures;
         std::unordered_map<std::string, Texture> g_textures;
         std::unordered_map<std::string, TextureArray> g_textureArrays;
+        std::unordered_map<std::string, Vat> g_vats;
 
         std::vector<Material> g_materials;
         std::vector<std::string> g_materialNamesByIndex;
@@ -79,6 +81,7 @@ namespace Hell::ResourceManager {
         g_models.clear();
         g_modelIdsByName.clear();
         g_nextModelId = 0;
+        g_pointAnimations.clear();
         g_ragdollData.clear();
         g_skinnedModels.clear();
         g_skinnedModelIdsByName.clear();
@@ -86,6 +89,7 @@ namespace Hell::ResourceManager {
         g_soundFonts.clear();
         g_spriteSheetTextures.clear();
         g_textureNamesByBindlessIndex.clear();
+        g_vats.clear();
     }
 
     // Animation
@@ -213,6 +217,108 @@ namespace Hell::ResourceManager {
 
         if (it == g_iesProfiles.end()) {
             Logging::Error() << "ResourceManager::GetIESProfilePtr(..) failed: '" << name << "' does not exist\n";
+            return nullptr;
+        }
+
+        return &it->second;
+    }
+
+    // VAT
+
+    Vat& CreateVAT(const std::string& name) {
+        auto it = g_vats.find(name);
+
+        if (it != g_vats.end()) {
+            Logging::Fatal() << "ResourceManager::CreateVAT(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_vats.emplace(name, Vat(name));
+        return result.first->second;
+    }
+
+    Vat& CreateVAT(Vat&& vat) {
+        const std::string name = vat.GetName();
+        auto it = g_vats.find(name);
+
+        if (it != g_vats.end()) {
+            Logging::Fatal() << "ResourceManager::CreateVAT(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_vats.emplace(name, std::move(vat));
+        return result.first->second;
+    }
+
+    Vat& GetVAT(const std::string& name) {
+        auto it = g_vats.find(name);
+
+        if (it == g_vats.end()) {
+            Logging::Error() << "ResourceManager::GetVAT(..) failed: '" << name << "' does not exist\n";
+
+            static Vat invalid;
+            return invalid;
+        }
+
+        return it->second;
+    }
+
+    Vat* GetVATPtr(const std::string& name) {
+        auto it = g_vats.find(name);
+
+        if (it == g_vats.end()) {
+            Logging::Error() << "ResourceManager::GetVATPtr(..) failed: '" << name << "' does not exist\n";
+            return nullptr;
+        }
+
+        return &it->second;
+    }
+
+    // Point Animation
+
+    PointAnimation& CreatePointAnimation(const std::string& name) {
+        auto it = g_pointAnimations.find(name);
+
+        if (it != g_pointAnimations.end()) {
+            Logging::Fatal() << "ResourceManager::CreatePointAnimation(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_pointAnimations.emplace(name, PointAnimation(name));
+        return result.first->second;
+    }
+
+    PointAnimation& CreatePointAnimation(PointAnimation&& pointAnimation) {
+        const std::string name = pointAnimation.GetName();
+        auto it = g_pointAnimations.find(name);
+
+        if (it != g_pointAnimations.end()) {
+            Logging::Fatal() << "ResourceManager::CreatePointAnimation(..) failed: '" << name << "' already exists\n";
+            return it->second;
+        }
+
+        auto result = g_pointAnimations.emplace(name, std::move(pointAnimation));
+        return result.first->second;
+    }
+
+    PointAnimation& GetPointAnimation(const std::string& name) {
+        auto it = g_pointAnimations.find(name);
+
+        if (it == g_pointAnimations.end()) {
+            Logging::Error() << "ResourceManager::GetPointAnimation(..) failed: '" << name << "' does not exist\n";
+
+            static PointAnimation invalid;
+            return invalid;
+        }
+
+        return it->second;
+    }
+
+    PointAnimation* GetPointAnimationPtr(const std::string& name) {
+        auto it = g_pointAnimations.find(name);
+
+        if (it == g_pointAnimations.end()) {
+            Logging::Error() << "ResourceManager::GetPointAnimationPtr(..) failed: '" << name << "' does not exist\n";
             return nullptr;
         }
 
@@ -782,6 +888,14 @@ namespace Hell::ResourceManager {
         return &it->second;
     }
 
+    void RemoveTextureArrayByName(const std::string& name) {
+        auto it = g_textureArrays.find(name);
+        if (it == g_textureArrays.end()) return;
+
+        it->second.CleanUp();
+        g_textureArrays.erase(it);
+    }
+
     // Memory Report
 
     void AppendMemoryReport(MemoryTracker::MemoryReport& report) {
@@ -844,6 +958,38 @@ namespace Hell::ResourceManager {
                 MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
                 entry.name = name;
                 entry.cpuBytes = iesProfile.GetCPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
+
+        if (!g_vats.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "VAT";
+            category.entries.reserve(g_vats.size());
+
+            for (const auto& [name, vat] : g_vats) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = vat.GetCPUAllocatedByteCount();
+            }
+
+            std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {
+                return a.name < b.name;
+                });
+        }
+
+        if (!g_pointAnimations.empty()) {
+            MemoryTracker::MemoryReportCategory& category = report.categories.emplace_back();
+            category.name = "Point Animations";
+            category.entries.reserve(g_pointAnimations.size());
+
+            for (const auto& [name, pointAnimation] : g_pointAnimations) {
+                MemoryTracker::MemoryReportEntry& entry = category.entries.emplace_back();
+                entry.name = name;
+                entry.cpuBytes = pointAnimation.GetCPUAllocatedByteCount();
             }
 
             std::sort(category.entries.begin(), category.entries.end(), [](const auto& a, const auto& b) {

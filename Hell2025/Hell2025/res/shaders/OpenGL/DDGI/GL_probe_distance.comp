@@ -49,10 +49,11 @@ void main() {
     uint pIdx = probeDistanceIndices[listIdx];
     if (pIdx >= uint(volume.totalProbes)) return;
 
+    uint globalProbeIdx = volume.probeOffset + pIdx;
     uint threadIdx = gl_LocalInvocationID.x;
     float probeSpacing = volume.probeSpacing;
     ivec3 probeCoords = DDGIGetProbeCoords(int(pIdx), volume);
-    vec3 probePos = DDGIGetProbeWorldPosition(probeCoords, volume, probeStates[pIdx]);
+    vec3 probePos = DDGIGetProbeWorldPosition(probeCoords, volume, probeStates[globalProbeIdx]);
     
     float maxDist = length(vec3(probeSpacing)) * 1.5;
 
@@ -79,10 +80,10 @@ void main() {
             if (shared_hitDistances[i] < 0.0) backfaceCount++;
         }
         shared_isActive = (float(backfaceCount) / float(BACKFACE_CLASSIFICATION_RAYS) <= 0.25);
-        probeStates[pIdx].isActive = shared_isActive;
+        probeStates[globalProbeIdx].isActive = shared_isActive;
 
-        if (probeStates[pIdx].distanceCooldown > 0u) {
-            probeStates[pIdx].distanceCooldown--;
+        if (probeStates[globalProbeIdx].distanceCooldown > 0u) {
+            probeStates[globalProbeIdx].distanceCooldown--;
         }
     }
 

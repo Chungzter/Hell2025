@@ -1,7 +1,7 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : enable
-#include "../../common/OpenGL/binding_indices.glsl"
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
@@ -12,6 +12,7 @@ layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow 
 layout (binding = 5) uniform sampler2D u_indirectDiffuseTexture;
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
 layout (binding = 9) uniform sampler2D u_flashlightCookieTexture;
+layout (binding = 10) uniform sampler2D u_indirectDiffuseSurfaceTexture;
 layout (binding = 11) uniform sampler2D hairFlowMap;
 layout (binding = 12) uniform sampler2D hairIdMap;
 layout (binding = 13) uniform sampler2D hairRootMap;
@@ -22,6 +23,7 @@ layout(early_fragment_tests) in;
 #include "../../common/lighting.glsl"
 #include "../../common/post_processing.glsl"
 #include "../../common/util.glsl"
+#include "../../common/ddgi_upsample.glsl"
 
 readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
 readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
@@ -337,18 +339,18 @@ void main() {
         directLighting += lightContribution * spotAttenuation * flashlightModifer;
     }
 
-    // Indirect diffuse
-    bool u_sampleProbes = true;
-
-    vec2 resolution = vec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
-    vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / resolution;
-    vec3 probeIrradiance = texture(u_indirectDiffuseTexture, screenUV).rgb;
-    
     vec3 indirectDiffuse = vec3(0.0);
-    vec3 diffuseAlbedo = hairBaseColor.rgb * (1.0 - metallic);
-    float indirectDiffuseScale = 1.0;
 
-    if (u_sampleProbes) {
+    // Indirect diffuse
+    if (rendererData.enableIrradianceProbeSampling) {
+        vec2 resolution = vec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
+        vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / resolution;
+        ViewportData vd = viewportData[v_viewportIndex];
+        ivec2 outputImageSize = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
+        ivec4 viewportRect = ivec4(vd.xOffset, vd.yOffset, vd.width, vd.height);
+        vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral(u_indirectDiffuseTexture, u_indirectDiffuseSurfaceTexture, screenUV, finalNormal, fragDistance, outputImageSize, viewportRect);
+        vec3 diffuseAlbedo = hairBaseColor.rgb * (1.0 - metallic);
+        float indirectDiffuseScale = 1.0;
         indirectDiffuse = probeIrradiance * diffuseAlbedo * indirectDiffuseScale;
     }
 

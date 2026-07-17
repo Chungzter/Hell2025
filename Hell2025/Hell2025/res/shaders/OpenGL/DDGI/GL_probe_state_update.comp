@@ -11,8 +11,9 @@ uniform int u_dirtyDoorAABBCount;
 uniform float u_time;
 
 void ApplyDirtyDoorDistanceUpdate(uint probeIdx) {
+    uint globalProbeIdx = volume.probeOffset + probeIdx;
     ivec3 probeCoords = DDGIGetProbeCoords(int(probeIdx), volume);
-    vec3 probePos = DDGIGetProbeWorldPosition(probeCoords, volume, probeStates[probeIdx]);
+    vec3 probePos = DDGIGetProbeWorldPosition(probeCoords, volume, probeStates[globalProbeIdx]);
 
     // Define the probe's area of influence
     float influenceRadius = volume.probeSpacing * PROBE_MAX_RAY_DISTANCE;
@@ -31,7 +32,7 @@ void ApplyDirtyDoorDistanceUpdate(uint probeIdx) {
 
         // If the distance is less than the influence radius squared, the probe can "see" the door
         if (distSq <= influenceRadiusSq) {
-            probeStates[probeIdx].distanceCooldown = PROBE_MAX_DISTANCE_COOLDOWN;
+            probeStates[globalProbeIdx].distanceCooldown = PROBE_MAX_DISTANCE_COOLDOWN;
 
             // Once u know it needs an update, stop checking the rest of the doors for this probe
             break;
@@ -43,7 +44,8 @@ void main() {
     uint probeIdx = gl_GlobalInvocationID.x;
     if (probeIdx >= volume.totalProbes) return;
 
-    probeStates[probeIdx].isRelevant = false;
+    uint globalProbeIdx = volume.probeOffset + probeIdx;
+    probeStates[globalProbeIdx].isRelevant = false;
 
     ApplyDirtyDoorDistanceUpdate(probeIdx);
 
@@ -54,10 +56,10 @@ void main() {
     }                   // HACK TO PREVENT COLORFUL PROBE GLITCH
 
     if (init) {
-        probeStates[probeIdx].distanceCooldown = PROBE_MAX_DISTANCE_COOLDOWN;
-        probeStates[probeIdx].irradianceCooldown = PROBE_MAX_IRRADIANCE_COOLDOWN;
-        probeStates[probeIdx].relocationOffset = vec3(0.0);
-        probeStates[probeIdx].isActive = true;
-        probeStates[probeIdx].isRelevant = true;
+        probeStates[globalProbeIdx].distanceCooldown = PROBE_MAX_DISTANCE_COOLDOWN;
+        probeStates[globalProbeIdx].irradianceCooldown = PROBE_MAX_IRRADIANCE_COOLDOWN;
+        probeStates[globalProbeIdx].relocationOffset = vec3(0.0);
+        probeStates[globalProbeIdx].isActive = true;
+        probeStates[globalProbeIdx].isRelevant = true;
     }
 }

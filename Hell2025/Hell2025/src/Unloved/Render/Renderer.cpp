@@ -42,6 +42,12 @@ namespace Unloved::Renderer {
         }
     }
 
+    void WaitIdle() {
+        if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+            VulkanRenderer::WaitIdle();
+        }
+    }
+
     void InitMain() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
             OpenGL::Renderer::InitMain();

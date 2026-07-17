@@ -9,7 +9,6 @@ layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 layout(rgba16f, binding = 0) uniform image2DArray u_irradianceAtlas;
 
 restrict layout(std430, binding = 4)  readonly buffer PointCloudBuffer         { CloudPoint points[]; };
-restrict layout(std430, binding = 5)  buffer ProbeColorBuffer                  { ProbeColor probeColors[]; };
 restrict layout(std430, binding = 6)  readonly buffer ProbeVisibilityCounter  { uint probeVisibilityCounter; };
 restrict layout(std430, binding = 7)  readonly buffer VisibleProbeList         { uint packedIndices[]; };
 restrict layout(std430, binding = 8)  readonly buffer DDGIVolumeBuffer         { DDGIVolume volume; };
@@ -18,87 +17,13 @@ restrict layout(std430, binding = 10) readonly buffer BakedIndicesBuffer       {
 restrict layout(std430, binding = 11) readonly buffer BakedOffsetsBuffer       { uint bakedOffsets[]; };
 restrict layout(std430, binding = 12) readonly buffer BakedCountsBuffer        { uint bakedCounts[]; };
 
-uniform int u_frameIndex;
 uniform float u_pointCloudSpacing;
-uniform bool u_useSH;
 
 const float maxDist = 3.0;
 
 shared vec3 shared_texelDirs[36];
 
-void sh(uint pIdx, vec3 probePos, uint threadIdx) {
-    // SH constants
-    const float A0 = 3.141592654;
-    const float A1 = 2.094395102;
-    const float A2 = 0.785398163;
-    const float SH_C0 = 0.28209479177;
-    const float SH_C1 = 0.4886025119;
-    const float SH_C2 = 1.09254843059;
-    const float SH_C3 = 0.31539156525;
-    const float SH_C4 = 0.54627421529;
-
-    vec3 local_sh[9];
-    for(int i = 0; i < 9; i++) local_sh[i] = vec3(0.0);
-
-    const float pointArea = u_pointCloudSpacing * u_pointCloudSpacing;
-    uint poolStart = bakedOffsets[pIdx];
-    uint poolCount = bakedCounts[pIdx];
-
-    for (uint i = threadIdx; i < poolCount; i += 32) {
-        uint ptIdx = bakedIndices[poolStart + i];
-
-        vec3 ptPos = points[ptIdx].position.xyz;
-        vec3 diff = ptPos - probePos;
-        float distSq = dot(diff, diff);
-
-        // Early out on range
-        if (distSq > maxDist * maxDist) continue;
-
-        vec3 ptNormal = points[ptIdx].normal.xyz;
-        float dist = sqrt(distSq);
-        vec3 dirToPoint = diff / dist;
-
-        // Backface culling for the point
-        float cosTheta = dot(ptNormal, -dirToPoint);
-        if (cosTheta <= 0.0) continue;
-
-        // Visibility test
-        if (!AnyHit(probePos, dirToPoint, 0.01, dist - 0.01)) {
-            // Coz u do not divide by a sum later, this acts as the integral weight
-            float spatialWeight = (cosTheta * pointArea) / max(distSq, 0.001);
-            vec3 radiance = points[ptIdx].directLightingRGB_dirty.xyz * spatialWeight;
-
-            // SH basis evaluation
-            float n[9];
-            n[0] = SH_C0 * A0;
-            n[1] = -SH_C1 * dirToPoint.y * A1;
-            n[2] =  SH_C1 * dirToPoint.z * A1;
-            n[3] = -SH_C1 * dirToPoint.x * A1;
-            n[4] =  SH_C2 * dirToPoint.x * dirToPoint.y * A2;
-            n[5] = -SH_C2 * dirToPoint.y * dirToPoint.z * A2;
-            n[6] =  SH_C3 * (3.0 * dirToPoint.z * dirToPoint.z - 1.0) * A2;
-            n[7] = -SH_C2 * dirToPoint.x * dirToPoint.z * A2;
-            n[8] =  SH_C4 * (dirToPoint.x * dirToPoint.x - dirToPoint.y * dirToPoint.y) * A2;
-
-            for(int j = 0; j < 9; j++) {
-                local_sh[j] += radiance * n[j];
-            }
-        }
-    }
-
-    // Accumulate results across the warp
-    for(int j = 0; j < 9; j++) {
-        vec3 sum = subgroupAdd(local_sh[j]);
-        if (subgroupElect()) {
-            vec3 old_sh = probeColors[pIdx].sh[j].rgb;
-
-            // Blend back in
-            probeColors[pIdx].sh[j] = vec4(mix(old_sh, sum, 0.1), 1.0);
-        }
-    }
-}
-
-void octral(uint pIdx, vec3 probePos, uint threadIdx) {
+void octal(uint pIdx, vec3 probePos, uint threadIdx) {
     const float encodingGamma = 5.0;
     const int INTERIOR = 6;
 
@@ -132,7 +57,6 @@ void octral(uint pIdx, vec3 probePos, uint threadIdx) {
         if (ptCos <= 0.0) continue;
 
         if (!AnyHit(probePos, dirToPoint, 0.01, dist - 0.01)) {
-            // Match sh function weight
             float spatialWeight = (ptCos * pointArea) / max(distSq, 0.001);
             vec3 radiance = points[ptIdx].directLightingRGB_dirty.xyz * spatialWeight;
 
@@ -180,13 +104,10 @@ void main() {
     ivec3 probeCoords = DDGIGetProbeCoords(int(pIdx), volume);
     vec3 probePos = DDGIGetProbeBaseWorldPosition(probeCoords, volume);
 
-    if (u_useSH) {
-        sh(pIdx, probePos, threadIdx);
-    } else {
-        octral(pIdx, probePos, threadIdx);
-    }
+    octal(pIdx, probePos, threadIdx);
 
-    if (threadIdx == 0u && probeStates[pIdx].irradianceCooldown > 0u) {
-        probeStates[pIdx].irradianceCooldown--;
+    uint globalProbeIdx = volume.probeOffset + pIdx;
+    if (threadIdx == 0u && probeStates[globalProbeIdx].irradianceCooldown > 0u) {
+        probeStates[globalProbeIdx].irradianceCooldown--;
     }
 }

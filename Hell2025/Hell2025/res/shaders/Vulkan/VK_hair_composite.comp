@@ -3,7 +3,7 @@
 
 layout(local_size_x = 24, local_size_y = 24, local_size_z = 1) in;
 
-#include "../common/Vulkan/binding_indices.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/post_processing.glsl"
 
 layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];

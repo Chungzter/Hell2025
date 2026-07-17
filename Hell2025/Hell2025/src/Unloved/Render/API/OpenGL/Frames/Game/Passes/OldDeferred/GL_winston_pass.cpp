@@ -36,10 +36,17 @@ namespace OpenGL::Renderer {
         gBuffer->Bind();
         gBuffer->DrawBuffer("Lighting");
 
-        glEnable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_BLEND);
-        glDepthFunc(GL_EQUAL);
+        OpenGLRasterizerState rasterizerState;
+        rasterizerState.depthTestEnabled = true;
+        rasterizerState.depthMask = false;
+        rasterizerState.depthFunc = GL_EQUAL;
+        rasterizerState.blendEnable = true;
+        rasterizerState.blendFuncSrcfactor = GL_SRC_ALPHA;
+        rasterizerState.blendFuncDstfactor = GL_ONE_MINUS_SRC_ALPHA;
+        rasterizerState.cullfaceEnable = false;
+        rasterizerState.colorMask = true;
+        rasterizerState.stencilTestEnabled = false;
+        OpenGL::RasterizerStateManager::ForceRasterizerState(rasterizerState);
 
         glBindTextureUnit(0, gBuffer->GetDepthAttachmentHandle());
         glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
@@ -50,10 +57,10 @@ namespace OpenGL::Renderer {
 
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
-            glm::mat4 projectionMatrix = viewportData[i].projection;
+            glm::mat4 projectionViewMatrix = viewportData[i].projectionViewReverseZ;
             glm::mat4 viewMatrix = viewportData[i].view;
 
-            OpenGL::SetUniformMat4("projection", projectionMatrix);
+            OpenGL::SetUniformMat4("projectionView", projectionViewMatrix);
             OpenGL::SetUniformMat4("view", viewMatrix);
             OpenGL::SetUniformBool("useUniformColor", false);
 
@@ -84,6 +91,5 @@ namespace OpenGL::Renderer {
             }
         }
 
-        glDepthFunc(GL_LEQUAL);
     }
 }

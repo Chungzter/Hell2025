@@ -15,32 +15,6 @@ namespace OpenGL::Renderer {
             //DebugBlitFrameBufferTexture("DecalMasks", "DecalMask0", 0, 480, 480, 480);
         }
 
-        // DD probes
-        if (false) {
-            OpenGLTextureArray& probeDistanceTexture = GetProbeDistanceTextureArray();
-            OpenGLFrameBuffer blitFrameBuffer;
-
-            int w = probeDistanceTexture.GetWidth();
-            int h = probeDistanceTexture.GetHeight();
-
-            blitFrameBuffer.Create("Blit", w, h);
-            glBindFramebuffer(GL_FRAMEBUFFER, blitFrameBuffer.GetHandle());
-            glNamedFramebufferTexture(blitFrameBuffer.GetHandle(), GL_COLOR_ATTACHMENT0, probeDistanceTexture.GetHandle(), 0);
-
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, blitFrameBuffer.GetHandle());
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-            glReadBuffer(GL_COLOR_ATTACHMENT0);
-            glDrawBuffer(GL_BACK);
-
-            int segmentWidth = w / 3;
-            glBlitFramebuffer(0, 0, segmentWidth, h, 0, 0, segmentWidth, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-            glBlitFramebuffer(segmentWidth, 0, segmentWidth * 2, h, 0, h, segmentWidth, h * 2, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-            glBlitFramebuffer(segmentWidth * 2, 0, w, h, 0, h * 2, segmentWidth, h * 3, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-            blitFrameBuffer.CleanUp();
-        }
-
         // World height map
         if (false) {
             OpenGLFrameBuffer* worldFrameBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("World");

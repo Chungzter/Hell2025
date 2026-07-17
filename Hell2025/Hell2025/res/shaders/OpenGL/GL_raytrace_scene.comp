@@ -40,7 +40,7 @@ void main() {
         float lightStrength = light.strength;
         float lightRadius = light.radius;
 
-        vec3 hitPos = rayOrigin + rayDir * record.t;
+        vec3 hitPos = rayOrigin + rayDir * abs(record.t);
         float dist = length(lightPosition - hitPos);
 
         float attenuation = lightStrength / (dist * dist + 0.0001);
@@ -60,7 +60,7 @@ void main() {
         float lightStrength = light.strength;
         float lightRadius = light.radius;
 
-        vec3 hitPos = rayOrigin + rayDir * record.t;
+        vec3 hitPos = rayOrigin + rayDir * abs(record.t);
         float dist = length(lightPosition - hitPos);
 
         float attenuation = lightStrength / (dist * dist + 0.0001);
