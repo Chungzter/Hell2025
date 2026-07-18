@@ -30,6 +30,7 @@ namespace {
     void CreateDebugTileView() {
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugTileView");
         pipeline.SetShader("DebugTileView");
+        pipeline.AddPushConstant(sizeof(PushConstantsDebugTileView), VK_SHADER_STAGE_COMPUTE_BIT);
         pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
         pipeline.Build();
     }
@@ -243,6 +244,18 @@ namespace {
         pipeline.SetRenderState("MaterialResolve");
         pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
         pipeline.AddPushConstant(sizeof(PushConstantsMaterialResolve), VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.Build();
+    }
+
+    // Reflectance
+
+    void CreateReflectedRadiancePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("ReflectedRadiance");
+        pipeline.SetShader("ReflectedRadiance");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddDescriptorSetLayout("RayQueryDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsReflectedRadiance), VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.SetRenderState("ReflectedRadiance");
         pipeline.Build();
     }
 
@@ -471,7 +484,8 @@ namespace VulkanRenderer {
         CreateTileWorldBoundsPipeline();
         CreateTileLightCullingPipeline();
 
-
+        // Reflectance
+        CreateReflectedRadiancePipeline();
 
 
         // Final present

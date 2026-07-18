@@ -18,13 +18,13 @@ shared float validDepthSampleCount;
 
 void main() {
 	uint tileIndex = gl_WorkGroupID.y * uint(rendererData.tileCountX) + gl_WorkGroupID.x;
-    
+
 	// Defaults
-	if (gl_LocalInvocationIndex == 0) {		
+	if (gl_LocalInvocationIndex == 0) {
         // Output defaults
-		tilelights[tileIndex].lightCount = 0;	
+		tilelights[tileIndex].lightCount = 0;
 		tilelightCount = 0;
-        
+
         // Pull tile world bounds out of the SSBO
         // And the valid sample count
         worldSpaceMin = tileWorldBounds[tileIndex].boundsMin.xyz;
@@ -37,13 +37,13 @@ void main() {
 	if (validDepthSampleCount > 0) {
 		uint invocationCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
 		uint loopCount = (rendererData.lightCount + invocationCount - 1u) / invocationCount;
-		
+
         for (uint i = 0u; i < loopCount; i++) {
 			uint lightIndex = gl_LocalInvocationIndex + i * invocationCount;
-			
+
             if (lightIndex < rendererData.lightCount) {
 				vec3 lightPos = vec3(lights[lightIndex].posX, lights[lightIndex].posY, lights[lightIndex].posZ);
-				float lightRadius = lights[lightIndex].radius;			
+				float lightRadius = lights[lightIndex].radius;
 
                 vec3 lightAabbMin = lights[lightIndex].worldBoundsMin.xyz;
                 vec3 lightAabbMax = lights[lightIndex].worldBoundsMax.xyz;

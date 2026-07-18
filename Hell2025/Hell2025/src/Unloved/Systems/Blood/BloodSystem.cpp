@@ -11,6 +11,7 @@
 
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Objects/Renderables/VATInstance.h"
+#include "Unloved/Session/Session.h"
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
 
 namespace {
@@ -40,6 +41,7 @@ namespace Unloved::BloodSystem {
     }
 
     void Update() {
+        return;
         UpdateVATInstances();
         UpdateParticles();
     }
@@ -52,6 +54,27 @@ namespace Unloved::BloodSystem {
     }
 
     void UpdateParticles() {
+
+        if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE)) {
+            g_particles.clear();
+        }
+
+        if (Hell::Input::KeyPressed(HELL_KEY_R)) {
+            if (Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0)) {
+
+                const glm::vec3& position = player->GetInteractHitPosition();
+                const glm::vec3& forward = player->GetInteractHitNormal();
+
+                Hell::LocalFrame localFrame = Hell::LocalFrame(forward);
+                Hell::QuatTransform transform = Hell::QuatTransform(position, localFrame, glm::vec3(0.05f));
+
+                glm::vec3 vel = localFrame.up +
+                                localFrame.forward;
+
+                g_particles.push_back(TestParticle(position, vel));
+            }
+        }
+
         for (int i = 0; i < g_particles.size(); i++) {
             g_particles[i].Update(Hell::Time::DeltaTime());
 
@@ -59,7 +82,9 @@ namespace Unloved::BloodSystem {
             const glm::vec3 rayDir = glm::normalize(g_particles[i].m_positionPrev - g_particles[i].m_position);
             float rayLength = glm::distance(g_particles[i].m_positionPrev, g_particles[i].m_position);
 
-            //g_particles[i].DebugDraw(i);
+            g_particles[i].DebugDraw(i);
+
+            g_particles[i].m_localFrame = Hell::LocalFrame(rayDir);
 
             if (g_particles[i].m_lifeTime < 0.1f) continue;
 
@@ -67,7 +92,7 @@ namespace Unloved::BloodSystem {
             PhysXRayResult physXRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, rayLength, false);
             if (physXRayResult.hitFound) {
                 g_particles[i].m_position = physXRayResult.hitPosition;
-                g_particles[i].m_finalRestingNormal = rayDir;
+                g_particles[i].m_finalHitNormal = physXRayResult.hitNormal;
                 g_particles[i].m_stopped = true;
                 continue;
             }
@@ -76,7 +101,7 @@ namespace Unloved::BloodSystem {
             BvhRayResult bvhRayResult = WorldBVH::ClosestHit(rayOrigin, rayDir, rayLength);
             if (bvhRayResult.hitFound) {
                 g_particles[i].m_position = bvhRayResult.hitPosition;
-                g_particles[i].m_finalRestingNormal = rayDir;
+                g_particles[i].m_finalHitNormal = bvhRayResult.hitNormal;
                 g_particles[i].m_stopped = true;
                 continue;
             }

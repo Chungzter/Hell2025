@@ -1,6 +1,7 @@
 #version 460
 
 #include "../../common/constants.glsl"
+#include "../../common/renderer_override_modes.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
 
@@ -82,8 +83,9 @@ void main() {
 	}
 	barrier();
 
-	// Lines
 	imageStore(u_outputImage, px, vec4(sharedDebugOutputColor, 1));
+
+	// Lines
 	if (gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 0 || gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 1) {
 		imageStore(u_outputImage, px, vec4(0, 0, 0, 1));
 	}

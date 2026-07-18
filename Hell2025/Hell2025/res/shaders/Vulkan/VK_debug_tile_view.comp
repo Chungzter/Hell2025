@@ -1,12 +1,28 @@
 #version 460
+#extension GL_EXT_buffer_reference2 : require
 #extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
 #include "../common/constants.glsl"
+#include "../common/renderer_override_modes.glsl"
+#include "../common/types.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
 #include "../common/Vulkan/VK_binding_indices.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
 layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsDebugTileView data;
+} pushConstant;
+
+
+layout(buffer_reference, scalar) readonly buffer RendererDataBuffer { RendererData rendererData; };
+layout(buffer_reference, scalar) buffer TileLightsBuffer            { TileLights data[];};
+
+shared vec3 sharedDebugOutputColor;
 
 void main() {
     ivec2 texel = ivec2(gl_GlobalInvocationID.xy);
@@ -14,15 +30,48 @@ void main() {
 
     if (texel.x >= targetSize.x || texel.y >= targetSize.y) return;
 
-    vec4 color = imageLoad(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel);
-    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel, color);
+    TileLightsBuffer tileLights = TileLightsBuffer(pushConstant.data.tileLightsDeviceAddress);
+    RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress);
 
-    // TODO
-    //
-    // actually read from the Tile Based Deferred data structures
-    //
+    RendererData rendererData = rendererDataBuffer.rendererData;
 
-    // Lines
+	if (gl_LocalInvocationIndex == 0) {
+		uint tileIndex = gl_WorkGroupID.y * rendererData.tileCountX + gl_WorkGroupID.x;
+
+        vec3 lightingColor = imageLoad(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel).rgb;
+
+        float count = 0;
+
+        // Tile lights
+        if (rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_LIGHTS) {
+			count = tileLights.data[tileIndex].lightCount / 8.0;
+		}
+        if (rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_BLOOD_DECALS) {
+			// TODO
+		}
+        if (rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_CHRISTMAS_LIGHTS) {
+			// TODO
+		}
+
+		count = clamp(count, 0, 1);
+		float level = count * 3.14159265/2;
+		vec3 col;
+		col.r = sin(level);
+		col.g = sin(level * 2.0);
+		col.b = cos(level);
+		//sharedDebugOutputColor = lightingColor * 0.5 + col * col;
+		sharedDebugOutputColor = (lightingColor * 0.1) + (col * col);
+
+		if (tileLights.data[tileIndex].lightCount == 0) {
+			sharedDebugOutputColor = vec3(0,0,0);
+		}
+	}
+	barrier();
+
+    // Write tile color
+    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel, vec4(sharedDebugOutputColor, 1.0));
+
+	// Lines
 	if (gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 0 || gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 1) {
         imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel, vec4(0, 0, 0, 1));
 	}

@@ -36,7 +36,10 @@ namespace VulkanRenderer {
         ComputeTileWorldBounds(frame.commandBuffer);
         LightCullingPass(frame.commandBuffer);
 
+        ReflectedRadiancePass(frame.commandBuffer);
+
         LightingPass(frame.commandBuffer);
+
         LightingForwardBlendedPass(frame.commandBuffer);
         SkyboxPass(frame.commandBuffer);
         // HairPass(frame.commandBuffer);

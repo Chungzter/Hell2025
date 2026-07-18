@@ -162,7 +162,7 @@ void main() {
 
     if (moonNdotL > 0.0) {
         vec3 shadow = ShadowCalculationCSM(worldPos, normal.xyz, moonLightDir, viewMatrix, viewportIndex);
-    
+
         if (any(greaterThan(shadow, vec3(0.0)))) {
             moonLighting = GetDirectionalLighting(moonLightDir, MOON_LIGHT_COLOR, MOON_LIGHT_STRENGTH, normal.xyz, worldPos, linearBaseColor.rgb, roughness, metallic, viewPos);
             moonLighting *= shadow;
@@ -173,6 +173,6 @@ void main() {
 
     // Distance Fog
     finalColor = DistanceFog(finalColor, fragDistance);
-    
+
     LightingOut = vec4(finalColor, 1);
 }

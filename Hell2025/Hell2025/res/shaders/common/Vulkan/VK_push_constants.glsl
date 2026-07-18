@@ -66,6 +66,16 @@ struct PushConstantsDeferredLighting {
 
     uint64_t rayQueryBLASInstanceDataDeviceAddress;
     uint64_t rayQueryMeshInstanceDataDeviceAddress;
+    uint64_t tileLightsDeviceAddress;
+    uint rayQueryEnabled;
+    uint padding0;
+};
+
+struct PushConstantsReflectedRadiance {
+    PushConstantsFrameResources frame;
+
+    uint64_t rayQueryBLASInstanceDataDeviceAddress;
+    uint64_t rayQueryMeshInstanceDataDeviceAddress;
     uint rayQueryEnabled;
     uint padding0;
 };
@@ -89,6 +99,17 @@ struct PushConstantsTileWorldBounds {
     uint64_t tileWorldBoundsDeviceAddress;
     int tileXCount;
     int tileYCount;
+};
+
+struct PushConstantsTileLightCulling {
+    PushConstantsFrameResources frame;
+    uint64_t tileLightsDeviceAddress;
+    uint64_t tileWorldBoundsDeviceAddress;
+};
+
+struct PushConstantsDebugTileView {
+    PushConstantsFrameResources frame;
+    uint64_t tileLightsDeviceAddress;
 };
 
 struct PushConstantsDDGIRaytraceScene {

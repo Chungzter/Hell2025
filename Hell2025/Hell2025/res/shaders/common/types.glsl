@@ -104,22 +104,22 @@ struct RenderItem {
     int woundMaskTextureIndex;
     int exclusiveViewportIndex;
     int ignoredViewportIndex;
-    
+
     uint meshId;
     uint miscFlags;
     uint shadowFlags;
     uint vulkanFlags;
-    
+
     int localMeshNodeIndex;
     float emissiveR;
     float emissiveG;
     float emissiveB;
-    
+
     uint blendingMode;
     float tintColorR;
     float tintColorG;
     float tintColorB;
-    
+
     uint customId;
     uint openableId;
     int woundMaterialIndex;

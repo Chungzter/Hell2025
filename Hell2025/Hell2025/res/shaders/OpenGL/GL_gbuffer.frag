@@ -145,7 +145,7 @@ void main() {
     float metallic = rmat.g;
     float ao = rmat.b;
 
-        
+
 
 
     // Basecolor / Metallic out

@@ -27,6 +27,13 @@ namespace VulkanRenderer {
         VulkanResourceManager::CreateAllocatedImage("Lighting", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
         VulkanResourceManager::CreateAllocatedImage("Depth", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, depthUsage);
 
+        // ReflectionHitGBuffer
+        //VulkanResourceManager::CreateAllocatedImage("ReflectedNormalXYMaterialUV", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        //VulkanResourceManager::CreateAllocatedImage("ReflectedMaterialIndex", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32_UINT, usage);
+        //VulkanResourceManager::CreateAllocatedImage("ReflectedRayT", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32_SFLOAT, usage);
+        //VulkanResourceManager::CreateAllocatedImage("ReflectedRayDirOct", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16_SNORM, usage);
+        VulkanResourceManager::CreateAllocatedImage("ReflectedRadiance", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage, true);
+
         // DDGI
         VulkanResourceManager::CreateAllocatedImage("IndirectDiffuse", indirectDiffuseExtent.width, indirectDiffuseExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
         VulkanResourceManager::CreateAllocatedImage("IndirectDiffuseSurface", indirectDiffuseExtent.width, indirectDiffuseExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);

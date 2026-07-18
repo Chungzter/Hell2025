@@ -1,13 +1,87 @@
 #version 460
+#extension GL_EXT_buffer_reference2 : require
 #extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
 #include "../common/constants.glsl"
+#include "../common/intersect.glsl"
+#include "../common/types.glsl"
 #include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
-layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
+shared uint tilelightCount;
+
+shared vec3 worldSpaceMin;
+shared vec3 worldSpaceMax;
+shared float validDepthSampleCount;
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsTileLightCulling data;
+} pushConstant;
+
+layout(buffer_reference, scalar) readonly buffer RendererDataBuffer { RendererData rendererData; };
+layout(buffer_reference, scalar) buffer TileWorldBoundsBuffer       { TileWorldBounds data[]; };
+layout(buffer_reference, scalar) buffer TileLightsBuffer            { TileLights data[];};
+layout(buffer_reference, scalar) buffer LightsBuffer                { Light data[]; };
 
 void main() {
+    RendererData rendererData = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress).rendererData;
+    TileLightsBuffer tileLights = TileLightsBuffer(pushConstant.data.tileLightsDeviceAddress);
+    TileWorldBoundsBuffer tileWorldBounds = TileWorldBoundsBuffer(pushConstant.data.tileWorldBoundsDeviceAddress);
+    LightsBuffer lights = LightsBuffer(pushConstant.data.frame.lightsDeviceAddress);
 
+    uint tileIndex = gl_WorkGroupID.y * uint(rendererData.tileCountX) + gl_WorkGroupID.x;
+
+    // Defaults
+	if (gl_LocalInvocationIndex == 0) {
+        // Output defaults
+		tileLights.data[tileIndex].lightCount = 0;
+		tilelightCount = 0;
+
+        // Pull tile world bounds out of the SSBO
+        // And the valid sample count
+        worldSpaceMin = tileWorldBounds.data[tileIndex].boundsMin.xyz;
+        worldSpaceMax = tileWorldBounds.data[tileIndex].boundsMax.xyz;
+        validDepthSampleCount = tileWorldBounds.data[tileIndex].boundsMin.w;
+	}
+	barrier();
+
+    // Light culling
+	if (validDepthSampleCount > 0) {
+		uint invocationCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
+		uint loopCount = (rendererData.lightCount + invocationCount - 1u) / invocationCount;
+
+        for (uint i = 0u; i < loopCount; i++) {
+			uint lightIndex = gl_LocalInvocationIndex + i * invocationCount;
+
+            if (lightIndex < rendererData.lightCount) {
+				vec3 lightPos = vec3(lights.data[lightIndex].posX, lights.data[lightIndex].posY, lights.data[lightIndex].posZ);
+				float lightRadius = lights.data[lightIndex].radius;
+
+                vec3 lightAabbMin = lights.data[lightIndex].worldBoundsMin.xyz;
+                vec3 lightAabbMax = lights.data[lightIndex].worldBoundsMax.xyz;
+
+                // First broad reject using your tight light bounds
+                if (AABBsIntersect(worldSpaceMin, worldSpaceMax, lightAabbMin, lightAabbMax) &&
+
+                    // Then reject AABB corner false positives using the actual spherical light radius
+                    SphereVsAABB(worldSpaceMin, worldSpaceMax, lightPos, lightRadius)) {
+                    uint index = atomicAdd(tilelightCount, 1);
+
+                    const uint MAX_LIGHTS_PER_TILE = 127;
+                    if (index < MAX_LIGHTS_PER_TILE) {
+                        tileLights.data[tileIndex].lightIndices[index] = lightIndex;
+                    }
+                }
+			}
+		}
+	}
+	barrier();
+
+	if (gl_LocalInvocationIndex == 0) {
+        tileLights.data[tileIndex].lightCount = min(tilelightCount, 127u);
+	}
 }

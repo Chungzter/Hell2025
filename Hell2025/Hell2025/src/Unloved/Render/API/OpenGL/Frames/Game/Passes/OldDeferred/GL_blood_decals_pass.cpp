@@ -16,9 +16,14 @@ namespace OpenGL::Renderer {
     void BloodDecalDraw();
     void BloodDecalComposite();
     void DecalTestPass();
+    void NewBloodsDecalsPass();
 
     void BloodDecalsPass() {
         DecalTestPass();
+        NewBloodsDecalsPass();
+
+        // DO NOT RENDER OLD BLOOD
+        return;
 
         if (Unloved::RenderDataManager::GetBloodScreenSpaceDecalInstanceData().empty()) {
             return;
@@ -191,5 +196,84 @@ namespace OpenGL::Renderer {
             Hell::DebugDraw::DrawPoint(decal.position, RED);
             Hell::DebugDraw::DrawLine(decal.position, decal.position + (decal.normal * 0.1f), RED);
         }
+    }
+
+
+    void NewBloodsDecalsPass() {
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
+        if (!gBuffer) return;
+
+        gBuffer->Bind();
+        gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
+
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+
+        Model* model = Hell::ResourceManager::GetModelByName("Cube");
+        if (!model) return;
+        if (model->GetMeshIndices().empty()) return;
+
+        Mesh* mesh = meshBuffer.GetMeshById(model->GetMeshIndices()[0]);
+        if (!mesh) return;
+
+        BindShader("BloodDecalsNew");
+
+        glBindTextureUnit(1, gBuffer->GetDepthAttachmentHandle());
+        OpenGL::BindSSBO(3, "ViewportData");
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.depthFunc = GL_GREATER;
+
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
+
+        // Replace the decal material channels directly in the G-buffer.
+        glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glColorMaski(1, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glColorMaski(2, GL_FALSE, GL_FALSE, GL_TRUE, GL_FALSE);
+
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+
+        for (int i = 0; i < 4; i++) {
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
+            OpenGL::SetUniformInt("u_viewportIndex", i);
+
+            for (const TestParticle& particle : Unloved::BloodSystem::GetTestParticles()) {
+
+                float scale = 0.3f;
+
+                Hell::LocalFrame localFrame = Hell::LocalFrame(particle.m_finalHitNormal);
+                Hell::QuatTransform transform = Hell::QuatTransform(particle.m_position, localFrame, glm::vec3(scale));
+
+
+                Hell::LocalFrame anotherLocalFrame = Hell::LocalFrame(particle.m_localFrame.right);
+                Hell::QuatTransform rotationTransform = Hell::QuatTransform(glm::vec3(0.0), anotherLocalFrame, glm::vec3(1.0));
+
+                const glm::mat4 modelMatrix = transform.ToMat4();
+
+                const glm::mat4 inverseModelMatrix = glm::inverse(modelMatrix);
+
+                Texture* texture = Hell::ResourceManager::GetTextureByName("BloodDecal_0");
+                if (!texture) return;
+
+                glBindTextureUnit(0, texture->GetGLTexture().GetHandle());
+
+                SetUniformMat4("u_modelMatrix", modelMatrix);
+                SetUniformMat4("u_inverseModelMatrix", inverseModelMatrix);
+
+                glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
+            }
+        }
+
+        glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glColorMaski(1, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glColorMaski(2, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     }
 }

@@ -122,6 +122,21 @@ namespace {
         state.rasterizer.stencilRef = 0;
     }
 
+    void CreateReflectedRadianceRenderState() {
+        VulkanRenderState& state = VulkanResourceManager::CreateRenderState("ReflectedRadiance");
+
+        VulkanRenderTargetInfo& reflectedRadiance = state.AddColorTarget("ReflectedRadiance");
+        reflectedRadiance.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        reflectedRadiance.clearValue.color.float32[0] = 0;
+        reflectedRadiance.clearValue.color.float32[1] = 0;
+        reflectedRadiance.clearValue.color.float32[2] = 0;
+        reflectedRadiance.clearValue.color.float32[3] = 0;
+
+        state.rasterizer.depthTestEnabled = false;
+        state.rasterizer.depthWriteEnabled = false;
+        state.rasterizer.cullFaceEnabled = false;
+    }
+
     void CreateLightingForwardBlendedRenderState() {
         VulkanRenderState& state = VulkanResourceManager::CreateRenderState("LightingForwardBlended");
 
@@ -294,6 +309,8 @@ namespace VulkanRenderer {
         CreateDebug3DRenderState();
         CreateDDGIProbeDebugRenderState();
         CreateDebug2DRenderState();
+
+        CreateReflectedRadianceRenderState();
 
         //CreateHairDepthPrepRenderState();
         //CreateHairDepthPrePassRenderState();

@@ -32,7 +32,6 @@ layout(location = 0) out vec4 out_color;
 layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer { ViewportData viewportDataArr[]; };
 layout(buffer_reference, scalar) readonly buffer RendererDataBuffer { RendererData rendererData; };
 layout(buffer_reference, scalar) readonly buffer LightBuffer        { Light lights[]; };
-layout(buffer_reference, scalar) readonly buffer TileLightsBuffer   { TileLights data[];};
 layout(buffer_reference, scalar) readonly buffer MaterialBuffer     { Material materials[]; };
 
 // Must match the ray query vertex buffer layout
@@ -108,7 +107,7 @@ layout(buffer_reference, scalar) readonly buffer RayQueryMeshInstanceDataBuffer 
 };
 
 layout(push_constant, scalar) uniform PushConstants {
-    PushConstantsDeferredLighting data;
+    PushConstantsReflectedRadiance data;
 } pushConstant;
 
 //vec3 FresnelSchlick(float cosTheta, vec3 f0) {
@@ -553,9 +552,6 @@ vec3 GetReflectedRadiance(Surface surface, vec3 viewPos) {
 void main() {
     ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
     RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress);
-    TileLightsBuffer tileLights = TileLightsBuffer(pushConstant.data.tileLightsDeviceAddress);
-
-    RendererData rendererData = rendererDataBuffer.rendererData;
 
     // Get viewport data
     ivec2 px = ivec2(gl_FragCoord.xy);
@@ -594,100 +590,10 @@ void main() {
     uint miscFlags = DecodeMiscFlags(normalXYRoughnessMisc.a);
     bool isMirrorSurface = (miscFlags & MISC_FLAG_MIRROR_SURFACE) != 0u;
 
-    // Direct light
-    vec3 directLighting = vec3(0.0);
-
-    if (!isMirrorSurface) {
-
-        LightBuffer lightBuffer = LightBuffer(pushConstant.data.frame.lightsDeviceAddress);
-
-        //tileLightsBuffer
-        //
-        //TileLightsBuffer tileLightsBuffer = TileLightsBuffer(pushConstant.data.tileLightsDeviceAddress);
-
-        // Tile data
-        uvec2 tileCoord = uvec2(px) / uint(TILE_SIZE);
-        uint tileIndex = tileCoord.y * rendererData.tileCountX + tileCoord.x;
-        uint tileLightCount = tileLights.data[tileIndex].lightCount;
-
-
-
-        for (int i = 0; i < tileLightCount; i++) {
-
-            int lightIndex = int(tileLights.data[tileIndex].lightIndices[i]);
-            Light light = lightBuffer.lights[lightIndex];
-
-
-        // Hardcoded light loop until tiled deferred is back
-        //for (int i = 0; i < LIGHT_COUNT; i++) {
-        //    Light light = lightBuffer.lights[i];
-         //  if (light.radius <= 0.0 || light.strength <= 0.0) {
-         //      continue;
-         //  }
-
-            vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
-            vec3 lightColor =  vec3(light.colorR, light.colorG, light.colorB);
-
-            vec3 lightBoundsMin = light.worldBoundsMin.xyz;
-            vec3 lightBoundsMax = light.worldBoundsMax.xyz;
-
-            //if (!PointInAABB(worldPos, lightBoundsMin, lightBoundsMax)) {
-            //    continue;
-            //}
-
-            vec3 toLight = lightPosition - worldPos;
-            float dist = length(toLight);
-            vec3 lightDir = toLight / max(dist, 0.0001);
-            float attenuation = smoothstep(light.radius, 0.0, dist) * light.strength;
-            float ndotl = max(dot(normal, lightDir), 0.0);
-            if (ndotl <= 0.0 || attenuation <= 0.0) {
-                continue;
-            }
-
-            float candelas = 1.0;
-
-            if (light.iesTextureIndex != 0) {
-                uint iesTextureIndex = uint(light.iesTextureIndex);
-                candelas = ApplyIESProfile(worldPos, light, textures[nonuniformEXT(iesTextureIndex)], textureSamplers[nonuniformEXT(iesTextureIndex)]);
-            }
-
-            if (candelas == 0) {
-                continue;
-            }
-
-            float visibility = GetShadowVisibility(worldPos + normal * 0.001, lightPosition);
-            visibility *= candelas;
-
-            if (visibility <= 0.0) {
-                continue;
-            }
-
-            vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, viewPos) * visibility;
-            directLighting += directLight;
-        }
-    }
-
-    // Reflections
+    // Reflected Radiance
     vec3 viewDirToCamera = normalize(viewPos - surface.worldPos);
     float reflectionNoV = clamp(dot(surface.normal, viewDirToCamera), 0.0, 1.0);
-    //vec3 reflectedRadiance = GetReflectedRadiance(surface, viewPos);
-    //vec3 reflectedRadiance = vec3(0);
-
-
-    // Filtered reflected radiance
-    float reflectionRoughnessPower = 1.1;
-    float reflectionMipScale = 1.0;
-    float reflectionMipBias = 0.0;
-
-    int mipCount = textureQueryLevels(sampler2D(textures[VULKAN_TEXTURE_IDX_REFLECTED_RADIANCE], samplers[VULKAN_SAMPLER_IDX_LINEAR]));
-    float maxMip = float(mipCount) - 1;
-
-    float reflectionLod = pow(surface.roughness, reflectionRoughnessPower) * maxMip * reflectionMipScale + reflectionMipBias;
-    reflectionLod = clamp(reflectionLod, 0.0, maxMip);
-
-    reflectionLod = 0;
-
-   vec3 reflectedRadiance = textureLod(sampler2D(textures[VULKAN_TEXTURE_IDX_REFLECTED_RADIANCE], samplers[VULKAN_SAMPLER_IDX_NEAREST]), screenUV, reflectionLod).rgb;
+    vec3 reflectedRadiance = GetReflectedRadiance(surface, viewPos);
 
     vec3 reflectionWeight = vec3(1.0);
     if (!isMirrorSurface) {
@@ -698,24 +604,10 @@ void main() {
 
     vec3 reflectionLighting = reflectedRadiance * reflectionWeight;
 
-    // Indirect diffuse
-    vec3 indirectDiffuse = vec3(0.0);
-
-    if (!isMirrorSurface && rendererDataBuffer.rendererData.enableIrradianceProbeSampling) {
-        ivec4 viewportRect = ivec4(viewportData.xOffset, viewportData.yOffset, viewportData.width, viewportData.height);
-        vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral_VK(screenUV, normal, fragDistance, outputImageSize, viewportRect);
-        vec3 diffuseAlbedo = linearBaseColor.rgb * (1.0 - metallic);
-        indirectDiffuse = probeIrradiance * diffuseAlbedo;
-    }
-
     // Final composite
-    vec3 finalLighting = directLighting + indirectDiffuse + reflectionLighting;
+    vec3 finalLighting = reflectionLighting;
 
     out_color = vec4(finalLighting, 1.0);
-
-
-    //out_color = vec4(reflectedRadiance, 1.0);
-
 
     // Normals test
     if (false) {
@@ -791,5 +683,9 @@ void main() {
 
         out_color = vec4(debugColor, 1.0);
     }
+}
 
+
+void main2() {
+        out_color = vec4(1.0, 0.0, 1.0, 1.0);
 }

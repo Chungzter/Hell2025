@@ -262,6 +262,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_VAT_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_debug.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\Reflectance\VK_refleced_radiance_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_ddgi_raytrace_scene_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\DDGI\VK_ddgi_point_cloud_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_hair_pass.cpp" />
@@ -679,6 +680,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.frag" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.geom" />
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.vert" />
+    <None Include="res\shaders\OpenGL\GL_blood_decals_new.frag" />
+    <None Include="res\shaders\OpenGL\GL_blood_decals_new.vert" />
     <None Include="res\shaders\OpenGL\GL_decal_test.frag" />
     <None Include="res\shaders\OpenGL\GL_decal_test.vert" />
     <None Include="res\shaders\Vulkan\VK_compute_skinning.comp" />

@@ -50,6 +50,9 @@ namespace VulkanRenderer {
         VulkanResourceManager::CreateShader("LightingForward", { "VK_lighting_forward.vert", "VK_lighting_forward.frag" });
         VulkanResourceManager::CreateShader("SpriteSheet", { "VK_sprite_sheet.vert", "VK_sprite_sheet.frag" });
 
+        // Reflectance
+        VulkanResourceManager::CreateShader("ReflectedRadiance", { "VK_fullscreen_triangle.vert", "VK_reflected_radiance.frag" });
+
         // Post Processing
         VulkanResourceManager::CreateShader("PostProcessing", { "VK_post_processing.comp" });
 

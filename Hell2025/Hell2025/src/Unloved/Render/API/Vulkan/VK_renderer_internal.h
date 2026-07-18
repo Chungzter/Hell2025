@@ -96,6 +96,9 @@ namespace VulkanRenderer {
     void LightCullingPass(VkCommandBuffer commandBuffer);
     void SpriteSheetPass(VkCommandBuffer commandBuffer);
 
+    void ReflectedRadiancePass(VkCommandBuffer commandBuffer);
+
+
     void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView);
 
     bool BeginRenderState(VkCommandBuffer commandBuffer, const VulkanRenderState& state, VkExtent2D extent);

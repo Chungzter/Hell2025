@@ -11,7 +11,7 @@ PictureFrame::PictureFrame(uint64_t id, PictureFrameCreateInfo& createInfo, Spaw
 
     m_createInfo.position += spawnOffset.translation;
     m_createInfo.rotation += glm::vec3(0.0f, spawnOffset.yRotation, 0.0f);
-    
+
     SelectRandomPicture();
 }
 
@@ -32,6 +32,8 @@ void PictureFrame::SelectRandomPicture() {
     const std::vector<const char*> bigLandscapeImages = {
         //"Picture_RainbowMage_ALB",
         "Picture_SHNakedLady",
+        "Picture_Raptors",
+        "Picture_SamNeil",
         "Picture_Minotaur"
     };
 

@@ -46,6 +46,17 @@ struct PushConstantsVisibility {
     uint32_t useDepthOffset = 0;
 };
 
+// Reflectance
+
+struct PushConstantsReflectedRadiance {
+    PushConstantsFrameResources frame;
+
+    uint64_t rayQueryBLASInstanceDataDeviceAddress = 0;
+    uint64_t rayQueryMeshInstanceDataDeviceAddress = 0;
+    uint32_t rayQueryEnabled = 0;
+    uint32_t padding0 = 0;
+};
+
 // Lighting
 
 struct PushConstantsDeferredLighting {
@@ -53,6 +64,7 @@ struct PushConstantsDeferredLighting {
 
     uint64_t rayQueryBLASInstanceDataDeviceAddress = 0;
     uint64_t rayQueryMeshInstanceDataDeviceAddress = 0;
+    uint64_t tileLightsDeviceAddress;
     uint32_t rayQueryEnabled = 0;
     uint32_t padding0 = 0;
 };
@@ -72,8 +84,6 @@ struct PushConstantsTileLightCulling {
     PushConstantsFrameResources frame;
     uint64_t tileLightsDeviceAddress;
     uint64_t tileWorldBoundsDeviceAddress;
-    uint32_t lightCount;
-    uint32_t tileXCount;
 };
 
 struct PushConstantsTileWorldBounds {
@@ -119,6 +129,11 @@ struct PushConstantsDebug3D {
 
 struct PushConstantsDebugView {
     PushConstantsFrameResources frame;
+};
+
+struct PushConstantsDebugTileView {
+    PushConstantsFrameResources frame;
+    uint64_t tileLightsDeviceAddress;
 };
 
 // DDGI

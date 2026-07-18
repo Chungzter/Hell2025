@@ -109,7 +109,7 @@ namespace VulkanRenderer {
 
             MultiDrawIndexedCommands(commandBuffer, skinnedBlendedCommands[i]);
         }
-       
+
         EndRenderState(commandBuffer);
     }
 }

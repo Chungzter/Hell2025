@@ -18,10 +18,11 @@ struct TestParticle {
     glm::vec3 m_position = glm::vec3(0.0f);
     glm::vec3 m_positionPrev = glm::vec3(0.0f);
     glm::vec3 m_velocity = glm::vec3(0.0f);
-    glm::vec3 m_finalRestingNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 m_finalHitNormal = glm::vec3(0.0f, 1.0f, 0.0f);
     float m_gravity = -9.8f;
     float m_lifeTime = 0.0f;
     bool m_stopped = false;
+    Hell::LocalFrame m_localFrame;
 };
 
 namespace Unloved::BloodSystem {

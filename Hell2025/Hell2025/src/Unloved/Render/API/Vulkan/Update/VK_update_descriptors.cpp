@@ -99,6 +99,16 @@ namespace VulkanRenderer {
             }
         }
 
+
+        if (VulkanResourceManager::AllocatedImageExists("ReflectedRadiance")) {
+            AllocatedImage* indirectDiffuseImage = VulkanResourceManager::GetAllocatedImage("ReflectedRadiance");
+            if (indirectDiffuseImage) {
+                staticDescriptorSet->WriteImage(DESC_IDX_TEXTURES, indirectDiffuseImage->GetSampledImageView(), VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VULKAN_TEXTURE_IDX_REFLECTED_RADIANCE);
+                staticDescriptorSet->WriteImage(DESC_IDX_STORAGE_IMAGES_RGBA16F, indirectDiffuseImage->GetImageView(), VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VULKAN_STORAGE_IMAGE_IDX_REFLECTED_RADIANCE);
+                dirty = true;
+            }
+        }
+
         if (dirty) {
             staticDescriptorSet->Update();
         }
