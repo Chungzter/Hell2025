@@ -36,8 +36,6 @@
 #define NAV_MESH_TIMER(name) ((void)0)
 #endif
 
-using namespace Hell;
-
 namespace mapbox {
     namespace util {
         template <std::size_t I>
@@ -57,7 +55,7 @@ namespace Unloved::NavMeshManager {
         Clipper2Lib::PathsD staticPaths;
         Clipper2Lib::PathsD staticObstaclePaths;
         Clipper2Lib::PathsD dynamicObstaclePaths;
-                            
+
         Clipper2Lib::PathsD solutionStatic;
         Clipper2Lib::PathsD solutionDynamic;
         Clipper2Lib::PathsD solutionFinal;
@@ -128,7 +126,7 @@ namespace Unloved::NavMeshManager {
         void RemoveTJunctions();
         void BuildNeighbors();
         void BuildSpatialGrid();
-        
+
         void DebugDrawAdjacentTris();
         int FindContainingTriIndex(const glm::vec3& p);
         int GetGridIndex(const glm::vec3& p);
@@ -278,13 +276,13 @@ namespace Unloved::NavMeshManager {
             levelInfo.solutionDynamic = Clipper2Lib::Union(levelInfo.dynamicObstaclePaths, Clipper2Lib::FillRule::NonZero);
         }
     }
-    
+
     void NavMesh::UpdateNavMesh() {
         NAV_MESH_TIMER("UpdateNavMesh");
-        
+
         constexpr auto fillRule = Clipper2Lib::FillRule::NonZero;
         m_boundsMin = glm::vec2(std::numeric_limits<float>::max());
-        m_boundsMax = glm::vec2(std::numeric_limits<float>::lowest()); 
+        m_boundsMax = glm::vec2(std::numeric_limits<float>::lowest());
         std::size_t estimatedTris = 0;
 
         // Iterate each path level and add the tris to the nav mesh
@@ -836,8 +834,8 @@ namespace Unloved::NavMeshManager {
                     glm::vec3 b0 = b.v[eb];
                     glm::vec3 b1 = b.v[(eb + 1) % 3];
 
-                    bool same01 = Math::DistSquared(a0, b0) < epsSq && Math::DistSquared(a1, b1) < epsSq;
-                    bool same10 = Math::DistSquared(a0, b1) < epsSq && Math::DistSquared(a1, b0) < epsSq;
+                    bool same01 = Hell::Math::DistSquared(a0, b0) < epsSq && Hell::Math::DistSquared(a1, b1) < epsSq;
+                    bool same10 = Hell::Math::DistSquared(a0, b1) < epsSq && Hell::Math::DistSquared(a1, b0) < epsSq;
 
                     if (same01 || same10) {
                         e0 = a0;
@@ -944,7 +942,7 @@ namespace Unloved::NavMeshManager {
 
             // Right
             if (TriArea2D(apex2, right2, newRight2) <= 0.0f) {
-                if (Math::DistSquared2D(apex2, right2) < eq ||
+                if (Hell::Math::DistSquared2D(apex2, right2) < eq ||
                     TriArea2D(apex2, left2, newRight2) > 0.0f) {
                     right2 = newRight2;
                     rightIndex = i;
@@ -968,7 +966,7 @@ namespace Unloved::NavMeshManager {
 
             // Left
             if (TriArea2D(apex2, left2, newLeft2) >= 0.0f) {
-                if (Math::DistSquared2D(apex2, left2) < eq ||
+                if (Hell::Math::DistSquared2D(apex2, left2) < eq ||
                     TriArea2D(apex2, right2, newLeft2) < 0.0f) {
                     left2 = newLeft2;
                     leftIndex = i;
@@ -1093,7 +1091,7 @@ namespace Unloved::NavMeshManager {
         }
         return path;
     }
-    
+
     void DrawPath(std::vector<glm::vec3>& path, const glm::vec4& color) {
 		if (path.size() >= 2) {
 			for (int i = 0; i < path.size() - 1; i++) {
@@ -1244,7 +1242,7 @@ namespace Unloved::NavMeshManager {
         // Build lower hull
         for (size_t i = 0; i < n; ++i) {
             // While the last two points and the new point form a clockwise turn (area < 0)
-            while (hull.size() >= 2 && Math::TriArea2D(hull[hull.size() - 2], hull.back(), points[i]) <= 0.0f) {
+            while (hull.size() >= 2 && Hell::Math::TriArea2D(hull[hull.size() - 2], hull.back(), points[i]) <= 0.0f) {
                 hull.pop_back();
             }
             hull.push_back(points[i]);
@@ -1254,7 +1252,7 @@ namespace Unloved::NavMeshManager {
         size_t t = hull.size() + 1;
         for (size_t i = n - 1; i > 0; --i) {
             // While the last two points and the new point form a clockwise turn (area < 0)
-            while (hull.size() >= t && Math::TriArea2D(hull[hull.size() - 2], hull.back(), points[i - 1]) <= 0.0f) {
+            while (hull.size() >= t && Hell::Math::TriArea2D(hull[hull.size() - 2], hull.back(), points[i - 1]) <= 0.0f) {
                 hull.pop_back();
             }
             hull.push_back(points[i - 1]);
@@ -1269,8 +1267,8 @@ namespace Unloved::NavMeshManager {
     }
 
     bool EdgesMatch(const glm::vec3& a0, const glm::vec3& a1, const glm::vec3& b0, const glm::vec3& b1, float epsilon) {
-        bool sameDir = Math::PointsEqual(a0, b0, epsilon) && Math::PointsEqual(a1, b1, epsilon);
-        bool oppoDir = Math::PointsEqual(a0, b1, epsilon) && Math::PointsEqual(a1, b0, epsilon);
+        bool sameDir = Hell::Math::PointsEqual(a0, b0, epsilon) && Hell::Math::PointsEqual(a1, b1, epsilon);
+        bool oppoDir = Hell::Math::PointsEqual(a0, b1, epsilon) && Hell::Math::PointsEqual(a1, b0, epsilon);
         return sameDir || oppoDir;
     }
 
