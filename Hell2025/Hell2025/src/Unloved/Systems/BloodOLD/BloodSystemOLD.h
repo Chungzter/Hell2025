@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Unloved/Systems/Blood/BloodScreenSpaceDecal.h"
-#include "Unloved/Systems/Blood/BloodVAT.h"
+#include "Unloved/Systems/BloodOLD/BloodScreenSpaceDecal.h"
+#include "Unloved/Systems/BloodOLD/BloodVAT.h"
 
 #include <vector>
 

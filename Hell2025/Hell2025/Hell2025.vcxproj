@@ -393,6 +393,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Session\Session_players.cpp" />
     <ClCompile Include="src\Unloved\Session\Session_spawns.cpp" />
     <ClCompile Include="src\Unloved\Session\Session_update.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Blood\BloodSystem.cpp" />
     <ClCompile Include="src\Unloved\Systems\FeatureTest\FeatureTest.cpp">
       <ObjectFileName>$(IntDir)Unloved_Systems_FeatureTest.obj</ObjectFileName>
     </ClCompile>
@@ -519,9 +520,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Systems\Animator\Animator.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\Christmas\ChristmasLights.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\Christmas\ChristmasTree.cpp" />
-    <ClCompile Include="src\Unloved\Systems\Blood\BloodSystemOLD.cpp" />
-    <ClCompile Include="src\Unloved\Systems\Blood\BloodScreenSpaceDecal.cpp" />
-    <ClCompile Include="src\Unloved\Systems\Blood\BloodVAT.cpp" />
+    <ClCompile Include="src\Unloved\Systems\BloodOLD\BloodSystemOLD.cpp" />
+    <ClCompile Include="src\Unloved\Systems\BloodOLD\BloodScreenSpaceDecal.cpp" />
+    <ClCompile Include="src\Unloved\Systems\BloodOLD\BloodVAT.cpp" />
     <ClCompile Include="src\Unloved\Characters\Mermaids\Mermaid\Mermaid.cpp" />
     <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark.cpp" />
     <ClCompile Include="src\Unloved\Maps\MapFile.cpp" />
@@ -813,6 +814,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Render\RendererTypes.h" />
     <ClInclude Include="src\Unloved\Session\Session.h" />
     <ClInclude Include="src\Unloved\Session\Session_types.h" />
+    <ClInclude Include="src\Unloved\Systems\Blood\BloodSystem.h" />
     <ClInclude Include="src\Unloved\Systems\FeatureTest\FeatureTest.h" />
     <ClInclude Include="src\Unloved\Systems\House\HouseClipping.h" />
     <ClInclude Include="src\Unloved\Systems\P90Mag\P90MagManager.h" />
@@ -948,10 +950,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Objects\House\Fireplace.h" />
     <ClInclude Include="src\Unloved\Objects\House\TrimSet.h" />
     <ClInclude Include="src\Unloved\Systems\Mirrors\Mirror.h" />
-    <ClInclude Include="src\Unloved\Systems\Blood\BloodSystemOLD.h" />
-    <ClInclude Include="src\Unloved\Systems\Blood\Blood_types.h" />
-    <ClInclude Include="src\Unloved\Systems\Blood\BloodScreenSpaceDecal.h" />
-    <ClInclude Include="src\Unloved\Systems\Blood\BloodVAT.h" />
+    <ClInclude Include="src\Unloved\Systems\BloodOLD\BloodSystemOLD.h" />
+    <ClInclude Include="src\Unloved\Systems\BloodOLD\Blood_types.h" />
+    <ClInclude Include="src\Unloved\Systems\BloodOLD\BloodScreenSpaceDecal.h" />
+    <ClInclude Include="src\Unloved\Systems\BloodOLD\BloodVAT.h" />
     <ClInclude Include="src\Unloved\Characters\Mermaids\Mermaid\Mermaid.h" />
     <ClInclude Include="src\Unloved\Characters\Enemies\Shark\Shark.h" />
     <ClInclude Include="src\Unloved\Systems\Openables\Openable.h" />

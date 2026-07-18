@@ -74,15 +74,16 @@ void main() {
     // Local Z follows the hit normal, so the decal lies in the local XY plane
     vec2 decalUV = (localPosition.xy / decalAspectScale) + 0.5;
     decalUV.y = 1 - decalUV.y;
-    
+
     vec4 decalColor = texture(u_decalTexture, decalUV);
 
     if (decalColor.a < 0.5) {
         discard;
     }
 
-    const float metallic = 0.25;
+    vec3 bloodBaseColor = vec3(0.2, 0.00, 0);
     const float roughness = 0.125;
+    const float metallic = 0.25;
     const float ao = 1.0;
 
     BaseColorMetallicOut = vec4(decalColor.rgb, metallic);

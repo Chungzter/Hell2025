@@ -15,6 +15,7 @@
 #include "Unloved/Objects/Props/PickUp.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Session/Session.h"
+#include "Unloved/Systems/Blood/BloodSystem.h"
 #include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/Systems/GameAudio/GameAudio.h"
@@ -148,6 +149,10 @@ namespace Unloved::BulletSystem {
 
                 ObjectType hitObjectType = Unloved::GetObjectIdType(objectId);
                 Hell::Physics::PhysicsObjectType physicsObjectType = Hell::Physics::GetPhysicsObjectType(physicsId);
+
+
+                glm::vec3 vatForward = glm::normalize(hitNormal * glm::vec3(1.0f, 0.0f, 1.0f));
+                BloodSystem::SpawnVatBlood(hitPosition, vatForward, 0.05f, objectId);
 
                 // std::cout << "\n";
                 // std::cout << "Hit found " << Unloved::Session::GetSessionTime() << "\n";

@@ -6,6 +6,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Session/Session.h"
+#include "Unloved/Systems/Blood/BloodSystem.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "World/LegacyWorld.h"

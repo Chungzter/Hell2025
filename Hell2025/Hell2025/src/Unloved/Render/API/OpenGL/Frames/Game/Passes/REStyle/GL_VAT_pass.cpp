@@ -17,6 +17,7 @@
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Session/Session.h"
+#include "Unloved/Systems/Blood/BloodSystem.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
@@ -28,111 +29,10 @@
 
 namespace OpenGL::Renderer {
 
-    struct TestParticle {
-
-        TestParticle() = default;
-
-        TestParticle(const glm::vec3& position, const glm::vec3& velocity) {
-            m_position = position;
-            m_velocity = velocity;
-        }
-
-        void Update(float deltaTime) {
-            m_velocity.y += m_gravity * deltaTime;
-            m_position += m_velocity * deltaTime;
-        }
-
-        glm::vec3 m_position = glm::vec3(0.0f);
-        glm::vec3 m_velocity = glm::vec3(0.0f);
-        float m_gravity = -9.8f;
-    };
-
     void VATPass() {
         ProfilerOpenGLZoneFunction();
 
-        static VATInstance vatInstance;
-        static std::vector<TestParticle> particles;
-        static bool mirror = false;
-        static bool superDebugMode = false;
-
-        glm::vec3 position = glm::vec3(36.25f, 32.60f, 37.56f);
-        Hell::DebugDraw::DrawPoint(position, YELLOW);
-    
-        // Model matrix
-        Hell::Transform transform;
-        transform.position = position;
-        transform.scale = glm::vec3(0.1f);
-        glm::mat4 modelMatrix = transform.ToMat4();
-
-        // Toggle super debug mode
-        if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE)) {
-            superDebugMode = !superDebugMode;
-        }
-
-        // Super debug mode
-        if (superDebugMode) {
-            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0);
-            if (!player) return;
-
-            glm::vec3 pos = player->GetInteractHitPosition();
-            glm::vec3 normal = player->GetInteractHitNormal();
-
-            normal.y = 0.0f;
-            normal = glm::normalize(normal);
-
-            Hell::LocalFrame localFrame = Hell::LocalFrame(normal);
-            Hell::QuatTransform transform = Hell::QuatTransform(pos, localFrame, glm::vec3(0.05f));
-            modelMatrix = transform.ToMat4();
-
-            Hell::DebugDraw::DrawPoint(pos, YELLOW);
-            Hell::DebugDraw::DrawLocalFrame(pos, localFrame, 0.1f);
-
-            // Spawn particle
-            if (Hell::Input::KeyDown(HELL_KEY_UP)) {
-                glm::vec3 vel =
-                    localFrame.right * Hell::Random::Float(-1.0f, 1.0f) +
-                    localFrame.up * Hell::Random::Float(0.1f, 1.0f) +
-                    localFrame.forward * Hell::Random::Float(0.0f, 0.5f);
-
-                particles.push_back(TestParticle(pos, vel));
-            }
-        }
-
-        if (Hell::Input::KeyPressed(HELL_KEY_RIGHT)) {
-            constexpr float testPlaybackSpeed = 5.0f;
-
-            VATInstanceCreateInfo createInfo;
-            createInfo.resourceName = "Blood19";
-            createInfo.playbackSpeed = testPlaybackSpeed;
-            createInfo.loop = false;
-            vatInstance.Init(createInfo);
-
-            particles.clear();
-        }
-
-        if (Hell::Input::KeyPressed(HELL_KEY_LEFT)) {
-            constexpr float testPlaybackSpeed = 5.0f;
-
-            VATInstanceCreateInfo createInfo;
-            createInfo.resourceName = "Blood20";
-            createInfo.playbackSpeed = testPlaybackSpeed;
-            createInfo.loop = false;
-            vatInstance.Init(createInfo);
-
-            particles.clear();
-        }
-
-        if (Hell::Input::KeyPressed(HELL_KEY_DOWN)) {
-            constexpr float testPlaybackSpeed = 5.0f;
-
-            VATInstanceCreateInfo createInfo;
-            createInfo.resourceName = "Blood22";
-            createInfo.playbackSpeed = testPlaybackSpeed;
-            createInfo.loop = false;
-            vatInstance.Init(createInfo);
-
-            particles.clear();
-        }
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         if (!gBuffer) return;
@@ -140,28 +40,9 @@ namespace OpenGL::Renderer {
         gBuffer->Bind();
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
 
-        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
-
-        Hell::Vat* vat = Hell::ResourceManager::GetVATPtr(vatInstance.GetResourceName());
-        if (!vat) return;
-
-        const Hell::VATMetadata& metadata = vat->GetMetadata();
-
-        Model* model = Hell::ResourceManager::GetModelById(vat->GetModelId());
-        if (!model) return;
-        if (model->GetMeshIndices().empty()) return;
-
-        Mesh* mesh = meshBuffer.GetMeshById(model->GetMeshIndices()[0]);
-        if (!mesh) return;
-
         BindShader("VAT");
 
-        if (!vatInstance.HasValidTextureIndices()) return;
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
-        SetUniformInt("u_positionTextureIndex", vatInstance.GetPositionTextureIndex());
-        SetUniformInt("u_rotationTextureIndex", vatInstance.GetRotationTextureIndex());
-        SetUniformInt("u_lookupTextureIndex", vatInstance.GetLookupTextureIndex());
-
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
         state.blendEnable = false;
@@ -171,12 +52,11 @@ namespace OpenGL::Renderer {
 
         OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
-        const glm::mat4 inverseModelMatrix = glm::inverse(modelMatrix);
-        
         const float deltaTime = Hell::Time::DeltaTime();
-        vatInstance.Update(deltaTime, modelMatrix);
 
         glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+
+        const std::vector<VATRenderItem>& renderItems = Unloved::BloodSystem::GetVATRenderItems();
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
@@ -185,23 +65,22 @@ namespace OpenGL::Renderer {
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
 
-            SetUniformMat4("u_modelMatrix", modelMatrix);
-            SetUniformMat4("u_inverseModelMatrix", inverseModelMatrix);
-            SetUniformFloat("u_time", vatInstance.GetCurrentTime());
-            SetUniformFloat("u_fps", vatInstance.GetFPS());
-            SetUniformInt("u_frameCount", vatInstance.GetFrameCount());
-            SetUniformVec3("u_boundsMin", metadata.boundsMin);
-            SetUniformVec3("u_boundsMax", metadata.boundsMax);
-            SetUniformBool("u_mirror", mirror);
+            for (const VATRenderItem& renderItem : renderItems) {
 
-            glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
-        }
+                SetUniformMat4("u_modelMatrix", renderItem.modelMatrix);
+                SetUniformMat4("u_inverseModelMatrix", renderItem.inverseModelMatrix);
+                SetUniformFloat("u_time", renderItem.currentTime);
+                SetUniformFloat("u_fps", renderItem.fps);
+                SetUniformInt("u_frameCount", renderItem.frameCount);
+                SetUniformVec3("u_boundsMin", renderItem.boundsMin);
+                SetUniformVec3("u_boundsMax", renderItem.boundsMax);
+                SetUniformInt("u_positionTextureIndex", renderItem.positionTextureIdx);
+                SetUniformInt("u_rotationTextureIndex", renderItem.rotationTextureIdx);
+                SetUniformInt("u_lookupTextureIndex", renderItem.lookupTextureIdx);
+                SetUniformBool("u_mirror", renderItem.mirror);
 
-        for (int i = 0; i < particles.size(); i++) {
-            particles[i].Update(Hell::Time::DeltaTime());
-
-            const glm::vec3& point = particles[i].m_position;
-            Hell::DebugDraw::DrawPoint(point, glm::vec4(Hell::Color::Random(i), 1.0f));
+                glDrawElementsBaseVertex(GL_TRIANGLES, renderItem.indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * renderItem.baseIndex), renderItem.baseVertex);
+            }
         }
     }
 }

@@ -2,6 +2,7 @@
 
 #include "Hell/Time.h"
 
+#include "Unloved/Systems/Blood/BloodSystem.h"
 #include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 #include "Unloved/Systems/DirtyTracker/DirtyTracker.h"
@@ -20,6 +21,7 @@ namespace Unloved::Systems {
     }
 
     void BeginFrame() {
+        BloodSystem::BeginFrame();
         DirtyTracker::BeginFrame();
         GameAudio::BeginFrame();
         ShadowMapManager::BeginFrame();
@@ -35,6 +37,7 @@ namespace Unloved::Systems {
     }
 
     void PostWorldUpdate() {
+        BloodSystem::Update();
         DirtyTracker::Update();
         MirrorManager::Update();
         ShadowMapManager::Update();
