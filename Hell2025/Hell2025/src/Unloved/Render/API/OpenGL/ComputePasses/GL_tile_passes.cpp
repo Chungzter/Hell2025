@@ -3,7 +3,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Render/RendererTypes.h"
-#include "Unloved/Systems/Blood/BloodSystem.h"
+#include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
 #include "Unloved/World/World.h"
 
 namespace OpenGL::Renderer {
@@ -111,7 +111,7 @@ namespace OpenGL::Renderer {
         if (!shader) return;
 
         OpenGL::BindShader("BloodDecalsCulling");
-        OpenGL::SetUniformInt("u_decalCount", static_cast<int>(Unloved::BloodSystem::GetBloodScreenSpaceDecals().size()));
+        OpenGL::SetUniformInt("u_decalCount", static_cast<int>(Unloved::BloodSystemOLD::GetBloodScreenSpaceDecals().size()));
         OpenGL::SetUniformInt("u_tileXCount", static_cast<int>(GetTileCountX()));
         OpenGL::SetUniformInt("u_tileYCount", static_cast<int>(GetTileCountY()));
 

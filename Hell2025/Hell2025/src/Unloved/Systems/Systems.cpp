@@ -2,7 +2,7 @@
 
 #include "Hell/Time.h"
 
-#include "Unloved/Systems/Blood/BloodSystem.h"
+#include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 #include "Unloved/Systems/DirtyTracker/DirtyTracker.h"
 #include "Unloved/Systems/FeatureTest/FeatureTest.h"
@@ -31,7 +31,7 @@ namespace Unloved::Systems {
         PianoPlaybackManager::Update();
         GameAudio::Update();
         FeatureTest::Update();
-        BloodSystem::Update(Hell::Time::DeltaTime());
+        BloodSystemOLD::Update(Hell::Time::DeltaTime());
     }
 
     void PostWorldUpdate() {
@@ -41,7 +41,7 @@ namespace Unloved::Systems {
     }
 
     void CleanUp() {
-        BloodSystem::CleanUp();
+        BloodSystemOLD::CleanUp();
         BulletSystem::CleanUp();
         PianoPlaybackManager::CleanUp();
     }

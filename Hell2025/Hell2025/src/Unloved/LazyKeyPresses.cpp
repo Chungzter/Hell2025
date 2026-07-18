@@ -10,7 +10,7 @@
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Session/Session.h"
-#include "Unloved/Systems/Blood/BloodSystem.h"
+#include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Unloved/World/World.h"
 
@@ -51,11 +51,12 @@ void UpdateLazyKeypresses() {
         if (Hell::Input::KeyPressed(HELL_KEY_APOSTROPHE))   Renderer::TogglePointCloudGrid();
         if (Hell::Input::KeyPressed(HELL_KEY_BACKSLASH))    Renderer::NextRendererOverrideState();
         if (Hell::Input::KeyPressed(HELL_KEY_LEFT_BRACKET)) Renderer::NextRendererMode();
+        if (Hell::Input::KeyPressed(HELL_KEY_F10))          Renderer::ToggleShadowMappingForSkinnedGeometry();
     }
 
     if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    World::CleanUpCasings();
     if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    World::CleanUpDecals();
-    if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    BloodSystem::CleanUp();
+    if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    BloodSystemOLD::CleanUp();
 
     // Editor only
     if (!Editor::IsOpen()) {

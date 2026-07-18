@@ -519,7 +519,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Systems\Animator\Animator.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\Christmas\ChristmasLights.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\Christmas\ChristmasTree.cpp" />
-    <ClCompile Include="src\Unloved\Systems\Blood\BloodSystem.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Blood\BloodSystemOLD.cpp" />
     <ClCompile Include="src\Unloved\Systems\Blood\BloodScreenSpaceDecal.cpp" />
     <ClCompile Include="src\Unloved\Systems\Blood\BloodVAT.cpp" />
     <ClCompile Include="src\Unloved\Characters\Mermaids\Mermaid\Mermaid.cpp" />
@@ -948,7 +948,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Objects\House\Fireplace.h" />
     <ClInclude Include="src\Unloved\Objects\House\TrimSet.h" />
     <ClInclude Include="src\Unloved\Systems\Mirrors\Mirror.h" />
-    <ClInclude Include="src\Unloved\Systems\Blood\BloodSystem.h" />
+    <ClInclude Include="src\Unloved\Systems\Blood\BloodSystemOLD.h" />
     <ClInclude Include="src\Unloved\Systems\Blood\Blood_types.h" />
     <ClInclude Include="src\Unloved\Systems\Blood\BloodScreenSpaceDecal.h" />
     <ClInclude Include="src\Unloved\Systems\Blood\BloodVAT.h" />

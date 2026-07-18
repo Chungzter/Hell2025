@@ -108,9 +108,11 @@ namespace OpenGL::Renderer {
 
         OceanUnderwaterCompositePass();
 
+        WinstonPass();
         StainedGlassPass();
-        BubblesPass2();
-        BubblesPass3();
+
+        BubblesPass2(); // wtf is this
+        BubblesPass3(); // wtf is this
 
         ParticlePass();
 

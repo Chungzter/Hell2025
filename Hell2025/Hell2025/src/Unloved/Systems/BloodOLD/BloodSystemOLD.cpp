@@ -1,10 +1,10 @@
-#include "BloodSystem.h"
+#include "BloodSystemOLD.h"
 
 #include "Hell/Physics/Physics.h"
 
 #include <cstddef>
 
-namespace Unloved::BloodSystem {
+namespace Unloved::BloodSystemOLD {
     std::vector<BloodScreenSpaceDecal> g_bloodScreenSpaceDecals;
     std::vector<BloodVAT> g_bloodVAT;
 

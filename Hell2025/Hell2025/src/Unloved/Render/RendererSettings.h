@@ -12,6 +12,7 @@ struct RendererSettings {
     bool debugDrawRagdolls = false;
     bool enableIrradianceProbeSampling = true;
     bool enableLighting = true;
+    bool enableShadowMappingForSkinnedGeometry = false;
     RendererOverrideState rendererOverrideState = RendererOverrideState::NONE;
     ProbeDebugState probeDebugState = ProbeDebugState::HIDDEN;
 };

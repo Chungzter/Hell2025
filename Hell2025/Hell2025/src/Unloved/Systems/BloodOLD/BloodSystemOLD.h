@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace Unloved::BloodSystem {
+namespace Unloved::BloodSystemOLD {
     void AddBloodVAT(const glm::vec3& position, const glm::vec3& direction);
     void AddBloodScreenSpaceDecal(BloodScreenSpaceDecalCreateInfo createInfo);
 

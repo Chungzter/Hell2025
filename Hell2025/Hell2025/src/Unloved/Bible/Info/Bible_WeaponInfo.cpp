@@ -54,7 +54,7 @@ namespace Bible {
         aks74u.animationCancelFrames.reload = 80.0f;
         aks74u.animationCancelFrames.reloadFromEmpty = 95.0f;
         aks74u.animationCancelFrames.draw = 75.0f;
-        aks74u.animationCancelFrames.adsFire = 18.0f;
+        aks74u.animationCancelFrames.adsFire = 3.0f;
         aks74u.audioFiles.fire.push_back("AKS74U_Fire0.wav");
         aks74u.audioFiles.fire.push_back("AKS74U_Fire1.wav");
         aks74u.audioFiles.fire.push_back("AKS74U_Fire2.wav");

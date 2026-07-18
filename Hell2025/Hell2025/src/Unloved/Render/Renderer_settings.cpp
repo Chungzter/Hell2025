@@ -89,6 +89,15 @@ namespace Unloved::Renderer {
         Debug::BlitQuickDebugMessage("Screenspace Reflections: " + onOff);
     }
 
+    void ToggleShadowMappingForSkinnedGeometry() {
+        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        RendererSettings& rendererSettings = GetCurrentRendererSettings();
+        rendererSettings.enableShadowMappingForSkinnedGeometry = !rendererSettings.enableShadowMappingForSkinnedGeometry;
+
+        std::string onOff = rendererSettings.enableShadowMappingForSkinnedGeometry ? "ON" : "OFF";
+        Debug::BlitQuickDebugMessage("Skinned Geometry Shadow Mappin " + onOff);
+    }
+
     void ToggleIrradianceProbeSampling() {
         Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();

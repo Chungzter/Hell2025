@@ -522,10 +522,23 @@ vec3 GetReflectedRadiance(Surface surface, vec3 viewPos) {
                     continue;
                 }
 
+                float candelas = 1.0;
+
+                if (light.iesTextureIndex != 0) {
+                    uint iesTextureIndex = uint(light.iesTextureIndex);
+                    candelas = ApplyIESProfile(reflectedSurface.worldPos , light, textures[nonuniformEXT(iesTextureIndex)], textureSamplers[nonuniformEXT(iesTextureIndex)]);
+                }
+
+                if (candelas == 0) {
+                    continue;
+                }
+
                 float visibility = GetShadowVisibility(reflectedSurface.worldPos + reflectedSurface.normal * 0.001, lightPosition);
                 if (visibility <= 0.0) {
                     continue;
                 }
+
+                visibility *= candelas;
 
                 reflectedRadiance += EvaluatePointLight(lightPosition, lightColor, light.radius, light.strength, reflectedSurface.worldPos, reflectedSurface.normal, reflectedSurface.linearBaseColor, reflectedSurface.roughness, reflectedSurface.metallic, surface.worldPos) * visibility;
             }
@@ -609,7 +622,19 @@ void main() {
                 continue;
             }
 
+            float candelas = 1.0;
+
+            if (light.iesTextureIndex != 0) {
+                uint iesTextureIndex = uint(light.iesTextureIndex);
+                candelas = ApplyIESProfile(worldPos, light, textures[nonuniformEXT(iesTextureIndex)], textureSamplers[nonuniformEXT(iesTextureIndex)]);
+            }
+
+            if (candelas == 0) {
+                continue;
+            }
+
             float visibility = GetShadowVisibility(worldPos + normal * 0.001, lightPosition);
+            visibility *= candelas;
 
             if (visibility <= 0.0) {
                 continue;
@@ -624,6 +649,7 @@ void main() {
     vec3 viewDirToCamera = normalize(viewPos - surface.worldPos);
     float reflectionNoV = clamp(dot(surface.normal, viewDirToCamera), 0.0, 1.0);
     vec3 reflectedRadiance = GetReflectedRadiance(surface, viewPos);
+    //vec3 reflectedRadiance = vec3(0);
 
     // Filtered reflected radiance
     // float reflectionRoughnessPower = 1.0;

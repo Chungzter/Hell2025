@@ -15,7 +15,7 @@
 #include "Unloved/Objects/Props/PickUp.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Session/Session.h"
-#include "Unloved/Systems/Blood/BloodSystem.h"
+#include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/Systems/GameAudio/GameAudio.h"
 #include "Unloved/World/World.h"
@@ -342,7 +342,7 @@ namespace Unloved::BulletSystem {
             Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, false);
         }
 
-        BloodSystem::AddBloodVAT(hitPosition, -bullet.GetDirection());
+        BloodSystemOLD::AddBloodVAT(hitPosition, -bullet.GetDirection());
         GameAudio::TryPlayFleshImpactAudio();
     }
 
@@ -361,7 +361,7 @@ namespace Unloved::BulletSystem {
             Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, false);
         }
 
-        BloodSystem::AddBloodVAT(hitPosition, -bullet.GetDirection());
+        BloodSystemOLD::AddBloodVAT(hitPosition, -bullet.GetDirection());
         GameAudio::TryPlayFleshImpactAudio();
     }
 
@@ -392,7 +392,7 @@ namespace Unloved::BulletSystem {
         }
 
         GameAudio::TryPlayFleshImpactAudio();
-        BloodSystem::AddBloodVAT(hitPosition, -bullet.GetDirection());
+        BloodSystemOLD::AddBloodVAT(hitPosition, -bullet.GetDirection());
     }
 
     // Shark hit
@@ -410,7 +410,7 @@ namespace Unloved::BulletSystem {
             Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, false);
         }
 
-        BloodSystem::AddBloodVAT(hitPosition, -bullet.GetDirection());
+        BloodSystemOLD::AddBloodVAT(hitPosition, -bullet.GetDirection());
         GameAudio::TryPlayFleshImpactAudio();
     }
 
@@ -418,7 +418,7 @@ namespace Unloved::BulletSystem {
 
     void ProcessStandaloneRagdollHit(uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
         GameAudio::TryPlayFleshImpactAudio();
-        BloodSystem::AddBloodVAT(hitPosition, bullet.GetDirection());
+        BloodSystemOLD::AddBloodVAT(hitPosition, bullet.GetDirection());
 
         Hell::Physics::AddForceToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactVelocityChange(), true);
         Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, true);

@@ -10,10 +10,11 @@
 #include "Unloved/World/World.h"
 #include "World/LegacyWorld.h"
 
-using namespace Hell;
+using namespace Hell;            // lil bit cursed dis
 
 namespace OpenGL::Renderer {
-    using namespace Unloved;
+
+    using namespace Unloved;     // lil bit cursed dis
 
 
     void RenderFlashLightShadowMaps();
@@ -141,6 +142,8 @@ namespace OpenGL::Renderer {
         if (!shadowMaps) return;
         if (shadowMapInfoSet.empty()) return;
 
+        RendererSettings& rendererSettings = Unloved::Renderer::GetCurrentRendererSettings();
+
         OpenGLMeshBuffer& meshBufferAssets = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
         OpenGLMeshBuffer& meshBufferProcedural = OpenGL::ResourceManager::GetMeshBuffer("Procedural");
 
@@ -194,23 +197,42 @@ namespace OpenGL::Renderer {
 
                 glBindVertexArray(meshBufferAssets.GetVAO());
                 MultiDrawIndirect(drawCommands.assetGeometry[shadowMapIndex][face]);
+
                 OpenGL::RasterizerStateManager::SetRasterizerState(alphaShadowState);
+
                 MultiDrawIndirect(drawCommands.assetGeometryAlphaDiscard[shadowMapIndex][face]);
                 MultiDrawIndirect(drawCommands.assetGeometryHair[shadowMapIndex][face]);
+
                 OpenGL::RasterizerStateManager::SetRasterizerState(solidShadowState);
-                MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][face]);
+
+
+                if (rendererSettings.enableShadowMappingForSkinnedGeometry) {
+                    MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][face]);
+                }
+
                 OpenGL::RasterizerStateManager::SetRasterizerState(alphaShadowState);
-                MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][face]);
-                MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][face]);
+
+                if (rendererSettings.enableShadowMappingForSkinnedGeometry) {
+                    MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][face]);
+                    MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][face]);
+                }
 
                 glBindVertexArray(OpenGL::BackEnd::GetSkinnedVertexDataVAO());
                 glBindBuffer(GL_ARRAY_BUFFER, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBufferAssets.GetEBO());
+
                 OpenGL::RasterizerStateManager::SetRasterizerState(solidShadowState);
-                MultiDrawIndirect(drawCommands.assetGeometrySkinned[shadowMapIndex][face]);
+
+                if (rendererSettings.enableShadowMappingForSkinnedGeometry) {
+                    MultiDrawIndirect(drawCommands.assetGeometrySkinned[shadowMapIndex][face]);
+                }
+
                 OpenGL::RasterizerStateManager::SetRasterizerState(alphaShadowState);
-                MultiDrawIndirect(drawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][face]);
-                MultiDrawIndirect(drawCommands.assetGeometrySkinnedHair[shadowMapIndex][face]);
+
+                if (rendererSettings.enableShadowMappingForSkinnedGeometry) {
+                    MultiDrawIndirect(drawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][face]);
+                    MultiDrawIndirect(drawCommands.assetGeometrySkinnedHair[shadowMapIndex][face]);
+                }
             }
         }
     }

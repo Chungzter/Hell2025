@@ -15,7 +15,7 @@
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
-#include "Unloved/Systems/Blood/BloodSystem.h"
+#include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
 #include "Unloved/Systems/House/HouseManager.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
@@ -290,7 +290,7 @@ namespace Unloved::LegacyWorld {
         Unloved::HouseBuilder::RemoveAllWeatherBoards();
         Unloved::MirrorManager::CleanUp();
         Unloved::BulletSystem::CleanUp();
-        Unloved::BloodSystem::CleanUp();
+        Unloved::BloodSystemOLD::CleanUp();
         Ocean::DestroyPhysicsPlane();
         Unloved::World::CleanUpAll();
         Hell::Physics::FlushPendingRemovals();

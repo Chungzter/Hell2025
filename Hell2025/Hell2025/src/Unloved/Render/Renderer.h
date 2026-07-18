@@ -37,6 +37,7 @@ namespace Unloved::Renderer {
     void TogglePointCloudGrid();
     void ToggleRagdollRendering();
     void ToggleScreenSpaceReflections();
+    void ToggleShadowMappingForSkinnedGeometry();
 
     void NextRendererMode();
 	void SetRendererMode(RendererMode rendererMode);

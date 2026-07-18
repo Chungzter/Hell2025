@@ -15,7 +15,7 @@
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Objects/Renderables/AnimatedGameObject.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
-#include "Unloved/Systems/Blood/BloodSystem.h"
+#include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Systems/ShadowMaps/ShadowMapManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
@@ -644,7 +644,7 @@ namespace Unloved::RenderDataManager {
         }
 
         // Screenspace blood decals
-        std::vector<BloodScreenSpaceDecal>& bloodScreenSpaceDecals = Unloved::BloodSystem::GetBloodScreenSpaceDecals();
+        std::vector<BloodScreenSpaceDecal>& bloodScreenSpaceDecals = Unloved::BloodSystemOLD::GetBloodScreenSpaceDecals();
         std::sort(bloodScreenSpaceDecals.begin(), bloodScreenSpaceDecals.end(), [](const BloodScreenSpaceDecal& a, const BloodScreenSpaceDecal& b) {
             return a.m_type < b.m_type;
         });

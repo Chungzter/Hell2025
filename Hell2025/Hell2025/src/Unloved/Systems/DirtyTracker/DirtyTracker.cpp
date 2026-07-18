@@ -5,10 +5,12 @@
 #include "Hell/Math/AABB.h"
 
 #include "Unloved/Common/Constants.h"
+#include "Unloved/Debug/Debug.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/ObjectId.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/Lighting/Light.h"
+#include "Unloved/Render/Renderer.h"
 #include "Unloved/World/World.h"
 
 #include <unordered_map>
@@ -27,6 +29,7 @@ namespace Unloved::DirtyTracker {
     void DebugDrawLightIds();
     void DebugDrawDirtyBounds();
     void DebugPrintDirtyLightInfo(const Light& light, uint64_t intersectingObjectId);
+    void DebugMessageOfAllDirtyLights();
 
     std::vector<uint64_t> g_dirtyDoorIds;
     std::vector<uint64_t> g_dirtyLightIds;
@@ -57,7 +60,7 @@ namespace Unloved::DirtyTracker {
             }
 
             bool found = false;
-    
+
             // Check whether the ID is already in there
             for (uint64_t dirtyId : g_dirtyDoorIds) {
                 if (dirtyId == dirtyBounds.objectId) {
@@ -88,7 +91,7 @@ namespace Unloved::DirtyTracker {
                     if (!dirtyBounds.castShadows) {
                         continue;
                     }
-                
+
                     // If intersection is found add the light ID and move onto checking next light
                     if (IntersectAABB(light.GetWorldBoundsMin(), light.GetWorldBoundsMax(), dirtyBounds.boundsMin, dirtyBounds.boundsMax)) {
                         g_dirtyLightIds.push_back(light.GetObjectId());
@@ -100,9 +103,27 @@ namespace Unloved::DirtyTracker {
 
         //DebugDrawDirtyBounds();
         //DebugDrawLightIds();
+        //DebugMessageOfAllDirtyLights();
     }
 
     void AddDirtyBounds(const DirtyBounds& dirtyBounds) {
+
+        ObjectType objectType = GetObjectIdType(dirtyBounds.objectId);
+
+
+        RendererSettings& rendererSettings = Renderer::GetCurrentRendererSettings();
+        if (!rendererSettings.enableShadowMappingForSkinnedGeometry) {
+
+            ObjectType objectType = GetObjectIdType(dirtyBounds.objectId);
+            if (objectType == ObjectType::ANIMATED_GAME_OBJECT) {
+                //Logging::Debug() << "Rejected an animated game object " << dirtyBounds.objectId << "\n";
+                return;
+            }
+        }
+        else {
+            //Logging::Debug() << "Added " << dirtyBounds.objectId << " " << Hell::Enum::ToString(objectType) << "\n";
+        }
+
         // Bail if invalid AABB was passed in
         if (dirtyBounds.boundsMin.x > dirtyBounds.boundsMax.x ||
             dirtyBounds.boundsMin.y > dirtyBounds.boundsMax.y ||
@@ -187,6 +208,16 @@ namespace Unloved::DirtyTracker {
                 DebugDraw::DrawAABB(aabb, GREEN);
             }
         }
+    }
+
+    void DebugMessageOfAllDirtyLights() {
+        std::string message;
+
+        for (uint64_t id : g_dirtyLightIds) {
+            message += std::to_string(id) + "\n";
+        }
+
+        Debug::BlitQuickDebugMessage(message);
     }
 
     void DebugPrintDirtyLightInfo(const Light& light, uint64_t intersectingObjectId) {

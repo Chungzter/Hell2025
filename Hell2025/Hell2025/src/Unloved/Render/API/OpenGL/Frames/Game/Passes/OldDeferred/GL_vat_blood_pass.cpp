@@ -1,7 +1,7 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Session/Session.h"
-#include "Unloved/Systems/Blood/BloodSystem.h"
+#include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
@@ -54,7 +54,7 @@ namespace OpenGL::Renderer {
         static uint32_t meshId7 = getFirstMeshId("blood_mesh7");
         static uint32_t meshId9 = getFirstMeshId("blood_mesh9");
 
-        std::vector<BloodVAT>& bloodVATItems = Unloved::BloodSystem::GetBloodVAT();
+        std::vector<BloodVAT>& bloodVATItems = Unloved::BloodSystemOLD::GetBloodVAT();
 
         struct RenderItemVAT {
             glm::mat4 modelMatrix = glm::mat4(1.0f);
