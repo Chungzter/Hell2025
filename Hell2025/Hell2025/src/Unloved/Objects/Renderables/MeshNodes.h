@@ -33,6 +33,7 @@ struct MeshNode {
     glm::mat4 localTransform;         // Think of better name. Same for transform/transformPreviousFrame. Cause you are always confused.
     glm::mat4 inverseBindTransform;
     AABB worldspaceAabb;
+    AABB previousWorldspaceAabb;
     OBB worldSpaceObb;
     RenderItem renderItem;
     glm::mat4 localMatrix = glm::mat4(1.0f);

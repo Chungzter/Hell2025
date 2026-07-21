@@ -1,6 +1,7 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Hell/Backend/BackEnd.h"
+#include "Hell/Render/API/OpenGL/GL_resource_manager.h"
 #include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Debug/DebugDraw.h"
@@ -45,7 +46,7 @@ namespace OpenGL::Renderer {
         fbo.SetViewport();
 
         OpenGL::BindShader("LightAABBPosition");
-        OpenGL::BindSSBO(5, "Lights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
 
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
@@ -105,7 +106,11 @@ namespace OpenGL::Renderer {
     }
 
     void DrawHeightMap(OpenGLShader* shader, Light* light) {
-        OpenGLHeightMapMesh& heightMapMesh = OpenGL::BackEnd::GetHeightMapMesh();
+        std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
+        if (chunks.empty()) return;
+
+        Hell::MeshBuffer& heightMapMeshBuffer = Hell::ResourceManager::GetMeshBuffer("HeightMapGeometry");
+        OpenGLMeshBuffer& glHeightMapMeshBuffer = OpenGL::ResourceManager::GetMeshBuffer("HeightMapGeometry");
 
         Transform transform;
         transform.scale = glm::vec3(HEIGHTMAP_SCALE_XZ, HEIGHTMAP_SCALE_Y, HEIGHTMAP_SCALE_XZ);
@@ -114,14 +119,9 @@ namespace OpenGL::Renderer {
 
         OpenGL::SetUniformMat4("u_model", modelMatrix);
 
-        glBindVertexArray(heightMapMesh.GetVAO());
+        glBindVertexArray(glHeightMapMeshBuffer.GetVAO());
 
-        int verticesPerChunk = 33 * 33;
-        int verticesPerHeightMap = verticesPerChunk * 8 * 8;
-        int indicesPerChunk = 32 * 32 * 6;
-        int indicesPerHeightMap = indicesPerChunk * 8 * 8;
-
-        for (HeightMapChunk& chunk : LegacyWorld::GetHeightMapChunks()) {
+        for (HeightMapChunk& chunk : chunks) {
 
             // Skip any chunks that don't intersect the light radius
             AABB chunkAABB(chunk.aabbMin, chunk.aabbMax);
@@ -129,9 +129,12 @@ namespace OpenGL::Renderer {
                 continue;
             }
 
-            int indexCount = INDICES_PER_CHUNK;
-            int baseVertex = 0;
-            int baseIndex = chunk.baseIndex;
+            Mesh* mesh = heightMapMeshBuffer.GetMeshById(chunk.meshId);
+            if (!mesh) continue;
+
+            int indexCount = mesh->indexCount;
+            int baseVertex = mesh->baseVertex;
+            int baseIndex = mesh->baseIndex;
             void* indexOffset = (GLvoid*)(baseIndex * sizeof(GLuint));
             int instanceCount = 1;
             glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indexOffset, instanceCount, baseVertex, 0);

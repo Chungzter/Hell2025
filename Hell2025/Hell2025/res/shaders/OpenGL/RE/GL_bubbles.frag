@@ -1,4 +1,5 @@
 #version 460
+#extension GL_ARB_bindless_texture : enable
 #include "../../common/lighting.glsl"
 #include "../../common/types.glsl"
 
@@ -9,6 +10,7 @@ uniform float u_time;
 
 layout (binding = 0) uniform samplerCube cubeMap;
 
+readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
@@ -165,29 +167,22 @@ void main() {
     //totalSpecular = vec3(0);
     //totalOpacity = 0;
 
-    for (int i = 0; i < 2; i++) {
-        float modifier = viewportDataArr[i].flashlightModifer;
+    if (rendererData.flashlightIESTextureIndex >= 0) {
+        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
+        for (int i = 0; i < 2; i++) {
+            float modifier = viewportDataArr[i].flashlightModifer;
+            if (modifier <= 0.05) continue;
 
-        if (modifier > 0.05) {
-            vec3 flashColor = vec3(0.9, 0.95, 1.1);
-            
-            vec3 spotLightPos = viewportDataArr[i].viewPos.xyz;
-            vec3 spotLightDir = normalize(viewportDataArr[i].cameraForward.xyz);
-            vec3 L_flash = -spotLightDir; 
-
+            vec3 spotLightPos = viewportDataArr[i].flashlightPosition.xyz;
+            vec3 spotLightDir = normalize(viewportDataArr[i].flashlightDir.xyz);
+            vec3 L_flash = normalize(spotLightPos - worldPos);
             vec3 H_flash = normalize(L_flash + vd);
             float flashSpec = pow(max(dot(n, H_flash), 0.0), 512.0) * 5.0;
+            float attenuation = GetFlashlightIESAttenuation(worldPos, spotLightPos, spotLightDir, rendererData, flashlightIES) * modifier;
 
-
-            // tweakable for inverse square distance attenuation
-            float flashFalloff = 0.005; 
-            float dist = length(spotLightPos - worldPos);
-            float attenuation = 1.0 / (1.0 + (flashFalloff * dist * dist));
-            attenuation = 1.0;
-
-            totalSpecular += flashColor * flashSpec * attenuation;
+            totalSpecular += rendererData.flashlightColor.rgb * flashSpec * attenuation;
             totalOpacity += flashSpec * 0.4 * attenuation;
-            totalOpacity += fresnel * 0.75 + length(irid) * 0.12; // Frensel
+            totalOpacity += fresnel * 0.75 + length(irid) * 0.12;
         }
     }
 

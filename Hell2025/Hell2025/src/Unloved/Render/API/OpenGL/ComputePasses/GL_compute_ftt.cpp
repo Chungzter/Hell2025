@@ -1,161 +1,79 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
-#include "Unloved/Session/Session.h"
-#include "Unloved/Systems/Ocean/Ocean.h"
-#include "Hell/Input.h"
-namespace Input = Hell::Input;
 
+#include "Unloved/Systems/Ocean/Ocean.h"
+#include "Unloved/World/World.h"
+
+#include <string>
 
 namespace OpenGL::Renderer {
 
-    void ComputeInverseFFT2D(GLuint handleA, GLuint handleB);
-    float g_globalTime = 50.0f;
+    struct OceanFFTResources {
+        OpenGLFrameBuffer* frameBuffers[Ocean::FFT_BAND_COUNT] = {};
+        OpenGLSSBO* h0SSBOs[Ocean::FFT_BAND_COUNT] = {};
+        OpenGLSSBO* spectrumInSSBO = nullptr;
+        OpenGLSSBO* spectrumOutSSBO = nullptr;
+        OpenGLSSBO* dispXInSSBO = nullptr;
+        OpenGLSSBO* dispZInSSBO = nullptr;
+        OpenGLSSBO* gradXInSSBO = nullptr;
+        OpenGLSSBO* gradZInSSBO = nullptr;
+        OpenGLSSBO* dispXOutSSBO = nullptr;
+        OpenGLSSBO* dispZOutSSBO = nullptr;
+        OpenGLSSBO* gradXOutSSBO = nullptr;
+        OpenGLSSBO* gradZOutSSBO = nullptr;
+    };
 
-    void ComputeOceanFFTPass() {
-        ProfilerOpenGLZoneFunction();
-
-        OpenGLFrameBuffer* fftFrameBuffer_band0 = OpenGL::ResourceManager::GetFrameBufferPtr("FFT_band0");
-        OpenGLFrameBuffer* fftFrameBuffer_band1 = OpenGL::ResourceManager::GetFrameBufferPtr("FFT_band1");
-        OpenGLShader* oceanCalculateSpectrumShader = OpenGL::ResourceManager::GetShaderPtr("OceanCalculateSpectrum");
-        OpenGLShader* oceanUpdateTexturesShader = OpenGL::ResourceManager::GetShaderPtr("OceanUpdateTextures");
-
-        OpenGLSSBO* fftH0SSBO_band0 = OpenGL::ResourceManager::GetSSBOPtr("ffth0Band0");
-        OpenGLSSBO* fftH0SSBO_band1 = OpenGL::ResourceManager::GetSSBOPtr("ffth0Band1");
-        OpenGLSSBO* fftSpectrumInSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftSpectrumInSSBO");
-        OpenGLSSBO* fftSpectrumOutSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftSpectrumOutSSBO");
-        OpenGLSSBO* fftDispXInSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftDispInXSSBO");
-        OpenGLSSBO* fftDispZInSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftDispZInSSBO");
-        OpenGLSSBO* fftGradXInSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftGradXInSSBO");
-        OpenGLSSBO* fftGradZInSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftGradZInSSBO");
-        OpenGLSSBO* fftDispXOutSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftDispXOutSSBO");
-        OpenGLSSBO* fftDispZOutSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftDispZOutSSBO");
-        OpenGLSSBO* fftGradXOutSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftGradXOutSSBO");
-        OpenGLSSBO* fftGradZOutSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftGradZOutSSBO");
-
-        if (!fftFrameBuffer_band0) return;
-        if (!fftFrameBuffer_band1) return;
-        if (!fftH0SSBO_band0) return;
-        if (!fftH0SSBO_band1) return;
-        if (!fftSpectrumInSSBO) return;
-        if (!fftSpectrumOutSSBO) return;
-        if (!fftDispXInSSBO) return;
-        if (!fftDispZInSSBO) return;
-        if (!fftGradXInSSBO) return;
-        if (!fftGradZInSSBO) return;
-        if (!fftDispXOutSSBO) return;
-        if (!fftDispZOutSSBO) return;
-        if (!fftGradXOutSSBO) return;
-        if (!fftGradZOutSSBO) return;
-        if (!oceanUpdateTexturesShader) return;
-        if (!oceanCalculateSpectrumShader) return;
-
-        static double lastTime = glfwGetTime();
-        double currentTime = glfwGetTime();
-        float deltaTime = float(currentTime - lastTime);
-        lastTime = currentTime;
-
-        static bool doTime = true;
-
-        if (doTime) {
-            g_globalTime += deltaTime * 2.0f;
-        }
-        else {
-            g_globalTime = 50.0f;
-        }
-        if (Input::KeyPressed(HELL_KEY_T)) {
-            doTime = !doTime;
+    bool LoadOceanFFTResources(OceanFFTResources& resources) {
+        for (int i = 0; i < Ocean::FFT_BAND_COUNT; i++) {
+            const std::string bandIndex = std::to_string(i);
+            resources.frameBuffers[i] = OpenGL::ResourceManager::GetFrameBufferPtr("FFT_band" + bandIndex);
+            resources.h0SSBOs[i] = OpenGL::ResourceManager::GetSSBOPtr("ffth0Band" + bandIndex);
+            if (!resources.frameBuffers[i]) return false;
+            if (!resources.h0SSBOs[i]) return false;
         }
 
-        int bandCount = 2;
+        resources.spectrumInSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftSpectrumInSSBO");
+        resources.spectrumOutSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftSpectrumOutSSBO");
+        resources.dispXInSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftDispInXSSBO");
+        resources.dispZInSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftDispZInSSBO");
+        resources.gradXInSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftGradXInSSBO");
+        resources.gradZInSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftGradZInSSBO");
+        resources.dispXOutSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftDispXOutSSBO");
+        resources.dispZOutSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftDispZOutSSBO");
+        resources.gradXOutSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftGradXOutSSBO");
+        resources.gradZOutSSBO = OpenGL::ResourceManager::GetSSBOPtr("fftGradZOutSSBO");
 
-        const float gravity = Ocean::GetGravity();
+        if (!resources.spectrumInSSBO) return false;
+        if (!resources.spectrumOutSSBO) return false;
+        if (!resources.dispXInSSBO) return false;
+        if (!resources.dispZInSSBO) return false;
+        if (!resources.gradXInSSBO) return false;
+        if (!resources.gradZInSSBO) return false;
+        if (!resources.dispXOutSSBO) return false;
+        if (!resources.dispZOutSSBO) return false;
+        if (!resources.gradXOutSSBO) return false;
+        if (!resources.gradZOutSSBO) return false;
+        if (!OpenGL::ResourceManager::GetShaderPtr("OceanCalculateSpectrum")) return false;
+        if (!OpenGL::ResourceManager::GetShaderPtr("OceanUpdateTextures")) return false;
+        if (!OpenGL::ResourceManager::GetShaderPtr("FttRadix64Vertical")) return false;
+        if (!OpenGL::ResourceManager::GetShaderPtr("FttRadix8Vertical")) return false;
+        if (!OpenGL::ResourceManager::GetShaderPtr("FttRadix64Horizontal")) return false;
+        if (!OpenGL::ResourceManager::GetShaderPtr("FttRadix8Horizontal")) return false;
 
-        for (int i = 0; i < bandCount; i++) {
+        return true;
+    }
 
-            if (GetFftDisplayMode() == 1 && i == 1) {
-                continue;
-            }
-            if (GetFftDisplayMode() == 2 && i == 0) {
-                continue;
-            }
+    void UploadChangedOceanSpectra(const OceanFFTResources& resources) {
+        for (int i = 0; i < Ocean::FFT_BAND_COUNT; i++) {
+            if (!Ocean::H0UploadRequired(i)) continue;
 
-            const glm::uvec2 fftResolution = Ocean::GetFFTResolution(i);
-            const glm::vec2 patchSimSize = Ocean::GetPatchSimSize(i);
-
-            const GLuint blocksPerSide = 16;
-            const GLuint blockSizeX = fftResolution.x / blocksPerSide;
-            const GLuint blockSizeY = fftResolution.y / blocksPerSide;
-
-            // Generate spectrum on GPU
-            if (i == 0) {
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, fftH0SSBO_band0->GetHandle());
-            }
-            if (i == 1) {
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, fftH0SSBO_band1->GetHandle());
-            }
-
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, fftSpectrumInSSBO->GetHandle());
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, fftDispXInSSBO->GetHandle());
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, fftDispZInSSBO->GetHandle());
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, fftGradXInSSBO->GetHandle());
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, fftGradZInSSBO->GetHandle());
-
-            OpenGL::BindShader("OceanCalculateSpectrum");
-            OpenGL::SetUniformUVec2("u_fftGridSize", fftResolution);
-            OpenGL::SetUniformVec2("u_patchSimSize", patchSimSize);
-            OpenGL::SetUniformFloat("u_gravity", gravity);
-            OpenGL::SetUniformFloat("u_time", g_globalTime);
-            OpenGL::DispatchCompute(blockSizeX, blockSizeY, 1);
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-            // Perform FFT
-            ComputeInverseFFT2D(fftSpectrumInSSBO->GetHandle(), fftSpectrumOutSSBO->GetHandle());
-            ComputeInverseFFT2D(fftDispXInSSBO->GetHandle(), fftDispXOutSSBO->GetHandle());
-            ComputeInverseFFT2D(fftDispZInSSBO->GetHandle(), fftDispZOutSSBO->GetHandle());
-            ComputeInverseFFT2D(fftGradXInSSBO->GetHandle(), fftGradXOutSSBO->GetHandle());
-            ComputeInverseFFT2D(fftGradZInSSBO->GetHandle(), fftGradZOutSSBO->GetHandle());
-
-            // Update mesh position
-            if (i == 0) {
-                glBindImageTexture(0, fftFrameBuffer_band0->GetColorAttachmentHandleByName("Displacement"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-                glBindImageTexture(1, fftFrameBuffer_band0->GetColorAttachmentHandleByName("Normals"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-            }
-            if (i == 1) {
-                glBindImageTexture(0, fftFrameBuffer_band1->GetColorAttachmentHandleByName("Displacement"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-                glBindImageTexture(1, fftFrameBuffer_band1->GetColorAttachmentHandleByName("Normals"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-            }
-
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, fftSpectrumInSSBO->GetHandle());
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, fftDispXInSSBO->GetHandle());
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, fftDispZInSSBO->GetHandle());
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, fftGradXInSSBO->GetHandle());
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, fftGradZInSSBO->GetHandle());
-
-            OpenGL::BindShader("OceanUpdateTextures");
-            OpenGL::SetUniformUVec2("u_fftGridSize", fftResolution);
-            OpenGL::SetUniformFloat("u_dispScale", Ocean::GetDisplacementScale());
-            OpenGL::SetUniformFloat("u_heightScale", Ocean::GetHeightScale());
-
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-            OpenGL::DispatchCompute(blockSizeX, blockSizeY, 1);
+            const std::vector<std::complex<float>>& h0 = Ocean::GetH0(i);
+            resources.h0SSBOs[i]->CopyFrom(h0.data(), sizeof(std::complex<float>) * h0.size());
+            Ocean::MarkH0Uploaded(i);
         }
-
-        // Generate mips for the normals
-        glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
-        glGenerateTextureMipmap(fftFrameBuffer_band0->GetColorAttachmentHandleByName("Normals"));
-        glGenerateTextureMipmap(fftFrameBuffer_band1->GetColorAttachmentHandleByName("Normals"));
     }
 
     void ComputeInverseFFT2D(GLuint handleA, GLuint handleB) {
-        OpenGLShader* radix64Vert = OpenGL::ResourceManager::GetShaderPtr("FttRadix64Vertical");
-        OpenGLShader* radix8Vert = OpenGL::ResourceManager::GetShaderPtr("FttRadix8Vertical");
-        OpenGLShader* radix64Hori = OpenGL::ResourceManager::GetShaderPtr("FttRadix64Horizontal");
-        OpenGLShader* radix8Hori = OpenGL::ResourceManager::GetShaderPtr("FttRadix8Horizontal");
-
-        if (!radix64Vert) return;
-        if (!radix8Vert) return;
-        if (!radix64Hori) return;
-        if (!radix8Hori) return;
-
+        // Fixed 512 point radix 64 x 8 FFT
         OpenGL::BindShader("FttRadix64Vertical");
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, handleA);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, handleB);
@@ -171,13 +89,91 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("FttRadix64Horizontal");
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, handleA);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, handleB);
-        OpenGL::DispatchCompute(1, 512, 1);
+        OpenGL::DispatchCompute(1, Ocean::FFT_RESOLUTION, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         OpenGL::BindShader("FttRadix8Horizontal");
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, handleB);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, handleA);
-        OpenGL::DispatchCompute(1, 256, 1);
+        OpenGL::DispatchCompute(1, Ocean::FFT_RESOLUTION / 2, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    }
+
+    void GenerateOceanSpectrum(const OceanFFTResources& resources, int bandIndex, float simulationTime) {
+        constexpr GLuint localSize = 16;
+        constexpr GLuint dispatchSize = (Ocean::FFT_RESOLUTION + localSize - 1) / localSize;
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, resources.h0SSBOs[bandIndex]->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, resources.spectrumInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, resources.dispXInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, resources.dispZInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, resources.gradXInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, resources.gradZInSSBO->GetHandle());
+
+        OpenGL::BindShader("OceanCalculateSpectrum");
+        OpenGL::SetUniformFloat("u_domainSize", Ocean::GetDomainSize(bandIndex));
+        OpenGL::SetUniformFloat("u_gravity", Ocean::GetGravity());
+        OpenGL::SetUniformFloat("u_time", simulationTime);
+        OpenGL::DispatchCompute(dispatchSize, dispatchSize, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    }
+
+    void ComputeOceanInverseTransforms(const OceanFFTResources& resources) {
+        ComputeInverseFFT2D(resources.spectrumInSSBO->GetHandle(), resources.spectrumOutSSBO->GetHandle());
+        ComputeInverseFFT2D(resources.dispXInSSBO->GetHandle(), resources.dispXOutSSBO->GetHandle());
+        ComputeInverseFFT2D(resources.dispZInSSBO->GetHandle(), resources.dispZOutSSBO->GetHandle());
+        ComputeInverseFFT2D(resources.gradXInSSBO->GetHandle(), resources.gradXOutSSBO->GetHandle());
+        ComputeInverseFFT2D(resources.gradZInSSBO->GetHandle(), resources.gradZOutSSBO->GetHandle());
+    }
+
+    void WriteOceanBandTextures(const OceanFFTResources& resources, int bandIndex) {
+        constexpr GLuint localSize = 16;
+        constexpr GLuint dispatchSize = (Ocean::FFT_RESOLUTION + localSize - 1) / localSize;
+
+        OpenGL::BindImageTexture(0, resources.frameBuffers[bandIndex]->GetColorAttachmentHandleByName("Displacement"), GL_WRITE_ONLY, GL_RGBA32F);
+        OpenGL::BindImageTexture(1, resources.frameBuffers[bandIndex]->GetColorAttachmentHandleByName("Slope"), GL_WRITE_ONLY, GL_RGBA32F);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, resources.spectrumInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, resources.dispXInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, resources.dispZInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, resources.gradXInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, resources.gradZInSSBO->GetHandle());
+
+        OpenGL::BindShader("OceanUpdateTextures");
+        OpenGL::SetUniformFloat("u_dispScale", Ocean::GetDisplacementScale());
+        OpenGL::SetUniformFloat("u_heightScale", Ocean::GetHeightScale());
+        OpenGL::DispatchCompute(dispatchSize, dispatchSize, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    }
+
+    void SimulateOceanBand(const OceanFFTResources& resources, int bandIndex, float simulationTime) {
+        GenerateOceanSpectrum(resources, bandIndex, simulationTime);
+        ComputeOceanInverseTransforms(resources);
+        WriteOceanBandTextures(resources, bandIndex);
+    }
+
+    void GenerateOceanSlopeMipmaps(const OceanFFTResources& resources) {
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_UPDATE_BARRIER_BIT);
+        for (int i = 0; i < Ocean::FFT_BAND_COUNT; i++) {
+            glGenerateTextureMipmap(resources.frameBuffers[i]->GetColorAttachmentHandleByName("Slope"));
+        }
+        glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT | GL_TEXTURE_UPDATE_BARRIER_BIT);
+    }
+
+    void ComputeOceanFFTPass() {
+        ProfilerOpenGLZoneFunction();
+        if (!Unloved::World::HasOcean()) return;
+
+        // Only rebuild H0 when a debug setting actually moves
+        Ocean::UpdateSpectrum();
+
+        OceanFFTResources resources;
+        if (!LoadOceanFFTResources(resources)) return;
+        UploadChangedOceanSpectra(resources);
+
+        const float simulationTime = Ocean::UpdateSimulationTime();
+        for (int i = 0; i < Ocean::FFT_BAND_COUNT; i++) {
+            SimulateOceanBand(resources, i, simulationTime);
+        }
+        GenerateOceanSlopeMipmaps(resources);
     }
 }

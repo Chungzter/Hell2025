@@ -39,7 +39,9 @@ void main() {
 #endif
     RenderItem renderItem = renderItems[globalInstanceIndex];
     
-    mat4 projectionView = viewportData[viewportIndex].projectionView;
+    mat4 jitterMatrix = viewportData[viewportIndex].jitteredProjectionViewReverseZ *
+                        viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    mat4 projectionView = jitterMatrix * viewportData[viewportIndex].projectionView;
     mat4 modelMatrix = renderItem.modelMatrix;
 
     vec4 WorldPos = modelMatrix * vec4(a_position, 1.0);

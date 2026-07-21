@@ -15,17 +15,9 @@ layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamp
 
 layout(location = 0) out vec4 out_color;
 
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
-    ViewportData viewportDataArr[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RendererDataBuffer {
-    RendererData rendererData;
-};
-
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsSkybox data;
-} pushConstant;
+} pc;
 
 mat3 GetSkyboxRotationMatrix() {
     float angle = radians(-90.0);
@@ -35,14 +27,14 @@ mat3 GetSkyboxRotationMatrix() {
 }
 
 void main() {
-    RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress);
-    ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
+    RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
 
     ivec2 px = ivec2(gl_FragCoord.xy);
     ivec2 resolution = ivec2(rendererDataBuffer.rendererData.gBufferWidth, rendererDataBuffer.rendererData.gBufferHeight);
 
     uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, resolution, rendererDataBuffer.rendererData.splitscreenMode);
-    ViewportData viewportData = viewportDataBuffer.viewportDataArr[viewportIndex];
+    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
 
     mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
     vec3 viewPos = viewportData.viewPos.xyz;

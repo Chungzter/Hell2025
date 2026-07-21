@@ -79,6 +79,7 @@ namespace Hell::AssetLoader {
         };
 
         LoadingComplete g_loadingComplete;
+        uint32_t g_maxCompressedTextureResolution = 0;
         std::vector<std::string> g_loadLog = { "We are all alone on life's journey, held captive by the limitations of human consciousness.\n\n" };
 
         std::vector<AnimationLoadJob> g_animationLoadJobs;
@@ -133,8 +134,8 @@ namespace Hell::AssetLoader {
             return skinnedModelData;
         }
 
-        ImageData LoadTextureImageData(std::string path, ImageDataType imageDataType) {
-            return ImageTools::LoadImageData(path, imageDataType);
+        ImageData LoadTextureImageData(std::string path, ImageDataType imageDataType, uint32_t maxCompressedTextureResolution) {
+            return ImageTools::LoadImageData(path, imageDataType, maxCompressedTextureResolution);
         }
 
         void PollAnimationJobs() {
@@ -323,7 +324,7 @@ namespace Hell::AssetLoader {
                     }
 
                     job.awaitingWork = false;
-                    job.future = std::async(std::launch::async, LoadTextureImageData, job.filePath, job.imageDataType);
+                    job.future = std::async(std::launch::async, LoadTextureImageData, job.filePath, job.imageDataType, g_maxCompressedTextureResolution);
                     activeJobCount++;
                     i++;
                     continue;
@@ -415,7 +416,8 @@ namespace Hell::AssetLoader {
         return g_loadLog;
     }
 
-    void Init() {
+    void Init(uint32_t maxCompressedTextureResolution) {
+        g_maxCompressedTextureResolution = maxCompressedTextureResolution;
         LoadMinimumRequiredAssets();
         DiscoverAssets();
         LoadIESFiles();
@@ -466,6 +468,30 @@ namespace Hell::AssetLoader {
                 Logging::Error() << "AssetLoader::LoadRequired(..) failed to upload '" << fileInfo.path << "'\n";
                 continue;
             }
+        }
+
+        // BRDF Texture for Indirect Specular
+        FileInfo brdfFileInfo = File::GetInfo("res/textures/required/BrdfLut.dds");
+
+        Texture& brdfTexture = ResourceManager::CreateTexture(brdfFileInfo.name);
+        brdfTexture.SetFileInfo(brdfFileInfo);
+        brdfTexture.SetImageDataType(ImageDataType::COMPRESSED);
+        brdfTexture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
+        brdfTexture.SetMinFilter(TextureFilter::LINEAR);
+        brdfTexture.SetMagFilter(TextureFilter::LINEAR);
+
+        ImageData brdfImageData = Hell::ImageTools::LoadImageData(brdfFileInfo.path, ImageDataType::COMPRESSED, g_maxCompressedTextureResolution);
+        if (brdfImageData.format == ImageFormat::RGBA8_UNORM) {
+            // FidelityFX SDK 1.1.4's Cauldron loader requests this DDS as sRGB
+            // Overwriting format here so the sampled BRDF coefficients receive the same hardware sRGB to linear conversion the AMD demo
+            brdfImageData.format = ImageFormat::RGBA8_SRGB;
+        }
+        brdfTexture.SetImageData(std::move(brdfImageData));
+        AddLoadLogItem("Loaded " + brdfFileInfo.path);
+
+        if (!TextureUploader::ImmediateUpload(brdfTexture)) {
+            brdfTexture.SetUploadState(UploadState::FAILED);
+            Logging::Error() << "AssetLoader::LoadRequired(..) failed to upload '" << brdfFileInfo.path << "'\n";
         }
     }
 

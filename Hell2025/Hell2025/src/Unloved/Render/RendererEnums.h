@@ -32,6 +32,18 @@ enum struct RendererMode {
     RENDERER_MODE_COUNT
 };
 
+enum class IndirectSpecularRaysPerQuad {
+    ONE,
+    TWO,
+    FOUR,
+    UNDFINED
+};
+
+enum class DirectPointShadowMode {
+    SHADOW_MAP,
+    RAY_QUERY
+};
+
 enum class RendererOverrideState {
     NONE = 0,
     BASE_COLOR,
@@ -51,5 +63,13 @@ enum class RendererOverrideState {
     WORLD_POSITION,
     EMISSIVE,
     DDGI_RAYTRACE,
+    HIZ,
+    INDIRECT_SPECULAR_AMD_SAMPLE_COUNT,
+    INDIRECT_SPECULAR_AMD_INPUT,
+    INDIRECT_SPECULAR_AMD_REPROJECTED,
+    INDIRECT_SPECULAR_AMD_PREFILTERED,
+    INDIRECT_SPECULAR_AMD_PREFILTERED_VARIANCE,
+    INDIRECT_SPECULAR_AMD_TEMPORAL,
+    INDIRECT_SPECULAR_AMD_TEMPORAL_VARIANCE,
     STATE_COUNT,
 };

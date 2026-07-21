@@ -39,6 +39,24 @@ struct DDGIVolumeGPU {
     uint32_t padding4{};
 };
 
+struct DDGIReflectionVolumeGPU {
+    DDGIVolumeGPU volume{};
+    uint32_t probeAtlasImageIndex{};
+    uint32_t padding0{};
+    uint32_t padding1{};
+    uint32_t padding2{};
+};
+
+struct DDGIReflectionVolumeBufferHeaderGPU {
+    uint64_t probeStatesDeviceAddress{};
+    uint32_t volumeCount{};
+    uint32_t padding0{};
+};
+
+static_assert(sizeof(DDGIVolumeGPU) == 80);
+static_assert(sizeof(DDGIReflectionVolumeGPU) == 96);
+static_assert(sizeof(DDGIReflectionVolumeBufferHeaderGPU) == 16);
+
 namespace Unloved {
 
 struct DDGIProbeUpdateCandidate {

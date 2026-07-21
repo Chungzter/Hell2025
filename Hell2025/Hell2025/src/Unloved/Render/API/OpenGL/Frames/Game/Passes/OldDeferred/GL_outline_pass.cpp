@@ -113,6 +113,7 @@ namespace OpenGL::Renderer {
             glDrawBuffer(outlineFBO->GetColorAttachmentSlotByName("Mask"));
             glDisable(GL_BLEND);
             OpenGL::BindShader("OutlineMask");
+            OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
             OpenGL::SetUniformInt("u_viewportIndex", i);
             for (const RenderItem& renderItem : Unloved::RenderDataManager::GetRenderItemsOutline()) {
                 OpenGL::SetUniformMat4("u_modelMatrix", renderItem.modelMatrix);
@@ -122,6 +123,7 @@ namespace OpenGL::Renderer {
 
             // Render the outline (by drawing an instanced quad offset many times)
             OpenGL::BindShader("Outline");
+            OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
             OpenGL::SetUniformVec2Array("u_offsets", offsets);
             OpenGL::SetUniformInt("u_viewportIndex", i);
             int instanceCount = offsets.size();

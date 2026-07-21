@@ -102,11 +102,13 @@ namespace VulkanDeviceManager {
             if (!checkFeatures.features.drawIndirectFirstInstance ||
                 !checkFeatures.features.multiDrawIndirect ||
                 !checkFeatures.features.geometryShader ||
+                !checkFeatures.features.imageCubeArray ||
                 !checkFeatures.features.shaderClipDistance ||
                 !checkFeatures.features.shaderStorageImageArrayDynamicIndexing ||
                 !supportedFeatures11.shaderDrawParameters ||
                 !supportedFeatures12.descriptorBindingStorageImageUpdateAfterBind ||
                 !supportedFeatures12.scalarBlockLayout ||
+                !supportedFeatures12.shaderOutputLayer ||
                 !unifiedFeatures.unifiedImageLayouts ||
                 !accelerationStructureFeatures.accelerationStructure ||
                 !accelerationStructureFeatures.descriptorBindingAccelerationStructureUpdateAfterBind ||
@@ -143,8 +145,10 @@ namespace VulkanDeviceManager {
             features.drawIndirectFirstInstance = VK_TRUE;
             features.multiDrawIndirect = VK_TRUE;
             features.geometryShader = VK_TRUE;
+            features.imageCubeArray = VK_TRUE;
             features.shaderClipDistance = VK_TRUE;
             features.shaderStorageImageArrayDynamicIndexing = VK_TRUE;
+            features.shaderStorageImageExtendedFormats = VK_TRUE;
 
             VkPhysicalDeviceVulkan11Features features11{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES };
             features11.shaderDrawParameters = VK_TRUE;
@@ -159,6 +163,7 @@ namespace VulkanDeviceManager {
             features12.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
             features12.descriptorBindingStorageImageUpdateAfterBind = VK_TRUE;
             features12.scalarBlockLayout = VK_TRUE;
+            features12.shaderOutputLayer = VK_TRUE;
 
             VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipeline{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR };
             rtPipeline.rayTracingPipeline = VK_TRUE;

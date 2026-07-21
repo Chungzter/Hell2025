@@ -1,4 +1,5 @@
 #version 460
+#extension GL_ARB_bindless_texture : enable
 #include "../../common/lighting.glsl"
 #include "../../common/types.glsl"
 
@@ -12,6 +13,7 @@ uniform float u_particleAlphaFade;
 layout (binding = 0) uniform samplerCube cubeMap;
 layout (binding = 1) uniform sampler2D u_texture;
 
+readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
@@ -25,44 +27,24 @@ void main() {
     float a = spriteSheetColor.a;
 
     // Base moonlight contribution
-    float finalStrength = 0.2;
-    //finalStrength = 1.0;
+    vec3 finalLight = vec3(0.2);
 
     // Flashlights
-    for (int i = 0; i < 2; i++) {
-        float modifier = viewportDataArr[i].flashlightModifer;
+    if (rendererData.flashlightIESTextureIndex >= 0) {
+        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
+        for (int i = 0; i < 2; i++) {
+            float modifier = viewportDataArr[i].flashlightModifer;
+            if (modifier <= 0.05) continue;
 
-        if (modifier > 0.05) {
-            vec4 flashlightDir = viewportDataArr[i].flashlightDir;
-            vec4 flashlightPosition = viewportDataArr[i].flashlightPosition;
-
-            vec3 spotLightPos = flashlightPosition.xyz;
-            vec3 spotLightDir = normalize(flashlightDir.xyz);
-
-            float spotLightRadius = 25.0;
-            float spotLightStrength = 4.5;
-
-            float innerAngle = cos(radians(5.0 * modifier));
-            float outerAngle = cos(radians(20.5));
-
-            // Attenuation
-            float dist = length(spotLightPos - v_worldPos);
-            float distanceFalloff = clamp(1.0 - (dist / spotLightRadius), 0.0, 1.0);
-            distanceFalloff *= distanceFalloff;
-
-            // Cone angle attenuation
-            vec3 dirToFragment = normalize(v_worldPos - spotLightPos);
-            float theta = dot(dirToFragment, spotLightDir);
-            float epsilon = innerAngle - outerAngle;
-            float coneFalloff = clamp((theta - outerAngle) / epsilon, 0.0, 1.0);
-
-            // Accumulate flashlight contribution
-            finalStrength += (distanceFalloff * coneFalloff * spotLightStrength * modifier);
+            vec3 spotLightPos = viewportDataArr[i].flashlightPosition.xyz;
+            vec3 spotLightDir = normalize(viewportDataArr[i].flashlightDir.xyz);
+            float attenuation = GetFlashlightIESAttenuation(v_worldPos, spotLightPos, spotLightDir, rendererData, flashlightIES);
+            finalLight += rendererData.flashlightColor.rgb * attenuation * modifier;
         }
     }
 
     // Final color
-    vec3 finalColor = spriteSheetColor.rgb * finalStrength;
+    vec3 finalColor = spriteSheetColor.rgb * finalLight;
 
     const vec3 UNDER_WATER_TINT = mix(vec3(0.4, 0.8, 0.6) * 1.75, vec3(0.01, 0.03, 0.04), 0.25);
     finalColor *= UNDER_WATER_TINT;

@@ -8,11 +8,7 @@
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsUI data;
-} pushConstant;
-
-layout(buffer_reference, scalar) readonly buffer RenderItemUIBuffer {
-    RenderItemUI data[];
-};
+} pc;
 
 layout(location = 0) in vec2 a_position;
 layout(location = 1) in vec2 a_uv;
@@ -29,8 +25,8 @@ out gl_PerVertex {
 };
 
 void main() {
-    RenderItemUIBuffer renderItems = RenderItemUIBuffer(pushConstant.data.renderItemsDeviceAddress);
-    RenderItemUI renderItem = renderItems.data[gl_InstanceIndex];
+    RenderItemUIBuffer renderItems = pc.data.frame.uiRenderItemBuffer;
+    RenderItemUI renderItem = renderItems.uiRenderItems[gl_InstanceIndex];
 
     v_uv = a_uv;
     v_color = a_color;
@@ -39,10 +35,10 @@ void main() {
 
     vec4 position = vec4(a_position, 0.0, 1.0);
 
-    float ndcLeft = (renderItem.clipMinX / pushConstant.data.renderTargetWidth) * 2.0 - 1.0;
-    float ndcRight = (renderItem.clipMaxX / pushConstant.data.renderTargetWidth) * 2.0 - 1.0;
-    float ndcTop = 1.0 - (renderItem.clipMinY / pushConstant.data.renderTargetHeight) * 2.0;
-    float ndcBottom = 1.0 - (renderItem.clipMaxY / pushConstant.data.renderTargetHeight) * 2.0;
+    float ndcLeft = (renderItem.clipMinX / pc.data.renderTargetWidth) * 2.0 - 1.0;
+    float ndcRight = (renderItem.clipMaxX / pc.data.renderTargetWidth) * 2.0 - 1.0;
+    float ndcTop = 1.0 - (renderItem.clipMinY / pc.data.renderTargetHeight) * 2.0;
+    float ndcBottom = 1.0 - (renderItem.clipMaxY / pc.data.renderTargetHeight) * 2.0;
 
     vec2 ndc = position.xy / position.w;
 

@@ -36,5 +36,6 @@ private:
     MeshNodes m_meshNodes;
     MeshNodes m_shadowCasterMeshNodes;
     uint64_t m_objectId;
+    bool m_navMeshTransformDirty = true;
 };
 }

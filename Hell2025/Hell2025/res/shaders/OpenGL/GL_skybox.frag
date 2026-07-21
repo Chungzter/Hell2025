@@ -18,14 +18,12 @@ vec3 GetWorldRay_GL(vec2 fragCoordWindow, int viewportIndex) {
     vec2 fragCoord = fragCoordWindow - viewportOrigin;
     vec2 ndc = (fragCoord / viewportSize) * 2.0 - 1.0;
     ndc.y = -ndc.y;
-    mat4 inverseProjectionView = viewportData[viewportIndex].inverseProjectionView;
+    mat4 inverseProjectionView = viewportData[viewportIndex].inverseJitteredProjectionViewReverseZ;
 
-    vec4 nearH = inverseProjectionView * vec4(ndc, -1.0, 1.0);
-    vec4 farH  = inverseProjectionView * vec4(ndc,  1.0, 1.0);
-    vec3 nearW = nearH.xyz / nearH.w;
-    vec3 farW  = farH.xyz  / farH.w;
-
-    return normalize(farW - nearW);
+    vec4 worldH = inverseProjectionView * vec4(ndc, 1.0, 1.0);
+    vec3 worldPos = worldH.xyz / worldH.w;
+    vec3 viewPos = viewportData[viewportIndex].viewPos.xyz;
+    return normalize(worldPos - viewPos);
 }
 
 void main() {

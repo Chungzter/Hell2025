@@ -26,8 +26,8 @@ namespace OpenGL::Renderer {
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
 		OpenGL::SetUniformInt("u_tileYCount", GetTileCountY());
 
-        OpenGL::BindSSBO(2, "RendererData");
-        OpenGL::BindSSBO(3, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(7, "TileWorldBounds");
 
         OpenGL::BindTextureUnit(0, depthHandle);
@@ -45,8 +45,8 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindShader("LightCulling");
 
-        OpenGL::BindSSBO(2, "RendererData");
-        OpenGL::BindSSBO(5, "Lights");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::BindSSBO(6, "TileLights");
         OpenGL::BindSSBO(7, "TileWorldBounds");
 
@@ -90,6 +90,8 @@ namespace OpenGL::Renderer {
         if (!shader) return;
 
         OpenGL::BindShader("ChristmasLightCulling");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::SetUniformInt("u_christmasLightCount", g_christmasLights.size());
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
         OpenGL::SetUniformInt("u_tileYCount", GetTileCountY());
@@ -111,6 +113,8 @@ namespace OpenGL::Renderer {
         if (!shader) return;
 
         OpenGL::BindShader("BloodDecalsCulling");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::SetUniformInt("u_decalCount", static_cast<int>(Unloved::BloodSystemOLD::GetBloodScreenSpaceDecals().size()));
         OpenGL::SetUniformInt("u_tileXCount", static_cast<int>(GetTileCountX()));
         OpenGL::SetUniformInt("u_tileYCount", static_cast<int>(GetTileCountY()));

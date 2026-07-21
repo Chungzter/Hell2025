@@ -247,15 +247,75 @@ namespace {
         pipeline.Build();
     }
 
-    // Reflectance
+    // Hierarchical depth buffer
 
-    void CreateReflectedRadiancePipeline() {
-        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("ReflectedRadiance");
-        pipeline.SetShader("ReflectedRadiance");
+    void CreateHiZPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HiZ");
+        pipeline.SetShader("HiZ");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.Build();
+    }
+
+    // Indirect specular
+
+    void CreateIndirectSpecularAMDInputPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("IndirectSpecularAMDInput");
+        pipeline.SetShader("IndirectSpecularAMDInput");
         pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
         pipeline.AddDescriptorSetLayout("RayQueryDescriptorSet");
-        pipeline.AddPushConstant(sizeof(PushConstantsReflectedRadiance), VK_SHADER_STAGE_FRAGMENT_BIT);
-        pipeline.SetRenderState("ReflectedRadiance");
+        pipeline.AddPushConstant(sizeof(PushConstantsIndirectSpecularAMDInput), VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.SetRenderState("IndirectSpecularAMDRayInput");
+        pipeline.Build();
+    }
+
+    void CreateIndirectSpecularAMDResolveRayInputPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("IndirectSpecularAMDResolveRayInput");
+        pipeline.SetShader("IndirectSpecularAMDResolveRayInput");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.Build();
+    }
+
+    void CreateIndirectSpecularAMDClassifyTilesPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("IndirectSpecularAMDClassifyTiles");
+        pipeline.SetShader("IndirectSpecularAMDClassifyTiles");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.Build();
+    }
+
+    void CreateIndirectSpecularAMDPrepareIndirectArgsPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("IndirectSpecularAMDPrepareIndirectArgs");
+        pipeline.SetShader("IndirectSpecularAMDPrepareIndirectArgs");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.Build();
+    }
+
+    void CreateIndirectSpecularAMDReprojectPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("IndirectSpecularAMDReproject");
+        pipeline.SetShader("IndirectSpecularAMDReproject");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsIndirectSpecularAMDReproject), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateIndirectSpecularAMDPrefilterPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("IndirectSpecularAMDPrefilter");
+        pipeline.SetShader("IndirectSpecularAMDPrefilter");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsIndirectSpecularAMDPrefilter), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateIndirectSpecularAMDResolveTemporalPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("IndirectSpecularAMDResolveTemporal");
+        pipeline.SetShader("IndirectSpecularAMDResolveTemporal");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.Build();
+    }
+
+    void CreateIndirectSpecularAMDStoreHistoryPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("IndirectSpecularAMDStoreHistory");
+        pipeline.SetShader("IndirectSpecularAMDStoreHistory");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
         pipeline.Build();
     }
 
@@ -280,6 +340,25 @@ namespace {
         pipeline.SetRenderState("LightingForwardBlended");
         pipeline.SetVertexDescription<Vertex>();
         pipeline.Build();
+    }
+
+    void CreatePointShadowPipeline(const std::string& name, const std::string& shaderName, VkCullModeFlags cullMode, bool useStaticDescriptorSet) {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline(name);
+        pipeline.SetShader(shaderName);
+        if (useStaticDescriptorSet) pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsPointShadow), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.SetDepthAttachmentFormat(VK_FORMAT_D16_UNORM);
+        pipeline.SetDepthTest(true, true);
+        pipeline.SetDepthCompareOp(VK_COMPARE_OP_LESS);
+        pipeline.SetFrontFace(VK_FRONT_FACE_COUNTER_CLOCKWISE);
+        pipeline.SetCullMode(cullMode);
+        pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
+        pipeline.Build();
+    }
+
+    void CreatePointShadowPipelines() {
+        CreatePointShadowPipeline("PointShadowOpaque", "PointShadow", VK_CULL_MODE_FRONT_BIT, false);
+        CreatePointShadowPipeline("PointShadowAlphaDiscard", "PointShadowAlphaDiscard", VK_CULL_MODE_NONE, true);
     }
 
     void CreateSpriteSheetPipeline() {
@@ -321,7 +400,7 @@ namespace {
         VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("PostProcessing");
         pipeline.SetShader("PostProcessing");
         pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
-        pipeline.AddPushConstant(sizeof(PushConstantsFrameResources), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.AddPushConstant(sizeof(PushConstantsPostProcessing), VK_SHADER_STAGE_COMPUTE_BIT);
         pipeline.Build();
     }
 
@@ -390,45 +469,55 @@ namespace {
         pipeline.Build();
     }
 
-    //void CreateHairDepthPrepPipeline() {
-    //    VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairDepthPrep");
-    //    pipeline.SetShader("HairDepthPrep");
-    //    pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
-    //    pipeline.SetRenderState("HairDepthPrep");
-    //    pipeline.SetSampleCount(VK_SAMPLE_COUNT_4_BIT);
-    //    pipeline.SetCullMode(VK_CULL_MODE_NONE);
-    //    pipeline.Build();
-    //}
-    //
-    //void CreateHairDepthPrePassPipeline() {
-    //    VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairDepthPrePass");
-    //    pipeline.SetShader("HairDepthPrePass");
-    //    pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
-    //    pipeline.AddPushConstant(sizeof(PushConstantsVisibility), VK_SHADER_STAGE_VERTEX_BIT);
-    //    pipeline.SetRenderState("HairDepthPrePass");
-    //    pipeline.SetSampleCount(VK_SAMPLE_COUNT_4_BIT);
-    //    pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
-    //    pipeline.Build();
-    //}
-    //
-    //void CreateHairLightingPipeline() {
-    //    VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairLighting");
-    //    pipeline.SetShader("HairLighting");
-    //    pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
-    //    pipeline.AddDescriptorSetLayout("RayQueryDescriptorSet");
-    //    pipeline.AddPushConstant(sizeof(PushConstantsHair), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
-    //    pipeline.SetRenderState("HairLighting");
-    //    pipeline.SetSampleCount(VK_SAMPLE_COUNT_4_BIT);
-    //    pipeline.SetVertexDescription<Vertex>();
-    //    pipeline.Build();
-    //}
-    //
-    //void CreateHairCompositePipeline() {
-    //    VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairComposite");
-    //    pipeline.SetShader("HairComposite");
-    //    pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
-    //    pipeline.Build();
-    //}
+    void CreateHairDepthPrepPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairDepthPrep");
+        pipeline.SetShader("HairDepthPrep");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.SetRenderState("HairDepthPrep");
+        pipeline.SetSampleCount(VK_SAMPLE_COUNT_4_BIT);
+        pipeline.SetCullMode(VK_CULL_MODE_NONE);
+        pipeline.Build();
+    }
+
+    void CreateHairDepthPrePassPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairDepthPrePass");
+        pipeline.SetShader("HairDepthPrePass");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsVisibility), VK_SHADER_STAGE_VERTEX_BIT);
+        pipeline.SetRenderState("HairDepthPrePass");
+        pipeline.SetSampleCount(VK_SAMPLE_COUNT_4_BIT);
+        pipeline.SetVertexDescription(Vertex::GetPositionUVLayout());
+        pipeline.Build();
+    }
+
+    void CreateHairLightingPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairLighting");
+        pipeline.SetShader("HairLighting");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsHair), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.SetRenderState("HairLighting");
+        pipeline.SetSampleCount(VK_SAMPLE_COUNT_4_BIT);
+        pipeline.SetVertexDescription<Vertex>();
+        pipeline.Build();
+    }
+
+    void CreateHairSurfaceLightingPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairSurfaceLighting");
+        pipeline.SetShader("HairSurfaceLighting");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsHair), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.SetRenderState("HairLighting");
+        pipeline.SetSampleCount(VK_SAMPLE_COUNT_4_BIT);
+        pipeline.SetVertexDescription<Vertex>();
+        pipeline.Build();
+    }
+
+    void CreateHairCompositePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("HairComposite");
+        pipeline.SetShader("HairComposite");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.Build();
+    }
 
 }
 
@@ -471,6 +560,7 @@ namespace VulkanRenderer {
         CreateMaterialResolvePipeline();
         CreateLightingDeferredPipeline();
         CreateLightingForwardBlendedPipeline();
+        CreatePointShadowPipelines();
         CreateSkyboxPipeline();
         CreateSpriteSheetPipeline();
 
@@ -484,17 +574,27 @@ namespace VulkanRenderer {
         CreateTileWorldBoundsPipeline();
         CreateTileLightCullingPipeline();
 
-        // Reflectance
-        CreateReflectedRadiancePipeline();
+        // Hierarchical depth buffer
+        CreateHiZPipeline();
 
+        // Indirect specular
+        CreateIndirectSpecularAMDInputPipeline();
+        CreateIndirectSpecularAMDResolveRayInputPipeline();
+        CreateIndirectSpecularAMDClassifyTilesPipeline();
+        CreateIndirectSpecularAMDPrepareIndirectArgsPipeline();
+        CreateIndirectSpecularAMDReprojectPipeline();
+        CreateIndirectSpecularAMDPrefilterPipeline();
+        CreateIndirectSpecularAMDResolveTemporalPipeline();
+        CreateIndirectSpecularAMDStoreHistoryPipeline();
 
         // Final present
         CreatePresentPipeline();
 
-        // CreateHairDepthPrepPipeline();
-        // CreateHairDepthPrePassPipeline();
-        // CreateHairLightingPipeline();
-        // CreateHairCompositePipeline();
+        CreateHairDepthPrepPipeline();
+        CreateHairDepthPrePassPipeline();
+        CreateHairLightingPipeline();
+        CreateHairSurfaceLightingPipeline();
+        CreateHairCompositePipeline();
 
         CreateUIPipeline();
     }

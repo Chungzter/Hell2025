@@ -214,7 +214,7 @@ namespace VulkanRenderer {
                 size_t rangeInfoOffset = rangeInfos.size();
 
                 for (const RayQueryMeshInstance& meshInstance : build.meshInstances) {
-                    geometries.push_back(CreateTriangleGeometry(build.vertexBufferDeviceAddress, build.indexBufferDeviceAddress, meshInstance.mesh));
+                    geometries.push_back(CreateTriangleGeometry(build.vertexBufferDeviceAddress, build.indexBufferDeviceAddress, meshInstance.mesh, GetRayQueryGeometryFlags(meshInstance.material)));
 
                     VkAccelerationStructureBuildRangeInfoKHR& rangeInfo = rangeInfos.emplace_back();
                     rangeInfo.primitiveCount = meshInstance.mesh.indexCount / 3;
@@ -293,6 +293,7 @@ namespace VulkanRenderer {
                 HashMix(hash, meshInstance.mesh.baseIndex);
                 HashMix(hash, meshInstance.mesh.vertexCount);
                 HashMix(hash, meshInstance.mesh.indexCount);
+                HashMix(hash, GetRayQueryGeometryFlags(meshInstance.material));
             }
 
             return hash;

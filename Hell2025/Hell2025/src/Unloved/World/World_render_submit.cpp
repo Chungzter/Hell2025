@@ -1,6 +1,7 @@
 #include "World.h"
 
 #include "Hell/Logging.h"
+#include "Hell/Profiling/CPUProfiler.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Time.h"
 
@@ -42,6 +43,7 @@ namespace Unloved::World {
 // TODO: This whole file is pretty fucked. Clean it up.
 
 void SubmitRenderItems() {
+    ProfilerCPUZoneFunction();
 
     for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
         Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);

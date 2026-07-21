@@ -29,6 +29,21 @@ namespace {
     constexpr size_t GPU_TARGET_MAX_STACK_SIZE = 32;
     bvh::v2::ThreadPool g_threadPool;
 
+    MadmannBvh BuildTopLevelBvh(const std::vector<MadmannBBox>& bboxes, const std::vector<MadmannVec3>& centers) {
+        MadmannBvhBuilder::Config config;
+        config.quality = MadmannBvhBuilder::Quality::High;
+        return MadmannBvhBuilder::build(g_threadPool, bboxes, centers, config);
+    }
+
+    bool HasSameStructure(const PrimitiveInstance& a, const PrimitiveInstance& b) {
+        return a.objectId == b.objectId &&
+               a.meshBvhId == b.meshBvhId &&
+               a.openableId == b.openableId &&
+               a.customId == b.customId &&
+               a.globalMeshIndex == b.globalMeshIndex &&
+               a.localMeshNodeIndex == b.localMeshNodeIndex;
+    }
+
     MadmannVec3 GlmVec3ToMadmannVec3(const glm::vec3& vec) {
         return MadmannVec3(vec.x, vec.y, vec.z);
     }
@@ -278,6 +293,7 @@ bool SceneBvh::SetMeshBvhs(const std::vector<SceneBvhMeshInput>& meshBvhs) {
     m_instances.clear();
     m_gpuInstances.clear();
     m_leafInstanceIndices.clear();
+    m_refitNodeOrder.clear();
 
     m_meshBvhIds.clear();
     m_meshRootNodeOffsets.clear();
@@ -331,7 +347,169 @@ bool SceneBvh::AddMeshBvhs(const std::vector<SceneBvhMeshInput>& meshBvhs) {
     return true;
 }
 
+bool SceneBvh::CanRefitInstances(const std::vector<PrimitiveInstance>& instances) const {
+    if (instances.size() != m_instances.size()) {
+        return false;
+    }
+
+    if (instances.empty()) {
+        return m_nodes.empty();
+    }
+
+    if (m_nodes.empty() ||
+        m_gpuInstances.size() != instances.size() ||
+        m_leafInstanceIndices.size() != instances.size() ||
+        m_refitNodeOrder.size() != m_nodes.size()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < instances.size(); i++) {
+        if (!HasSameStructure(m_instances[i], instances[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool SceneBvh::BuildRefitNodeOrder() {
+    struct NodeVisit {
+        uint32_t nodeIndex;
+        bool childrenVisited;
+    };
+
+    m_refitNodeOrder.clear();
+    if (m_nodes.empty()) {
+        return true;
+    }
+
+    std::vector<NodeVisit> stack;
+    stack.reserve(GPU_TARGET_MAX_STACK_SIZE * 2);
+    stack.push_back({ 0, false });
+
+    while (!stack.empty()) {
+        const NodeVisit visit = stack.back();
+        stack.pop_back();
+
+        if (visit.nodeIndex >= m_nodes.size()) {
+            Logging::Error() << "SceneBvh::BuildRefitNodeOrder() failed: invalid node index " << visit.nodeIndex << "\n";
+            return false;
+        }
+
+        const BvhNode& node = m_nodes[visit.nodeIndex];
+        if (node.primitiveCount > 0 || visit.childrenVisited) {
+            m_refitNodeOrder.push_back(visit.nodeIndex);
+            continue;
+        }
+
+        const uint32_t leftChildIndex = node.firstChildOrPrimitive;
+        const uint32_t rightChildIndex = leftChildIndex + 1;
+        if (rightChildIndex >= m_nodes.size()) {
+            Logging::Error() << "SceneBvh::BuildRefitNodeOrder() failed: invalid child node index " << rightChildIndex << "\n";
+            return false;
+        }
+
+        stack.push_back({ visit.nodeIndex, true });
+        stack.push_back({ rightChildIndex, false });
+        stack.push_back({ leftChildIndex, false });
+    }
+
+    return m_refitNodeOrder.size() == m_nodes.size();
+}
+
 bool SceneBvh::UpdateInstances(const std::vector<PrimitiveInstance>& instances) {
+    if (RefitInstances(instances)) {
+        return true;
+    }
+
+    return RebuildInstances(instances);
+}
+
+bool SceneBvh::RefitInstances(const std::vector<PrimitiveInstance>& instances) {
+    if (!CanRefitInstances(instances)) {
+        return false;
+    }
+
+    if (instances.empty()) {
+        m_instances.clear();
+        return true;
+    }
+
+    for (size_t gpuInstanceIndex = 0; gpuInstanceIndex < m_gpuInstances.size(); gpuInstanceIndex++) {
+        const uint32_t instanceIndex = m_leafInstanceIndices[gpuInstanceIndex];
+        if (instanceIndex >= instances.size()) {
+            Logging::Error() << "SceneBvh::RefitInstances(..) failed: invalid instance index " << instanceIndex << "\n";
+            return false;
+        }
+
+        const PrimitiveInstance& instance = instances[instanceIndex];
+        auto rootNodeOffsetIt = m_meshRootNodeOffsets.find(instance.meshBvhId);
+        if (rootNodeOffsetIt == m_meshRootNodeOffsets.end()) {
+            Logging::Error() << "SceneBvh::RefitInstances(..) failed: missing root node offset for mesh BVH id " << instance.meshBvhId << "\n";
+            return false;
+        }
+
+        GpuPrimitiveInstance& gpuInstance = m_gpuInstances[gpuInstanceIndex];
+        gpuInstance.worldTransform = instance.worldTransform;
+        gpuInstance.inverseWorldTransform = instance.inverseWorldTransform;
+        gpuInstance.rootNodeIndex = static_cast<int32_t>(rootNodeOffsetIt->second);
+        gpuInstance.openableId = instance.openableId;
+        gpuInstance.customId = instance.customId;
+        gpuInstance.globalMeshIndex = instance.globalMeshIndex;
+        gpuInstance.localMeshNodeIndex = instance.localMeshNodeIndex;
+        gpuInstance.padding2 = 0;
+        Hell::Bit::PackUint64(instance.objectId, gpuInstance.objectIdLowerBit, gpuInstance.objectIdUpperBit);
+    }
+
+    for (uint32_t nodeIndex : m_refitNodeOrder) {
+        BvhNode& node = m_nodes[nodeIndex];
+
+        if (node.primitiveCount > 0) {
+            const uint32_t firstPrimitive = node.firstChildOrPrimitive;
+            const uint32_t primitiveEnd = firstPrimitive + node.primitiveCount;
+            if (primitiveEnd > m_leafInstanceIndices.size()) {
+                Logging::Error() << "SceneBvh::RefitInstances(..) failed: invalid leaf primitive range\n";
+                return false;
+            }
+
+            const uint32_t firstInstanceIndex = m_leafInstanceIndices[firstPrimitive];
+            if (firstInstanceIndex >= instances.size()) {
+                Logging::Error() << "SceneBvh::RefitInstances(..) failed: invalid leaf instance index " << firstInstanceIndex << "\n";
+                return false;
+            }
+
+            node.boundsMin = instances[firstInstanceIndex].worldAabbBoundsMin;
+            node.boundsMax = instances[firstInstanceIndex].worldAabbBoundsMax;
+
+            for (uint32_t primitiveIndex = firstPrimitive + 1; primitiveIndex < primitiveEnd; primitiveIndex++) {
+                const uint32_t instanceIndex = m_leafInstanceIndices[primitiveIndex];
+                if (instanceIndex >= instances.size()) {
+                    Logging::Error() << "SceneBvh::RefitInstances(..) failed: invalid leaf instance index " << instanceIndex << "\n";
+                    return false;
+                }
+
+                node.boundsMin = glm::min(node.boundsMin, instances[instanceIndex].worldAabbBoundsMin);
+                node.boundsMax = glm::max(node.boundsMax, instances[instanceIndex].worldAabbBoundsMax);
+            }
+        }
+        else {
+            const uint32_t leftChildIndex = node.firstChildOrPrimitive;
+            const uint32_t rightChildIndex = leftChildIndex + 1;
+            if (rightChildIndex >= m_nodes.size()) {
+                Logging::Error() << "SceneBvh::RefitInstances(..) failed: invalid child node index " << rightChildIndex << "\n";
+                return false;
+            }
+
+            node.boundsMin = glm::min(m_nodes[leftChildIndex].boundsMin, m_nodes[rightChildIndex].boundsMin);
+            node.boundsMax = glm::max(m_nodes[leftChildIndex].boundsMax, m_nodes[rightChildIndex].boundsMax);
+        }
+    }
+
+    m_instances = instances;
+    return true;
+}
+
+bool SceneBvh::RebuildInstances(const std::vector<PrimitiveInstance>& instances) {
     for (const PrimitiveInstance& instance : instances) {
         if (!HasMeshBvh(instance.meshBvhId)) {
             Logging::Error() << "SceneBvh::UpdateInstances(..) failed: mesh BVH id " << instance.meshBvhId << " was not included in the scene\n";
@@ -343,6 +521,7 @@ bool SceneBvh::UpdateInstances(const std::vector<PrimitiveInstance>& instances) 
     m_gpuInstances.clear();
     m_leafInstanceIndices.clear();
     m_nodes.clear();
+    m_refitNodeOrder.clear();
 
     if (instances.empty()) {
         return true;
@@ -359,9 +538,7 @@ bool SceneBvh::UpdateInstances(const std::vector<PrimitiveInstance>& instances) 
         centers[i] = GlmVec3ToMadmannVec3(instance.worldAabbCenter);
     }
 
-    MadmannBvhBuilder::Config config;
-    config.quality = MadmannBvhBuilder::Quality::High;
-    MadmannBvh bvh = MadmannBvhBuilder::build(g_threadPool, bboxes, centers, config);
+    MadmannBvh bvh = BuildTopLevelBvh(bboxes, centers);
 
     m_nodes.resize(bvh.nodes.size());
 
@@ -438,7 +615,7 @@ bool SceneBvh::UpdateInstances(const std::vector<PrimitiveInstance>& instances) 
         }
     }
 
-    return true;
+    return BuildRefitNodeOrder();
 }
 
 bool SceneBvh::HasMeshBvh(uint64_t meshBvhId) const {

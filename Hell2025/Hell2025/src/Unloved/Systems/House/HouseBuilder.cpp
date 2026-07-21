@@ -6,6 +6,7 @@
 #include "Unloved/Objects/House/Wall.h"
 #include "Unloved/Objects/House/WorldPlane.h"
 #include "Unloved/Objects/Lighting/Light.h"
+#include "Unloved/Systems/NavMesh/NavMesh.h"
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/World/World.h"
 
@@ -32,8 +33,10 @@ void RebuildAll() {
 
     for (Light& light : Unloved::World::GetLights()) {
         light.RaycastWorldBounds();
+        light.ForceDirty();
     }
 
+    NavMeshManager::MarkStaticDirty();
     g_dirty = false;
 }
 

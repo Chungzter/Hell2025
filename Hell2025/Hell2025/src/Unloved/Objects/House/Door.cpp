@@ -9,6 +9,7 @@
 
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
+#include "Unloved/Systems/NavMesh/NavMesh.h"
 #include "Unloved/World/World.h"
 
 #include "Hell/Logging.h"
@@ -97,6 +98,10 @@ void Door::Update(float deltaTime) {
     m_doorModelMatrix = transform.to_mat4();
 
     m_meshNodes.Update(m_doorModelMatrix);
+
+    if (m_meshNodes.IsDirty()) {
+        NavMeshManager::MarkDynamicDirty();
+    }
 
     m_renderItems = m_meshNodes.GetRenderItems();
 

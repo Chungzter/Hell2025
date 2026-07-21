@@ -44,7 +44,7 @@ namespace VulkanRenderer {
 
     private:
         RayQueryMeshInstanceData CreateMeshInstanceData(uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayQueryMeshInstance& meshInstance) const;
-        VkAccelerationStructureInstanceKHR CreateTLASInstance(uint64_t accelerationStructureAddress, VkTransformMatrixKHR transform, uint32_t instanceCustomIndex) const;
+        VkAccelerationStructureInstanceKHR CreateTLASInstance(uint64_t accelerationStructureAddress, VkTransformMatrixKHR transform, uint32_t instanceCustomIndex, VkGeometryInstanceFlagsKHR opacityFlags = 0) const;
 
         std::vector<VkAccelerationStructureInstanceKHR> m_instances;
         std::vector<RayQueryBLASInstanceData> m_blasInstanceData;

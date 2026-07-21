@@ -21,26 +21,24 @@ layout(set = 1, binding = 0) uniform accelerationStructureEXT u_DDGIRayQueryAcce
 
 layout(buffer_reference, scalar) buffer PointCloudBuffer { CloudPoint points[]; };
 layout(buffer_reference, scalar) buffer PointCloudDirtyFlagsBuffer { uint pointCloudDirtyFlags[]; };
-layout(buffer_reference, scalar) readonly buffer LightBuffer { Light lights[]; };
-
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIPointCloudLighting data;
-} pushConstant;
+} pc;
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
-    if (idx >= pushConstant.data.pointCount) return;
+    if (idx >= pc.data.pointCount) return;
 
-    PointCloudBuffer pointCloud = PointCloudBuffer(pushConstant.data.pointCloudDeviceAddress);
-    PointCloudDirtyFlagsBuffer dirtyFlags = PointCloudDirtyFlagsBuffer(pushConstant.data.pointCloudDirtyFlagsDeviceAddress);
-    LightBuffer lightBuffer = LightBuffer(pushConstant.data.frame.lightsDeviceAddress);
+    PointCloudBuffer pointCloud = PointCloudBuffer(pc.data.pointCloudDeviceAddress);
+    PointCloudDirtyFlagsBuffer dirtyFlags = PointCloudDirtyFlagsBuffer(pc.data.pointCloudDirtyFlagsDeviceAddress);
+    LightBuffer lightBuffer = pc.data.frame.lightBuffer;
 
     vec3 pointPosition = pointCloud.points[idx].position.xyz;
     vec3 pointNormal = pointCloud.points[idx].normal.xyz;
 
-    bool needsUpdate = pushConstant.data.forceUpdate != 0u;
+    bool needsUpdate = pc.data.forceUpdate != 0u;
     if (!needsUpdate) {
-        for (uint i = 0u; i < pushConstant.data.lightCount; i++) {
+        for (uint i = 0u; i < pc.data.lightCount; i++) {
             Light light = lightBuffer.lights[i];
             if (light.isDirtyForRaytracing == 0) continue;
 
@@ -59,7 +57,7 @@ void main() {
 
     vec3 directLight = vec3(0.0);
 
-    for (uint i = 0u; i < pushConstant.data.lightCount; i++) {
+    for (uint i = 0u; i < pc.data.lightCount; i++) {
         Light light = lightBuffer.lights[i];
         vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
 

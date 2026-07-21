@@ -1,7 +1,6 @@
 #version 460
 #extension GL_EXT_buffer_reference2 : require
 #extension GL_EXT_nonuniform_qualifier : require
-#extension GL_EXT_ray_query : require
 #extension GL_EXT_scalar_block_layout : require
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
@@ -10,15 +9,17 @@ layout(early_fragment_tests) in;
 #include "../common/hair.glsl"
 #include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/constants.glsl"
-#include "../common/flags.glsl"
 #include "../common/lighting.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 #include "../common/Vulkan/VK_push_constants.glsl"
 
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
 layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamplers[];
-layout(set = 1, binding = 0) uniform accelerationStructureEXT u_RayQueryAccelerationStructure;
+
+#include "VK_point_shadows.glsl"
+#include "VK_ddgi_upsample.glsl"
 
 layout(location = 0) out vec4 LightingOut;
 
@@ -29,83 +30,10 @@ layout(location = 3) centroid in vec4 v_worldPos;
 layout(location = 4) flat in uint v_globalInstanceIndex;
 layout(location = 5) flat in uint v_viewportIndex;
 
-layout(buffer_reference, scalar) readonly buffer RenderItemBuffer {
-    RenderItem renderItems[];
-};
-
-layout(buffer_reference, scalar) readonly buffer MaterialBuffer {
-    Material materials[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RendererDataBuffer {
-    RendererData rendererData;
-};
-
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
-    ViewportData viewportData[];
-};
-
-layout(buffer_reference, scalar) readonly buffer LightBuffer {
-    Light lights[];
-};
-
-// Must match the ray query vertex buffer layout.
-struct PackedVertex {
-    float vx, vy, vz;
-    float nx, ny, nz;
-    float u, v;
-    float tx, ty, tz;
-};
-
-struct RayQueryBLASInstanceData {
-    uint meshInstanceDataOffset;
-    uint meshInstanceDataCount;
-    uint padding0;
-    uint padding1;
-};
-
-struct RayQueryMesh {
-    uint baseVertex;
-    uint baseIndex;
-    uint vertexCount;
-    uint indexCount;
-};
-
-struct RayQueryMaterial {
-    uint blendingMode;
-    int materialIndex;
-    uint shadowBit;
-    uint padding0;
-};
-
-struct RayQueryMeshInstanceData {
-    uint64_t vertexBufferDeviceAddress;
-    uint64_t indexBufferDeviceAddress;
-    RayQueryMesh mesh;
-    RayQueryMaterial material;
-};
-
-layout(buffer_reference, scalar) readonly buffer VertexBuffer {
-    PackedVertex vertices[];
-};
-
-layout(buffer_reference, scalar) readonly buffer IndexBuffer {
-    uint indices[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RayQueryBLASInstanceDataBuffer {
-    RayQueryBLASInstanceData blasInstanceData[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RayQueryMeshInstanceDataBuffer {
-    RayQueryMeshInstanceData meshInstanceData[];
-};
-
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsHair data;
-} pushConstant;
+} pc;
 
-const int MAX_GPU_LIGHTS = 16;
 const float u_spec1Intensity   = 0.25;
 const float u_spec2Intensity   = 0.1;
 const float u_scatterPower     = 12.0;
@@ -177,252 +105,16 @@ void ComputeCCNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 flow
     finalNormal = meshNormal;
 }
 
-bool RayQueryMaterialNeedsAlphaTest(uint blendingMode) {
-    return blendingMode == BLENDING_MODE_ALPHA_DISCARD || blendingMode == BLENDING_MODE_HAIR || blendingMode == BLENDING_MODE_HAIR_UNDER_LAYER;
-}
-
-bool SampleRayQueryBaseColor(RayQueryMeshInstanceData meshInstanceData, uint primitiveIndex, vec2 barycentrics, out vec4 baseColor) {
-    baseColor = vec4(0.0);
-
-    if (meshInstanceData.material.materialIndex < 0) {
-        return false;
-    }
-
-    uint localIndexOffset = primitiveIndex * 3u;
-    if (localIndexOffset + 2u >= meshInstanceData.mesh.indexCount) {
-        return false;
-    }
-
-    IndexBuffer indexBuffer = IndexBuffer(meshInstanceData.indexBufferDeviceAddress);
-    uint i0 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 0u] + meshInstanceData.mesh.baseVertex;
-    uint i1 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 1u] + meshInstanceData.mesh.baseVertex;
-    uint i2 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 2u] + meshInstanceData.mesh.baseVertex;
-    uint vertexEnd = meshInstanceData.mesh.baseVertex + meshInstanceData.mesh.vertexCount;
-    if (i0 >= vertexEnd || i1 >= vertexEnd || i2 >= vertexEnd) {
-        return false;
-    }
-
-    VertexBuffer vertexBuffer = VertexBuffer(meshInstanceData.vertexBufferDeviceAddress);
-    PackedVertex v0 = vertexBuffer.vertices[i0];
-    PackedVertex v1 = vertexBuffer.vertices[i1];
-    PackedVertex v2 = vertexBuffer.vertices[i2];
-
-    vec3 weights = vec3(1.0 - barycentrics.x - barycentrics.y, barycentrics.x, barycentrics.y);
-    vec2 uv = vec2(v0.u, v0.v) * weights.x + vec2(v1.u, v1.v) * weights.y + vec2(v2.u, v2.v) * weights.z;
-
-    MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
-    Material material = materialBuffer.materials[meshInstanceData.material.materialIndex];
-    if (material.basecolor < 0) {
-        return false;
-    }
-
-    uint textureIndex = uint(material.basecolor);
-    baseColor = textureLod(sampler2D(textures[nonuniformEXT(textureIndex)], textureSamplers[nonuniformEXT(textureIndex)]), uv, 0.0);
-    return true;
-}
-
-float RayQueryLineOfSight(vec3 rayOrigin, vec3 target) {
-    vec3 rayVector = target - rayOrigin;
-    float rayLength = length(rayVector);
-
-    const float rayTMin = 0.001;
-    const float targetBias = 0.01;
-
-    float rayTMax = rayLength - targetBias;
-    if (rayTMax <= rayTMin) {
-        return 1.0;
-    }
-
-    vec3 rayDirection = rayVector / rayLength;
-
-    rayQueryEXT rayQuery;
-    rayQueryInitializeEXT(rayQuery, u_RayQueryAccelerationStructure, 0u, 0xff, rayOrigin, rayTMin, rayDirection, rayTMax);
-
-    while (rayQueryProceedEXT(rayQuery)) {
-        uint candidateType = rayQueryGetIntersectionTypeEXT(rayQuery, false);
-        if (candidateType != gl_RayQueryCandidateIntersectionTriangleEXT) {
-            continue;
-        }
-
-        RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pushConstant.data.rayQueryBLASInstanceDataDeviceAddress);
-        RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pushConstant.data.rayQueryMeshInstanceDataDeviceAddress);
-
-        uint instanceIndex = rayQueryGetIntersectionInstanceCustomIndexEXT(rayQuery, false);
-        RayQueryBLASInstanceData blasInstanceData = rayQueryBLASInstanceDataBuffer.blasInstanceData[instanceIndex];
-
-        uint geometryIndex = rayQueryGetIntersectionGeometryIndexEXT(rayQuery, false);
-        if (geometryIndex >= blasInstanceData.meshInstanceDataCount) {
-            rayQueryConfirmIntersectionEXT(rayQuery);
-            return 0.0;
-        }
-
-        RayQueryMeshInstanceData meshInstanceData = rayQueryMeshInstanceDataBuffer.meshInstanceData[blasInstanceData.meshInstanceDataOffset + geometryIndex];
-        if (meshInstanceData.material.blendingMode == BLENDING_MODE_HAIR || meshInstanceData.material.blendingMode == BLENDING_MODE_HAIR_UNDER_LAYER) {
-            continue;
-        }
-
-        bool alphaTest = RayQueryMaterialNeedsAlphaTest(meshInstanceData.material.blendingMode) && meshInstanceData.material.materialIndex >= 0;
-
-        if (alphaTest) {
-            uint primitiveIndex = rayQueryGetIntersectionPrimitiveIndexEXT(rayQuery, false);
-            vec2 barycentrics = rayQueryGetIntersectionBarycentricsEXT(rayQuery, false);
-
-            vec4 hitBaseColor;
-            if (SampleRayQueryBaseColor(meshInstanceData, primitiveIndex, barycentrics, hitBaseColor) && hitBaseColor.a < 0.25) {
-                continue;
-            }
-        }
-
-        rayQueryConfirmIntersectionEXT(rayQuery);
-        return 0.0;
-    }
-
-    uint intersectionType = rayQueryGetIntersectionTypeEXT(rayQuery, true);
-    return intersectionType == gl_RayQueryCommittedIntersectionNoneEXT ? 1.0 : 0.0;
-}
-
-float HairLightVisibility(vec3 worldPos, vec3 normal, vec3 lightPos) {
-    if (pushConstant.data.rayQueryEnabled == 0u) {
-        return 1.0;
-    }
-
-    return RayQueryLineOfSight(worldPos + normal * 0.001, lightPos);
-}
-
-void AddPointLights(inout vec3 directLighting, LightBuffer lightBuffer, vec3 hairBaseColor, vec3 finalTangent, vec3 finalNormal, vec3 V, vec3 t1, vec3 t2, float alpha1, float alpha2) {
-    for (int i = 0; i < MAX_GPU_LIGHTS; i++) {
-        Light light = lightBuffer.lights[i];
-        if (light.radius <= 0.0 || light.strength <= 0.0) {
-            continue;
-        }
-
-        vec3 lightPos = vec3(light.posX, light.posY, light.posZ);
-        vec3 lightCol = vec3(light.colorR, light.colorG, light.colorB);
-        vec3 lightVector = lightPos - v_worldPos.xyz;
-        float distanceSquared = max(dot(lightVector, lightVector), 0.0001);
-        float lightDistance = sqrt(distanceSquared);
-        float attenuation = smoothstep(light.radius, 0.0, lightDistance) * light.strength;
-        if (attenuation <= 0.0) {
-            continue;
-        }
-
-        vec3 L = lightVector * inversesqrt(distanceSquared);
-        float shadow = 1.0;
-        if (light.hiResShadowMapIndex != -1 || light.lowResShadowMapIndex != -1) {
-            shadow = HairLightVisibility(v_worldPos.xyz, finalNormal, lightPos);
-        }
-
-        vec3 lightContribution = EvaluateHairLight(hairBaseColor, finalTangent, V, L, t1, t2, alpha1, alpha2, lightCol, shadow);
-
-        if (light.iesTextureIndex != 0) {
-            uint iesTextureIndex = uint(light.iesTextureIndex);
-            lightContribution *= ApplyIESProfile(v_worldPos.xyz, light, textures[nonuniformEXT(iesTextureIndex)], textureSamplers[nonuniformEXT(iesTextureIndex)]);
-        }
-
-        directLighting += lightContribution * attenuation;
-    }
-}
-
-void AddFlashlights(inout vec3 directLighting, ViewportDataBuffer viewportDataBuffer, vec3 viewPos, vec3 hairBaseColor, vec3 finalTangent, vec3 finalNormal, vec3 V, vec3 t1, vec3 t2, float alpha1, float alpha2) {
-    float fragDistance = distance(v_worldPos.xyz, viewPos);
-
-    for (int i = 0; i < 2; i++) {
-        ViewportData flashlightViewportData = viewportDataBuffer.viewportData[i];
-        float flashlightModifer = flashlightViewportData.flashlightModifer;
-        if (flashlightModifer <= 0.05) {
-            continue;
-        }
-
-        vec3 spotLightPos = flashlightViewportData.flashlightPosition.xyz;
-        vec3 spotLightDir = normalize(flashlightViewportData.flashlightDir.xyz);
-        vec3 spotLightColor = GetFlashLightColor();
-        float spotLightRadius = 25.0;
-        float spotLightStrength = 4.5;
-
-        if (i != int(v_viewportIndex)) {
-            spotLightPos += spotLightDir * 0.2;
-            spotLightColor *= 0.825;
-        }
-
-        float innerAngle = cos(radians(5.0 * flashlightModifer));
-        float outerAngle = cos(radians(20.5));
-        bool flashlightIsInShop = bool(flashlightViewportData.isInShop);
-        if (flashlightIsInShop) {
-            spotLightRadius = 8.0;
-            outerAngle = cos(radians(50.0));
-        }
-
-        vec3 lightVector = spotLightPos - v_worldPos.xyz;
-        float distanceSquared = max(dot(lightVector, lightVector), 0.0001);
-        float lightDistance = sqrt(distanceSquared);
-        float attenuation = smoothstep(spotLightRadius, 0.0, lightDistance) * spotLightStrength;
-        vec3 L = lightVector * inversesqrt(distanceSquared);
-
-        float coneFalloff = smoothstep(outerAngle, innerAngle, dot(L, -spotLightDir));
-        float distanceFactor = clamp(1.0 - lightDistance / spotLightRadius, 0.0, 1.0);
-        float spotAttenuation = attenuation * coneFalloff * distanceFactor * distanceFactor;
-        if (spotAttenuation <= 0.0) {
-            continue;
-        }
-
-        mat4 lightProjectionView = flashlightViewportData.flashlightProjectionView;
-        float visibility = 1.0;
-        if (!(i == int(v_viewportIndex) && flashlightIsInShop)) {
-            visibility = HairLightVisibility(v_worldPos.xyz, finalNormal, spotLightPos);
-        }
-
-        if (visibility <= 0.0) {
-            continue;
-        }
-
-        vec3 lightContribution = EvaluateHairLight(hairBaseColor, finalTangent, V, L, t1, t2, alpha1, alpha2, spotLightColor, visibility);
-
-        vec3 cookie = vec3(1.0);
-        if (pushConstant.data.flashlightCookieTextureIndex >= 0) {
-            uint cookieTextureIndex = uint(pushConstant.data.flashlightCookieTextureIndex);
-            cookie = ApplyCookie(lightProjectionView, v_worldPos.xyz, spotLightPos, spotLightColor, spotLightRadius, textures[nonuniformEXT(cookieTextureIndex)], textureSamplers[nonuniformEXT(cookieTextureIndex)]);
-        }
-
-        float cookieStartDistance = 1.0;
-        float cookieEndDistance = 10.0;
-        float cookieDistanceExponent = 2.0;
-        float cookieMinValue = 0.5;
-        float cookieMaxValue = 5.0;
-        float cookieDistScale;
-        if (fragDistance <= cookieStartDistance) {
-            cookieDistScale = cookieMinValue;
-        }
-        else if (fragDistance >= cookieEndDistance) {
-            cookieDistScale = cookieMaxValue;
-        }
-        else {
-            float t = (fragDistance - cookieStartDistance) / (cookieEndDistance - cookieStartDistance);
-            cookieDistScale = mix(cookieMinValue, cookieMaxValue, pow(t, cookieDistanceExponent));
-        }
-
-        lightContribution *= cookieDistScale;
-        if (!flashlightIsInShop) {
-            lightContribution *= cookie;
-        }
-
-        directLighting += lightContribution * spotAttenuation * flashlightModifer;
-    }
-}
-
 void main() {
-    RenderItemBuffer renderItemBuffer = RenderItemBuffer(pushConstant.data.frame.renderItemsDeviceAddress);
-    MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
-    RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress);
-    ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
-    LightBuffer lightBuffer = LightBuffer(pushConstant.data.frame.lightsDeviceAddress);
+    RenderItemBuffer renderItemBuffer = pc.data.frame.renderItemBuffer;
+    MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
+    RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
+    LightBuffer lightBuffer = pc.data.frame.lightBuffer;
+    TileLightsBuffer tileLights = pc.data.frame.tileLightBuffer;
 
     RenderItem renderItem = renderItemBuffer.renderItems[v_globalInstanceIndex];
     Material material = materialBuffer.materials[renderItem.materialIndex];
-    ViewportData viewport = viewportDataBuffer.viewportData[v_viewportIndex];
-
-    if (material.basecolor < 0 || material.rma < 0 || material.hairMaps < 0) {
-        discard;
-    }
 
     uint baseColorTextureIndex = uint(material.basecolor);
     uint rmaTextureIndex = uint(material.rma);
@@ -444,7 +136,7 @@ void main() {
     float ao = rma.b;
     vec3 linearBaseColor = pow(baseColor.rgb, vec3(2.2));
 
-    vec3 viewPos = viewport.viewPos.xyz;
+    vec3 viewPos = viewportDataBuffer.viewportData[v_viewportIndex].viewPos.xyz;
     vec3 V = normalize(viewPos - v_worldPos.xyz);
 
     vec3 finalNormal;
@@ -457,13 +149,13 @@ void main() {
     const float u_specularAARoughnessPerMip = 0.5;
     const float u_specularMipFadeStrength = 0.2;
     const float u_specularMipStart = 0.9;
-    float renderResolutionScale = 1.0;
-    float mipLevelRaw = max(0.0, hairMipLevelRaw + log2(renderResolutionScale));
+    float u_renderResolutionScale = 1.0;
+    float mipLevelRaw = max(0.0, hairMipLevelRaw + log2(u_renderResolutionScale));
     float mipLevel = max(0.0, mipLevelRaw - u_specularMipStart);
     float roughnessAA = clamp(roughness + mipLevel * u_specularAARoughnessPerMip, 0.0, 1.0);
     float specularMipFade = 1.0 / (1.0 + mipLevel * mipLevel * u_specularMipFadeStrength);
 
-    const float kHairRoughnessMapStrength = 0.45;
+    const float kHairRoughnessMapStrength = 1.0;
     const float kRoughnessGamma = 1.0;
     const float kRoughnessWeight = 1.0;
     float ue4Roughness = pow(abs(rma.r), kRoughnessGamma) * kRoughnessWeight * kHairRoughnessMapStrength;
@@ -476,21 +168,57 @@ void main() {
     vec3 t1 = normalize(finalTangent + finalNormal * 0.035);
     vec3 t2 = normalize(finalTangent - finalNormal * 0.052);
 
+    uvec2 tileCoord = uvec2(gl_FragCoord.xy) / uint(TILE_SIZE);
+    uint tileIndex = tileCoord.y * rendererDataBuffer.rendererData.tileCountX + tileCoord.x;
+    uint lightCount = tileLights.tileLights[tileIndex].lightCount;
+
     vec3 directLighting = vec3(0.0);
-    AddPointLights(directLighting, lightBuffer, hairBaseColor, finalTangent, finalNormal, V, t1, t2, alpha1, alpha2);
-    AddFlashlights(directLighting, viewportDataBuffer, viewPos, hairBaseColor, finalTangent, finalNormal, V, t1, t2, alpha1, alpha2);
 
-    // OpenGL samples indirect diffuse here so setting this to false
-    bool u_sampleProbes = false;
-    vec2 resolution = vec2(rendererDataBuffer.rendererData.gBufferWidth, rendererDataBuffer.rendererData.gBufferHeight);
-    vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / resolution;
-    vec3 probeIrradiance = vec3(0.0);
+    for (int i = 0; i < lightCount; i++) {
+        int lightIndex = int(tileLights.tileLights[tileIndex].lightIndices[i]);
+        Light light = lightBuffer.lights[lightIndex];
 
+        vec3 lightPos = vec3(light.posX, light.posY, light.posZ);
+        vec3 lightCol = vec3(light.colorR, light.colorG, light.colorB);
+
+        vec3 lightVector = lightPos - v_worldPos.xyz;
+        float distanceSquared = max(dot(lightVector, lightVector), 0.0001);
+        float lightDistance = sqrt(distanceSquared);
+        float attenuation = smoothstep(light.radius, 0.0, lightDistance) * light.strength;
+        if (attenuation <= 0.0) {
+            continue;
+        }
+        vec3 L = lightVector * inversesqrt(distanceSquared);
+
+        float shadow = 1.0;
+        if (light.hiResShadowMapIndex != -1) {
+            shadow = ShadowCalculationMediumBindless(light.hiResShadowMapIndex, lightPos, light.radius, v_worldPos.xyz, viewPos, finalNormal, VULKAN_POINT_SHADOW_IDX_HIGH_RES);
+        }
+        else if (light.lowResShadowMapIndex != -1) {
+            shadow = ShadowCalculationMediumBindless(light.lowResShadowMapIndex, lightPos, light.radius, v_worldPos.xyz, viewPos, finalNormal, VULKAN_POINT_SHADOW_IDX_LOW_RES);
+        }
+
+        vec3 lightContribution = EvaluateHairLight(hairBaseColor, finalTangent, V, L, t1, t2, alpha1, alpha2, lightCol, shadow);
+
+        if (light.iesTextureIndex != 0) {
+            uint iesTextureIndex = uint(light.iesTextureIndex);
+            lightContribution *= ApplyIESProfile(v_worldPos.xyz, light, textures[nonuniformEXT(iesTextureIndex)], textureSamplers[nonuniformEXT(iesTextureIndex)]);
+        }
+        directLighting += lightContribution * attenuation;
+    }
+
+    float fragDistance = distance(v_worldPos.xyz, viewPos);
     vec3 indirectDiffuse = vec3(0.0);
-    vec3 diffuseAlbedo = hairBaseColor.rgb * (1.0 - metallic);
-    float indirectDiffuseScale = 1.0;
 
-    if (u_sampleProbes) {
+    if (rendererDataBuffer.rendererData.enableIrradianceProbeSampling) {
+        vec2 resolution = vec2(rendererDataBuffer.rendererData.gBufferWidth, rendererDataBuffer.rendererData.gBufferHeight);
+        vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / resolution;
+        ViewportData vd = viewportDataBuffer.viewportData[v_viewportIndex];
+        ivec2 outputImageSize = ivec2(rendererDataBuffer.rendererData.gBufferWidth, rendererDataBuffer.rendererData.gBufferHeight);
+        ivec4 viewportRect = ivec4(vd.xOffset, vd.yOffset, vd.width, vd.height);
+        vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral_VK(screenUV, finalNormal, fragDistance, outputImageSize, viewportRect);
+        vec3 diffuseAlbedo = hairBaseColor.rgb * (1.0 - metallic);
+        float indirectDiffuseScale = 1.0;
         indirectDiffuse = probeIrradiance * diffuseAlbedo * indirectDiffuseScale;
     }
 

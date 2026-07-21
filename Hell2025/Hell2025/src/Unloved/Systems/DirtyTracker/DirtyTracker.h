@@ -2,13 +2,20 @@
 
 #include "Unloved/Render/RendererTypes.h"
 
+#include <cstdint>
 #include <vector>
+
+enum class DirtyBoundsType : uint8_t {
+    DYNAMIC,
+    STATIC,
+};
 
 struct DirtyBounds {
     uint64_t objectId = 0;
     glm::vec3 boundsMin = glm::vec3(0.0f);
     glm::vec3 boundsMax = glm::vec3(0.0f);
     bool castShadows = true;
+    DirtyBoundsType type = DirtyBoundsType::DYNAMIC;
 };
 
 namespace Unloved::DirtyTracker {
@@ -20,6 +27,7 @@ namespace Unloved::DirtyTracker {
     const std::vector<GPUAABB>& GetDirtyDoorAABBs();
 
     const std::vector<uint64_t>& GetDirtyDoorIds();
-    const std::vector<uint64_t>& GetDirtyLightIds();
+    const std::vector<uint64_t>& GetStaticDirtyLightIds();
+    const std::vector<uint64_t>& GetCompositeDirtyLightIds();
 
 }

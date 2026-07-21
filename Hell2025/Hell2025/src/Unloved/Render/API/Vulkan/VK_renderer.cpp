@@ -2,6 +2,7 @@
 #include "Unloved/Render/API/Vulkan/VK_renderer_internal.h"
 
 #include "Hell/Logging.h"
+#include "Hell/Profiling/CPUProfiler.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_command_manager.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_deletion_queue.h"
 #include "Hell/Render/API/Vulkan/Managers/vk_device_manager.h"
@@ -23,6 +24,65 @@ namespace VulkanRenderer {
     std::vector<VkImageLayout> g_swapchainImageLayouts;
     bool g_staticSamplersUploaded = false;
 
+    VkResult WaitForRenderFence(uint32_t frameIndex) {
+        ProfilerCPUZoneFunction();
+
+        return VulkanSyncManager::WaitForRenderFence(frameIndex);
+    }
+
+    VkResult AcquireSwapchainImage(SwapchainFrame& frame) {
+        ProfilerCPUZoneFunction();
+
+        return vkAcquireNextImageKHR(
+            VulkanDeviceManager::GetDevice(),
+            VulkanSwapchainManager::GetSwapchain(),
+            UINT64_MAX,
+            VulkanSyncManager::GetPresentSemaphore(frame.frameIndex),
+            VK_NULL_HANDLE,
+            &frame.imageIndex
+        );
+    }
+
+    VkResult SubmitSwapchainFrame(const SwapchainFrame& frame) {
+        ProfilerCPUZoneFunction();
+
+        VkSemaphore waitSemaphore = VulkanSyncManager::GetPresentSemaphore(frame.frameIndex);
+        VkSemaphore signalSemaphore = VulkanSyncManager::GetRenderFinishedSemaphore(frame.frameIndex, frame.imageIndex);
+        VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+        VkSubmitInfo submitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = &waitSemaphore;
+        submitInfo.pWaitDstStageMask = &waitStage;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &frame.commandBuffer;
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = &signalSemaphore;
+
+        return vkQueueSubmit(
+            VulkanDeviceManager::GetGraphicsQueue(),
+            1,
+            &submitInfo,
+            VulkanSyncManager::GetRenderFence(frame.frameIndex)
+        );
+    }
+
+    VkResult PresentSwapchainFrame(const SwapchainFrame& frame) {
+        ProfilerCPUZoneFunction();
+
+        VkSwapchainKHR swapchain = VulkanSwapchainManager::GetSwapchain();
+        VkSemaphore waitSemaphore = VulkanSyncManager::GetRenderFinishedSemaphore(frame.frameIndex, frame.imageIndex);
+
+        VkPresentInfoKHR presentInfo{ VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = &waitSemaphore;
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = &swapchain;
+        presentInfo.pImageIndices = &frame.imageIndex;
+
+        return vkQueuePresentKHR(VulkanDeviceManager::GetPresentQueue(), &presentInfo);
+    }
+
     void Init() {
         CreateShaders();
         CreateSamplers();
@@ -30,6 +90,7 @@ namespace VulkanRenderer {
         CreateRayQueryDescriptorSet();
         CreateDDGIRayQueryDescriptorSet();
         CreateFrameData();
+        CreatePointShadowMaps();
         CreateRenderTargets();
         CreatePresentRenderTarget(VulkanSwapchainManager::GetSwapchainExtent());
         CreateRenderStates();
@@ -135,7 +196,6 @@ namespace VulkanRenderer {
 
     bool BeginSwapchainFrame(SwapchainFrame& frame) {
         VkDevice device = VulkanDeviceManager::GetDevice();
-        VkSwapchainKHR swapchain = VulkanSwapchainManager::GetSwapchain();
         std::vector<VkImage>& swapchainImages = VulkanSwapchainManager::GetSwapchainImages();
         std::vector<VkImageView>& swapchainImageViews = VulkanSwapchainManager::GetSwapchainImageViews();
 
@@ -145,7 +205,7 @@ namespace VulkanRenderer {
 
         frame.frameIndex = g_frameIndex % FRAME_OVERLAP;
 
-        VkResult waitResult = VulkanSyncManager::WaitForRenderFence(frame.frameIndex);
+        VkResult waitResult = WaitForRenderFence(frame.frameIndex);
         if (waitResult != VK_SUCCESS) {
             Logging::Error() << "VulkanRenderer::BeginSwapchainFrame() failed while waiting for render fence: " << static_cast<int>(waitResult) << "\n";
             return false;
@@ -154,7 +214,7 @@ namespace VulkanRenderer {
         VulkanDeletionQueue::Flush(frame.frameIndex);
         VulkanDeletionQueue::SetFrameIndex(frame.frameIndex);
 
-        VkResult acquireResult = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, VulkanSyncManager::GetPresentSemaphore(frame.frameIndex), VK_NULL_HANDLE, &frame.imageIndex);
+        VkResult acquireResult = AcquireSwapchainImage(frame);
 
         if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR) {
             VulkanSwapchainManager::RecreateSwapchain();
@@ -207,8 +267,6 @@ namespace VulkanRenderer {
     }
 
     void EndSwapchainFrame(SwapchainFrame& frame) {
-        VkSwapchainKHR swapchain = VulkanSwapchainManager::GetSwapchain();
-
         vktools::setImageLayout(frame.commandBuffer, frame.swapchainImage, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
         g_swapchainImageLayouts[frame.imageIndex] = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
@@ -220,33 +278,13 @@ namespace VulkanRenderer {
             return;
         }
 
-        VkSemaphore waitSemaphore = VulkanSyncManager::GetPresentSemaphore(frame.frameIndex);
-        VkSemaphore signalSemaphore = VulkanSyncManager::GetRenderFinishedSemaphore(frame.frameIndex, frame.imageIndex);
-        VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-        VkSubmitInfo submitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = &waitSemaphore;
-        submitInfo.pWaitDstStageMask = &waitStage;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &frame.commandBuffer;
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &signalSemaphore;
-
-        VkResult submitResult = vkQueueSubmit(VulkanDeviceManager::GetGraphicsQueue(), 1, &submitInfo, VulkanSyncManager::GetRenderFence(frame.frameIndex));
+        VkResult submitResult = SubmitSwapchainFrame(frame);
         if (submitResult != VK_SUCCESS) {
             Logging::Error() << "VulkanRenderer::EndSwapchainFrame() failed to submit command buffer: " << static_cast<int>(submitResult) << "\n";
             return;
         }
 
-        VkPresentInfoKHR presentInfo{ VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = &signalSemaphore;
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = &swapchain;
-        presentInfo.pImageIndices = &frame.imageIndex;
-
-        VkResult presentResult = vkQueuePresentKHR(VulkanDeviceManager::GetPresentQueue(), &presentInfo);
+        VkResult presentResult = PresentSwapchainFrame(frame);
         if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
             VulkanSwapchainManager::RecreateSwapchain();
             g_swapchainImageLayouts.clear();
@@ -256,7 +294,7 @@ namespace VulkanRenderer {
             Logging::Error() << "VulkanRenderer::EndSwapchainFrame() failed to present swapchain image\n";
         }
 
-        g_frameIndex = (g_frameIndex + 1) % FRAME_OVERLAP;
+        ++g_frameIndex;
     }
 
 }

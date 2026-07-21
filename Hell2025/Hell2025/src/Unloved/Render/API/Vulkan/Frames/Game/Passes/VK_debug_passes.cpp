@@ -58,8 +58,8 @@ namespace VulkanRenderer {
         VkExtent2D extent = lightingImage->GetExtent2D();
 
         PushConstantsDDGIPointCloudDebug pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
-        if (pushConstants.frame.viewportDataDeviceAddress == 0) return;
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
+        if (pushConstants.frameAddressTableDeviceAddress == 0) return;
 
         for (DDGIVolume& ddgiVolume : ddgiVolumes) {
             if (ddgiVolume.GetPointCloudCount() == 0) continue;
@@ -94,7 +94,7 @@ namespace VulkanRenderer {
                 pushConstants.pointCloudDirtyFlagsDeviceAddress = pointCloudDirtyFlagsBuffer->GetDeviceAddress();
                 if (pushConstants.pointCloudDeviceAddress == 0 || pushConstants.pointCloudDirtyFlagsDeviceAddress == 0) continue;
 
-                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsDDGIPointCloudDebug), &pushConstants);
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
                 vkCmdDraw(commandBuffer, pushConstants.pointCount, 1, 0, 0);
             }
         }
@@ -132,10 +132,10 @@ namespace VulkanRenderer {
         if (ddgiVolumes.empty()) return;
 
         PushConstantsDDGIProbeDebug pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.probeDebugState = static_cast<uint32_t>(rendererSettings.probeDebugState);
-        if (pushConstants.frame.viewportDataDeviceAddress == 0) return;
+        if (pushConstants.frameAddressTableDeviceAddress == 0) return;
 
         VkExtent2D extent = lightingImage->GetExtent2D();
         RecordComputeToVertexReadBarrier(commandBuffer, probeStatesBuffer);
@@ -163,7 +163,7 @@ namespace VulkanRenderer {
                 pushConstants.probeCounts = volume.probeCounts;
                 pushConstants.probeOffset = ddgiVolume.GetProbeOffset();
 
-                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsDDGIProbeDebug), &pushConstants);
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
                 vkCmdDrawIndexed(commandBuffer, mesh->indexCount, probeCount, mesh->baseIndex, mesh->baseVertex, 0);
             }
         }
@@ -194,9 +194,9 @@ namespace VulkanRenderer {
             VulkanPipeline* linePipeline = VulkanResourceManager::GetPipeline("DebugVertex3DLine");
             VulkanPipeline* pointPipeline = VulkanResourceManager::GetPipeline("DebugVertex3DPoint");
             PushConstantsDebug3D pushConstants{};
-            pushConstants.frame = CreatePushConstantsFrameResources();
+            pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
 
-            if (pushConstants.frame.viewportDataDeviceAddress != 0 && renderState && BeginRenderState(commandBuffer, *renderState, extent)) {
+            if (pushConstants.frameAddressTableDeviceAddress != 0 && renderState && BeginRenderState(commandBuffer, *renderState, extent)) {
                 for (uint32_t i = 0; i < 4; i++) {
                     Viewport* viewport = ViewportManager::GetViewportByIndex(i);
                     if (!viewport || !viewport->IsVisible()) continue;
@@ -208,7 +208,7 @@ namespace VulkanRenderer {
                         VulkanBuffer* vertexBuffer = lines3D->GetVertexBuffer();
                         if (vertexBuffer) {
                             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, linePipeline->GetHandle());
-                            vkCmdPushConstants(commandBuffer, linePipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsDebug3D), &pushConstants);
+                            vkCmdPushConstants(commandBuffer, linePipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
                             BindVertexBuffer(commandBuffer, vertexBuffer);
                             vkCmdDraw(commandBuffer, static_cast<uint32_t>(lines3D->GetVertexCount()), 1, 0, 0);
                         }
@@ -218,7 +218,7 @@ namespace VulkanRenderer {
                         VulkanBuffer* vertexBuffer = points3D->GetVertexBuffer();
                         if (vertexBuffer) {
                             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pointPipeline->GetHandle());
-                            vkCmdPushConstants(commandBuffer, pointPipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsDebug3D), &pushConstants);
+                            vkCmdPushConstants(commandBuffer, pointPipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
                             BindVertexBuffer(commandBuffer, vertexBuffer);
                             vkCmdDraw(commandBuffer, static_cast<uint32_t>(points3D->GetVertexCount()), 1, 0, 0);
                         }
@@ -233,6 +233,7 @@ namespace VulkanRenderer {
             VulkanPipeline* linePipeline = VulkanResourceManager::GetPipeline("DebugVertex2DLine");
             VulkanPipeline* pointPipeline = VulkanResourceManager::GetPipeline("DebugVertex2DPoint");
             PushConstantsDebug2D pushConstants{};
+            pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
             pushConstants.renderTargetWidth = static_cast<float>(extent.width);
             pushConstants.renderTargetHeight = static_cast<float>(extent.height);
 
@@ -251,7 +252,7 @@ namespace VulkanRenderer {
                     VulkanBuffer* vertexBuffer = lines2D->GetVertexBuffer();
                     if (vertexBuffer) {
                         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, linePipeline->GetHandle());
-                        vkCmdPushConstants(commandBuffer, linePipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsDebug2D), &pushConstants);
+                        vkCmdPushConstants(commandBuffer, linePipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
                         BindVertexBuffer(commandBuffer, vertexBuffer);
                         vkCmdDraw(commandBuffer, static_cast<uint32_t>(lines2D->GetVertexCount()), 1, 0, 0);
                     }
@@ -261,7 +262,7 @@ namespace VulkanRenderer {
                     VulkanBuffer* vertexBuffer = points2D->GetVertexBuffer();
                     if (vertexBuffer) {
                         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pointPipeline->GetHandle());
-                        vkCmdPushConstants(commandBuffer, pointPipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsDebug2D), &pushConstants);
+                        vkCmdPushConstants(commandBuffer, pointPipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
                         BindVertexBuffer(commandBuffer, vertexBuffer);
                         vkCmdDraw(commandBuffer, static_cast<uint32_t>(points2D->GetVertexCount()), 1, 0, 0);
                     }
@@ -339,8 +340,8 @@ namespace VulkanRenderer {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, descriptorSets, 0, nullptr);
 
         PushConstantsDebugView pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsDebugView), &pushConstants);
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
@@ -368,9 +369,8 @@ namespace VulkanRenderer {
         lightingImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
 
         PushConstantsDebugTileView pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
-        pushConstants.tileLightsDeviceAddress = tileLightsBuffer->GetDeviceAddress();
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsDebugTileView), &pushConstants);
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);

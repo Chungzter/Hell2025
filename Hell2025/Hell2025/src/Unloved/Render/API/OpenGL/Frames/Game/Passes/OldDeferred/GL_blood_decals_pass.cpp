@@ -19,11 +19,11 @@ namespace OpenGL::Renderer {
     void NewBloodsDecalsPass();
 
     void BloodDecalsPass() {
-        DecalTestPass();
-        NewBloodsDecalsPass();
-
-        // DO NOT RENDER OLD BLOOD
-        return;
+        //DecalTestPass();
+        //NewBloodsDecalsPass();
+        //
+        //// DO NOT RENDER OLD BLOOD
+        //return;
 
         if (Unloved::RenderDataManager::GetBloodScreenSpaceDecalInstanceData().empty()) {
             return;
@@ -55,6 +55,9 @@ namespace OpenGL::Renderer {
         miscFullSizeFBO->DrawBuffers({ "BloodScreenSpaceDecalMask" });
 
         OpenGL::BindShader("BloodDecalsDraw");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
         OpenGL::SetUniformInt("u_tileYCount", GetTileCountY());
 
@@ -66,7 +69,6 @@ namespace OpenGL::Renderer {
         state.colorMask = true;
         OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 
-        OpenGL::BindSSBO(0, "Samplers");
         OpenGL::BindSSBO(8, "TileBloodDecals");
         OpenGL::BindSSBO(9, "BloodDecalInstances");
         OpenGL::BindSSBO(10, "BloodDecalIndices");
@@ -143,7 +145,7 @@ namespace OpenGL::Renderer {
         BindShader("DecalTest");
 
         glBindTextureUnit(1, gBuffer->GetDepthAttachmentHandle());
-        OpenGL::BindSSBO(3, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -220,7 +222,7 @@ namespace OpenGL::Renderer {
         BindShader("BloodDecalsNew");
 
         glBindTextureUnit(1, gBuffer->GetDepthAttachmentHandle());
-        OpenGL::BindSSBO(3, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -245,28 +247,13 @@ namespace OpenGL::Renderer {
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
 
-            for (const TestParticle& particle : Unloved::BloodSystem::GetTestParticles()) {
-
-                float scale = 0.3f;
-
-                Hell::LocalFrame localFrame = Hell::LocalFrame(particle.m_finalHitNormal);
-                Hell::QuatTransform transform = Hell::QuatTransform(particle.m_position, localFrame, glm::vec3(scale));
-
-
-                Hell::LocalFrame anotherLocalFrame = Hell::LocalFrame(particle.m_localFrame.right);
-                Hell::QuatTransform rotationTransform = Hell::QuatTransform(glm::vec3(0.0), anotherLocalFrame, glm::vec3(1.0));
-
-                const glm::mat4 modelMatrix = transform.ToMat4();
-
-                const glm::mat4 inverseModelMatrix = glm::inverse(modelMatrix);
-
-                Texture* texture = Hell::ResourceManager::GetTextureByName("BloodDecal_0");
-                if (!texture) return;
+            for (const TestBloodDecal& decal : Unloved::BloodSystem::GetBloodDecals()) {
+                Texture* texture = Hell::ResourceManager::GetTextureByBindlessIndex(static_cast<int32_t>(decal.textureIdx));
 
                 glBindTextureUnit(0, texture->GetGLTexture().GetHandle());
 
-                SetUniformMat4("u_modelMatrix", modelMatrix);
-                SetUniformMat4("u_inverseModelMatrix", inverseModelMatrix);
+                SetUniformMat4("u_modelMatrix", decal.modelMatrix);
+                SetUniformMat4("u_inverseModelMatrix", decal.inverseModelMatrix);
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
             }

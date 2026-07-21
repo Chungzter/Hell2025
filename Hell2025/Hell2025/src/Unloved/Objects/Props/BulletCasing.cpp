@@ -1,11 +1,14 @@
 #include "BulletCasing.h"
-#include "Unloved/Render/RendererUtil.h"
-#include "Hell/ResourceManagement/ResourceManager.h"
+
 #include "Hell/Audio.h"
 #include "Hell/Common/Random.h"
+#include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+
 #include "Unloved/Render/RendererConstants.h"
 #include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/RendererUtil.h"
 
 namespace Unloved {
 
@@ -17,23 +20,35 @@ BulletCasing::BulletCasing(uint64_t id, BulletCasingCreateInfo createInfo) {
     // Get model
     Model* model = Hell::ResourceManager::GetModelById(m_createInfo.modelId);
     if (!model) {
-        std::cout << "BulletCasing(BulletCasingCreateInfo createInfo) failed from invalid model\n";
+        Logging::Error() << "BulletCasing(BulletCasingCreateInfo createInfo) failed from invalid model\n";
         return;
     }
     if (model->GetMeshCount() < 1) {
-        std::cout << "BulletCasing(BulletCasingCreateInfo createInfo) failed from mesh count 0\n";
+        Logging::Error() << "BulletCasing(BulletCasingCreateInfo createInfo) failed from mesh count 0\n";
     }
 
     // Get mesh
     m_meshId = model->GetMeshIndices()[0];
     Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(m_meshId);
     if (!mesh) {
-        std::cout << "BulletCasing(BulletCasingCreateInfo createInfo) failed from invalid mesh\n";
+        Logging::Error() << "BulletCasing(BulletCasingCreateInfo createInfo) failed from invalid mesh\n";
+        return;
     }
 
     Transform transform;
     transform.position = m_createInfo.position;
     transform.rotation = m_createInfo.rotation;
+
+    m_renderItem.modelMatrix = transform.ToMat4();
+    m_renderItem.prevModelMatrix = transform.ToMat4();
+    m_renderItem.baseVertex = mesh->baseVertex;
+    m_renderItem.baseIndex = mesh->baseIndex;
+    m_renderItem.vertexCount = mesh->vertexCount;
+    m_renderItem.indexCount = mesh->indexCount;
+    m_renderItem.materialIndex = GetMaterialIndex();
+    m_renderItem.meshId = GetMeshId();
+    m_renderItem.shadowFlags = SHADOW_FLAG_NONE;
+    m_renderItem.vulkanFlags = 0;
 
     PhysicsFilterData filterData;
     filterData.raycastGroup = RaycastGroup::RAYCAST_DISABLED;
@@ -68,23 +83,12 @@ void BulletCasing::Update(float deltaTime) {
 }
 
 void BulletCasing::SubmitRenderItem() {
-    Material* material = Hell::ResourceManager::GetMaterialByIndex(GetMaterialIndex());
+    m_renderItem.prevModelMatrix = m_renderItem.modelMatrix;
+    m_renderItem.modelMatrix = GetModelMatrix();
+    m_renderItem.inverseModelMatrix = glm::inverse(m_renderItem.modelMatrix);
 
-    RenderItem renderItem;
-    renderItem.modelMatrix = GetModelMatrix();
-    renderItem.inverseModelMatrix = inverse(renderItem.modelMatrix);
-    renderItem.materialIndex = GetMaterialIndex();
-    renderItem.meshId = GetMeshId();
-    renderItem.shadowFlags = SHADOW_FLAG_NONE;
-    renderItem.vulkanFlags = 0;
-
-    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
-    if (mesh) {
-        renderItem.baseVertex = mesh->baseVertex;
-        renderItem.baseIndex = mesh->baseIndex;
-    }
-
-    RendererUtil::UpdateRenderItemAABB(renderItem);
-    RenderDataManager::SubmitRenderItem(renderItem);
+    RendererUtil::UpdateRenderItemAABB(m_renderItem);
+    RenderDataManager::SubmitRenderItem(m_renderItem);
 }
+
 }

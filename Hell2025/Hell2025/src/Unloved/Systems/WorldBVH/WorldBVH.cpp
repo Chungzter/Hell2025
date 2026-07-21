@@ -160,6 +160,30 @@ namespace Unloved::WorldBVH {
 		}
 	}
 
+    void GatherDynamicMeshNodeInstances() {
+        for (Door& door : Unloved::World::GetDoors()) {
+            CreateDynamicPrimtiveInstances(door.GetMeshNodes());
+        }
+        for (Fireplace& fireplace : Unloved::World::GetFireplaces()) {
+            CreateDynamicPrimtiveInstances(fireplace.GetMeshNodes());
+        }
+        for (GenericObject& genericObject : Unloved::World::GetGenericObjects()) {
+            CreateDynamicPrimtiveInstances(genericObject.GetMeshNodes());
+        }
+        for (Piano& piano : Unloved::World::GetPianos()) {
+            CreateDynamicPrimtiveInstances(piano.GetMeshNodes());
+        }
+    }
+
+    void GatherDynamicRenderItemInstances() {
+        for (PictureFrame& pictureFrame : Unloved::World::GetPictureFrames()) {
+            CreateObjectInstanceDataFromRenderItems(pictureFrame.GetRenderItems(), g_dynamicSceneInstances);
+        }
+        for (PickUp& pickUp : Unloved::World::GetPickUps()) {
+            CreateObjectInstanceDataFromRenderItems(pickUp.GetRenderItems(), g_dynamicSceneInstances);
+        }
+    }
+
     void CreateStaticPrimtiveInstances(MeshNodes& meshNodes) {
 		for (int i = 0; i < meshNodes.GetNodeCount(); i++) {
 			MeshNode* meshNode = meshNodes.GetMeshNodeByLocalIndex(i);
@@ -180,39 +204,8 @@ namespace Unloved::WorldBVH {
 		// Clear any existing primitive instances
 		g_dynamicSceneInstances.clear();
 
-		// Add any dynamic mesh nodes to the primitive instances vector
-		for (Door& door : Unloved::World::GetDoors()) {
-			CreateDynamicPrimtiveInstances(door.GetMeshNodes());
-		}
-		for (Fireplace& fireplace : Unloved::World::GetFireplaces()) {
-            CreateDynamicPrimtiveInstances(fireplace.GetMeshNodes());
-		}
-		for (GenericObject& genericObject : Unloved::World::GetGenericObjects()) {
-			CreateDynamicPrimtiveInstances(genericObject.GetMeshNodes());
-        }
-        for (Piano& piano : Unloved::World::GetPianos()) {
-            CreateDynamicPrimtiveInstances(piano.GetMeshNodes());
-        }
-
-        // TODO: Remove me
-		//for (Door& door : GetDoors()) {
-		//	const std::vector<RenderItem>& renderItems = door.GetRenderItems();
-		//	for (const RenderItem& renderItem : renderItems) {
-		//		CreateObjectInstanceDataFromRenderItem(renderItem, g_dynamicSceneInstances);
-		//	}
-		//}
-		for (PictureFrame& pictureFrame : Unloved::World::GetPictureFrames()) {
-			const std::vector<RenderItem>& renderItems = pictureFrame.GetRenderItems();
-			for (const RenderItem& renderItem : renderItems) {
-				CreateObjectInstanceDataFromRenderItem(renderItem, g_dynamicSceneInstances);
-			}
-		}
-		for (PickUp& pickUp : Unloved::World::GetPickUps()) {
-			const std::vector<RenderItem>& renderItems = pickUp.GetRenderItems();
-			for (const RenderItem& renderItem : renderItems) {
-				CreateObjectInstanceDataFromRenderItem(renderItem, g_dynamicSceneInstances);
-			}
-		}
+        GatherDynamicMeshNodeInstances();
+        GatherDynamicRenderItemInstances();
 
 		// Recreate the TLAS
 		if (!Hell::Bvh::AddInstanceMeshBvhsToSceneBvh(g_dynamicSceneBvhId, g_dynamicSceneInstances)) return;

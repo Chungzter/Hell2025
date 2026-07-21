@@ -24,7 +24,7 @@ namespace OpenGL::Renderer {
 
     void RenderNonDeformingAnimatedGameObjects();
 
-	void HouseGeometryPass() {
+	void ProceduralGeometryPass() {
 		ProfilerOpenGLZoneFunction();
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
@@ -40,6 +40,11 @@ namespace OpenGL::Renderer {
         EditorRasterizerStateOverride();
 
         OpenGL::BindShader("GBuffer");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::SetUniformMat4("u_model", glm::mat4(1));
         OpenGL::SetUniformBool("u_flipNormalMapY", ShouldFlipNormalMapY());
         OpenGL::SetUniformBool("u_alphaDiscard", false);
@@ -82,6 +87,11 @@ namespace OpenGL::Renderer {
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         OpenGL::BindShader("GBuffer");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
 
         //glBindVertexArray(OpenGL::BackEnd::GetWeightedVertexDataVAO());
         //glBindBuffer(GL_ARRAY_BUFFER, OpenGL::BackEnd::GetWeightedVertexDataVBO());
@@ -186,6 +196,11 @@ namespace OpenGL::Renderer {
 
 
         OpenGL::BindShader("GBuffer");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::SetUniformBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
         OpenGLFrameBuffer* decalMasksFBO = OpenGL::ResourceManager::GetFrameBufferPtr("DecalMasks");
@@ -358,7 +373,7 @@ namespace OpenGL::Renderer {
                         if (!player) continue;
 
                         OpenGL::SetUniformInt("u_playerIndex", i);
-                        OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+                        OpenGL::SetUniformMat4("u_projectionView", viewportData[i].jitteredProjectionViewReverseZ);
 
                         glBindVertexArray(glPhysicsDebugGeometry.GetVAO());
 
@@ -466,7 +481,7 @@ namespace OpenGL::Renderer {
 
                 glm::mat4 modelMatrix = mirror->GetWorldMatrix();
 
-                OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+                OpenGL::SetUniformMat4("u_projectionView", viewportData[i].jitteredProjectionViewReverseZ);
                 OpenGL::SetUniformMat4("u_model", modelMatrix);
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertex);
@@ -493,6 +508,11 @@ namespace OpenGL::Renderer {
         glStencilMask(0x00);
 
         OpenGL::BindShader("GBuffer");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::SetUniformBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
         // Regular geometry

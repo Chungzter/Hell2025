@@ -62,11 +62,11 @@ namespace VulkanMemoryManager {
         uint32_t sets = 4; // Buffer for a few versions/overlays
 
         std::vector<VkDescriptorPoolSize> sizes = {
-            // Static samplers + texture samplers
-            { VK_DESCRIPTOR_TYPE_SAMPLER, (16 + 10000) * sets + 100 },
+            // Static samplers + texture samplers + shadow samplers
+            { VK_DESCRIPTOR_TYPE_SAMPLER, (16 + 10000 + 16) * sets + 100 },
 
-            // From sampled textures, uint textures, and sampled texture arrays
-            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, (10000 + 128 + 100 + 100) * sets },
+            // From sampled textures, uint textures, sampled texture arrays, and depth cube arrays
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, (10000 + 128 + 100 + 100 + 16) * sets },
 
             // From Binding 2
             { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 128 * sets + 100 },
@@ -75,8 +75,9 @@ namespace VulkanMemoryManager {
             // Note: You have a typo in your bindings 5/6, they should be STORAGE_BUFFER type
             { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, (1024 * sets) + 200 },
 
-            // From Binding 4
-            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 * sets + 100 },
+            // Seven bindless storage-image format bindings (RGBA32F, RGBA16F,
+            // RGBA8, RG16F, R32F, RG8, and R16F).
+            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, (100 * 7) * sets + 100 },
 
             // Misc/Legacy/Raytracing
             { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },

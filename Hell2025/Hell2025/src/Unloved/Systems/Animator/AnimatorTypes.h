@@ -4,6 +4,7 @@
 
 #include <glm/mat4x4.hpp>
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -39,6 +40,7 @@ struct AnimationPlayback {
     bool paused = false;
     bool complete = false;
     bool fadingOut = false;
+    std::vector<int32_t> animatedNodeIndexByModelNode;
     std::vector<Hell::QuatTransform> sampledPose;
 };
 
@@ -49,8 +51,7 @@ struct AnimationLayerState {
     std::vector<float> nodeWeights;
     std::vector<AnimationPlayback> playbacks;
     std::vector<Hell::QuatTransform> blendedPose;
-    std::vector<Hell::QuatTransform> localNodeTransforms;
-    std::vector<Hell::QuatTransform> globalNodeTransforms;
+    std::vector<float> blendedWeights;
 };
 
 struct AnimationState {

@@ -42,11 +42,9 @@ namespace VulkanRenderer {
         if (!meshBuffer->GetIndexBuffer()) return;
 
         PushConstantsSpriteSheet pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
-        pushConstants.spriteSheetRenderItemsDeviceAddress = spriteSheetRenderItemsBuffer->GetDeviceAddress();
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
 
-        if (pushConstants.frame.viewportDataDeviceAddress == 0) return;
-        if (pushConstants.spriteSheetRenderItemsDeviceAddress == 0) return;
+        if (pushConstants.frameAddressTableDeviceAddress == 0) return;
 
         std::array<VulkanDrawCommandBatch, 4> spriteSheetCommands = WriteDrawCommandsByViewport(drawInfoSet.spriteSheets);
 
@@ -55,7 +53,7 @@ namespace VulkanRenderer {
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsSpriteSheet), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
 
         BindVertexBuffer(commandBuffer, meshBuffer->GetVertexBuffer());
         BindIndexBuffer(commandBuffer, meshBuffer->GetIndexBuffer());

@@ -101,7 +101,7 @@ vec3 GetDirectionalLighting(vec3 lightDir, vec3 lightColor, float strength, vec3
 }
 
 
-vec3 GetSpotlightLighting(vec3 lightPos, vec3 lightDir, vec3 lightColor, float radius, float strength, float innerAngle, float outerAngle, vec3 Normal, vec3 WorldPos, vec3 baseColor, float roughness, float metallic, vec3 viewPos, mat4 LightViewProj) {
+vec3 GetSpotlightLighting(vec3 lightPos, vec3 lightDir, vec3 lightColor, float radius, float strength, float innerAngle, float outerAngle, vec3 Normal, vec3 WorldPos, vec3 baseColor, float roughness, float metallic, vec3 viewPos, mat4 LightViewProj, float distanceFalloffExponent) {
     vec3 d = lightPos - WorldPos;
     float dist = length(d);
     vec3 toLight = d / dist;
@@ -115,10 +115,29 @@ vec3 GetSpotlightLighting(vec3 lightPos, vec3 lightDir, vec3 lightColor, float r
 
     // extra smooth fade by distance
     float distanceFactor = clamp(1.0 - dist / radius, 0.0, 1.0);
-    spotFactor *= distanceFactor * distanceFactor;
+    spotFactor *= pow(distanceFactor, max(distanceFalloffExponent, 0.001));
 
     // lambert
     float irradiance = max(dot(toLight, Normal), 0.0) * lightAttenuation * spotFactor;
+
+    vec3 brdf = microfacetBRDF(toLight, viewDir, Normal, baseColor, metallic, 1.0, roughness);
+    return brdf * irradiance * clamp(lightColor, 0.0, 1.0);
+}
+
+vec3 GetSpotlightLighting(vec3 lightPos, vec3 lightDir, vec3 lightColor, float radius, float strength, float innerAngle, float outerAngle, vec3 Normal, vec3 WorldPos, vec3 baseColor, float roughness, float metallic, vec3 viewPos, mat4 LightViewProj) {
+    return GetSpotlightLighting(lightPos, lightDir, lightColor, radius, strength, innerAngle, outerAngle, Normal, WorldPos, baseColor, roughness, metallic, viewPos, LightViewProj, 2.0);
+}
+
+// Three.js IESSpotLightNode replaces the regular cone attenuation with the IES
+// attenuation. Keep Hell's BRDF and distance behavior, but do not multiply the
+// measured profile by the ordinary spotlight smoothstep as well.
+vec3 GetFlashlightIESLighting(vec3 lightPos, vec3 lightColor, float attenuation, vec3 Normal, vec3 WorldPos, vec3 baseColor, float roughness, float metallic, vec3 viewPos) {
+    vec3 d = lightPos - WorldPos;
+    float dist = max(length(d), 0.000001);
+    vec3 toLight = d / dist;
+    vec3 viewDir = normalize(viewPos - WorldPos);
+
+    float irradiance = max(dot(toLight, Normal), 0.0) * attenuation;
 
     vec3 brdf = microfacetBRDF(toLight, viewDir, Normal, baseColor, metallic, 1.0, roughness);
     return brdf * irradiance * clamp(lightColor, 0.0, 1.0);
@@ -128,6 +147,14 @@ float SpotlightShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 light
     // Project and bias
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w * 0.5 + 0.5;
     projCoords.y = 1.0 - projCoords.y;
+
+    // Outside the flashlight's shadow camera means "not represented by this
+    // shadow map", not "sample its clamped border". The latter creates a
+    // visible square around wide IES profiles.
+    if (fragPosLightSpace.w <= 0.0 || any(lessThan(projCoords, vec3(0.0))) || any(greaterThan(projCoords, vec3(1.0)))) {
+        return 0.0;
+    }
+
     float currentDepth = projCoords.z;
 
     // Fold slope bias and constant bias into one
@@ -178,48 +205,183 @@ float SpotlightShadowCalculationFast(vec4 fragPosLightSpace, vec3 normal, vec3 l
 
 
 
-#if defined(VULKAN)
-vec3 ApplyCookie(mat4 LightViewProj, vec3 worldPos, vec3 lightPos, vec3 lightColor, float maxDistance, texture2D cookieTexture, sampler cookieSampler) {
-#else
-vec3 ApplyCookie(mat4 LightViewProj, vec3 worldPos, vec3 lightPos, vec3 lightColor, float maxDistance, sampler2D cookieTexture) {
-#endif
-   vec4 lightSpacePos = LightViewProj * vec4(worldPos, 1.0);
-    vec2 cookieUV = lightSpacePos.xy / lightSpacePos.w * 0.5 + 0.5;
+#if !defined(VULKAN)
+float ApplyFlashlightIESProfile(vec3 worldPos, vec3 lightPos, vec3 lightDir, RendererData flashlightSettings, sampler2D iesTexture) {
+    vec3 lightVector = lightPos - worldPos;
+    float lightDistance = length(lightVector);
+    if (lightDistance <= 0.000001) return 1.0;
 
-    // Centered scale
-    float cookieScale = 1.5;
-    vec2 scaledUV = (cookieUV - 0.5) * cookieScale + 0.5;
+    // Matches IESSpotLightNode: acos(angleCosine) drives a rotationally
+    // symmetric one-dimensional IES lookup. Keep the complete measured lobe at
+    // 80% of the enclosing spotlight/shadow cone so its rings are preserved and
+    // its tail cannot hit the shadow boundary.
+    const float iesProfileConeInset = 0.8;
+    float angleCosine = dot(lightVector / lightDistance, -normalize(lightDir));
+    float worldAngle = degrees(acos(clamp(angleCosine, -1.0, 1.0)));
+    float safeConeScale = clamp(flashlightSettings.flashlightIESConeScale, 0.001, 1.2);
 
-    // Edge fade based on scaledUV
-    vec2 clampedUV = clamp(scaledUV, vec2(0.0), vec2(1.0));
-    float fadeFactor = clamp(1.0 - length(scaledUV - clampedUV) * 15.0, 0.0, 1.0);
+    // Recover the IES texture's authored upper angle from its scale/bias. A
+    // flashlight only uses the forward hemisphere, even if the file also has
+    // rear-facing photometric data.
+    float authoredMaxAngle = flashlightSettings.flashlightIESVerticalScale > 0.000001
+        ? (1.0 - flashlightSettings.flashlightIESVerticalBias) / flashlightSettings.flashlightIESVerticalScale
+        : 90.0;
+    float authoredForwardAngle = clamp(authoredMaxAngle, 0.001, 90.0);
 
-    float dist = length(worldPos - lightPos);
-    float distanceFactor = clamp(1.0 - dist / maxDistance, 0.0, 1.0);
-    distanceFactor *= distanceFactor;
+    // With no override, preserve the IES-authored angular size. With an outer
+    // angle, fit the entire authored pattern inside that cone instead of merely
+    // chopping off everything (including rings) beyond the new angle.
+    float enclosingConeAngle = flashlightSettings.flashlightIESOuterAngle > 0.0 ? flashlightSettings.flashlightIESOuterAngle : authoredForwardAngle;
+    float iesWorldConeAngle = enclosingConeAngle * safeConeScale * iesProfileConeInset;
+    float profileT = worldAngle / max(iesWorldConeAngle, 0.001);
+    if (profileT > 1.0) return 0.0;
 
-#if defined(VULKAN)
-    float cookieFactor = texture(sampler2D(cookieTexture, cookieSampler), clampedUV).r;
-#else
-    float cookieFactor = texture(cookieTexture, clampedUV).r;
-#endif
-    return lightColor * cookieFactor * fadeFactor * distanceFactor;
+    float profileAngle = profileT * authoredForwardAngle;
+    float textureU = profileAngle * flashlightSettings.flashlightIESVerticalScale + flashlightSettings.flashlightIESVerticalBias;
+
+    // The IES file contains no authored data beyond this angular interval.
+    // Returning zero also prevents the final texel interval from extrapolating
+    // a non-zero tail indefinitely.
+    if (textureU < 0.0 || textureU > 1.0) return 0.0;
+
+    // Three.js squares candela values before normalizing and interpolating its
+    // 180-sample spotlight texture. Reproduce that interpolation from our native
+    // grid so the shared texture and point-light IES path remain untouched.
+    ivec2 sampleCount = textureSize(iesTexture, 0);
+
+    float verticalPosition = textureU * float(max(sampleCount.x - 1, 0));
+    int vertical0 = 0;
+    int vertical1 = 0;
+    float verticalInterpolation = 0.0;
+    if (sampleCount.x > 1) {
+        if (verticalPosition <= 0.0) {
+            vertical1 = 1;
+            verticalInterpolation = verticalPosition;
+        }
+        else if (verticalPosition >= float(sampleCount.x - 1)) {
+            vertical0 = sampleCount.x - 2;
+            vertical1 = sampleCount.x - 1;
+            verticalInterpolation = verticalPosition - float(vertical0);
+        }
+        else {
+            vertical0 = int(floor(verticalPosition));
+            vertical1 = vertical0 + 1;
+            verticalInterpolation = fract(verticalPosition);
+        }
+    }
+
+    // Three.js reduces the IES data to its theta-zero slice. Some source files
+    // begin at C90, so preserve its first-interval extrapolation in that case.
+    float horizontalPosition = flashlightSettings.flashlightIESHorizontalBias * float(max(sampleCount.y - 1, 0));
+    int horizontal0 = 0;
+    int horizontal1 = 0;
+    float horizontalInterpolation = 0.0;
+    if (sampleCount.y > 1) {
+        if (horizontalPosition <= 0.0) {
+            horizontal1 = 1;
+            horizontalInterpolation = horizontalPosition;
+        }
+        else if (horizontalPosition >= float(sampleCount.y - 1)) {
+            horizontal0 = sampleCount.y - 2;
+            horizontal1 = sampleCount.y - 1;
+            horizontalInterpolation = horizontalPosition - float(horizontal0);
+        }
+        else {
+            horizontal0 = int(floor(horizontalPosition));
+            horizontal1 = horizontal0 + 1;
+            horizontalInterpolation = fract(horizontalPosition);
+        }
+    }
+
+    float value00 = texelFetch(iesTexture, ivec2(vertical0, horizontal0), 0).r;
+    float value01 = texelFetch(iesTexture, ivec2(vertical0, horizontal1), 0).r;
+    float value10 = texelFetch(iesTexture, ivec2(vertical1, horizontal0), 0).r;
+    float value11 = texelFetch(iesTexture, ivec2(vertical1, horizontal1), 0).r;
+    float value0 = mix(value00 * value00, value01 * value01, horizontalInterpolation);
+    float value1 = mix(value10 * value10, value11 * value11, horizontalInterpolation);
+    float attenuation = pow(max(mix(value0, value1, verticalInterpolation), 0.0), max(flashlightSettings.flashlightIESContrast, 0.001));
+
+    // Zero disables the optional artistic mask. This makes the IES data alone
+    // define the cone at the defaults. Inner/outer are degrees at scale 1 and
+    // share the same user cone scale as the IES profile and shadow projection.
+    if (flashlightSettings.flashlightIESOuterAngle > 0.0) {
+        float scaledOuterAngle = flashlightSettings.flashlightIESOuterAngle * safeConeScale;
+        float scaledInnerAngle = clamp(flashlightSettings.flashlightIESInnerAngle, 0.0, flashlightSettings.flashlightIESOuterAngle) * safeConeScale;
+        float featherWidth = scaledOuterAngle - scaledInnerAngle;
+        float coneMask = featherWidth > 0.0001
+            ? 1.0 - smoothstep(scaledInnerAngle, scaledOuterAngle, worldAngle)
+            : (worldAngle <= scaledOuterAngle ? 1.0 : 0.0);
+        attenuation *= coneMask;
+    }
+
+    return attenuation;
 }
 
-#if !defined(VULKAN)
-vec3 GetFlashlightContribution(int flashlightIndex, uint viewportIndex, float flashlightModifer, mat4 flashlightProjectionView, vec3 flashlightDir, vec3 flashlightPosition, vec3 flashlightViewPos, bool flashlightIsInShop, vec3 flashlightColor, vec3 normal, vec3 worldPos, vec3 baseColor, float roughness, float metallic, float fragDistance, float oceanHeight, sampler2D flashlightCookieTexture, sampler2DArray flashlightShadowMapArrayTexture) {
+float GetFlashlightCenterSpotAttenuation(vec3 worldPos, vec3 lightPos, vec3 lightDir, RendererData flashlightSettings) {
+    if (flashlightSettings.flashlightCenterSpotEnabled == 0u || flashlightSettings.flashlightCenterSpotBrightness <= 0.0) return 0.0;
+
+    // The center spot shares the main flashlight shadow map, so keep its range
+    // inside the shadow camera's far plane.
+    float radius = min(
+        max(flashlightSettings.flashlightCenterSpotRange, 0.001),
+        max(flashlightSettings.flashlightRange, 0.001)
+    );
+    vec3 lightVector = lightPos - worldPos;
+    float lightDistance = length(lightVector);
+    if (lightDistance >= radius) return 0.0;
+
+    float worldAngle = lightDistance > 0.000001
+        ? degrees(acos(clamp(dot(lightVector / lightDistance, -normalize(lightDir)), -1.0, 1.0)))
+        : 0.0;
+    float outerAngle = clamp(flashlightSettings.flashlightCenterSpotOuterAngle, 0.0, 89.0);
+    float innerAngle = clamp(flashlightSettings.flashlightCenterSpotInnerAngle, 0.0, outerAngle);
+    if (outerAngle <= 0.0 || worldAngle >= outerAngle) return 0.0;
+
+    float featherWidth = outerAngle - innerAngle;
+    float coneAttenuation = featherWidth > 0.0001
+        ? 1.0 - smoothstep(innerAngle, outerAngle, worldAngle)
+        : 1.0;
+
+    float distanceFactor = clamp(1.0 - lightDistance / radius, 0.0, 1.0);
+    float distanceAttenuation = smoothstep(radius, 0.0, lightDistance);
+    distanceAttenuation *= pow(distanceFactor, max(flashlightSettings.flashlightCenterSpotFalloffExponent, 0.001));
+
+    float strength = 4.5 * max(flashlightSettings.flashlightCenterSpotBrightness, 0.0);
+    return distanceAttenuation * coneAttenuation * strength;
+}
+
+float GetFlashlightIESAttenuation(vec3 worldPos, vec3 lightPos, vec3 lightDir, RendererData flashlightSettings, sampler2D iesTexture) {
+    float radius = max(flashlightSettings.flashlightRange, 0.001);
+    float lightDistance = distance(lightPos, worldPos);
+    float iesLighting = 0.0;
+
+    if (flashlightSettings.flashlightIESEnabled != 0u && lightDistance < radius) {
+        float distanceFactor = clamp(1.0 - lightDistance / radius, 0.0, 1.0);
+        float distanceAttenuation = smoothstep(radius, 0.0, lightDistance);
+        distanceAttenuation *= pow(distanceFactor, max(flashlightSettings.flashlightFalloffExponent, 0.001));
+
+        float iesAttenuation = ApplyFlashlightIESProfile(worldPos, lightPos, lightDir, flashlightSettings, iesTexture);
+        float strength = 4.5 * max(flashlightSettings.flashlightBrightness, 0.0);
+        iesLighting = distanceAttenuation * iesAttenuation * strength;
+    }
+
+    return iesLighting + GetFlashlightCenterSpotAttenuation(worldPos, lightPos, lightDir, flashlightSettings);
+}
+
+float GetFlashlightViewDistanceScale(float fragDistance) {
+    if (fragDistance <= 1.0) return 0.5;
+    if (fragDistance >= 10.0) return 5.0;
+    float t = (fragDistance - 1.0) / 9.0;
+    return mix(0.5, 5.0, t * t);
+}
+
+vec3 GetFlashlightContribution(int flashlightIndex, uint viewportIndex, float flashlightModifer, mat4 flashlightProjectionView, vec3 flashlightDir, vec3 flashlightPosition, vec3 flashlightViewPos, bool flashlightIsInShop, RendererData flashlightSettings, vec3 normal, vec3 worldPos, vec3 baseColor, float roughness, float metallic, float fragDistance, float oceanHeight, sampler2D flashlightIESTexture, sampler2DArray flashlightShadowMapArrayTexture) {
     if (flashlightModifer <= 0.05) return vec3(0.0);
 
     int layerIndex = flashlightIndex;
     vec3 spotLightPos = flashlightPosition;
-    vec3 spotLightDir = flashlightDir;
-    vec3 spotLightColor = flashlightColor;
-    float spotLightRadius = 25.0;
-    float spotLightStregth = 4.5;
-
-    if (worldPos.y < oceanHeight - 0.1) {
-        spotLightStregth *= 2.0;
-    }
+    vec3 spotLightDir = normalize(flashlightDir);
+    vec3 spotLightColor = flashlightSettings.flashlightColor.rgb;
 
     // Prevent flashlight being drawn on the back of your head when viewed by another player
     if (flashlightIndex != int(viewportIndex)) {
@@ -229,16 +391,12 @@ vec3 GetFlashlightContribution(int flashlightIndex, uint viewportIndex, float fl
         spotLightColor *= 0.825;
     }
 
-    float innerAngle = cos(radians(5.0 * flashlightModifer));
-    float outerAngle = cos(radians(20.5));
-
-    if (flashlightIsInShop) {
-        spotLightRadius = 8;
-        outerAngle = cos(radians(50.0));
-    }
-
     mat4 lightProjectionView = flashlightProjectionView;
-    vec3 spotLighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, spotLightRadius, spotLightStregth, innerAngle, outerAngle, normal, worldPos, baseColor, roughness, metallic, flashlightViewPos, lightProjectionView);
+    float attenuation = GetFlashlightIESAttenuation(worldPos, spotLightPos, spotLightDir, flashlightSettings, flashlightIESTexture);
+    if (worldPos.y < oceanHeight - 0.1) {
+        attenuation *= 2.0;
+    }
+    vec3 spotLighting = GetFlashlightIESLighting(spotLightPos, spotLightColor, attenuation, normal, worldPos, baseColor, roughness, metallic, flashlightViewPos);
 
     vec4 FragPosLightSpace = lightProjectionView * vec4(worldPos, 1.0);
     float shadow = 0;
@@ -251,29 +409,9 @@ vec3 GetFlashlightContribution(int flashlightIndex, uint viewportIndex, float fl
         shadow = SpotlightShadowCalculation(FragPosLightSpace, normal, spotLightDir, worldPos, spotLightPos, flashlightViewPos, flashlightShadowMapArrayTexture, layerIndex);
     }
 
-    vec3 cookie = ApplyCookie(lightProjectionView, worldPos, spotLightPos, spotLightColor, spotLightRadius, flashlightCookieTexture);
-
-    float cookieStartDistance = 1.0;
-    float cookieEndDistance = 10.0;
-    float cookieDistanceExponent = 2;
-    float cookieMinValue = 0.5;
-    float cookieMaxValue = 5.0;
-    float cookieDistScale;
-    if(fragDistance <= cookieStartDistance) {
-        cookieDistScale = cookieMinValue;
-    } else if(fragDistance >= cookieEndDistance) {
-        cookieDistScale = cookieMaxValue;
-    } else {
-        float t = (fragDistance - cookieStartDistance) / (cookieEndDistance - cookieStartDistance);
-        cookieDistScale = mix(cookieMinValue, cookieMaxValue, pow(t, cookieDistanceExponent));
-    }
-    spotLighting *= cookieDistScale;
+    spotLighting *= GetFlashlightViewDistanceScale(fragDistance);
 
     spotLighting *= vec3(1 - shadow);
-
-    if (!flashlightIsInShop) {
-        spotLighting *= cookie;
-    }
 
     return vec3(spotLighting) * flashlightModifer;
 }

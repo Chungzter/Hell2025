@@ -10,15 +10,7 @@
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsSpriteSheet data;
-} pushConstant;
-
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
-    ViewportData data[];
-};
-
-layout(buffer_reference, scalar) readonly buffer SpriteSheetRenderItemBuffer {
-    SpriteSheetRenderItem data[];
-};
+} pc;
 
 layout(location = 0) in vec3 a_position;
 layout(location = 2) in vec2 a_uv;
@@ -29,15 +21,15 @@ layout(location = 2) flat out int v_textureIndex;
 layout(location = 3) flat out float v_mixFactor;
 
 void main() {
-    ViewportDataBuffer viewportData = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
-    SpriteSheetRenderItemBuffer spriteSheetRenderItems = SpriteSheetRenderItemBuffer(pushConstant.data.spriteSheetRenderItemsDeviceAddress);
+    ViewportDataBuffer viewportData = pc.data.frame.viewportDataBuffer;
+    SpriteSheetRenderItemBuffer spriteSheetRenderItems = pc.data.frame.spriteSheetRenderItemBuffer;
 
     uint baseInstance = uint(gl_BaseInstanceARB);
     uint viewportIndex = baseInstance >> VIEWPORT_INDEX_SHIFT;
     uint instanceOffset = baseInstance & uint((1 << VIEWPORT_INDEX_SHIFT) - 1);
     uint globalInstanceIndex = instanceOffset + (uint(gl_InstanceIndex) - baseInstance);
 
-    SpriteSheetRenderItem renderItem = spriteSheetRenderItems.data[globalInstanceIndex];
+    SpriteSheetRenderItem renderItem = spriteSheetRenderItems.spriteSheetRenderItems[globalInstanceIndex];
 
     vec2 uv = a_uv;
     uv.y = 1.0 - uv.y;
@@ -47,8 +39,8 @@ void main() {
     v_textureIndex = renderItem.textureIndex;
     v_mixFactor = renderItem.mixFactor;
 
-    mat4 projectionView = viewportData.data[viewportIndex].projectionViewReverseZ;
-    mat4 inverseView = viewportData.data[viewportIndex].inverseView;
+    mat4 projectionView = viewportData.viewportData[viewportIndex].projectionViewReverseZ;
+    mat4 inverseView = viewportData.viewportData[viewportIndex].inverseView;
     mat4 modelMatrix = renderItem.modelMatrix;
 
     if (renderItem.isBillboard != 0) {

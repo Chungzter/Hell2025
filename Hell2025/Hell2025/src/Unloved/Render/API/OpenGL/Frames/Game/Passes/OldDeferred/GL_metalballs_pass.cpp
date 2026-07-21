@@ -118,6 +118,8 @@ namespace OpenGL::Renderer {
         OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
         OpenGL::BindShader("MetaBalls");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::SetUniformInt("u_metaBallCount", metaBalls.size());
 
         static GLuint noiseTexture = 0;
@@ -134,7 +136,7 @@ namespace OpenGL::Renderer {
 
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
-            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionView);
+            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].jitteredProjectionViewReverseZ);
 
             for (MetaBall& metaBall : metaBalls) {
                 OpenGL::SetUniformFloat("u_stepSize", metaBall.GetStepSize());

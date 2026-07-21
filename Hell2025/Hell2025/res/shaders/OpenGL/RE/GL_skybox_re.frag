@@ -24,7 +24,7 @@ void main() {
     ViewportData viewportData = viewportDataArr[viewportIndex];
 
     // Get world ray
-    mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
+    mat4 inverseProjectionView = viewportData.inverseJitteredProjectionViewReverseZ;
     vec3 viewPos = viewportData.viewPos.xyz;
     vec2 viewportOrigin = vec2(viewportData.xOffset, viewportData.yOffset);
     vec2 viewportSize = vec2(viewportData.width, viewportData.height);

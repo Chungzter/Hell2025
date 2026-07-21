@@ -59,14 +59,12 @@ namespace VulkanRenderer {
                 SetGameViewportAndScissor(commandBuffer, *viewport, extent);
 
                 PushConstantsVisibility pushConstants{};
-                pushConstants.renderItemsDeviceAddress = renderItemBuffer->GetDeviceAddress();
-                pushConstants.viewportDataDeviceAddress = viewportDataBuffer->GetDeviceAddress();
+                pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
                 pushConstants.skinnedVerticesDeviceAddress = skinnedVertexBuffer->GetDeviceAddress();
-                pushConstants.materialsDeviceAddress = materialsBuffer->GetDeviceAddress();
                 pushConstants.viewportIndex = i;
 
                 vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
-                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
 
                 BindVertexBuffer(commandBuffer, assetGeometry->GetVertexBuffer());
                 BindIndexBuffer(commandBuffer, assetGeometry->GetIndexBuffer());
@@ -130,16 +128,14 @@ namespace VulkanRenderer {
                 SetGameViewportAndScissor(commandBuffer, *viewport, extent);
 
                 PushConstantsVisibility pushConstants{};
-                pushConstants.renderItemsDeviceAddress = renderItemBuffer->GetDeviceAddress();
-                pushConstants.viewportDataDeviceAddress = viewportDataBuffer->GetDeviceAddress();
+                pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
                 pushConstants.skinnedVerticesDeviceAddress = skinnedVertexBuffer->GetDeviceAddress();
-                pushConstants.materialsDeviceAddress = materialsBuffer->GetDeviceAddress();
                 pushConstants.viewportIndex = i;
                 pushConstants.useDepthOffset = 0;
 
                 vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
                 vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
-                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
 
                 BindVertexBuffer(commandBuffer, meshBuffer->GetVertexBuffer());
                 BindIndexBuffer(commandBuffer, meshBuffer->GetIndexBuffer());
@@ -148,18 +144,18 @@ namespace VulkanRenderer {
                 MultiDrawIndexedCommands(commandBuffer, skinnedNonDeformingAlphaDiscardCommands[i]);
 
                 pushConstants.useDepthOffset = 1;
-                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
                 MultiDrawIndexedCommands(commandBuffer, hairCommands[i]);
 
                 BindVertexBuffer(commandBuffer, skinnedVertexBuffer);
                 BindIndexBuffer(commandBuffer, meshBuffer->GetIndexBuffer());
                 pushConstants.useDepthOffset = 0;
-                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
                 SetStencilReference(commandBuffer, STENCIL_BIT_SKINNED);
                 MultiDrawIndexedCommands(commandBuffer, skinnedAlphaDiscardCommands[i]);
 
                 pushConstants.useDepthOffset = 1;
-                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
                 SetStencilReference(commandBuffer, STENCIL_BIT_SKINNED_HAIR);
                 MultiDrawIndexedCommands(commandBuffer, skinnedHairCommands[i]);
             }

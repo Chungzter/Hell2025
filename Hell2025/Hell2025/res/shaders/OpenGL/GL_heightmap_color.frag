@@ -1,16 +1,34 @@
 #version 460 core
+
+#ifndef ENABLE_BINDLESS
+    #define ENABLE_BINDLESS 1
+#endif
+
+#if ENABLE_BINDLESS
+#extension GL_ARB_bindless_texture : enable
+#endif
+
 #include "../common/constants.glsl"
 #include "../common/normal_encoding.glsl"
 #include "../common/post_processing.glsl"
+#include "../common/types.glsl"
+#include "../common/OpenGL/GL_binding_indices.glsl"
 
 layout (location = 0) out vec4 BaseColorMetallicOut;
 layout (location = 1) out vec4 NormalXYRoughnessMiscOut;
 layout (location = 2) out vec4 EmissiveOut;
 layout (location = 3) out vec4 VelocityXYOcclusionSubSurfaceOut;
 
+#if ENABLE_BINDLESS
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
+in flat int MaterialIndex;
+#else
 layout (binding = 0) uniform sampler2D baseColorTexture;
 layout (binding = 1) uniform sampler2D normalTexture;
 layout (binding = 2) uniform sampler2D rmaTexture;
+#endif
+
 layout (binding = 3) uniform sampler2D DirtRoadBaseColorTexture;
 layout (binding = 4) uniform sampler2D DirtRoadNormalTexture;
 layout (binding = 5) uniform sampler2D DirtRoadRmaTexture;
@@ -22,8 +40,6 @@ in vec3 Tangent;
 in vec3 BiTangent;
 in vec3 WorldPos;
 
-uniform float u_worldWidth;
-uniform float u_worldDepth;
 uniform float u_discardHeight = 0.01;
 
 void main() {
@@ -31,9 +47,16 @@ void main() {
         discard;
     }
 
-    vec4 dirtBaseColor = texture2D(baseColorTexture, TexCoord);
-    vec3 dirtNormalMap = texture2D(normalTexture, TexCoord).rgb;
-    vec3 dirtRma = texture2D(rmaTexture, TexCoord).rgb;
+#if ENABLE_BINDLESS
+    Material material = materials[MaterialIndex];
+    vec4 dirtBaseColor = texture(sampler2D(textureSamplers[material.basecolor]), TexCoord);
+    vec3 dirtNormalMap = texture(sampler2D(textureSamplers[material.normal]), TexCoord).rgb;
+    vec3 dirtRma = texture(sampler2D(textureSamplers[material.rma]), TexCoord).rgb;
+#else
+    vec4 dirtBaseColor = texture(baseColorTexture, TexCoord);
+    vec3 dirtNormalMap = texture(normalTexture, TexCoord).rgb;
+    vec3 dirtRma = texture(rmaTexture, TexCoord).rgb;
+#endif
 
     vec2 dirtRoadUV = TexCoord * 2.0;
     vec4 dirtRoadBaseColor = texture2D(DirtRoadBaseColorTexture, dirtRoadUV) + 0.1;

@@ -86,11 +86,13 @@ namespace OpenGL::Renderer {
 			OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
 			OpenGL::BindShader("DepthPeeledTransparencyDepth");
-			OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionView);
+			glm::mat4 jitterMatrix = viewportData[i].jitteredProjectionViewReverseZ * viewportData[i].inverseProjectionViewReverseZ;
+			OpenGL::SetUniformMat4("u_projectionView", jitterMatrix * viewportData[i].projectionView);
 			OpenGL::SetUniformMat4("u_view", viewportData[i].view);
 
 			OpenGL::BindShader("DepthPeeledTransparencyColor");
-			OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionView);
+            OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
+			OpenGL::SetUniformMat4("u_projectionView", jitterMatrix * viewportData[i].projectionView);
 			OpenGL::SetUniformMat4("u_view", viewportData[i].view);
 
 			// PEEL
@@ -145,6 +147,7 @@ namespace OpenGL::Renderer {
 
 
 					OpenGL::BindShader("DepthPeeledTransparencyColor");
+                    OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
 					OpenGL::BindImageTexture(4, depthPeeledTransparencyFbo->GetColorAttachmentHandleByName("ViewspaceDepth"), GL_READ_ONLY, GL_R32F);
 
 					Material* material = Hell::ResourceManager::GetMaterialByName("Plastic");

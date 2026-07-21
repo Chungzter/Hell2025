@@ -36,7 +36,7 @@ void main() {
     TextureIndex = renderItem.textureIndex;
     MixFactor = renderItem.mixFactor;
 
-	mat4 projectionView = viewportData[viewportIndex].projectionViewReverseZ;
+	mat4 projectionView = viewportData[viewportIndex].jitteredProjectionViewReverseZ;
 	mat4 inverseView = viewportData[viewportIndex].inverseView;
 
     mat4 modelMatrix = renderItem.modelMatrix;

@@ -1,5 +1,6 @@
 #version 460 core
 
+#include "../common/reconstruction.glsl"
 #include "../common/util.glsl"
 #include "../common/normal_encoding.glsl"
 
@@ -17,7 +18,7 @@ layout(std430, binding = 3) readonly restrict buffer viewportDataBuffer {
 uniform int u_viewportIndex;
 uniform mat4 u_inverseModelMatrix;
 
-void main() {
+void main2() {
     vec3 bloodBaseColor = vec3(0.2, 0.00, 0);
     const float roughness = 0.125;
     const float metallic = 0.25;
@@ -28,7 +29,7 @@ void main() {
     VelocityXYOcclusionSubSurfaceOut = vec4(0.0, 0.0, ao, 0.0);
 }
 
-void main2() {
+void main() {
     ivec2 px = ivec2(gl_FragCoord.xy);
     ivec2 gBufferSize = textureSize(u_depthTexture, 0);
 
@@ -40,7 +41,7 @@ void main2() {
     ViewportData viewport = viewportData[u_viewportIndex];
     vec2 screenUV = (vec2(px) + 0.5) / vec2(gBufferSize);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewport);
-    vec3 worldPosition = ReconstructWorldPos(viewportUV, depth, viewport.inverseProjectionViewReverseZ);
+    vec3 worldPosition = WorldPosFromDepth_GL(viewportUV, depth, viewport.inverseJitteredProjectionViewReverseZ);
 
     vec3 positionDx = dFdx(worldPosition);
     vec3 positionDy = dFdy(worldPosition);

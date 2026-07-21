@@ -13,6 +13,7 @@
 #include "Unloved/Render/API/Vulkan/RayTracing/VK_acceleration_structure_utils.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RendererEnums.h"
 #include "Unloved/Systems/DDGI/DDGIGeometryBuilder.h"
 #include "Unloved/Systems/DDGI/DDGIManager.h"
 
@@ -224,6 +225,8 @@ namespace {
         meshInstance.mesh.baseIndex = 0;
         meshInstance.mesh.vertexCount = vertexCount;
         meshInstance.mesh.indexCount = indexCount;
+        meshInstance.material.blendingMode = static_cast<uint32_t>(BlendingMode::DEFAULT);
+        meshInstance.material.materialIndex = 0;
 
         std::vector<RayQueryMeshInstance> meshInstances = { meshInstance };
         sizeInfo = QueryBottomLevelBuildSize(vertexBuffer->GetDeviceAddress(), indexBuffer->GetDeviceAddress(), meshInstances, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
@@ -244,8 +247,10 @@ namespace {
         meshInstance.mesh.baseIndex = 0;
         meshInstance.mesh.vertexCount = vertexCount;
         meshInstance.mesh.indexCount = indexCount;
+        meshInstance.material.blendingMode = static_cast<uint32_t>(BlendingMode::DEFAULT);
+        meshInstance.material.materialIndex = 0;
 
-        VkAccelerationStructureGeometryKHR geometry = CreateTriangleGeometry(vertexBuffer->GetDeviceAddress(), indexBuffer->GetDeviceAddress(), meshInstance.mesh);
+        VkAccelerationStructureGeometryKHR geometry = CreateTriangleGeometry(vertexBuffer->GetDeviceAddress(), indexBuffer->GetDeviceAddress(), meshInstance.mesh, GetRayQueryGeometryFlags(meshInstance.material));
 
         VkAccelerationStructureBuildGeometryInfoKHR buildInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
         buildInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
@@ -457,7 +462,7 @@ void DDGIRaytraceScenePass(VkCommandBuffer commandBuffer) {
     if (!houseVertexBuffer || !houseIndexBuffer || !doorVertexBuffer || !doorIndexBuffer) return;
 
     PushConstantsDDGIRaytraceScene pushConstants{};
-    pushConstants.frame = CreatePushConstantsFrameResources();
+    pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
     pushConstants.houseVertexBufferDeviceAddress = houseVertexBuffer->GetDeviceAddress();
     pushConstants.houseIndexBufferDeviceAddress = houseIndexBuffer->GetDeviceAddress();
     pushConstants.doorVertexBufferDeviceAddress = doorVertexBuffer->GetDeviceAddress();
@@ -465,8 +470,7 @@ void DDGIRaytraceScenePass(VkCommandBuffer commandBuffer) {
     pushConstants.clearOutput = 1;
     pushConstants.maxRayDistance = 100.0f;
 
-    if (pushConstants.frame.viewportDataDeviceAddress == 0) return;
-    if (pushConstants.frame.rendererDataDeviceAddress == 0) return;
+    if (pushConstants.frameAddressTableDeviceAddress == 0) return;
 
     VkExtent2D extent = lightingImage->GetExtent2D();
     lightingImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
@@ -478,7 +482,7 @@ void DDGIRaytraceScenePass(VkCommandBuffer commandBuffer) {
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 2, descriptorSets, 0, nullptr);
-    vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIRaytraceScene), &pushConstants);
+    vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
 
     const uint32_t groupCountX = (extent.width + 15) / 16;
     const uint32_t groupCountY = (extent.height + 15) / 16;

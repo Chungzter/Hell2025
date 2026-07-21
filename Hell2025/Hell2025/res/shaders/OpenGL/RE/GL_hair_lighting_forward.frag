@@ -11,7 +11,6 @@ layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow 
 
 layout (binding = 5) uniform sampler2D u_indirectDiffuseTexture;
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
-layout (binding = 9) uniform sampler2D u_flashlightCookieTexture;
 layout (binding = 10) uniform sampler2D u_indirectDiffuseSurfaceTexture;
 layout (binding = 11) uniform sampler2D hairFlowMap;
 layout (binding = 12) uniform sampler2D hairIdMap;
@@ -92,7 +91,7 @@ vec3 EvaluateHairLight(vec3 hairBaseColor, vec3 finalTangent, vec3 V, vec3 L, ve
 void ComputeCCNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 flowMap, float hairID, float flipTangentGreen, out vec3 finalNormal, out vec3 finalTangent) {
     vec3 meshTangent = normalize(vertexTangent);
     vec3 meshNormalUnflipped = normalize(vertexNormal);
-    vec3 meshNormal = gl_FrontFacing ? meshNormalUnflipped : -meshNormalUnflipped;
+    vec3 meshNormal = gl_FrontFacing ? -meshNormalUnflipped : meshNormalUnflipped;
 
     vec3 meshBitangent = normalize(cross(meshNormalUnflipped, meshTangent));
     
@@ -121,7 +120,7 @@ void ComputeCCNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 flow
 void ComputeGhettoNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 flowMap, float hairID, float flipTangentGreen, out vec3 finalNormal, out vec3 finalTangent) {
     vec3 meshTangent = normalize(vertexTangent);
     vec3 meshNormalUnflipped = normalize(vertexNormal); // unused???
-    vec3 meshNormal = gl_FrontFacing ? meshNormalUnflipped : -meshNormalUnflipped;
+    vec3 meshNormal = gl_FrontFacing ? -meshNormalUnflipped : meshNormalUnflipped;
 
     meshTangent = normalize(meshTangent - dot(meshTangent, meshNormal) * meshNormal);
     vec3 meshBitangent = cross(meshNormalUnflipped, meshTangent);
@@ -199,7 +198,7 @@ void main() {
     float roughnessAA = clamp(roughness + mipLevel * u_specularAARoughnessPerMip, 0.0, 1.0);
     float specularMipFade = 1.0 / (1.0 + mipLevel * mipLevel * u_specularMipFadeStrength);
 
-    const float kHairRoughnessMapStrength = 0.45;
+    const float kHairRoughnessMapStrength = 1.00;
     const float kRoughnessGamma = 1.0;
     const float kRoughnessWeight = 1.0;
 
@@ -255,88 +254,46 @@ void main() {
         directLighting += lightContribution * attenuation;
     }
 
-    // Flash light direct lighting
     float fragDistance = distance(v_worldPos.xyz, viewPos);
 
-    for (int i = 0; i < 2; i++) {
-        ViewportData flashlightViewportData = viewportData[i];
-        float flashlightModifer = flashlightViewportData.flashlightModifer;
-        if (flashlightModifer <= 0.05) {
-            continue;
+    // Flashlight direct lighting
+    if (rendererData.flashlightIESTextureIndex >= 0) {
+        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
+        for (int i = 0; i < 2; i++) {
+            ViewportData flashlightViewportData = viewportData[i];
+            float flashlightModifer = flashlightViewportData.flashlightModifer;
+            if (flashlightModifer <= 0.05) continue;
+
+            vec3 spotLightPos = flashlightViewportData.flashlightPosition.xyz;
+            vec3 spotLightDir = normalize(flashlightViewportData.flashlightDir.xyz);
+            vec3 spotLightColor = rendererData.flashlightColor.rgb;
+
+            if (i != int(v_viewportIndex)) {
+                spotLightPos += spotLightDir * 0.2;
+                spotLightColor *= 0.825;
+            }
+
+            vec3 lightVector = spotLightPos - v_worldPos.xyz;
+            float distanceSquared = max(dot(lightVector, lightVector), 0.0001);
+            vec3 L = lightVector * inversesqrt(distanceSquared);
+            float attenuation = GetFlashlightIESAttenuation(v_worldPos.xyz, spotLightPos, spotLightDir, rendererData, flashlightIES);
+            attenuation *= GetFlashlightViewDistanceScale(fragDistance);
+            if (attenuation <= 0.0) continue;
+
+            mat4 lightProjectionView = flashlightViewportData.flashlightProjectionView;
+            vec4 fragPosLightSpace = lightProjectionView * vec4(v_worldPos.xyz, 1.0);
+            float shadow = 0.0;
+            bool flashlightIsInShop = bool(flashlightViewportData.isInShop);
+            if (!(i == int(v_viewportIndex) && flashlightIsInShop)) {
+                shadow = SpotlightShadowCalculation(fragPosLightSpace, finalNormal, spotLightDir, v_worldPos.xyz, spotLightPos, flashlightViewportData.inverseView[3].xyz, u_flashlighShadowMapArrayTexture, i);
+            }
+
+            float visibility = 1.0 - shadow;
+            if (visibility <= 0.0) continue;
+
+            vec3 lightContribution = EvaluateHairLight(hairBaseColor, finalTangent, V, L, t1, t2, alpha1, alpha2, spotLightColor, visibility);
+            directLighting += lightContribution * attenuation * flashlightModifer;
         }
-
-        int layerIndex = i;
-        vec3 spotLightPos = flashlightViewportData.flashlightPosition.xyz;
-        vec3 spotLightDir = normalize(flashlightViewportData.flashlightDir.xyz);
-        vec3 spotLightColor = GetFlashLightColor();
-        float spotLightRadius = 25.0;
-        float spotLightStrength = 4.5;
-
-        if (i != int(v_viewportIndex)) {
-            spotLightPos += spotLightDir * 0.2;
-            spotLightColor *= 0.825;
-        }
-
-        float innerAngle = cos(radians(5.0 * flashlightModifer));
-        float outerAngle = cos(radians(20.5));
-        bool flashlightIsInShop = bool(flashlightViewportData.isInShop);
-        if (flashlightIsInShop) {
-            spotLightRadius = 8.0;
-            outerAngle = cos(radians(50.0));
-        }
-
-        vec3 lightVector = spotLightPos - v_worldPos.xyz;
-        float distanceSquared = max(dot(lightVector, lightVector), 0.0001);
-        float lightDistance = sqrt(distanceSquared);
-        float attenuation = smoothstep(spotLightRadius, 0.0, lightDistance) * spotLightStrength;
-        vec3 L = lightVector * inversesqrt(distanceSquared);
-
-        float coneFalloff = smoothstep(outerAngle, innerAngle, dot(L, -spotLightDir));
-        float distanceFactor = clamp(1.0 - lightDistance / spotLightRadius, 0.0, 1.0);
-        float spotAttenuation = attenuation * coneFalloff * distanceFactor * distanceFactor;
-        if (spotAttenuation <= 0.0) {
-            continue;
-        }
-
-        mat4 lightProjectionView = flashlightViewportData.flashlightProjectionView;
-        vec4 fragPosLightSpace = lightProjectionView * vec4(v_worldPos.xyz, 1.0);
-        float shadow = 0.0;
-        if (!(i == int(v_viewportIndex) && flashlightIsInShop)) {
-            shadow = SpotlightShadowCalculation(fragPosLightSpace, finalNormal, spotLightDir, v_worldPos.xyz, spotLightPos, flashlightViewportData.inverseView[3].xyz, u_flashlighShadowMapArrayTexture, layerIndex);
-        }
-
-        float visibility = 1.0 - shadow;
-        if (visibility <= 0.0) {
-            continue;
-        }
-
-        vec3 lightContribution = EvaluateHairLight(hairBaseColor, finalTangent, V, L, t1, t2, alpha1, alpha2, spotLightColor, visibility);
-
-        vec3 cookie = ApplyCookie(lightProjectionView, v_worldPos.xyz, spotLightPos, spotLightColor, spotLightRadius, u_flashlightCookieTexture);
-
-        float cookieStartDistance = 1.0;
-        float cookieEndDistance = 10.0;
-        float cookieDistanceExponent = 2.0;
-        float cookieMinValue = 0.5;
-        float cookieMaxValue = 5.0;
-        float cookieDistScale;
-        if (fragDistance <= cookieStartDistance) {
-            cookieDistScale = cookieMinValue;
-        }
-        else if (fragDistance >= cookieEndDistance) {
-            cookieDistScale = cookieMaxValue;
-        }
-        else {
-            float t = (fragDistance - cookieStartDistance) / (cookieEndDistance - cookieStartDistance);
-            cookieDistScale = mix(cookieMinValue, cookieMaxValue, pow(t, cookieDistanceExponent));
-        }
-
-        lightContribution *= cookieDistScale;
-        if (!flashlightIsInShop) {
-            lightContribution *= cookie;
-        }
-
-        directLighting += lightContribution * spotAttenuation * flashlightModifer;
     }
 
     vec3 indirectDiffuse = vec3(0.0);

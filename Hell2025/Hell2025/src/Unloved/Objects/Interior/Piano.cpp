@@ -11,6 +11,7 @@
 
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Systems/NavMesh/NavMesh.h"
 #include "Legacy/World/LegacyWorld.h"
 
 namespace Unloved {
@@ -200,6 +201,7 @@ void Piano::SetPosition(glm::vec3 position) {
     Hell::Physics::SetRigidStaticWorldTransform(m_rigidStaticId, m_transform.to_mat4());
 
     CalculatePianoKeyWorldspaceCenters();
+    NavMeshManager::MarkStaticDirty();
 }
 
 void Piano::CleanUp() {

@@ -1,0 +1,26 @@
+{
+    "brightness": 5.500031471252441,
+    "centerSpot": {
+        "brightness": 2.519998550415039,
+        "enabled": false,
+        "falloffExponent": 1.0000028610229492,
+        "innerAngle": 7.390075206756592,
+        "outerAngle": 10.930135726928711,
+        "range": 4.499977111816406
+    },
+    "color": [
+        0.7200000286102295,
+        0.8679999113082886,
+        0.9569998383522034
+    ],
+    "falloffExponent": 5.000016212463379,
+    "ies": {
+        "coneScale": 1.0,
+        "contrast": 0.30000001192092896,
+        "enabled": true,
+        "innerAngle": 14.0,
+        "outerAngle": 40.0
+    },
+    "iesProfile": "ThreeJS_2",
+    "range": 14.999984741210938
+}

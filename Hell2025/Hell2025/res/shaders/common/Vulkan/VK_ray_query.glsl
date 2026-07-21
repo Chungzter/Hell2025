@@ -64,7 +64,7 @@ bool RayQueryAnyTriangleHit(accelerationStructureEXT accelerationStructure, uint
         }
     }
 
-    return false;
+    return rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT;
 }
 
 #endif

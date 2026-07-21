@@ -67,7 +67,7 @@ namespace VulkanRenderer {
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
         PushConstantsUI pushConstants{};
-        pushConstants.renderItemsDeviceAddress = renderItemBuffer->GetDeviceAddress();
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.renderTargetWidth = static_cast<float>(Config::GetResolutions().ui.x);
         pushConstants.renderTargetHeight = static_cast<float>(Config::GetResolutions().ui.y);
 
@@ -75,7 +75,7 @@ namespace VulkanRenderer {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
         BindVertexBuffer(commandBuffer, vertexBuffer);
         BindIndexBuffer(commandBuffer, indexBuffer);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsUI), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
         MultiDrawIndexedCommands(commandBuffer, drawCommandBatch);
 
         vkCmdEndRendering(commandBuffer);

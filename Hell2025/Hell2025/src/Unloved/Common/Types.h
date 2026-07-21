@@ -11,6 +11,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
+#include <cstdint>
 #include <string>
 
 struct HouseLocation {
@@ -45,8 +46,7 @@ struct SpawnOffset {
 
 struct HeightMapChunk {
     Hell::ivecXZ coord;
-    int baseIndex = 0;
-    int baseVertex = 0;
+    uint32_t meshId = 0;
     glm::vec3 aabbMin;
     glm::vec3 aabbMax;
 };

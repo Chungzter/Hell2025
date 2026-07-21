@@ -17,22 +17,26 @@ namespace VulkanRenderer {
     }
 
     VulkanDrawCommandBatch WriteDrawCommands(const std::vector<DrawIndexedIndirectCommand>& drawCommands) {
-        VulkanDrawCommandBatch batch;
-
-        VulkanBuffer* drawCommandBuffer = VulkanResourceManager::GetBuffer(GetCurrentFrameData().buffers.drawCommands);
-        if (!drawCommandBuffer || drawCommands.empty()) return batch;
-
         if (drawCommands.size() > MAX_INDIRECT_DRAW_COMMAND_COUNT) {
             Logging::Error() << "VulkanRenderer::WriteDrawCommands() draw command count " << drawCommands.size() << " exceeded MAX_INDIRECT_DRAW_COMMAND_COUNT " << MAX_INDIRECT_DRAW_COMMAND_COUNT << "\n";
             __debugbreak();
-            return batch;
+            return {};
         }
+
+        VulkanBuffer* drawCommandBuffer = VulkanResourceManager::GetBuffer(GetCurrentFrameData().buffers.drawCommands);
+        if (!drawCommandBuffer) return {};
+        return WriteDrawCommands(*drawCommandBuffer, drawCommands);
+    }
+
+    VulkanDrawCommandBatch WriteDrawCommands(VulkanBuffer& drawCommandBuffer, const std::vector<DrawIndexedIndirectCommand>& drawCommands) {
+        VulkanDrawCommandBatch batch;
+        if (drawCommands.empty()) return batch;
 
         VkDeviceSize writeSize = sizeof(DrawIndexedIndirectCommand) * drawCommands.size();
         VkDeviceSize offset = g_drawCommandBufferOffset;
 
         // Bail if buffer is full
-        if (offset + writeSize > drawCommandBuffer->GetSize()) {
+        if (offset + writeSize > drawCommandBuffer.GetSize()) {
             Logging::Error() << "VulkanRenderer::WriteDrawCommands() draw command buffer capacity exceeded\n";
             __debugbreak();
             return batch;
@@ -42,7 +46,7 @@ namespace VulkanRenderer {
         batch.count = static_cast<uint32_t>(drawCommands.size());
 
         // Write commands into shared indirect buffer
-        drawCommandBuffer->UpdateData(drawCommands.data(), writeSize, offset);
+        drawCommandBuffer.UpdateData(drawCommands.data(), writeSize, offset);
         g_drawCommandBufferOffset += writeSize;
         return batch;
     }

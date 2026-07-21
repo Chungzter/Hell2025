@@ -21,12 +21,15 @@ namespace Unloved::ShadowMapManager {
 
     int32_t GetHiResShadowMapIndex(uint64_t lightId);
     int32_t GetLowResShadowMapIndex(uint64_t lightId);
+    bool StaticCacheEnabled();
 
     inline size_t GetShadowMapHiResMaxCount()    { return SHADOW_MAP_HI_RES_MAX_COUNT; }
     inline size_t GetShadowMapLowResMaxCount()   { return SHADOW_MAP_LOW_RES_MAX_COUNT; }
     inline size_t GetShadowMapHiResResolution()  { return SHADOW_MAP_HI_RES_RESOLUTION; }
     inline size_t GetShadowMapLowResResolution() { return SHADOW_MAP_LOW_RES_RESOLUTION; }
 
-    const std::vector<ShadowMapInfo>& GetDirtyHiResShadowMaps();
-    const std::vector<ShadowMapInfo>& GetDirtyLowResShadowMaps();
+    const std::vector<ShadowMapInfo>& GetStaticDirtyHiResShadowMaps();
+    const std::vector<ShadowMapInfo>& GetStaticDirtyLowResShadowMaps();
+    const std::vector<ShadowMapInfo>& GetCompositeDirtyHiResShadowMaps();
+    const std::vector<ShadowMapInfo>& GetCompositeDirtyLowResShadowMaps();
 }

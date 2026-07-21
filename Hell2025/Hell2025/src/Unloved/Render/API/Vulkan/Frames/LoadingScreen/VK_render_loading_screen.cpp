@@ -13,6 +13,10 @@ namespace VulkanRenderer {
         LoadingScreenPass(frame.commandBuffer, frame.presentImage->GetImageView(), frame.extent);
 
         UpdateBuffersUI();
+        if (!UpdateFrameAddressTable()) {
+            EndSwapchainFrame(frame);
+            return;
+        }
 
         RenderUIPass(frame.commandBuffer);
 

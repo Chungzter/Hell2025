@@ -56,6 +56,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
         meshNode.inverseBindTransform = mesh->inverseBindTransform;
         meshNode.localMatrix = glm::mat4(1.0f);
         meshNode.worldspaceAabb = AABB();
+        meshNode.previousWorldspaceAabb = AABB();
         meshNode.parentObjectId = parentId;
         meshNode.globalMeshIndex = globalMeshIndex;
         meshNode.customId = 0;
@@ -279,6 +280,19 @@ bool MeshNodes::MeshNodeIsNonKinematicRigidDynamic(int localNodeIndex) const {
 }
 
 void MeshNodes::CleanUp() {
+    for (int32_t i = 0; i < static_cast<int32_t>(m_meshNodes.size()); i++) {
+        const MeshNode& meshNode = m_meshNodes[i];
+        if (!meshNode.castShadows) continue;
+
+        DirtyBounds dirtyBounds;
+        dirtyBounds.objectId = meshNode.parentObjectId;
+        dirtyBounds.boundsMin = meshNode.worldspaceAabb.GetBoundsMin();
+        dirtyBounds.boundsMax = meshNode.worldspaceAabb.GetBoundsMax();
+        dirtyBounds.castShadows = true;
+        dirtyBounds.type = MeshNodeIsStatic(i) ? DirtyBoundsType::STATIC : DirtyBoundsType::DYNAMIC;
+        DirtyTracker::AddDirtyBounds(dirtyBounds);
+    }
+
     // First remove physics shapes
     for (MeshNode& meshNode : m_meshNodes) {
         if (meshNode.rigidDynamicId != 0) {
@@ -498,6 +512,18 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
 
     // If neither are dirty, then no need to recompute RenderItems
     if (!worldMatrixDirty && !hierarchyDirty) {
+        // The transforms are unchanged, but render history still has to advance.
+        // Otherwise the last moving frame's previous matrix remains cached and
+        // produces the same non-zero motion vector on every subsequent frame.
+        for (MeshNode& meshNode : m_meshNodes) {
+            meshNode.prevWorldMatrix = meshNode.worldMatrix;
+            meshNode.renderItem.prevModelMatrix = meshNode.renderItem.modelMatrix;
+        }
+
+        for (RenderItem& renderItem : m_renderItems) {
+            renderItem.prevModelMatrix = renderItem.modelMatrix;
+        }
+
         m_isDirty = false;
         return;
     }
@@ -560,6 +586,8 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.renderItem.tintColorR = meshNode.tintColor.r;
         meshNode.renderItem.tintColorG = meshNode.tintColor.g;
         meshNode.renderItem.tintColorB = meshNode.tintColor.b;
+        meshNode.renderItem.vertexCount = meshNode.vertexCount;
+        meshNode.renderItem.indexCount = meshNode.indexCount;
         meshNode.renderItem.baseVertex = meshNode.baseVertex;
         meshNode.renderItem.baseIndex = meshNode.baseIndex;
         meshNode.renderItem.blendingMode = (int)meshNode.blendingMode;
@@ -760,6 +788,8 @@ void MeshNodes::UpdateAABBsFromWorldMatrices() {
         Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshNode.globalMeshIndex);
         if (!mesh) continue;
 
+        meshNode.previousWorldspaceAabb = meshNode.worldspaceAabb;
+
         const glm::vec3 localMin = mesh->aabbMin;
         const glm::vec3 localMax = mesh->aabbMax;
         const glm::vec3 localCenter = 0.5f * (localMin + localMax);
@@ -793,16 +823,13 @@ void MeshNodes::UpdateAABBsFromWorldMatrices() {
 }
 
 void MeshNodes::AddDirtyBoundsToTracker() {
-    for (const MeshNode& meshNode : m_meshNodes) {
-        if (!m_firstFrame && Hell::Math::NearlyEqual(meshNode.worldMatrix, meshNode.prevWorldMatrix)) {
+    for (int32_t i = 0; i < static_cast<int32_t>(m_meshNodes.size()); i++) {
+        const MeshNode& meshNode = m_meshNodes[i];
+        if (!m_firstFrame && !m_forceDirty && Hell::Math::NearlyEqual(meshNode.worldMatrix, meshNode.prevWorldMatrix)) {
             continue;
         }
 
         if (!meshNode.castShadows) {
-            continue;
-        }
-
-        if (meshNode.blendingMode == BlendingMode::DO_NOT_RENDER) {
             continue;
         }
 
@@ -811,6 +838,12 @@ void MeshNodes::AddDirtyBoundsToTracker() {
         dirtyBounds.boundsMin = meshNode.worldspaceAabb.GetBoundsMin();
         dirtyBounds.boundsMax = meshNode.worldspaceAabb.GetBoundsMax();
         dirtyBounds.castShadows = meshNode.castShadows;
+        dirtyBounds.type = MeshNodeIsStatic(i) ? DirtyBoundsType::STATIC : DirtyBoundsType::DYNAMIC;
+
+        if (!m_firstFrame) {
+            dirtyBounds.boundsMin = glm::min(dirtyBounds.boundsMin, meshNode.previousWorldspaceAabb.GetBoundsMin());
+            dirtyBounds.boundsMax = glm::max(dirtyBounds.boundsMax, meshNode.previousWorldspaceAabb.GetBoundsMax());
+        }
 
         DirtyTracker::AddDirtyBounds(dirtyBounds);
     }

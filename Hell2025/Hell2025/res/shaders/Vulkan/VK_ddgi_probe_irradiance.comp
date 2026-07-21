@@ -18,7 +18,7 @@ layout(set = 1, binding = 0) uniform accelerationStructureEXT u_DDGIRayQueryAcce
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIProbeIrradiance data;
-} pushConstant;
+} pc;
 
 layout(buffer_reference, scalar) readonly buffer PointCloudBuffer { CloudPoint points[]; };
 layout(buffer_reference, scalar) buffer ProbeStatesBuffer { ProbeState probeStates[]; };
@@ -36,31 +36,31 @@ shared vec3 shared_texelDirs[36];
 
 DDGIVolume GetVolume() {
     DDGIVolume volume;
-    volume.origin = pushConstant.data.volumeOrigin;
-    volume.probeSpacing = pushConstant.data.probeSpacing;
-    volume.probeCounts = pushConstant.data.probeCounts;
-    volume.totalProbes = int(pushConstant.data.totalProbes);
-    volume.probeOffset = pushConstant.data.probeOffset;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.probeOffset = pc.data.probeOffset;
     return volume;
 }
 
 void main() {
-    uint irradianceAtlasIndex = pushConstant.data.irradianceAtlasStorageImageIndex;
+    uint irradianceAtlasIndex = pc.data.irradianceAtlasStorageImageIndex;
     uint listIdx = gl_WorkGroupID.x;
-    ProbeIrradianceCounterBuffer probeIrradianceCounter = ProbeIrradianceCounterBuffer(pushConstant.data.probeIrradianceCounterDeviceAddress);
+    ProbeIrradianceCounterBuffer probeIrradianceCounter = ProbeIrradianceCounterBuffer(pc.data.probeIrradianceCounterDeviceAddress);
     if (listIdx >= probeIrradianceCounter.probeIrradianceCounter) return;
 
-    ProbeIrradianceIndicesBuffer probeIrradianceIndices = ProbeIrradianceIndicesBuffer(pushConstant.data.probeIrradianceIndicesDeviceAddress);
+    ProbeIrradianceIndicesBuffer probeIrradianceIndices = ProbeIrradianceIndicesBuffer(pc.data.probeIrradianceIndicesDeviceAddress);
     uint pIdx = probeIrradianceIndices.probeIrradianceIndices[listIdx];
     DDGIVolume volume = GetVolume();
     if (pIdx >= uint(volume.totalProbes)) return;
 
     uint threadIdx = gl_LocalInvocationID.x;
-    PointCloudBuffer pointCloud = PointCloudBuffer(pushConstant.data.pointCloudDeviceAddress);
-    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pushConstant.data.probeStatesDeviceAddress);
-    ProbePointIndicesBuffer probePointIndices = ProbePointIndicesBuffer(pushConstant.data.probePointIndicesDeviceAddress);
-    ProbePointOffsetsBuffer probePointOffsets = ProbePointOffsetsBuffer(pushConstant.data.probePointOffsetsDeviceAddress);
-    ProbePointCountsBuffer probePointCounts = ProbePointCountsBuffer(pushConstant.data.probePointCountsDeviceAddress);
+    PointCloudBuffer pointCloud = PointCloudBuffer(pc.data.pointCloudDeviceAddress);
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
+    ProbePointIndicesBuffer probePointIndices = ProbePointIndicesBuffer(pc.data.probePointIndicesDeviceAddress);
+    ProbePointOffsetsBuffer probePointOffsets = ProbePointOffsetsBuffer(pc.data.probePointOffsetsDeviceAddress);
+    ProbePointCountsBuffer probePointCounts = ProbePointCountsBuffer(pc.data.probePointCountsDeviceAddress);
 
     for (int i = int(threadIdx); i < 36; i += 32) {
         vec2 uv = DDGIGetNormalizedOctahedralCoordinates(ivec2(i % IRRADIANCE_INTERIOR_SIZE, i / IRRADIANCE_INTERIOR_SIZE), IRRADIANCE_INTERIOR_SIZE);
@@ -75,7 +75,7 @@ void main() {
     vec3 localAccum[36];
     for (int i = 0; i < 36; i++) localAccum[i] = vec3(0.0);
 
-    float pointArea = pushConstant.data.pointCloudSpacing * pushConstant.data.pointCloudSpacing;
+    float pointArea = pc.data.pointCloudSpacing * pc.data.pointCloudSpacing;
     uint poolStart = probePointOffsets.probePointOffsets[pIdx];
     uint poolCount = probePointCounts.probePointCounts[pIdx];
 

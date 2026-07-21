@@ -108,6 +108,7 @@ struct OpenGLFrameTimer {
 	const std::string& GetZoneList() const;
 	const std::string& GetCPUTimingList() const;
 	const std::string& GetGPUTimingList() const;
+	bool TryGetZoneTiming(std::string_view zoneName, double& cpuMilliseconds, double& gpuMilliseconds) const;
 
 	const std::string& GetTotalCPUFrameTime() const;
 	const std::string& GetTotalGPUFrameTime() const;
@@ -217,6 +218,7 @@ struct OpenGLFrameTimer {
 	const std::string& GetZoneList() const { static std::string s; return s; }
 	const std::string& GetCPUTimingList() const { static std::string s; return s; }
 	const std::string& GetGPUTimingList() const { static std::string s; return s; }
+	bool TryGetZoneTiming(std::string_view, double& cpuMilliseconds, double& gpuMilliseconds) const { cpuMilliseconds = 0.0; gpuMilliseconds = 0.0; return false; }
 	const std::string& GetTotalCPUFrameTime() const { static std::string s; return s; }
 	const std::string& GetTotalGPUFrameTime() const { static std::string s; return s; }
 

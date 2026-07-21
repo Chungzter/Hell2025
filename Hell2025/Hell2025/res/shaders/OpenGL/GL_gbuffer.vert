@@ -69,6 +69,7 @@ void main() {
     mat4 prevModelMatrix = renderItem.prevModelMatrix;
     mat4 inverseModelMatrix = renderItem.inverseModelMatrix;
 	mat4 projectionView = viewportData[viewportIndex].projectionViewReverseZ;
+	mat4 rasterProjectionView = viewportData[viewportIndex].jitteredProjectionViewReverseZ;
 	mat4 prevProjectionView = viewportData[viewportIndex].prevProjectionViewReverseZ;
 	mat4 projection = viewportData[viewportIndex].projection;
 	mat4 view = viewportData[viewportIndex].view;
@@ -94,6 +95,9 @@ void main() {
         mat4 projection = viewportData[viewportIndex].projectionReverseZ;
         projection[0][0] *= -1.0;
         projectionView = projection * u_mirrorViewMatrix;
+        mat4 jitterMatrix = viewportData[viewportIndex].jitteredProjectionViewReverseZ *
+                            viewportData[viewportIndex].inverseProjectionViewReverseZ;
+        rasterProjectionView = jitterMatrix * projectionView;
         gl_ClipDistance[0] = dot(WorldPos, u_mirrorClipPlane);
         //projection[0][0] *= -1.0;
         //view = u_mirrorViewMatrix;
@@ -101,7 +105,7 @@ void main() {
     }
 
     // Old
-    gl_Position = projectionView * WorldPos;
+    gl_Position = rasterProjectionView * WorldPos;
 
     // Camera relative position for depth precision
     //vec4 camRelativeWorldPos = vec4(WorldPos.xyz - ViewPos, 1.0);

@@ -38,6 +38,7 @@ namespace Hell::Physics {
     PxDefaultAllocator g_allocator;
     PxDefaultCpuDispatcher* g_dispatcher = NULL;
     PxPvd* g_pvd = NULL;
+    bool g_enablePvdDebugger = false;
     PxMaterial* g_defaultMaterial = NULL;
     PxMaterial* g_grassMaterial = NULL;
     PxControllerManager* g_characterControllerManager;
@@ -52,9 +53,11 @@ namespace Hell::Physics {
         Logging::Init() << "Hell::Physics::Init()";
 
         g_foundation = PxCreateFoundation(PX_PHYSICS_VERSION, g_allocator, gErrorCallback);
-        g_pvd = physx::PxCreatePvd(*g_foundation);
-        physx::PxPvdTransport* transport = physx::PxDefaultPvdSocketTransportCreate(PVD_HOST, 5425, 10);
-        g_pvd->connect(*transport, physx::PxPvdInstrumentationFlag::eALL);
+        if (g_enablePvdDebugger) {
+            g_pvd = physx::PxCreatePvd(*g_foundation);
+            physx::PxPvdTransport* transport = physx::PxDefaultPvdSocketTransportCreate(PVD_HOST, 5425, 10);
+            g_pvd->connect(*transport, physx::PxPvdInstrumentationFlag::eALL);
+        }
         g_physics = PxCreatePhysics(PX_PHYSICS_VERSION, *g_foundation, physx::PxTolerancesScale(), true, g_pvd);
         
         g_dispatcher = physx::PxDefaultCpuDispatcherCreate(2);
@@ -67,15 +70,16 @@ namespace Hell::Physics {
         sceneDesc.simulationEventCallback = &g_contactReportCallback;
 
         g_scene = g_physics->createScene(sceneDesc);
-        g_scene->setVisualizationParameter(physx::PxVisualizationParameter::eSCALE, 1.0f);
-        g_scene->setVisualizationParameter(physx::PxVisualizationParameter::eCOLLISION_SHAPES, 2.0f);
+        if (g_enablePvdDebugger) {
+            g_scene->setVisualizationParameter(physx::PxVisualizationParameter::eSCALE, 1.0f);
+            g_scene->setVisualizationParameter(physx::PxVisualizationParameter::eCOLLISION_SHAPES, 2.0f);
 
-
-        physx::PxPvdSceneClient* pvdClient = g_scene->getScenePvdClient();
-        if (pvdClient) {
-            pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
-            pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
-            pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
+            physx::PxPvdSceneClient* pvdClient = g_scene->getScenePvdClient();
+            if (pvdClient) {
+                pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
+                pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
+                pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
+            }
         }
         //g_defaultMaterial = g_physics->createMaterial(0.5f, 0.5f, 0.6f);
         g_defaultMaterial = g_physics->createMaterial(0.7f, 0.6f, 0.0f);
@@ -107,8 +111,10 @@ namespace Hell::Physics {
 
         // This might not work!
         PxScene* pxScene = GetPxScene();
-        pxScene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LOCAL_FRAMES, 1.0f);
-        pxScene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LIMITS, 1.0f);
+        if (g_enablePvdDebugger) {
+            pxScene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LOCAL_FRAMES, 1.0f);
+            pxScene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LIMITS, 1.0f);
+        }
         pxScene->setFlag(PxSceneFlag::eENABLE_STABILIZATION, true);
         // This may not work!
 

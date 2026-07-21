@@ -17,9 +17,6 @@ layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
 layout(set = 1, binding = 0) uniform accelerationStructureEXT u_DDGIRayQueryAccelerationStructure;
 
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer { ViewportData viewportDataArr[]; };
-layout(buffer_reference, scalar) readonly buffer RendererDataBuffer { RendererData rendererData; };
-
 struct PackedVertex {
     float vx, vy, vz;
     float nx, ny, nz;
@@ -37,13 +34,13 @@ layout(buffer_reference, scalar) readonly buffer IndexBuffer {
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIRaytraceScene data;
-} pushConstant;
+} pc;
 
 const float MISS_DISTANCE = 65504.0;
 
 bool ResolveDDGIHitNormal(RayQueryTriangleHit hit, out vec3 worldNormal) {
-    uint64_t vertexBufferAddress = hit.instanceCustomIndex == 0u ? pushConstant.data.houseVertexBufferDeviceAddress : pushConstant.data.doorVertexBufferDeviceAddress;
-    uint64_t indexBufferAddress = hit.instanceCustomIndex == 0u ? pushConstant.data.houseIndexBufferDeviceAddress : pushConstant.data.doorIndexBufferDeviceAddress;
+    uint64_t vertexBufferAddress = hit.instanceCustomIndex == 0u ? pc.data.houseVertexBufferDeviceAddress : pc.data.doorVertexBufferDeviceAddress;
+    uint64_t indexBufferAddress = hit.instanceCustomIndex == 0u ? pc.data.houseIndexBufferDeviceAddress : pc.data.doorIndexBufferDeviceAddress;
 
     VertexBuffer vertexBuffer = VertexBuffer(vertexBufferAddress);
     IndexBuffer indexBuffer = IndexBuffer(indexBufferAddress);
@@ -71,17 +68,17 @@ void main() {
     vec3 outputColor = previous.rgb;
     float outputDistance = previous.a;
 
-    if (pushConstant.data.clearOutput != 0u) {
+    if (pc.data.clearOutput != 0u) {
         outputColor = vec3(0.0);
         outputDistance = MISS_DISTANCE;
     }
 
-    ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
-    RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress);
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
+    RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
 
     RendererData rendererData = rendererDataBuffer.rendererData;
     uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, outputSize, rendererData.splitscreenMode);
-    ViewportData viewportData = viewportDataBuffer.viewportDataArr[viewportIndex];
+    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
 
     vec3 rayOrigin = viewportData.viewPos.xyz;
     vec2 viewportOrigin = vec2(viewportData.xOffset, outputSize.y - viewportData.yOffset - viewportData.height);
@@ -89,7 +86,7 @@ void main() {
     vec3 rayDir = GetWorldRay_VK(vec2(px) + 0.5, viewportData.inverseProjectionViewReverseZ, rayOrigin, viewportOrigin, viewportSize);
 
     RayQueryTriangleHit hit;
-    if (RayQueryTraceClosestTriangle(u_DDGIRayQueryAccelerationStructure, 0u, 0xff, rayOrigin, 0.01, rayDir, pushConstant.data.maxRayDistance, hit)) {
+    if (RayQueryTraceClosestTriangle(u_DDGIRayQueryAccelerationStructure, 0u, 0xff, rayOrigin, 0.01, rayDir, pc.data.maxRayDistance, hit)) {
         if (hit.t < outputDistance) {
             vec3 normal;
             if (ResolveDDGIHitNormal(hit, normal)) {

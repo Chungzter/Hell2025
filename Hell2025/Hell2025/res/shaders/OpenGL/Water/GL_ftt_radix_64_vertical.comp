@@ -1,4 +1,5 @@
 #version 430 
+#include "../../common/ocean_fft.glsl"
 layout(local_size_x = 16, local_size_y = 1, local_size_z = 8) in;
 
 #define BINDING_SSBO_IN 0
@@ -20,7 +21,7 @@ shared float tmpy[FFT_SHARED_SIZE * gl_WorkGroupSize.x * gl_WorkGroupSize.y];
 #define TWIDDLE_1_8 (vec2(+SQRT_1_2, +SQRT_1_2))
 #define TWIDDLE_3_8 (vec2(-SQRT_1_2, +SQRT_1_2))
 
-#define FFT_STRIDE 512 // previously uStride
+#define FFT_STRIDE OCEAN_FFT_RESOLUTION
 
 vec2 cmul(vec2 a, vec2 b) {
     vec2 r3 = a.yx;

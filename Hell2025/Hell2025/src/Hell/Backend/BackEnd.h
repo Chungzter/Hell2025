@@ -1,10 +1,11 @@
 #pragma once
 #include "Hell/Common.h"
+#include <cstdint>
 #include <string>
 
 namespace Hell::BackEnd {
     // Core
-    bool Init(API api, WindowedMode windowMode, const std::string& title);
+    bool Init(API api, WindowedMode windowMode, const std::string& title, uint32_t maxCompressedTextureResolution);
     void BeginFrame();
     void EndFrame();
 

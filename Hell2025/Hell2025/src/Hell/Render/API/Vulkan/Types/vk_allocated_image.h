@@ -3,6 +3,7 @@
 #include "Hell/Render/API/Vulkan/vk_common.h"
 #include <cstddef>
 #include <string>
+#include <vector>
 
 struct AllocatedImage {
     AllocatedImage() = default;
@@ -27,6 +28,7 @@ struct AllocatedImage {
     VkSampleCountFlagBits GetSampleCount() const { return m_sampleCount; }
     VkImage GetImage() const            { return m_image; }
     VkImageView GetImageView() const    { return m_imageView; }
+    VkImageView GetMipImageView(uint32_t mipLevel) const { return mipLevel < m_mipImageViews.size() ? m_mipImageViews[mipLevel] : VK_NULL_HANDLE; }
     VkImageView GetSampledImageView() const { return m_sampledImageView != VK_NULL_HANDLE ? m_sampledImageView : m_imageView; }
     VkImageView GetDepthOnlyImageView() const { return m_depthOnlyImageView != VK_NULL_HANDLE ? m_depthOnlyImageView : m_imageView; }
     VkImageView GetSampledDepthOnlyImageView() const { return m_sampledDepthOnlyImageView != VK_NULL_HANDLE ? m_sampledDepthOnlyImageView : (m_depthOnlyImageView != VK_NULL_HANDLE ? m_depthOnlyImageView : GetSampledImageView()); }
@@ -37,6 +39,7 @@ struct AllocatedImage {
 private:
     VkImage m_image = VK_NULL_HANDLE;
     VkImageView m_imageView = VK_NULL_HANDLE;
+    std::vector<VkImageView> m_mipImageViews;
     VkImageView m_sampledImageView = VK_NULL_HANDLE;
     VkImageView m_depthOnlyImageView = VK_NULL_HANDLE;
     VkImageView m_sampledDepthOnlyImageView = VK_NULL_HANDLE;

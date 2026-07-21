@@ -16,17 +16,9 @@ layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
 
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
-    ViewportData viewportDataArr[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RendererDataBuffer {
-    RendererData rendererData;
-};
-
 layout(push_constant, scalar) uniform PushConstants {
-    PushConstantsFrameResources data;
-} pushConstant;
+    PushConstantsPostProcessing data;
+} pc;
 
 
 
@@ -147,8 +139,8 @@ void main() {
 
     if (texel.x >= targetSize.x || texel.y >= targetSize.y) return;
 
-    ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.viewportDataDeviceAddress);
-    RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.rendererDataDeviceAddress);
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
+    RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
 
 
     vec4 color = imageLoad(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel);
@@ -163,7 +155,7 @@ void main() {
     vec3 rawLighting = color.rgb;
     uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(pixelCoords, outputSize, rendererDataBuffer.rendererData.splitscreenMode);
 
-    ViewportData viewportData = viewportDataBuffer.viewportDataArr[viewportIndex];
+    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
 
     float contrast = viewportData.colorContrast;
     vec3 colorTint = viewportData.colorTint.rgb;

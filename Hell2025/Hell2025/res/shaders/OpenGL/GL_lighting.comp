@@ -1,5 +1,4 @@
 #version 460
-
 //#if ENABLE_BINDLESS == 1
 #extension GL_ARB_bindless_texture : enable
 #extension GL_EXT_nonuniform_qualifier : enable
@@ -14,6 +13,7 @@ readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uve
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 #include "../common/constants.glsl"
+#include "../common/reconstruction.glsl"
 #include "../common/ddgi_upsample.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
@@ -33,7 +33,6 @@ layout (binding = 6) uniform sampler2D u_velocityXYOcclusionSubSurfaceTexture;
 
 layout (binding = 7) uniform sampler2D u_depthTexture;
 layout (binding = 8) uniform sampler2D EmissiveTexture;
-layout (binding = 9) uniform sampler2D FlashlightCookieTexture;
 layout (binding = 10) uniform sampler2D IndirectDiffuseTexture;
 layout (binding = 11) uniform sampler2D IndirectDiffuseSurfaceTexture;
 
@@ -151,14 +150,14 @@ void main() {
     //float clipSpaceYMin = viewportData[viewportIndex].clipSpaceYMin;
     //float clipSpaceYMax = viewportData[viewportIndex].clipSpaceYMax;
     mat4 inverseProjection = viewportDataArr[viewportIndex].inverseProjectionReverseZ;
-    mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseProjectionViewReverseZ;
+    mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
     mat4 inverseView = viewportDataArr[viewportIndex].inverseView;
     mat4 viewMatrix = viewportDataArr[viewportIndex].view;
     vec3 viewPos = inverseView[3].xyz;
     bool thisViewportIsInShop = bool(viewportDataArr[viewportIndex].isInShop);
 
     // Position from depth reconstruction
-    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionView);
+    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionView);
 
     float fragDistance = distance(viewPos, worldPos);
 
@@ -237,9 +236,12 @@ void main() {
     }
 
 
-    for (int i = 0; i < 2; i++) {
-        ViewportData flashlightViewportData = viewportDataArr[i];
-        directLighting += GetFlashlightContribution(i, viewportIndex, flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), GetFlashLightColor(), normal.xyz, worldPos.xyz, gammaBaseColor.rgb, roughness, metallic, fragDistance, u_oceanHeight, FlashlightCookieTexture, FlashlighShadowMapArrayTexture);
+    if (rendererData.flashlightIESTextureIndex >= 0) {
+        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
+        for (int i = 0; i < 2; i++) {
+            ViewportData flashlightViewportData = viewportDataArr[i];
+            directLighting += GetFlashlightContribution(i, viewportIndex, flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), rendererData, normal.xyz, worldPos.xyz, gammaBaseColor.rgb, roughness, metallic, fragDistance, u_oceanHeight, flashlightIES, FlashlighShadowMapArrayTexture);
+        }
     }
 
     // Moon light
@@ -264,35 +266,33 @@ void main() {
         }
     }
 
-
-
-
-
+    // Extra near-camera light for the first-person view weapon. This is
+    // deliberately separate from the world-space IES flashlight beam.
+    /*
     if (viewportDataArr[viewportIndex].flashlightModifer > 0.1) {
         vec3 offset = viewportDataArr[viewportIndex].cameraForward.xyz * 0.001;
         vec3 spotLightPos = viewPos + offset;
         vec3 spotLightDir = viewportDataArr[viewportIndex].flashlightDir.xyz;
         vec3 spotLightColor = vec3(0.9, 0.95, 1.1);
 
-        //spotLightColor = vec3(1.00, 0.7799999713897705, 0.5289999842643738);
-
-
         spotLightColor = mix(spotLightColor, vec3(1, 0.7799999713897705, 0.5289999842643738), 0.5);
 
-        //float spotLightRadius = 0.0765;
         float spotLightRadius = 0.165;
         float spotLightStregth = 10.0;
-        float innerAngle = cos(radians(00.0 * viewportDataArr[viewportIndex].flashlightModifer));
+        float innerAngle = cos(radians(0.0 * viewportDataArr[viewportIndex].flashlightModifer));
         float outerAngle = cos(radians(40.0));
 
         mat4 lightProjectionView = viewportDataArr[viewportIndex].flashlightProjectionView;
-        vec4 flashlightDir = viewportDataArr[viewportIndex].flashlightDir;
-        vec4 flashlightPosition = viewportDataArr[viewportIndex].flashlightPosition;
         vec3 flashlightViewPos = viewportDataArr[viewportIndex].inverseView[3].xyz;
 
         vec3 re7Lighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, spotLightRadius, spotLightStregth, innerAngle, outerAngle, normal.xyz, worldPos, gammaBaseColor.rgb, roughness, metallic, flashlightViewPos, lightProjectionView);
         directLighting += re7Lighting;
     }
+    */
+
+
+
+
 
     // Alpha
     //float finalAlpha = baseColor.a;

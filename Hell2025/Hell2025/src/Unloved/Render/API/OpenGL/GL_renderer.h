@@ -3,7 +3,6 @@
 #include "Hell/Render/API/OpenGL/Types/GL_cubemapView.h"
 #include "Hell/Render/API/OpenGL/Types/GL_cubemap_frame_buffer.h"
 #include "Hell/Render/API/OpenGL/Types/GL_mesh_buffer_old.h"
-#include "Hell/Render/API/OpenGL/Types/GL_mesh_patch.h"
 #include "Hell/Render/API/OpenGL/Types/GL_frameBuffer.h"
 #include "Hell/Render/API/OpenGL/Types/GL_shader.h"
 #include "Hell/Render/API/OpenGL/Types/GL_shadow_map.h"
@@ -20,6 +19,8 @@
 #include "Hell/Math/OBB.h"
 #include "Hell/Render/DrawCommandTypes.h"
 #include "Hell/Render/VertexAttributes.h"
+
+#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 #include "Unloved/Systems/DDGI/DDGIVolume.h"
 
@@ -86,10 +87,12 @@ namespace OpenGL::Renderer {
     void MetaBallsPass();
     void MirrorGeometryPass();
     void GlassPass();
+    int32_t GetGlassMode();
+    void SetGlassMode(int32_t mode);
     void GrassPass();
     void HairPass();
     void HeightMapPass();
-    void HouseGeometryPass();
+    void ProceduralGeometryPass();
     void ImGuiPass();
     void InventoryGaussianPass();
     void LightCullingPass();
@@ -109,7 +112,6 @@ namespace OpenGL::Renderer {
     void StainedGlassPass();
     void UIPass();
     void VatBloodPass();
-    void WeatherBoardsPass();
     void ChristmasLightsPass();
     void ExamineItemPass();
     void DepthPeeledTransparencyPass();
@@ -119,16 +121,18 @@ namespace OpenGL::Renderer {
     void ReserveLightAABBSSBOStorage();
     void DebugDrawLightAABBs();
 
-    void GaussianBlur();
+    void OceanUnderwaterBlurPass();
 
 
     // Requiem functions
     void VisibilityPass();
+    void VisibilityHeightMapPass();
     void VisibilityAlphaDiscardPass();
     void VisibilitySkinnedPass();
     void VisibilitySkinnedHairPass();
 
     void MaterialResolvePass();
+    void MaterialResolveHeightMapPass();
     void MaterialResolveSkinnedPass();
     void MaterialResolveProceduralPass();
 
@@ -154,7 +158,7 @@ namespace OpenGL::Renderer {
     void UpdateGlobalIllumintation();
 
     // Utility passes
-    void RecalculateAllHeightMapData(bool blitWorldMap);
+    void RecalculateAllHeightMapData(bool uploadWorldHeightData);
     void ReadBackHeightMapData(Unloved::MapData* mapData);
     void ClearAllWoundMasks();
 
@@ -174,13 +178,10 @@ namespace OpenGL::Renderer {
     void DrawItemExamineAABB(const AABB& aabb, const glm::vec4& color);
 
 
-    void CreateBlurBuffers();
     void DrawFullscreenTriangle();
 
     void BindEmptyVAO();
     GLuint GetTextureHandleByName(const std::string& name);
-
-    OpenGLMeshPatch* GetOceanMeshPatch();
 
     std::vector<float>& GetShadowCascadeLevels();
     void MultiDrawPerViewport(OpenGLFrameBuffer* fbo, OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
@@ -207,7 +208,6 @@ namespace OpenGL::Renderer {
     BlitRect BlitRectFromFrameBufferViewport(OpenGLFrameBuffer* framebuffer, Unloved::Viewport* viewport);
     GLint CreateQuadVAO();
     void GaussianBlur(OpenGLFrameBuffer& srcFrameBuffer, OpenGLFrameBuffer& dstFrameBuffer, const std::string& srcAttachmentName, const std::string& dstAttachmentName, BlitRect srcRect, BlitRect dstRect, int blurRadius, int passCount);
-    int GetFftDisplayMode();
 
 	uint32_t GetTileCount();
 	uint32_t GetTileCountX();

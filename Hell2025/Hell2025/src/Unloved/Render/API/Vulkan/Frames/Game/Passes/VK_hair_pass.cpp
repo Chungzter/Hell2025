@@ -7,7 +7,6 @@
 #include "Hell/Render/API/Vulkan/Types/vk_descriptor_set.h"
 #include "Hell/Render/API/Vulkan/Types/vk_mesh_buffer.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
-#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Render/API/Vulkan/VK_draw.h"
 #include "Unloved/Render/API/Vulkan/VK_push_constants.h"
 #include "Unloved/Render/RenderDataManager.h"
@@ -47,20 +46,14 @@ namespace VulkanRenderer {
 
         PushConstantsVisibility CreateVisibilityPushConstants(VulkanBuffer* renderItemBuffer, VulkanBuffer* viewportDataBuffer, VulkanBuffer* materialsBuffer, VulkanBuffer* skinnedVertexBuffer) {
             PushConstantsVisibility pushConstants{};
-            pushConstants.renderItemsDeviceAddress = renderItemBuffer->GetDeviceAddress();
-            pushConstants.viewportDataDeviceAddress = viewportDataBuffer->GetDeviceAddress();
+            pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
             pushConstants.skinnedVerticesDeviceAddress = skinnedVertexBuffer->GetDeviceAddress();
-            pushConstants.materialsDeviceAddress = materialsBuffer->GetDeviceAddress();
             return pushConstants;
         }
 
-        PushConstantsHair CreateHairPushConstants(VulkanBuffer* rayQueryBLASInstanceDataBuffer, VulkanBuffer* rayQueryMeshInstanceDataBuffer) {
+        PushConstantsHair CreateHairPushConstants() {
             PushConstantsHair pushConstants{};
-            pushConstants.frame = CreatePushConstantsFrameResources();
-            pushConstants.rayQueryBLASInstanceDataDeviceAddress = rayQueryBLASInstanceDataBuffer->GetDeviceAddress();
-            pushConstants.rayQueryMeshInstanceDataDeviceAddress = rayQueryMeshInstanceDataBuffer->GetDeviceAddress();
-            pushConstants.flashlightCookieTextureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("Flashlight2", true);
-            pushConstants.rayQueryEnabled = 1;
+            pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
             return pushConstants;
         }
 
@@ -161,7 +154,7 @@ namespace VulkanRenderer {
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantsVisibility), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
 
         DrawStaticAndNonDeformingHair(commandBuffer, meshBuffer, hairCommands, skinnedNonDeformingHairCommands, extent);
         DrawSkinnedHair(commandBuffer, meshBuffer, skinnedVertexBuffer, skinnedHairCommands, extent);
@@ -177,33 +170,28 @@ namespace VulkanRenderer {
 
         AllocatedImage* hairLightingImage = VulkanResourceManager::GetAllocatedImage("HairLighting");
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("HairLighting");
-        VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("HairLighting");
+        VulkanPipeline* hairPipeline = VulkanResourceManager::GetPipeline("HairLighting");
+        VulkanPipeline* surfacePipeline = VulkanResourceManager::GetPipeline("HairSurfaceLighting");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
-        VulkanDescriptorSetResource* rayQueryDescriptorSetResource = VulkanResourceManager::GetDescriptorSetResource("RayQueryDescriptorSet");
-        VulkanDescriptorSet* rayQueryDescriptorSet = rayQueryDescriptorSetResource ? &rayQueryDescriptorSetResource->GetSet(GetCurrentFrameIndex()) : nullptr;
         VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
         VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
         VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
         VulkanBuffer* rendererDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rendererData);
         VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
         VulkanBuffer* gpuLightsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.lights);
-        VulkanBuffer* rayQueryBLASInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryBLASInstanceData);
-        VulkanBuffer* rayQueryMeshInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryMeshInstanceData);
         VulkanBuffer* skinnedVertexBuffer = frameData.buffers.skinnedVertices != 0 ? VulkanResourceManager::GetBuffer(frameData.buffers.skinnedVertices) : nullptr;
 
         if (!hairLightingImage) return;
         if (!renderState) return;
-        if (!pipeline) return;
+        if (!hairPipeline) return;
+        if (!surfacePipeline) return;
         if (!staticDescriptorSet) return;
-        if (!rayQueryDescriptorSet) return;
         if (!meshBuffer) return;
         if (!renderItemBuffer) return;
         if (!viewportDataBuffer) return;
         if (!rendererDataBuffer) return;
         if (!materialsBuffer) return;
         if (!gpuLightsBuffer) return;
-        if (!rayQueryBLASInstanceDataBuffer) return;
-        if (!rayQueryMeshInstanceDataBuffer) return;
         if (!skinnedVertexBuffer) return;
         if (!meshBuffer->GetVertexBuffer()) return;
         if (!meshBuffer->GetIndexBuffer()) return;
@@ -215,14 +203,18 @@ namespace VulkanRenderer {
         VkExtent2D extent = hairLightingImage->GetExtent2D();
         if (!BeginRenderState(commandBuffer, *renderState, extent)) return;
 
-        PushConstantsHair pushConstants = CreateHairPushConstants(rayQueryBLASInstanceDataBuffer, rayQueryMeshInstanceDataBuffer);
+        PushConstantsHair pushConstants = CreateHairPushConstants();
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
-        VkDescriptorSet descriptorSets[] = { staticDescriptorSet->GetHandle(), rayQueryDescriptorSet->GetHandle() };
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 2, descriptorSets, 0, nullptr);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsHair), &pushConstants);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, hairPipeline->GetHandle());
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, hairPipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
+        vkCmdPushConstants(commandBuffer, hairPipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
         DrawSkinnedHair(commandBuffer, meshBuffer, skinnedVertexBuffer, skinnedHairCommands, extent);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, surfacePipeline->GetHandle());
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, surfacePipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
+        vkCmdPushConstants(commandBuffer, surfacePipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
+
         DrawStaticAndNonDeformingHair(commandBuffer, meshBuffer, hairCommands, skinnedNonDeformingHairCommands, extent);
 
         EndRenderState(commandBuffer);
@@ -248,8 +240,8 @@ namespace VulkanRenderer {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
 
         VkExtent2D extent = lightingImage->GetExtent2D();
-        uint32_t groupCountX = (extent.width + 23) / 24;
-        uint32_t groupCountY = (extent.height + 23) / 24;
+        uint32_t groupCountX = extent.width / 24;
+        uint32_t groupCountY = extent.height / 24;
         vkCmdDispatch(commandBuffer, groupCountX, groupCountY, 1);
     }
 }

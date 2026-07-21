@@ -100,6 +100,11 @@ namespace Hell::Ray {
             return result;
         }
 
+        const float determinant = glm::determinant(worldTransform);
+        if (!std::isfinite(determinant) || std::abs(determinant) < RAY_EPSILON) {
+            return result;
+        }
+
         const glm::mat4 inverseWorldTransform = glm::inverse(worldTransform);
         const glm::mat3 normalMatrix = glm::transpose(glm::mat3(inverseWorldTransform));
         const glm::vec3 localOrigin = glm::vec3(inverseWorldTransform * glm::vec4(rayOrigin, 1.0f));

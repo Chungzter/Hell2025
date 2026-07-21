@@ -1,8 +1,6 @@
 #include "MapData.h"
 
-#include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
-#include "Hell/Render/API/OpenGL/GL_util.h"
 
 namespace Unloved {
 
@@ -11,25 +9,12 @@ namespace Unloved {
         m_chunkCountX = chunkCountX;
         m_chunkCountZ = chunkCountZ;
 
-        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            m_heightMapGLTexture.Create(GetTextureWidth(), GetTextureWidth(), GL_R16F, 1);
-        }
-        else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan TODO: HeightMap::CreateNew()";
-        }
-
         ClearToHeight(initialHeight);
-        Logging::Debug() << "Created map: '" << filename << "' with height map texture size " << GetTextureWidth() << "x" << std::to_string(GetTextureWidth());
+        Logging::Debug() << "Created map: '" << filename << "' with height map size " << GetTextureWidth() << "x" << GetTextureHeight();
     }
 
     void MapData::ClearToHeight(float height) {
-        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            int internalFormat = GL_R16F;   
-            m_heightMapGLTexture.ClearR(height / HEIGHTMAP_SCALE_Y);
-        }
-        else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan TODO: MapData::ClearToHeight()\n";
-        }
+        m_heightMapData.assign(static_cast<size_t>(GetTextureWidth()) * static_cast<size_t>(GetTextureHeight()), height / HEIGHTMAP_SCALE_Y);
     }
 
     void MapData::SetFilename(const std::string& filename) {
@@ -48,17 +33,6 @@ namespace Unloved {
         m_chunkCountX = chunkCountX;
         m_chunkCountZ = chunkCountZ;
         m_heightMapData = data;
-
-        //Logging::Debug() << "m_chunkCountX: " << m_chunkCountX;
-        //Logging::Debug() << "m_chunkCountZ: " << m_chunkCountZ;
-
-        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            m_heightMapGLTexture.Create(GetTextureWidth(), GetTextureHeight(), GL_R16F, 1);
-            m_heightMapGLTexture.UploadR16FData(m_heightMapData.data(), GetTextureWidth(), GetTextureHeight(), 0, 0, 0);
-        }
-        else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan TODO: MapData::SetHeightMapData()";
-        }
     }
 
     void MapData::SetCreateInfoCollection(const CreateInfoCollection& createInfoCollection) {
@@ -70,13 +44,7 @@ namespace Unloved {
     }
 
     const glm::ivec2 MapData::GetHeightMapTextureSize() {
-        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            return glm::ivec2(m_heightMapGLTexture.GetWidth(), m_heightMapGLTexture.GetHeight());
-        }
-        else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan TODO: MapData::GetHeightMapTextureSize()\n";
-            return glm::ivec2(0, 0);
-        }
+        return glm::ivec2(GetTextureWidth(), GetTextureHeight());
     }
 
 

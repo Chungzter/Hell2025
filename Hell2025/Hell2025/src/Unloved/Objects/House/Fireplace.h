@@ -61,5 +61,6 @@ private:
     glm::vec3 m_firePosition = glm::vec3(0.0f);
 
     uint64_t m_lightId = 0;
+    bool m_navMeshTransformDirty = true;
 };
 }

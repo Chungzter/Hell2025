@@ -20,6 +20,8 @@ namespace OpenGL::Renderer {
         gBuffer.DrawBuffers({ "Lighting" });
 
         OpenGL::BindShader("SkyboxRE");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = false;

@@ -2,6 +2,7 @@
 #include "../../common/constants.glsl"
 #include "../../common/normal_encoding.glsl"
 #include "../../common/ddgi.glsl"
+#include "../../common/reconstruction.glsl"
 #include "../../common/util.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
@@ -162,7 +163,7 @@ void main() {
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
 
     ViewportData viewport = viewportDataArr[viewportIndex];
-    mat4 inverseProjectionViewReverseZ = viewport.inverseProjectionViewReverseZ;
+    mat4 inverseProjectionViewReverseZ = viewport.inverseJitteredProjectionViewReverseZ;
     vec3 viewPos = viewport.viewPos.xyz;
 
     ivec2 inputCoords = ivec2(screenUV * vec2(textureSize(u_normalTexture, 0)));
@@ -180,7 +181,7 @@ void main() {
 
     // Position from depth
     float depth = texelFetch(u_depthTexture, inputCoords, 0).r;
-    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionViewReverseZ);
+    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionViewReverseZ);
 
     if (any(lessThan(worldPos, volume.worldBoundsMin)) || any(greaterThan(worldPos, volume.worldBoundsMax))) {
         return;

@@ -28,6 +28,7 @@ namespace Unloved {
     struct Ladder;
     struct Light;
     struct Map;
+    struct MapCreateInfo;
     struct MapData;
     struct Mermaid;
     struct MeshNode;
@@ -71,15 +72,23 @@ namespace Unloved::World {
     void ResetWorld();
     void ClearAllObjects();
 
+    bool HasLoadedMap();
+    bool HasOcean();
+    void RefreshOceanPhysics();
+
     void UpdateEnvironment();
     const glm::vec3& GetMoonlightDirection();
 
     CreateInfoCollection GetCreateInfoCollection();
     void AddCreateInfoCollection(const CreateInfoCollection& createInfoCollection, SpawnOffset spawnOffset);
 
+    void LoadMap(const std::string& mapName);
+    void LoadMaps(const std::vector<MapCreateInfo>& mapCreateInfoSet);
     void LoadMap(const MapData& mapData, SpawnOffset spawnOffset);
     void LoadMapObjects(const MapData& mapData, SpawnOffset spawnOffset);
     void LoadMapHouses(const MapData& mapData, SpawnOffset spawnOffset);
+    void LoadSingleHouse(const std::string& houseName);
+    void LoadHouse(const std::string& houseName, SpawnOffset spawnOffset);
     void LoadHouse(const HouseData& houseData, SpawnOffset spawnOffset);
 
     bool RemoveObjectById(uint64_t objectId);
@@ -176,7 +185,7 @@ namespace Unloved::World {
     Hell::SlotMap<Kangaroo>& GetKangaroos();
     Hell::SlotMap<Ladder>& GetLadders();
     Hell::SlotMap<Light>& GetLights();
-    Hell::SlotMap<Map>& GetMaps();
+    std::vector<Map>& GetMaps();
     Hell::SlotMap<Mermaid>& GetMermaids();
     Hell::SlotMap<Piano>& GetPianos();
     Hell::SlotMap<PickUp>& GetPickUps();

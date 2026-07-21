@@ -98,7 +98,7 @@ vec3 RotateUpVectorByQuaternion(vec4 quaternion) {
 
 void main() {
 
-	mat4 projectionView = viewportData[u_viewportIndex].projectionViewReverseZ;
+	mat4 projectionView = viewportData[u_viewportIndex].jitteredProjectionViewReverseZ;
     mat4 normalMatrix = transpose(u_inverseModelMatrix);
 
     float frameCount = max(float(u_frameCount), 1.0);

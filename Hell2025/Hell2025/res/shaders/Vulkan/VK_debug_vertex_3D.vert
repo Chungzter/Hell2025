@@ -8,11 +8,7 @@
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDebug3D data;
-} pushConstant;
-
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
-    ViewportData data[];
-};
+} pc;
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_color;
@@ -24,17 +20,17 @@ layout(location = 5) in int a_ignoredViewportIndex;
 layout(location = 0) out vec3 v_color;
 
 void main() {
-    ViewportDataBuffer viewportData = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
-    mat4 projectionView = viewportData.data[pushConstant.data.viewportIndex].projectionViewReverseZ;
+    ViewportDataBuffer viewportData = pc.data.frame.viewportDataBuffer;
+    mat4 projectionView = viewportData.viewportData[pc.data.viewportIndex].projectionViewReverseZ;
 
     v_color = a_color;
     gl_Position = projectionView * vec4(a_position, 1.0);
     gl_PointSize = 8.0;
 
-    if (a_exclusiveViewportIndex != -1 && a_exclusiveViewportIndex != int(pushConstant.data.viewportIndex)) {
+    if (a_exclusiveViewportIndex != -1 && a_exclusiveViewportIndex != int(pc.data.viewportIndex)) {
         gl_Position = vec4(0, 0, 0, 0);
     }
-    if (a_ignoredViewportIndex != -1 && a_ignoredViewportIndex == int(pushConstant.data.viewportIndex)) {
+    if (a_ignoredViewportIndex != -1 && a_ignoredViewportIndex == int(pc.data.viewportIndex)) {
         gl_Position = vec4(0, 0, 0, 0);
     }
     if (a_depthEnabled != 1) {

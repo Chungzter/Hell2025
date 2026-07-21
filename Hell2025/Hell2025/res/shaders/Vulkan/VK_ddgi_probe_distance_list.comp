@@ -10,7 +10,7 @@ layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIProbeDistanceList data;
-} pushConstant;
+} pc;
 
 layout(buffer_reference, scalar) buffer ProbeStatesBuffer { ProbeState probeStates[]; };
 layout(buffer_reference, scalar) buffer ProbeDistanceCounterBuffer { uint counter; };
@@ -18,14 +18,14 @@ layout(buffer_reference, scalar) buffer ProbeDistanceIndicesBuffer { uint probeD
 
 void main() {
     uint probeIdx = gl_GlobalInvocationID.x;
-    if (probeIdx >= pushConstant.data.totalProbes) return;
+    if (probeIdx >= pc.data.totalProbes) return;
 
-    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pushConstant.data.probeStatesDeviceAddress);
-    uint globalProbeIdx = pushConstant.data.probeOffset + probeIdx;
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
+    uint globalProbeIdx = pc.data.probeOffset + probeIdx;
 
     if (probeStates.probeStates[globalProbeIdx].isRelevant && probeStates.probeStates[globalProbeIdx].distanceCooldown > 0u) {
-        ProbeDistanceCounterBuffer probeDistanceCounter = ProbeDistanceCounterBuffer(pushConstant.data.probeDistanceCounterDeviceAddress);
-        ProbeDistanceIndicesBuffer probeDistanceIndices = ProbeDistanceIndicesBuffer(pushConstant.data.probeDistanceIndicesDeviceAddress);
+        ProbeDistanceCounterBuffer probeDistanceCounter = ProbeDistanceCounterBuffer(pc.data.probeDistanceCounterDeviceAddress);
+        ProbeDistanceIndicesBuffer probeDistanceIndices = ProbeDistanceIndicesBuffer(pc.data.probeDistanceIndicesDeviceAddress);
         uint slot = atomicAdd(probeDistanceCounter.counter, 1);
         probeDistanceIndices.probeDistanceIndices[slot] = probeIdx;
     }

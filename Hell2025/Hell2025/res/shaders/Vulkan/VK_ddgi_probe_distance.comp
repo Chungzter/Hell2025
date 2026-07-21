@@ -18,7 +18,7 @@ layout(set = 1, binding = 0) uniform accelerationStructureEXT u_DDGIRayQueryAcce
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIProbeDistance data;
-} pushConstant;
+} pc;
 
 layout(buffer_reference, scalar) buffer ProbeStatesBuffer { ProbeState probeStates[]; };
 layout(buffer_reference, scalar) readonly buffer ProbeDistanceCounterBuffer { uint probeDistanceCounter; };
@@ -38,11 +38,11 @@ shared bool shared_isActive;
 
 DDGIVolume GetVolume() {
     DDGIVolume volume;
-    volume.origin = pushConstant.data.volumeOrigin;
-    volume.probeSpacing = pushConstant.data.probeSpacing;
-    volume.probeCounts = pushConstant.data.probeCounts;
-    volume.totalProbes = int(pushConstant.data.totalProbes);
-    volume.probeOffset = pushConstant.data.probeOffset;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.probeOffset = pc.data.probeOffset;
     return volume;
 }
 
@@ -62,17 +62,17 @@ vec3 GetFixedProbeRayDirection(int rayIndex) {
 }
 
 void main() {
-    uint distanceAtlasIndex = pushConstant.data.distanceAtlasStorageImageIndex;
+    uint distanceAtlasIndex = pc.data.distanceAtlasStorageImageIndex;
     uint listIdx = gl_WorkGroupID.x;
-    ProbeDistanceCounterBuffer probeDistanceCounter = ProbeDistanceCounterBuffer(pushConstant.data.probeDistanceCounterDeviceAddress);
+    ProbeDistanceCounterBuffer probeDistanceCounter = ProbeDistanceCounterBuffer(pc.data.probeDistanceCounterDeviceAddress);
     if (listIdx >= probeDistanceCounter.probeDistanceCounter) return;
 
-    ProbeDistanceIndicesBuffer probeDistanceIndices = ProbeDistanceIndicesBuffer(pushConstant.data.probeDistanceIndicesDeviceAddress);
+    ProbeDistanceIndicesBuffer probeDistanceIndices = ProbeDistanceIndicesBuffer(pc.data.probeDistanceIndicesDeviceAddress);
     uint pIdx = probeDistanceIndices.probeDistanceIndices[listIdx];
     DDGIVolume volume = GetVolume();
     if (pIdx >= uint(volume.totalProbes)) return;
 
-    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pushConstant.data.probeStatesDeviceAddress);
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
     uint globalProbeIdx = volume.probeOffset + pIdx;
     uint threadIdx = gl_LocalInvocationID.x;
     ivec3 probeCoords = DDGIGetProbeCoords(int(pIdx), volume);

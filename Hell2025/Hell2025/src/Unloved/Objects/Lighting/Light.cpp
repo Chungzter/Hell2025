@@ -156,24 +156,28 @@ void Light::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
     ConfigureMeshNodes();
     RaycastWorldBounds();
+    ForceDirty();
 }
 
 void Light::SetPositionX(float x) {
     m_createInfo.position.x = x;
     ConfigureMeshNodes();
     RaycastWorldBounds();
+    ForceDirty();
 }
 
 void Light::SetPositionY(float y) {
     m_createInfo.position.y = y;
     ConfigureMeshNodes();
     RaycastWorldBounds();
+    ForceDirty();
 }
 
 void Light::SetPositionZ(float z) {
     m_createInfo.position.z = z;
     ConfigureMeshNodes();
     RaycastWorldBounds();
+    ForceDirty();
 }
 
 void Light::SetRotation(const glm::vec3& rotation) {
@@ -245,6 +249,7 @@ void Light::SetRadius(float radius) {
     m_createInfo.radius = radius;
     ConfigureMeshNodes();
     RaycastWorldBounds();
+    ForceDirty();
 }
 
 void Light::SetStrength(float strength) {

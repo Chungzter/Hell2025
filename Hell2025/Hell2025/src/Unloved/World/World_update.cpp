@@ -1,5 +1,6 @@
 #include "World.h"
 
+#include "Hell/Profiling/CPUProfiler.h"
 #include "Hell/Time.h"
 
 #include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"
@@ -35,7 +36,60 @@
 
 #include "Legacy/World/LegacyWorld.h"
 
+#include <algorithm>
+#include <execution>
+
 namespace Unloved::World {
+    namespace {
+        void UpdateAnimatedObjects(float deltaTime) {
+            ProfilerCPUZone("Animated objects");
+
+            Hell::SlotMap<AnimatedGameObject>& animatedObjects = GetAnimatedGameObjects();
+
+            std::for_each(
+                std::execution::par,
+                animatedObjects.begin(),
+                animatedObjects.end(),
+                [deltaTime](AnimatedGameObject& object) {
+                    object.EvaluateAnimation(deltaTime);
+                });
+
+            for (AnimatedGameObject& object : animatedObjects) {
+                object.FinalizeAnimation();
+            }
+        }
+
+        void UpdatePropsAndTraversal(float deltaTime) {
+            for (GameObject& object : GetGameObjects())       object.Update(deltaTime);
+            for (GenericObject& object : GetGenericObjects()) object.Update(deltaTime);
+            for (Ladder& object : GetLadders())               object.Update(deltaTime);
+            for (Mermaid& object : GetMermaids())             object.Update(deltaTime);
+            for (Piano& object : GetPianos())                 object.Update(deltaTime);
+            for (PickUp& object : GetPickUps())               object.Update(deltaTime);
+            for (PictureFrame& object : GetPictureFrames())   object.Update();
+            for (PowerPoleSet& object : GetPowerPoleSets())   object.Update();
+            for (Road& object : LegacyWorld::GetRoads())      object.Update();
+            for (Staircase& object : GetStaircases())         object.Update(deltaTime);
+            for (TrimSet& object : GetTrimSets())             object.Update();
+            for (Window& object : GetWindows())               object.Update(deltaTime);
+        }
+
+        void UpdateEnemyObjects(float deltaTime) {
+            for (Dobermann& object : GetDobermanns()) object.Update(deltaTime);
+            for (Kangaroo& object : GetKangaroos())   object.Update(deltaTime);
+            for (Shark& object : GetSharks())         object.Update(deltaTime);
+        }
+
+        void UpdateLightingAndDecals(float deltaTime) {
+            // These must run in this order otherwise various dirty flags are stale
+            DDGIManager::Update();
+            for (Light& object : GetLights()) object.Update(deltaTime);
+            for (Decal& object : GetDecals()) object.Update();
+
+            P90MagManager::SubmitRenderItems();
+        }
+    }
+
     void UpdateBvhs() {
         Unloved::WorldBVH::UpdateBvhs();
     }
@@ -49,41 +103,25 @@ namespace Unloved::World {
     }
 
     void UpdateObjects() {
+        ProfilerCPUZoneFunction();
+
         const float deltaTime = Hell::Time::DeltaTime();
 
-        for (AnimatedGameObject& object : GetAnimatedGameObjects()) object.Update(deltaTime);
-        for (BulletCasing& object : GetBulletCasings())             object.Update(deltaTime);
-        for (ChristmasLightSet& object : GetChristmasLightSets())   object.Update(deltaTime);
-        for (ChristmasTree& object : GetChristmasTrees())           object.Update(deltaTime);
-        for (Door& object : GetDoors())                             object.Update(deltaTime);
-        for (Fence& object : GetFences())                           object.Update();
-        for (Fireplace& object : GetFireplaces())                   object.Update(deltaTime);
-        for (GameObject& object : GetGameObjects())                 object.Update(deltaTime);
-        for (GenericObject& object : GetGenericObjects())           object.Update(deltaTime);
-        for (Ladder& object : GetLadders())                         object.Update(deltaTime);
-        for (Mermaid& object : GetMermaids())                       object.Update(deltaTime);
-        for (Piano& object : GetPianos())                           object.Update(deltaTime);
-        for (PickUp& object : GetPickUps())                         object.Update(deltaTime);
-        for (PictureFrame& object : GetPictureFrames())             object.Update();
-        for (PowerPoleSet& object : GetPowerPoleSets())             object.Update();
-        for (Road& object : LegacyWorld::GetRoads())                object.Update();
-        for (Staircase& object : GetStaircases())                   object.Update(deltaTime);
-        for (TrimSet& object : GetTrimSets())                       object.Update();
-        for (Window& object : GetWindows())                         object.Update(deltaTime);
-
-        for (Dobermann& object : GetDobermanns())                   object.Update(deltaTime);
-        for (Kangaroo& object : GetKangaroos())                     object.Update(deltaTime);
-        for (Shark& object : GetSharks())                           object.Update(deltaTime);
-
-        // These must run in this order otherwise various dirty flags are stale
-        DDGIManager::Update();
-        for (Light& object : GetLights())                           object.Update(deltaTime);
-        for (Decal& object : GetDecals())                           object.Update();
-
-        P90MagManager::SubmitRenderItems();
+        UpdateAnimatedObjects(deltaTime);
+        for (BulletCasing& object : GetBulletCasings())           object.Update(deltaTime);
+        for (ChristmasLightSet& object : GetChristmasLightSets()) object.Update(deltaTime);
+        for (ChristmasTree& object : GetChristmasTrees()) object.Update(deltaTime);
+        for (Door& object : GetDoors())                   object.Update(deltaTime);
+        for (Fence& object : GetFences())                 object.Update();
+        for (Fireplace& object : GetFireplaces())         object.Update(deltaTime);
+        UpdatePropsAndTraversal(deltaTime);
+        UpdateEnemyObjects(deltaTime);
+        UpdateLightingAndDecals(deltaTime);
     }
 
     void UpdatePlayers() {
+        ProfilerCPUZoneFunction();
+
         const float deltaTime = Hell::Time::DeltaTime();
         const bool disableControl = Editor::IsOpen() || ImGuiBackEnd::OwnsMouse();
 

@@ -38,9 +38,6 @@
 namespace OpenGL::Renderer {
     using namespace Unloved;
 
-
-    OpenGLMeshPatch g_tesselationPatch;
-
     std::vector<float> g_shadowCascadeLevels{ 5.0f, 10.0f, 20.0f, 40.0f };
     const glm::vec3 g_lightDir = glm::normalize(glm::vec3(20.0f, 50, 20.0f));
     unsigned int g_lightFBO;
@@ -67,8 +64,6 @@ namespace OpenGL::Renderer {
 
         uint64_t flashlightShadowMapsId = OpenGL::ResourceManager::CreateShadowMap("FlashlightShadowMaps");
         OpenGL::ResourceManager::GetShadowMapById(flashlightShadowMapsId) = OpenGLShadowMap("FlashlightShadowMaps", FLASHLIGHT_SHADOWMAP_SIZE, FLASHLIGHT_SHADOWMAP_SIZE, 4);
-
-        g_tesselationPatch.Resize2(Ocean::GetTesslationMeshSize().x, Ocean::GetTesslationMeshSize().y);
 
         CreateFramebuffers();
         CreateSSBOs();
@@ -152,10 +147,16 @@ namespace OpenGL::Renderer {
 
         // Allocate shadow map array memory
         OpenGLShadowCubeMapArray& hiResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("HiRes");
-        hiResShadowMapArray.Init(ShadowMapManager::GetShadowMapHiResMaxCount(), 1024);
+        hiResShadowMapArray.Init(ShadowMapManager::GetShadowMapHiResMaxCount(), ShadowMapManager::GetShadowMapHiResResolution());
 
         OpenGLShadowCubeMapArray& lowResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("LowRes");
-        lowResShadowMapArray.Init(ShadowMapManager::GetShadowMapLowResMaxCount(), 512);
+        lowResShadowMapArray.Init(ShadowMapManager::GetShadowMapLowResMaxCount(), ShadowMapManager::GetShadowMapLowResResolution());
+
+        OpenGLShadowCubeMapArray& staticHiResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("StaticHiRes");
+        staticHiResShadowMapArray.Init(ShadowMapManager::GetShadowMapHiResMaxCount(), ShadowMapManager::GetShadowMapHiResResolution());
+
+        OpenGLShadowCubeMapArray& staticLowResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("StaticLowRes");
+        staticLowResShadowMapArray.Init(ShadowMapManager::GetShadowMapLowResMaxCount(), ShadowMapManager::GetShadowMapLowResResolution());
 
         // Moon light shadow maps
         float depthMapResolution = SHADOW_MAP_CSM_SIZE;
@@ -194,8 +195,6 @@ namespace OpenGL::Renderer {
             OpenGL::ResourceManager::GetCubemapViewById(skyboxNightSkyId).CreateCubemap(texturesHandles);
         }
 
-        CreateBlurBuffers();
-
         // Upload materials
         std::vector<Material>& materials = Hell::ResourceManager::GetMaterials();
         OpenGL::UpdateSSBO("Materials", materials.size() * sizeof(Material), materials.data());
@@ -207,53 +206,14 @@ namespace OpenGL::Renderer {
         //OpenGL::UpdateSSBO("ProbeDispatchArgs", sizeof(DispatchIndirectCommand), &command);
 
         // HO
-        const std::vector<std::complex<float>>& h0Band0 = Ocean::GetH0(0);
-        const std::vector<std::complex<float>>& h0Band1 = Ocean::GetH0(1);
-        if (OpenGLSSBO* ssbo = OpenGL::ResourceManager::GetSSBOPtr("ffth0Band0")) {
-            ssbo->CopyFrom(h0Band0.data(), sizeof(std::complex<float>) * h0Band0.size());
+        for (int i = 0; i < Ocean::FFT_BAND_COUNT; i++) {
+            const std::vector<std::complex<float>>& h0 = Ocean::GetH0(i);
+            if (OpenGLSSBO* ssbo = OpenGL::ResourceManager::GetSSBOPtr("ffth0Band" + std::to_string(i))) {
+                ssbo->CopyFrom(h0.data(), sizeof(std::complex<float>) * h0.size());
+                Ocean::MarkH0Uploaded(i);
+            }
         }
-        if (OpenGLSSBO* ssbo = OpenGL::ResourceManager::GetSSBOPtr("ffth0Band1")) {
-            ssbo->CopyFrom(h0Band1.data(), sizeof(std::complex<float>) * h0Band1.size());
-        }
 
-    }
-
-    void UpdateSSBOS() {
-        OpenGL::UpdateSSBO("Samplers", sizeof(GLuint64) * OpenGL::BackEnd::GetBindlessTextureIDs().size(), OpenGL::BackEnd::GetBindlessTextureIDs().data());
-        const std::vector<Material>& materials = Hell::ResourceManager::GetMaterials();
-        OpenGL::UpdateSSBO("Materials", materials.size() * sizeof(Material), materials.data());
-
-        const RendererData& rendererData = Unloved::RenderDataManager::GetRendererData();
-        const std::vector<BloodDecalInstanceData>& bloodScreenSpaceDecalInstances = Unloved::RenderDataManager::GetBloodScreenSpaceDecalInstanceData();
-        const std::vector<GPULight>& gpuLights = Unloved::RenderDataManager::GetGPULights();
-        const std::vector<RenderItem>& instanceData = Unloved::RenderDataManager::GetInstanceData();
-        const std::vector<SpriteSheetRenderItem>& spriteSheetInstanceData = Unloved::RenderDataManager::GetSpriteSheetInstanceData();
-        const std::vector<ViewportData>& playerData = Unloved::RenderDataManager::GetViewportData();
-        const std::vector<glm::mat4>&oceanPatchTransforms = Unloved::RenderDataManager::GetOceanPatchTransforms();
-
-        GLuint zero = 0;
-
-        OpenGL::UpdateSSBO("BloodDecalCounter", sizeof(uint32_t), &zero);
-        OpenGL::UpdateSSBO("BloodDecalInstances", bloodScreenSpaceDecalInstances.size() * sizeof(BloodDecalInstanceData), bloodScreenSpaceDecalInstances.data());
-        OpenGL::UpdateSSBO("ChristmasLightCounter", sizeof(uint32_t), &zero);
-        OpenGL::UpdateSSBO("InstanceData", instanceData.size() * sizeof(RenderItem), instanceData.data());
-        OpenGL::UpdateSSBO("SpriteSheetInstanceData", spriteSheetInstanceData.size() * sizeof(SpriteSheetRenderItem), spriteSheetInstanceData.data());
-        OpenGL::UpdateSSBO("Lights", gpuLights.size() * sizeof(GPULight), gpuLights.data());
-        OpenGL::UpdateSSBO("RendererData", sizeof(RendererData), (void*)&rendererData);
-        OpenGL::UpdateSSBO("ViewportData", playerData.size() * sizeof(ViewportData), playerData.data());
-        OpenGL::UpdateSSBO("OceanPatchTransforms", oceanPatchTransforms.size() * sizeof(glm::mat4), oceanPatchTransforms.data());
-
-        const std::vector<RenderItemUI>& renderItemsUI = UIBackEnd::GetRenderItems();
-        OpenGL::UpdateSSBO("RenderItemsUI", renderItemsUI.size() * sizeof(RenderItemUI), renderItemsUI.data());
-
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-        OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(1, "Materials");
-        OpenGL::BindSSBO(2, "RendererData");
-        OpenGL::BindSSBO(3, "ViewportData");
-        OpenGL::BindSSBO(4, "InstanceData");
-        OpenGL::BindSSBO(5, "Lights");
     }
 
     void PreGameLogicComputePasses() {
@@ -370,32 +330,6 @@ namespace OpenGL::Renderer {
 
     }
 
-    void CreateBlurBuffers() {
-        const Resolutions& resolutions = Config::GetResolutions();
-
-        // Iterate each viewport
-        for (int x = 0; x < 4; x++) {
-            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(x);
-
-            // Start the first blur buffer at the full viewport dimensions
-            Unloved::SpaceCoords spaceCoords = viewport->GetGBufferSpaceCoords();
-            float width = spaceCoords.width;
-            float height = spaceCoords.height;
-
-            // Create framebuffers, downscale by 50% each time
-            for (int y = 0; y < 4; y++) {
-
-                std::string blurBufferName = "BlurBuffer_" + std::to_string(x) + "_" + std::to_string(y);
-                OpenGLFrameBuffer& blurBuffer = OpenGL::ResourceManager::CreateFrameBuffer(blurBufferName);
-                blurBuffer.Create(blurBufferName, (int)width, (int)height);
-                blurBuffer.CreateAttachment("ColorA", GL_RGBA8, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
-                blurBuffer.CreateAttachment("ColorB", GL_RGBA8, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
-                width *= 0.5f;
-                height *= 0.5f;
-            }
-        }
-    }
-
     void BindEmptyVAO() {
         if (g_emptyVao == 0) glGenVertexArrays(1, &g_emptyVao);
         glBindVertexArray(g_emptyVao);
@@ -462,12 +396,6 @@ namespace OpenGL::Renderer {
         g_cachedTextureHandles.emplace(name, textureHandle);
         return textureHandle;
     }
-
-    OpenGLMeshPatch* GetOceanMeshPatch() {
-        return &g_tesselationPatch;
-    }
-
-
 
     void CleanUp() {
         if (g_emptyVao != 0) {

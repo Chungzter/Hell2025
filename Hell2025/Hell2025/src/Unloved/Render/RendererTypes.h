@@ -26,6 +26,9 @@ struct ViewportData {
     glm::mat4 flashlightProjectionView;
     glm::mat4 previousProjectionView = glm::mat4(1.0f);
 
+    glm::mat4 jitteredProjectionViewReverseZ;
+    glm::mat4 inverseJitteredProjectionViewReverseZ;
+
     glm::mat4 csmLightProjectionView[5]; // Is this right?
 
     int xOffset;
@@ -81,8 +84,43 @@ struct RendererData {
     float normalizedMouseY;
     int tileCountX;
     int tileCountY;
-    uint32_t lightCount;
-    bool enableIrradianceProbeSampling;
+    uint32_t lightCount; // Boolean
+    uint32_t enableDDGI; // Boolean
+    uint32_t enableIndirectSpecular; // Boolean
+    uint32_t enableTAA;  // Boolean
+    glm::vec2 taaJitterPx = glm::vec2(0.0f);
+    float indirectSpecularFactor = 1.0f;
+    float indirectSpecularRoughnessDampening = 1.0;
+    uint32_t directPointShadowMode = 0;
+    uint32_t padding0 = 0;
+    uint32_t padding1 = 0;
+
+    glm::vec4 flashlightColor = glm::vec4(0.780f, 0.778f, 0.797f, 1.0f);
+
+    float flashlightRange = 19.1f;
+    float flashlightFalloffExponent = 4.29f;
+    float flashlightBrightness = 1.0f;
+    float flashlightIESConeScale = 1.0f;
+
+    float flashlightIESInnerAngle = 14.0f;
+    float flashlightIESOuterAngle = 40.0f;
+    float flashlightIESContrast = 0.2f;
+    float flashlightIESVerticalScale = 0.0f;
+
+    float flashlightIESVerticalBias = 0.0f;
+    float flashlightIESHorizontalBias = 0.0f;
+    int32_t flashlightIESTextureIndex = -1;
+    uint32_t flashlightIESEnabled = 1;
+
+    float flashlightCenterSpotRange = 15.0f;
+    float flashlightCenterSpotFalloffExponent = 4.0f;
+    float flashlightCenterSpotBrightness = 1.0f;
+    float flashlightCenterSpotInnerAngle = 1.5f;
+
+    float flashlightCenterSpotOuterAngle = 5.0f;
+    uint32_t flashlightCenterSpotEnabled = 1;
+    uint32_t padding3 = 0;
+    uint32_t padding4 = 0;
 };
 
 struct RenderItem {
@@ -127,6 +165,11 @@ struct RenderItem {
     uint32_t openableId = 0;
     int32_t woundMaterialIndex = -1;
     int padding = 0;
+};
+
+struct GlassLightRange {
+    uint32_t offset;
+    uint32_t count;
 };
 
 struct SpriteSheetRenderItem {

@@ -100,9 +100,9 @@ namespace Unloved::Renderer {
         }
     }
 
-    void RecalculateAllHeightMapData(bool blitWorldMap) {
+    void RecalculateAllHeightMapData(bool uploadWorldHeightData) {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            OpenGL::Renderer::RecalculateAllHeightMapData(blitWorldMap);
+            OpenGL::Renderer::RecalculateAllHeightMapData(uploadWorldHeightData);
         }
         else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
             Logging::ToDo() << "Vulkan: RecalculateAllHeightMapData()";

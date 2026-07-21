@@ -7,7 +7,6 @@
 namespace Unloved {
 
     void Kangaroo::UpdateAnimationStateMachine() {
-
         if (m_animationState == KanagarooAnimationState::IDLE_TO_HOP) {
             if (AnimationIsComplete()) {
                 m_animationState = KanagarooAnimationState::HOP;

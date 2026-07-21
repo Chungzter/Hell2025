@@ -18,8 +18,8 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindShader("Visibility");
 
-        OpenGL::BindSSBO(3, "ViewportData");
-        OpenGL::BindSSBO(4, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -49,6 +49,41 @@ namespace OpenGL::Renderer {
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingStandard, state);
     }
 
+    void VisibilityHeightMapPass() {
+        ProfilerOpenGLZoneFunction();
+        const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("HeightMapGeometry");
+
+        OpenGLFrameBuffer& fbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
+        fbo.Bind();
+        fbo.DrawBuffers({ "Visibility" });
+
+        OpenGL::BindShader("VisibilityHeightMap");
+
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = false;
+        state.cullfaceEnable = true;
+        state.depthMask = true;
+        state.colorMask = true;
+        state.depthFunc = GL_GREATER;
+
+        state.stencilTestEnabled = true;
+        state.stencilFunc = GL_ALWAYS;
+        state.stencilRef = STENCIL_BIT_HEIGHT_MAP;
+        state.stencilReadMask = 0xFF;
+        state.stencilWriteMask = 0xFF;
+        state.stencilFailOp = GL_KEEP;
+        state.stencilDepthFailOp = GL_KEEP;
+        state.stencilPassOp = GL_REPLACE;
+
+        glBindVertexArray(meshBuffer.GetVAO());
+        MultiDrawPerViewportRE(fbo, drawInfoSet.heightMap, state);
+    }
+
     void VisibilityAlphaDiscardPass() {
         ProfilerOpenGLZoneFunction();
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
@@ -64,9 +99,10 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("VisibilityAlphaDiscard");
         OpenGL::SetUniformUInt("u_frameCount", frameCount);
 
-        OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(3, "ViewportData");
-        OpenGL::BindSSBO(4, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -108,8 +144,8 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindShader("Visibility");
 
-        OpenGL::BindSSBO(3, "ViewportData");
-        OpenGL::BindSSBO(4, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -143,8 +179,10 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindShader("VisibilityAlphaDiscard");
 
-        OpenGL::BindSSBO(3, "ViewportData");
-        OpenGL::BindSSBO(4, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;

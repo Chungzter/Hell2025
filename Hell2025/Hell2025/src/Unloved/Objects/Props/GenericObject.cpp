@@ -4,6 +4,7 @@
 #include "Hell/Common/Random.h"
 #include "Hell/Logging.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
+#include "Unloved/Systems/NavMesh/NavMesh.h"
 #include "Unloved/Render/Renderer.h"
 
 namespace Unloved {
@@ -31,6 +32,11 @@ GenericObject::GenericObject(uint64_t id, const GenericObjectCreateInfo& createI
 void GenericObject::Update(float deltaTime) {
     m_meshNodes.Update(m_transform.to_mat4());
     m_shadowCasterMeshNodes.Update(m_transform.to_mat4());
+
+    if (m_navMeshTransformDirty) {
+        NavMeshManager::MarkStaticDirty();
+        m_navMeshTransformDirty = false;
+    }
 }
 
 void GenericObject::CleanUp() {
@@ -41,11 +47,13 @@ void GenericObject::CleanUp() {
 void GenericObject::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
     m_transform.position = position;
+    m_navMeshTransformDirty = true;
 }
 
 void GenericObject::SetRotation(const glm::vec3& rotation) {
     m_createInfo.rotation = rotation;
     m_transform.rotation = rotation;
+    m_navMeshTransformDirty = true;
 };
 
 }

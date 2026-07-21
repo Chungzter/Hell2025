@@ -17,5 +17,6 @@ private:
     GLuint m_textureArrayHandle = 0;
     GLuint m_width = 0;
     GLuint m_height = 0;
+    GLuint m_mipLevelCount = 0;
     GLenum m_internalFormat = GL_NONE;
 };

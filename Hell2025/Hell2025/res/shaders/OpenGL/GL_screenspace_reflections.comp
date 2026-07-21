@@ -2,6 +2,7 @@
 
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
+#include "../common/reconstruction.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 
@@ -127,10 +128,10 @@ void main() {
 
     ViewportData viewportData = viewportDataArr[viewportIndex];
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
-    mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
+    mat4 inverseProjectionView = viewportData.inverseJitteredProjectionViewReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
-    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionView);
+    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionView);
 
     vec3 normalRaw = texelFetch(NormalTexture, px, 0).xyz;
     if (IsSky(normalRaw)) {
@@ -154,7 +155,9 @@ void main() {
     if (gloss < 0.15) return;
 
     mat4 viewMatrix = viewportData.view;
-    mat4 projectionMatrix = viewportData.projectionReverseZ;
+    // Convert the jittered projection-view back to a projection matrix so
+    // view-space ray samples land on the same pixel grid as the depth buffer.
+    mat4 projectionMatrix = viewportData.jitteredProjectionViewReverseZ * viewportData.inverseView;
     mat4 inverseView = viewportData.inverseView;
 
     vec3 viewPosWorld = inverseView[3].xyz;

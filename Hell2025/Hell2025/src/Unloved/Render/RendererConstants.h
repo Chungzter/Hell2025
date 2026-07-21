@@ -5,6 +5,7 @@
 #define STENCIL_BIT_PROCEDUAL    (1u << 2)
 #define STENCIL_BIT_ASSET_HAIR   (1u << 3)
 #define STENCIL_BIT_SKINNED_HAIR (1u << 4)
+#define STENCIL_BIT_HEIGHT_MAP   (1u << 5)
 
 #define SHADOW_FLAG_NONE        0u
 #define SHADOW_FLAG_POINT_LIGHT (1u << 0)

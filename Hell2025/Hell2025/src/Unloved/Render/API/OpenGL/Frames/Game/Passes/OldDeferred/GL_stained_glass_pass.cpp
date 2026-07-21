@@ -8,7 +8,6 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 namespace OpenGL::Renderer {
 
@@ -31,13 +30,16 @@ namespace OpenGL::Renderer {
         if (!flashLightShadowMapsFBO) return;
 
         OpenGL::BindShader("StainedGlass");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::SetUniformBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
         gBuffer.Bind();
         gBuffer.DrawBuffer("Lighting");
 
         glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
-        glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(TEX_IDX_SHADOW_MAP_FLASHLIGHT, flashLightShadowMapsFBO->GetDepthTextureHandle());
         glBindTextureUnit(8, miscFullSizeFrameBuffer->GetColorAttachmentHandleByName("GaussianFinalLightingIntermediate"));
 

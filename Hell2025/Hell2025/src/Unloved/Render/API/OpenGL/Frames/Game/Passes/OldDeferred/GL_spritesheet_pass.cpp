@@ -4,7 +4,6 @@
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 namespace OpenGL::Renderer {
     using namespace Unloved;
@@ -21,6 +20,8 @@ namespace OpenGL::Renderer {
         gBuffer.DrawBuffer("Lighting");
 
         OpenGL::BindShader("SpriteSheet");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_SPRITE_SHEET_INSTANCE_DATA, "SpriteSheetInstanceData");
 
         OpenGLRasterizerState rasterizerState;

@@ -35,7 +35,8 @@ namespace VulkanRenderer {
         data.meshInstanceDataCount = 1;
 
         m_meshInstanceData.push_back(CreateMeshInstanceData(vertexBufferAddress, indexBufferAddress, meshInstance));
-        m_instances.push_back(CreateTLASInstance(blasDeviceAddress, transform, instanceCustomIndex));
+        VkGeometryInstanceFlagsKHR opacityFlags = GetRayQueryGeometryFlags(meshInstance.material) == 0 ? VK_GEOMETRY_INSTANCE_FORCE_NO_OPAQUE_BIT_KHR : VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR;
+        m_instances.push_back(CreateTLASInstance(blasDeviceAddress, transform, instanceCustomIndex, opacityFlags));
     }
 
     void RayQueryScene::AddBLASInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const std::vector<RayQueryMeshInstance>& meshInstances) {
@@ -155,14 +156,14 @@ namespace VulkanRenderer {
         return data;
     }
 
-    VkAccelerationStructureInstanceKHR RayQueryScene::CreateTLASInstance(uint64_t accelerationStructureAddress, VkTransformMatrixKHR transform, uint32_t instanceCustomIndex) const {
+    VkAccelerationStructureInstanceKHR RayQueryScene::CreateTLASInstance(uint64_t accelerationStructureAddress, VkTransformMatrixKHR transform, uint32_t instanceCustomIndex, VkGeometryInstanceFlagsKHR opacityFlags) const {
         // instanceCustomIndex is the shader lookup into RayQueryBLASInstanceData
         VkAccelerationStructureInstanceKHR instance{};
         instance.transform = transform;
         instance.instanceCustomIndex = instanceCustomIndex;
         instance.mask = 0xff;
         instance.instanceShaderBindingTableRecordOffset = 0;
-        instance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+        instance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR | opacityFlags;
         instance.accelerationStructureReference = accelerationStructureAddress;
         return instance;
     }

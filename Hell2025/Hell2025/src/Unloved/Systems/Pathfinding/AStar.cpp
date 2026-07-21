@@ -3,6 +3,40 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Timer.hpp"
 
+void AStar::InitGrid() {
+    ClearData();
+    m_gridInitialized = false;
+
+    if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+        return;
+    }
+
+    m_mapWidth = AStarMap::GetMapWidth();
+    m_mapHeight = AStarMap::GetMapHeight();
+
+    m_cells.clear();
+    m_cells.resize(AStarMap::GetCellCount());
+
+    for (int i = 0; i < m_cells.size(); i++) {
+        int x = i % m_mapWidth;
+        int y = i / m_mapWidth;
+
+        Cell& cell = m_cells[i];
+        cell.x = x;
+        cell.y = y;
+        cell.obstacle = AStarMap::IsCellObstacle(x, y);
+        cell.neighbourCount = 0;
+    }
+
+    for (int i = 0; i < m_cells.size(); i++) {
+        FindNeighbours(i);
+    }
+
+    m_openList.AllocateSpace(m_mapWidth * m_mapHeight);
+    m_closedFlags.resize(m_mapWidth * m_mapHeight);
+    m_gridInitialized = true;
+}
+
 void AStar::InitSearch(int startX, int startY, int destinationX, int destinationY) {
     //Timer timer("InitSearch()");
 
@@ -12,31 +46,22 @@ void AStar::InitSearch(int startX, int startY, int destinationX, int destination
         return;
     }
 
-    m_cells.resize(AStarMap::GetCellCount());
-    m_mapWidth = AStarMap::GetMapWidth();
-    m_mapHeight = AStarMap::GetMapHeight();
+    if (!m_gridInitialized ||
+        m_mapWidth != AStarMap::GetMapWidth() ||
+        m_mapHeight != AStarMap::GetMapHeight()) {
+        InitGrid();
+    }
 
     if (!AStarMap::IsInBounds(startX, startY) ||
         !AStarMap::IsInBounds(destinationX, destinationY)) {
         return;
     }
 
-    // Preprocess the cells
-    for (int i = 0; i < m_cells.size(); i++) {
-        int x = i % m_mapWidth;
-        int y = i / m_mapWidth;
-        int idx = Index1D(x, y);
-
-        Cell& cell = m_cells[i];
-        cell.x = x;
-        cell.y = y;
-        cell.obstacle = AStarMap::IsCellObstacle(x, y);
+    for (Cell& cell : m_cells) {
         cell.g = 99999;
         cell.f = -1;
         cell.parent = nullptr;
-        cell.neighbourCount = 0;
-        //cell.neighbours.clear();
-        //cell.neighbours.reserve(8);
+        cell.heapIndex = -1;
 
         // Precompute H
         int dx = std::abs(cell.x - destinationX);
@@ -54,8 +79,6 @@ void AStar::InitSearch(int startX, int startY, int destinationX, int destination
     m_start->GetF(m_destination);
     m_searchInitilized = true;
 
-    // Init min heap
-    m_openList.AllocateSpace(m_mapWidth * m_mapHeight);
     m_openList.Clear();
     m_openList.AddItem(m_start);
 
@@ -65,12 +88,6 @@ void AStar::InitSearch(int startX, int startY, int destinationX, int destination
 
     // initialize closed list to false
     m_closedFlags.assign(m_mapWidth * m_mapHeight, false);
-
-    // Cache all neighbours
-
-    for (int i = 0; i < m_cells.size(); i++) {
-        FindNeighbours(i);
-    }
 }
 
 void AStar::ClearData() {
@@ -82,6 +99,9 @@ void AStar::ClearData() {
     m_smoothPathFound = false;
     m_searchInitilized = false;
     m_smoothSearchIndex = 0;
+    m_start = nullptr;
+    m_destination = nullptr;
+    m_current = nullptr;
 }
 
 bool AStar::GridPathFound() {

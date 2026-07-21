@@ -104,7 +104,6 @@ void AnimatedMeshNodes::UpdateRenderItems(const glm::mat4& modelMatrix, const st
             int boneIndex = metadata->nonDeformingBoneIndex;
 
             if (boneIndex >= 0 && boneIndex < boneSkinningMatrices.size()) {
-                renderItem.prevModelMatrix = renderItem.modelMatrix * boneSkinningMatrices[boneIndex]; // Hack because you are compute skinning and can't rely on shit here. FIGURE THIS OUT
                 renderItem.modelMatrix = modelMatrix * boneSkinningMatrices[boneIndex];
                 renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
                 RendererUtil::UpdateRenderItemAABB(renderItem);

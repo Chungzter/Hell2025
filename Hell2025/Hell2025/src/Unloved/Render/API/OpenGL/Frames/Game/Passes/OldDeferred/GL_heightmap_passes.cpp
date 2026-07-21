@@ -1,13 +1,14 @@
 #include "Hell/Logging.h"
-#include "Hell/Render/API/OpenGL/GL_back_end.h"
+#include "Hell/Render/API/OpenGL/GL_resource_manager.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
-#include "Hell/Render/API/OpenGL/Types/GL_heightmap_mesh.h"
+#include "Unloved/Render/RenderDataManager.h"
 #include "Hell/Render/API/OpenGL/Types/GL_texture_readback.h"
-#include "Hell/Backend/BackEnd.h"
 #include "Unloved/Config/Config.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Editor/Gizmo.h"
+#include "Unloved/Maps/MapData.h"
+#include "Unloved/Systems/HeightMap/HeightMap.h"
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "World/LegacyWorld.h"
@@ -19,9 +20,6 @@
 
 #include "Hell/Physics/Physics.h"
 
-#include "Unloved/Systems/Map/MapManager.h"
-#include "World/LegacyWorld.h"
-
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
@@ -30,14 +28,14 @@ namespace Input = Hell::Input;
 namespace OpenGL::Renderer {
     using namespace Unloved;
 
-    void BlitWorldMap();
+    void UploadWorldHeightData();
     void GenerateHeightMapVertexData();
     void GeneratePhysXTextures();
     void DrawHeightMap();
 
-    void RecalculateAllHeightMapData(bool blitWorldMap) {
-        if (blitWorldMap) {
-            BlitWorldMap();
+    void RecalculateAllHeightMapData(bool uploadWorldHeightData) {
+        if (uploadWorldHeightData) {
+            UploadWorldHeightData();
         }
         GenerateHeightMapVertexData();
         GeneratePhysXTextures();
@@ -71,45 +69,28 @@ namespace OpenGL::Renderer {
         //}
     }
 
-    void BlitWorldMap() {
+    void UploadWorldHeightData() {
         OpenGLFrameBuffer* worldFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("World");
         OpenGLFrameBuffer* roadFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("Road");
-        OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("HeightMapToWorldBlit");
-
-        if (!shader) return;
         if (!worldFramebuffer) return;
+        if (!roadFramebuffer) return;
 
-        int textureWidth = (LegacyWorld::GetChunkCountX() * HEIGHT_MAP_CHUNK_PIXEL_SIZE) + 1;
-        int textureHeight = (LegacyWorld::GetChunkCountZ() * HEIGHT_MAP_CHUNK_PIXEL_SIZE) + 1;
+        const std::vector<float>& worldHeightData = HeightMap::GetWorldHeightData();
+        const uint32_t textureWidth = HeightMap::GetWorldTextureWidth();
+        const uint32_t textureHeight = HeightMap::GetWorldTextureHeight();
+        if (worldHeightData.empty() || textureWidth == 0 || textureHeight == 0) return;
 
-        const glm::uvec2 textureSize = glm::uvec2(textureWidth, textureHeight);
+        // Resize the runtime textures to the assembled world
+        if (worldFramebuffer->GetWidth() != textureWidth || worldFramebuffer->GetHeight() != textureHeight) {
+            worldFramebuffer->Resize(textureWidth, textureHeight);
 
-        // Resize world framebuffer if it is too small for the heightmap
-        if (worldFramebuffer->GetWidth() != textureSize.x || worldFramebuffer->GetHeight() != textureSize.y) {
-            worldFramebuffer->Resize(textureSize.x, textureSize.y);
-
-            int roadScale = 4;
-            roadFramebuffer->Resize(textureSize.x * roadScale, textureSize.y * roadScale);
+            const int roadScale = 4;
+            roadFramebuffer->Resize(textureWidth * roadScale, textureHeight * roadScale);
         }
 
-        // Blit height maps
-        OpenGL::BindShader("HeightMapToWorldBlit");
-        for (Map& map : LegacyWorld::GetMaps()) {
-            MapData* mapData = MapManager::GetMapDataByIndex(map.m_mapIndex);
-            if (!mapData) continue;
-
-            int offsetX = map.spawnOffsetChunkX * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
-            int offsetZ = map.spawnOffsetChunkZ * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
-            int heightMapTextureWidth = map.GetChunkCountX() * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
-            int heightMapTextureHeight = map.GetChunkCountZ() * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
-            OpenGL::SetUniformInt("u_offsetX", offsetX);
-            OpenGL::SetUniformInt("u_offsetZ", offsetZ);
-            glBindImageTexture(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R16F);
-            glBindImageTexture(1, mapData->GetHeightMapGLTexture().GetHandle(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16F);
-            OpenGL::DispatchCompute(heightMapTextureWidth / 8, heightMapTextureHeight / 8, 1);
-        }
-
-        // Blit roads
+        GLuint heightMapHandle = worldFramebuffer->GetColorAttachmentHandleByName("HeightMap");
+        glTextureSubImage2D(heightMapHandle, 0, 0, 0, textureWidth, textureHeight, GL_RED, GL_FLOAT, worldHeightData.data());
+        glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
 
     void PaintHeightMap() {
@@ -143,28 +124,29 @@ namespace OpenGL::Renderer {
     }
 
     void GenerateHeightMapVertexData() {
-        OpenGLFrameBuffer* worldFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("World");
-        OpenGLHeightMapMesh& heightMapMesh = OpenGL::BackEnd::GetHeightMapMesh();
-        OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("HeightMapVertexGeneration");
-
-        int heightMapWidth = 256;
-        int heightMapDepth = 512;
-
         std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
+        if (chunks.empty()) return;
 
-        heightMapMesh.AllocateMemory(chunks.size());
+        OpenGLFrameBuffer* worldFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("World");
+        OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("HeightMapVertexGeneration");
+        if (!worldFramebuffer) return;
+        if (!shader) return;
+
+        Hell::MeshBuffer& heightMapMeshBuffer = Hell::ResourceManager::GetMeshBuffer("HeightMapGeometry");
+        OpenGLMeshBuffer& glHeightMapMeshBuffer = OpenGL::ResourceManager::GetMeshBuffer("HeightMapGeometry");
 
         OpenGL::BindShader("HeightMapVertexGeneration");
         glBindImageTexture(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16F);
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, heightMapMesh.GetVBO());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, heightMapMesh.GetEBO());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, glHeightMapMeshBuffer.GetVBO());
 
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
         for (HeightMapChunk& chunk : chunks) {
-            OpenGL::SetUniformInt("u_baseIndex", chunk.baseIndex);
-            OpenGL::SetUniformInt("u_baseVertex", chunk.baseVertex);
+            Mesh* mesh = heightMapMeshBuffer.GetMeshById(chunk.meshId);
+            if (!mesh) continue;
+
+            OpenGL::SetUniformInt("u_baseVertex", mesh->baseVertex);
             OpenGL::SetUniformInt("u_chunkX", chunk.coord.x);
             OpenGL::SetUniformInt("u_chunkZ", chunk.coord.z);
             int chunkSize = HEIGHT_MAP_SIZE / 8;
@@ -260,91 +242,50 @@ namespace OpenGL::Renderer {
         if (!roadFramebuffer) return;
         if (!shader) return;
 
-        OpenGLHeightMapMesh& heightMapMesh = OpenGL::BackEnd::GetHeightMapMesh();
-
-        Transform transform;
-        transform.scale = glm::vec3(HEIGHTMAP_SCALE_XZ, HEIGHTMAP_SCALE_Y, HEIGHTMAP_SCALE_XZ);
-        glm::mat4 modelMatrix = transform.to_mat4();
-        glm::mat4 inverseModelMatrix = glm::inverse(modelMatrix);
+        OpenGLMeshBuffer& glHeightMapMeshBuffer = OpenGL::ResourceManager::GetMeshBuffer("HeightMapGeometry");
+        const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
 
         gBuffer->Bind();
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
         OpenGL::BindShader("HeightMapColor");
-        OpenGL::SetUniformMat4("modelMatrix", modelMatrix);
-        OpenGL::SetUniformMat4("inverseModelMatrix", inverseModelMatrix);
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::SetUniformFloat("u_textureScaling", 1);
-        OpenGL::SetUniformFloat("u_worldWidth", LegacyWorld::GetWorldSpaceWidth());
-        OpenGL::SetUniformFloat("u_worldDepth", LegacyWorld::GetWorldSpaceDepth());
 
         OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
-
-        Material* material = Hell::ResourceManager::GetDefaultMaterial();
-        int materialIndex = Hell::ResourceManager::GetMaterialIndexByName("Ground_MudVeg");
-        material = Hell::ResourceManager::GetMaterialByIndex(materialIndex);
 
         Material* dirtRoadMaterial = Hell::ResourceManager::GetMaterialByName("DirtRoad");
 
         if (Editor::IsOpen() && Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) {
-            material = Hell::ResourceManager::GetDefaultMaterial();
             OpenGL::SetUniformFloat("u_textureScaling", 0.1);
         }
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_basecolor)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_normal)->GetGLTexture().GetHandle());
         glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_rma)->GetGLTexture().GetHandle());;
+        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_rma)->GetGLTexture().GetHandle());
         glBindTextureUnit(6, roadFramebuffer->GetColorAttachmentHandleByName("RoadMask"));
 
-        glBindVertexArray(heightMapMesh.GetVAO());
-
-        int verticesPerChunk = 33 * 33;
-        int verticesPerHeightMap = verticesPerChunk * 8 * 8;
-        int indicesPerChunk = 32 * 32 * 6;
-        int indicesPerHeightMap = indicesPerChunk * 8 * 8;
-
-        int culled = 0;
+        glBindVertexArray(glHeightMapMeshBuffer.GetVAO());
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
-            Unloved::Frustum& frustum = viewport->GetFrustum();
+            if (!viewport->IsVisible()) continue;
 
-            int test = 0;
-            if (viewport->IsVisible()) {
-                OpenGL::Renderer::SetViewport(gBuffer, viewport);
-                std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
-
-                //std::cout << "chunks.size(): " << chunks.size() << "\n";
-
-                for (HeightMapChunk& chunk : chunks) {
-
-                    if (Editor::IsClosed()) {
-                        if (!frustum.IntersectsAABBFast(AABB(chunk.aabbMin, chunk.aabbMax))) {
-                            culled++;
-                            continue;
-                        }
-                    }
-
-                    int indexCount = INDICES_PER_CHUNK;
-                    int baseVertex = 0;
-                    int baseIndex = chunk.baseIndex;
-                    void* indexOffset = (GLvoid*)(baseIndex * sizeof(GLuint));
-                    int instanceCount = 1;
-                    int viewportIndex = i;
-                    glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indexOffset, instanceCount, baseVertex, viewportIndex);
-                }
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
+            if (Hell::BackEnd::RenderDocFound()) {
+                SplitMultiDrawIndirect(shader, drawInfoSet.heightMap[i], true, false);
+            }
+            else {
+                MultiDrawIndirect(drawInfoSet.heightMap[i]);
             }
         }
         glBindVertexArray(0);
-        //std::cout << "Culled: " << culled << "\n";
     }
 
 

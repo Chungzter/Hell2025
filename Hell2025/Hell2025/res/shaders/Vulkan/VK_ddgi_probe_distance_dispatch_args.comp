@@ -9,14 +9,14 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIProbeDistanceDispatchArgs data;
-} pushConstant;
+} pc;
 
 layout(buffer_reference, scalar) readonly buffer ProbeDistanceCounterBuffer { uint probeDistanceCounter; };
 layout(buffer_reference, scalar) buffer DispatchIndirectCommandBuffer { uint num_groups_x; uint num_groups_y; uint num_groups_z; };
 
 void main() {
-    ProbeDistanceCounterBuffer counter = ProbeDistanceCounterBuffer(pushConstant.data.probeDistanceCounterDeviceAddress);
-    DispatchIndirectCommandBuffer command = DispatchIndirectCommandBuffer(pushConstant.data.probeDistanceDispatchArgsDeviceAddress);
+    ProbeDistanceCounterBuffer counter = ProbeDistanceCounterBuffer(pc.data.probeDistanceCounterDeviceAddress);
+    DispatchIndirectCommandBuffer command = DispatchIndirectCommandBuffer(pc.data.probeDistanceDispatchArgsDeviceAddress);
     command.num_groups_x = counter.probeDistanceCounter;
     command.num_groups_y = 1u;
     command.num_groups_z = 1u;

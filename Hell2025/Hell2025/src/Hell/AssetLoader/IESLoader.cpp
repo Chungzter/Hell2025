@@ -37,6 +37,8 @@ namespace Hell::AssetLoader {
         loadedProfile.m_maxIntensity = ies.max_candela;
         loadedProfile.RecalculateDerivedValues();
 
+        loadedProfile.PrintDebugInfo();
+
         return loadedProfile;
     }
 
@@ -67,7 +69,7 @@ namespace Hell::AssetLoader {
             mip.data.resize(candelaValues.size() * sizeof(float));
             std::memcpy(mip.data.data(), candelaValues.data(), mip.data.size());
 
-            Texture& texture = ResourceManager::CreateTexture(fileInfo.name);
+            Texture& texture = ResourceManager::CreateTexture(iesProfile.GetName() + "IES");
             texture.SetFileInfo(fileInfo);
             texture.SetImageData(std::move(imageData));
             texture.SetTextureWrapModeS(TextureWrapMode::REPEAT);

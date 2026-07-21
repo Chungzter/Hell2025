@@ -1,5 +1,7 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
+#include "Unloved/Editor/Editor.h"
 #include "Unloved/Render/Renderer.h"
 
 #include "Unloved/Render/RendererConstants.h"
@@ -15,16 +17,19 @@ namespace OpenGL::Renderer {
         gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
 
         OpenGL::BindShader("MaterialResolve");
+        OpenGL::SetUniformBool("u_hasPreviousSkinnedPositions", false);
+        OpenGL::SetUniformBool("u_woundMaskEnabled", false);
+        OpenGL::SetUniformBool("u_heightMapResolve", false);
 
         OpenGL::BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
 
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
-        OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(1, "Materials");
-        OpenGL::BindSSBO(2, "RendererData");
-        OpenGL::BindSSBO(3, "ViewportData");
-        OpenGL::BindSSBO(4, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(6, meshBuffer.GetVBO());
         OpenGL::BindSSBO(7, meshBuffer.GetEBO());
 
@@ -48,8 +53,11 @@ namespace OpenGL::Renderer {
         RenderFullscreenTriangle();
     }
 
-    void MaterialResolveSkinnedPass() {
+    void MaterialResolveHeightMapPass() {
         ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer* roadFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("Road");
+        if (!roadFramebuffer) return;
 
         OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         gbufferFbo.Bind();
@@ -57,17 +65,83 @@ namespace OpenGL::Renderer {
         gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
 
         OpenGL::BindShader("MaterialResolve");
+        OpenGL::SetUniformBool("u_hasPreviousSkinnedPositions", false);
+        OpenGL::SetUniformBool("u_woundMaskEnabled", false);
+        OpenGL::SetUniformBool("u_heightMapResolve", true);
 
         OpenGL::BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
+        OpenGL::BindTextureUnit(3, roadFramebuffer->GetColorAttachmentHandleByName("RoadMask"));
 
-        OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(1, "Materials");
-        OpenGL::BindSSBO(2, "RendererData");
-        OpenGL::BindSSBO(3, "ViewportData");
-        OpenGL::BindSSBO(4, "InstanceData");
+        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("HeightMapGeometry");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(6, meshBuffer.GetVBO());
+        OpenGL::BindSSBO(7, meshBuffer.GetEBO());
+
+        int32_t dirtRoadMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("DirtRoad");
+        int32_t groundMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Ground_MudVeg");
+        if (groundMaterialIndex == -1) {
+            groundMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("CheckerBoard");
+        }
+        OpenGL::SetUniformInt("u_dirtRoadMaterialIndex", dirtRoadMaterialIndex == -1 ? groundMaterialIndex : dirtRoadMaterialIndex);
+
+        float textureScaling = 1.0f;
+        if (Unloved::Editor::IsOpen() && Unloved::Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) {
+            textureScaling = 0.1f;
+        }
+        OpenGL::SetUniformFloat("u_textureScaling", textureScaling);
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.colorMask = true;
+
+        state.stencilTestEnabled = true;
+        state.stencilFunc = GL_EQUAL;
+        state.stencilRef = STENCIL_BIT_HEIGHT_MAP;
+        state.stencilReadMask = 0xFF;
+        state.stencilWriteMask = 0x00;
+        state.stencilFailOp = GL_KEEP;
+        state.stencilDepthFailOp = GL_KEEP;
+        state.stencilPassOp = GL_KEEP;
+
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
+        RenderFullscreenTriangle();
+    }
+
+    void MaterialResolveSkinnedPass() {
+        ProfilerOpenGLZoneFunction();
+
+        Hell::TextureArray* woundMaskArray = Hell::ResourceManager::GetTextureArrayPtr("WoundMasks");
+
+        OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
+        gbufferFbo.Bind();
+        gbufferFbo.SetViewport();
+        gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
+
+        OpenGL::BindShader("MaterialResolve");
+        OpenGL::SetUniformBool("u_hasPreviousSkinnedPositions", true);
+        OpenGL::SetUniformBool("u_woundMaskEnabled", woundMaskArray != nullptr);
+        OpenGL::SetUniformBool("u_heightMapResolve", false);
+
+        OpenGL::BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
+        OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
+        if (woundMaskArray) OpenGL::BindTextureUnit(2, woundMaskArray->GetHandle());
+
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(6, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
         OpenGL::BindSSBO(7, OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
+        OpenGL::BindSSBO(8, OpenGL::BackEnd::GetPreviousSkinnedPositionBuffer());
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = false;
@@ -104,15 +178,18 @@ namespace OpenGL::Renderer {
         gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
 
         OpenGL::BindShader("MaterialResolve");
+        OpenGL::SetUniformBool("u_hasPreviousSkinnedPositions", false);
+        OpenGL::SetUniformBool("u_woundMaskEnabled", false);
+        OpenGL::SetUniformBool("u_heightMapResolve", false);
 
         OpenGL::BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
 
-        OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(1, "Materials");
-        OpenGL::BindSSBO(2, "RendererData");
-        OpenGL::BindSSBO(3, "ViewportData");
-        OpenGL::BindSSBO(4, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(6, proceduralMeshBuffer.GetVBO());
         OpenGL::BindSSBO(7, proceduralMeshBuffer.GetEBO());
 
@@ -149,11 +226,11 @@ namespace OpenGL::Renderer {
         OpenGL::BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
 
-        OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(1, "Materials");
-        OpenGL::BindSSBO(2, "RendererData");
-        OpenGL::BindSSBO(3, "ViewportData");
-        OpenGL::BindSSBO(4, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(6, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
         OpenGL::BindSSBO(7, OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
 

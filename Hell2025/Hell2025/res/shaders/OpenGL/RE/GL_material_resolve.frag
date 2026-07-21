@@ -9,6 +9,7 @@ layout(early_fragment_tests) in;
 #include "../../common/flags.glsl"
 #include "../../common/normal_encoding.glsl"
 #include "../../common/post_processing.glsl"
+#include "../../common/reconstruction.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
 
@@ -18,6 +19,13 @@ layout (location = 2) out vec4 VelocityXYOcclusionSubSurfaceOut;
 
 layout(rg32ui, binding = 0) uniform readonly uimage2D u_VisibilityBuffer;
 layout(binding = 1) uniform sampler2D u_DepthTexture;
+layout(binding = 2) uniform sampler2DArray u_WoundMaskTexture;
+layout(binding = 3) uniform sampler2D u_RoadMaskTexture;
+uniform bool u_hasPreviousSkinnedPositions;
+uniform bool u_woundMaskEnabled;
+uniform bool u_heightMapResolve;
+uniform int u_dirtRoadMaterialIndex;
+uniform float u_textureScaling;
 
 struct PackedVertex {
     float vx, vy, vz;
@@ -26,6 +34,14 @@ struct PackedVertex {
     float tx, ty, tz;
 };
 
+struct PackedPosition {
+    float x, y, z;
+};
+
+vec3 UnpackPosition(PackedPosition position) {
+    return vec3(position.x, position.y, position.z);
+}
+
 readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
@@ -33,6 +49,7 @@ readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewpo
 readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
 readonly restrict layout(std430, binding = 6) buffer vertexBuffer { PackedVertex vertices[]; };
 readonly restrict layout(std430, binding = 7) buffer indexBuffer { uint indices[]; };
+readonly restrict layout(std430, binding = 8) buffer previousPositionBuffer { PackedPosition previousSkinnedPositions[]; };
 
 float Cross2D(vec2 a, vec2 b) {
     return a.x * b.y - a.y * b.x;
@@ -88,7 +105,7 @@ void main() {
 
     // Position from depth reconstruction
     float depth = texelFetch(u_DepthTexture, px, 0).r;
-    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
+    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, viewportData.inverseJitteredProjectionViewReverseZ);
 
     // Transform vertices to world space
     mat4 modelMatrix = renderItem.modelMatrix;
@@ -103,10 +120,10 @@ void main() {
     vec3 geoNormal = normalize(cross(e1, e2));
     bool isFrontFacing = dot(geoNormal, viewDir) <= 0.0;
 
-    // Project vertices to NDC for stable screen space barycentrics
-    vec4 clip0 = viewportData.projectionViewReverseZ * vec4(ws0, 1.0);
-    vec4 clip1 = viewportData.projectionViewReverseZ * vec4(ws1, 1.0);
-    vec4 clip2 = viewportData.projectionViewReverseZ * vec4(ws2, 1.0);
+    // Match the jittered raster positions that produced gl_FragCoord.
+    vec4 clip0 = viewportData.jitteredProjectionViewReverseZ * vec4(ws0, 1.0);
+    vec4 clip1 = viewportData.jitteredProjectionViewReverseZ * vec4(ws1, 1.0);
+    vec4 clip2 = viewportData.jitteredProjectionViewReverseZ * vec4(ws2, 1.0);
 
     vec2 viewportPosition = gl_FragCoord.xy - vec2(viewportData.xOffset, viewportData.yOffset);
     vec2 viewportSize = vec2(viewportData.width, viewportData.height);
@@ -126,9 +143,14 @@ void main() {
     vec3 baryX = ComputeScreenBarycentrics(p + vec2(pixelStep.x, 0.0), s0, s1, s2, invW);
     vec3 baryY = ComputeScreenBarycentrics(p + vec2(0.0, -pixelStep.y), s0, s1, s2, invW);
 
-    vec2 uv0 = vec2(v0.u, v0.v);
-    vec2 uv1 = vec2(v1.u, v1.v);
-    vec2 uv2 = vec2(v2.u, v2.v);
+    float textureScale = 1.0;
+    if (u_heightMapResolve) {
+        textureScale = 50.0 * u_textureScaling;
+    }
+
+    vec2 uv0 = vec2(v0.u, v0.v) * textureScale;
+    vec2 uv1 = vec2(v1.u, v1.v) * textureScale;
+    vec2 uv2 = vec2(v2.u, v2.v) * textureScale;
 
     vec2 uv  = uv0 * bary.x  + uv1 * bary.y  + uv2 * bary.z;
     vec2 uvX = uv0 * baryX.x + uv1 * baryX.y + uv2 * baryX.z;
@@ -168,6 +190,39 @@ void main() {
     vec3 normalMap = textureGrad(sampler2D(textureSamplers[material.normal]), uv, dPdx, dPdy).rgb;
     vec4 rma = textureGrad(sampler2D(textureSamplers[material.rma]), uv, dPdx, dPdy).rgba;
 
+    if (u_heightMapResolve) {
+        Material dirtRoadMaterial = materials[u_dirtRoadMaterialIndex];
+        vec2 dirtRoadUV = uv * 2.0;
+        vec4 dirtRoadBaseColor = textureGrad(sampler2D(textureSamplers[dirtRoadMaterial.basecolor]), dirtRoadUV, dPdx * 2.0, dPdy * 2.0) + 0.1;
+        vec3 dirtRoadNormalMap = textureGrad(sampler2D(textureSamplers[dirtRoadMaterial.normal]), dirtRoadUV, dPdx * 2.0, dPdy * 2.0).rgb;
+        vec3 dirtRoadRma = textureGrad(sampler2D(textureSamplers[dirtRoadMaterial.rma]), dirtRoadUV, dPdx * 2.0, dPdy * 2.0).rgb;
+
+        vec2 roadMaskWorldSize = vec2(textureSize(u_RoadMaskTexture, 0)) * HEIGHTMAP_SCALE_XZ / 4.0;
+        vec2 roadMaskUV = worldPos.xz / roadMaskWorldSize;
+        float roadMask = texture(u_RoadMaskTexture, roadMaskUV).r;
+
+        baseColor.rgb = mix(baseColor.rgb, dirtRoadBaseColor.rgb, roadMask);
+        normalMap = mix(normalMap, dirtRoadNormalMap, roadMask);
+        rma.rgb = mix(rma.rgb, dirtRoadRma, roadMask);
+    }
+    else if (u_woundMaskEnabled && renderItem.woundMaskTextureIndex != -1 && renderItem.woundMaterialIndex != -1) {
+        Material woundMaterial = materials[renderItem.woundMaterialIndex];
+        vec4 woundBaseColor = textureGrad(sampler2D(textureSamplers[woundMaterial.basecolor]), uv, dPdx, dPdy);
+        vec3 woundNormalMap = textureGrad(sampler2D(textureSamplers[woundMaterial.normal]), uv, dPdx, dPdy).rgb;
+        vec3 woundRma = textureGrad(sampler2D(textureSamplers[woundMaterial.rma]), uv, dPdx, dPdy).rgb;
+        float woundMask = textureGrad(u_WoundMaskTexture, vec3(uv, float(renderItem.woundMaskTextureIndex)), dPdx, dPdy).r;
+
+        woundMask = clamp(woundMask * 1.25, 0.0, 1.0);
+        float woundDarken = clamp(pow(woundMask, 0.1) * 0.3, 0.0, 1.0);
+        woundBaseColor.rgb = mix(woundBaseColor.rgb, vec3(0.0), woundDarken);
+        woundRma.r = mix(woundRma.r, 0.0, woundDarken * 2.0);
+        woundRma.b = mix(woundRma.b, 0.0, woundDarken * 2.0);
+
+        baseColor = mix(baseColor, woundBaseColor, woundMask);
+        normalMap = mix(normalMap, woundNormalMap, woundMask);
+        rma.rgb = mix(rma.rgb, woundRma, woundMask);
+    }
+
     float roughness = rma.r;
     float metallic  = rma.g;
     float ao = rma.b;
@@ -180,22 +235,44 @@ void main() {
     float variance = (dot(dNdx, dNdx) + dot(dNdy, dNdy)) * 0.1591549;
     roughness = sqrt(clamp(roughness * roughness + min(variance, 0.18), 0.0, 1.0));
 
-    vec4 localPos = renderItem.inverseModelMatrix * vec4(worldPos, 1.0);
-    vec4 currPos = viewportData.projectionViewReverseZ * vec4(worldPos, 1.0);
-    vec4 prevPos = viewportData.prevProjectionViewReverseZ * renderItem.prevModelMatrix * localPos;
+    vec4 currPos;
+    vec4 prevPos;
+
+    if (u_hasPreviousSkinnedPositions) {
+        vec3 currentLocalPos =
+            vec3(v0.vx, v0.vy, v0.vz) * bary.x +
+            vec3(v1.vx, v1.vy, v1.vz) * bary.y +
+            vec3(v2.vx, v2.vy, v2.vz) * bary.z;
+
+        vec3 previousLocalPos =
+            UnpackPosition(previousSkinnedPositions[i0]) * bary.x +
+            UnpackPosition(previousSkinnedPositions[i1]) * bary.y +
+            UnpackPosition(previousSkinnedPositions[i2]) * bary.z;
+
+        currPos = viewportData.projectionViewReverseZ * renderItem.modelMatrix * vec4(currentLocalPos, 1.0);
+        prevPos = viewportData.prevProjectionViewReverseZ * renderItem.prevModelMatrix * vec4(previousLocalPos, 1.0);
+    }
+    else {
+        vec4 localPos = renderItem.inverseModelMatrix * vec4(worldPos, 1.0);
+        currPos = viewportData.projectionViewReverseZ * vec4(worldPos, 1.0);
+        prevPos = viewportData.prevProjectionViewReverseZ * renderItem.prevModelMatrix * localPos;
+    }
 
     vec2 currNDC = currPos.xy / currPos.w;
     vec2 prevNDC = prevPos.xy / prevPos.w;
-    vec2 velocity = (currNDC - prevNDC) * 0.5;
+    // Match FidelityFX's motion-vector input contract: store the raw
+    // current-minus-previous displacement in clip-space NDC. Consumers are
+    // responsible for converting this to texture-UV displacement.
+    vec2 velocityNDC = currNDC - prevNDC;
 
     BaseColorMetallicOut.rgb = baseColor.rgb;
     BaseColorMetallicOut.a = metallic;
 
     NormalXYRoughnessMiscOut.rg = EncodeOct(normal);
     NormalXYRoughnessMiscOut.b = roughness;
-    NormalXYRoughnessMiscOut.a = EncodeMiscFlags(renderItem.miscFlags);
+    NormalXYRoughnessMiscOut.a = u_heightMapResolve ? 0.0 : EncodeMiscFlags(renderItem.miscFlags);
 
-    VelocityXYOcclusionSubSurfaceOut.rg = velocity;
+    VelocityXYOcclusionSubSurfaceOut.rg = velocityNDC;
     VelocityXYOcclusionSubSurfaceOut.b = ao;
     VelocityXYOcclusionSubSurfaceOut.a = 0.0;
 }

@@ -3,6 +3,7 @@
 #include "Hell/Render/API/Vulkan/Types/vk_acceleration_structure.h"
 #include "Hell/Render/API/Vulkan/Types/vk_allocated_image.h"
 #include "Hell/Render/API/Vulkan/Types/vk_buffer.h"
+#include "Hell/Render/API/Vulkan/Types/vk_cube_map_array.h"
 #include "Hell/Render/API/Vulkan/Types/vk_cubemap.h"
 #include "Hell/Render/API/Vulkan/Types/vk_descriptor_set.h"
 #include "Hell/Render/API/Vulkan/Types/vk_generic_mesh.h"
@@ -42,6 +43,12 @@ namespace VulkanResourceManager {
     VulkanCubemap* GetCubemap(const std::string& name);
     bool CubemapExists(const std::string& name);
     void RemoveCubemap(const std::string& name);
+
+    // Cube Map Arrays
+    VulkanCubeMapArray& CreateCubeMapArray(const std::string& name);
+    VulkanCubeMapArray* GetCubeMapArray(const std::string& name);
+    bool CubeMapArrayExists(const std::string& name);
+    void RemoveCubeMapArray(const std::string& name);
 
     // Buffers
     uint64_t CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags vmaFlags = 0);

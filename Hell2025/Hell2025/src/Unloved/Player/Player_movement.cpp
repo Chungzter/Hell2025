@@ -3,11 +3,10 @@
 #include "Hell/Input.h"
 #include "Hell/Math/Math.h"
 
-#include "Legacy/World/LegacyWorld.h"
-
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Session/Session.h" // for total time
+#include "Unloved/World/World.h"
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
@@ -29,7 +28,7 @@ void Player::UpdateMovement(float deltaTime) {
     //}
 
     if (Editor::IsClosed() && m_controlEnabled) {
-        if (LegacyWorld::HasOcean() && GetCameraPosition().y < Ocean::GetWaterHeightAtPlayer(m_viewportIndex) + 0.1f) {
+        if (World::HasOcean() && GetCameraPosition().y < Ocean::GetWaterHeightAtPlayer(m_viewportIndex) + 0.1f) {
             UpdateSwimmingMovement(deltaTime);
             //std::cout << " swimming\n";
         }

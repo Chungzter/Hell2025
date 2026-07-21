@@ -57,7 +57,7 @@ namespace OpenGL::Renderer {
 
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
-            glm::mat4 projectionViewMatrix = viewportData[i].projectionViewReverseZ;
+            glm::mat4 projectionViewMatrix = viewportData[i].jitteredProjectionViewReverseZ;
             glm::mat4 viewMatrix = viewportData[i].view;
 
             OpenGL::SetUniformMat4("projectionView", projectionViewMatrix);

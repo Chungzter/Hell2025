@@ -22,6 +22,12 @@ void AnimatedGameObject::UpdateRenderItems() {
     m_animatedMeshNodes.UpdateRenderItems(GetModelMatrix(), m_animationState.boneSkinningMatrices);
 }
 
+void AnimatedGameObject::CommitRenderPoseHistory() {
+    m_previousRenderBoneSkinningMatrices = m_animationState.boneSkinningMatrices;
+    m_previousRenderModelMatrix = GetModelMatrix();
+    m_hasRenderPoseHistory = true;
+}
+
 const uint32_t AnimatedGameObject::GetVerteXCount() {
     if (m_skinnedModel) {
         return m_skinnedModel->GetVertexCount();
@@ -58,24 +64,32 @@ void AnimatedGameObject::UpdateBoneTransformsFromRagdoll() {
     }
 }
 
-
 void AnimatedGameObject::Update(float deltaTime) {
+    EvaluateAnimation(deltaTime);
+    FinalizeAnimation();
+}
+
+void AnimatedGameObject::EvaluateAnimation(float deltaTime) {
+    if (!m_skinnedModel) return;
+
+    if (m_animationMode == AnimationMode::RAGDOLL_V2) return;
+
+    if (m_animationMode == AnimationMode::BINDPOSE) {
+        //m_animationLayerOLD.ClearAllAnimationStates();
+        //m_animator.ClearAllAnimations();
+    }
+
+    Animator::Update(m_animationState, deltaTime);
+    Animator::UpdateBoneSkinningMatrices(m_animationState);
+}
+
+void AnimatedGameObject::FinalizeAnimation() {
     if (!m_skinnedModel) return;
 
     if (m_animationMode == AnimationMode::RAGDOLL_V2) {
         UpdateBoneTransformsFromRagdoll();
+        Animator::UpdateBoneSkinningMatrices(m_animationState);
     }
-    else {
-        if (m_animationMode == AnimationMode::BINDPOSE) {
-            //m_animationLayerOLD.ClearAllAnimationStates();
-            //m_animator.ClearAllAnimations();
-        }
-
-        Animator::Update(m_animationState, deltaTime);
-        //m_globalBlendedNodeTransforms = m_animator.m_globalBlendedNodeTransforms;
-    }
-
-    Animator::UpdateBoneSkinningMatrices(m_animationState);
 
     // If it has a ragdoll then sink the ragdoll rigids to the animated pose
     if (m_animationMode == AnimationMode::BINDPOSE || m_animationMode == AnimationMode::ANIMATION) {
@@ -458,6 +472,9 @@ void AnimatedGameObject::SetSkinnedModel(const std::string& name, const std::str
     if (ptr) {
         m_skinnedModel = ptr;
         Animator::SetSkinnedModel(m_animationState, ptr);
+        m_previousRenderBoneSkinningMatrices.clear();
+        m_previousRenderModelMatrix = GetModelMatrix();
+        m_hasRenderPoseHistory = false;
     }
     else {
         std::cout << "Could not SetSkinnedModel(name) with name: \"" << name << "\", it does not exist\n";

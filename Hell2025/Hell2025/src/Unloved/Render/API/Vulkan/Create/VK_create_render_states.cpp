@@ -77,6 +77,10 @@ namespace {
         velocity.clearValue.color.float32[2] = 0.0f;
         velocity.clearValue.color.float32[3] = 0.0f;
 
+        VulkanRenderTargetInfo& amdMaterialRoughness = state.AddColorTarget("IndirectSpecularAMDMaterialRoughness");
+        amdMaterialRoughness.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        amdMaterialRoughness.clearValue.color.float32[0] = 0.0f;
+
         VulkanRenderTargetInfo& depth = state.SetDepthTarget("Depth");
         depth.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 
@@ -122,15 +126,15 @@ namespace {
         state.rasterizer.stencilRef = 0;
     }
 
-    void CreateReflectedRadianceRenderState() {
-        VulkanRenderState& state = VulkanResourceManager::CreateRenderState("ReflectedRadiance");
+    void CreateIndirectSpecularAMDInputRenderState() {
+        VulkanRenderState& state = VulkanResourceManager::CreateRenderState("IndirectSpecularAMDRayInput");
 
-        VulkanRenderTargetInfo& reflectedRadiance = state.AddColorTarget("ReflectedRadiance");
-        reflectedRadiance.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        reflectedRadiance.clearValue.color.float32[0] = 0;
-        reflectedRadiance.clearValue.color.float32[1] = 0;
-        reflectedRadiance.clearValue.color.float32[2] = 0;
-        reflectedRadiance.clearValue.color.float32[3] = 0;
+        VulkanRenderTargetInfo& amdInput = state.AddColorTarget("IndirectSpecularAMDRayInput");
+        amdInput.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        amdInput.clearValue.color.float32[0] = 0;
+        amdInput.clearValue.color.float32[1] = 0;
+        amdInput.clearValue.color.float32[2] = 0;
+        amdInput.clearValue.color.float32[3] = 0;
 
         state.rasterizer.depthTestEnabled = false;
         state.rasterizer.depthWriteEnabled = false;
@@ -239,61 +243,61 @@ namespace {
         state.rasterizer.cullFaceEnabled = false;
     }
 
-    //void CreateHairDepthPrepRenderState() {
-    //    VulkanRenderState& state = VulkanResourceManager::CreateRenderState("HairDepthPrep");
-    //
-    //    VulkanRenderTargetInfo& lighting = state.AddColorTarget("HairLighting");
-    //    lighting.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    //    lighting.clearValue.color.float32[0] = 0.0f;
-    //    lighting.clearValue.color.float32[1] = 0.0f;
-    //    lighting.clearValue.color.float32[2] = 0.0f;
-    //    lighting.clearValue.color.float32[3] = 0.0f;
-    //
-    //    VulkanRenderTargetInfo& depth = state.SetDepthTarget("HairDepth");
-    //    depth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    //    depth.clearValue.depthStencil.depth = 0.0f;
-    //    depth.clearValue.depthStencil.stencil = 0;
-    //
-    //    state.rasterizer.depthTestEnabled = true;
-    //    state.rasterizer.depthWriteEnabled = true;
-    //    state.rasterizer.depthCompareOp = VK_COMPARE_OP_ALWAYS;
-    //    state.rasterizer.cullFaceEnabled = false;
-    //
-    //    state.rasterizer.stencilTestEnabled = true;
-    //    state.rasterizer.stencilCompareOp = VK_COMPARE_OP_EQUAL;
-    //    state.rasterizer.stencilFailOp = VK_STENCIL_OP_KEEP;
-    //    state.rasterizer.stencilDepthFailOp = VK_STENCIL_OP_KEEP;
-    //    state.rasterizer.stencilPassOp = VK_STENCIL_OP_KEEP;
-    //    state.rasterizer.stencilReadMask = STENCIL_BIT_SKINNED_HAIR;
-    //    state.rasterizer.stencilWriteMask = 0x00;
-    //}
-    //
-    //void CreateHairDepthPrePassRenderState() {
-    //    VulkanRenderState& state = VulkanResourceManager::CreateRenderState("HairDepthPrePass");
-    //
-    //    VulkanRenderTargetInfo& depth = state.SetDepthTarget("HairDepth");
-    //    depth.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-    //
-    //    state.rasterizer.depthTestEnabled = true;
-    //    state.rasterizer.depthWriteEnabled = true;
-    //    state.rasterizer.depthCompareOp = VK_COMPARE_OP_GREATER;
-    //    state.rasterizer.cullFaceEnabled = false;
-    //}
-    //
-    //void CreateHairLightingRenderState() {
-    //    VulkanRenderState& state = VulkanResourceManager::CreateRenderState("HairLighting");
-    //
-    //    VulkanRenderTargetInfo& lighting = state.AddColorTarget("HairLighting");
-    //    lighting.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-    //
-    //    VulkanRenderTargetInfo& depth = state.SetDepthTarget("HairDepth");
-    //    depth.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-    //
-    //    state.rasterizer.depthTestEnabled = true;
-    //    state.rasterizer.depthWriteEnabled = false;
-    //    state.rasterizer.depthCompareOp = VK_COMPARE_OP_EQUAL;
-    //    state.rasterizer.cullFaceEnabled = false;
-    //}
+    void CreateHairDepthPrepRenderState() {
+        VulkanRenderState& state = VulkanResourceManager::CreateRenderState("HairDepthPrep");
+
+        VulkanRenderTargetInfo& lighting = state.AddColorTarget("HairLighting");
+        lighting.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        lighting.clearValue.color.float32[0] = 0.0f;
+        lighting.clearValue.color.float32[1] = 0.0f;
+        lighting.clearValue.color.float32[2] = 0.0f;
+        lighting.clearValue.color.float32[3] = 0.0f;
+
+        VulkanRenderTargetInfo& depth = state.SetDepthTarget("HairDepth");
+        depth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depth.clearValue.depthStencil.depth = 0.0f;
+        depth.clearValue.depthStencil.stencil = 0;
+
+        state.rasterizer.depthTestEnabled = true;
+        state.rasterizer.depthWriteEnabled = true;
+        state.rasterizer.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+        state.rasterizer.cullFaceEnabled = false;
+
+        state.rasterizer.stencilTestEnabled = true;
+        state.rasterizer.stencilCompareOp = VK_COMPARE_OP_EQUAL;
+        state.rasterizer.stencilFailOp = VK_STENCIL_OP_KEEP;
+        state.rasterizer.stencilDepthFailOp = VK_STENCIL_OP_KEEP;
+        state.rasterizer.stencilPassOp = VK_STENCIL_OP_KEEP;
+        state.rasterizer.stencilReadMask = STENCIL_BIT_SKINNED_HAIR;
+        state.rasterizer.stencilWriteMask = 0x00;
+    }
+
+    void CreateHairDepthPrePassRenderState() {
+        VulkanRenderState& state = VulkanResourceManager::CreateRenderState("HairDepthPrePass");
+
+        VulkanRenderTargetInfo& depth = state.SetDepthTarget("HairDepth");
+        depth.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        state.rasterizer.depthTestEnabled = true;
+        state.rasterizer.depthWriteEnabled = true;
+        state.rasterizer.depthCompareOp = VK_COMPARE_OP_GREATER;
+        state.rasterizer.cullFaceEnabled = false;
+    }
+
+    void CreateHairLightingRenderState() {
+        VulkanRenderState& state = VulkanResourceManager::CreateRenderState("HairLighting");
+
+        VulkanRenderTargetInfo& lighting = state.AddColorTarget("HairLighting");
+        lighting.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        VulkanRenderTargetInfo& depth = state.SetDepthTarget("HairDepth");
+        depth.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        state.rasterizer.depthTestEnabled = true;
+        state.rasterizer.depthWriteEnabled = false;
+        state.rasterizer.depthCompareOp = VK_COMPARE_OP_EQUAL;
+        state.rasterizer.cullFaceEnabled = false;
+    }
 }
 
 namespace VulkanRenderer {
@@ -310,10 +314,10 @@ namespace VulkanRenderer {
         CreateDDGIProbeDebugRenderState();
         CreateDebug2DRenderState();
 
-        CreateReflectedRadianceRenderState();
+        CreateIndirectSpecularAMDInputRenderState();
 
-        //CreateHairDepthPrepRenderState();
-        //CreateHairDepthPrePassRenderState();
-        //CreateHairLightingRenderState();
+        CreateHairDepthPrepRenderState();
+        CreateHairDepthPrePassRenderState();
+        CreateHairLightingRenderState();
     }
 }

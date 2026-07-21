@@ -4,6 +4,7 @@
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Input.h"
 #include "Hell/Logging.h"
+#include "Hell/Profiling/CPUProfiler.h"
 
 #include "Unloved/Camera/Camera.h"
 #include "Unloved/Config/Config.h"
@@ -14,7 +15,6 @@
 #include "Unloved/Editor/Gizmo.h"
 #include "Unloved/Systems/Map/MapManager.h"
 #include "Unloved/Session/Session.h"
-#include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Systems/House/HouseManager.h"
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Unloved/Viewport/ViewportManager.h"
@@ -180,8 +180,7 @@ namespace Unloved::Editor {
     }
 
     void Update(float deltaTime) {
-        // TODO: Handle me better!!!
-        Ocean::DestroyPhysicsPlane();
+        ProfilerCPUZoneFunction();
 
         // Close editor
         if (Input::KeyPressed(HELL_KEY_TAB)) {

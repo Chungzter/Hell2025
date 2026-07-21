@@ -18,19 +18,16 @@ layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIProbeRelevance data;
-} pushConstant;
+} pc;
 
 layout(buffer_reference, scalar) buffer ProbeStatesBuffer { ProbeState probeStates[]; };
-layout(buffer_reference, scalar) readonly buffer RendererDataBuffer { RendererData rendererData; };
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer { ViewportData viewportData[]; };
-
 DDGIVolume GetVolume() {
     DDGIVolume volume;
-    volume.origin = pushConstant.data.volumeOrigin;
-    volume.probeSpacing = pushConstant.data.probeSpacing;
-    volume.probeCounts = pushConstant.data.probeCounts;
-    volume.totalProbes = int(pushConstant.data.totalProbes);
-    volume.probeOffset = pushConstant.data.probeOffset;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.probeOffset = pc.data.probeOffset;
     return volume;
 }
 
@@ -40,8 +37,8 @@ void main() {
 
     if (pixelCoords.x >= gBufferSize.x || pixelCoords.y >= gBufferSize.y) return;
 
-    RendererData rendererData = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress).rendererData;
-    ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
+    RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
     uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(pixelCoords, gBufferSize, rendererData.splitscreenMode);
     ViewportData viewport = viewportDataBuffer.viewportData[viewportIndex];
 
@@ -60,7 +57,7 @@ void main() {
     ivec3 maxCoords = volume.probeCounts - ivec3(2);
     if (any(lessThan(base, ivec3(0))) || any(greaterThan(base, maxCoords))) return;
 
-    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pushConstant.data.probeStatesDeviceAddress);
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
 
     for (int dy = 0; dy <= 1; dy++) {
         for (int dz = 0; dz <= 1; dz++) {

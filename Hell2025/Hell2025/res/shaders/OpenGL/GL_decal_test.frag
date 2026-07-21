@@ -1,5 +1,6 @@
 #version 460 core
 
+#include "../common/reconstruction.glsl"
 #include "../common/util.glsl"
 #include "../common/normal_encoding.glsl"
 
@@ -29,7 +30,7 @@ void main() {
     ViewportData viewport = viewportData[u_viewportIndex];
     vec2 screenUV = (vec2(px) + 0.5) / vec2(gBufferSize);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewport);
-    vec3 worldPosition = ReconstructWorldPos(viewportUV, depth, viewport.inverseProjectionViewReverseZ);
+    vec3 worldPosition = WorldPosFromDepth_GL(viewportUV, depth, viewport.inverseJitteredProjectionViewReverseZ);
 
     vec3 positionDx = dFdx(worldPosition);
     vec3 positionDy = dFdy(worldPosition);

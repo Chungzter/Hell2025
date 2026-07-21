@@ -1,4 +1,5 @@
 #version 430
+#include "../../common/ocean_fft.glsl"
 
 layout(local_size_x = 16, local_size_y = 8, local_size_z = 1) in;
 
@@ -10,7 +11,7 @@ layout(local_size_x = 16, local_size_y = 8, local_size_z = 1) in;
 layout(std430, binding = BINDING_SSBO_IN) readonly buffer Block { vec2 data[]; } fft_in;
 layout(std430, binding = BINDING_SSBO_OUT) writeonly buffer BlockOut { vec2 data[]; } fft_out;
 
-#define FFT_STRIDE 512 // previously uSrtide
+#define FFT_STRIDE OCEAN_FFT_RESOLUTION
 #define FFT_PADDING 64 // previously uP
 
 #define PI 3.14159265359

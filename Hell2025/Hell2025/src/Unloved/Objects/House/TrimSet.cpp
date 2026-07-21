@@ -37,8 +37,16 @@ void TrimSet::CreateRenderItems() {
     m_renderItems.clear();
 
     // Find corners, by walking around the wall segment points, and check for raycast hits on all fireplace blocking volumes
-    for (int i = 0; i < m_createInfo.points.size(); i++) {
+    for (size_t i = 0; i < m_createInfo.points.size(); i++) {
         const glm::vec3& point = m_createInfo.points[i];
+
+        // Add the current point, including the repeated closing point at the end.
+        m_corners.push_back(TrimCorner(point));
+
+        if (i + 1 >= m_createInfo.points.size()) {
+            continue;
+        }
+
         const glm::vec3& nextPoint = m_createInfo.points[i + 1];
         float distanceToNextPoint = glm::distance(point, nextPoint);
         glm::vec3 directionToNextPoint = glm::normalize(nextPoint - point);
@@ -46,9 +54,6 @@ void TrimSet::CreateRenderItems() {
         glm::vec3 rayOrigin = point;
         glm::vec3 rayDir = directionToNextPoint;
         float maxDistance = distanceToNextPoint;
-
-        // Add the current point
-        m_corners.push_back(TrimCorner(point));
 
         for (Fireplace& fireplace : Unloved::World::GetFireplaces()) {
             const auto rayHit = fireplace.GetBlockingVolume().Raycast(rayOrigin, rayDir, maxDistance);
@@ -234,6 +239,8 @@ void TrimSet::CreateRenderItems() {
 
         renderItem.baseVertex = mesh->baseVertex;
         renderItem.baseIndex = mesh->baseIndex;
+        renderItem.vertexCount = mesh->vertexCount;
+        renderItem.indexCount = mesh->indexCount;
 
         renderItem.prevModelMatrix = renderItem.modelMatrix; // These never move, so use current model matrix
 

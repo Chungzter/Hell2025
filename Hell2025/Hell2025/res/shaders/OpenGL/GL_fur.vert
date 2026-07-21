@@ -58,7 +58,9 @@ void main() {
     vec3 pos = inPosition + inNormal * ((u_furLength * H0) + (curvatureH0 * u_displacementStrength));
 
     WorldPos = u_model * vec4(pos, 1.0);
-    gl_Position = viewportData[u_viewportIndex].projectionView * WorldPos;
+    mat4 jitterMatrix = viewportData[u_viewportIndex].jitteredProjectionViewReverseZ *
+                        viewportData[u_viewportIndex].inverseProjectionViewReverseZ;
+    gl_Position = jitterMatrix * viewportData[u_viewportIndex].projectionView * WorldPos;
 
 
 }

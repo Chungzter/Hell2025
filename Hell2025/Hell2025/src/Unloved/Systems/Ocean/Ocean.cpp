@@ -1,78 +1,100 @@
 #include "Ocean.h"
 
-#include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
+#include "Hell/Time.h"
 
 #include "Unloved/Common/Constants.h"
 #include "Unloved/ObjectId.h"
 
 #include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-
+#include <algorithm>
 #include <cmath>
-#include <cassert>
 #include <random>
 
 namespace Ocean {
 
+    struct FFTBandData {
+        std::vector<std::complex<float>> h0;
+        bool h0UploadRequired = false;
+    };
+
     uint64_t g_waterPlaneUpFacingPhysicsID = 0;
     uint64_t g_waterPlaneDownFacingPhysicsID = 0;
 
-    FFTBand g_fftBands[2];
+    Settings g_settings;
+    Settings g_generatedSettings;
+    FFTBandData g_fftBandData[FFT_BAND_COUNT];
+    bool g_spectrumGenerated = false;
     OceanReadbackData g_oceanReadbackData;
+    float g_animationTime = 0.0f;
+    float g_simulationTime = 0.0f;
 
-    const unsigned int g_baseFftResolution = 512;
-    const float g_cellSize = 0.3f;
-
-    const float g_oceanMeshToGridRatio = 8.0f;       // Ratio of original ocean mesh size to the FFT grid size; used to scale the model matrix
-    const float g_meshSubdivisionFactor = 32.0f;     // Number of mesh subdivisions per FFT grid cell; controls mesh density
-    const float g_modelMatrixScale = g_oceanMeshToGridRatio / g_baseFftResolution; // was g_fftResolution.x;
     const float g_oceanOriginY = 29.5f;
 
-    //glm::vec2 g_mWindDir = glm::normalize(glm::vec2(1.0f, 0.0f));
-    float g_windSpeed = 75.0f;
-    float g_gravity = 9.8f;
-
-    float g_dispScale = 1.0f;    // Controls the choppiness of the ocean waves
-    float g_heightScale = 0.5f;   // Controls the height of the ocean waves
-
-    float PhillipsSpectrum(const glm::vec2& k, FFTBand& fftBand);
-    glm::vec2 KVector(int x, int z, glm::uvec2 fftResolution, glm::vec2 patchSimSize);
-    std::vector<std::complex<float>> ComputeH0(FFTBand& fftBand, uint32_t randomSeed);
-
-    std::string FFTBandToString(int bandIndex) {
-        std::string result = "FFT Band " + std::to_string(bandIndex) + "\n";
-        result += "- resolution: " + std::to_string(g_fftBands[bandIndex].fftResolution.x) + "\n";
-        result += "- patchSimSize: " + std::to_string(g_fftBands[bandIndex].patchSimSize.x) + "\n";
-        result += "- amplitude: " + std::to_string(g_fftBands[bandIndex].amplitude) + "\n";
-        result += "- windDir: " + std::to_string(g_fftBands[bandIndex].windDir.x) + ", " + std::to_string(g_fftBands[bandIndex].windDir.y) + "\n";
-        result += "- crossWindDamping: " + std::to_string(g_fftBands[bandIndex].crossWindDampingCoefficient) + "\n";
-        result += "- smallWavesDamping: " + std::to_string(g_fftBands[bandIndex].smallWavesDampingCoefficient) + "\n";
-        return result;
-    }
+    float SmoothStep(float edge0, float edge1, float value);
+    float SpectrumBandWindow(float wavelength, const BandSettings& settings);
+    float SpectrumBandWeight(float wavelength, int bandIndex);
+    float PhillipsSpectrum(const glm::vec2& k, int bandIndex);
+    glm::vec2 KVector(int x, int z, float domainSize);
+    std::vector<std::complex<float>> ComputeH0(int bandIndex);
+    Settings CreateDefaultSettings();
+    bool BandSpectrumSettingsChanged(int bandIndex);
+    void SanitizeSettings();
 
     void Init() {
-        float cellScale = g_cellSize;
-        float gridSize = g_baseFftResolution;
-
-        g_fftBands[0].fftResolution = glm::uvec2(512);
-        g_fftBands[0].patchSimSize = glm::vec2(150);
-        g_fftBands[0].amplitude = 0.00001f;
-        g_fftBands[0].windDir = glm::normalize(glm::vec2(1.0f, 0.1f));
-        g_fftBands[0].h0 = ComputeH0(g_fftBands[0], 1337);
-
-        g_fftBands[1].fftResolution = glm::uvec2(512);
-        g_fftBands[1].patchSimSize = glm::vec2(110); // 220 looks good too for more waves
-        g_fftBands[1].amplitude = 0.00001f;
-        g_fftBands[1].windDir = glm::normalize(glm::vec2(0.9f, -0.4f));
-        g_fftBands[1].h0 = ComputeH0(g_fftBands[1], 42);
+        g_spectrumGenerated = false;
+        g_animationTime = 0.0f;
+        g_simulationTime = 0.0f;
+        ResetSettings();
 
         g_oceanReadbackData.heightPlayer0 = g_oceanOriginY;
         g_oceanReadbackData.heightPlayer1 = g_oceanOriginY;
         g_oceanReadbackData.heightPlayer2 = g_oceanOriginY;
         g_oceanReadbackData.heightPlayer3 = g_oceanOriginY;
+    }
 
+    Settings CreateDefaultSettings() {
+        Settings settings;
+
+        // Big water matched to the old 13 metre layer
+        settings.bands[0].domainSize = 13.123f;
+        settings.bands[0].minimumWavelength = 1.0f;
+        settings.bands[0].maximumWavelength = 13.123f;
+        settings.bands[0].minimumWavelengthFade = 0.5f;
+        settings.bands[0].maximumWavelengthFade = 0.25f;
+        settings.bands[0].windDirection = glm::vec2(0.9f, -0.4f);
+        settings.bands[0].amplitude = 0.09873434f;
+        settings.bands[0].opposingWavesDamping = 1.0f;
+        settings.bands[0].smallWavesDamping = 0.000000001423249f;
+        settings.bands[0].randomSeed = 42;
+
+        // Small water matched to the old 8 metre layer
+        settings.bands[1].domainSize = 8.0f;
+        settings.bands[1].minimumWavelength = 0.03125f;
+        settings.bands[1].maximumWavelength = 2.0f;
+        settings.bands[1].minimumWavelengthFade = 0.015625f;
+        settings.bands[1].maximumWavelengthFade = 0.5f;
+        settings.bands[1].windDirection = glm::vec2(1.0f, 0.1f);
+        settings.bands[1].amplitude = 2.4719238f;
+        settings.bands[1].opposingWavesDamping = 1.0f;
+        settings.bands[1].smallWavesDamping = 0.00000000028444445f;
+        settings.bands[1].randomSeed = 1337;
+
+        return settings;
+    }
+
+    void UpdateSpectrum() {
+        SanitizeSettings();
+
+        for (int i = 0; i < FFT_BAND_COUNT; i++) {
+            if (!g_spectrumGenerated || BandSpectrumSettingsChanged(i)) {
+                g_fftBandData[i].h0 = ComputeH0(i);
+                g_fftBandData[i].h0UploadRequired = true;
+            }
+        }
+
+        g_generatedSettings = g_settings;
+        g_spectrumGenerated = true;
     }
 
     void CreatePhysicsPlane() {
@@ -98,58 +120,80 @@ namespace Ocean {
     }
 
     void DestroyPhysicsPlane() {
-        Hell::Physics::RemoveRigidStatic(g_waterPlaneUpFacingPhysicsID);
-        Hell::Physics::RemoveRigidStatic(g_waterPlaneDownFacingPhysicsID);
+        if (g_waterPlaneUpFacingPhysicsID != 0) Hell::Physics::RemoveRigidStatic(g_waterPlaneUpFacingPhysicsID);
+        if (g_waterPlaneDownFacingPhysicsID != 0) Hell::Physics::RemoveRigidStatic(g_waterPlaneDownFacingPhysicsID);
+        g_waterPlaneUpFacingPhysicsID = 0;
+        g_waterPlaneDownFacingPhysicsID = 0;
     }
 
-    void ReComputeH0() {
-        g_fftBands[0].h0 = ComputeH0(g_fftBands[0], 1337);
-        g_fftBands[1].h0 = ComputeH0(g_fftBands[1], 42);
+    float SmoothStep(float edge0, float edge1, float value) {
+        if (edge0 == edge1) return value < edge0 ? 0.0f : 1.0f;
+        float t = std::clamp((value - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+        return t * t * (3.0f - 2.0f * t);
     }
 
-    glm::vec2 KVector(int x, int z, glm::uvec2 fftResolution, glm::vec2 patchSimSize) {
-        return glm::vec2((x - fftResolution.x / 2.0f) * (2.0f * HELL_PI / patchSimSize.x), (z - fftResolution.y / 2.0f) * (2.0f * HELL_PI / patchSimSize.y));
+    float SpectrumBandWindow(float wavelength, const BandSettings& settings) {
+        float minimumWeight = SmoothStep(settings.minimumWavelength - settings.minimumWavelengthFade, settings.minimumWavelength + settings.minimumWavelengthFade, wavelength);
+        float maximumWeight = 1.0f - SmoothStep(settings.maximumWavelength - settings.maximumWavelengthFade, settings.maximumWavelength + settings.maximumWavelengthFade, wavelength);
+        return minimumWeight * maximumWeight;
     }
 
-    float PhillipsSpectrum(const glm::vec2& k, FFTBand& fftBand) {
-        const float lengthK = glm::length(k);
-        const float lengthKSquared = lengthK * lengthK;
-        const float dotKWind = glm::dot(k / lengthK, fftBand.windDir);
-        const float L = g_windSpeed * g_windSpeed / g_gravity;
+    float SpectrumBandWeight(float wavelength, int bandIndex) {
+        float bandWeight = SpectrumBandWindow(wavelength, g_settings.bands[bandIndex]);
+        float totalWeight = 0.0f;
 
-        float phillips = fftBand.amplitude * expf(-1.0f / (lengthKSquared * L * L)) * dotKWind * dotKWind / (lengthKSquared * lengthKSquared);
-
-        if (dotKWind < 0.0f) {
-            phillips *= fftBand.crossWindDampingCoefficient;
+        for (int i = 0; i < FFT_BAND_COUNT; i++) {
+            totalWeight += SpectrumBandWindow(wavelength, g_settings.bands[i]);
         }
 
-        return phillips * expf(-lengthKSquared * L * L * fftBand.smallWavesDampingCoefficient);
+        return totalWeight > 0.0f ? bandWeight / totalWeight : 0.0f;
     }
 
+    glm::vec2 KVector(int x, int z, float domainSize) {
+        return glm::vec2((x - FFT_RESOLUTION / 2.0f) * (2.0f * HELL_PI / domainSize), (z - FFT_RESOLUTION / 2.0f) * (2.0f * HELL_PI / domainSize));
+    }
 
-    std::vector<std::complex<float>> ComputeH0(FFTBand& fftBand, uint32_t seed) {
-        std::vector<std::complex<float>> h0(fftBand.fftResolution.x * fftBand.fftResolution.y);
-        std::mt19937 randomGen(seed);
+    float PhillipsSpectrum(const glm::vec2& k, int bandIndex) {
+        const BandSettings& settings = g_settings.bands[bandIndex];
+        const float lengthK = glm::length(k);
+        if (lengthK <= 0.0f) return 0.0f;
+
+        const float lengthKSquared = lengthK * lengthK;
+        const float dotKWind = glm::dot(k / lengthK, settings.windDirection);
+        const float directionalWeight = powf(std::clamp(std::abs(dotKWind), 0.0f, 1.0f), settings.windAlignmentExponent);
+        const float wavelength = 2.0f * HELL_PI / lengthK;
+        const float bandWeight = SpectrumBandWeight(wavelength, bandIndex);
+        const float L = g_settings.windSpeed * g_settings.windSpeed / g_settings.gravity;
+
+        float phillips = settings.amplitude * expf(-1.0f / (lengthKSquared * L * L)) * directionalWeight / (lengthKSquared * lengthKSquared);
+
+        if (dotKWind < 0.0f) {
+            phillips *= settings.opposingWavesDamping;
+        }
+
+        return phillips * expf(-lengthKSquared * L * L * settings.smallWavesDamping) * bandWeight;
+    }
+
+    std::vector<std::complex<float>> ComputeH0(int bandIndex) {
+        const BandSettings& settings = g_settings.bands[bandIndex];
+        std::vector<std::complex<float>> h0(FFT_RESOLUTION * FFT_RESOLUTION);
+        std::mt19937 randomGen(settings.randomSeed);
         std::normal_distribution<float> normalDist(0.0f, 1.0f);
 
-        for (unsigned int z = 0; z < fftBand.fftResolution.y; ++z) {
-            for (unsigned int x = 0; x < fftBand.fftResolution.x; ++x) {
-                int idx = z * fftBand.fftResolution.x + x;
-                glm::vec2 k = KVector(x, z, fftBand.fftResolution, fftBand.patchSimSize);
+        // Every frequency gets its own noise
+        for (unsigned int z = 0; z < FFT_RESOLUTION; ++z) {
+            for (unsigned int x = 0; x < FFT_RESOLUTION; ++x) {
+                int idx = z * FFT_RESOLUTION + x;
+                glm::vec2 k = KVector(x, z, settings.domainSize);
 
                 if (k == glm::vec2(0.0f)) {
                     h0[idx] = { 0.0f, 0.0f };
                 }
                 else {
-                    float amp = sqrt(PhillipsSpectrum(k, fftBand)) * HELL_SQRT_OF_HALF;
+                    float amp = sqrt(PhillipsSpectrum(k, bandIndex)) * HELL_SQRT_OF_HALF;
                     float a = normalDist(randomGen) * amp;
                     float b = normalDist(randomGen) * amp;
                     h0[idx] = { a, b };
-
-                    // Enforce Hermitian symmetry for real, periodic heights
-                    int ix = (fftBand.fftResolution.x - x) % fftBand.fftResolution.x;
-                    int iz = (fftBand.fftResolution.y - z) % fftBand.fftResolution.y;
-                    h0[iz * fftBand.fftResolution.x + ix] = std::conj(h0[idx]);
                 }
             }
         }
@@ -157,20 +201,162 @@ namespace Ocean {
         return h0;
     }
 
+    bool BandSpectrumSettingsChanged(int bandIndex) {
+        const BandSettings& settings = g_settings.bands[bandIndex];
+        const BandSettings& generated = g_generatedSettings.bands[bandIndex];
+        if (g_settings.windSpeed != g_generatedSettings.windSpeed) return true;
+        if (g_settings.gravity != g_generatedSettings.gravity) return true;
+        if (settings.domainSize != generated.domainSize) return true;
+        if (settings.minimumWavelength != generated.minimumWavelength) return true;
+        if (settings.maximumWavelength != generated.maximumWavelength) return true;
+        if (settings.minimumWavelengthFade != generated.minimumWavelengthFade) return true;
+        if (settings.maximumWavelengthFade != generated.maximumWavelengthFade) return true;
+        if (settings.windDirection.x != generated.windDirection.x || settings.windDirection.y != generated.windDirection.y) return true;
+        if (settings.amplitude != generated.amplitude) return true;
+        if (settings.windAlignmentExponent != generated.windAlignmentExponent) return true;
+        if (settings.opposingWavesDamping != generated.opposingWavesDamping) return true;
+        if (settings.smallWavesDamping != generated.smallWavesDamping) return true;
+        if (settings.randomSeed != generated.randomSeed) return true;
+
+        // One band moving changes the shared crossover
+        for (int i = 0; i < FFT_BAND_COUNT; i++) {
+            if (g_settings.bands[i].minimumWavelength != g_generatedSettings.bands[i].minimumWavelength) return true;
+            if (g_settings.bands[i].maximumWavelength != g_generatedSettings.bands[i].maximumWavelength) return true;
+            if (g_settings.bands[i].minimumWavelengthFade != g_generatedSettings.bands[i].minimumWavelengthFade) return true;
+            if (g_settings.bands[i].maximumWavelengthFade != g_generatedSettings.bands[i].maximumWavelengthFade) return true;
+        }
+
+        return false;
+    }
+
+    void SanitizeSettings() {
+        switch (g_settings.displayMode) {
+            case DisplayMode::COMBINED:
+            case DisplayMode::BAND_0:
+            case DisplayMode::BAND_1:
+                break;
+            default:
+                g_settings.displayMode = DisplayMode::COMBINED;
+                break;
+        }
+
+        g_settings.windSpeed = std::max(g_settings.windSpeed, 0.001f);
+        g_settings.gravity = std::max(g_settings.gravity, 0.001f);
+        g_settings.displacementScale = std::max(g_settings.displacementScale, 0.0f);
+        g_settings.heightScale = std::max(g_settings.heightScale, 0.0f);
+
+        for (int i = 0; i < FFT_BAND_COUNT; i++) {
+            BandSettings& settings = g_settings.bands[i];
+            settings.domainSize = std::max(settings.domainSize, 0.001f);
+            settings.minimumWavelength = std::max(settings.minimumWavelength, 0.0f);
+            settings.maximumWavelength = std::max(settings.maximumWavelength, settings.minimumWavelength + 0.001f);
+            settings.minimumWavelengthFade = std::max(settings.minimumWavelengthFade, 0.0f);
+            settings.maximumWavelengthFade = std::max(settings.maximumWavelengthFade, 0.0f);
+            settings.amplitude = std::max(settings.amplitude, 0.0f);
+            settings.windAlignmentExponent = std::max(settings.windAlignmentExponent, 0.0f);
+            settings.opposingWavesDamping = std::max(settings.opposingWavesDamping, 0.0f);
+            settings.smallWavesDamping = std::max(settings.smallWavesDamping, 0.0f);
+
+            float windLength = glm::length(settings.windDirection);
+            if (windLength <= 0.0001f) settings.windDirection = glm::vec2(1.0f, 0.0f);
+            else if (std::abs(windLength - 1.0f) > 0.0001f) settings.windDirection /= windLength;
+        }
+
+        SurfaceSettings& surface = g_settings.surface;
+        surface.albedo = glm::max(surface.albedo, glm::vec3(0.0f));
+        surface.fogColor = glm::max(surface.fogColor, glm::vec3(0.0f));
+        surface.normalScale = std::max(surface.normalScale, 0.0f);
+        surface.normalConvergeStartDistance = std::max(surface.normalConvergeStartDistance, 0.0f);
+        surface.normalConvergeEndDistance = std::max(surface.normalConvergeEndDistance, surface.normalConvergeStartDistance + 0.001f);
+        surface.normalConvergeMaxFactor = std::clamp(surface.normalConvergeMaxFactor, 0.0f, 1.0f);
+        surface.normalConvergeExponent = std::max(surface.normalConvergeExponent, 0.001f);
+        surface.normalSoftening = std::clamp(surface.normalSoftening, 0.0f, 1.0f);
+        surface.rippleTiling = std::max(surface.rippleTiling, 0.0f);
+        surface.rippleStrength = std::max(surface.rippleStrength, 0.0f);
+        surface.rippleSecondLayerScale = std::max(surface.rippleSecondLayerScale, 0.0f);
+        surface.roughness = std::clamp(surface.roughness, 0.001f, 1.0f);
+        surface.reflectance = std::clamp(surface.reflectance, 0.0f, 1.0f);
+        surface.reflectionGamma = std::max(surface.reflectionGamma, 0.001f);
+        surface.diffuseStrength = std::max(surface.diffuseStrength, 0.0f);
+        surface.sssHeightRange = std::max(surface.sssHeightRange, 0.001f);
+        surface.sssStrength = std::max(surface.sssStrength, 0.0f);
+        surface.underwaterSssStrength = std::max(surface.underwaterSssStrength, 0.0f);
+        surface.sssRadiusMinimum = std::max(surface.sssRadiusMinimum, 0.001f);
+        surface.sssRadiusMaximum = std::max(surface.sssRadiusMaximum, 0.001f);
+        surface.sssIntensity = std::max(surface.sssIntensity, 0.0f);
+        surface.sssFalloff = std::max(surface.sssFalloff, 0.0f);
+        surface.sssSaturation = std::max(surface.sssSaturation, 0.0f);
+        surface.fogStartDistance = std::max(surface.fogStartDistance, 0.0f);
+        surface.fogEndDistance = std::max(surface.fogEndDistance, surface.fogStartDistance + 0.001f);
+        surface.fogExponent = std::max(surface.fogExponent, 0.001f);
+        surface.fogStrength = std::max(surface.fogStrength, 0.0f);
+
+        CompositeSettings& composite = g_settings.composite;
+        composite.underwaterTint = glm::max(composite.underwaterTint, glm::vec3(0.0f));
+        composite.surface.distortionStrength = std::max(composite.surface.distortionStrength, 0.0f);
+        composite.surface.distortionTiling = std::max(composite.surface.distortionTiling, 0.0f);
+        composite.surface.refractionTintStrength = std::max(composite.surface.refractionTintStrength, 0.0f);
+        composite.underwater.rayFogColor = glm::max(composite.underwater.rayFogColor, glm::vec3(0.0f));
+        composite.underwater.rayFogStrength = std::max(composite.underwater.rayFogStrength, 0.0f);
+        composite.underwater.darknessCurve = std::max(composite.underwater.darknessCurve, 0.001f);
+        composite.underwater.distortionStrength = std::max(composite.underwater.distortionStrength, 0.0f);
+        composite.underwater.depthTintStrength = std::max(composite.underwater.depthTintStrength, 0.0f);
+        composite.underwater.depthTintOriginalWeight = std::clamp(composite.underwater.depthTintOriginalWeight, 0.0f, 1.0f);
+        composite.underwater.geometryWaterColorSquaredStrength = std::max(composite.underwater.geometryWaterColorSquaredStrength, 0.0f);
+        composite.underwater.geometryWaterColorStrength = std::max(composite.underwater.geometryWaterColorStrength, 0.0f);
+        composite.underwater.geometryTintStrength = std::clamp(composite.underwater.geometryTintStrength, 0.0f, 1.0f);
+        composite.underwater.openWaterTintStrength = std::clamp(composite.underwater.openWaterTintStrength, 0.0f, 1.0f);
+        composite.underwater.openWaterBrightness = std::max(composite.underwater.openWaterBrightness, 0.0f);
+    }
+
+    Settings GetSettings() {
+        return g_settings;
+    }
+
+    void SetSettings(const Settings& settings) {
+        g_settings = settings;
+        UpdateSpectrum();
+    }
+
+    void ResetSettings() {
+        SetSettings(CreateDefaultSettings());
+    }
+
+    bool H0UploadRequired(int bandIndex) {
+        return g_fftBandData[bandIndex].h0UploadRequired;
+    }
+
+    void MarkH0Uploaded(int bandIndex) {
+        g_fftBandData[bandIndex].h0UploadRequired = false;
+    }
+
     const float GetDisplacementScale() {
-        return g_dispScale;
+        return g_settings.displacementScale;
     }
 
     const float GetHeightScale() {
-        return g_heightScale;
+        return g_settings.heightScale;
     }
 
-    const float GetMeshSubdivisionFactor() {
-        return g_meshSubdivisionFactor;
+    float GetAnimationTime() {
+        return g_animationTime;
+    }
+
+    float UpdateSimulationTime() {
+        if (g_settings.simulate) {
+            const float deltaTime = Hell::Time::DeltaTime();
+            g_animationTime += deltaTime;
+            g_simulationTime += deltaTime * g_settings.simulationTimeScale;
+        }
+        return g_settings.simulationTimeOffset + g_simulationTime;
+    }
+
+    DisplayMode GetDisplayMode() {
+        return g_settings.displayMode;
     }
 
     const float GetGravity() {
-        return g_gravity;
+        return g_settings.gravity;
     }
 
     const float GetOceanOriginY() {
@@ -187,32 +373,12 @@ namespace Ocean {
         }
     }
 
-    const glm::uvec2 GetBaseFFTResolution() {
-        return glm::uvec2(g_baseFftResolution);
-    }
-
-    const float GetModelMatrixScale() {
-        return g_modelMatrixScale;
-    }
-
-    const glm::vec2 GetPatchSimSize(int bandIndex) {
-        return g_fftBands[0].patchSimSize;
-    }
-
-    const glm::uvec2 GetTesslationMeshSize() {
-        return Ocean::GetBaseFFTResolution() / glm::uvec2(g_meshSubdivisionFactor) + glm::uvec2(1);
+    const float GetDomainSize(int bandIndex) {
+        return g_settings.bands[bandIndex].domainSize;
     }
 
     const std::vector<std::complex<float>>& GetH0(int bandIndex) {
-        return g_fftBands[bandIndex].h0;
-    }
-
-    const glm::uvec2 GetFFTResolution(int bandIndex) {
-        return g_fftBands[bandIndex].fftResolution;
-    }
-
-    FFTBand& GetFFTBandByIndex(int bandIndex) {
-        return g_fftBands[bandIndex];
+        return g_fftBandData[bandIndex].h0;
     }
 
     OceanReadbackData& GetOceanReadBackData() {

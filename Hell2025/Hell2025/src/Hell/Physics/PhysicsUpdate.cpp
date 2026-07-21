@@ -1,4 +1,5 @@
 #include "Physics.h"
+#include "Hell/Profiling/CPUProfiler.h"
 #include "Hell/Time.h"
 
 #include <unordered_map>
@@ -25,6 +26,8 @@ namespace Hell::Physics {
     }
 
     void StepSimulation() {
+        ProfilerCPUZoneFunction();
+
         while (Hell::Time::ConsumeFixedStep()) {
             StepPhysics(Hell::Time::FixedDeltaTime());
         }
@@ -90,6 +93,8 @@ namespace Hell::Physics {
 
     namespace {
     void StepPhysics(float deltaTime) {
+        ProfilerCPUZone("PhysX fixed step");
+
         ClearCollisionReports();
 
         PxScene* pxScene = GetPxScene();

@@ -17,6 +17,7 @@ namespace VulkanRenderer {
         AllocatedImage* baseColorImage = VulkanResourceManager::GetAllocatedImage("BaseColorMetallic");
         AllocatedImage* normalImage = VulkanResourceManager::GetAllocatedImage("NormalXYRoughnessMisc");
         AllocatedImage* velocityImage = VulkanResourceManager::GetAllocatedImage("VelocityXYOcclusionSubSurface");
+        AllocatedImage* amdMaterialRoughnessImage = VulkanResourceManager::GetAllocatedImage("IndirectSpecularAMDMaterialRoughness");
         VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
         VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
         VulkanBuffer* rendererDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rendererData);
@@ -26,12 +27,14 @@ namespace VulkanRenderer {
         VulkanMeshBuffer* assetGeometry = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
         VulkanMeshBuffer* proceduralGeometry = VulkanResourceManager::GetMeshBuffer("Procedural");
         VulkanBuffer* skinnedVertexBuffer = frameData.buffers.skinnedVertices != 0 ? VulkanResourceManager::GetBuffer(frameData.buffers.skinnedVertices) : nullptr;
+        VulkanBuffer* previousSkinnedPositionBuffer = frameData.buffers.previousSkinnedPositions != 0 ? VulkanResourceManager::GetBuffer(frameData.buffers.previousSkinnedPositions) : nullptr;
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("MaterialResolve");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("MaterialResolve");
 
         if (!baseColorImage) return;
         if (!normalImage) return;
         if (!velocityImage) return;
+        if (!amdMaterialRoughnessImage) return;
         if (!renderItemBuffer) return;
         if (!viewportDataBuffer) return;
         if (!rendererDataBuffer) return;
@@ -40,6 +43,7 @@ namespace VulkanRenderer {
         if (!assetGeometry) return;
         if (!proceduralGeometry) return;
         if (!skinnedVertexBuffer) return;
+        if (!previousSkinnedPositionBuffer) return;
         if (!renderState) return;
         if (!pipeline) return;
         if (!assetGeometry->GetVertexBuffer()) return;
@@ -65,15 +69,17 @@ namespace VulkanRenderer {
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
         PushConstantsMaterialResolve pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
 
         // Static
         pushConstants.vertexBufferDeviceAddress = assetGeometry->GetVertexBufferAddress();
         pushConstants.indexBufferDeviceAddress = assetGeometry->GetIndexBufferAddress();
+        pushConstants.previousSkinnedPositionsDeviceAddress = 0;
         pushConstants.vertexCount = static_cast<uint32_t>(assetGeometry->GetVertexBuffer()->GetSize() / sizeof(Vertex));
         pushConstants.indexCount = static_cast<uint32_t>(assetGeometry->GetIndexBuffer()->GetSize() / sizeof(uint32_t));
+        pushConstants.hasPreviousSkinnedPositions = 0;
 
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsMaterialResolve), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
         SetStencilReference(commandBuffer, STENCIL_BIT_ASSET);
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
@@ -83,18 +89,25 @@ namespace VulkanRenderer {
         pushConstants.vertexCount = static_cast<uint32_t>(proceduralGeometry->GetVertexBuffer()->GetSize() / sizeof(Vertex));
         pushConstants.indexCount = static_cast<uint32_t>(proceduralGeometry->GetIndexBuffer()->GetSize() / sizeof(uint32_t));
 
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsMaterialResolve), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
         SetStencilReference(commandBuffer, STENCIL_BIT_PROCEDUAL);
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
         // Skinned
         pushConstants.vertexBufferDeviceAddress = skinnedVertexBuffer->GetDeviceAddress();
         pushConstants.indexBufferDeviceAddress = assetGeometry->GetIndexBufferAddress();
+        pushConstants.previousSkinnedPositionsDeviceAddress = previousSkinnedPositionBuffer->GetDeviceAddress();
         pushConstants.vertexCount = static_cast<uint32_t>(skinnedVertexBuffer->GetSize() / sizeof(Vertex));
         pushConstants.indexCount = static_cast<uint32_t>(assetGeometry->GetIndexBuffer()->GetSize() / sizeof(uint32_t));
+        pushConstants.hasPreviousSkinnedPositions = 1;
 
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsMaterialResolve), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
         SetStencilReference(commandBuffer, STENCIL_BIT_SKINNED);
+        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+
+        // Skinned hair uses the same vertex and previous-position buffers, but
+        // visibility marks it with a distinct stencil value.
+        SetStencilReference(commandBuffer, STENCIL_BIT_SKINNED_HAIR);
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
         // End
@@ -103,5 +116,6 @@ namespace VulkanRenderer {
         baseColorImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_TRANSFER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_TRANSFER_BIT);
         normalImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         velocityImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
+        amdMaterialRoughnessImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
     }
 }

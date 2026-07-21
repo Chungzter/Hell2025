@@ -197,7 +197,8 @@ bool VulkanShaderModule::CreateModule(VkShaderModule& module) const {
     nameInfo.objectType = VK_OBJECT_TYPE_SHADER_MODULE;
     nameInfo.objectHandle = (uint64_t)module;
     nameInfo.pObjectName = m_path.c_str();
-    vkSetDebugUtilsObjectNameEXT(device, &nameInfo);
+    auto setDebugName = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetDeviceProcAddr(device, "vkSetDebugUtilsObjectNameEXT"));
+    if (setDebugName) setDebugName(device, &nameInfo);
 
     return true;
 }

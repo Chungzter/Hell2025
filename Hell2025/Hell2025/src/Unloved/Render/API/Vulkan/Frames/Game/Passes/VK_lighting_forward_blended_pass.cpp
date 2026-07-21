@@ -77,11 +77,10 @@ namespace VulkanRenderer {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 2, descriptorSets, 0, nullptr);
 
         PushConstantsDeferredLighting pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.rayQueryBLASInstanceDataDeviceAddress = rayQueryBLASInstanceDataBuffer->GetDeviceAddress();
         pushConstants.rayQueryMeshInstanceDataDeviceAddress = rayQueryMeshInstanceDataBuffer->GetDeviceAddress();
-        pushConstants.rayQueryEnabled = 1;
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsDeferredLighting), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
         BindVertexBuffer(commandBuffer, meshBuffer->GetVertexBuffer());
         BindIndexBuffer(commandBuffer, meshBuffer->GetIndexBuffer());

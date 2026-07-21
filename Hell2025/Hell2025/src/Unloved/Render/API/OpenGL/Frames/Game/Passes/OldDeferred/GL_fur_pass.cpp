@@ -9,7 +9,6 @@
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 
 namespace OpenGL::Renderer {

@@ -10,7 +10,7 @@ layout(local_size_x = 32) in;
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIProbePointIndices data;
-} pushConstant;
+} pc;
 
 layout(buffer_reference, scalar) readonly buffer PointCloudBuffer { CloudPoint points[]; };
 layout(buffer_reference, scalar) readonly buffer GridOffsetsBuffer { uint cellOffsets[]; };
@@ -25,16 +25,16 @@ shared uint shared_globalOffset;
 shared uint shared_tempIndices[2048];
 
 int GetGridCellIndex(ivec3 coords) {
-    if (any(lessThan(coords, ivec3(0))) || any(greaterThanEqual(coords, pushConstant.data.gridDimensions))) {
+    if (any(lessThan(coords, ivec3(0))) || any(greaterThanEqual(coords, pc.data.gridDimensions))) {
         return -1;
     }
 
-    return coords.x + coords.y * pushConstant.data.gridDimensions.x + coords.z * pushConstant.data.gridDimensions.x * pushConstant.data.gridDimensions.y;
+    return coords.x + coords.y * pc.data.gridDimensions.x + coords.z * pc.data.gridDimensions.x * pc.data.gridDimensions.y;
 }
 
 void main() {
     uint probeIdx = gl_WorkGroupID.x;
-    if (probeIdx >= pushConstant.data.totalProbes) return;
+    if (probeIdx >= pc.data.totalProbes) return;
 
     uint threadIdx = gl_LocalInvocationID.x;
 
@@ -42,21 +42,21 @@ void main() {
     barrier();
 
     DDGIVolume volume;
-    volume.origin = pushConstant.data.volumeOrigin;
-    volume.probeSpacing = pushConstant.data.probeSpacing;
-    volume.probeCounts = pushConstant.data.probeCounts;
-    volume.totalProbes = int(pushConstant.data.totalProbes);
-    volume.probeOffset = pushConstant.data.probeOffset;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.probeOffset = pc.data.probeOffset;
 
-    PointCloudBuffer pointCloud = PointCloudBuffer(pushConstant.data.pointCloudDeviceAddress);
-    GridOffsetsBuffer gridOffsets = GridOffsetsBuffer(pushConstant.data.pointCloudGridOffsetsDeviceAddress);
-    GridCountsBuffer gridCounts = GridCountsBuffer(pushConstant.data.pointCloudGridCountsDeviceAddress);
+    PointCloudBuffer pointCloud = PointCloudBuffer(pc.data.pointCloudDeviceAddress);
+    GridOffsetsBuffer gridOffsets = GridOffsetsBuffer(pc.data.pointCloudGridOffsetsDeviceAddress);
+    GridCountsBuffer gridCounts = GridCountsBuffer(pc.data.pointCloudGridCountsDeviceAddress);
 
     ivec3 probeCoords = DDGIGetProbeCoords(int(probeIdx), volume);
     vec3 probePos = DDGIGetProbeBaseWorldPosition(probeCoords, volume);
 
-    vec3 localPos = probePos - pushConstant.data.gridMin;
-    ivec3 baseCellCoords = ivec3(floor(localPos / pushConstant.data.gridCellSize));
+    vec3 localPos = probePos - pc.data.gridMin;
+    ivec3 baseCellCoords = ivec3(floor(localPos / pc.data.gridCellSize));
 
     const float maxDistSq = 3.0 * 3.0;
 
@@ -91,9 +91,9 @@ void main() {
 
     barrier();
 
-    ProbeIndexCounterBuffer probeIndexCounter = ProbeIndexCounterBuffer(pushConstant.data.probeIndexCounterDeviceAddress);
-    ProbePointOffsetsBuffer probePointOffsets = ProbePointOffsetsBuffer(pushConstant.data.probePointOffsetsDeviceAddress);
-    ProbePointCountsBuffer probePointCounts = ProbePointCountsBuffer(pushConstant.data.probePointCountsDeviceAddress);
+    ProbeIndexCounterBuffer probeIndexCounter = ProbeIndexCounterBuffer(pc.data.probeIndexCounterDeviceAddress);
+    ProbePointOffsetsBuffer probePointOffsets = ProbePointOffsetsBuffer(pc.data.probePointOffsetsDeviceAddress);
+    ProbePointCountsBuffer probePointCounts = ProbePointCountsBuffer(pc.data.probePointCountsDeviceAddress);
 
     if (threadIdx == 0) {
         uint totalFound = min(shared_probePointCount, 2048u);
@@ -105,7 +105,7 @@ void main() {
 
     barrier();
 
-    ProbePointIndicesBuffer probePointIndices = ProbePointIndicesBuffer(pushConstant.data.probePointIndicesDeviceAddress);
+    ProbePointIndicesBuffer probePointIndices = ProbePointIndicesBuffer(pc.data.probePointIndicesDeviceAddress);
     uint totalFound = min(shared_probePointCount, 2048u);
     for (uint i = threadIdx; i < totalFound; i += 32) {
         probePointIndices.probePointIndices[shared_globalOffset + i] = shared_tempIndices[i];

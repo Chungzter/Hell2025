@@ -67,6 +67,7 @@ void SkinnedModel::BuildRuntimeData() {
 
     // Store bone node indices
     m_boneNodeIndices.assign(m_boneMapping.size(), -1);
+    m_bindPose.resize(m_nodes.size());
     for (int nodeIdx = 0; nodeIdx < GetNodeCount(); ++nodeIdx) {
         const auto& name = m_nodes[nodeIdx].name;
         auto it = m_boneMapping.find(name);
@@ -74,6 +75,7 @@ void SkinnedModel::BuildRuntimeData() {
             m_boneNodeIndices[it->second] = nodeIdx;
         }
         m_nodeMapping[name] = nodeIdx;
+        m_bindPose[nodeIdx] = Hell::QuatTransform(m_nodes[nodeIdx].inverseBindTransform);
     }
 }
 
@@ -170,6 +172,7 @@ size_t SkinnedModel::GetCPUAllocatedByteCount() const {
     byteCount += BoneMappingAllocatedByteCount(m_boneMapping);
     byteCount += BoneMappingAllocatedByteCount(m_nodeMapping);
     byteCount += m_boneNodeIndices.capacity() * sizeof(int);
+    byteCount += m_bindPose.capacity() * sizeof(Hell::QuatTransform);
     byteCount += m_meshIndices.capacity() * sizeof(uint32_t);
     byteCount += SkinnedModelDataAllocatedByteCount(m_skinnedModelData);
 

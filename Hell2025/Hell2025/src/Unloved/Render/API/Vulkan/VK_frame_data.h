@@ -7,8 +7,23 @@ inline constexpr size_t VULKAN_MAX_UI_VERTICES = 262144;
 inline constexpr size_t VULKAN_MAX_UI_INDICES = 393216;
 inline constexpr size_t VULKAN_MAX_UI_RENDER_ITEMS = 16384;
 
+struct FrameAddressTable {
+    uint64_t renderItemBuffer = 0;
+    uint64_t viewportDataBuffer = 0;
+    uint64_t rendererDataBuffer = 0;
+    uint64_t materialBuffer = 0;
+    uint64_t lightBuffer = 0;
+    uint64_t spriteSheetRenderItemBuffer = 0;
+    uint64_t uiRenderItemBuffer = 0;
+    uint64_t tileLightBuffer = 0;
+    uint64_t tileWorldBoundsBuffer = 0;
+};
+
+static_assert(sizeof(FrameAddressTable) == sizeof(uint64_t) * 9);
+
 struct VulkanFrameData {
     struct Buffers {
+        uint64_t frameAddressTable = 0;
         uint64_t instanceData = 0;
         uint64_t viewportData = 0;
         uint64_t rendererData = 0;
@@ -16,10 +31,13 @@ struct VulkanFrameData {
         uint64_t materials = 0;
         uint64_t spriteSheetInstanceData = 0;
         uint64_t drawCommands = 0;
+        uint64_t pointShadowFaceData = 0;
         uint64_t skinningDispatchGroups = 0;
         uint64_t skinningJobs = 0;
         uint64_t skinningTransforms = 0;
+        uint64_t previousSkinningTransforms = 0;
         uint64_t skinnedVertices = 0;
+        uint64_t previousSkinnedPositions = 0;
         uint64_t rayQueryInstances = 0;
         uint64_t rayQueryBLASInstanceData = 0;
         uint64_t rayQueryMeshInstanceData = 0;

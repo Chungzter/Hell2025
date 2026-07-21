@@ -1,18 +1,30 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
-#include "Hell/Common/String.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
-
-// todo remove
-#include "Unloved/Debug/Debug.h"
-#include "Unloved/Render/Renderer.h"
-#include "Hell/Input.h"
-namespace Input = Hell::Input;
+#include <array>
 
 namespace {
-    std::string GetBlurBufferName(int viewportIndex, int bufferIndex) {
-        return "BlurBuffer_" + std::to_string(viewportIndex) + "_" + std::to_string(bufferIndex);
+    constexpr int BLOOM_MIP_COUNT = 3;
+
+    glm::ivec2 GetHalfExtent(const glm::ivec2& extent) {
+        return glm::max((extent + glm::ivec2(1)) / 2, glm::ivec2(1));
+    }
+
+    void DispatchEmissiveBloomFilter(GLuint sourceHandle, int sourceMip, const glm::ivec2& sourceOffset, const glm::ivec2& sourceExtent, GLuint outputHandle, int outputMip, const glm::ivec2& outputExtent, const glm::ivec2& direction, float filterScale) {
+        OpenGL::BindShader("EmissiveBloomFilter");
+        OpenGL::BindTextureUnit(0, sourceHandle);
+        glBindImageTexture(1, outputHandle, outputMip, GL_FALSE, 0, GL_WRITE_ONLY, GL_R11F_G11F_B10F);
+
+        OpenGL::SetUniformIVec2("u_sourceOffset", sourceOffset);
+        OpenGL::SetUniformIVec2("u_sourceExtent", sourceExtent);
+        OpenGL::SetUniformIVec2("u_outputExtent", outputExtent);
+        OpenGL::SetUniformIVec2("u_direction", direction);
+        OpenGL::SetUniformInt("u_sourceMip", sourceMip);
+        OpenGL::SetUniformFloat("u_filterScale", filterScale);
+
+        OpenGL::DispatchCompute((outputExtent.x + 15) / 16, (outputExtent.y + 7) / 8, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
     }
 }
 
@@ -21,223 +33,62 @@ namespace OpenGL::Renderer {
     void EmissivePass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* gBuffer = nullptr;
-        std::string outputTextureName = UNDEFINED_STRING;
+        OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
+        OpenGLFrameBuffer& bloomPyramidFBO = OpenGL::ResourceManager::GetFrameBuffer("EmissiveBloomPyramid");
 
-        if (Unloved::Renderer::GetRendererMode() == RendererMode::OLD_DEFERRED) {
-            gBuffer = &OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
-            outputTextureName = "Lighting";
-        }
-        if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
-            gBuffer = &OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
-            outputTextureName = "Lighting";
-        }
-        if (!gBuffer) return;
+        const GLuint emissiveHandle = gBuffer.GetColorAttachmentHandleByName("Emissive");
+        const GLuint lightingHandle = gBuffer.GetColorAttachmentHandleByName("Lighting");
+        const GLuint bloomHandleA = bloomPyramidFBO.GetColorAttachmentHandleByName("ColorA");
+        const GLuint bloomHandleB = bloomPyramidFBO.GetColorAttachmentHandleByName("ColorB");
 
-        static bool old = true;
+        // Hair just wrote emissive
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT);
 
-        if (Input::KeyPressed(HELL_KEY_NUMPAD_4)) {
-            old = !old;
-            Debug::BlitQuickDebugMessage("OLD: " + Hell::String::FormatBool(old));
-        }
+        for (int viewportIndex = 0; viewportIndex < 4; viewportIndex++) {
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(viewportIndex);
 
-        if (old) {
-            OpenGL::RasterizerStateManager::ForceRasterizerState("EmissivePass");
+            // Skip dead viewports
+            if (!viewport || !viewport->IsVisible()) continue;
 
+            const BlitRect viewportRect = OpenGL::Renderer::BlitRectFromFrameBufferViewport(&gBuffer, viewport);
+            const glm::ivec2 viewportOffset(viewportRect.x0, viewportRect.y0);
+            const glm::ivec2 viewportExtent(viewportRect.x1 - viewportRect.x0, viewportRect.y1 - viewportRect.y0);
+            if (viewportExtent.x <= 0 || viewportExtent.y <= 0) continue;
 
-            //OpenGLFrameBuffer* finalImageFBO = OpenGL::ResourceManager::GetFrameBufferPtr("FinalImage");
-            OpenGLShader* horizontalShader = OpenGL::ResourceManager::GetShaderPtr("BlurHorizontal");
-            OpenGLShader* verticalShader = OpenGL::ResourceManager::GetShaderPtr("BlurVertical");
-            OpenGLShader* compositeShader = OpenGL::ResourceManager::GetShaderPtr("EmissiveComposite");
+            // Build the viewport local pyramid sizes
+            std::array<glm::ivec2, BLOOM_MIP_COUNT> bloomExtents;
+            bloomExtents[0] = GetHalfExtent(viewportExtent);
 
-            glDisable(GL_DEPTH_TEST);
-            glDepthMask(GL_FALSE);
-
-            for (int i = 0; i < 4; i++) {
-                Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
-                if (!viewport->IsVisible()) continue;
-
-                OpenGLFrameBuffer* blurBuffer = OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, 0));
-
-                BlitRect srcRect = OpenGL::Renderer::BlitRectFromFrameBufferViewport(gBuffer, viewport);
-                BlitRect dstRect;
-                dstRect.x0 = 0;
-                dstRect.x1 = blurBuffer->GetWidth();
-                dstRect.y0 = 0;
-                dstRect.y1 = blurBuffer->GetHeight();
-
-                OpenGL::BlitFrameBuffer(gBuffer, blurBuffer, "Emissive", "ColorA", srcRect, dstRect, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-                // First round blur (vertical)
-                blurBuffer->Bind();
-                blurBuffer->SetViewport();
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, blurBuffer->GetColorAttachmentHandleByName("ColorA"));
-                glDrawBuffer(GL_COLOR_ATTACHMENT1);
-                OpenGL::BindShader("BlurVertical");
-                OpenGL::SetUniformFloat("targetHeight", blurBuffer->GetHeight());
-                DrawFullscreenTriangle();
-
-                for (int j = 1; j < 4; j++) {
-
-                    GLuint horizontalSourceHandle = OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, j - 1))->GetColorAttachmentHandleByName("ColorB");
-                    GLuint verticalSourceHandle = OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, j))->GetColorAttachmentHandleByName("ColorA");
-
-                    OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, j))->Bind();
-                    OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, j))->SetViewport();
-
-                    // Second round blur (horizontal)
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, horizontalSourceHandle);
-                    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-                    OpenGL::BindShader("BlurHorizontal");
-                    OpenGL::SetUniformFloat("targetWidth", OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, j))->GetWidth());
-                    DrawFullscreenTriangle();
-
-                    // Second round blur (vertical)
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, verticalSourceHandle);
-                    glDrawBuffer(GL_COLOR_ATTACHMENT1);
-                    OpenGL::BindShader("BlurVertical");
-                    OpenGL::SetUniformFloat("targetHeight", OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, j))->GetHeight());
-                    DrawFullscreenTriangle();
-                }
-
-                // Composite those blurred textures into the main lighting image
-                float viewportWidth = gBuffer->GetWidth() * viewport->GetSize().x;
-                float viewportHeight = gBuffer->GetHeight() * viewport->GetSize().y;
-                float viewportOffsetX = gBuffer->GetWidth() * viewport->GetPosition().x;
-                float viewportOffsetY = gBuffer->GetHeight() * viewport->GetPosition().y;
-
-                OpenGL::BindShader("EmissiveComposite");
-                OpenGL::SetUniformInt("u_viewportIndex", i);
-
-                glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName(outputTextureName), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-                glBindTextureUnit(1, OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, 0))->GetColorAttachmentHandleByName("ColorB"));
-                glBindTextureUnit(2, OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, 1))->GetColorAttachmentHandleByName("ColorB"));
-                glBindTextureUnit(3, OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, 2))->GetColorAttachmentHandleByName("ColorB"));
-                glBindTextureUnit(4, OpenGL::ResourceManager::GetFrameBufferPtr(GetBlurBufferName(i, 3))->GetColorAttachmentHandleByName("ColorB"));
-
-                int dispatchX = static_cast<int>(std::ceil(viewportWidth / 16.0f));
-                int dispatchY = static_cast<int>(std::ceil(viewportHeight / 4.0f));
-                OpenGL::DispatchCompute(dispatchX, dispatchY, 1);
-            }
-        }
-        else {
-            ProfilerOpenGLZoneFunction();
-            OpenGL::RasterizerStateManager::ForceRasterizerState("EmissivePass");
-
-            OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
-            OpenGLFrameBuffer* emissiveBlurFBO = OpenGL::ResourceManager::GetFrameBufferPtr("EmissiveBlur");
-            OpenGLShader* horizontalShader = OpenGL::ResourceManager::GetShaderPtr("BlurHorizontal");
-            OpenGLShader* verticalShader = OpenGL::ResourceManager::GetShaderPtr("BlurVertical");
-            OpenGLShader* compositeShader = OpenGL::ResourceManager::GetShaderPtr("EmissiveCompositeNew");
-
-            GLuint handleA = emissiveBlurFBO->GetColorAttachmentHandleByName("ColorA");
-            GLuint handleB = emissiveBlurFBO->GetColorAttachmentHandleByName("ColorB");
-
-            glDisable(GL_DEPTH_TEST);
-            glDepthMask(GL_FALSE);
-
-            float fullWidth = gBuffer->GetWidth();
-            float fullHeight = gBuffer->GetHeight();
-
-            // blit initial emissive data to mip 0
-            emissiveBlurFBO->Bind();
-            emissiveBlurFBO->SetColorAttachmentMipLevel("ColorA", 0);
-            emissiveBlurFBO->DrawBuffer("ColorA");
-
-            BlitRect fullScreenRect;
-            fullScreenRect.x0 = 0;
-            fullScreenRect.x1 = fullWidth;
-            fullScreenRect.y0 = 0;
-            fullScreenRect.y1 = fullHeight;
-
-            OpenGL::BlitFrameBuffer(gBuffer, emissiveBlurFBO, "Emissive", "ColorA", fullScreenRect, fullScreenRect, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-            // perform vertical blur only for base mip
-            glViewport(0, 0, fullWidth, fullHeight);
-            emissiveBlurFBO->SetColorAttachmentMipLevel("ColorB", 0);
-            emissiveBlurFBO->DrawBuffer("ColorB");
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, handleA);
-            glTextureParameteri(handleA, GL_TEXTURE_BASE_LEVEL, 0);
-            glTextureParameteri(handleA, GL_TEXTURE_MAX_LEVEL, 0);
-
-            OpenGL::BindShader("BlurVertical");
-            OpenGL::SetUniformFloat("targetHeight", fullHeight);
-            DrawFullscreenTriangle();
-
-            for (int mip = 1; mip < 4; mip++) {
-                float currentW = fullWidth / std::pow(2.0f, mip);
-                float currentH = fullHeight / std::pow(2.0f, mip);
-
-                glViewport(0, 0, currentW, currentH);
-
-                // downsample horizontally from previous mip b to current mip a
-                emissiveBlurFBO->SetColorAttachmentMipLevel("ColorA", mip);
-                emissiveBlurFBO->DrawBuffer("ColorA");
-
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, handleB);
-                glTextureParameteri(handleB, GL_TEXTURE_BASE_LEVEL, mip - 1);
-                glTextureParameteri(handleB, GL_TEXTURE_MAX_LEVEL, mip - 1);
-
-                OpenGL::BindShader("BlurHorizontal");
-                OpenGL::SetUniformFloat("targetWidth", currentW);
-                DrawFullscreenTriangle();
-
-                // perform vertical blur on current mip
-                emissiveBlurFBO->SetColorAttachmentMipLevel("ColorB", mip);
-                emissiveBlurFBO->DrawBuffer("ColorB");
-
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, handleA);
-                glTextureParameteri(handleA, GL_TEXTURE_BASE_LEVEL, mip);
-                glTextureParameteri(handleA, GL_TEXTURE_MAX_LEVEL, mip);
-
-                OpenGL::BindShader("BlurVertical");
-                OpenGL::SetUniformFloat("targetHeight", currentH);
-
-                DrawFullscreenTriangle();
+            for (int mip = 1; mip < BLOOM_MIP_COUNT; mip++) {
+                bloomExtents[mip] = GetHalfExtent(bloomExtents[mip - 1]);
             }
 
-            // restore mip chain visibility
-            int maxDim = std::max((int)fullWidth, (int)fullHeight);
-            int maxMips = 1 + (int)floor(log2(maxDim));
+            // Build the first half res band
+            DispatchEmissiveBloomFilter(emissiveHandle, 0, viewportOffset, viewportExtent, bloomHandleA, 0, bloomExtents[0], glm::ivec2(1, 0), 1.0f);
 
-            glTextureParameteri(handleA, GL_TEXTURE_BASE_LEVEL, 0);
-            glTextureParameteri(handleA, GL_TEXTURE_MAX_LEVEL, maxMips - 1);
+            // Squash the old two vertical passes into one
+            DispatchEmissiveBloomFilter(bloomHandleA, 0, glm::ivec2(0), bloomExtents[0], bloomHandleB, 0, bloomExtents[0], glm::ivec2(0, 1), 1.11803398875f);
 
-            glTextureParameteri(handleB, GL_TEXTURE_BASE_LEVEL, 0);
-            glTextureParameteri(handleB, GL_TEXTURE_MAX_LEVEL, maxMips - 1);
-
-            glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
-
-            // reset viewports for composite
-            for (int i = 0; i < 4; i++) {
-                Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
-                if (!viewport->IsVisible()) continue;
-
-                float vW = viewport->GetSize().x * fullWidth;
-                float vH = viewport->GetSize().y * fullHeight;
-
-                OpenGL::BindShader("EmissiveCompositeNew");
-                OpenGL::SetUniformInt("u_viewportIndex", i);
-
-                glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName(outputTextureName), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-                glBindTextureUnit(1, handleA);
-                glBindTextureUnit(1, handleB);
-
-                int dispatchX = static_cast<int>(std::ceil(vW / 16.0f));
-                int dispatchY = static_cast<int>(std::ceil(vH / 4.0f));
-                OpenGL::DispatchCompute(dispatchX, dispatchY, 1);
+            // Build the wider bands
+            for (int mip = 1; mip < BLOOM_MIP_COUNT; mip++) {
+                DispatchEmissiveBloomFilter(bloomHandleB, mip - 1, glm::ivec2(0), bloomExtents[mip - 1], bloomHandleA, mip, bloomExtents[mip], glm::ivec2(1, 0), 1.0f);
+                DispatchEmissiveBloomFilter(bloomHandleA, mip, glm::ivec2(0), bloomExtents[mip], bloomHandleB, mip, bloomExtents[mip], glm::ivec2(0, 1), 1.0f);
             }
 
-            // reset mip attachments to 0 to avoid breaking future passes
-            emissiveBlurFBO->SetColorAttachmentMipLevel("ColorA", 0);
-            emissiveBlurFBO->SetColorAttachmentMipLevel("ColorB", 0);
+            // Composite bloom straight into lighting
+            OpenGL::BindShader("EmissiveBloomComposite");
+
+            OpenGL::BindImageTexture(0, lightingHandle, GL_READ_WRITE, GL_RGBA16F);
+            OpenGL::BindTextureUnit(1, emissiveHandle);
+            OpenGL::BindTextureUnit(2, bloomHandleB);
+            OpenGL::SetUniformIVec2("u_viewportOffset", viewportOffset);
+            OpenGL::SetUniformIVec2("u_viewportExtent", viewportExtent);
+            OpenGL::SetUniformIVec2("u_bloomExtents[0]", bloomExtents[0]);
+            OpenGL::SetUniformIVec2("u_bloomExtents[1]", bloomExtents[1]);
+            OpenGL::SetUniformIVec2("u_bloomExtents[2]", bloomExtents[2]);
+
+            OpenGL::DispatchCompute((viewportExtent.x + 15) / 16, (viewportExtent.y + 3) / 4, 1);
+            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT);
         }
     }
 }

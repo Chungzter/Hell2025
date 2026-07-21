@@ -8,6 +8,7 @@
 #include "../../common/normal_encoding.glsl"
 #include "../../common/post_processing.glsl"
 #include "../../common/types.glsl"
+#include "../../common/reconstruction.glsl"
 #include "../../common/util.glsl"
 #include "../../common/ddgi_upsample.glsl"
 
@@ -23,7 +24,6 @@ layout (binding = 5) uniform sampler2D u_normalXYRoughnessMiscTexture;
 layout (binding = 6) uniform sampler2D u_velocityXYOcclusionSubSurfaceTexture;
 layout (binding = 7) uniform sampler2D u_depthTexture;
 layout (binding = 8) uniform sampler2D u_indirectDiffuseTexture;
-layout (binding = 9) uniform sampler2D u_flashlightCookieTexture;
 layout (binding = 10) uniform sampler2D u_indirectDiffuseSurfaceTexture;
 
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
@@ -66,7 +66,7 @@ void main() {
 
     ViewportData viewportData = viewportDataArr[viewportIndex];
     mat4 inverseProjection = viewportData.inverseProjection;
-    mat4 inverseProjectionViewReverseZ = viewportData.inverseProjectionViewReverseZ;
+    mat4 inverseProjectionViewReverseZ = viewportData.inverseJitteredProjectionViewReverseZ;
     mat4 inverseView = viewportData.inverseView;
     mat4 viewMatrix = viewportData.view;
     vec3 viewPos = viewportData.viewPos.xyz;
@@ -79,7 +79,7 @@ void main() {
 
     // Depth reconstruction
     float depth = texelFetch(u_depthTexture, px, 0).r;
-    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionViewReverseZ);
+    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionViewReverseZ);
 
     float fragDistance = distance(worldPos, viewPos);
 
@@ -109,8 +109,7 @@ void main() {
         vec3 directLight = GetDirectLighting(lightPosition, lightColor, lightRadius, lightStrength, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, viewPos) * shadow;
 
         if (light.iesTextureIndex != 0) {
-            sampler2D iesSampler = sampler2D(textureSamplers[(light.iesTextureIndex)]);
-            float candelas = ApplyIESProfile(worldPos.xyz, light, iesSampler);
+            float candelas = ApplyIESProfile(worldPos.xyz, light, sampler2D(textureSamplers[light.iesTextureIndex]));
             directLight *= candelas;
         }
 
@@ -118,9 +117,12 @@ void main() {
     }
 
 
-    for (int i = 0; i < 2; i++) {
-        ViewportData flashlightViewportData = viewportDataArr[i];
-        directLighting += GetFlashlightContribution(i, viewportIndex, flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), GetFlashLightColor(), normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, fragDistance, u_oceanHeight, u_flashlightCookieTexture, u_flashlighShadowMapArrayTexture);
+    if (rendererData.flashlightIESTextureIndex >= 0) {
+        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
+        for (int i = 0; i < 2; i++) {
+            ViewportData flashlightViewportData = viewportDataArr[i];
+            directLighting += GetFlashlightContribution(i, viewportIndex, flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), rendererData, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, fragDistance, u_oceanHeight, flashlightIES, u_flashlighShadowMapArrayTexture);
+        }
     }
 
     // Indirect diffuse
@@ -132,7 +134,9 @@ void main() {
         indirectDiffuse = probeIrradiance * diffuseAlbedo;
     }
 
-    // Extra flashlight lighting
+    // Extra near-camera light for the first-person view weapon. This is
+    // deliberately separate from the world-space IES flashlight beam.
+    /*
     if (viewportDataArr[viewportIndex].flashlightModifer > 0.1) {
         vec3 offset = viewportDataArr[viewportIndex].cameraForward.xyz * 0.001;
         vec3 spotLightPos = viewPos + offset;
@@ -143,17 +147,16 @@ void main() {
 
         float spotLightRadius = 0.165;
         float spotLightStregth = 10.0;
-        float innerAngle = cos(radians(00.0 * viewportDataArr[viewportIndex].flashlightModifer));
+        float innerAngle = cos(radians(0.0 * viewportDataArr[viewportIndex].flashlightModifer));
         float outerAngle = cos(radians(40.0));
 
         mat4 lightProjectionView = viewportDataArr[viewportIndex].flashlightProjectionView;
-        vec4 flashlightDir = viewportDataArr[viewportIndex].flashlightDir;
-        vec4 flashlightPosition = viewportDataArr[viewportIndex].flashlightPosition;
         vec3 flashlightViewPos = viewportDataArr[viewportIndex].inverseView[3].xyz;
 
         vec3 re7Lighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, spotLightRadius, spotLightStregth, innerAngle, outerAngle, normal.xyz, worldPos, linearBaseColor.rgb, roughness, metallic, flashlightViewPos, lightProjectionView);
         directLighting += re7Lighting;
     }
+    */
 
     // Moon light
     vec3 moonLighting = vec3(0.0);

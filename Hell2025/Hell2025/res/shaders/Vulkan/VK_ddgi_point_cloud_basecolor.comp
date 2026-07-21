@@ -18,15 +18,15 @@ layout(buffer_reference, scalar) readonly buffer PointCloudTextureInfoBuffer { C
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIPointCloudBaseColor data;
-} pushConstant;
+} pc;
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
-    if (idx >= pushConstant.data.pointCount) return;
-    if (idx >= pushConstant.data.textureInfoCount) return;
+    if (idx >= pc.data.pointCount) return;
+    if (idx >= pc.data.textureInfoCount) return;
 
-    PointCloudBuffer pointCloud = PointCloudBuffer(pushConstant.data.pointCloudDeviceAddress);
-    PointCloudTextureInfoBuffer pointCloudTextureInfo = PointCloudTextureInfoBuffer(pushConstant.data.pointCloudTextureInfoDeviceAddress);
+    PointCloudBuffer pointCloud = PointCloudBuffer(pc.data.pointCloudDeviceAddress);
+    PointCloudTextureInfoBuffer pointCloudTextureInfo = PointCloudTextureInfoBuffer(pc.data.pointCloudTextureInfoDeviceAddress);
 
     CloudPointTextureInfo info = pointCloudTextureInfo.textureInfo[idx];
     if (info.baseColorIndex < 0) {

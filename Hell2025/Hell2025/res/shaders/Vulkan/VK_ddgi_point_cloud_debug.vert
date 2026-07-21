@@ -8,11 +8,7 @@
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIPointCloudDebug data;
-} pushConstant;
-
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
-    ViewportData data[];
-};
+} pc;
 
 layout(buffer_reference, scalar) readonly buffer PointCloudBuffer {
     CloudPoint points[];
@@ -25,20 +21,20 @@ layout(buffer_reference, scalar) readonly buffer PointCloudDirtyFlagsBuffer {
 layout(location = 0) out vec3 v_color;
 
 void main() {
-    if (uint(gl_VertexIndex) >= pushConstant.data.pointCount) {
+    if (uint(gl_VertexIndex) >= pc.data.pointCount) {
         v_color = vec3(0.0);
         gl_Position = vec4(0.0);
         return;
     }
 
-    ViewportDataBuffer viewportData = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
-    PointCloudBuffer pointCloud = PointCloudBuffer(pushConstant.data.pointCloudDeviceAddress);
-    PointCloudDirtyFlagsBuffer dirtyFlags = PointCloudDirtyFlagsBuffer(pushConstant.data.pointCloudDirtyFlagsDeviceAddress);
+    ViewportDataBuffer viewportData = pc.data.frame.viewportDataBuffer;
+    PointCloudBuffer pointCloud = PointCloudBuffer(pc.data.pointCloudDeviceAddress);
+    PointCloudDirtyFlagsBuffer dirtyFlags = PointCloudDirtyFlagsBuffer(pc.data.pointCloudDirtyFlagsDeviceAddress);
 
     CloudPoint point = pointCloud.points[gl_VertexIndex];
     vec3 position = point.position.xyz + point.normal.xyz * 0.01;
 
-    mat4 projectionView = viewportData.data[pushConstant.data.viewportIndex].projectionViewReverseZ;
+    mat4 projectionView = viewportData.viewportData[pc.data.viewportIndex].projectionViewReverseZ;
     gl_Position = projectionView * vec4(position, 1.0);
     gl_PointSize = 8.0;
 

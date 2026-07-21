@@ -9,11 +9,20 @@ namespace Debug {
     void AddText(const std::string& text);
     void BlitQuickDebugMessage(const std::string& message);
     void EndFrame();
-	void NextDebugRenderMode();
-	void NextDebugTextMode();
+    void NextDebugRenderMode();
+    void SetDebugTextMode(DebugTextMode mode);
     void SetDebugRenderMode(DebugRenderMode mode);
 
     void PrintModelMeshNames(const std::string& name);
+
+    // Menu
+    void ToggleMenuVisiblity();
+    void HideMenu();
+    void ShowMenu();
+    void UpdateMenu();
+    bool IsMenuVisible();
+    bool MenuHadFocusThisFrame();
+    void EndMenuFrame();
 
     const std::string& GetText();
     const DebugRenderMode& GetDebugRenderMode();

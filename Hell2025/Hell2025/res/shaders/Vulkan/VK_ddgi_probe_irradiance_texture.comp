@@ -22,24 +22,21 @@ layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform imag
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIProbeIrradianceTexture data;
-} pushConstant;
+} pc;
 
 layout(buffer_reference, scalar) readonly buffer ProbeStatesBuffer { ProbeState probeStates[]; };
-layout(buffer_reference, scalar) readonly buffer RendererDataBuffer { RendererData rendererData; };
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer { ViewportData viewportDataArr[]; };
-
 const float RTXGI_2PI = 6.2831853071795864;
 const float encodingGamma = 5.0;
 
 DDGIVolume GetVolume() {
     DDGIVolume volume;
-    volume.origin = pushConstant.data.volumeOrigin;
-    volume.probeSpacing = pushConstant.data.probeSpacing;
-    volume.probeCounts = pushConstant.data.probeCounts;
-    volume.totalProbes = int(pushConstant.data.totalProbes);
-    volume.worldBoundsMin = pushConstant.data.worldBoundsMin;
-    volume.worldBoundsMax = pushConstant.data.worldBoundsMax;
-    volume.probeOffset = pushConstant.data.probeOffset;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.worldBoundsMin = pc.data.worldBoundsMin;
+    volume.worldBoundsMax = pc.data.worldBoundsMax;
+    volume.probeOffset = pc.data.probeOffset;
     return volume;
 }
 
@@ -53,7 +50,7 @@ vec3 SampleIrradianceAtlas(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
         return vec3(0.0);
     }
 
-    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pushConstant.data.probeStatesDeviceAddress);
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
     vec3 direction = normal;
     vec3 irradiance = vec3(0.0);
     float accumulatedWeights = 0.0;
@@ -88,7 +85,7 @@ vec3 SampleIrradianceAtlas(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
 
         vec2 octantCoordsDist = DDGIGetOctahedralCoordinates(-biasedPosToAdjProbe);
         vec3 probeTextureUVDist = DDGIGetProbeUV(adjacentProbeIndex, octantCoordsDist, 14, volume);
-        vec2 filteredDistance = 2.0 * texture(sampler2DArray(textureArraysRG16F[pushConstant.data.probeAtlasImageIndex], samplers[VULKAN_SAMPLER_IDX_LINEAR]), probeTextureUVDist).rg;
+        vec2 filteredDistance = 2.0 * texture(sampler2DArray(textureArraysRG16F[pc.data.probeAtlasImageIndex], samplers[VULKAN_SAMPLER_IDX_LINEAR]), probeTextureUVDist).rg;
 
         float variance = abs((filteredDistance.x * filteredDistance.x) - filteredDistance.y);
         float chebyshevWeight = 1.0;
@@ -111,7 +108,7 @@ vec3 SampleIrradianceAtlas(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
 
         vec2 octantCoordsIrrad = DDGIGetOctahedralCoordinates(normal);
         vec3 probeTextureUVIrrad = DDGIGetProbeUV(adjacentProbeIndex, octantCoordsIrrad, 6, volume);
-        vec3 probeIrradiance = texture(sampler2DArray(textureArraysRGBA16F[pushConstant.data.probeAtlasImageIndex], samplers[VULKAN_SAMPLER_IDX_LINEAR]), probeTextureUVIrrad).rgb;
+        vec3 probeIrradiance = texture(sampler2DArray(textureArraysRGBA16F[pc.data.probeAtlasImageIndex], samplers[VULKAN_SAMPLER_IDX_LINEAR]), probeTextureUVIrrad).rgb;
         probeIrradiance = pow(max(vec3(0.0), probeIrradiance), vec3(encodingGamma * 0.5));
 
         irradiance += weight * probeIrradiance;
@@ -128,18 +125,18 @@ vec3 SampleIrradianceAtlas(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
 
 void main() {
     ivec2 px = ivec2(gl_GlobalInvocationID.xy);
-    uint outputImageIndex = pushConstant.data.indirectDiffuseStorageImageIndex;
-    uint outputSurfaceImageIndex = pushConstant.data.indirectDiffuseSurfaceStorageImageIndex;
+    uint outputImageIndex = pc.data.indirectDiffuseStorageImageIndex;
+    uint outputSurfaceImageIndex = pc.data.indirectDiffuseSurfaceStorageImageIndex;
     ivec2 outputImageSize = imageSize(storageImagesRGBA16F[outputImageIndex]);
 
     if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) return;
 
     ivec2 gBufferSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
 
-    RendererData rendererData = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress).rendererData;
-    ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
+    RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
     uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, outputImageSize, rendererData.splitscreenMode);
-    ViewportData viewport = viewportDataBuffer.viewportDataArr[viewportIndex];
+    ViewportData viewport = viewportDataBuffer.viewportData[viewportIndex];
     vec2 viewportScale = vec2(outputImageSize) / vec2(gBufferSize);
     viewport.xOffset = int(round(float(viewport.xOffset) * viewportScale.x));
     viewport.yOffset = int(round(float(viewport.yOffset) * viewportScale.y));

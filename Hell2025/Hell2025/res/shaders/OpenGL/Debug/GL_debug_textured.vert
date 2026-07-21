@@ -49,7 +49,7 @@ mat3 RotationZ(float angle) {
 void main() {
     mat4 modelMatrix = u_model;
     mat4 inverseModelMatrix = inverse(modelMatrix);
-	mat4 projectionView = viewportData[u_viewportIndex].projectionViewReverseZ;
+	mat4 projectionView = viewportData[u_viewportIndex].jitteredProjectionViewReverseZ;
     mat4 normalMatrix = transpose(inverseModelMatrix);
 
     Normal = normalize(normalMatrix * vec4(vNormal, 0)).xyz;
@@ -63,6 +63,9 @@ void main() {
         mat4 projection = viewportData[u_viewportIndex].projectionReverseZ;
         projection[0][0] *= -1.0;
         projectionView = projection * u_mirrorViewMatrix;
+        mat4 jitterMatrix = viewportData[u_viewportIndex].jitteredProjectionViewReverseZ *
+                            viewportData[u_viewportIndex].inverseProjectionViewReverseZ;
+        projectionView = jitterMatrix * projectionView;
         gl_ClipDistance[0] = dot(WorldPos, u_mirrorClipPlane);
 
         //vec3 shardRotation = vec3(0.00, 0.00, -0.0005);

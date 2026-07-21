@@ -37,7 +37,7 @@ namespace VulkanRenderer {
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("Skybox");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
         VulkanCubemap* skyboxCubemap = VulkanResourceManager::CubemapExists("SkyboxNightSky") ? VulkanResourceManager::GetCubemap("SkyboxNightSky") : nullptr;
-        PushConstantsFrameResources frameResources = CreatePushConstantsFrameResources();
+        const uint64_t frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
 
         if (!pipeline) return;
         if (!renderState) return;
@@ -46,8 +46,7 @@ namespace VulkanRenderer {
         if (skyboxCubemap->GetImageView() == VK_NULL_HANDLE) return;
         if (skyboxCubemap->GetSampler() == VK_NULL_HANDLE) return;
         if (!lightingImage) return;
-        if (frameResources.viewportDataDeviceAddress == 0) return;
-        if (frameResources.rendererDataDeviceAddress == 0) return;
+        if (frameAddressTableDeviceAddress == 0) return;
 
         VkExtent2D extent = lightingImage->GetExtent2D();
         lightingImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT); // Needed?
@@ -68,8 +67,8 @@ namespace VulkanRenderer {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, descriptorSets, 0, nullptr);
 
         PushConstantsSkybox pushConstants{};
-        pushConstants.frame = frameResources;
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsSkybox), &pushConstants);
+        pushConstants.frameAddressTableDeviceAddress = frameAddressTableDeviceAddress;
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 

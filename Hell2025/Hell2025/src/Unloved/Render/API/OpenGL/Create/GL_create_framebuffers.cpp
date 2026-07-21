@@ -33,6 +33,15 @@ namespace OpenGL::Renderer {
         indirectDiffuseFbo.CreateAttachment("Color", GL_R11F_G11F_B10F);
         indirectDiffuseFbo.CreateAttachment("Surface", GL_RGBA16F, GL_NEAREST, GL_NEAREST);
 
+        OpenGLFrameBuffer& taaFbo = OpenGL::ResourceManager::CreateFrameBuffer("TAA");
+        taaFbo.Create(resolutions.gBuffer);
+        taaFbo.CreateAttachment("History", GL_RGBA16F);
+        taaFbo.CreateAttachment("Output", GL_RGBA16F);
+
+        OpenGLFrameBuffer& scratchFbo = OpenGL::ResourceManager::CreateFrameBuffer("Scratch");
+        scratchFbo.Create(resolutions.gBuffer);
+        scratchFbo.CreateAttachment("RGBA16F", GL_RGBA16F);
+
         OpenGL::ResourceManager::CreateSSBO("BubblePositions").Create(sizeof(glm::vec4) * 100, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("BubblePositionCount").Create(sizeof(uint64_t), GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("BubbleDrawCommand").Create(sizeof(DrawArraysIndirectCommand), GL_DYNAMIC_STORAGE_BIT);
@@ -73,9 +82,6 @@ namespace OpenGL::Renderer {
         lightAABBfbo.CreateDepthAttachment(GL_DEPTH_COMPONENT32F);
 
 
-        OpenGLFrameBuffer& scratchFbo = OpenGL::ResourceManager::CreateFrameBuffer("Scratch");
-        scratchFbo.Create(resolutions.gBuffer);
-        scratchFbo.CreateAttachment("RGBA16F", GL_RGBA16F);
 
         OpenGLFrameBuffer& waterFbo = OpenGL::ResourceManager::CreateFrameBuffer("Water");
         waterFbo.Create(resolutions.gBuffer);
@@ -84,10 +90,15 @@ namespace OpenGL::Renderer {
         waterFbo.CreateAttachment("OceanMask", GL_R8UI);
         waterFbo.CreateDepthAttachment(GL_DEPTH32F_STENCIL8);
 
-        OpenGLFrameBuffer& emissiveBlurFbo = OpenGL::ResourceManager::CreateFrameBuffer("EmissiveBlur");
-        emissiveBlurFbo.Create(resolutions.gBuffer.x, resolutions.gBuffer.y);
-        emissiveBlurFbo.CreateAttachment("ColorA", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
-        emissiveBlurFbo.CreateAttachment("ColorB", GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
+        // One half-resolution emissive bloom pyramid is reused for every
+        // visible viewport, so split-screen views can never filter into each other.
+        constexpr int EMISSIVE_BLOOM_MIP_ALIGNMENT = 4;
+        const glm::ivec2 halfGBufferResolution = glm::max((resolutions.gBuffer + 1) / 2, glm::ivec2(1));
+        const glm::ivec2 emissiveBloomResolution = ((halfGBufferResolution + EMISSIVE_BLOOM_MIP_ALIGNMENT - 1) / EMISSIVE_BLOOM_MIP_ALIGNMENT) * EMISSIVE_BLOOM_MIP_ALIGNMENT;
+        OpenGLFrameBuffer& emissiveBloomPyramidFbo = OpenGL::ResourceManager::CreateFrameBuffer("EmissiveBloomPyramid");
+        emissiveBloomPyramidFbo.Create(emissiveBloomResolution);
+        emissiveBloomPyramidFbo.CreateAttachment("ColorA", GL_R11F_G11F_B10F, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
+        emissiveBloomPyramidFbo.CreateAttachment("ColorB", GL_R11F_G11F_B10F, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, true);
 
         OpenGLFrameBuffer& depthPeeledTransparencyFbo = OpenGL::ResourceManager::CreateFrameBuffer("DepthPeeledTransparency");
         depthPeeledTransparencyFbo.Create(resolutions.gBuffer);
@@ -169,20 +180,14 @@ namespace OpenGL::Renderer {
         roadFbo.Create(1, 1);
         roadFbo.CreateAttachment("RoadMask", GL_R16F);
 
-        OpenGL::ResourceManager::CreateFrameBuffer("HeightMapBlitBuffer").Create(HEIGHT_MAP_SIZE, HEIGHT_MAP_SIZE);
-
-        OpenGLFrameBuffer& heightMapFbo = OpenGL::ResourceManager::CreateFrameBuffer("HeightMap");
-        heightMapFbo.Create(HEIGHT_MAP_SIZE, HEIGHT_MAP_SIZE);
-        heightMapFbo.CreateAttachment("Color", GL_R16F);
-
         OpenGLFrameBuffer& fftFrameBufferBand0 = OpenGL::ResourceManager::CreateFrameBuffer("FFT_band0");
-        fftFrameBufferBand0.Create(Ocean::GetFFTResolution(0).x, Ocean::GetFFTResolution(0).y);
+        fftFrameBufferBand0.Create(Ocean::FFT_RESOLUTION, Ocean::FFT_RESOLUTION);
         fftFrameBufferBand0.CreateAttachment("Displacement", GL_RGBA32F, GL_LINEAR, GL_LINEAR, GL_REPEAT);
-        fftFrameBufferBand0.CreateAttachment("Normals", GL_RGBA32F, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_REPEAT, true);
+        fftFrameBufferBand0.CreateAttachment("Slope", GL_RGBA32F, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_REPEAT, true);
 
         OpenGLFrameBuffer& fftFrameBufferBand1 = OpenGL::ResourceManager::CreateFrameBuffer("FFT_band1");
-        fftFrameBufferBand1.Create(Ocean::GetFFTResolution(1).x, Ocean::GetFFTResolution(1).y);
+        fftFrameBufferBand1.Create(Ocean::FFT_RESOLUTION, Ocean::FFT_RESOLUTION);
         fftFrameBufferBand1.CreateAttachment("Displacement", GL_RGBA32F, GL_LINEAR, GL_LINEAR, GL_REPEAT, true);
-        fftFrameBufferBand1.CreateAttachment("Normals", GL_RGBA32F, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_REPEAT, true);
+        fftFrameBufferBand1.CreateAttachment("Slope", GL_RGBA32F, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_REPEAT, true);
     }
 }

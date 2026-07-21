@@ -10,15 +10,7 @@
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsHair data;
-} pushConstant;
-
-layout(buffer_reference, scalar) readonly buffer RenderItemBuffer {
-    RenderItem data[];
-};
-
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
-    ViewportData data[];
-};
+} pc;
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_normal;
@@ -33,18 +25,18 @@ layout(location = 4) flat out uint v_globalInstanceIndex;
 layout(location = 5) flat out uint v_viewportIndex;
 
 void main() {
-    RenderItemBuffer renderItems = RenderItemBuffer(pushConstant.data.frame.renderItemsDeviceAddress);
-    ViewportDataBuffer viewportData = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
+    RenderItemBuffer renderItems = pc.data.frame.renderItemBuffer;
+    ViewportDataBuffer viewportData = pc.data.frame.viewportDataBuffer;
 
     uint baseInstance = uint(gl_BaseInstanceARB);
     uint viewportIndex = baseInstance >> VIEWPORT_INDEX_SHIFT;
     uint instanceOffset = baseInstance & uint((1 << VIEWPORT_INDEX_SHIFT) - 1);
     uint globalInstanceIndex = instanceOffset + (uint(gl_InstanceIndex) - baseInstance);
 
-    RenderItem renderItem = renderItems.data[globalInstanceIndex];
+    RenderItem renderItem = renderItems.renderItems[globalInstanceIndex];
     mat4 modelMatrix = renderItem.modelMatrix;
     mat4 normalMatrix = transpose(renderItem.inverseModelMatrix);
-    mat4 projectionView = viewportData.data[viewportIndex].projectionViewReverseZ;
+    mat4 projectionView = viewportData.viewportData[viewportIndex].jitteredProjectionViewReverseZ;
 
     v_normal = normalize((normalMatrix * vec4(a_normal, 0.0)).xyz);
     v_tangent = normalize((modelMatrix * vec4(a_tangent, 0.0)).xyz);

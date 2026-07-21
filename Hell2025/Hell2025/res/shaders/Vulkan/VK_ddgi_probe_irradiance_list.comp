@@ -10,7 +10,7 @@ layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIProbeIrradianceList data;
-} pushConstant;
+} pc;
 
 layout(buffer_reference, scalar) buffer ProbeStatesBuffer { ProbeState probeStates[]; };
 layout(buffer_reference, scalar) buffer ProbeIrradianceCounterBuffer { uint counter; };
@@ -18,14 +18,14 @@ layout(buffer_reference, scalar) buffer ProbeIrradianceIndicesBuffer { uint prob
 
 void main() {
     uint probeIdx = gl_GlobalInvocationID.x;
-    if (probeIdx >= pushConstant.data.totalProbes) return;
+    if (probeIdx >= pc.data.totalProbes) return;
 
-    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pushConstant.data.probeStatesDeviceAddress);
-    uint globalProbeIdx = pushConstant.data.probeOffset + probeIdx;
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
+    uint globalProbeIdx = pc.data.probeOffset + probeIdx;
 
     if (probeStates.probeStates[globalProbeIdx].isRelevant && probeStates.probeStates[globalProbeIdx].irradianceCooldown > 0u) {
-        ProbeIrradianceCounterBuffer probeIrradianceCounter = ProbeIrradianceCounterBuffer(pushConstant.data.probeIrradianceCounterDeviceAddress);
-        ProbeIrradianceIndicesBuffer probeIrradianceIndices = ProbeIrradianceIndicesBuffer(pushConstant.data.probeIrradianceIndicesDeviceAddress);
+        ProbeIrradianceCounterBuffer probeIrradianceCounter = ProbeIrradianceCounterBuffer(pc.data.probeIrradianceCounterDeviceAddress);
+        ProbeIrradianceIndicesBuffer probeIrradianceIndices = ProbeIrradianceIndicesBuffer(pc.data.probeIrradianceIndicesDeviceAddress);
         uint slot = atomicAdd(probeIrradianceCounter.counter, 1);
         probeIrradianceIndices.probeIrradianceIndices[slot] = probeIdx;
     }

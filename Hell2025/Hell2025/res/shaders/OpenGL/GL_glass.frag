@@ -1,7 +1,5 @@
 #version 460 core
-
 #extension GL_ARB_bindless_texture : enable
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
 #include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/lighting.glsl"
@@ -10,16 +8,15 @@ readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uve
 
 layout (location = 0) out vec4 FragOut;
 
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS)            buffer textureSamplersBuffer   { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS)           buffer materialsBuffer         { Material materials[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA)       buffer rendererDataBuffer      { RendererData rendererData;   };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA)       buffer viewportDataBuffer      { ViewportData viewportData[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS)              buffer lightsBuffer            { Light lights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_GLASS_LIGHT_RANGES)  buffer glassLightRangesBuffer  { uvec2 glassLightRanges[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_GLASS_LIGHT_INDICES) buffer glassLightIndicesBuffer { uint glassLightIndices[];};
+
 layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray FlashlighShadowMapTextureArray;
-
-layout (binding = 4) uniform sampler2D baseColorTexture;
-layout (binding = 5) uniform sampler2D normalTexture;
-layout (binding = 6) uniform sampler2D rmaTexture;
-layout (binding = 7) uniform sampler2D FlashlightCookieTexture;
-
-readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData  rendererData;   };
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData  viewportData[]; };
-readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light         lights[];       };
 
 in vec2 TexCoord;
 in vec3 v_normal;
@@ -27,15 +24,18 @@ in vec3 Tangent;
 in vec3 BiTangent;
 in vec4 v_worldPos;
 in vec3 ViewPos;
+in flat int MaterialIndex;
+in flat uint v_instanceIndex;
 uniform int u_viewportIndex;
 uniform bool u_flipNormalMapY;
 
 
 void main() {
 
-    vec4 baseColor = texture2D(baseColorTexture, TexCoord);
-    vec3 normalMap = texture2D(normalTexture, TexCoord).rgb;
-    vec3 rma = texture2D(rmaTexture, TexCoord).rgb;
+    Material material = materials[MaterialIndex];
+    vec4 baseColor = texture(sampler2D(textureSamplers[material.basecolor]), TexCoord);
+    vec3 normalMap = texture(sampler2D(textureSamplers[material.normal]), TexCoord).rgb;
+    vec3 rma = texture(sampler2D(textureSamplers[material.rma]), TexCoord).rgb;
 
     normalMap = mix(normalMap, vec3(0.5, 0.5, 1), 0.7);
 
@@ -65,27 +65,33 @@ void main() {
 
     vec3 directLighting = vec3(0);
 
-    //for (uint i = 0; i < lightCount; ++i) {
-    //    uint lightIndex = tileData[tileIndex].lightIndices[i];
-    //    Light light = lights[lightIndex];
+    uvec2 range = glassLightRanges[v_instanceIndex];
 
-    for (uint i = 0; i < 8; ++i) {
-        Light light = lights[i];
+    for (uint i = 0; i < range.y; i++) {
+        uint lightIndex = glassLightIndices[range.x + i];
+        Light light = lights[lightIndex];
+        vec3 lightPos = vec3(light.posX, light.posY, light.posZ);
 
-        vec3 lightPos= vec3(light.posX, light.posY, light.posZ);
+        if (any(lessThan(v_worldPos.xyz, light.worldBoundsMin.xyz)) ||
+            any(greaterThan(v_worldPos.xyz, light.worldBoundsMax.xyz))) {
+            continue;
+        }
+
+        vec3 lightDelta = lightPos - v_worldPos.xyz;
+        float distanceSquared = dot(lightDelta, lightDelta);
+
+        if (distanceSquared > light.radius * light.radius) {
+            continue;
+        }
+
         vec3 lightColor =  vec3(light.colorR, light.colorG, light.colorB);
         float lightStrength = light.strength;
         float lightRadius = light.radius;
 
         
-        vec3 toLight = lightPos - v_worldPos.xyz;
-        float dist = length(toLight);
-
-        if (dist > lightRadius) continue;
-
         vec3 lightVector = lightPos - v_worldPos.xyz;
-        float distanceSquared = max(dot(lightVector, lightVector), 0.0001);
-        vec3 L = lightVector * inversesqrt(distanceSquared);
+        float safeDistanceSquared = max(distanceSquared, 0.0001);
+        vec3 L = lightVector * inversesqrt(safeDistanceSquared);
 
         float ndotl = dot(normal, L);
     
@@ -104,84 +110,13 @@ void main() {
     }
 
 
-    mat4 flashlightProjectionView = viewportData[u_viewportIndex].flashlightProjectionView;
-    vec4 flashlightDir = viewportData[u_viewportIndex].flashlightDir;
-    vec4 flashlightPosition = viewportData[u_viewportIndex].flashlightPosition;
-    float flashlightModifer = viewportData[u_viewportIndex].flashlightModifer;
-
-    flashlightDir = viewportData[u_viewportIndex].cameraForward;
-    flashlightPosition = viewportData[u_viewportIndex].viewPos;
-
     float fragDistance = distance(viewPos, v_worldPos.xyz);
 
-    for (int i = 0; i < 2; i++) {
-        float flashlightModifer = viewportData[i].flashlightModifer;
-        if (flashlightModifer > 0.05) {
-            mat4 flashlightProjectionView = viewportData[i].flashlightProjectionView;
-            vec4 flashlightDir = viewportData[i].flashlightDir;
-            vec4 flashlightPosition = viewportData[i].flashlightPosition;
-            vec3 flashlightViewPos = viewportData[i].inverseView[3].xyz;
-            vec3 playerForward = -normalize(viewportData[i].inverseView[2].xyz);
-            int layerIndex = i;
-		    vec3 spotLightPos = flashlightPosition.xyz;
-            vec3 camightRight = normalize(viewportData[i].inverseView[0].xyz);
-		    vec3 spotLightDir = flashlightDir.xyz;
-            vec3 spotLightColor = vec3(0.9, 0.95, 1.1);
-
-            float fresnelReflect = 0.9;
-            float spotLightRadius = 20.0;
-            float spotLightStregth = 4.5;
-
-            // EXPERIMENTAL NEW COLORS
-            vec3 defaultLightColor = vec3(1.0, 0.7799999713897705, 0.5289999842643738);
-            spotLightColor = mix(defaultLightColor, spotLightColor, 0.95);
-            spotLightRadius = 20.0;
-            spotLightStregth = 5.0;
-
-            if (v_worldPos.y < 10) {
-                spotLightStregth = 25;
-            }
-
-            float innerAngle = cos(radians(5.0 * flashlightModifer));
-            float outerAngle = cos(radians(25.0));
-            mat4 lightProjectionView = flashlightProjectionView;
-            vec3 spotLighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, spotLightRadius, spotLightStregth, innerAngle, outerAngle, normal.xyz, v_worldPos.xyz, linearBaseColor.rgb, roughness, metallic, flashlightViewPos, lightProjectionView);
-
-
-
-            vec4 FragPosLightSpace = lightProjectionView * vec4(v_worldPos.xyz, 1.0);
-            float shadow = SpotlightShadowCalculation(FragPosLightSpace, normal.xyz, spotLightDir, v_worldPos.xyz, spotLightPos, flashlightViewPos, FlashlighShadowMapTextureArray, layerIndex);
-
-            vec3 cookie = ApplyCookie(lightProjectionView, v_worldPos.xyz, spotLightPos, spotLightColor, spotLightRadius, FlashlightCookieTexture);
-
-            float cookieStartDistance = 1.0;
-            float cookieEndDistance = 10.0;
-            float cookieDistanceExponent = 2;
-            float cookieMinValue = 0.5;
-            float cookieMaxValue = 5.0;
-            float cookieDistScale;
-            if(fragDistance <= cookieStartDistance) {
-                cookieDistScale = cookieMinValue;
-            } else if(fragDistance >= cookieEndDistance) {
-                cookieDistScale = cookieMaxValue;
-            } else {
-                float t = (fragDistance - cookieStartDistance) / (cookieEndDistance - cookieStartDistance);
-                cookieDistScale = mix(cookieMinValue, cookieMaxValue, pow(t, cookieDistanceExponent));
-            }
-            spotLighting *= cookieDistScale;
-            //spotLighting *= spotLightColor;
-
-            spotLighting *= vec3(1 - shadow);
-            spotLighting *= cookie;
-            directLighting += vec3(spotLighting) * flashlightModifer;
-
-
-            vec3 toLight = flashlightPosition.xyz - v_worldPos.xyz;
-            float dist = length(toLight);
-            vec3 lightDir = toLight / dist;
-            vec3 viewDir = normalize(viewPos - v_worldPos.xyz);
-            float att = smoothstep(spotLightRadius, 0.0, dist) * spotLightStregth;
-            directLighting += vec3(roughness * roughness * 0.02 * att) * spotLightColor * cookie;
+    if (rendererData.flashlightIESTextureIndex >= 0) {
+        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
+        for (int i = 0; i < 2; i++) {
+            ViewportData flashlightViewportData = viewportData[i];
+            directLighting += GetFlashlightContribution(i, uint(u_viewportIndex), flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), rendererData, normal.xyz, v_worldPos.xyz, linearBaseColor.rgb, roughness, metallic, fragDistance, -1000.0, flashlightIES, FlashlighShadowMapTextureArray);
         }
     }
 

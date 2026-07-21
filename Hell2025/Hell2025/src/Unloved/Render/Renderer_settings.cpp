@@ -1,7 +1,9 @@
 #include "Renderer.h"
+#include "Renderer_settings.h"
+
 #include "Hell/Audio.h"
 #include "Hell/Common/Enum.h"
-namespace Audio = Hell::Audio;
+
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Editor/Editor.h"
 
@@ -26,17 +28,27 @@ namespace Unloved::Renderer {
         return g_rendererSettingsSet.game;
     }
 
+    void SetCurrentRendererSettings(const RendererSettings& settings) {
+        RendererSettings& currentSettings = GetCurrentRendererSettings();
+        currentSettings = settings;
+    }
+
+    void ResetCurrentRendererSettings() {
+        RendererSettings& currentSettings = GetCurrentRendererSettings();
+        currentSettings = RendererSettings();
+    }
+
     void ToggleLighting() {
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
         rendererSettings.enableLighting = !rendererSettings.enableLighting;
 
         std::string onOff = rendererSettings.enableLighting ? "ON" : "OFF";
         Debug::BlitQuickDebugMessage("Lighting: " + onOff);
+
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
     }
 
     void TogglePointCloud() {
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
         rendererSettings.debugDrawPointCloud = !rendererSettings.debugDrawPointCloud;
 
@@ -46,10 +58,11 @@ namespace Unloved::Renderer {
 
         std::string onOff = rendererSettings.debugDrawPointCloud ? "ON" : "OFF";
         Debug::BlitQuickDebugMessage("Point Cloud: " + onOff);
+
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
     }
 
     void TogglePointCloudGrid() {
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
         rendererSettings.debugDrawPointCloudGrid = !rendererSettings.debugDrawPointCloudGrid;
 
@@ -59,56 +72,52 @@ namespace Unloved::Renderer {
 
         std::string onOff = rendererSettings.debugDrawPointCloudGrid ? "ON" : "OFF";
         Debug::BlitQuickDebugMessage("Point Cloud Grid: " + onOff);
+
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
     }
 
 
     void ToggleRagdollRendering() {
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
         rendererSettings.debugDrawRagdolls = !rendererSettings.debugDrawRagdolls;
 
         std::string onOff = rendererSettings.debugDrawRagdolls ? "ON" : "OFF";
         Debug::BlitQuickDebugMessage("Draw Ragdolls: " + onOff);
+
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
     }
 
     void ToggleDebugDraw() {
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
         rendererSettings.debugDrawNavMesh = !rendererSettings.debugDrawNavMesh;
 
         std::string onOff = rendererSettings.debugDrawNavMesh ? "ON" : "OFF";
         Debug::BlitQuickDebugMessage("Nav Mesh: " + onOff);
+
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
     }
 
     void ToggleScreenSpaceReflections() {
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
         rendererSettings.screenspaceReflections = !rendererSettings.screenspaceReflections;
 
         std::string onOff = rendererSettings.screenspaceReflections ? "ON" : "OFF";
         Debug::BlitQuickDebugMessage("Screenspace Reflections: " + onOff);
-    }
 
-    void ToggleShadowMappingForSkinnedGeometry() {
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
-        RendererSettings& rendererSettings = GetCurrentRendererSettings();
-        rendererSettings.enableShadowMappingForSkinnedGeometry = !rendererSettings.enableShadowMappingForSkinnedGeometry;
-
-        std::string onOff = rendererSettings.enableShadowMappingForSkinnedGeometry ? "ON" : "OFF";
-        Debug::BlitQuickDebugMessage("Skinned Geometry Shadow Mappin " + onOff);
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
     }
 
     void ToggleIrradianceProbeSampling() {
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
-        rendererSettings.enableIrradianceProbeSampling = !rendererSettings.enableIrradianceProbeSampling;
+        rendererSettings.enableDDGI = !rendererSettings.enableDDGI;
 
-        std::string onOff = rendererSettings.enableIrradianceProbeSampling ? "ON" : "OFF";
+        std::string onOff = rendererSettings.enableDDGI ? "ON" : "OFF";
         Debug::BlitQuickDebugMessage("Irradiance Probe Sampling: " + onOff);
+
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
     }
 
     void ToggleOverrideState(RendererOverrideState state) {
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
         if (rendererSettings.rendererOverrideState == state) {
             SetRendererOverrideState(RendererOverrideState::NONE);
@@ -116,6 +125,8 @@ namespace Unloved::Renderer {
         else {
             SetRendererOverrideState(state);
         }
+
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
     }
 
     void SetRendererOverrideState(RendererOverrideState state) {
@@ -123,13 +134,23 @@ namespace Unloved::Renderer {
         rendererSettings.rendererOverrideState = state;
 
         Debug::BlitQuickDebugMessage("Renderer Override State: " + Hell::Enum::ToString(state));
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+    }
+
+    void PrevRendererOverrideState() {
+        RendererSettings& rendererSettings = GetCurrentRendererSettings();
+        int stateCount = static_cast<int>(RendererOverrideState::STATE_COUNT);
+        int i = static_cast<int>(rendererSettings.rendererOverrideState);
+        i = (i - 1 + stateCount) % stateCount;
+
+        SetRendererOverrideState(static_cast<RendererOverrideState>(i));
     }
 
     void NextRendererOverrideState() {
         RendererSettings& rendererSettings = GetCurrentRendererSettings();
+        int stateCount = static_cast<int>(RendererOverrideState::STATE_COUNT);
         int i = static_cast<int>(rendererSettings.rendererOverrideState);
-        i = (i + 1) % static_cast<int>(RendererOverrideState::STATE_COUNT);
+        i = (i + 1) % stateCount;
 
         SetRendererOverrideState(static_cast<RendererOverrideState>(i));
     }
@@ -146,6 +167,14 @@ namespace Unloved::Renderer {
             case RendererOverrideState::AO:
             case RendererOverrideState::CAMERA_NDOTL:
             case RendererOverrideState::INDIRECT_DIFFUSE:
+            case RendererOverrideState::HIZ:
+            case RendererOverrideState::INDIRECT_SPECULAR_AMD_SAMPLE_COUNT:
+            case RendererOverrideState::INDIRECT_SPECULAR_AMD_INPUT:
+            case RendererOverrideState::INDIRECT_SPECULAR_AMD_REPROJECTED:
+            case RendererOverrideState::INDIRECT_SPECULAR_AMD_PREFILTERED:
+            case RendererOverrideState::INDIRECT_SPECULAR_AMD_PREFILTERED_VARIANCE:
+            case RendererOverrideState::INDIRECT_SPECULAR_AMD_TEMPORAL:
+            case RendererOverrideState::INDIRECT_SPECULAR_AMD_TEMPORAL_VARIANCE:
             case RendererOverrideState::VELOCITY:
             case RendererOverrideState::VIS_BUFFER:
             case RendererOverrideState::DEPTH:
@@ -187,8 +216,8 @@ namespace Unloved::Renderer {
     void SetRendererMode(RendererMode rendererMode) {
         g_rendererMode = rendererMode;
 
-		Debug::BlitQuickDebugMessage("Renderer Mode: " + Hell::Enum::ToString(rendererMode));
-		Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        Debug::BlitQuickDebugMessage("Renderer Mode: " + Hell::Enum::ToString(rendererMode));
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
 	}
 
     RendererMode GetRendererMode() {
@@ -201,7 +230,22 @@ namespace Unloved::Renderer {
 
         rendererSettings.debugDrawIrradianceProbes = rendererSettings.probeDebugState != ProbeDebugState::HIDDEN;
 
-		Debug::BlitQuickDebugMessage("Irradiance Probes: " + Hell::Enum::ToString(state));
-		Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+        Debug::BlitQuickDebugMessage("Irradiance Probes: " + Hell::Enum::ToString(state));
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
 	}
+
+    bool DDGIEnabled()             { return GetCurrentRendererSettings().enableDDGI; }
+    bool IndirectSpecularEnabled() { return GetCurrentRendererSettings().enableIndirectSpecular; }
+    bool FXAAEnabled()             { return GetCurrentRendererSettings().enableFXAA; }
+    bool TAAEnabled()              { return GetCurrentRendererSettings().enableTAA; }
+
+    uint32_t GetIndirectSpecularRaysPerQuad() {
+        switch (Unloved::Renderer::GetCurrentRendererSettings().indirectSpecularRaysPerQuad) {
+            case IndirectSpecularRaysPerQuad::ONE:  return 1;
+            case IndirectSpecularRaysPerQuad::TWO:  return 2;
+            case IndirectSpecularRaysPerQuad::FOUR: return 4;
+        }
+        return 4;
+    }
+
 }

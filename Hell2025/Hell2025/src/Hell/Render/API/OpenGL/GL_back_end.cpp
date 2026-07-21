@@ -29,10 +29,9 @@ namespace OpenGL::BackEnd {
     PBO g_heightMapIndicesReadBackPBO;
     GLuint g_skinnedVertexDataVAO = 0;
     GLuint g_skinnedVertexDataVBO = 0;
+    GLuint g_previousSkinnedPositionBuffer = 0;
     GLuint g_allocatedSkinnedVertexBufferSize = 0;
     std::vector<GLuint64> g_bindlessTextureIDs;
-
-    OpenGLHeightMapMesh g_heightMapMesh;
 
     void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei /*length*/, const char* message, const void* /*userParam*/);
     void UpdateBindlessTextures();
@@ -75,6 +74,7 @@ namespace OpenGL::BackEnd {
 
         // Match Vulkan matrix shit
         glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
+        glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
         // Old texture baking PBO allocation disabled. Texture uploads are owned by OpenGL::TextureUploader.
 
@@ -101,6 +101,8 @@ namespace OpenGL::BackEnd {
             glGenBuffers(1, &g_skinnedVertexDataVBO);
             glBindBuffer(GL_ARRAY_BUFFER, g_skinnedVertexDataVBO);
 
+            glGenBuffers(1, &g_previousSkinnedPositionBuffer);
+
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)0);
 
@@ -123,6 +125,11 @@ namespace OpenGL::BackEnd {
             glBindBuffer(GL_ARRAY_BUFFER, g_skinnedVertexDataVBO);
             glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)newSize, nullptr, GL_DYNAMIC_DRAW);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            const uint32_t previousPositionBufferSize = vertexCount * sizeof(float) * 3;
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_previousSkinnedPositionBuffer);
+            glBufferData(GL_SHADER_STORAGE_BUFFER, (GLsizeiptr)previousPositionBufferSize, nullptr, GL_DYNAMIC_DRAW);
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
             g_allocatedSkinnedVertexBufferSize = newSize;
             std::cout << "Recreated skinned vertex buffer. Size: " << g_allocatedSkinnedVertexBufferSize << "\n";
@@ -255,7 +262,7 @@ namespace OpenGL::BackEnd {
 
     GLuint GetSkinnedVertexDataVAO()                     { return g_skinnedVertexDataVAO; }
     GLuint GetSkinnedVertexDataVBO()                     { return g_skinnedVertexDataVBO; }
-    OpenGLHeightMapMesh& GetHeightMapMesh()              { return g_heightMapMesh; };
+    GLuint GetPreviousSkinnedPositionBuffer()            { return g_previousSkinnedPositionBuffer; }
     const std::vector<GLuint64>& GetBindlessTextureIDs() { return g_bindlessTextureIDs; }
 
 }

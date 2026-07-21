@@ -46,7 +46,7 @@ void main() {
     mat4 normalMatrix = transpose(inverseModelMatrix);
 
     ViewportData viewportData = viewportData[v_viewportIndex];
-    mat4 projectionView = viewportData.projectionViewReverseZ;   
+    mat4 projectionView = viewportData.jitteredProjectionViewReverseZ;
 
     Normal = normalize(normalMatrix * vec4(vNormal, 0.0)).xyz;
     Tangent = normalize(modelMatrix * vec4(vTangent, 0.0)).xyz;

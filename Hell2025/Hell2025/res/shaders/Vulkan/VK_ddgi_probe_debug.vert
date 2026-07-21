@@ -8,11 +8,7 @@
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDDGIProbeDebug data;
-} pushConstant;
-
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
-    ViewportData data[];
-};
+} pc;
 
 layout(buffer_reference, scalar) readonly buffer ProbeStatesBuffer {
     ProbeState probeStates[];
@@ -56,18 +52,18 @@ vec3 GetProbeDebugColor(uint debugState, vec3 normal, ivec3 probeCoords, ivec3 p
 }
 
 void main() {
-    ViewportDataBuffer viewportData = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
-    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pushConstant.data.probeStatesDeviceAddress);
+    ViewportDataBuffer viewportData = pc.data.frame.viewportDataBuffer;
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
 
     int probeIndex = gl_InstanceIndex;
-    ivec3 probeCoords = GetProbeDebugCoords(probeIndex, pushConstant.data.probeCounts);
-    uint globalProbeIndex = pushConstant.data.probeOffset + uint(probeIndex);
+    ivec3 probeCoords = GetProbeDebugCoords(probeIndex, pc.data.probeCounts);
+    uint globalProbeIndex = pc.data.probeOffset + uint(probeIndex);
     ProbeState probeState = probeStates.probeStates[globalProbeIndex];
-    vec3 probePos = GetProbeDebugBaseWorldPosition(probeCoords, pushConstant.data.volumeOrigin, pushConstant.data.probeSpacing, pushConstant.data.probeCounts);
-    probePos += probeState.relocationOffset * pushConstant.data.probeSpacing;
+    vec3 probePos = GetProbeDebugBaseWorldPosition(probeCoords, pc.data.volumeOrigin, pc.data.probeSpacing, pc.data.probeCounts);
+    probePos += probeState.relocationOffset * pc.data.probeSpacing;
     vec3 worldPos = probePos + a_position * 0.0625;
-    mat4 projectionView = viewportData.data[pushConstant.data.viewportIndex].projectionViewReverseZ;
+    mat4 projectionView = viewportData.viewportData[pc.data.viewportIndex].projectionViewReverseZ;
 
-    v_color = GetProbeDebugColor(pushConstant.data.probeDebugState, normalize(a_normal), probeCoords, pushConstant.data.probeCounts, probeState);
+    v_color = GetProbeDebugColor(pc.data.probeDebugState, normalize(a_normal), probeCoords, pc.data.probeCounts, probeState);
     gl_Position = projectionView * vec4(worldPos, 1.0);
 }

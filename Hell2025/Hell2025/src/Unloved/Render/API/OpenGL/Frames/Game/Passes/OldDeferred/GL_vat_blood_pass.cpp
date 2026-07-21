@@ -27,6 +27,7 @@ namespace OpenGL::Renderer {
         if (!gBuffer) return;
 
         OpenGL::BindShader("VatBlood");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
 
         gBuffer->Bind();
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });

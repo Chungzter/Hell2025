@@ -1,6 +1,7 @@
 #pragma once
 #include "Hell/AssetFormats/AssetData.h"
 #include "Hell/File/FileInfo.h"
+#include "Hell/Transform.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -42,6 +43,7 @@ public:
     std::map<std::string, unsigned int> m_boneMapping;
     std::map<std::string, unsigned int> m_nodeMapping;
     std::vector<int> m_boneNodeIndices;
+    std::vector<Hell::QuatTransform> m_bindPose;
     SkinnedModelData m_skinnedModelData;
 
 private:

@@ -18,4 +18,17 @@ namespace Hell::Random {
         std::uniform_int_distribution<int> distribution(min, max);
         return distribution(Generator());
     }
+
+    inline float Halton(uint32_t index, uint32_t base) {
+        float f = 1.0;
+        float result = 0.0;
+
+        while (index > 0u) {
+            f /= float(base);
+            result += f * float(index % base);
+            index /= base;
+        }
+
+        return result;
+    }
 }

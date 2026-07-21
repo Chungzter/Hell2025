@@ -25,7 +25,14 @@ namespace Unloved {
         //    Respawn();
         //}
 
-        FindPathToTarget();
+        const bool isMoving =
+            m_animationState == KanagarooAnimationState::IDLE_TO_HOP ||
+            m_animationState == KanagarooAnimationState::HOP ||
+            m_animationState == KanagarooAnimationState::BITE;
+
+        if (isMoving) {
+            FindPathToTarget();
+        }
 
         UpdateAnimationStateMachine();
         UpdateMovementLogic(deltaTime);

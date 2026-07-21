@@ -6,6 +6,9 @@
 #include "Unloved/Render/RendererTypes.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 
+#include <cstddef>
+#include <string>
+
 namespace OpenGL::Renderer{
 
     void CreateSSBOs() {
@@ -13,19 +16,20 @@ namespace OpenGL::Renderer{
         GLbitfield dynamicFlags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT | GL_MAP_WRITE_BIT;
 
         // Ocean
-        const glm::uvec2 oceanSize = Ocean::GetBaseFFTResolution(); // WARNING!!! This size must bit your largest FFT dimensions
-        OpenGL::ResourceManager::CreateSSBO("ffth0Band0").Create(Ocean::GetFFTResolution(0).x * Ocean::GetFFTResolution(0).y * sizeof(std::complex<float>), staticFlags);
-        OpenGL::ResourceManager::CreateSSBO("ffth0Band1").Create(Ocean::GetFFTResolution(1).x * Ocean::GetFFTResolution(1).y * sizeof(std::complex<float>), staticFlags);
-        OpenGL::ResourceManager::CreateSSBO("fftSpectrumInSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-        OpenGL::ResourceManager::CreateSSBO("fftSpectrumOutSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-        OpenGL::ResourceManager::CreateSSBO("fftDispInXSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-        OpenGL::ResourceManager::CreateSSBO("fftDispZInSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-        OpenGL::ResourceManager::CreateSSBO("fftGradXInSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-        OpenGL::ResourceManager::CreateSSBO("fftGradZInSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-        OpenGL::ResourceManager::CreateSSBO("fftDispXOutSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-        OpenGL::ResourceManager::CreateSSBO("fftDispZOutSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-        OpenGL::ResourceManager::CreateSSBO("fftGradXOutSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
-        OpenGL::ResourceManager::CreateSSBO("fftGradZOutSSBO").Create(oceanSize.x * oceanSize.y * sizeof(std::complex<float>), dynamicFlags);
+        const size_t oceanFFTByteSize = Ocean::FFT_RESOLUTION * Ocean::FFT_RESOLUTION * sizeof(std::complex<float>);
+        for (int i = 0; i < Ocean::FFT_BAND_COUNT; i++) {
+            OpenGL::ResourceManager::CreateSSBO("ffth0Band" + std::to_string(i)).Create(oceanFFTByteSize, staticFlags);
+        }
+        OpenGL::ResourceManager::CreateSSBO("fftSpectrumInSSBO").Create(oceanFFTByteSize, dynamicFlags);
+        OpenGL::ResourceManager::CreateSSBO("fftSpectrumOutSSBO").Create(oceanFFTByteSize, dynamicFlags);
+        OpenGL::ResourceManager::CreateSSBO("fftDispInXSSBO").Create(oceanFFTByteSize, dynamicFlags);
+        OpenGL::ResourceManager::CreateSSBO("fftDispZInSSBO").Create(oceanFFTByteSize, dynamicFlags);
+        OpenGL::ResourceManager::CreateSSBO("fftGradXInSSBO").Create(oceanFFTByteSize, dynamicFlags);
+        OpenGL::ResourceManager::CreateSSBO("fftGradZInSSBO").Create(oceanFFTByteSize, dynamicFlags);
+        OpenGL::ResourceManager::CreateSSBO("fftDispXOutSSBO").Create(oceanFFTByteSize, dynamicFlags);
+        OpenGL::ResourceManager::CreateSSBO("fftDispZOutSSBO").Create(oceanFFTByteSize, dynamicFlags);
+        OpenGL::ResourceManager::CreateSSBO("fftGradXOutSSBO").Create(oceanFFTByteSize, dynamicFlags);
+        OpenGL::ResourceManager::CreateSSBO("fftGradZOutSSBO").Create(oceanFFTByteSize, dynamicFlags);
 
         int dummySize = 64;
 
@@ -33,14 +37,26 @@ namespace OpenGL::Renderer{
         OpenGL::ResourceManager::CreateSSBO("Samplers").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("ViewportData").Create(sizeof(ViewportData) * 4, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("RendererData").Create(sizeof(RendererData), GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("GlassInstanceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("GlassLightRanges").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("GlassLightIndices").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("InstanceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("SpriteSheetInstanceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("Lights").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("PointShadowStaticHiResFaceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("PointShadowStaticLowResFaceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("PointShadowHiResFaceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("PointShadowLowResFaceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("PointShadowStaticHiResDrawCommands").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("PointShadowStaticLowResDrawCommands").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("PointShadowHiResDrawCommands").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("PointShadowLowResDrawCommands").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
 
         // Skinning
         OpenGL::ResourceManager::CreateSSBO("SkinningDispatchGroups").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("SkinningJobs").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("SkinningTransforms").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("PreviousSkinningTransforms").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
 
         OpenGL::ResourceManager::CreateSSBO("Materials").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
 
@@ -95,9 +111,6 @@ namespace OpenGL::Renderer{
 
         // Remove me at some point
         OpenGL::ResourceManager::CreateSSBO("MetaBalls").Create(sizeof(glm::vec4) * 1000, GL_DYNAMIC_STORAGE_BIT);
-
-        int MAX_OCEAN_PATCHES = 500;
-        OpenGL::ResourceManager::CreateSSBO("OceanPatchTransforms").Create(sizeof(glm::mat4) * MAX_OCEAN_PATCHES, GL_DYNAMIC_STORAGE_BIT);
 
         // Preallocate the indirect command buffer
         IndirectBuffer& indirectBuffer = GetIndirectBuffer();

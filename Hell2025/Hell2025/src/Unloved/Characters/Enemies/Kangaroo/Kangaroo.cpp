@@ -30,6 +30,7 @@ namespace Unloved {
         m_objectId = id;
 
         Respawn();
+        m_aStar.InitGrid();
     
         if (m_animatedGameObjectId == 0) {
             m_animatedGameObjectId = LegacyWorld::CreateAnimatedGameObject();

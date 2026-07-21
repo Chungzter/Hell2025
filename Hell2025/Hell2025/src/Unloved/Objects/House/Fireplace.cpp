@@ -3,6 +3,7 @@
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Objects/Lighting/Light.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
+#include "Unloved/Systems/NavMesh/NavMesh.h"
 #include "Unloved/World/World.h"
 
 namespace Unloved {
@@ -183,6 +184,7 @@ void Fireplace::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
     m_transform.position = position;
     UpdateWorldMatrix();
+    m_navMeshTransformDirty = true;
     HouseBuilder::MarkDirty();
 }
 
@@ -202,11 +204,17 @@ void Fireplace::SetRotation(const glm::vec3& rotation) {
     m_createInfo.rotation = rotation;
     m_transform.rotation = rotation;
     UpdateWorldMatrix();
+    m_navMeshTransformDirty = true;
     HouseBuilder::MarkDirty();
 }
 
 void Fireplace::Update(float deltaTime) {
     m_meshNodes.Update(m_worldMatrix);
+
+    if (m_navMeshTransformDirty) {
+        NavMeshManager::MarkStaticDirty();
+        m_navMeshTransformDirty = false;
+    }
 
     //DebugDraw::DrawPoint(m_firePosition, RED);
 

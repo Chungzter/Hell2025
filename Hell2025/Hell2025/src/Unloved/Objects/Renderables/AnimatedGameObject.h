@@ -24,6 +24,8 @@ struct AnimatedGameObject {
     void CleanUp();
     void UpdateRenderItems();
     void Update(float deltaTime);
+    void EvaluateAnimation(float deltaTime);
+    void FinalizeAnimation();
     void SetName(std::string name);
     void SetSkinnedModel(const std::string& skinnedModelName, const std::string& presetName = UNDEFINED_STRING);
     void SetScale(float scale);
@@ -110,6 +112,10 @@ struct AnimatedGameObject {
     const std::vector<RenderItem>& GetNonDeformingRenderItemsDepthPeeledTransparent() { return m_animatedMeshNodes.m_nonDeformingRenderItemsDepthPeeledTransparent; }
     const std::vector<glm::mat4>& GetGlobalBlendedNodeTransforms()                    { return m_animationState.globalNodeTransforms; }
     const std::vector<glm::mat4>& GetBoneSkinningMatrices()                           { return m_animationState.boneSkinningMatrices; }
+    const std::vector<glm::mat4>& GetPreviousRenderBoneSkinningMatrices() const        { return m_previousRenderBoneSkinningMatrices; }
+    const glm::mat4& GetPreviousRenderModelMatrix() const                              { return m_previousRenderModelMatrix; }
+    bool HasRenderPoseHistory() const                                                  { return m_hasRenderPoseHistory; }
+    void CommitRenderPoseHistory();
     const std::string& GetName() const                                                { return m_name; }
     const std::string& GetEditorName() const                                          { return m_name; }
     const glm::mat4 GetModelMatrixOverride() const                                    { return m_modelMatrixOverride; }
@@ -138,6 +144,9 @@ private:
     bool m_castsShadows = true;
 
     std::vector<BoneSegment> m_boneSegments;
+    std::vector<glm::mat4> m_previousRenderBoneSkinningMatrices;
+    glm::mat4 m_previousRenderModelMatrix = glm::mat4(1.0f);
+    bool m_hasRenderPoseHistory = false;
     AABB m_skinnedAABB;
     AABB m_skinnedAABBLastFrame;
     float m_skinnedAABBThreshold = 0.1f;

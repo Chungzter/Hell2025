@@ -26,7 +26,7 @@ struct PointLightShadowMapDrawCommands {
 };
 
 struct DrawCommandsSet {
-    std::vector<RenderItem> glass[4];
+    std::vector<DrawIndexedIndirectCommand> glassDrawCommands[4];
 
     std::vector<DrawIndexedIndirectCommand> spriteSheets[4];
 
@@ -35,6 +35,7 @@ struct DrawCommandsSet {
     std::vector<DrawIndexedIndirectCommand> hair[4];
     std::vector<DrawIndexedIndirectCommand> standard[4];
     std::vector<DrawIndexedIndirectCommand> procedural[4];
+    std::vector<DrawIndexedIndirectCommand> heightMap[4];
     std::vector<DrawIndexedIndirectCommand> mirrorRenderItems[4];
     std::vector<DrawIndexedIndirectCommand> plastic[4];
     std::vector<DrawIndexedIndirectCommand> emissive[4];
@@ -49,8 +50,10 @@ struct DrawCommandsSet {
     std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingHair[4];
     std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingStandard[4];
 
-    PointLightShadowMapDrawCommands hiResShadowMapDrawCommands;
-    PointLightShadowMapDrawCommands lowResShadowMapDrawCommands;
+    PointLightShadowMapDrawCommands staticHiResShadowMapDrawCommands;
+    PointLightShadowMapDrawCommands staticLowResShadowMapDrawCommands;
+    PointLightShadowMapDrawCommands compositeHiResShadowMapDrawCommands;
+    PointLightShadowMapDrawCommands compositeLowResShadowMapDrawCommands;
 
     std::vector<DrawIndexedIndirectCommand> moonLightCascades[4][SHADOW_CASCADE_COUNT];
 };

@@ -1,5 +1,6 @@
 #version 460
 #include "../common/constants.glsl"
+#include "../common/reconstruction.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 
@@ -66,11 +67,7 @@ void main() {
 
         // Background pixels are irrelevant to the tile's world-space bounds.
         if (depth > 0.000001) {
-            vec3 worldSpacePosition = ReconstructWorldPos(
-                viewportUV,
-                depth,
-                viewportData.inverseProjectionViewReverseZ
-            );
+            vec3 worldSpacePosition = WorldPosFromDepth_GL(viewportUV, depth, viewportData.inverseJitteredProjectionViewReverseZ);
 
             uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
             uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);

@@ -27,11 +27,7 @@ out vec3 Normal;
 out vec3 Tangent;
 out vec3 BiTangent;
 out vec3 ViewPos;
-out mat4 FlashlightProjectionView;
-out vec4 FlashlightDir;
-out vec4 FlashlightPosition;
-out float FlashlightModifer;
-out vec3 CameraForward;
+out flat int ViewportIndex;
 
 #if ENABLE_BINDLESS
 out flat int MaterialIndex;
@@ -56,7 +52,9 @@ void main() {
     MaterialIndex = renderItem.materialIndex;
 #endif
     
-    mat4 projectionView = viewportData[viewportIndex].projectionView;
+    mat4 jitterMatrix = viewportData[viewportIndex].jitteredProjectionViewReverseZ *
+                        viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    mat4 projectionView = jitterMatrix * viewportData[viewportIndex].projectionView;
     mat4 inverseView = viewportData[viewportIndex].inverseView;
     mat4 inverseModelMatrix = renderItem.inverseModelMatrix;
     mat4 modelMatrix = renderItem.modelMatrix;
@@ -69,12 +67,7 @@ void main() {
 	TexCoord = vUV;
     WorldPos = modelMatrix * vec4(vPosition, 1.0);
     ViewPos = viewportData[viewportIndex].inverseView[3].xyz;
-
-    FlashlightProjectionView = viewportData[viewportIndex].flashlightProjectionView;
-    FlashlightDir = viewportData[viewportIndex].flashlightDir;
-    FlashlightPosition = viewportData[viewportIndex].flashlightPosition;
-    FlashlightModifer = viewportData[viewportIndex].flashlightModifer;
-    CameraForward = -normalize(vec3(inverseView[2].xyz));	
+    ViewportIndex = viewportIndex;
 
 	gl_Position = projectionView * WorldPos;
 }

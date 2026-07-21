@@ -17,7 +17,10 @@ void MinHeap::Update(Cell* cell) {
 }
 
 bool MinHeap::Contains(Cell* cell) {
-    return (items[cell->heapIndex] == cell);
+    return cell &&
+           cell->heapIndex >= 0 &&
+           cell->heapIndex < currentItemCount &&
+           items[cell->heapIndex] == cell;
 }
 
 bool MinHeap::IsEmpty() {
@@ -54,9 +57,12 @@ inline void MinHeap::Swap(Cell* a, Cell* b) {
 Cell* MinHeap::RemoveFirst() {
     Cell* firstItem = items[0];
     currentItemCount--;
-    items[0] = items[currentItemCount];
-    items[0]->heapIndex = 0;
-    SortDown(items[0]);
+    if (currentItemCount > 0) {
+        items[0] = items[currentItemCount];
+        items[0]->heapIndex = 0;
+        SortDown(items[0]);
+    }
+    firstItem->heapIndex = -1;
     return firstItem;
 }
 

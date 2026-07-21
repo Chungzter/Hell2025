@@ -20,7 +20,6 @@
 #include "Unloved/Systems/Blood/BloodSystem.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
-#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 #include <cstddef>
 #include <cstdint>
@@ -43,6 +42,7 @@ namespace OpenGL::Renderer {
         BindShader("VAT");
 
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
         state.blendEnable = false;

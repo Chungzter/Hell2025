@@ -2,6 +2,7 @@
 #include "Hell/AssetFormats/AssetData.h"
 #include "Hell/File.h"
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -9,7 +10,7 @@ struct RagdollData;
 
 namespace Hell::AssetLoader {
 
-    void Init();
+    void Init(uint32_t maxCompressedTextureResolution);
     void DiscoverAssets();
     void Update();
     void LoadMinimumRequiredAssets(); // TODO: rename to something that doesn't fell like a boolean

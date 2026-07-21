@@ -29,24 +29,26 @@ using namespace Unloved;
 
 namespace VulkanRenderer {
 
-    void LightingPass(VkCommandBuffer commandBuffer) {
-        ProfilerVulkanZoneFunction();
+    void RenderDeferredLighting(VkCommandBuffer commandBuffer) {
 
         AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("Lighting");
         AllocatedImage* baseColorImage = VulkanResourceManager::GetAllocatedImage("BaseColorMetallic");
         AllocatedImage* normalImage = VulkanResourceManager::GetAllocatedImage("NormalXYRoughnessMisc");
         AllocatedImage* indirectDiffuseImage = VulkanResourceManager::GetAllocatedImage("IndirectDiffuse");
         AllocatedImage* indirectDiffuseSurfaceImage = VulkanResourceManager::GetAllocatedImage("IndirectDiffuseSurface");
+        AllocatedImage* amdTemporalImage = VulkanResourceManager::GetAllocatedImage("IndirectSpecularAMDTemporal");
+        AllocatedImage* amdMaterialRoughnessImage = VulkanResourceManager::GetAllocatedImage("IndirectSpecularAMDMaterialRoughness");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("LightingDeferred");
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("LightingDeferred");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
         VulkanDescriptorSetResource* rayQueryDescriptorSetResource = VulkanResourceManager::GetDescriptorSetResource("RayQueryDescriptorSet");
         const VulkanFrameData& frameData = GetCurrentFrameData();
         VulkanDescriptorSet* rayQueryDescriptorSet = rayQueryDescriptorSetResource ? &rayQueryDescriptorSetResource->GetSet(GetCurrentFrameIndex()) : nullptr;
-        PushConstantsFrameResources frameResources = CreatePushConstantsFrameResources();
+        const uint64_t frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         VulkanBuffer* rayQueryBLASInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryBLASInstanceData);
         VulkanBuffer* rayQueryMeshInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryMeshInstanceData);
         VulkanBuffer* tileLightsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.tileLights);
+        const int32_t brdfLutTextureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BrdfLut", true);
 
         if (!pipeline) return;
         if (!renderState) return;
@@ -57,10 +59,8 @@ namespace VulkanRenderer {
         if (!normalImage) return;
         if (!indirectDiffuseImage) return;
         if (!indirectDiffuseSurfaceImage) return;
-        if (frameResources.viewportDataDeviceAddress == 0) return;
-        if (frameResources.rendererDataDeviceAddress == 0) return;
-        if (frameResources.materialsDeviceAddress == 0) return;
-        if (frameResources.lightsDeviceAddress == 0) return;
+        if (!amdTemporalImage || !amdMaterialRoughnessImage) return;
+        if (frameAddressTableDeviceAddress == 0) return;
         if (!rayQueryBLASInstanceDataBuffer) return;
         if (!rayQueryMeshInstanceDataBuffer) return;
         if (!tileLightsBuffer) return;
@@ -70,6 +70,8 @@ namespace VulkanRenderer {
         normalImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         indirectDiffuseImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         indirectDiffuseSurfaceImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
+        amdTemporalImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
+        amdMaterialRoughnessImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         if (!BeginRenderState(commandBuffer, *renderState, extent)) return;
 
         VkViewport viewport{};
@@ -87,15 +89,19 @@ namespace VulkanRenderer {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 2, descriptorSets, 0, nullptr);
 
         PushConstantsDeferredLighting pushConstants{};
-        pushConstants.frame = frameResources;
+        pushConstants.frameAddressTableDeviceAddress = frameAddressTableDeviceAddress;
         pushConstants.rayQueryBLASInstanceDataDeviceAddress = rayQueryBLASInstanceDataBuffer->GetDeviceAddress();
         pushConstants.rayQueryMeshInstanceDataDeviceAddress = rayQueryMeshInstanceDataBuffer->GetDeviceAddress();
-        pushConstants.tileLightsDeviceAddress = tileLightsBuffer->GetDeviceAddress();
-        pushConstants.rayQueryEnabled = 1; // TODO: remove me, fucking early return way before here if your TLAS is invalid
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantsDeferredLighting), &pushConstants);
+        pushConstants.brdfLutTextureIndex = brdfLutTextureIndex;
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
         EndRenderState(commandBuffer);
+    }
+
+    void LightingPass(VkCommandBuffer commandBuffer) {
+        ProfilerVulkanZoneFunction();
+        RenderDeferredLighting(commandBuffer);
     }
 }

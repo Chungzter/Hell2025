@@ -16,11 +16,8 @@ layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform imag
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDebugTileView data;
-} pushConstant;
+} pc;
 
-
-layout(buffer_reference, scalar) readonly buffer RendererDataBuffer { RendererData rendererData; };
-layout(buffer_reference, scalar) buffer TileLightsBuffer            { TileLights data[];};
 
 shared vec3 sharedDebugOutputColor;
 
@@ -30,8 +27,8 @@ void main() {
 
     if (texel.x >= targetSize.x || texel.y >= targetSize.y) return;
 
-    TileLightsBuffer tileLights = TileLightsBuffer(pushConstant.data.tileLightsDeviceAddress);
-    RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress);
+    TileLightsBuffer tileLights = pc.data.frame.tileLightBuffer;
+    RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
 
     RendererData rendererData = rendererDataBuffer.rendererData;
 
@@ -44,7 +41,7 @@ void main() {
 
         // Tile lights
         if (rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_LIGHTS) {
-			count = tileLights.data[tileIndex].lightCount / 8.0;
+			count = tileLights.tileLights[tileIndex].lightCount / 8.0;
 		}
         if (rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_BLOOD_DECALS) {
 			// TODO
@@ -62,7 +59,7 @@ void main() {
 		//sharedDebugOutputColor = lightingColor * 0.5 + col * col;
 		sharedDebugOutputColor = (lightingColor * 0.1) + (col * col);
 
-		if (tileLights.data[tileIndex].lightCount == 0) {
+		if (tileLights.tileLights[tileIndex].lightCount == 0) {
 			sharedDebugOutputColor = vec3(0,0,0);
 		}
 	}

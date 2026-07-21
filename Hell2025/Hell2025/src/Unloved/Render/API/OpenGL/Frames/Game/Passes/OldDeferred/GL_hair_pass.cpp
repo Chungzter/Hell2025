@@ -14,7 +14,6 @@ namespace Audio = Hell::Audio;
 #include "Hell/Input.h"
 namespace Input = Hell::Input;
 
-#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 
 namespace OpenGL::Renderer {
@@ -58,6 +57,7 @@ namespace OpenGL::Renderer {
         OpenGLShader* finalCompositeShader = OpenGL::ResourceManager::GetShaderPtr("HairFinalComposite");
         OpenGLShadowCubeMapArray* hiResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("HiRes");
         OpenGLShadowCubeMapArray* lowResShadowMaps = OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("LowRes");
+        OpenGLShadowMap* flashlightShadowMaps = OpenGL::ResourceManager::GetShadowMapPtr("FlashlightShadowMaps");
 
         if (!finalCompositeShader) return;
         if (!gBuffer) return;
@@ -66,6 +66,7 @@ namespace OpenGL::Renderer {
         if (!hairLightingShader) return;
         if (!hiResShadowMaps) return;
         if (!lowResShadowMaps) return;
+        if (!flashlightShadowMaps) return;
 
         UpdateHairDebugInput();
 
@@ -93,6 +94,8 @@ namespace OpenGL::Renderer {
             hairFrameBuffer->ClearDepthAttachment();
 
             OpenGL::BindShader("HairDepthPeel");
+            OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+            OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
             OpenGL::BindImageTexture(0, hairFrameBuffer->GetColorAttachmentHandleByName("ViewspaceDepthPrevious"), GL_READ_ONLY, GL_R32F);
             OpenGL::BindTextureUnit(1, gBuffer->GetDepthAttachmentHandle());
 
@@ -154,8 +157,14 @@ namespace OpenGL::Renderer {
             glDisablei(GL_BLEND, viewspaceDepthBufferIndex);
 
             OpenGL::BindShader("HairLighting");
+            OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+            OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+            OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+            OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+            OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+            OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
             OpenGL::SetUniformVec3("u_moonlightDir", Unloved::World::GetMoonlightDirection());
-            glBindTextureUnit(7, GetTextureHandleByName("Flashlight2"));
+            glBindTextureUnit(TEX_IDX_SHADOW_MAP_FLASHLIGHT, flashlightShadowMaps->GetDepthTextureHandle());
             glBindTextureUnit(TEX_IDX_SHADOW_MAP_HI_RES, hiResShadowMaps->GetDepthTexture());
             glBindTextureUnit(TEX_IDX_SHADOW_MAP_LOW_RES, lowResShadowMaps->GetDepthTexture());
 

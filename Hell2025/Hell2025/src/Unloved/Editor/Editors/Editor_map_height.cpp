@@ -66,10 +66,7 @@ namespace Unloved::Editor {
         mapCreateInfo.spawnOffsetChunkZ = 0;
         LegacyWorld::ClearAllObjects();
         LegacyWorld::LoadMapsHeightMapData({ mapCreateInfo });
-        LegacyWorld::EnableOcean();
-
         MapManager::Init();                          // ?
-        Renderer::RecalculateAllHeightMapData(true); // ?
 
         // Init UI
         InitFileMenuImGuiElements();
@@ -193,13 +190,6 @@ namespace Unloved::Editor {
                 g_noiseScale = g_imguiElements.noiseScale.GetValue();
             }
 
-            bool reloadRequired = false;
-
-            ///////if (reloadRequired) {
-            ///////    MapDataCreateInfo* mapCreateInfo = MapManager::GetMapCreateInfoByName("MapHeightEditorMap");
-            ///////    LegacyWorld::LoadMap(mapCreateInfo);
-            ///////    Renderer::RecalculateAllMapHeightData();
-            ///////}
         }
 
         //g_imguiElements.leftPanel.EndImGuiElement();

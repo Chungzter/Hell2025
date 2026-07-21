@@ -15,6 +15,11 @@ namespace Hell::Enum {
     }
 
     template <typename T>
+    size_t GetCount() {
+        return magic_enum::enum_count<T>();
+    }
+
+    template <typename T>
     std::string ToString(T value) {
         return std::string(magic_enum::enum_name(value));
     }

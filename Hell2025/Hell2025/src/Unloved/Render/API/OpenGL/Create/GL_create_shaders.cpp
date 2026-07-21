@@ -7,8 +7,6 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("ChristmasLightCulling", { "GL_christmas_light_culling.comp" });
         OpenGL::ResourceManager::LoadShader("ChristmasLightsWire", { "GL_christmas_light_wire.vert", "GL_christmas_light_wire.frag" });
         OpenGL::ResourceManager::LoadShader("BlitRoad", { "GL_blit_road.comp" });
-        OpenGL::ResourceManager::LoadShader("BlurHorizontal", { "GL_blur_horizontal.vert", "GL_blur.frag" });
-        OpenGL::ResourceManager::LoadShader("BlurVertical", { "GL_blur_vertical.vert", "GL_blur.frag" });
         OpenGL::ResourceManager::LoadShader("ComputeSkinning", { "GL_compute_skinning.comp" });
         OpenGL::ResourceManager::LoadShader("TileWorldBounds", { "GL_tile_world_bounds.comp" });
         OpenGL::ResourceManager::LoadShader("VAT", { "GL_vat.vert", "GL_vat.frag" });
@@ -18,8 +16,8 @@ namespace OpenGL::Renderer {
 
         OpenGL::ResourceManager::LoadShader("DownSample2xBox", { "GL_down_sample_2x_box.comp" });
         OpenGL::ResourceManager::LoadShader("EditorMesh", { "GL_editor_mesh.vert", "GL_editor_mesh.frag" });
-        OpenGL::ResourceManager::LoadShader("EmissiveComposite", { "GL_emissive_composite.comp" });
-        OpenGL::ResourceManager::LoadShader("EmissiveCompositeNew", { "GL_emissive_composite_new.comp" });
+        OpenGL::ResourceManager::LoadShader("EmissiveBloomFilter", { "GL_emissive_bloom_filter.comp" });
+        OpenGL::ResourceManager::LoadShader("EmissiveBloomComposite", { "GL_emissive_bloom_composite.comp" });
         OpenGL::ResourceManager::LoadShader("ExamineItem", { "GL_examine_item.vert", "GL_examine_item.frag" });
         OpenGL::ResourceManager::LoadShader("FogRayMarch", { "GL_fog_ray_march.comp" });
         OpenGL::ResourceManager::LoadShader("FogComposite", { "GL_fog_composite.comp" });
@@ -37,9 +35,7 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("HairFinalComposite", { "GL_hair_final_composite.comp" });
         OpenGL::ResourceManager::LoadShader("HairLighting", { "GL_hair_lighting.vert", "GL_hair_lighting.frag" });
         OpenGL::ResourceManager::LoadShader("HeightMapColor", { "GL_heightmap_color.vert", "GL_heightmap_color.frag" });
-        OpenGL::ResourceManager::LoadShader("HeightMapImageGeneration", { "GL_heightmap_image_generation.comp" });
         OpenGL::ResourceManager::LoadShader("HeightMapPhysxTextureGeneration", { "GL_heightmap_physx_texture_generation.comp" });
-        OpenGL::ResourceManager::LoadShader("HeightMapToWorldBlit", { "GL_heightmap_to_world_blit.comp" });
         OpenGL::ResourceManager::LoadShader("HeightMapVertexGeneration", { "GL_heightmap_vertex_generation.comp" });
         OpenGL::ResourceManager::LoadShader("HeightMapPaint", { "GL_heightmap_paint.comp" });
         OpenGL::ResourceManager::LoadShader("LightCulling", { "GL_light_culling.comp" });
@@ -51,6 +47,7 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("PerlinNoise3D", { "GL_perlin_noise_3d.comp" });
         OpenGL::ResourceManager::LoadShader("ShadowMap", { "GL_shadow_map.vert", "GL_shadow_map.frag" });
         OpenGL::ResourceManager::LoadShader("ShadowCubeMap", { "GL_shadow_cube_map.vert", "GL_shadow_cube_map.frag" });
+        OpenGL::ResourceManager::LoadShader("ShadowCubeMapAlphaDiscard", { "GL_shadow_cube_map.vert", "GL_shadow_cube_map_alpha_discard.frag" });
         OpenGL::ResourceManager::LoadShader("SolidColor", { "GL_solid_color.vert", "GL_solid_color.frag" });
         OpenGL::ResourceManager::LoadShader("Skybox", { "GL_skybox.vert", "GL_skybox.frag" });
         OpenGL::ResourceManager::LoadShader("SpriteSheet", { "GL_sprite_sheet.vert", "GL_sprite_sheet.frag" });
@@ -127,16 +124,15 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("Water", "FttRadix8Horizontal", { "GL_ftt_radix_8_horizontal.comp" });
         OpenGL::ResourceManager::LoadShader("Water", "OceanFlags", { "GL_ocean_flags.comp" });
         OpenGL::ResourceManager::LoadShader("Water", "OceanSurfaceComposite", { "GL_ocean_surface_composite.comp" });
-        OpenGL::ResourceManager::LoadShader("Water", "OceanGeometry", { "GL_ocean_geometry.vert", "GL_ocean_geometry.frag", "GL_ocean_geometry.tesc", "GL_ocean_geometry.tese" });
         OpenGL::ResourceManager::LoadShader("Water", "OceanCalculateSpectrum", { "GL_ocean_calculate_spectrum.comp" });
         OpenGL::ResourceManager::LoadShader("Water", "OceanUpdateTextures", { "GL_ocean_update_textures.comp" });
         OpenGL::ResourceManager::LoadShader("Water", "OceanUnderwaterComposite", { "GL_ocean_underwater_composite.comp" });
-        OpenGL::ResourceManager::LoadShader("Water", "OceanTesseleationEdgeTransitionCleanUp", { "GL_ocean_tessellation_edge_transition_cleanup.comp" });
         OpenGL::ResourceManager::LoadShader("Water", "OceanPositionReadback", { "GL_ocean_position_readback.comp" });
 
         // Post processing
         OpenGL::ResourceManager::LoadShader("FXAA", { "RE/GL_fullscreen_triangle.vert", "GL_fxaa.frag" });
-        OpenGL::ResourceManager::LoadShader("PostProcessing", "TAA", { "GL_taa.comp" });
+        OpenGL::ResourceManager::LoadShader("TAA", { "GL_taa.comp" });
+        OpenGL::ResourceManager::LoadShader("TAAPost", { "GL_taa_post.comp" });
         OpenGL::ResourceManager::LoadShader("PostProcessing", "PostProcessing", { "GL_post_processing.comp" });
 
         // RE_STYLE ONLY
@@ -152,6 +148,7 @@ namespace OpenGL::Renderer {
 
         OpenGL::ResourceManager::LoadShader("RE", "Visibility", { "GL_visibility.vert", "GL_visibility.frag" });
         OpenGL::ResourceManager::LoadShader("RE", "VisibilityAlphaDiscard", { "GL_visibility.vert", "GL_visibility_alpha_discard.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "VisibilityHeightMap", { "GL_visibility_height_map.vert", "GL_visibility_height_map.frag" });
         OpenGL::ResourceManager::LoadShader("RE", "MaterialResolve", { "GL_material_resolve.vert", "GL_material_resolve.frag" });
 
         OpenGL::ResourceManager::LoadShader("RE", "EmissiveForward", { "GL_gbuffer_re.vert", "GL_emissive_forward.frag" });

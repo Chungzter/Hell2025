@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <cmath>
 #include <glm/geometric.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 namespace Unloved::Animator {
@@ -68,8 +67,8 @@ namespace Unloved::Animator {
             return animation->m_duration / ticksPerSecond;
         }
 
-        Hell::QuatTransform BindPoseForNode(const SkinnedModel& skinnedModel, int nodeIndex) {
-            return Hell::QuatTransform(skinnedModel.m_nodes[nodeIndex].inverseBindTransform);
+        const Hell::QuatTransform& BindPoseForNode(const SkinnedModel& skinnedModel, int nodeIndex) {
+            return skinnedModel.m_bindPose[nodeIndex];
         }
 
         Hell::QuatTransform BlendTransform(const Hell::QuatTransform& from, const Hell::QuatTransform& to, float factor) {
@@ -141,109 +140,87 @@ namespace Unloved::Animator {
             return bestPlayback;
         }
 
-        const AnimatedNode* FindAnimatedNode(Animation* animation, const std::string& nodeName) {
-            if (!animation) {
-                return nullptr;
-            }
-
-            for (const AnimatedNode& animatedNode : animation->m_animatedNodes) {
-                if (animatedNode.m_nodeName == nodeName) {
-                    return &animatedNode;
-                }
-            }
-            return nullptr;
-        }
-
-        int FindAnimatedNodeIndex(float animationTime, const AnimatedNode* animatedNode) {
-            if (!animatedNode || animatedNode->m_nodeKeys.empty()) {
+        int FindKeyframeIndex(float animationTime, const AnimatedNode& animatedNode) {
+            if (animatedNode.m_nodeKeys.empty()) {
                 return -1;
             }
 
-            if (animationTime < animatedNode->m_nodeKeys[0].timeStamp) {
+            if (animationTime < animatedNode.m_nodeKeys[0].timeStamp) {
                 return -1;
             }
 
-            for (int i = 1; i < animatedNode->m_nodeKeys.size(); i++) {
-                if (animationTime < animatedNode->m_nodeKeys[i].timeStamp) {
+            for (int i = 1; i < animatedNode.m_nodeKeys.size(); i++) {
+                if (animationTime < animatedNode.m_nodeKeys[i].timeStamp) {
                     return i - 1;
                 }
             }
 
-            return static_cast<int>(animatedNode->m_nodeKeys.size()) - 1;
+            return static_cast<int>(animatedNode.m_nodeKeys.size()) - 1;
         }
 
-        glm::vec3 SamplePosition(float animationTime, const AnimatedNode* animatedNode) {
-            if (!animatedNode || animatedNode->m_nodeKeys.empty()) {
-                return glm::vec3(0.0f);
-            }
-
-            const int index = FindAnimatedNodeIndex(animationTime, animatedNode);
+        Hell::QuatTransform SampleNodeTransform(float animationTime, const AnimatedNode& animatedNode) {
+            const int index = FindKeyframeIndex(animationTime, animatedNode);
             const int nextIndex = index + 1;
 
-            if (index == -1 || animatedNode->m_nodeKeys.size() == 1) {
-                return animatedNode->m_nodeKeys[0].positon;
+            if (animatedNode.m_nodeKeys.empty()) {
+                return Hell::QuatTransform();
             }
 
-            if (nextIndex == animatedNode->m_nodeKeys.size()) {
-                return animatedNode->m_nodeKeys[index].positon;
+            if (index == -1 || animatedNode.m_nodeKeys.size() == 1) {
+                const SQT& key = animatedNode.m_nodeKeys[0];
+                Hell::QuatTransform transform;
+                transform.translation = key.positon;
+                transform.rotation = key.rotation;
+                transform.scale = key.scale;
+                return transform;
             }
 
-            const float deltaTime = animatedNode->m_nodeKeys[nextIndex].timeStamp - animatedNode->m_nodeKeys[index].timeStamp;
-            const float factor = (animationTime - animatedNode->m_nodeKeys[index].timeStamp) / deltaTime;
-            const glm::vec3 start = animatedNode->m_nodeKeys[index].positon;
-            const glm::vec3 end = animatedNode->m_nodeKeys[nextIndex].positon;
-            return start + factor * (end - start);
+            if (nextIndex == animatedNode.m_nodeKeys.size()) {
+                const SQT& key = animatedNode.m_nodeKeys[index];
+                Hell::QuatTransform transform;
+                transform.translation = key.positon;
+                transform.rotation = key.rotation;
+                transform.scale = key.scale;
+                return transform;
+            }
+
+            const SQT& start = animatedNode.m_nodeKeys[index];
+            const SQT& end = animatedNode.m_nodeKeys[nextIndex];
+            const float deltaTime = end.timeStamp - start.timeStamp;
+            const float factor = deltaTime > 0.0f ? Clamp01((animationTime - start.timeStamp) / deltaTime) : 0.0f;
+
+            Hell::QuatTransform transform;
+            transform.translation = start.positon + factor * (end.positon - start.positon);
+            transform.scale = start.scale + factor * (end.scale - start.scale);
+
+            glm::quat endRotation = end.rotation;
+
+            if (glm::dot(start.rotation, endRotation) < 0.0f) {
+                endRotation = -endRotation;
+            }
+
+            transform.rotation = glm::normalize(glm::slerp(start.rotation, endRotation, factor));
+            return transform;
         }
 
-        glm::vec3 SampleScale(float animationTime, const AnimatedNode* animatedNode) {
-            if (!animatedNode || animatedNode->m_nodeKeys.empty()) {
-                return glm::vec3(1.0f);
+        void CacheAnimatedNodeIndices(const SkinnedModel& skinnedModel, AnimationPlayback& playback) {
+            const int nodeCount = static_cast<int>(skinnedModel.m_nodes.size());
+            playback.animatedNodeIndexByModelNode.assign(nodeCount, -1);
+
+            if (!playback.animation) {
+                return;
             }
 
-            const int index = FindAnimatedNodeIndex(animationTime, animatedNode);
-            const int nextIndex = index + 1;
+            for (int modelNodeIndex = 0; modelNodeIndex < nodeCount; modelNodeIndex++) {
+                const std::string& modelNodeName = skinnedModel.m_nodes[modelNodeIndex].name;
 
-            if (index == -1 || animatedNode->m_nodeKeys.size() == 1) {
-                return animatedNode->m_nodeKeys[0].scale;
+                for (int animatedNodeIndex = 0; animatedNodeIndex < playback.animation->m_animatedNodes.size(); animatedNodeIndex++) {
+                    if (playback.animation->m_animatedNodes[animatedNodeIndex].m_nodeName == modelNodeName) {
+                        playback.animatedNodeIndexByModelNode[modelNodeIndex] = animatedNodeIndex;
+                        break;
+                    }
+                }
             }
-
-            if (nextIndex == animatedNode->m_nodeKeys.size()) {
-                return animatedNode->m_nodeKeys[index].scale;
-            }
-
-            const float deltaTime = animatedNode->m_nodeKeys[nextIndex].timeStamp - animatedNode->m_nodeKeys[index].timeStamp;
-            const float factor = (animationTime - animatedNode->m_nodeKeys[index].timeStamp) / deltaTime;
-            const glm::vec3 start = animatedNode->m_nodeKeys[index].scale;
-            const glm::vec3 end = animatedNode->m_nodeKeys[nextIndex].scale;
-            return start + factor * (end - start);
-        }
-
-        glm::quat SampleRotation(float animationTime, const AnimatedNode* animatedNode) {
-            if (!animatedNode || animatedNode->m_nodeKeys.empty()) {
-                return glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-            }
-
-            const int index = FindAnimatedNodeIndex(animationTime, animatedNode);
-            const int nextIndex = index + 1;
-
-            if (index == -1 || animatedNode->m_nodeKeys.size() == 1) {
-                return animatedNode->m_nodeKeys[0].rotation;
-            }
-
-            if (nextIndex == animatedNode->m_nodeKeys.size()) {
-                return animatedNode->m_nodeKeys[index].rotation;
-            }
-
-            const float deltaTime = animatedNode->m_nodeKeys[nextIndex].timeStamp - animatedNode->m_nodeKeys[index].timeStamp;
-            const float factor = (animationTime - animatedNode->m_nodeKeys[index].timeStamp) / deltaTime;
-            const glm::quat& start = animatedNode->m_nodeKeys[index].rotation;
-            glm::quat end = animatedNode->m_nodeKeys[nextIndex].rotation;
-
-            if (glm::dot(start, end) < 0.0f) {
-                end = -end;
-            }
-
-            return glm::normalize(glm::slerp(start, end, factor));
         }
 
         float GetAnimationTimeInTicks(const AnimationPlayback& playback) {
@@ -321,30 +298,31 @@ namespace Unloved::Animator {
 
             const int nodeCount = static_cast<int>(skinnedModel.m_nodes.size());
             playback.sampledPose.resize(nodeCount);
+            if (playback.animatedNodeIndexByModelNode.size() != nodeCount) {
+                CacheAnimatedNodeIndices(skinnedModel, playback);
+            }
 
             const float timeInTicks = GetAnimationTimeInTicks(playback);
 
-            for (int i = 0; i < skinnedModel.m_nodes.size(); i++) {
-                glm::mat4 nodeTransformation = glm::mat4(1.0f);
-                const std::string& nodeName = skinnedModel.m_nodes[i].name;
-                const AnimatedNode* animatedNode = FindAnimatedNode(playback.animation, nodeName);
-
-                if (animatedNode) {
-                    const glm::vec3 translation = SamplePosition(timeInTicks, animatedNode);
-                    const glm::quat rotation = SampleRotation(timeInTicks, animatedNode);
-                    const glm::vec3 scale = SampleScale(timeInTicks, animatedNode);
-                    nodeTransformation = glm::translate(glm::mat4(1.0f), translation) * glm::mat4(rotation);
-                    nodeTransformation = glm::scale(nodeTransformation, scale);
+            for (int modelNodeIndex = 0; modelNodeIndex < nodeCount; modelNodeIndex++) {
+                const int animatedNodeIndex = playback.animatedNodeIndexByModelNode[modelNodeIndex];
+                if (animatedNodeIndex >= 0 && animatedNodeIndex < playback.animation->m_animatedNodes.size()) {
+                    playback.sampledPose[modelNodeIndex] = SampleNodeTransform(
+                        timeInTicks,
+                        playback.animation->m_animatedNodes[animatedNodeIndex]);
                 }
-
-                playback.sampledPose[i] = Hell::QuatTransform(nodeTransformation);
+                else {
+                    playback.sampledPose[modelNodeIndex] = Hell::QuatTransform();
+                }
             }
         }
 
         void BlendPlaybackPosesIntoLayer(const SkinnedModel& skinnedModel, AnimationLayerState& layer) {
             const int nodeCount = static_cast<int>(skinnedModel.m_nodes.size());
-            layer.blendedPose.assign(nodeCount, Hell::QuatTransform());
-            std::vector<float> blendedWeight(nodeCount, 0.0f);
+            layer.blendedPose.resize(nodeCount);
+            layer.blendedWeights.resize(nodeCount);
+            std::fill(layer.blendedPose.begin(), layer.blendedPose.end(), Hell::QuatTransform());
+            std::fill(layer.blendedWeights.begin(), layer.blendedWeights.end(), 0.0f);
 
             for (const AnimationPlayback& playback : layer.playbacks) {
                 if (!playback.animation || playback.weight <= MIN_ANIMATION_WEIGHT || playback.sampledPose.size() != nodeCount) {
@@ -352,35 +330,26 @@ namespace Unloved::Animator {
                 }
 
                 for (int i = 0; i < nodeCount; i++) {
-                    const float newWeightSum = blendedWeight[i] + playback.weight;
+                    const float newWeightSum = layer.blendedWeights[i] + playback.weight;
                     const float blendFactor = playback.weight / newWeightSum;
 
-                    if (blendedWeight[i] <= MIN_ANIMATION_WEIGHT) {
+                    if (layer.blendedWeights[i] <= MIN_ANIMATION_WEIGHT) {
                         layer.blendedPose[i] = playback.sampledPose[i];
                     }
                     else {
                         layer.blendedPose[i] = BlendTransform(layer.blendedPose[i], playback.sampledPose[i], blendFactor);
                     }
 
-                    blendedWeight[i] = newWeightSum;
+                    layer.blendedWeights[i] = newWeightSum;
                 }
             }
 
             for (int i = 0; i < nodeCount; i++) {
-                if (blendedWeight[i] <= MIN_ANIMATION_WEIGHT) {
+                if (layer.blendedWeights[i] <= MIN_ANIMATION_WEIGHT) {
                     layer.blendedPose[i] = BindPoseForNode(skinnedModel, i);
                 }
             }
 
-            layer.localNodeTransforms = layer.blendedPose;
-            layer.globalNodeTransforms.resize(nodeCount);
-
-            for (int i = 0; i < nodeCount; i++) {
-                const glm::mat4 localMatrix = layer.blendedPose[i].to_mat4();
-                const int parent = skinnedModel.m_nodes[i].parentIndex;
-                const glm::mat4 globalMatrix = parent >= 0 ? layer.globalNodeTransforms[parent].to_mat4() * localMatrix : localMatrix;
-                layer.globalNodeTransforms[i] = Hell::QuatTransform(globalMatrix);
-            }
         }
 
         void UpdateLayer(AnimationState& state, AnimationLayerState& layer, float deltaTime) {
@@ -401,6 +370,70 @@ namespace Unloved::Animator {
             }
 
             BlendPlaybackPosesIntoLayer(*state.skinnedModel, layer);
+        }
+
+        void UpdateLayers(AnimationState& state, float deltaTime) {
+            for (AnimationLayerState& layer : state.layers) {
+                UpdateLayer(state, layer, deltaTime);
+            }
+        }
+
+        void InitializeLocalPose(AnimationState& state) {
+            const int nodeCount = state.skinnedModel->GetNodeCount();
+            state.localNodePose.resize(nodeCount);
+            state.globalNodeTransforms.resize(nodeCount);
+            std::copy(state.skinnedModel->m_bindPose.begin(), state.skinnedModel->m_bindPose.end(), state.localNodePose.begin());
+        }
+
+        void BlendLayersIntoLocalPose(AnimationState& state) {
+            const int nodeCount = state.skinnedModel->GetNodeCount();
+            std::vector<Hell::QuatTransform>& finalLocals = state.localNodePose;
+            const std::vector<Hell::QuatTransform>& bindPose = state.skinnedModel->m_bindPose;
+
+            for (AnimationLayerState& layer : state.layers) {
+                if (layer.weight <= MIN_ANIMATION_WEIGHT || layer.playbacks.empty() || layer.blendedPose.size() != nodeCount) {
+                    continue;
+                }
+
+                for (int i = 0; i < nodeCount; i++) {
+                    const float nodeWeight = i < layer.nodeWeights.size() ? layer.nodeWeights[i] : 1.0f;
+                    const float weight = Clamp01(layer.weight * nodeWeight);
+
+                    if (weight <= MIN_ANIMATION_WEIGHT) {
+                        continue;
+                    }
+
+                    if (layer.blendMode == AnimationBlendMode::Additive) {
+                        finalLocals[i] = ApplyAdditiveTransform(finalLocals[i], bindPose[i], layer.blendedPose[i], weight);
+                    }
+                    else {
+                        finalLocals[i] = BlendTransform(finalLocals[i], layer.blendedPose[i], weight);
+                    }
+                }
+            }
+        }
+
+        void BuildGlobalNodeTransforms(AnimationState& state) {
+            const int nodeCount = state.skinnedModel->GetNodeCount();
+
+            for (int i = 0; i < nodeCount; i++) {
+                glm::mat4 localMatrix = state.localNodePose[i].to_mat4();
+                const std::string& nodeName = state.skinnedModel->m_nodes[i].name;
+                auto additive = state.additiveNodeTransforms.find(nodeName);
+
+                if (additive != state.additiveNodeTransforms.end()) {
+                    localMatrix = additive->second * localMatrix;
+                }
+
+                const int parent = state.skinnedModel->m_nodes[i].parentIndex;
+                state.globalNodeTransforms[i] = parent >= 0 ? state.globalNodeTransforms[parent] * localMatrix : localMatrix;
+            }
+        }
+
+        void SanitizeGlobalNodeTransforms(AnimationState& state) {
+            for (glm::mat4& matrix : state.globalNodeTransforms) {
+                Hell::Math::Sanitize(matrix);
+            }
         }
 
         void FadeOutPlayback(AnimationPlayback& playback, float fadeDuration) {
@@ -433,6 +466,12 @@ namespace Unloved::Animator {
     void SetSkinnedModel(AnimationState& state, SkinnedModel* skinnedModel) {
         Clear(state);
         state.skinnedModel = skinnedModel;
+
+        if (state.skinnedModel) {
+            state.localNodePose.resize(state.skinnedModel->GetNodeCount());
+            state.globalNodeTransforms.resize(state.skinnedModel->GetNodeCount());
+            state.boneSkinningMatrices.resize(state.skinnedModel->GetBoneCount());
+        }
     }
 
     void PlayAnimation(AnimationState& state, const std::string& layerName, const std::string& animationName, float speed, bool loop) {
@@ -468,8 +507,7 @@ namespace Unloved::Animator {
         }
 
         layer.blendedPose.resize(nodeCount);
-        layer.localNodeTransforms.resize(nodeCount);
-        layer.globalNodeTransforms.resize(nodeCount);
+        layer.blendedWeights.resize(nodeCount);
 
         const float fadeInDuration = std::max(0.0f, options.fadeInDuration);
         const float fadeOutDurationOption = std::max(0.0f, options.fadeOutDuration);
@@ -498,6 +536,7 @@ namespace Unloved::Animator {
         playback.complete = false;
         playback.fadingOut = false;
         playback.sampledPose.resize(nodeCount);
+        CacheAnimatedNodeIndices(*state.skinnedModel, playback);
     }
 
     void PlayAndLoopAnimation(AnimationState& state, const std::string& layerName, const std::string& animationName, float speed) {
@@ -549,60 +588,12 @@ namespace Unloved::Animator {
             return;
         }
 
-        for (AnimationLayerState& layer : state.layers) {
-            UpdateLayer(state, layer, deltaTime);
-        }
+        UpdateLayers(state, deltaTime);
 
-        const int nodeCount = state.skinnedModel->GetNodeCount();
-        std::vector<Hell::QuatTransform> finalLocals(nodeCount);
-        std::vector<Hell::QuatTransform> bindPose(nodeCount);
-
-        for (int i = 0; i < nodeCount; i++) {
-            bindPose[i] = BindPoseForNode(*state.skinnedModel, i);
-            finalLocals[i] = bindPose[i];
-        }
-
-        for (AnimationLayerState& layer : state.layers) {
-            if (layer.weight <= MIN_ANIMATION_WEIGHT || layer.playbacks.empty() || layer.blendedPose.size() != nodeCount) {
-                continue;
-            }
-
-            for (int i = 0; i < nodeCount; i++) {
-                const float nodeWeight = i < layer.nodeWeights.size() ? layer.nodeWeights[i] : 1.0f;
-                const float weight = Clamp01(layer.weight * nodeWeight);
-
-                if (weight <= MIN_ANIMATION_WEIGHT) {
-                    continue;
-                }
-
-                if (layer.blendMode == AnimationBlendMode::Additive) {
-                    finalLocals[i] = ApplyAdditiveTransform(finalLocals[i], bindPose[i], layer.blendedPose[i], weight);
-                }
-                else {
-                    finalLocals[i] = BlendTransform(finalLocals[i], layer.blendedPose[i], weight);
-                }
-            }
-        }
-
-        state.localNodePose = finalLocals;
-        state.globalNodeTransforms.resize(nodeCount);
-
-        for (int i = 0; i < nodeCount; i++) {
-            glm::mat4 localMatrix = state.localNodePose[i].to_mat4();
-            const std::string& nodeName = state.skinnedModel->m_nodes[i].name;
-            auto additive = state.additiveNodeTransforms.find(nodeName);
-
-            if (additive != state.additiveNodeTransforms.end()) {
-                localMatrix = additive->second * localMatrix;
-            }
-
-            const int parent = state.skinnedModel->m_nodes[i].parentIndex;
-            state.globalNodeTransforms[i] = parent >= 0 ? state.globalNodeTransforms[parent] * localMatrix : localMatrix;
-        }
-
-        for (glm::mat4& matrix : state.globalNodeTransforms) {
-            Hell::Math::Sanitize(matrix);
-        }
+        InitializeLocalPose(state);
+        BlendLayersIntoLocalPose(state);
+        BuildGlobalNodeTransforms(state);
+        SanitizeGlobalNodeTransforms(state);
     }
 
     void UpdateBoneSkinningMatrices(AnimationState& state) {

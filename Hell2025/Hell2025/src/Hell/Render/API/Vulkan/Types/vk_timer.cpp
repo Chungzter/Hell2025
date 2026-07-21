@@ -340,6 +340,19 @@ const std::string& VulkanFrameTimer::GetGPUTimingList() const {
     return m_gpuTimingList;
 }
 
+bool VulkanFrameTimer::TryGetZoneTiming(std::string_view zoneName, double& cpuMilliseconds, double& gpuMilliseconds) const {
+    const auto zoneIt = mZones.find(std::string(zoneName));
+    if (zoneIt == mZones.end()) {
+        cpuMilliseconds = 0.0;
+        gpuMilliseconds = 0.0;
+        return false;
+    }
+
+    cpuMilliseconds = zoneIt->second.mCpuRollingAverage.GetValue();
+    gpuMilliseconds = zoneIt->second.mGpuRollingAverage.GetValue();
+    return true;
+}
+
 const std::string& VulkanFrameTimer::GetTotalCPUFrameTime() const {
     return m_totalCpuFrameTime;
 }

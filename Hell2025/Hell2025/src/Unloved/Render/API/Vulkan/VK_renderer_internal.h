@@ -37,7 +37,8 @@ namespace VulkanRenderer {
     void CreateStaticDescriptorSet();
     void CreateRayQueryDescriptorSet();
     void CreateDDGIRayQueryDescriptorSet();
-    PushConstantsFrameResources CreatePushConstantsFrameResources();
+    bool UpdateFrameAddressTable();
+    uint64_t GetFrameAddressTableDeviceAddress();
 
     void CreatePipelines();
     void CreateRenderStates();
@@ -45,6 +46,7 @@ namespace VulkanRenderer {
     void CreatePresentRenderTarget(VkExtent2D extent);
     void CreateShaders();
     void CreateSkybox();
+    void CreatePointShadowMaps();
 
     void UpdateBindlessRenderTargetDescriptors();
 
@@ -72,6 +74,7 @@ namespace VulkanRenderer {
 
     // Game passes
     void VisibilityPass(VkCommandBuffer commandBuffer);
+    void PointLightShadowPass(VkCommandBuffer commandBuffer);
     void MaterialResolvePass(VkCommandBuffer commandBuffer);
     void UpdateRayTracing(VkCommandBuffer commandBuffer);
     void LightingPass(VkCommandBuffer commandBuffer);
@@ -89,15 +92,21 @@ namespace VulkanRenderer {
     void DDGIPointCloudPass(VkCommandBuffer commandBuffer);
     void DDGIProbeUpdatePass(VkCommandBuffer commandBuffer);
     void DDGIIrradianceTexturePass(VkCommandBuffer commandBuffer);
+    uint64_t GetDDGIReflectionVolumeDataDeviceAddress();
     void DDGIRaytraceScenePass(VkCommandBuffer commandBuffer);
     void HairPass(VkCommandBuffer commandBuffer);
     void PostProcessingPass(VkCommandBuffer commandBuffer);
     void ComputeTileWorldBounds(VkCommandBuffer commandBuffer);
     void LightCullingPass(VkCommandBuffer commandBuffer);
     void SpriteSheetPass(VkCommandBuffer commandBuffer);
+    void HiZPass(VkCommandBuffer commandBuffer);
 
-    void ReflectedRadiancePass(VkCommandBuffer commandBuffer);
-
+    void IndirectSpecularInputPass(VkCommandBuffer commandBuffer);
+    void IndirectSpecularClassifyTilesPass(VkCommandBuffer commandBuffer);
+    void IndirectSpecularReprojectPass(VkCommandBuffer commandBuffer);
+    void IndirectSpecularPrefilterPass(VkCommandBuffer commandBuffer);
+    void IndirectSpecularResolveTemporalPass(VkCommandBuffer commandBuffer);
+    void ResetIndirectSpecularAMDHistory();
 
     void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView);
 

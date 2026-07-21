@@ -86,6 +86,10 @@ namespace OpenGL::Renderer {
         // Masked
         OpenGLShader& shader = OpenGL::ResourceManager::GetShader("DepthPrePassAlphaDiscardRE");
         OpenGL::BindShader("DepthPrePassAlphaDiscardRE");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
 
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
         glBindVertexArray(meshBuffer.GetVAO());
@@ -109,6 +113,12 @@ namespace OpenGL::Renderer {
         fbo.DrawBuffers({ "Lighting" });
 
         BindShader("HairLightingForward");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         SetUniformFloat("u_renderResolutionScale", 1.0f);
 
         BindShadowMapsRE();
@@ -127,6 +137,12 @@ namespace OpenGL::Renderer {
         MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedHair, maskedState);
 
         BindShader("LightingForward");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         SetUniformBool("u_solidAlpha", true);
 
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");

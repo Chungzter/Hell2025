@@ -29,8 +29,5 @@ enum DebugRenderMode {
 enum class DebugTextMode {
     NONE,
     PER_PLAYER,
-    GLOBAL,
-    PROFILING,
-    MEMORY_TRACKER,
-    DEBUG_TEXT_MODE_COUNT
+    MENU,
 };

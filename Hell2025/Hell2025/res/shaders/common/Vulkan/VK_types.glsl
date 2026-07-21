@@ -1,3 +1,6 @@
+#ifndef VULKAN_TYPES_GLSL
+#define VULKAN_TYPES_GLSL
+
 struct RenderItemUI {
     uint baseVertex;
     uint baseIndex;
@@ -14,3 +17,5 @@ struct RenderItemUI {
     int padding1;
     int padding2;
 };
+
+#endif

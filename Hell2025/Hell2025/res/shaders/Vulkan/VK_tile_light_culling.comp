@@ -20,32 +20,27 @@ shared float validDepthSampleCount;
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsTileLightCulling data;
-} pushConstant;
-
-layout(buffer_reference, scalar) readonly buffer RendererDataBuffer { RendererData rendererData; };
-layout(buffer_reference, scalar) buffer TileWorldBoundsBuffer       { TileWorldBounds data[]; };
-layout(buffer_reference, scalar) buffer TileLightsBuffer            { TileLights data[];};
-layout(buffer_reference, scalar) buffer LightsBuffer                { Light data[]; };
+} pc;
 
 void main() {
-    RendererData rendererData = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress).rendererData;
-    TileLightsBuffer tileLights = TileLightsBuffer(pushConstant.data.tileLightsDeviceAddress);
-    TileWorldBoundsBuffer tileWorldBounds = TileWorldBoundsBuffer(pushConstant.data.tileWorldBoundsDeviceAddress);
-    LightsBuffer lights = LightsBuffer(pushConstant.data.frame.lightsDeviceAddress);
+    RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
+    TileLightsBuffer tileLights = pc.data.frame.tileLightBuffer;
+    TileWorldBoundsBuffer tileWorldBounds = pc.data.frame.tileWorldBoundsBuffer;
+    LightBuffer lights = pc.data.frame.lightBuffer;
 
     uint tileIndex = gl_WorkGroupID.y * uint(rendererData.tileCountX) + gl_WorkGroupID.x;
 
     // Defaults
 	if (gl_LocalInvocationIndex == 0) {
         // Output defaults
-		tileLights.data[tileIndex].lightCount = 0;
+		tileLights.tileLights[tileIndex].lightCount = 0;
 		tilelightCount = 0;
 
         // Pull tile world bounds out of the SSBO
         // And the valid sample count
-        worldSpaceMin = tileWorldBounds.data[tileIndex].boundsMin.xyz;
-        worldSpaceMax = tileWorldBounds.data[tileIndex].boundsMax.xyz;
-        validDepthSampleCount = tileWorldBounds.data[tileIndex].boundsMin.w;
+        worldSpaceMin = tileWorldBounds.tileWorldBounds[tileIndex].boundsMin.xyz;
+        worldSpaceMax = tileWorldBounds.tileWorldBounds[tileIndex].boundsMax.xyz;
+        validDepthSampleCount = tileWorldBounds.tileWorldBounds[tileIndex].boundsMin.w;
 	}
 	barrier();
 
@@ -58,11 +53,11 @@ void main() {
 			uint lightIndex = gl_LocalInvocationIndex + i * invocationCount;
 
             if (lightIndex < rendererData.lightCount) {
-				vec3 lightPos = vec3(lights.data[lightIndex].posX, lights.data[lightIndex].posY, lights.data[lightIndex].posZ);
-				float lightRadius = lights.data[lightIndex].radius;
+				vec3 lightPos = vec3(lights.lights[lightIndex].posX, lights.lights[lightIndex].posY, lights.lights[lightIndex].posZ);
+				float lightRadius = lights.lights[lightIndex].radius;
 
-                vec3 lightAabbMin = lights.data[lightIndex].worldBoundsMin.xyz;
-                vec3 lightAabbMax = lights.data[lightIndex].worldBoundsMax.xyz;
+                vec3 lightAabbMin = lights.lights[lightIndex].worldBoundsMin.xyz;
+                vec3 lightAabbMax = lights.lights[lightIndex].worldBoundsMax.xyz;
 
                 // First broad reject using your tight light bounds
                 if (AABBsIntersect(worldSpaceMin, worldSpaceMax, lightAabbMin, lightAabbMax) &&
@@ -73,7 +68,7 @@ void main() {
 
                     const uint MAX_LIGHTS_PER_TILE = 127;
                     if (index < MAX_LIGHTS_PER_TILE) {
-                        tileLights.data[tileIndex].lightIndices[index] = lightIndex;
+                        tileLights.tileLights[tileIndex].lightIndices[index] = lightIndex;
                     }
                 }
 			}
@@ -82,6 +77,6 @@ void main() {
 	barrier();
 
 	if (gl_LocalInvocationIndex == 0) {
-        tileLights.data[tileIndex].lightCount = min(tilelightCount, 127u);
+        tileLights.tileLights[tileIndex].lightCount = min(tilelightCount, 127u);
 	}
 }

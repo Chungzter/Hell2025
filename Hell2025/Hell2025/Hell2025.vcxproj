@@ -230,6 +230,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_acceleration_structure.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_allocated_image.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_buffer.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_cube_map_array.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_cubemap.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_descriptor_set.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_generic_mesh.cpp" />
@@ -240,10 +241,18 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_shader.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_timer.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_texture.cpp" />
+    <ClCompile Include="src\Hell\Profiling\CPUProfiler.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\vk_tools.cpp" />
     <ClCompile Include="src\Hell\Render\API\Vulkan\vk_types.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\PointAnimation.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\VAT.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_config.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_renderer.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_scratch.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_text.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_ocean.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_profiling.cpp" />
     <ClCompile Include="src\Unloved\LazyKeyPresses.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\PointAnimationInstance.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\VATInstance.cpp" />
@@ -262,7 +271,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_VAT_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_debug.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\Reflectance\VK_refleced_radiance_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Update\GL_update_ssbos.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\IndirectSpecular\VK_indirect_specular_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_hiz_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_ddgi_raytrace_scene_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\DDGI\VK_ddgi_point_cloud_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_hair_pass.cpp" />
@@ -283,6 +294,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_compute_red_test_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_compute_skinning_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_material_resolve_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_point_light_shadow_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_visibility_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Shared\Passes\VK_present_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Shared\Passes\VK_ui_pass.cpp" />
@@ -316,13 +328,12 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_fur_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_glass_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_metalballs_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_ocean_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\Shared\GL_ocean_passes.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_plastic_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_post_processing.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_screenspace_reflections.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_stained_glass_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_vat_blood_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_weatherboards_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_winston_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_hair_passes.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_material_resolve_passes.cpp" />
@@ -350,10 +361,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_cubemapView.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_cubemap_frame_buffer.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_framebuffer.cpp" />
-    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_heightmap_mesh.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_generic_mesh.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_mesh_buffer_old.cpp" />
-    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_mesh_patch.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_shader.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_shadow_cube_map_array.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_shadow_map.cpp" />
@@ -389,6 +398,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\BVH\Types\SceneBvh.cpp" />
     <ClCompile Include="src\Unloved\Camera\Frustum.cpp" />
     <ClCompile Include="src\Unloved\Config\Config.cpp" />
+    <ClCompile Include="src\Unloved\Config\FlashlightConfig.cpp" />
     <ClCompile Include="src\Hell\Audio\Audio.cpp" />
     <ClCompile Include="src\Unloved\Session\Session.cpp" />
     <ClCompile Include="src\Unloved\Session\Session_players.cpp" />
@@ -480,6 +490,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Inventory\Inventory.cpp" />
     <ClCompile Include="src\Unloved\Inventory\Inventory_render_submit.cpp" />
     <ClCompile Include="src\Unloved\Inventory\inventory_update.cpp" />
+    <ClCompile Include="src\Unloved\Systems\HeightMap\HeightMap.cpp" />
     <ClCompile Include="src\Unloved\Systems\Map\MapManager.cpp" />
     <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollAPI.cpp" />
     <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollData.cpp" />
@@ -672,6 +683,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\common\distance_fog.glsl" />
     <None Include="res\shaders\common\ddgi_upsample.glsl" />
     <None Include="res\shaders\common\intersect.glsl" />
+    <None Include="res\shaders\common\ocean.glsl" />
+    <None Include="res\shaders\common\ocean_fft.glsl" />
     <None Include="res\shaders\common\OpenGL\binding_indices.glsl" />
     <None Include="res\shaders\common\Vulkan\ddgi_upsample.glsl" />
     <None Include="res\shaders\common\Vulkan\ray_query.glsl" />
@@ -697,6 +710,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\Vulkan\VK_debug_vertex_2D.vert" />
     <None Include="res\shaders\Vulkan\VK_debug_vertex_3D.vert" />
     <None Include="res\shaders\Vulkan\VK_fullscreen_triangle.vert" />
+    <None Include="res\shaders\Vulkan\VK_indirect_specular_amd_config.glsl" />
     <None Include="res\shaders\Vulkan\VK_material_resolve.frag" />
     <None Include="res\shaders\Vulkan\VK_post_processing.comp" />
     <None Include="res\shaders\Vulkan\VK_present.frag" />
@@ -764,6 +778,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Common\SequencePoint.h" />
     <ClInclude Include="src\Unloved\Common\Types.h" />
     <ClInclude Include="src\Unloved\Debug\DebugTypes.h" />
+    <ClInclude Include="src\Unloved\Debug\Scratch.h" />
+    <ClInclude Include="src\Unloved\Debug\Menu\Debug_menu.h" />
     <ClInclude Include="src\Unloved\Objects\ObjectEnums.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\BoneSegment.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\PointAnimationInstance.h" />
@@ -771,7 +787,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Physics\PhysicsEnums.h" />
     <ClInclude Include="src\Unloved\ProgramState.h" />
     <ClInclude Include="src\Unloved\Render\RendererEnums.h" />
-    <ClInclude Include="src\Unloved\Render\RendererSettings.h" />
     <ClInclude Include="src\Hell\Render\RendererTypes.h" />
     <ClInclude Include="src\Hell\Transform.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\GL_commands.h" />
@@ -797,6 +812,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_allocated_buffer.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_allocated_image.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_buffer.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_cube_map_array.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_cubemap.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_descriptor_set.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_generic_mesh.h" />
@@ -807,6 +823,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_shader.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_timer.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_texture.h" />
+    <ClInclude Include="src\Hell\Profiling\CPUProfiler.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\vk_common.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\vk_tools.h" />
     <ClInclude Include="src\Hell\Render\API\Vulkan\vk_types.h" />
@@ -815,6 +832,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Render\DrawCommandSets.h" />
     <ClInclude Include="src\Unloved\Render\RendererConstants.h" />
     <ClInclude Include="src\Unloved\Render\RendererTypes.h" />
+    <ClInclude Include="src\Unloved\Render\Renderer_settings.h" />
     <ClInclude Include="src\Unloved\Session\Session.h" />
     <ClInclude Include="src\Unloved\Session\Session_types.h" />
     <ClInclude Include="src\Unloved\Systems\Blood\BloodSystem.h" />
@@ -869,11 +887,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Render\API\OpenGL\GL_util.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_cubemapView.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_mesh_buffer_old.h" />
-    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_heightmap_mesh.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_indirectBuffer.hpp" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_generic_mesh.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_frameBuffer.h" />
-    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_mesh_patch.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_pbo.hpp" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_rasterizer_state.h" />
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_shader.h" />
@@ -899,6 +915,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Common\Constants.h" />
     <ClInclude Include="src\Legacy\Common\HellFunctionTypes.h" />
     <ClInclude Include="src\Unloved\Config\Config.h" />
+    <ClInclude Include="src\Unloved\Config\FlashlightConfig.h" />
     <ClInclude Include="src\Hell\Audio.h" />
     <ClInclude Include="src\Hell\Audio\Audio.h" />
     <ClInclude Include="src\Hell\Debug\DebugDraw.h" />
@@ -926,6 +943,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Characters\Enemies\CharacterSpine.h" />
     <ClInclude Include="src\Unloved\Characters\Enemies\Dobermann\Dobermann.h" />
     <ClInclude Include="src\Unloved\Inventory\Inventory.h" />
+    <ClInclude Include="src\Unloved\Systems\HeightMap\HeightMap.h" />
     <ClInclude Include="src\Unloved\Systems\Map\MapManager.h" />
     <ClInclude Include="src\Unloved\Systems\Pathfinding\AStarMap.h" />
     <ClInclude Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo.h" />

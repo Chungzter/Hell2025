@@ -299,9 +299,12 @@ void Wall::SubmitRenderItems() {
             renderItem.materialIndex = materialIndex;
             renderItem.modelMatrix = glm::mat4(1.0f);
             renderItem.inverseModelMatrix = glm::mat4(1.0f);
+            renderItem.prevModelMatrix = glm::mat4(1.0f);
             renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
             renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
             renderItem.meshId = meshId;
+            renderItem.vertexCount = mesh->vertexCount;
+            renderItem.indexCount = mesh->indexCount;
             renderItem.baseVertex = mesh->baseVertex;
             renderItem.baseIndex = mesh->baseIndex;
             renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
@@ -322,10 +325,13 @@ void Wall::SubmitRenderItems() {
 	    RenderItem renderItem;
         renderItem.materialIndex = m_materialIndex;
 		renderItem.modelMatrix = glm::mat4(1.0f);
-		renderItem.inverseModelMatrix = glm::mat4(1.0f);
+        renderItem.inverseModelMatrix = glm::mat4(1.0f);
+        renderItem.prevModelMatrix = glm::mat4(1.0f);
 		renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
 		renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
         renderItem.meshId = wallSegment.GetMeshId();
+        renderItem.vertexCount = mesh->vertexCount;
+        renderItem.indexCount = mesh->indexCount;
         renderItem.baseVertex = mesh->baseVertex;
         renderItem.baseIndex = mesh->baseIndex;
         renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
@@ -473,13 +479,18 @@ void Wall::RecreateWeatherBoardMesh() {
         RenderItem& renderItem = m_weatherBoardstopRenderItems.emplace_back();
         renderItem.modelMatrix = transform.to_mat4();
         renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
+        renderItem.prevModelMatrix = renderItem.modelMatrix;
         renderItem.meshId = model->GetMeshIndices()[0];
         renderItem.materialIndex = weatherBoardsMaterialIndex;
+
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
         if (Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId)) {
             renderItem.baseIndex = mesh->baseIndex;
             renderItem.baseVertex = mesh->baseVertex;
+            renderItem.vertexCount = mesh->vertexCount;
+            renderItem.indexCount = mesh->indexCount;
         }
+
         renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
 
         RendererUtil::UpdateRenderItemAABB(renderItem);

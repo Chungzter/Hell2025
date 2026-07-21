@@ -1,5 +1,6 @@
 #version 460 core
 #include "../common/constants.glsl"
+#include "../common/reconstruction.glsl"
 #include "../common/util.glsl"
 #include "../common/types.glsl"
 
@@ -103,8 +104,8 @@ void main() {
     ViewportData viewportData = viewportDataArr[viewportIndex];
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
 
-    mat4 projectionView = viewportData.projectionViewReverseZ;
-    mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
+    mat4 projectionView = viewportData.jitteredProjectionViewReverseZ;
+    mat4 inverseProjectionView = viewportData.inverseJitteredProjectionViewReverseZ;
     mat4 inverseProjection = viewportData.inverseProjectionReverseZ;
 
     mat4 inverseView = viewportData.inverseView;
@@ -159,7 +160,7 @@ void main() {
 
     // Occlusion cull
     float depth = texture(u_depthTexture, biasedScreenUV).r;
-    vec3 sceneWorldPos = ReconstructWorldPos(biasedScreenUV, depth, inverseProjectionView);
+    vec3 sceneWorldPos = WorldPosFromDepth_GL(biasedScreenUV, depth, inverseProjectionView);
 
     float sceneDistanceToCamera = length(sceneWorldPos - viewPos);
     float baseDistanceToCamera = length(basePos - viewPos);

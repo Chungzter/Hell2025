@@ -3,7 +3,6 @@
 #include "Hell/Common.h"
 #include "Hell/Render/VertexAttributes.h"
 
-#include "Hell/Render/API/OpenGL/Types/GL_heightmap_mesh.h"
 #include "Unloved/Common/Types.h"
 #include "Types/GL_texture.h"
 #include "Hell/ResourceManagement/Types/Texture.h"
@@ -28,8 +27,8 @@ namespace OpenGL::BackEnd {
 
     void SetDepthClearValue(float value);
 
-    OpenGLHeightMapMesh& GetHeightMapMesh();
 
     GLuint GetSkinnedVertexDataVAO();
     GLuint GetSkinnedVertexDataVBO();
+    GLuint GetPreviousSkinnedPositionBuffer();
 }

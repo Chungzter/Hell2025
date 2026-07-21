@@ -5,6 +5,7 @@
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
+#include "Unloved/World/World.h"
 
 #include "Hell/Input.h"
 #include "Hell/Time.h"
@@ -23,6 +24,7 @@ namespace OpenGL::Renderer {
 
     void ParticlePass() {
         ProfilerOpenGLZoneFunction();
+        if (!Unloved::World::HasOcean()) return;
 
         UploadAnyNewParticles();
         UpdateParticles();
@@ -118,6 +120,9 @@ namespace OpenGL::Renderer {
         OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
         OpenGL::BindShader("ParticleColor");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
 
         OpenGL::BindTextureUnit(0, GetTextureHandleByName("UnderwaterBulletBubble"));
@@ -136,7 +141,7 @@ namespace OpenGL::Renderer {
 
             OpenGL::Renderer::SetViewport(&fbo, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
-            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].jitteredProjectionViewReverseZ);
             OpenGL::SetUniformMat4("u_view", viewportData[i].view);
             OpenGL::SetUniformVec3("u_viewPos", viewportData[i].viewPos);
 
@@ -201,6 +206,9 @@ namespace OpenGL::Renderer {
         OpenGL::RasterizerStateManager::SetRasterizerState(state);
 
         OpenGL::BindShader("Bubbles");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
         OpenGL::BindTextureUnit(0, skyboxCubemapView.GetHandle());
 
@@ -217,7 +225,7 @@ namespace OpenGL::Renderer {
 
             OpenGL::Renderer::SetViewport(&fbo, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
-            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].jitteredProjectionViewReverseZ);
             OpenGL::SetUniformMat4("u_view", viewportData[i].view);
             OpenGL::SetUniformVec3("u_viewPos", viewportData[i].viewPos);
 

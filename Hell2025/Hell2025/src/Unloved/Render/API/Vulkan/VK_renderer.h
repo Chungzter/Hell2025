@@ -5,6 +5,7 @@
 #include <string>
 
 namespace VulkanRenderer {
+
     void Init();
     void InitMain();
     void WaitIdle();

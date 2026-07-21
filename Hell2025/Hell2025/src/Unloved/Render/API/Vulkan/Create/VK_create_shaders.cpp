@@ -38,8 +38,9 @@ namespace VulkanRenderer {
 
         // Hair
         VulkanResourceManager::CreateShader("HairDepthPrep", { "VK_fullscreen_triangle.vert", "VK_hair_depth_prep.frag" });
-        VulkanResourceManager::CreateShader("HairDepthPrePass", { "VK_visibility.vert", "VK_hair_depth_prepass.frag" });
+        VulkanResourceManager::CreateShader("HairDepthPrePass", { "VK_hair_depth_prepass.vert", "VK_hair_depth_prepass.frag" });
         VulkanResourceManager::CreateShader("HairLighting", { "VK_hair_lighting.vert", "VK_hair_lighting.frag" });
+        VulkanResourceManager::CreateShader("HairSurfaceLighting", { "VK_hair_lighting.vert", "VK_hair_surface_lighting.frag" });
         VulkanResourceManager::CreateShader("HairComposite", { "VK_hair_composite.comp" });
 
         // Material Resolve
@@ -48,10 +49,22 @@ namespace VulkanRenderer {
         // Lighting
         VulkanResourceManager::CreateShader("LightingDeferred", { "VK_fullscreen_triangle.vert", "VK_lighting_deferred.frag" });
         VulkanResourceManager::CreateShader("LightingForward", { "VK_lighting_forward.vert", "VK_lighting_forward.frag" });
+        VulkanResourceManager::CreateShader("PointShadow", { "VK_point_shadow.vert", "VK_point_shadow.frag" });
+        VulkanResourceManager::CreateShader("PointShadowAlphaDiscard", { "VK_point_shadow_alpha_discard.vert", "VK_point_shadow_alpha_discard.frag" });
         VulkanResourceManager::CreateShader("SpriteSheet", { "VK_sprite_sheet.vert", "VK_sprite_sheet.frag" });
 
-        // Reflectance
-        VulkanResourceManager::CreateShader("ReflectedRadiance", { "VK_fullscreen_triangle.vert", "VK_reflected_radiance.frag" });
+        // Hierarchical depth buffer
+        VulkanResourceManager::CreateShader("HiZ", { "VK_hiz.comp" });
+
+        // Indirect specular
+        VulkanResourceManager::CreateShader("IndirectSpecularAMDInput", { "VK_fullscreen_triangle.vert", "VK_indirect_specular.frag" });
+        VulkanResourceManager::CreateShader("IndirectSpecularAMDResolveRayInput", { "VK_indirect_specular_amd_resolve_ray_input.comp" });
+        VulkanResourceManager::CreateShader("IndirectSpecularAMDClassifyTiles", { "VK_indirect_specular_amd_classify_tiles.comp" });
+        VulkanResourceManager::CreateShader("IndirectSpecularAMDPrepareIndirectArgs", { "VK_indirect_specular_amd_prepare_indirect_args.comp" });
+        VulkanResourceManager::CreateShader("IndirectSpecularAMDReproject", { "VK_indirect_specular_amd_reproject.comp" });
+        VulkanResourceManager::CreateShader("IndirectSpecularAMDPrefilter", { "VK_indirect_specular_amd_prefilter.comp" });
+        VulkanResourceManager::CreateShader("IndirectSpecularAMDResolveTemporal", { "VK_indirect_specular_amd_resolve_temporal.comp" });
+        VulkanResourceManager::CreateShader("IndirectSpecularAMDStoreHistory", { "VK_indirect_specular_amd_store_history.comp" });
 
         // Post Processing
         VulkanResourceManager::CreateShader("PostProcessing", { "VK_post_processing.comp" });

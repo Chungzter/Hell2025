@@ -25,7 +25,9 @@ readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
 
 void main() {
 
-	mat4 projectionView = viewportData[u_viewportIndex].projectionView;
+	mat4 jitterMatrix = viewportData[u_viewportIndex].jitteredProjectionViewReverseZ *
+	                    viewportData[u_viewportIndex].inverseProjectionViewReverseZ;
+	mat4 projectionView = jitterMatrix * viewportData[u_viewportIndex].projectionView;
 	mat4 inverseView = viewportData[u_viewportIndex].inverseView;
 
     mat4 modelMatrix = u_modelMatrix;

@@ -4,6 +4,7 @@
 #include "Hell/Render/API/Vulkan/Managers/vk_memory_manager.h"
 
 #include <algorithm>
+#include <utility>
 
 VkImageAspectFlags GetImageAspectFlagsFromFormat(VkFormat format) {
     if (format == VK_FORMAT_D32_SFLOAT || format == VK_FORMAT_D16_UNORM) {
@@ -75,6 +76,15 @@ AllocatedImage::AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkS
     }
 
     if (m_mipLevelCount > 1) {
+        m_mipImageViews.resize(m_mipLevelCount, VK_NULL_HANDLE);
+        for (uint32_t mipLevel = 0; mipLevel < m_mipLevelCount; mipLevel++) {
+            viewInfo.subresourceRange.aspectMask = GetImageAspectFlagsFromFormat(m_format);
+            viewInfo.subresourceRange.baseMipLevel = mipLevel;
+            viewInfo.subresourceRange.levelCount = 1;
+            vkCreateImageView(device, &viewInfo, nullptr, &m_mipImageViews[mipLevel]);
+        }
+
+        viewInfo.subresourceRange.baseMipLevel = 0;
         viewInfo.subresourceRange.aspectMask = GetImageAspectFlagsFromFormat(m_format);
         viewInfo.subresourceRange.levelCount = m_mipLevelCount;
         vkCreateImageView(device, &viewInfo, nullptr, &m_sampledImageView);
@@ -122,6 +132,7 @@ AllocatedImage::AllocatedImage(VkFormat imageFormat, VkExtent3D imageExtent, VkS
 AllocatedImage::AllocatedImage(AllocatedImage&& other) noexcept {
     m_image = other.m_image;
     m_imageView = other.m_imageView;
+    m_mipImageViews = std::move(other.m_mipImageViews);
     m_sampledImageView = other.m_sampledImageView;
     m_depthOnlyImageView = other.m_depthOnlyImageView;
     m_sampledDepthOnlyImageView = other.m_sampledDepthOnlyImageView;
@@ -138,6 +149,7 @@ AllocatedImage::AllocatedImage(AllocatedImage&& other) noexcept {
     // Nullify the other object so its cleanup doesn't destroy our handles
     other.m_image = VK_NULL_HANDLE;
     other.m_imageView = VK_NULL_HANDLE;
+    other.m_mipImageViews.clear();
     other.m_sampledImageView = VK_NULL_HANDLE;
     other.m_depthOnlyImageView = VK_NULL_HANDLE;
     other.m_sampledDepthOnlyImageView = VK_NULL_HANDLE;
@@ -151,6 +163,7 @@ AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other) noexcept {
     if (this != &other) {
         m_image = other.m_image;
         m_imageView = other.m_imageView;
+        m_mipImageViews = std::move(other.m_mipImageViews);
         m_sampledImageView = other.m_sampledImageView;
         m_depthOnlyImageView = other.m_depthOnlyImageView;
         m_sampledDepthOnlyImageView = other.m_sampledDepthOnlyImageView;
@@ -166,6 +179,7 @@ AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other) noexcept {
 
         other.m_image = VK_NULL_HANDLE;
         other.m_imageView = VK_NULL_HANDLE;
+        other.m_mipImageViews.clear();
         other.m_sampledImageView = VK_NULL_HANDLE;
         other.m_depthOnlyImageView = VK_NULL_HANDLE;
         other.m_sampledDepthOnlyImageView = VK_NULL_HANDLE;
@@ -255,6 +269,12 @@ void AllocatedImage::Cleanup() {
     if (m_imageView != VK_NULL_HANDLE) {
         vkDestroyImageView(device, m_imageView, nullptr);
     }
+    for (VkImageView mipImageView : m_mipImageViews) {
+        if (mipImageView != VK_NULL_HANDLE) {
+            vkDestroyImageView(device, mipImageView, nullptr);
+        }
+    }
+    m_mipImageViews.clear();
     if (m_sampledImageView != VK_NULL_HANDLE) {
         vkDestroyImageView(device, m_sampledImageView, nullptr);
     }

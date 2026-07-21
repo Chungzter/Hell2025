@@ -5,6 +5,7 @@
 
 #include "Hell/AssetLoader/AssetLoader.h"
 #include "Hell/Physics/Physics.h"
+#include "Hell/Profiling/CPUProfiler.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/UI/UIBackEnd.h"
 #include "Hell/Time.h"
@@ -70,6 +71,8 @@ namespace Unloved {
     }
 
     void Update() {
+        ProfilerCPUZoneFunction();
+
         switch (GetProgramState()) {
             case ProgramState::GAME:           UpdateGame();          break;
             case ProgramState::LOADING_SCREEN: UpdateLoadingScreen(); break;
@@ -79,6 +82,8 @@ namespace Unloved {
     }
 
     void Render() {
+        ProfilerCPUZoneFunction();
+
         switch (GetProgramState()) {
             case ProgramState::LOADING_SCREEN: RenderLoadingScreen(); break;
             case ProgramState::GAME:           RenderGame();          break;
@@ -113,6 +118,8 @@ namespace Unloved {
     }
 
     void UpdateLoadingScreen() {
+        ProfilerCPUZoneFunction();
+
         Hell::AssetLoader::Update();
 
         UIBackEnd::Update();
@@ -149,6 +156,8 @@ namespace Unloved {
     }
 
     void UpdateGame() {
+        ProfilerCPUZoneFunction();
+
         // Pre World Update
         Systems::PreWorldUpdate();
 
@@ -163,7 +172,6 @@ namespace Unloved {
         HouseBuilder::RebuildIfDirty();
 
         AStarMap::Update();
-        World::UpdateBvhs();
         Session::Update();
         World::UpdatePlayers();
         BulletSystem::Update();
@@ -171,6 +179,7 @@ namespace Unloved {
             World::UpdateEnemyMovement();
         }
         World::UpdateObjects();
+        World::UpdateBvhs();
 
         // World Update
         World::Update();

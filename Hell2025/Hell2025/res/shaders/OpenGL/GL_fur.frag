@@ -15,7 +15,6 @@ layout (binding = 4) uniform sampler2D BaseColorTexture;
 layout (binding = 5) uniform sampler2D NormalTexture;
 layout (binding = 6) uniform sampler2D RMATexture;
 layout (binding = 7) uniform sampler2D BlueNoiseTexture;
-layout (binding = 8) uniform sampler2D FlashlightCookieTexture;
 layout (binding = 9) uniform sampler2D FurMaskTexture;
 
 layout (location = 0) out vec4 FinalLightingOut;
@@ -122,24 +121,12 @@ void main() {
     }
 
     // Flashlights
-    for (int i = 0; i < 1; i++) {
-        float flashlightModifer = viewportData[i].flashlightModifer;
-        if (flashlightModifer > 0.05) {
-            mat4 flashlightProjectionView = viewportData[i].flashlightProjectionView;
-            vec4 flashlightDir = viewportData[i].flashlightDir;
-            vec4 flashlightPosition = viewportData[i].flashlightPosition;
-            vec3 flashlightViewPos = viewportData[i].inverseView[3].xyz;
-            vec3 spotLightPos = flashlightPosition.xyz;
-            vec3 spotLightDir = flashlightDir.xyz;
-            vec3 spotLightColor = vec3(0.9, 0.95, 1.1);
-            float innerAngle = cos(radians(5.0 * flashlightModifer));
-            float outerAngle = cos(radians(25.0));
-            
-            vec3 cookie = ApplyCookie(flashlightProjectionView, WorldPos.xyz, spotLightPos, spotLightColor, 10, FlashlightCookieTexture);
-            float shadow = 1 - SpotlightShadowCalculationFast(flashlightProjectionView * WorldPos, normal, spotLightDir, WorldPos.xyz, spotLightPos, flashlightViewPos, FlashlighShadowMapArrayTexture, i); 
-            vec3 spotLighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, 50.0, 3.0, innerAngle, outerAngle, normal, WorldPos.xyz, gammaBaseColor, roughness, metallic, flashlightViewPos, flashlightProjectionView) * shadow;
-            
-            directLighting += spotLighting * flashlightModifer * cookie * spotLightColor;
+    if (rendererData.flashlightIESTextureIndex >= 0) {
+        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
+        float fragDistance = distance(WorldPos.xyz, viewPos);
+        for (int i = 0; i < 2; i++) {
+            ViewportData flashlightViewportData = viewportData[i];
+            directLighting += GetFlashlightContribution(i, uint(u_viewportIndex), flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), rendererData, normal, WorldPos.xyz, gammaBaseColor, roughness, metallic, fragDistance, -1000.0, flashlightIES, FlashlighShadowMapArrayTexture);
         }
     }
 

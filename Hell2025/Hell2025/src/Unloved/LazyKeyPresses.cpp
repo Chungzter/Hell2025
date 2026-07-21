@@ -1,7 +1,6 @@
 #include "Unloved.h"
 
 #include "Unloved/Render/Renderer.h"
-#include "Legacy/World/LegacyWorld.h"
 
 #include "Hell/Audio.h"
 #include "Hell/Backend/BackEnd.h"
@@ -20,43 +19,49 @@ void UpdateLazyKeypresses() {
     // Bail early if ImGui is using the keyboard
     if (ImGuiBackEnd::HasKeyboardFocus()) return;
 
+    if (Hell::Input::KeyPressed(HELL_KEY_GRAVE_ACCENT)) Debug::ToggleMenuVisiblity();
+
     // Function keys
-    if (Hell::Input::KeyPressed(HELL_KEY_F1)) LegacyWorld::NewRun();
+    if (Hell::Input::KeyPressed(HELL_KEY_F1)) World::NewRun();
     if (Hell::Input::KeyPressed(HELL_KEY_F4)) Editor::OpenHouseEditor();
     if (Hell::Input::KeyPressed(HELL_KEY_F6)) Editor::OpenMapHeightEditor();
     if (Hell::Input::KeyPressed(HELL_KEY_F5)) Editor::OpenMapObjectEditor();
 
     // Core
-    if (Hell::Input::KeyPressed(HELL_KEY_ESCAPE))       Hell::BackEnd::ForceCloseWindow();
-    if (Hell::Input::KeyPressed(HELL_KEY_X))            Hell::BackEnd::ToggleFullscreen();
-    if (Hell::Input::KeyPressed(HELL_KEY_GRAVE_ACCENT)) Debug::NextDebugTextMode();
+    if (Hell::Input::KeyPressed(HELL_KEY_ESCAPE)) Hell::BackEnd::ForceCloseWindow();
+    if (Hell::Input::KeyPressed(HELL_KEY_X))      Hell::BackEnd::ToggleFullscreen();
 
     // Game
     if (Hell::Input::KeyPressed(HELL_KEY_K)) Unloved::Session::RespawnPlayers();
 
     // Renderer
     if (Renderer::GameIsRendering()) {
-        if (Hell::Input::KeyPressed(HELL_KEY_H))            Renderer::HotloadShaders();
-        if (Hell::Input::KeyPressed(HELL_KEY_I))            Renderer::ToggleRagdollRendering();
-        if (Hell::Input::KeyPressed(HELL_KEY_M))            Renderer::ToggleScreenSpaceReflections();
-        if (Hell::Input::KeyPressed(HELL_KEY_O))            Renderer::ToggleDebugDraw();
-        if (Hell::Input::KeyPressed(HELL_KEY_L))            Renderer::ToggleLighting();
-        if (Hell::Input::KeyPressed(HELL_KEY_COMMA))        Renderer::TogglePointCloud();
-        if (Hell::Input::KeyPressed(HELL_KEY_PERIOD))       Renderer::NextProbeDebugState();
-        if (Hell::Input::KeyPressed(HELL_KEY_SLASH))        Renderer::ToggleIrradianceProbeSampling();
-        if (Hell::Input::KeyPressed(HELL_KEY_RIGHT_SHIFT))  Renderer::ToggleOverrideState(RendererOverrideState::INDIRECT_DIFFUSE);
-        if (Hell::Input::KeyPressed(HELL_KEY_ENTER))        Renderer::ToggleOverrideState(RendererOverrideState::WORLD_POSITION);
-        if (Hell::Input::KeyPressed(HELL_KEY_V))            Renderer::ToggleOverrideState(RendererOverrideState::VIS_BUFFER);
-        if (Hell::Input::KeyPressed(HELL_KEY_DELETE))       Renderer::ToggleOverrideState(RendererOverrideState::VELOCITY);
-        if (Hell::Input::KeyPressed(HELL_KEY_APOSTROPHE))   Renderer::TogglePointCloudGrid();
-        if (Hell::Input::KeyPressed(HELL_KEY_BACKSLASH))    Renderer::NextRendererOverrideState();
-        if (Hell::Input::KeyPressed(HELL_KEY_LEFT_BRACKET)) Renderer::NextRendererMode();
-        if (Hell::Input::KeyPressed(HELL_KEY_F10))          Renderer::ToggleShadowMappingForSkinnedGeometry();
+        if (Hell::Input::KeyPressed(HELL_KEY_H))             Renderer::HotloadShaders();
+        if (Hell::Input::KeyPressed(HELL_KEY_I))             Renderer::ToggleRagdollRendering();
+        if (Hell::Input::KeyPressed(HELL_KEY_M))             Renderer::ToggleScreenSpaceReflections();
+        if (Hell::Input::KeyPressed(HELL_KEY_O))             Renderer::ToggleDebugDraw();
+        if (Hell::Input::KeyPressed(HELL_KEY_L))             Renderer::ToggleLighting();
+        if (Hell::Input::KeyPressed(HELL_KEY_COMMA))         Renderer::TogglePointCloud();
+        if (Hell::Input::KeyPressed(HELL_KEY_PERIOD))        Renderer::NextProbeDebugState();
+        if (Hell::Input::KeyPressed(HELL_KEY_SLASH))         Renderer::ToggleIrradianceProbeSampling();
+        if (Hell::Input::KeyPressed(HELL_KEY_RIGHT_CONTROL)) Renderer::ToggleOverrideState(RendererOverrideState::INDIRECT_SPECULAR_AMD_INPUT);
+        if (Hell::Input::KeyPressed(HELL_KEY_RIGHT_ALT))     Renderer::ToggleOverrideState(RendererOverrideState::INDIRECT_SPECULAR_AMD_TEMPORAL);
+        if (Hell::Input::KeyPressed(HELL_KEY_N))             Renderer::ToggleOverrideState(RendererOverrideState::VELOCITY);
+        if (Hell::Input::KeyPressed(HELL_KEY_RIGHT_SHIFT))   Renderer::ToggleOverrideState(RendererOverrideState::INDIRECT_DIFFUSE);
+        if (Hell::Input::KeyPressed(HELL_KEY_V))             Renderer::ToggleOverrideState(RendererOverrideState::VIS_BUFFER);
+        if (Hell::Input::KeyPressed(HELL_KEY_DELETE))        Renderer::ToggleOverrideState(RendererOverrideState::VELOCITY);
+        if (Hell::Input::KeyPressed(HELL_KEY_APOSTROPHE))    Renderer::TogglePointCloudGrid();
+        if (Hell::Input::KeyPressed(HELL_KEY_LEFT_BRACKET))  Renderer::PrevRendererOverrideState();
+        if (Hell::Input::KeyPressed(HELL_KEY_RIGHT_BRACKET)) Renderer::NextRendererOverrideState();
+        if (Hell::Input::KeyPressed(HELL_KEY_BACKSLASH))     Renderer::NextRendererMode();
     }
 
-    if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    World::CleanUpCasings();
-    if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    World::CleanUpDecals();
-    if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    BloodSystemOLD::CleanUp();
+    // Backspace resets state, unless menu is open, then it is BACK
+    if (!Debug::IsMenuVisible()) {
+        if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    World::CleanUpCasings();
+        if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    World::CleanUpDecals();
+        if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    BloodSystemOLD::CleanUp();
+    }
 
     // Editor only
     if (!Editor::IsOpen()) {

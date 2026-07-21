@@ -494,7 +494,7 @@ namespace OpenGL::Renderer {
         // Ensure bindless texture IDs are in the Samplers ID, which is not the case if this runs the first frame of the renderer
         OpenGL::UpdateSSBO("Samplers", sizeof(GLuint64) * OpenGL::BackEnd::GetBindlessTextureIDs().size(), OpenGL::BackEnd::GetBindlessTextureIDs().data());
 
-		OpenGL::BindSSBO(0, "Samplers");
+		OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
 		OpenGL::BindSSBO(1, ddgiVolume.GetPointCloudTextureInfoSSBOName());
 		OpenGL::BindSSBO(2, ddgiVolume.GetPointCloudSSBOName());
 
@@ -580,7 +580,7 @@ namespace OpenGL::Renderer {
 
             OpenGL::Renderer::SetViewport(fbo, viewport);
             OpenGL::SetUniformInt("u_viewportIndex", i);
-            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].jitteredProjectionViewReverseZ);
 
             glBindVertexArray(g_pointCloudVao);
             glDrawArrays(GL_POINTS, 0, ddgiVolume.GetPointCloudCount());
@@ -655,7 +655,7 @@ namespace OpenGL::Renderer {
 
 			OpenGL::Renderer::SetViewport(fbo, viewport);
 			OpenGL::SetUniformInt("u_viewportIndex", i);
-            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].jitteredProjectionViewReverseZ);
 
 			glDrawElementsInstancedBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), ddgiVolume.GetTotalProbeCount(), mesh->baseVertex);
         }

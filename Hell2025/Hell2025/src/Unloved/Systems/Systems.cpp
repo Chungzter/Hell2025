@@ -1,5 +1,6 @@
 #include "Systems.h"
 
+#include "Hell/Profiling/CPUProfiler.h"
 #include "Hell/Time.h"
 
 #include "Unloved/Systems/Blood/BloodSystem.h"
@@ -15,6 +16,38 @@
 #include "Unloved/Systems/ShadowMaps/ShadowMapManager.h"
 
 namespace Unloved::Systems {
+    namespace {
+        void UpdateOpenables(float deltaTime) {
+            ProfilerCPUZone("Openables");
+            OpenableManager::Update(deltaTime);
+        }
+
+        void UpdateNavMesh() {
+            ProfilerCPUZone("Nav mesh");
+            NavMeshManager::Update();
+        }
+
+        void UpdatePianoPlayback() {
+            ProfilerCPUZone("Piano playback");
+            PianoPlaybackManager::Update();
+        }
+
+        void UpdateGameAudio() {
+            ProfilerCPUZone("Game audio");
+            GameAudio::Update();
+        }
+
+        void UpdateFeatureTest() {
+            ProfilerCPUZone("Feature test");
+            FeatureTest::Update();
+        }
+
+        void UpdateOldBloodSystem(float deltaTime) {
+            ProfilerCPUZone("Old blood system");
+            BloodSystemOLD::Update(deltaTime);
+        }
+    }
+
     void Init() {
         NavMeshManager::Init();
         PianoPlaybackManager::Init();
@@ -28,12 +61,16 @@ namespace Unloved::Systems {
     }
 
     void PreWorldUpdate() {
-        OpenableManager::Update(Hell::Time::DeltaTime());
-        NavMeshManager::Update();
-        PianoPlaybackManager::Update();
-        GameAudio::Update();
-        FeatureTest::Update();
-        BloodSystemOLD::Update(Hell::Time::DeltaTime());
+        ProfilerCPUZoneFunction();
+
+        const float deltaTime = Hell::Time::DeltaTime();
+
+        UpdateOpenables(deltaTime);
+        UpdateNavMesh();
+        UpdatePianoPlayback();
+        UpdateGameAudio();
+        UpdateFeatureTest();
+        UpdateOldBloodSystem(deltaTime);
     }
 
     void PostWorldUpdate() {

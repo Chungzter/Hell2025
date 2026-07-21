@@ -31,6 +31,7 @@ void main() {
 
     ViewportData viewportData = viewportDataArr[v_viewportIndex];
     mat4 projectionView = viewportData.projectionViewReverseZ;
+    mat4 rasterProjectionView = viewportData.jitteredProjectionViewReverseZ;
     mat4 prevProjectionViewReverseZ = viewportData.prevProjectionViewReverseZ;
 
     RenderItem renderItem = renderItems[globalInstanceIndex];
@@ -48,7 +49,7 @@ void main() {
     v_currPos = projectionView * worldPos;
     v_prevPos = prevProjectionViewReverseZ * prevWorldPos;
 
-    gl_Position = projectionView * worldPos;
+    gl_Position = rasterProjectionView * worldPos;
 
     v_uv = a_uv;
 }

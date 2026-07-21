@@ -18,6 +18,9 @@ struct ViewportData {
     mat4 skyboxProjectionView;
     mat4 flashlightProjectionView;
     mat4 previousProjectionView;
+    
+    mat4 jitteredProjectionViewReverseZ;
+    mat4 inverseJitteredProjectionViewReverseZ;
 
     mat4 csmLightProjectionView[5];
 
@@ -81,6 +84,41 @@ struct RendererData {
     int tileCountY;
     uint lightCount;
     bool enableIrradianceProbeSampling;
+    bool enableIndirectSpecular;
+    
+    bool enableTAA;
+    vec2 taaJitterPx;
+    float indirectSpecularFactor;
+    float indirectSpecularRoughnessDampening;
+    uint directPointShadowMode;
+    uint padding0;
+
+    vec4 flashlightColor;
+
+    float flashlightRange;
+    float flashlightFalloffExponent;
+    float flashlightBrightness;
+    float flashlightIESConeScale;
+
+    float flashlightIESInnerAngle;
+    float flashlightIESOuterAngle;
+    float flashlightIESContrast;
+    float flashlightIESVerticalScale;
+
+    float flashlightIESVerticalBias;
+    float flashlightIESHorizontalBias;
+    int flashlightIESTextureIndex;
+    uint flashlightIESEnabled;
+
+    float flashlightCenterSpotRange;
+    float flashlightCenterSpotFalloffExponent;
+    float flashlightCenterSpotBrightness;
+    float flashlightCenterSpotInnerAngle;
+
+    float flashlightCenterSpotOuterAngle;
+    uint flashlightCenterSpotEnabled;
+    uint padding3;
+    uint padding4;
 };
 
 struct RenderItem {
@@ -294,6 +332,14 @@ struct DDGIVolume {
     uint padding2;
     uint padding3;
     uint padding4;
+};
+
+struct DDGIReflectionVolume {
+    DDGIVolume volume;
+    uint probeAtlasImageIndex;
+    uint padding0;
+    uint padding1;
+    uint padding2;
 };
 
 struct AABB {

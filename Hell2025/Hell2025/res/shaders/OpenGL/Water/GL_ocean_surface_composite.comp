@@ -15,18 +15,17 @@ layout(std430, binding = 3) readonly restrict buffer viewportDataBuffer { Viewpo
 
 uniform float u_time;
 uniform float u_oceanYOrigin;
-uniform vec2 u_resolution;
 
-const float distortionSpeed = 0.05;
-const float distortionFactor = 0.004;
-const float waterUVScaling = 0.15;
+struct OceanSurfaceCompositeSettings {
+    vec3 underwaterTint;
+    float planeHeightOffset;
+    float distortionSpeed;
+    float distortionStrength;
+    float distortionTiling;
+    float refractionTintStrength;
+};
 
-vec3 IntersectRayWithGroundPlane(vec3 rayOrigin, vec3 rayDir, float groundHeight) {
-    const float epsilon = 1e-5;
-    float denom = rayDir.y + sign(rayDir.y) * epsilon;
-    float t = (groundHeight - rayOrigin.y) / denom;
-    return rayOrigin + rayDir * t;
-}
+uniform OceanSurfaceCompositeSettings u_composite;
 
 void main() {
 	ivec2 px = ivec2(gl_GlobalInvocationID.xy);   
@@ -43,12 +42,11 @@ void main() {
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
 
     
-    vec4 lighting = imageLoad(LightingImage, px);
     vec3 waterColor = texelFetch(WaterColorTexture, px, 0).rgb;
 
     // Get world ray
     ViewportData viewportData = viewportDataArr[viewportIndex];
-    mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
+    mat4 inverseProjectionView = viewportData.inverseJitteredProjectionViewReverseZ;
     vec3 viewPos = viewportData.viewPos.xyz;
     vec2 viewportOrigin = vec2(viewportData.xOffset, viewportData.yOffset);
     vec2 viewportSize = vec2(viewportData.width, viewportData.height);
@@ -56,19 +54,19 @@ void main() {
 
     // Cast ray at water plane
     vec3 rayOrigin = viewPos;
-    float planeHeight = u_oceanYOrigin + 100;
+    float planeHeight = u_oceanYOrigin + u_composite.planeHeightOffset;
     float t = (planeHeight - rayOrigin.y) / rayDir.y; // distance to ray hit
-    
+
     vec3 waterWorldPos = rayOrigin + rayDir * t;
-    vec2 uv_waterSurface = vec2(waterWorldPos.x, waterWorldPos.z) * waterUVScaling;
-    float offsetX = mod(u_time * distortionSpeed, 1.0);
+    vec2 uv_waterSurface = vec2(waterWorldPos.x, waterWorldPos.z) * u_composite.distortionTiling;
+    float offsetX = mod(u_time * u_composite.distortionSpeed, 1.0);
     vec2 uv_dudv = vec2(uv_waterSurface + vec2(offsetX, 0));
     vec2 distortion = texture(waterDUDVTexture, uv_dudv).rg * 2 - 1;
-    vec2 uv_refraction = screenUV + (distortion * distortionFactor);
+    vec2 uv_refraction = screenUV + (distortion * u_composite.distortionStrength);
     uv_refraction = clamp(uv_refraction, 0, 1);
  
     vec3 refractedColor = texture(DownSampledFinalLightingTexture, uv_refraction).rgb;
-    vec3 finalColor = (refractedColor * UNDER_WATER_TINT * 0.2) + waterColor;
+    vec3 finalColor = (refractedColor * u_composite.underwaterTint * u_composite.refractionTintStrength) + waterColor;
 
     imageStore(LightingImage, px, vec4(vec3(finalColor), 1.0));
 }

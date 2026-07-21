@@ -115,6 +115,8 @@ namespace OpenGL::Renderer {
             if (!shader) return;
 
             OpenGL::BindShader("DebugTileView");
+            OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+            OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
             OpenGL::SetUniformFloat("u_viewportWidth", gBuffer->GetWidth());
             OpenGL::SetUniformFloat("u_viewportHeight", gBuffer->GetHeight());
             OpenGL::SetUniformInt("u_tileXCount", gBuffer->GetWidth() / TILE_SIZE);
@@ -152,6 +154,8 @@ namespace OpenGL::Renderer {
 				OpenGLShader& shader = OpenGL::ResourceManager::GetShader("DebugViewRE");
 
 				OpenGL::BindShader("DebugViewRE");
+                OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+                OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
 				OpenGL::SetUniformFloat("u_brushSize", Unloved::Editor::GetMapHeightBrushSize());
 				OpenGL::SetUniformBool("u_heightMapEditor", (Unloved::Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Unloved::Editor::IsOpen());
 
@@ -172,6 +176,8 @@ namespace OpenGL::Renderer {
 				if (!shader) return;
 
 				OpenGL::BindShader("DebugView");
+                OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+                OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
 				OpenGL::SetUniformFloat("u_brushSize", Unloved::Editor::GetMapHeightBrushSize());
 				OpenGL::SetUniformBool("u_heightMapEditor", (Unloved::Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) && Unloved::Editor::IsOpen());
 

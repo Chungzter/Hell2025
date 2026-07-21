@@ -48,6 +48,8 @@ namespace Unloved::NavMeshManager {
 
     void Init();
     void Update();
+    void MarkStaticDirty();
+    void MarkDynamicDirty();
     void DrawPath(std::vector<glm::vec3>& path, const glm::vec4& color);
 
     std::vector<glm::vec3> FindPath(const glm::vec3& start, const glm::vec3& dest);

@@ -1,5 +1,4 @@
 #include "GL_shadow_cube_map_array.h"
-#include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Hell/Render/API/OpenGL/GL_util.h"
 #include <glad/gl.h>
 #include <iostream>
@@ -53,16 +52,8 @@ void OpenGLShadowCubeMapArray::CleanUp() {
 }
 
 void OpenGLShadowCubeMapArray::ClearDepthLayer(int layerIndex, float clearValue) {
-    OpenGL::BackEnd::SetDepthClearValue(clearValue);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, m_handle);
-    glViewport(0, 0, m_size, m_size);
-
-    for (int face = 0; face < 6; ++face) {
-        int layer = layerIndex * 6 + face;
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_depthTexture, 0, layer);
-        glClear(GL_DEPTH_BUFFER_BIT);
-    }
+    if (layerIndex < 0 || layerIndex >= static_cast<int>(m_numberOfCubemaps)) return;
+    glClearTexSubImage(m_depthTexture, 0, 0, 0, layerIndex * 6, m_size, m_size, 6, GL_DEPTH_COMPONENT, GL_FLOAT, &clearValue);
 }
 
 void OpenGLShadowCubeMapArray::ClearDepthLayers(float clearValue) {

@@ -3,7 +3,7 @@
 #include "Hell/Math/OBB.h"
 
 #include "Unloved/Render/RendererEnums.h"
-#include "Unloved/Render/RendererSettings.h"
+#include "Unloved/Render/Renderer_settings.h"
 #include "Unloved/Maps/MapData.h"
 
 #include "Unloved/Common/Types.h"
@@ -21,6 +21,7 @@ namespace Unloved::Renderer {
 
     // Override states
     void SetRendererOverrideState(RendererOverrideState state);
+    void PrevRendererOverrideState();
     void NextRendererOverrideState();
     bool OverrideStateUsesDebugViewPass();
     bool OverrideStateUsesDebugTileViewPass();
@@ -37,7 +38,6 @@ namespace Unloved::Renderer {
     void TogglePointCloudGrid();
     void ToggleRagdollRendering();
     void ToggleScreenSpaceReflections();
-    void ToggleShadowMappingForSkinnedGeometry();
 
     void NextRendererMode();
 	void SetRendererMode(RendererMode rendererMode);
@@ -46,14 +46,16 @@ namespace Unloved::Renderer {
     int32_t GetNextFreeWoundMaskIndexAndMarkItTaken();
     void MarkWoundMaskIndexAsAvailable(int32_t index);
 
-    void RecalculateAllHeightMapData(bool blitWorldMap);
+    void RecalculateAllHeightMapData(bool uploadWorldHeightData);
     void ReadBackHeightMapData(Unloved::MapData* mapData);
 
 	uint32_t GetTileCount();
 	uint32_t GetTileCountX();
 	uint32_t GetTileCountY();
 
-    RendererSettings& GetCurrentRendererSettings();
+    // TODO: move me to Renderer_settings.h
+
+    // TODO: move me to Renderer_settings.h
 
     const std::string& GetZoneNames();
     const std::string& GetZoneGPUTimings();

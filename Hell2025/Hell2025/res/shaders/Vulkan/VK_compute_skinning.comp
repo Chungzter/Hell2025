@@ -40,6 +40,7 @@ struct SkinningJob {
 };
 
 layout(buffer_reference, scalar) buffer VertexBuffer                         { Vertex data[]; };
+layout(buffer_reference, scalar) buffer PreviousSkinnedPositionBuffer        { vec3 positions[]; };
 layout(buffer_reference, scalar) readonly buffer ReadonlyVertexBuffer        { Vertex data[]; };
 layout(buffer_reference, scalar) readonly buffer SkinningTransformBuffer     { mat4 data[]; };
 layout(buffer_reference, scalar) readonly buffer VertexWeightBuffer          { VertexWeight data[]; };
@@ -48,15 +49,17 @@ layout(buffer_reference, scalar) readonly buffer SkinningJobBuffer           { S
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsSkinning data;
-} pushConstant;
+} pc;
 
 void main() {
-    VertexBuffer outputVertices = VertexBuffer(pushConstant.data.outputVerticesDeviceAddress);
-    ReadonlyVertexBuffer inputVertices = ReadonlyVertexBuffer(pushConstant.data.inputVerticesDeviceAddress);
-    SkinningDispatchGroupBuffer skinningDispatchGroups= SkinningDispatchGroupBuffer(pushConstant.data.skinningDispatchGroupsDeviceAddress);
-    SkinningJobBuffer skinningJobs = SkinningJobBuffer(pushConstant.data.skinningJobsDeviceAddress);
-    SkinningTransformBuffer skinningTransforms = SkinningTransformBuffer(pushConstant.data.skinningTransformsDeviceAddress);
-    VertexWeightBuffer vertexWeights = VertexWeightBuffer(pushConstant.data.vertexWeightsDeviceAddress);
+    VertexBuffer outputVertices = VertexBuffer(pc.data.outputVerticesDeviceAddress);
+    PreviousSkinnedPositionBuffer previousSkinnedPositions = PreviousSkinnedPositionBuffer(pc.data.previousSkinnedPositionsDeviceAddress);
+    ReadonlyVertexBuffer inputVertices = ReadonlyVertexBuffer(pc.data.inputVerticesDeviceAddress);
+    SkinningDispatchGroupBuffer skinningDispatchGroups= SkinningDispatchGroupBuffer(pc.data.skinningDispatchGroupsDeviceAddress);
+    SkinningJobBuffer skinningJobs = SkinningJobBuffer(pc.data.skinningJobsDeviceAddress);
+    SkinningTransformBuffer skinningTransforms = SkinningTransformBuffer(pc.data.skinningTransformsDeviceAddress);
+    SkinningTransformBuffer previousSkinningTransforms = SkinningTransformBuffer(pc.data.previousSkinningTransformsDeviceAddress);
+    VertexWeightBuffer vertexWeights = VertexWeightBuffer(pc.data.vertexWeightsDeviceAddress);
     
     SkinningDispatchGroup group = skinningDispatchGroups.data[gl_WorkGroupID.x];
     SkinningJob job = skinningJobs.data[group.jobIndex];
@@ -79,12 +82,15 @@ void main() {
     vec4 weights = vertexWeight.weight;
 
     mat4 skinMat = mat4(0.0);
+    mat4 previousSkinMat = mat4(0.0);
 
     for(int i = 0; i < 4; i++) {
         float weight = weights[i];
         if (weight < 0.0001) continue;
 
-        skinMat += skinningTransforms.data[uint(boneIDs[i]) + job.skinningTransformOffset] * weight;
+        uint skinningTransformIndex = uint(boneIDs[i]) + job.skinningTransformOffset;
+        skinMat += skinningTransforms.data[skinningTransformIndex] * weight;
+        previousSkinMat += previousSkinningTransforms.data[skinningTransformIndex] * weight;
     }
 
     mat3 skinMat3 = mat3(skinMat);
@@ -112,4 +118,5 @@ void main() {
     vertexOut.uv[1] = vertexIn.uv[1];
 
     outputVertices.data[skinnedVertexIndex] = vertexOut;
+    previousSkinnedPositions.positions[skinnedVertexIndex] = (previousSkinMat * vertexPosition).xyz;
 }

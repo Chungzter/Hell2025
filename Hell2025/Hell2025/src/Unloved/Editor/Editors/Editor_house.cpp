@@ -72,8 +72,6 @@ namespace Unloved::Editor {
         if (HouseData* houseData = HouseManager::GetHouseDataByName(Editor::GetEditorHouseName())) {
             World::LoadHouse(*houseData, SpawnOffset());
         }
-        LegacyWorld::DisableOcean();
-
         // Init UI
         InitFileMenuImGuiElements();
         InitLeftPanel();

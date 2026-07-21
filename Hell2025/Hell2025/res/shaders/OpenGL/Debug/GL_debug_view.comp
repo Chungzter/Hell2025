@@ -4,6 +4,7 @@
 #include "../../common/normal_encoding.glsl"
 #include "../../common/post_processing.glsl"
 #include "../../common/renderer_override_modes.glsl"
+#include "../../common/reconstruction.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
 
@@ -120,7 +121,7 @@ vec3 GetIndirectDiffuse(ivec2 px) {
 vec3 GetVelocity(ivec2 px) {
     vec2 velocity = vec2(0);
     //#if defined(RE_ENABLED)
-        velocity = texelFetch(VelocityXYOcclusionSubSurface, px, 0).rg;
+        velocity = texelFetch(VelocityXYOcclusionSubSurface, px, 0).rg * 0.5;
     //#else
     //    velocity = texelFetch(VelocityOcclusionSubSurface, px, 0).rg;
     //#endif
@@ -174,10 +175,10 @@ vec3 GetWorldPosition(ivec2 px) {
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
 
     ViewportData viewportData = viewportDataArr[viewportIndex];
-    mat4 inverseProjectionViewReverseZ = viewportData.inverseProjectionViewReverseZ;
+    mat4 inverseProjectionViewReverseZ = viewportData.inverseJitteredProjectionViewReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
-    return ReconstructWorldPos(viewportUV, depth, inverseProjectionViewReverseZ);
+    return WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionViewReverseZ);
 }
 
 vec3 GetEmissive(ivec2 px) {

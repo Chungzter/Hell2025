@@ -15,6 +15,7 @@ readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer {
 
 layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
 layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowMapArray;
+layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray flashlightShadowMapArray;
 
 #if ENABLE_BINDLESS != 1
     layout (binding = 4) uniform sampler2D baseColorTexture;
@@ -31,8 +32,6 @@ readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material 
 
 layout (location = 0) out vec4 FragOut;
 layout (location = 1) out vec4 ViewSpaceDepthPreviousOut;
-layout (binding = 7) uniform sampler2D FlashlightCookieTexture;
-
 readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData  rendererData;   };
 readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData  viewportData[]; };
 readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light         lights[];       };
@@ -44,11 +43,7 @@ in vec3 Tangent;
 in vec3 BiTangent;
 in vec4 WorldPos;
 in vec3 ViewPos;
-in mat4 FlashlightProjectionView;
-in vec4 FlashlightDir;
-in vec4 FlashlightPosition;
-in float FlashlightModifer;
-in vec3 CameraForward;
+in flat int ViewportIndex;
 
 uniform float u_alphaBoost = 1.0;
 uniform vec3 u_moonlightDir;
@@ -123,45 +118,15 @@ void main() {
     float fragDistance = distance(WorldPos.xyz, ViewPos); // is this right?
 
     // Flashlights
-    for (int i = 0; i < 2; i++) {
-        float flashlightModifer = viewportData[i].flashlightModifer;
-        if (flashlightModifer > 0.05) { 
-            mat4 flashlightProjectionView = viewportData[i].flashlightProjectionView;
-            vec4 flashlightDir = viewportData[i].flashlightDir;
-            vec4 flashlightPosition = viewportData[i].flashlightPosition;
-            vec3 flashlightViewPos = viewportData[i].inverseView[3].xyz;
-            vec3 playerForward = -normalize(viewportData[i].inverseView[2].xyz);
-            int layerIndex = i;			
-            vec3 spotLightPos = flashlightPosition.xyz;
-            vec3 camightRight = normalize(viewportData[i].inverseView[0].xyz);
-            vec3 spotLightDir = flashlightDir.xyz;
-            vec3 spotLightColor = GetFlashLightColor();
-            float spotLightRadius = 20.0;
-            float spotLightStregth = 3.5;     
-            float innerAngle = cos(radians(5.0 * flashlightModifer));
-            float outerAngle = cos(radians(25.0));         
-            mat4 lightProjectionView = flashlightProjectionView;
-            vec3 cookie = ApplyCookie(lightProjectionView, WorldPos.xyz, spotLightPos, spotLightColor, spotLightRadius, FlashlightCookieTexture);
-            vec3 spotLighting = GetSpotlightLighting(spotLightPos, spotLightDir, spotLightColor, spotLightRadius, spotLightStregth, innerAngle, outerAngle, normal.xyz, WorldPos.xyz, baseColor.rgb, roughness, metallic, flashlightViewPos, lightProjectionView);
-            vec4 FragPosLightSpace = lightProjectionView * vec4(WorldPos.xyz, 1.0);
-            float shadow = 0;//SpotlightShadowCalculation(FragPosLightSpace, normal.xyz, spotLightDir, WorldPos.xyz, spotLightPos, flashlightViewPos, FlashlighShadowMapArrayTexture, layerIndex);  
-            
-            //spotLighting *= vec3(1 - shadow);
-            spotLighting *= spotLightColor;
-            spotLighting *= cookie;
-            directLighting += vec3(spotLighting) * flashlightModifer;
-           
-            // Subsurface scattering
-            vec3 radius = vec3(sssRadius);
-            vec3 subColor = Saturate(baseColor.rgb, 1.5);
-            vec3 L = spotLightDir;
-            float NdotL = max(dot(normal.xyz, L), 0.0);
-            vec3 sss = 0.2 * exp(-3.0 * abs(NdotL) / (radius + 0.001)); 
-            vec3 sssColor = subColor * radius * sss * sssStrength;
-            float lightAttenuation = smoothstep(spotLightRadius, 0.0, fragDistance) * spotLightStregth;
-            directLighting += sssColor * lightAttenuation * (1 - shadow) * cookie;
-       }
-   }
+#if ENABLE_BINDLESS
+    if (rendererData.flashlightIESTextureIndex >= 0) {
+        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
+        for (int i = 0; i < 2; i++) {
+            ViewportData flashlightViewportData = viewportData[i];
+            directLighting += GetFlashlightContribution(i, uint(ViewportIndex), flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), rendererData, normal.xyz, WorldPos.xyz, baseColor.rgb, roughness, metallic, fragDistance, -1000.0, flashlightIES, flashlightShadowMapArray);
+        }
+    }
+#endif
    
     vec3 moonColor = GetMoonLightColor();
     float moonLightStrength = 0.05;

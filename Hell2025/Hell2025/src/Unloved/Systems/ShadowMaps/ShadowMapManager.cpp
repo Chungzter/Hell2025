@@ -4,6 +4,7 @@
 
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Objects/Lighting/Light.h"
+#include "Unloved/Render/Renderer.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/DirtyTracker/DirtyTracker.h"
 #include "Unloved/World/World.h"
@@ -14,12 +15,17 @@ namespace Unloved::ShadowMapManager {
 
     std::vector<ShadowMapInfo> g_hiResShadowMaps;
     std::vector<ShadowMapInfo> g_lowResShadowMaps;
-    std::vector<ShadowMapInfo> g_dirtyHiResShadowMaps;
-    std::vector<ShadowMapInfo> g_dirtyLowResShadowMaps;
+    std::vector<ShadowMapInfo> g_staticDirtyHiResShadowMaps;
+    std::vector<ShadowMapInfo> g_staticDirtyLowResShadowMaps;
+    std::vector<ShadowMapInfo> g_compositeDirtyHiResShadowMaps;
+    std::vector<ShadowMapInfo> g_compositeDirtyLowResShadowMaps;
+    bool g_staticCacheEnabled = true;
+    bool g_staticCacheSettingInitialized = false;
 
     void CheckForRemovedLights();
     void AssignShadowMapIndices();
     void GatherDirtyShadowMaps();
+    void InvalidateAllShadowMaps();
     void BlitDebugInfo();
 
     void RemoveHiResShadowMap(uint64_t lightId);
@@ -29,15 +35,27 @@ namespace Unloved::ShadowMapManager {
 
     bool HasHiResShadowMap(uint64_t lightId);
     bool HasLowResShadowMap(uint64_t lightId);
+    void AddUniqueShadowMap(std::vector<ShadowMapInfo>& shadowMaps, const ShadowMapInfo& shadowMapInfo);
+    void InvalidateShadowMap(const ShadowMapInfo& shadowMapInfo, bool staticGeometryDirty, std::vector<ShadowMapInfo>& staticDirtyShadowMaps, std::vector<ShadowMapInfo>& compositeDirtyShadowMaps);
 
     void BeginFrame() {
-        g_dirtyHiResShadowMaps.clear();
-        g_dirtyLowResShadowMaps.clear();
+        g_staticDirtyHiResShadowMaps.clear();
+        g_staticDirtyLowResShadowMaps.clear();
+        g_compositeDirtyHiResShadowMaps.clear();
+        g_compositeDirtyLowResShadowMaps.clear();
     }
 
     void Update() {
+        const bool staticCacheEnabled = Renderer::GetCurrentRendererSettings().enableStaticShadowMapCaching;
+        const bool staticCacheModeChanged = !g_staticCacheSettingInitialized || staticCacheEnabled != g_staticCacheEnabled;
+        g_staticCacheEnabled = staticCacheEnabled;
+        g_staticCacheSettingInitialized = true;
+
         CheckForRemovedLights();
         AssignShadowMapIndices();
+        if (staticCacheModeChanged) {
+            InvalidateAllShadowMaps();
+        }
         GatherDirtyShadowMaps();
     }
 
@@ -126,47 +144,65 @@ namespace Unloved::ShadowMapManager {
     }
 
     void GatherDirtyShadowMaps() {
-        for (uint64_t lightId : DirtyTracker::GetDirtyLightIds()) {
-
-            // Add hi res
+        for (uint64_t lightId : DirtyTracker::GetStaticDirtyLightIds()) {
             for (const ShadowMapInfo& shadowMapInfo : g_hiResShadowMaps) {
                 if (shadowMapInfo.lightId == lightId) {
-                    bool found = false;
-
-                    for (const ShadowMapInfo& dirtyShadowMapInfo : g_dirtyHiResShadowMaps) {
-                        if (dirtyShadowMapInfo.lightId == lightId) {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        g_dirtyHiResShadowMaps.push_back(shadowMapInfo);
-                    }
-
+                    InvalidateShadowMap(shadowMapInfo, true, g_staticDirtyHiResShadowMaps, g_compositeDirtyHiResShadowMaps);
                     break;
                 }
             }
 
-            // Add low res
             for (const ShadowMapInfo& shadowMapInfo : g_lowResShadowMaps) {
                 if (shadowMapInfo.lightId == lightId) {
-                    bool found = false;
-
-                    for (const ShadowMapInfo& dirtyShadowMapInfo : g_dirtyLowResShadowMaps) {
-                        if (dirtyShadowMapInfo.lightId == lightId) {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        g_dirtyLowResShadowMaps.push_back(shadowMapInfo);
-                    }
-
+                    InvalidateShadowMap(shadowMapInfo, true, g_staticDirtyLowResShadowMaps, g_compositeDirtyLowResShadowMaps);
                     break;
                 }
             }
+        }
+
+        for (uint64_t lightId : DirtyTracker::GetCompositeDirtyLightIds()) {
+            for (const ShadowMapInfo& shadowMapInfo : g_hiResShadowMaps) {
+                if (shadowMapInfo.lightId == lightId) {
+                    InvalidateShadowMap(shadowMapInfo, false, g_staticDirtyHiResShadowMaps, g_compositeDirtyHiResShadowMaps);
+                    break;
+                }
+            }
+
+            for (const ShadowMapInfo& shadowMapInfo : g_lowResShadowMaps) {
+                if (shadowMapInfo.lightId == lightId) {
+                    InvalidateShadowMap(shadowMapInfo, false, g_staticDirtyLowResShadowMaps, g_compositeDirtyLowResShadowMaps);
+                    break;
+                }
+            }
+        }
+    }
+
+    void AddUniqueShadowMap(std::vector<ShadowMapInfo>& shadowMaps, const ShadowMapInfo& shadowMapInfo) {
+        for (const ShadowMapInfo& existing : shadowMaps) {
+            if (existing.lightId == shadowMapInfo.lightId) {
+                return;
+            }
+        }
+
+        shadowMaps.push_back(shadowMapInfo);
+    }
+
+    void InvalidateShadowMap(const ShadowMapInfo& shadowMapInfo, bool staticGeometryDirty, std::vector<ShadowMapInfo>& staticDirtyShadowMaps, std::vector<ShadowMapInfo>& compositeDirtyShadowMaps) {
+        // Static invalidation always requires a new composite. Uncached mode suppresses only the separate static work.
+        if (g_staticCacheEnabled && staticGeometryDirty) {
+            AddUniqueShadowMap(staticDirtyShadowMaps, shadowMapInfo);
+        }
+
+        AddUniqueShadowMap(compositeDirtyShadowMaps, shadowMapInfo);
+    }
+
+    void InvalidateAllShadowMaps() {
+        for (const ShadowMapInfo& shadowMapInfo : g_hiResShadowMaps) {
+            InvalidateShadowMap(shadowMapInfo, true, g_staticDirtyHiResShadowMaps, g_compositeDirtyHiResShadowMaps);
+        }
+
+        for (const ShadowMapInfo& shadowMapInfo : g_lowResShadowMaps) {
+            InvalidateShadowMap(shadowMapInfo, true, g_staticDirtyLowResShadowMaps, g_compositeDirtyLowResShadowMaps);
         }
     }
 
@@ -225,7 +261,7 @@ namespace Unloved::ShadowMapManager {
             if (!indexUsed) {
                 ShadowMapInfo shadowMapInfo = { lightId, shadowMapIndex };
                 g_hiResShadowMaps.push_back(shadowMapInfo);
-                g_dirtyHiResShadowMaps.push_back(shadowMapInfo);
+                InvalidateShadowMap(shadowMapInfo, true, g_staticDirtyHiResShadowMaps, g_compositeDirtyHiResShadowMaps);
                 return;
             }
         }
@@ -248,7 +284,7 @@ namespace Unloved::ShadowMapManager {
             if (!indexUsed) {
                 ShadowMapInfo shadowMapInfo = { lightId, shadowMapIndex };
                 g_lowResShadowMaps.push_back(shadowMapInfo);
-                g_dirtyLowResShadowMaps.push_back(shadowMapInfo);
+                InvalidateShadowMap(shadowMapInfo, true, g_staticDirtyLowResShadowMaps, g_compositeDirtyLowResShadowMaps);
                 return;
             }
         }
@@ -274,25 +310,49 @@ namespace Unloved::ShadowMapManager {
         return -1;
     }
 
-    const std::vector<ShadowMapInfo>& GetDirtyHiResShadowMaps() {
-        return g_dirtyHiResShadowMaps;
+    bool StaticCacheEnabled() {
+        return g_staticCacheEnabled;
     }
 
-    const std::vector<ShadowMapInfo>& GetDirtyLowResShadowMaps() {
-        return g_dirtyLowResShadowMaps;
+    const std::vector<ShadowMapInfo>& GetStaticDirtyHiResShadowMaps() {
+        return g_staticDirtyHiResShadowMaps;
+    }
+
+    const std::vector<ShadowMapInfo>& GetStaticDirtyLowResShadowMaps() {
+        return g_staticDirtyLowResShadowMaps;
+    }
+
+    const std::vector<ShadowMapInfo>& GetCompositeDirtyHiResShadowMaps() {
+        return g_compositeDirtyHiResShadowMaps;
+    }
+
+    const std::vector<ShadowMapInfo>& GetCompositeDirtyLowResShadowMaps() {
+        return g_compositeDirtyLowResShadowMaps;
     }
 
     void BlitDebugInfo() {
         std::string message;
 
-        message += "DIRTY HI RES\n";
-        for (ShadowMapInfo& shadowMapInfo : g_dirtyHiResShadowMaps) {
+        message += "STATIC DIRTY HI RES\n";
+        for (ShadowMapInfo& shadowMapInfo : g_staticDirtyHiResShadowMaps) {
             message += "Light " + std::to_string(shadowMapInfo.lightId) + "\n";
         }
         message += "\n";
 
-        message += "DIRTY LOW RES\n";
-        for (ShadowMapInfo& shadowMapInfo : g_dirtyLowResShadowMaps) {
+        message += "STATIC DIRTY LOW RES\n";
+        for (ShadowMapInfo& shadowMapInfo : g_staticDirtyLowResShadowMaps) {
+            message += "Light " + std::to_string(shadowMapInfo.lightId) + "\n";
+        }
+        message += "\n";
+
+        message += "COMPOSITE DIRTY HI RES\n";
+        for (ShadowMapInfo& shadowMapInfo : g_compositeDirtyHiResShadowMaps) {
+            message += "Light " + std::to_string(shadowMapInfo.lightId) + "\n";
+        }
+        message += "\n";
+
+        message += "COMPOSITE DIRTY LOW RES\n";
+        for (ShadowMapInfo& shadowMapInfo : g_compositeDirtyLowResShadowMaps) {
             message += "Light " + std::to_string(shadowMapInfo.lightId) + "\n";
         }
         message += "\n";

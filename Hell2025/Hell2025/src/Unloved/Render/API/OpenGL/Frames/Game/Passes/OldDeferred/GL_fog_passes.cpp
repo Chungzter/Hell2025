@@ -57,6 +57,9 @@ namespace OpenGL::Renderer {
 
         // Ray march the fog
         OpenGL::BindShader("FogRayMarch");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::SetUniformFloat("u_time", time);
         OpenGL::SetUniformInt("u_noiseSeed", noiseSeed);
         OpenGL::BindImageTexture(4, fogFbo->GetColorAttachmentHandleByName("Color"), GL_WRITE_ONLY, GL_RGBA16F);
@@ -68,6 +71,7 @@ namespace OpenGL::Renderer {
 
         // Composite
         OpenGL::BindShader("FogComposite");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
         OpenGL::BindTextureUnit(1, fogFbo->GetColorAttachmentHandleByName("Color"));
 

@@ -7,11 +7,10 @@
 #include "Unloved/Session/Session.h"
 #include "Unloved/Render/RendererConstants.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
+#include "Unloved/World/World.h"
 
-#include "World/LegacyWorld.h"
 #include "Unloved/Render/Renderer.h"
 
-#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 namespace OpenGL::Renderer {
 
@@ -25,6 +24,8 @@ namespace OpenGL::Renderer {
         if (!shader) return;
 
         OpenGL::BindShader("ViewspaceDepth");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindImageTexture(0, fullSizeFBO->GetColorAttachmentHandleByName("ViewspaceDepth"), GL_WRITE_ONLY, GL_R32F);
         OpenGL::BindTextureUnit(1, gBuffer->GetDepthAttachmentHandle());
 
@@ -50,17 +51,18 @@ namespace OpenGL::Renderer {
         if (!finalImageFBO) return;
         if (!shader) return;
 
-        IESProfile* iesProfile = Hell::ResourceManager::GetIESProfilePtr("Lamp0");
-        if (!iesProfile) return;
-
         OpenGL::BindShader("Lighting");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
 
         OpenGL::SetUniformFloat("u_viewportWidth", gBuffer->GetWidth());
         OpenGL::SetUniformFloat("u_viewportHeight", gBuffer->GetHeight());
         OpenGL::SetUniformInt("u_tileXCount", gBuffer->GetWidth() / TILE_SIZE);
         OpenGL::SetUniformInt("u_tileYCount", gBuffer->GetHeight() / TILE_SIZE);
 
-        if (Unloved::LegacyWorld::HasOcean()) {
+        if (Unloved::World::HasOcean()) {
             OpenGL::SetUniformFloat("u_oceanHeight", Ocean::GetOceanOriginY());
         }
         else {
@@ -86,7 +88,6 @@ namespace OpenGL::Renderer {
         glBindTextureUnit(6, gBuffer->GetColorAttachmentHandleByName("VelocityXYOcclusionSubSurface"));
         glBindTextureUnit(7, gBuffer->GetDepthAttachmentHandle());
         glBindTextureUnit(8, gBuffer->GetColorAttachmentHandleByName("Emissive"));
-        glBindTextureUnit(9, GetTextureHandleByName("Flashlight2"));
         glBindTextureUnit(TEX_IDX_SHADOW_MAP_FLASHLIGHT, flashLightShadowMapsFBO->GetDepthTextureHandle());
 
         glBindTextureUnit(TEX_IDX_SHADOW_MAP_HI_RES, hiResShadowMaps->GetDepthTexture());

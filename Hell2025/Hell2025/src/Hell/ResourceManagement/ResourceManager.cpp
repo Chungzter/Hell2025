@@ -62,6 +62,7 @@ namespace Hell::ResourceManager {
         CreateGenericMesh("UI");
 
         CreateMeshBuffer("AssetGeometry");
+        CreateMeshBuffer("HeightMapGeometry");
         CreateMeshBuffer("PhysicsDebugGeometry");
         CreateMeshBuffer("Procedural");
     }
@@ -482,7 +483,7 @@ namespace Hell::ResourceManager {
         }
 
         auto result = g_meshBuffers.emplace(name, MeshBuffer(name));
-        if (name == "Procedural") {
+        if (name == "HeightMapGeometry" || name == "Procedural") {
             result.first->second.SetCreateVulkanBlasForNewMeshes(false);
         }
         return result.first->second;

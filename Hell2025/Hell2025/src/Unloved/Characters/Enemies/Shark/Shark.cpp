@@ -439,7 +439,6 @@ namespace Unloved {
         animatedGameObject->SetAdditiveTransform("BN_Head_00", glm::rotate(glm::mat4(1.0f), rot10 - rot9, glm::vec3(0, 1, 0)));
 
         animatedGameObject->Update(deltaTime);
-        animatedGameObject->UpdateRenderItems();
 
         if (Ragdoll* ragdoll = GetRagdoll()) {
             if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {

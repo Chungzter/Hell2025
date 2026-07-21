@@ -5,6 +5,8 @@
 #include "Hell/Render/API/Vulkan/Types/vk_acceleration_structure.h"
 #include "Hell/Render/VertexAttributes.h"
 
+#include "Unloved/Render/RendererEnums.h"
+
 #include <glm/matrix.hpp>
 
 namespace VulkanRenderer {
@@ -33,7 +35,13 @@ namespace VulkanRenderer {
         return transform;
     }
 
-    VkAccelerationStructureGeometryKHR CreateTriangleGeometry(uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayQueryMesh& mesh, uint64_t transformAddress) {
+    VkGeometryFlagsKHR GetRayQueryGeometryFlags(const RayQueryMaterial& material) {
+        BlendingMode blendingMode = static_cast<BlendingMode>(material.blendingMode);
+        bool requiresCandidateProcessing = material.materialIndex < 0 || blendingMode == BlendingMode::ALPHA_DISCARD || blendingMode == BlendingMode::HAIR_UNDER_LAYER || blendingMode == BlendingMode::HAIR || blendingMode == BlendingMode::MIRROR;
+        return requiresCandidateProcessing ? 0 : VK_GEOMETRY_OPAQUE_BIT_KHR;
+    }
+
+    VkAccelerationStructureGeometryKHR CreateTriangleGeometry(uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayQueryMesh& mesh, VkGeometryFlagsKHR geometryFlags, uint64_t transformAddress) {
         // baseVertex and baseIndex are baked into the device addresses
         VkDeviceOrHostAddressConstKHR vertexBufferDeviceAddress{};
         vertexBufferDeviceAddress.deviceAddress = vertexBufferAddress + static_cast<uint64_t>(mesh.baseVertex) * sizeof(Vertex);
@@ -45,7 +53,7 @@ namespace VulkanRenderer {
         transformBufferDeviceAddress.deviceAddress = transformAddress;
 
         VkAccelerationStructureGeometryKHR geometry{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR };
-        geometry.flags = 0;
+        geometry.flags = geometryFlags;
         geometry.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
         geometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
         geometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
@@ -68,7 +76,7 @@ namespace VulkanRenderer {
         primitiveCounts.reserve(meshInstances.size());
 
         for (const RayQueryMeshInstance& meshInstance : meshInstances) {
-            geometries.push_back(CreateTriangleGeometry(vertexBufferAddress, indexBufferAddress, meshInstance.mesh));
+            geometries.push_back(CreateTriangleGeometry(vertexBufferAddress, indexBufferAddress, meshInstance.mesh, GetRayQueryGeometryFlags(meshInstance.material)));
             primitiveCounts.push_back(meshInstance.mesh.indexCount / 3);
         }
 

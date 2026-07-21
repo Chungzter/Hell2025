@@ -52,8 +52,6 @@ namespace Unloved::Editor {
         if (MapData* mapData = MapManager::GetMapDataByName(Editor::GetEditorMapName())) {
             World::LoadMapObjects(*mapData, SpawnOffset());
         }
-        LegacyWorld::EnableOcean();
-
         // Init UI
         InitFileMenuImGuiElements();
         InitLeftPanel();

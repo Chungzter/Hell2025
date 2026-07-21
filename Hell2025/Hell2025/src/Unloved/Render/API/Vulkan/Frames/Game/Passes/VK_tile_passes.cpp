@@ -35,11 +35,10 @@ namespace VulkanRenderer {
         uint32_t groupCountY = (extent.height + TILE_SIZE - 1) / TILE_SIZE;
 
         PushConstantsTileWorldBounds pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
-        pushConstants.tileWorldBoundsDeviceAddress = tileWorldBoundsBuffer->GetDeviceAddress();
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.tileXCount = static_cast<int32_t>(groupCountX);
         pushConstants.tileYCount = static_cast<int32_t>(groupCountY);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsTileWorldBounds), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
 
         vkCmdDispatch(commandBuffer, groupCountX, groupCountY, 1);
 
@@ -69,6 +68,7 @@ namespace VulkanRenderer {
         if (!lightingImage) return;
         if (!pipeline) return;
         if (!staticDescriptorSet) return;
+        if (!tileLightsBuffer) return;
         if (!tileWorldBoundsBuffer) return;
 
         VkExtent2D extent = depthImage->GetExtent2D();
@@ -82,11 +82,9 @@ namespace VulkanRenderer {
         uint32_t groupCountY = (extent.height + TILE_SIZE - 1) / TILE_SIZE;
 
         PushConstantsTileLightCulling pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
-        pushConstants.tileLightsDeviceAddress = tileLightsBuffer->GetDeviceAddress();
-        pushConstants.tileWorldBoundsDeviceAddress = tileWorldBoundsBuffer->GetDeviceAddress();
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
 
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsTileWorldBounds), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
 
         vkCmdDispatch(commandBuffer, groupCountX, groupCountY, 1);
 
@@ -95,10 +93,10 @@ namespace VulkanRenderer {
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.buffer = tileWorldBoundsBuffer->GetBuffer();
+        barrier.buffer = tileLightsBuffer->GetBuffer();
         barrier.offset = 0;
-        barrier.size = tileWorldBoundsBuffer->GetSize();
+        barrier.size = tileLightsBuffer->GetSize();
 
-        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
+        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
     }
 }

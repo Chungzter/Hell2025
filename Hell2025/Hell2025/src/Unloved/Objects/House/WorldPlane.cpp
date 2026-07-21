@@ -169,6 +169,8 @@ void WorldPlane::SubmitRenderItem() {
 	renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
 	renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
     renderItem.meshId = m_meshId;
+    renderItem.vertexCount = mesh->vertexCount;
+    renderItem.indexCount = mesh->indexCount;
     renderItem.baseVertex = mesh->baseVertex;
     renderItem.baseIndex = mesh->baseIndex;
     renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);

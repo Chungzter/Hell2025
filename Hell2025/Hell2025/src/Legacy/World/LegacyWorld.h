@@ -36,40 +36,21 @@
 #include "Unloved/Objects/House/Window.h"
 #include "Unloved/Objects/Renderables/MeshBufferOLD.h"
 #include "Unloved/Systems/DDGI/DDGIVolume.h"
+#include "Unloved/Maps/Map.h"
 
 #include <vector>
 
-// get me out of here
-#include "Unloved/Maps/Map.h"
-//
-
-struct MapCreateInfo {
-    std::string mapName;
-    uint32_t spawnOffsetChunkX;
-    uint32_t spawnOffsetChunkZ;
-};
-
 namespace Unloved::LegacyWorld {
 
-    void Init();
     void BeginFrame();
     void EndFrame();
-
-    void NewRun();
 
     void ResetWorld();
     void ClearAllObjects();
 
     DDGIVolume& GetTestDDGIVolume();
 
-    void LoadMap(const std::string& mapName); // Calls the function below, but with a single map
-    void LoadMaps(std::vector<MapCreateInfo> mapCreateInfoSet); // Calls the 3 functions below
-    void LoadMapsHeightMapData(std::vector<MapCreateInfo> mapCreateInfoSet);
-    void LoadMapObjects(const std::string& mapName, SpawnOffset spawnOffset);
-    void LoadMapHouses(const std::string& mapName, SpawnOffset spawnOffset);
-
-    void LoadSingleHouse(const std::string& houseName);
-    void LoadHouse(const std::string& houseName, SpawnOffset spawnOffset);
+    void LoadMapsHeightMapData(const std::vector<MapCreateInfo>& mapCreateInfoSet);
 
     bool ChunkExists(int x, int z);
     const uint32_t GetChunkCountX();
@@ -78,10 +59,6 @@ namespace Unloved::LegacyWorld {
     const HeightMapChunk* GetChunk(int x, int z);
 
     void PrintObjectCounts();
-
-    void EnableOcean();
-    void DisableOcean();
-    bool HasOcean();
 
     // Creation
     void CreateGameObject();
@@ -95,6 +72,5 @@ namespace Unloved::LegacyWorld {
 
 
     std::vector<HeightMapChunk>& GetHeightMapChunks();
-    std::vector<Map>& GetMaps();
     std::vector<Road>& GetRoads();
 }

@@ -5,6 +5,7 @@
 #include "glm/glm.hpp"
 
 struct AStar {
+    void InitGrid();
     void InitSearch(int startX, int startY, int destinationX, int destinationY);
     void FindPath();
     void FindSmoothPath();
@@ -46,6 +47,7 @@ private:
     bool m_gridPathFound = false;
     bool m_smoothPathFound = false;
     bool m_searchInitilized = false;
+    bool m_gridInitialized = false;
 
     int m_mapWidth = 0;
     int m_mapHeight = 0;

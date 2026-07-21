@@ -1,5 +1,6 @@
 #include "GL_cubemapView.h"
 #include "Hell/Render/API/OpenGL/GL_util.h"
+#include <algorithm>
 #include <iostream>
 
 OpenGLCubemapView::OpenGLCubemapView(const std::vector<GLuint>& tex2D) {
@@ -26,9 +27,13 @@ void OpenGLCubemapView::CreateCubemap(const std::vector<GLuint>& tex2D) {
     m_width = static_cast<GLuint>(width);
     m_height = static_cast<GLuint>(height);
     m_internalFormat = static_cast<GLenum>(format);
+    m_mipLevelCount = 1;
+    for (GLint mipSize = std::max(width, height); mipSize > 1; mipSize /= 2) {
+        m_mipLevelCount++;
+    }
 
-    // Allocate storage for the texture array
-    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, format, width, height, 6);
+    // Give reflections somewhere to go when their footprint gets too big
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, m_mipLevelCount, format, width, height, 6);
 
     // Copy each texture into the array
     for (int i = 0; i < 6; ++i) {
@@ -37,15 +42,17 @@ void OpenGLCubemapView::CreateCubemap(const std::vector<GLuint>& tex2D) {
             width, height, 1);
     }
 
+    glGenerateTextureMipmap(m_textureArrayHandle);
+
     // Now create a cubemap view from the 2D array
     glGenTextures(1, &m_handle);
-    glTextureView(m_handle, GL_TEXTURE_CUBE_MAP, m_textureArrayHandle, format, 0, 1, 0, 6);
+    glTextureView(m_handle, GL_TEXTURE_CUBE_MAP, m_textureArrayHandle, format, 0, m_mipLevelCount, 0, 6);
 
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(m_handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTextureParameteri(m_handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(m_handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(m_handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(m_handle, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
@@ -63,6 +70,7 @@ void OpenGLCubemapView::CleanUp() {
 
     m_width = 0;
     m_height = 0;
+    m_mipLevelCount = 0;
     m_internalFormat = GL_NONE;
 }
 
@@ -76,5 +84,5 @@ size_t OpenGLCubemapView::GetGPUAllocatedByteCount() const {
         return 0;
     }
 
-    return OpenGL::Util::CalculateTexture2DArrayByteCount(m_width, m_height, 6, m_internalFormat);
+    return OpenGL::Util::CalculateTexture2DArrayByteCount(m_width, m_height, 6, m_internalFormat, m_mipLevelCount);
 }

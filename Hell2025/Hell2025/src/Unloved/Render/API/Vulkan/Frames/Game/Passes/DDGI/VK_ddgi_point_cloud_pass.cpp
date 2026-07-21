@@ -15,6 +15,7 @@
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include <algorithm>
+#include <cstring>
 #include <limits>
 #include <unordered_map>
 #include <vector>
@@ -26,6 +27,7 @@ namespace {
     constexpr VkBufferUsageFlags DDGI_POINT_CLOUD_BUFFER_USAGE = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
     constexpr VmaAllocationCreateFlags DDGI_POINT_CLOUD_BUFFER_VMA_FLAGS = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
     constexpr const char* DDGI_PROBE_STATES_BUFFER_NAME = "ProbeStates";
+    constexpr const char* DDGI_REFLECTION_VOLUME_DATA_BUFFER_PREFIX = "DDGIReflectionVolumeData_";
     constexpr uint32_t DDGI_IRRADIANCE_OCTA_SIZE = 8;
     constexpr VkImageUsageFlags DDGI_PROBE_ATLAS_IMAGE_USAGE = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     constexpr uint32_t DDGI_PROBE_ATLAS_STORAGE_IMAGE_INDEX_LIMIT = 100;
@@ -37,9 +39,10 @@ namespace {
     };
 
     uint64_t g_uploadedProbeResetVersion = std::numeric_limits<uint64_t>::max();
+    bool g_ddgiReflectionVolumeDataReady = false;
     std::vector<uint64_t> g_updatedDDGIVolumeIds;
     std::unordered_map<uint64_t, ProbeAtlasBindlessImages> g_probeAtlasBindlessImages;
-    uint32_t g_nextProbeAtlasStorageImageIndex = VULKAN_STORAGE_IMAGE_IDX_INDIRECT_DIFFUSE_SURFACE + 1;
+    uint32_t g_nextProbeAtlasStorageImageIndex = VULKAN_STORAGE_IMAGE_IDX_FIRST_DYNAMIC;
 
     VulkanBuffer* GetOrCreateDDGIBuffer(const std::string& name, VkDeviceSize size) {
         const VkDeviceSize nonZeroSize = std::max(size, static_cast<VkDeviceSize>(sizeof(uint32_t)));
@@ -51,6 +54,10 @@ namespace {
         if (!buffer) return nullptr;
         if (!EnsureBufferSize(buffer, nonZeroSize)) return nullptr;
         return buffer;
+    }
+
+    std::string GetDDGIReflectionVolumeDataBufferName() {
+        return std::string(DDGI_REFLECTION_VOLUME_DATA_BUFFER_PREFIX) + std::to_string(GetCurrentFrameIndex());
     }
 
     bool UploadDDGIBuffer(const std::string& name, const void* data, VkDeviceSize size, VulkanBuffer*& buffer) {
@@ -174,6 +181,49 @@ namespace {
         return true;
     }
 
+    bool UploadDDGIReflectionVolumeData(
+        VkCommandBuffer commandBuffer,
+        VulkanBuffer* probeStatesBuffer,
+        const std::vector<DDGIReflectionVolumeGPU>& reflectionVolumes) {
+
+        if (!probeStatesBuffer || probeStatesBuffer->GetDeviceAddress() == 0 || reflectionVolumes.empty()) return false;
+
+        DDGIReflectionVolumeBufferHeaderGPU header{};
+        header.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
+        header.volumeCount = static_cast<uint32_t>(reflectionVolumes.size());
+
+        const VkDeviceSize volumeDataSize = sizeof(DDGIReflectionVolumeGPU) * reflectionVolumes.size();
+        const VkDeviceSize uploadSize = sizeof(header) + volumeDataSize;
+        std::vector<uint8_t> uploadData(static_cast<size_t>(uploadSize));
+        std::memcpy(uploadData.data(), &header, sizeof(header));
+        std::memcpy(uploadData.data() + sizeof(header), reflectionVolumes.data(), static_cast<size_t>(volumeDataSize));
+
+        VulkanBuffer* reflectionVolumeDataBuffer = nullptr;
+        if (!UploadDDGIBuffer(
+                GetDDGIReflectionVolumeDataBufferName(),
+                uploadData.data(),
+                uploadSize,
+                reflectionVolumeDataBuffer)) {
+            return false;
+        }
+
+        RecordBufferBarrier(
+            commandBuffer,
+            reflectionVolumeDataBuffer,
+            VK_ACCESS_HOST_WRITE_BIT,
+            VK_ACCESS_SHADER_READ_BIT,
+            VK_PIPELINE_STAGE_HOST_BIT,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+        RecordBufferBarrier(
+            commandBuffer,
+            probeStatesBuffer,
+            VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT,
+            VK_ACCESS_SHADER_READ_BIT,
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+        return true;
+    }
+
     bool UploadProbeStateBuffer(VkCommandBuffer commandBuffer) {
         const uint32_t totalProbeCount = DDGIManager::GetTotalProbeCount();
         if (totalProbeCount == 0) return false;
@@ -267,6 +317,7 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbePointIndices pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.pointCloudDeviceAddress = pointCloudBuffer->GetDeviceAddress();
         pushConstants.pointCloudGridOffsetsDeviceAddress = gridOffsetsBuffer->GetDeviceAddress();
         pushConstants.pointCloudGridCountsDeviceAddress = gridCountsBuffer->GetDeviceAddress();
@@ -287,7 +338,7 @@ namespace {
         if (pushConstants.probePointIndicesDeviceAddress == 0 || pushConstants.probePointOffsetsDeviceAddress == 0 || pushConstants.probePointCountsDeviceAddress == 0 || pushConstants.probeIndexCounterDeviceAddress == 0) return false;
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbePointIndices), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, totalProbes, 1, 1);
 
         RecordBufferBarrier(commandBuffer, probePointIndicesBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
@@ -306,6 +357,7 @@ namespace {
         if (pointCount == 0) return false;
 
         PushConstantsDDGIPointCloudBaseColor pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.pointCloudDeviceAddress = pointCloudBuffer->GetDeviceAddress();
         pushConstants.pointCloudTextureInfoDeviceAddress = pointCloudTextureInfoBuffer->GetDeviceAddress();
         pushConstants.pointCount = pointCount;
@@ -315,7 +367,7 @@ namespace {
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
         VkDescriptorSet descriptorSet = staticDescriptorSet->GetHandle();
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIPointCloudBaseColor), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, (pointCount + 127) / 128, 1, 1);
 
         RecordBufferBarrier(commandBuffer, pointCloudBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
@@ -353,13 +405,13 @@ namespace {
         if (!BuildDDGIRayQueryScene(commandBuffer, ddgiVolume, ddgiRayQueryDescriptorSet)) return false;
 
         PushConstantsDDGIPointCloudLighting pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.pointCloudDeviceAddress = pointCloudBuffer->GetDeviceAddress();
         pushConstants.pointCloudDirtyFlagsDeviceAddress = pointCloudDirtyFlagsBuffer->GetDeviceAddress();
         pushConstants.pointCount = ddgiVolume.GetPointCloudCount();
         pushConstants.lightCount = static_cast<uint32_t>(RenderDataManager::GetGPULights().size());
         pushConstants.forceUpdate = forceUpdate ? 1u : 0u;
-        if (pushConstants.frame.lightsDeviceAddress == 0) return false;
+        if (pushConstants.frameAddressTableDeviceAddress == 0) return false;
         if (pushConstants.pointCloudDeviceAddress == 0 || pushConstants.pointCloudDirtyFlagsDeviceAddress == 0) return false;
 
         VkDescriptorSet descriptorSets[] = {
@@ -369,7 +421,7 @@ namespace {
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 2, descriptorSets, 0, nullptr);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIPointCloudLighting), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, (pushConstants.pointCount + 127) / 128, 1, 1);
 
         RecordBufferBarrier(commandBuffer, pointCloudBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
@@ -390,6 +442,7 @@ namespace {
         const RendererData& rendererData = RenderDataManager::GetRendererData();
 
         PushConstantsDDGIProbeStateUpdate pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.dirtyDoorAABBsDeviceAddress = dirtyDoorAABBsBuffer->GetDeviceAddress();
         pushConstants.volumeOrigin = volume.origin;
@@ -402,7 +455,7 @@ namespace {
         if (pushConstants.probeStatesDeviceAddress == 0 || pushConstants.dirtyDoorAABBsDeviceAddress == 0) return false;
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeStateUpdate), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, (totalProbes + 63) / 64, 1, 1);
 
         RecordBufferBarrier(commandBuffer, probeStatesBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
@@ -428,21 +481,21 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbeRelevance pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.volumeOrigin = volume.origin;
         pushConstants.probeSpacing = volume.probeSpacing;
         pushConstants.probeCounts = volume.probeCounts;
         pushConstants.probeOffset = volume.probeOffset;
         pushConstants.totalProbes = totalProbes;
-        if (pushConstants.frame.viewportDataDeviceAddress == 0 || pushConstants.frame.rendererDataDeviceAddress == 0 || pushConstants.probeStatesDeviceAddress == 0) return false;
+        if (pushConstants.frameAddressTableDeviceAddress == 0 || pushConstants.probeStatesDeviceAddress == 0) return false;
 
         const VkExtent2D extent = normalImage->GetExtent2D();
         VkDescriptorSet descriptorSet = staticDescriptorSet->GetHandle();
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeRelevance), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, ((extent.width + 3) / 4 + 7) / 8, ((extent.height + 3) / 4 + 7) / 8, 1);
 
         RecordBufferBarrier(commandBuffer, probeStatesBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
@@ -467,6 +520,7 @@ namespace {
         if (!ClearDDGICounter(commandBuffer, distanceCounterBuffer)) return false;
 
         PushConstantsDDGIProbeDistanceList pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.probeDistanceCounterDeviceAddress = distanceCounterBuffer->GetDeviceAddress();
         pushConstants.probeDistanceIndicesDeviceAddress = distanceIndicesBuffer->GetDeviceAddress();
@@ -475,7 +529,7 @@ namespace {
         if (pushConstants.probeStatesDeviceAddress == 0 || pushConstants.probeDistanceCounterDeviceAddress == 0 || pushConstants.probeDistanceIndicesDeviceAddress == 0) return false;
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeDistanceList), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, (totalProbes + 63) / 64, 1, 1);
 
         RecordBufferBarrier(commandBuffer, distanceCounterBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
@@ -496,12 +550,13 @@ namespace {
         RecordBufferBarrier(commandBuffer, distanceDispatchArgsBuffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
         PushConstantsDDGIProbeDistanceDispatchArgs pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeDistanceCounterDeviceAddress = distanceCounterBuffer->GetDeviceAddress();
         pushConstants.probeDistanceDispatchArgsDeviceAddress = distanceDispatchArgsBuffer->GetDeviceAddress();
         if (pushConstants.probeDistanceCounterDeviceAddress == 0 || pushConstants.probeDistanceDispatchArgsDeviceAddress == 0) return false;
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeDistanceDispatchArgs), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, 1, 1, 1);
 
         RecordBufferBarrier(commandBuffer, distanceDispatchArgsBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
@@ -524,6 +579,7 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbeDistance pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.probeDistanceCounterDeviceAddress = distanceCounterBuffer->GetDeviceAddress();
         pushConstants.probeDistanceIndicesDeviceAddress = distanceIndicesBuffer->GetDeviceAddress();
@@ -543,7 +599,7 @@ namespace {
         distanceAtlas->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 2, descriptorSets, 0, nullptr);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeDistance), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatchIndirect(commandBuffer, distanceDispatchArgsBuffer->GetBuffer(), 0);
 
         RecordBufferBarrier(commandBuffer, probeStatesBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
@@ -562,6 +618,7 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbeBorder pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.volumeOrigin = volume.origin;
         pushConstants.probeSpacing = volume.probeSpacing;
         pushConstants.probeCounts = volume.probeCounts;
@@ -573,7 +630,7 @@ namespace {
         distanceAtlas->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeBorder), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, (totalProbes + 63) / 64, 1, 1);
 
         distanceAtlas->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
@@ -595,6 +652,7 @@ namespace {
         if (!probePointIndicesBuffer || !probePointOffsetsBuffer || !probePointCountsBuffer) return false;
 
         PushConstantsDDGIProbeIrradianceDirtyPointCheck pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.probePointIndicesDeviceAddress = probePointIndicesBuffer->GetDeviceAddress();
         pushConstants.probePointOffsetsDeviceAddress = probePointOffsetsBuffer->GetDeviceAddress();
@@ -605,7 +663,7 @@ namespace {
         if (pushConstants.probeStatesDeviceAddress == 0 || pushConstants.probePointIndicesDeviceAddress == 0 || pushConstants.probePointOffsetsDeviceAddress == 0 || pushConstants.probePointCountsDeviceAddress == 0 || pushConstants.pointCloudDirtyFlagsDeviceAddress == 0) return false;
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeIrradianceDirtyPointCheck), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, (totalProbes + 31) / 32, 1, 1);
 
         RecordBufferBarrier(commandBuffer, probeStatesBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
@@ -630,6 +688,7 @@ namespace {
         if (!ClearDDGICounter(commandBuffer, irradianceCounterBuffer)) return false;
 
         PushConstantsDDGIProbeIrradianceList pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.probeIrradianceCounterDeviceAddress = irradianceCounterBuffer->GetDeviceAddress();
         pushConstants.probeIrradianceIndicesDeviceAddress = irradianceIndicesBuffer->GetDeviceAddress();
@@ -638,7 +697,7 @@ namespace {
         if (pushConstants.probeStatesDeviceAddress == 0 || pushConstants.probeIrradianceCounterDeviceAddress == 0 || pushConstants.probeIrradianceIndicesDeviceAddress == 0) return false;
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeIrradianceList), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, (totalProbes + 63) / 64, 1, 1);
 
         RecordBufferBarrier(commandBuffer, irradianceCounterBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
@@ -661,12 +720,13 @@ namespace {
         RecordBufferBarrier(commandBuffer, irradianceDispatchArgsBuffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
         PushConstantsDDGIProbeIrradianceDispatchArgs pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeIrradianceCounterDeviceAddress = irradianceCounterBuffer->GetDeviceAddress();
         pushConstants.probeIrradianceDispatchArgsDeviceAddress = irradianceDispatchArgsBuffer->GetDeviceAddress();
         if (pushConstants.probeIrradianceCounterDeviceAddress == 0 || pushConstants.probeIrradianceDispatchArgsDeviceAddress == 0) return false;
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeIrradianceDispatchArgs), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, 1, 1, 1);
 
         RecordBufferBarrier(commandBuffer, irradianceDispatchArgsBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
@@ -693,6 +753,7 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbeIrradiance pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.pointCloudDeviceAddress = pointCloudBuffer->GetDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.probeIrradianceCounterDeviceAddress = irradianceCounterBuffer->GetDeviceAddress();
@@ -718,7 +779,7 @@ namespace {
         irradianceAtlas->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 2, descriptorSets, 0, nullptr);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeIrradiance), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatchIndirect(commandBuffer, irradianceDispatchArgsBuffer->GetBuffer(), 0);
 
         RecordBufferBarrier(commandBuffer, probeStatesBuffer, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
@@ -737,6 +798,7 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbeBorder pushConstants{};
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.volumeOrigin = volume.origin;
         pushConstants.probeSpacing = volume.probeSpacing;
         pushConstants.probeCounts = volume.probeCounts;
@@ -748,14 +810,20 @@ namespace {
         irradianceAtlas->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeBorder), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, (totalProbes + 63) / 64, 1, 1);
 
         irradianceAtlas->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
         return true;
     }
 
-    bool DispatchProbeIrradianceTexture(VkCommandBuffer commandBuffer, DDGIVolume& ddgiVolume, VulkanBuffer* probeStatesBuffer) {
+    bool DispatchProbeIrradianceTexture(
+        VkCommandBuffer commandBuffer,
+        DDGIVolume& ddgiVolume,
+        VulkanBuffer* probeStatesBuffer,
+        AllocatedImage* distanceAtlas,
+        AllocatedImage* irradianceAtlas,
+        uint32_t probeAtlasImageIndex) {
         ProfilerVulkanZoneLightGreen("ComputeIrradianceTexture");
 
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("DDGIProbeIrradianceTexture");
@@ -768,12 +836,7 @@ namespace {
         AllocatedImage* indirectDiffuseSurfaceImage = VulkanResourceManager::GetAllocatedImage("IndirectDiffuseSurface");
         if (!normalImage || !depthImage || !indirectDiffuseImage || !indirectDiffuseSurfaceImage) return false;
 
-        AllocatedImage* distanceAtlas = nullptr;
-        AllocatedImage* irradianceAtlas = nullptr;
-        if (!CreateOrResizeProbeAtlases(commandBuffer, ddgiVolume, distanceAtlas, irradianceAtlas)) return false;
-
-        uint32_t probeAtlasImageIndex = 0;
-        if (!BindProbeAtlasImages(ddgiVolume, distanceAtlas, irradianceAtlas, staticDescriptorSet, probeAtlasImageIndex)) return false;
+        if (!distanceAtlas || !irradianceAtlas || probeAtlasImageIndex == 0) return false;
 
         normalImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
         depthImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
@@ -784,7 +847,7 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbeIrradianceTexture pushConstants{};
-        pushConstants.frame = CreatePushConstantsFrameResources();
+        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.volumeOrigin = volume.origin;
         pushConstants.probeSpacing = volume.probeSpacing;
@@ -796,14 +859,14 @@ namespace {
         pushConstants.probeAtlasImageIndex = probeAtlasImageIndex;
         pushConstants.indirectDiffuseStorageImageIndex = VULKAN_STORAGE_IMAGE_IDX_INDIRECT_DIFFUSE;
         pushConstants.indirectDiffuseSurfaceStorageImageIndex = VULKAN_STORAGE_IMAGE_IDX_INDIRECT_DIFFUSE_SURFACE;
-        if (pushConstants.frame.viewportDataDeviceAddress == 0 || pushConstants.frame.rendererDataDeviceAddress == 0 || pushConstants.probeStatesDeviceAddress == 0) return false;
+        if (pushConstants.frameAddressTableDeviceAddress == 0 || pushConstants.probeStatesDeviceAddress == 0) return false;
 
         VkDescriptorSet descriptorSet = staticDescriptorSet->GetHandle();
         const VkExtent2D extent = indirectDiffuseImage->GetExtent2D();
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstantsDDGIProbeIrradianceTexture), &pushConstants);
+        vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
         vkCmdDispatch(commandBuffer, (extent.width + TILE_SIZE - 1) / TILE_SIZE, (extent.height + TILE_SIZE - 1) / TILE_SIZE, 1);
 
         indirectDiffuseImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
@@ -935,6 +998,8 @@ void DDGIProbeUpdatePass(VkCommandBuffer commandBuffer) {
 }
 
 void DDGIIrradianceTexturePass(VkCommandBuffer commandBuffer) {
+    g_ddgiReflectionVolumeDataReady = false;
+
     AllocatedImage* indirectDiffuseImage = VulkanResourceManager::GetAllocatedImage("IndirectDiffuse");
     AllocatedImage* indirectDiffuseSurfaceImage = VulkanResourceManager::GetAllocatedImage("IndirectDiffuseSurface");
     if (!indirectDiffuseImage || !indirectDiffuseSurfaceImage) return;
@@ -948,7 +1013,20 @@ void DDGIIrradianceTexturePass(VkCommandBuffer commandBuffer) {
     VulkanBuffer* probeStatesBuffer = GetDDGIBufferIfReady(DDGI_PROBE_STATES_BUFFER_NAME);
     if (!probeStatesBuffer) return;
 
+    VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
+    if (!staticDescriptorSet) return;
+
+    std::vector<DDGIReflectionVolumeGPU> reflectionVolumes;
+    reflectionVolumes.reserve(ddgiVolumes.size());
+
     for (DDGIVolume& ddgiVolume : ddgiVolumes) {
+        AllocatedImage* distanceAtlas = nullptr;
+        AllocatedImage* irradianceAtlas = nullptr;
+        if (!CreateOrResizeProbeAtlases(commandBuffer, ddgiVolume, distanceAtlas, irradianceAtlas)) continue;
+
+        uint32_t probeAtlasImageIndex = 0;
+        if (!BindProbeAtlasImages(ddgiVolume, distanceAtlas, irradianceAtlas, staticDescriptorSet, probeAtlasImageIndex)) continue;
+
         const AABB volumeBounds(ddgiVolume.GetBoundsMin(), ddgiVolume.GetBoundsMax());
 
         bool isVisible = false;
@@ -961,14 +1039,45 @@ void DDGIIrradianceTexturePass(VkCommandBuffer commandBuffer) {
             }
         }
 
-        if (!isVisible) continue;
-        DispatchProbeIrradianceTexture(commandBuffer, ddgiVolume, probeStatesBuffer);
+        if (isVisible) {
+            DispatchProbeIrradianceTexture(
+                commandBuffer,
+                ddgiVolume,
+                probeStatesBuffer,
+                distanceAtlas,
+                irradianceAtlas,
+                probeAtlasImageIndex);
+        }
+
+        distanceAtlas->Sync(commandBuffer, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
+        irradianceAtlas->Sync(commandBuffer, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
+
+        DDGIReflectionVolumeGPU reflectionVolume{};
+        reflectionVolume.volume = ddgiVolume.GetGPUData();
+        reflectionVolume.probeAtlasImageIndex = probeAtlasImageIndex;
+        reflectionVolumes.push_back(reflectionVolume);
     }
+
+    g_ddgiReflectionVolumeDataReady = UploadDDGIReflectionVolumeData(
+        commandBuffer,
+        probeStatesBuffer,
+        reflectionVolumes);
+}
+
+uint64_t GetDDGIReflectionVolumeDataDeviceAddress() {
+    const std::string bufferName = GetDDGIReflectionVolumeDataBufferName();
+    if (!g_ddgiReflectionVolumeDataReady || !VulkanResourceManager::BufferExists(bufferName)) {
+        return 0;
+    }
+
+    VulkanBuffer* buffer = VulkanResourceManager::GetBuffer(bufferName);
+    return buffer ? buffer->GetDeviceAddress() : 0;
 }
 
 void CleanUpDDGIProbeAtlasBindlessImages() {
+    g_ddgiReflectionVolumeDataReady = false;
     g_probeAtlasBindlessImages.clear();
-    g_nextProbeAtlasStorageImageIndex = VULKAN_STORAGE_IMAGE_IDX_INDIRECT_DIFFUSE_SURFACE + 1;
+    g_nextProbeAtlasStorageImageIndex = VULKAN_STORAGE_IMAGE_IDX_FIRST_DYNAMIC;
 }
 
 }

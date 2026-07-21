@@ -38,10 +38,10 @@ namespace Hell::ImageTools {
         }
     }
 
-    ImageData LoadImageData(const std::string& path, ImageDataType type) {
+    ImageData LoadImageData(const std::string& path, ImageDataType type, uint32_t maxCompressedTextureResolution) {
         switch (type) {
         case ImageDataType::UNCOMPRESSED: return LoadUncompressedImage(path);
-        case ImageDataType::COMPRESSED:   return LoadDDS(path);
+        case ImageDataType::COMPRESSED:   return LoadDDS(path, maxCompressedTextureResolution);
         case ImageDataType::EXR:          return LoadEXRImage(path);
         default:
             Logging::Error() << "ImageTools::LoadImageData(..) failed because image type was undefined for '" << path << "'\n";
@@ -49,7 +49,7 @@ namespace Hell::ImageTools {
         }
     }
 
-    ImageData LoadDDS(const std::string& filepath) {
+    ImageData LoadDDS(const std::string& filepath, uint32_t maxResolution) {
         ImageData imageData;
         imageData.type = ImageDataType::COMPRESSED;
 
@@ -113,8 +113,10 @@ namespace Hell::ImageTools {
 
         imageData.mips.reserve(mipCount);
         for (uint32_t i = 0; i < mipCount; ++i) {
-            const uint64_t blocksWide = (static_cast<uint64_t>(mipWidth) + 3) / 4;
-            const uint64_t blocksHigh = (static_cast<uint64_t>(mipHeight) + 3) / 4;
+            const uint64_t blocksWide =
+                (static_cast<uint64_t>(mipWidth) + formatInfo->blockWidth - 1) / formatInfo->blockWidth;
+            const uint64_t blocksHigh =
+                (static_cast<uint64_t>(mipHeight) + formatInfo->blockHeight - 1) / formatInfo->blockHeight;
             if (blocksHigh != 0 && blocksWide > std::numeric_limits<uint64_t>::max() / blocksHigh) {
                 std::cout << "DDS mip payload size overflow: " << filepath << "\n";
                 return {};
@@ -126,25 +128,45 @@ namespace Hell::ImageTools {
             }
             const uint64_t dataSize64 = blockCount * formatInfo->blockSize;
             if (dataSize64 > std::numeric_limits<size_t>::max() ||
-                dataSize64 > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max())) {
+                dataSize64 > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max()) ||
+                dataSize64 > static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max())) {
                 std::cout << "DDS mip payload is too large: " << filepath << "\n";
                 return {};
             }
             const size_t dataSize = static_cast<size_t>(dataSize64);
 
-            TextureMip mip;
-            mip.width = mipWidth;
-            mip.height = mipHeight;
-            mip.data.resize(dataSize);
-            file.read(reinterpret_cast<char*>(mip.data.data()), static_cast<std::streamsize>(dataSize));
-            if (file.gcount() != static_cast<std::streamsize>(dataSize)) {
-                std::cout << "Error reading DDS mip level " << i << ": " << filepath << "\n";
-                imageData = {};
-                return imageData;
+            const bool exceedsResolutionLimit =
+                maxResolution != 0 &&
+                (mipWidth > maxResolution || mipHeight > maxResolution);
+
+            if (exceedsResolutionLimit) {
+                file.seekg(static_cast<std::streamoff>(dataSize), std::ios::cur);
+                if (!file) {
+                    std::cout << "Error skipping oversized DDS mip level " << i << ": " << filepath << "\n";
+                    return {};
+                }
             }
-            imageData.mips.push_back(std::move(mip));
+            else {
+                TextureMip mip;
+                mip.width = mipWidth;
+                mip.height = mipHeight;
+                mip.data.resize(dataSize);
+                file.read(reinterpret_cast<char*>(mip.data.data()), static_cast<std::streamsize>(dataSize));
+                if (file.gcount() != static_cast<std::streamsize>(dataSize)) {
+                    std::cout << "Error reading DDS mip level " << i << ": " << filepath << "\n";
+                    imageData = {};
+                    return imageData;
+                }
+                imageData.mips.push_back(std::move(mip));
+            }
+
             mipWidth = std::max(1u, mipWidth / 2);
             mipHeight = std::max(1u, mipHeight / 2);
+        }
+
+        if (imageData.mips.empty()) {
+            std::cout << "DDS has no mip within maximum resolution " << maxResolution << ": " << filepath << "\n";
+            return {};
         }
 
         return imageData;

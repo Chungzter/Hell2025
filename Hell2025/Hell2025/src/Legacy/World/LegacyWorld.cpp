@@ -6,19 +6,16 @@
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Hell/Time.h"
 
 #include "Unloved/Bible/Bible.h"
-#include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/Map/MapManager.h"
 #include "Unloved/ObjectId.h"
-#include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 #include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
+#include "Unloved/Maps/Map.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
-#include "Unloved/Systems/House/HouseManager.h"
-#include "Unloved/Systems/Ocean/Ocean.h"
+#include "Unloved/Systems/HeightMap/HeightMap.h"
 #include "Unloved/Systems/Pathfinding/AStarMap.h"
 #include "Unloved/World/World.h"
 
@@ -30,10 +27,50 @@
 
 using namespace Hell;
 
+namespace {
+    std::vector<Vertex> CreateHeightMapChunkVertices(int chunkX, int chunkZ) {
+        std::vector<Vertex> vertices(VERTICES_PER_CHUNK);
+
+        for (int z = 0; z <= HEIGHT_MAP_CHUNK_PIXEL_SIZE; z++) {
+            for (int x = 0; x <= HEIGHT_MAP_CHUNK_PIXEL_SIZE; x++) {
+                int vertexIndex = z * (HEIGHT_MAP_CHUNK_PIXEL_SIZE + 1) + x;
+                Vertex& vertex = vertices[vertexIndex];
+                vertex.position = glm::vec3(chunkX * HEIGHT_MAP_CHUNK_PIXEL_SIZE + x, 0.0f, chunkZ * HEIGHT_MAP_CHUNK_PIXEL_SIZE + z);
+                vertex.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+                vertex.tangent = glm::vec3(1.0f, 0.0f, 0.0f);
+            }
+        }
+
+        return vertices;
+    }
+
+    std::vector<uint32_t> CreateHeightMapChunkIndices() {
+        std::vector<uint32_t> indices;
+        indices.reserve(INDICES_PER_CHUNK);
+
+        for (int z = 0; z < HEIGHT_MAP_CHUNK_PIXEL_SIZE; z++) {
+            for (int x = 0; x < HEIGHT_MAP_CHUNK_PIXEL_SIZE; x++) {
+                uint32_t v00 = z * (HEIGHT_MAP_CHUNK_PIXEL_SIZE + 1) + x;
+                uint32_t v10 = v00 + 1;
+                uint32_t v01 = (z + 1) * (HEIGHT_MAP_CHUNK_PIXEL_SIZE + 1) + x;
+                uint32_t v11 = v01 + 1;
+
+                indices.push_back(v00);
+                indices.push_back(v01);
+                indices.push_back(v10);
+                indices.push_back(v10);
+                indices.push_back(v01);
+                indices.push_back(v11);
+            }
+        }
+
+        return indices;
+    }
+}
+
 namespace Unloved::LegacyWorld {
 
     std::vector<HeightMapChunk> g_heightMapChunks;
-    std::vector<Map> g_maps;
     std::vector<Road> g_roads;
 
     std::vector<GPULight> g_gpuLightsLowRes;
@@ -46,69 +83,15 @@ namespace Unloved::LegacyWorld {
     uint32_t g_worldMapChunkCountX = 0;
     uint32_t g_worldMapChunkCountZ = 0;
 
-    // HACK!
-    float g_runTime = 0.0f;
-    bool g_playersAwaitingRespawn = false;
-    // HACK!
-
-    struct WorldState {
-        bool oceanEnabled = true;
-    } g_worldState;
-
-    void Init() {
-
-        NewRun();
-
-        //if (GetRoads().size() == 0) {
-        //    Road& road = GetRoads().emplace_back();
-        //    road.Init();
-        //}
-    }
-
-    void LoadMap(const std::string& mapName) {
-        //ResetWorld();
-
-        MapCreateInfo createInfo;
-        createInfo.mapName = mapName;
-        createInfo.spawnOffsetChunkX = 0;
-        createInfo.spawnOffsetChunkZ = 0;
-
-        LoadMaps({ createInfo });
-    }
-
-    void LoadMaps(std::vector<MapCreateInfo> mapCreateInfoSet) {
-        LoadMapsHeightMapData(mapCreateInfoSet);
-
-        int i = 0;
-        for (MapCreateInfo& mapCreateInfo : mapCreateInfoSet) {
-            SpawnOffset spawnOffset;
-            spawnOffset.translation.x = mapCreateInfo.spawnOffsetChunkX * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE;
-            spawnOffset.translation.z = mapCreateInfo.spawnOffsetChunkZ * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE;
-
-           //if (i == 1) {
-           //    spawnOffset.translation.x = 32 * mapCreateInfo.spawnOffsetChunkX * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE;
-           //    spawnOffset.translation.z = 32 * mapCreateInfo.spawnOffsetChunkZ * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE;
-           //}
-
-            LoadMapObjects(mapCreateInfo.mapName, spawnOffset);
-            LoadMapHouses(mapCreateInfo.mapName, spawnOffset);
-
-            i++;
-        }
-
-        KangarooCreateInfo kangarooCreateInfo;
-        kangarooCreateInfo.position = glm::vec3(48, 32.6, 39);
-        kangarooCreateInfo.rotation = glm::vec3(0, HELL_PI * -0.5f, 0);
-        Unloved::World::AddKangaroo(kangarooCreateInfo);
-    }
-
-    void LoadMapsHeightMapData(std::vector<MapCreateInfo> mapCreateInfoSet) {
-        g_maps.clear();
+    void LoadMapsHeightMapData(const std::vector<MapCreateInfo>& mapCreateInfoSet) {
+        World::GetMaps().clear();
+        World::RefreshOceanPhysics();
+        HeightMap::Clear();
         g_worldMapChunkCountX = 0;
         g_worldMapChunkCountZ = 0;
 
         // Load height map data from all maps
-        for (MapCreateInfo& mapCreateInfo : mapCreateInfoSet) {
+        for (const MapCreateInfo& mapCreateInfo : mapCreateInfoSet) {
             int32_t mapIndex = MapManager::GetMapDataIndexByName(mapCreateInfo.mapName);
             MapData* mapData = MapManager::GetMapDataByName(mapCreateInfo.mapName);
             if (!mapData) {
@@ -116,7 +99,7 @@ namespace Unloved::LegacyWorld {
                 return;
             }
 
-            Map& map = g_maps.emplace_back();
+            Map& map = World::GetMaps().emplace_back();
             map.m_mapIndex = mapIndex;
             map.spawnOffsetChunkX = mapCreateInfo.spawnOffsetChunkX;
             map.spawnOffsetChunkZ = mapCreateInfo.spawnOffsetChunkZ;
@@ -128,25 +111,29 @@ namespace Unloved::LegacyWorld {
             g_worldMapChunkCountZ = std::max(g_worldMapChunkCountZ, reachZ);
         }
 
+        World::RefreshOceanPhysics();
+        HeightMap::BuildWorldHeightData(g_worldMapChunkCountX, g_worldMapChunkCountZ);
+
         // Create heightmap chunks
         g_heightMapChunks.clear();
         g_validChunks.clear();
 
-        // Init heightmap chunks
-        int baseVertex = 0;
-        int baseIndex = 0;
+        MeshBuffer& heightMapMeshBuffer = ResourceManager::GetMeshBuffer("HeightMapGeometry");
+        heightMapMeshBuffer.Reset();
+
+        size_t chunkCount = static_cast<size_t>(g_worldMapChunkCountX) * static_cast<size_t>(g_worldMapChunkCountZ);
+        if (chunkCount > 0) {
+            heightMapMeshBuffer.PreAllocate(chunkCount * VERTICES_PER_CHUNK, chunkCount * INDICES_PER_CHUNK);
+        }
+
+        const std::vector<uint32_t> chunkIndices = CreateHeightMapChunkIndices();
+
         for (int x = 0; x < g_worldMapChunkCountX; x++) {
             for (int z = 0; z < g_worldMapChunkCountZ; z++) {
-                int cellX = x / 8;
-                int cellZ = z / 8;
-
                 HeightMapChunk& chunk = g_heightMapChunks.emplace_back();
                 chunk.coord.x = x;
                 chunk.coord.z = z;
-                chunk.baseVertex = baseVertex;
-                chunk.baseIndex = baseIndex;
-                baseVertex += VERTICES_PER_CHUNK;
-                baseIndex += INDICES_PER_CHUNK;
+                chunk.meshId = heightMapMeshBuffer.AddMesh(CreateHeightMapChunkVertices(x, z), chunkIndices, "HeightMapChunk_" + std::to_string(x) + "_" + std::to_string(z));
 
                 g_validChunks[chunk.coord] = g_heightMapChunks.size() - 1;
             }
@@ -155,99 +142,7 @@ namespace Unloved::LegacyWorld {
         Renderer::RecalculateAllHeightMapData(true);
     }
 
-    void LoadSingleHouse(const std::string& houseName) {
-        ResetWorld();
-        LoadHouse(houseName, SpawnOffset());
-    }
-
-    void LoadHouse(const std::string& houseName, SpawnOffset spawnOffset) {
-        // TODO: Probably handle me better!
-        Ocean::CreatePhysicsPlane();
-
-        HouseData* houseData = HouseManager::GetHouseDataByName(houseName);
-        if (!houseData) {
-            Logging::Error() << "LegacyWorld::LoadHouse() failed because " << houseName << " was not found";
-            return;
-        }
-
-        Unloved::World::AddCreateInfoCollection(houseData->GetCreateInfoCollection(), spawnOffset);
-
-        Logging::Debug() << "LegacyWorld::LoadHouse(): " << houseName << " at " << spawnOffset.translation;
-    }
-
-    void LoadMapObjects(const std::string& mapName, SpawnOffset spawnOffset) {
-        MapData* mapData = MapManager::GetMapDataByName(mapName);
-        if (!mapData) {
-            Logging::Error() << "LegacyWorld::LoadMapObjects() failed coz '" << mapName << "' was not found";
-            return;
-        }
-
-        // Add EVERYTHING: doors, walls, draws, toilets, pianos, etc...
-        Unloved::World::AddCreateInfoCollection(mapData->GetCreateInfoCollection(), spawnOffset);
-    }
-
-    void LoadMapHouses(const std::string& mapName, SpawnOffset spawnOffset) {
-        MapData* mapData = MapManager::GetMapDataByName(mapName);
-        if (!mapData) {
-            Logging::Error() << "LegacyWorld::LoadMapHouses() failed coz '" << mapName << "' was not found";
-            return;
-        }
-
-        for (const HouseLocation& houseLocation : mapData->GetAdditionalMapData().houseLocations) {
-            SpawnOffset houseSpawnOffset = spawnOffset;
-            houseSpawnOffset.translation += houseLocation.position;
-            houseSpawnOffset.yRotation += houseLocation.rotation;
-
-            LoadHouse("TestHouse", houseSpawnOffset);
-        }
-    }
-
-    void NewRun() {
-        ResetWorld();
-
-        // Respawn roos
-        for (Kangaroo& kangaroo : Unloved::World::GetKangaroos()) {
-            kangaroo.Respawn();
-        }
-
-        // Load the map
-        std::vector<MapCreateInfo> mapCreateInfoSet;
-
-        MapCreateInfo mapCreateInfo;
-        mapCreateInfo.mapName = "Shit";
-        mapCreateInfo.spawnOffsetChunkX = 0;
-        mapCreateInfo.spawnOffsetChunkZ = 0;
-        mapCreateInfoSet.push_back(mapCreateInfo);
-
-        LoadMaps(mapCreateInfoSet);
-
-        // Load a second house close to the first one
-        MapData* mapData = MapManager::GetMapDataByName("Shit");
-        if (mapData && !mapData->GetAdditionalMapData().houseLocations.empty()) {
-            const HouseLocation& houseLocation = mapData->GetAdditionalMapData().houseLocations.front();
-
-            SpawnOffset secondHouseSpawnOffset;
-            secondHouseSpawnOffset.translation = houseLocation.position + glm::vec3(0.0f, 0.0f, 10.0f);
-            secondHouseSpawnOffset.yRotation = houseLocation.rotation;
-            LoadHouse("TestHouse", secondHouseSpawnOffset);
-        }
-
-        Editor::SetEditorMapName(UNDEFINED_STRING);
-
-        g_runTime = 0.0f;
-        g_playersAwaitingRespawn = true;
-    }
-
     void BeginFrame() {
-
-        // HACK!!!
-        g_runTime += Hell::Time::DeltaTime();
-        if (g_runTime > 0.2f && g_playersAwaitingRespawn) {
-            Unloved::Session::RespawnPlayers();
-            g_playersAwaitingRespawn = false;
-        }
-        // HACK!!!
-
         for (GameObject& gameObject : Unloved::World::GetGameObjects()) {
             gameObject.BeginFrame();
         }
@@ -278,10 +173,15 @@ namespace Unloved::LegacyWorld {
         // Clear height map data
         g_heightMapChunks.clear();
         g_validChunks.clear();
-        g_maps.clear();
+        World::GetMaps().clear();
+        World::RefreshOceanPhysics();
+        HeightMap::Clear();
 
         MeshBuffer& proceduralMeshBuffer = ResourceManager::GetMeshBuffer("Procedural");
         proceduralMeshBuffer.Reset();
+
+        MeshBuffer& heightMapMeshBuffer = ResourceManager::GetMeshBuffer("HeightMapGeometry");
+        heightMapMeshBuffer.Reset();
 
         ClearAllObjects();
     }
@@ -291,7 +191,6 @@ namespace Unloved::LegacyWorld {
         Unloved::MirrorManager::CleanUp();
         Unloved::BulletSystem::CleanUp();
         Unloved::BloodSystemOLD::CleanUp();
-        Ocean::DestroyPhysicsPlane();
         Unloved::World::CleanUpAll();
         Hell::Physics::FlushPendingRemovals();
     }
@@ -314,18 +213,6 @@ namespace Unloved::LegacyWorld {
         }
 
         return invalid;
-    }
-
-    void EnableOcean() {
-        g_worldState.oceanEnabled = true;
-    }
-
-    void DisableOcean() {
-        g_worldState.oceanEnabled = false;
-    }
-
-    bool HasOcean() {
-        return g_worldState.oceanEnabled;
     }
 
     void AddMap(const std::string& mapName, int32_t spawnOffsetChunkX, int32_t spawnOffsetChunkZ) {
@@ -387,7 +274,6 @@ namespace Unloved::LegacyWorld {
 
     }
 
-    std::vector<Map>& GetMaps()                                         { return g_maps; }
     std::vector<Road>& GetRoads()                                       { return g_roads; }
 
 }

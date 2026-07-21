@@ -11,6 +11,7 @@
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/World/World.h"
 
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Render/Renderer.h"
@@ -277,12 +278,13 @@ namespace OpenGL::Renderer {
         // Uniforms
         OpenGLShader* generationShader = OpenGL::ResourceManager::GetShaderPtr("GrassPositionGeneration");
         OpenGL::BindShader("GrassPositionGeneration");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::SetUniformInt("gridSize", BLADES_PER_TILE_AXIS);
         OpenGL::SetUniformInt("u_viewportIndex", viewportIndex);
         OpenGL::SetUniformFloat("spacing", BLADE_SPACING);
         OpenGL::SetUniformVec3("offset", glm::vec3(xOffset, 0.0f, zOffset));
         OpenGL::SetUniformFloat("u_heightMapWorldSpaceSize", HEIGHT_MAP_SIZE * HEIGHTMAP_SCALE_XZ);
-        OpenGL::SetUniformFloat("u_waterHeight", Ocean::GetOceanOriginY());
+        OpenGL::SetUniformFloat("u_waterHeight", World::HasOcean() ? Ocean::GetOceanOriginY() : -1000.0f);
 
         // Dispatch compute shader
         int workGroupsX = BLADES_PER_TILE_AXIS / 16;
@@ -307,7 +309,7 @@ namespace OpenGL::Renderer {
         //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
-        glm::mat4 projectionView = viewportData[viewportIndex].projectionViewReverseZ;
+        glm::mat4 projectionView = viewportData[viewportIndex].jitteredProjectionViewReverseZ;
 
         OpenGL::BindShader("Grass");
         OpenGL::SetUniformMat4("u_projectionView", projectionView);

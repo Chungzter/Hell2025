@@ -11,7 +11,8 @@ namespace VulkanRenderer {
         const Resolutions& resolutions = Config::GetResolutions();
 
         VkExtent2D gBufferExtent = { static_cast<uint32_t>(resolutions.gBuffer.x), static_cast<uint32_t>(resolutions.gBuffer.y) };
-        VkExtent2D indirectDiffuseExtent = { static_cast<uint32_t>(resolutions.gBufferHalfRes.x), static_cast<uint32_t>(resolutions.gBufferHalfRes.y) };
+        VkExtent2D halfResExtent = { static_cast<uint32_t>(resolutions.gBufferHalfRes.x), static_cast<uint32_t>(resolutions.gBufferHalfRes.y) };
+        VkExtent2D indirectSpecularAMDAverageExtent = { (gBufferExtent.width + 7) / 8, (gBufferExtent.height + 7) / 8 };
         VkExtent2D finalImageExtent = { static_cast<uint32_t>(resolutions.finalImage.x), static_cast<uint32_t>(resolutions.finalImage.y) };
         VkFormat finalImageFormat = VulkanSwapchainManager::GetSwapchainImageFormat();
 
@@ -23,20 +24,46 @@ namespace VulkanRenderer {
         VulkanResourceManager::CreateAllocatedImage("BaseColorMetallic", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, usage);
         VulkanResourceManager::CreateAllocatedImage("NormalXYRoughnessMisc", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_A2B10G10R10_UNORM_PACK32, usage);
         VulkanResourceManager::CreateAllocatedImage("VelocityXYOcclusionSubSurface", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDMaterialRoughness", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8_UNORM, usage);
         VulkanResourceManager::CreateAllocatedImage("Visibility", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32G32_UINT, usage);
         VulkanResourceManager::CreateAllocatedImage("Lighting", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
         VulkanResourceManager::CreateAllocatedImage("Depth", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, depthUsage);
 
-        // ReflectionHitGBuffer
-        //VulkanResourceManager::CreateAllocatedImage("ReflectedNormalXYMaterialUV", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
-        //VulkanResourceManager::CreateAllocatedImage("ReflectedMaterialIndex", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32_UINT, usage);
-        //VulkanResourceManager::CreateAllocatedImage("ReflectedRayT", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32_SFLOAT, usage);
-        //VulkanResourceManager::CreateAllocatedImage("ReflectedRayDirOct", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16_SNORM, usage);
-        VulkanResourceManager::CreateAllocatedImage("ReflectedRadiance", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage, true);
+        // Reverse-Z hierarchical depth buffer. It is generated at the end of
+        // the frame and consumed as the next frame's occlusion structure.
+        VulkanResourceManager::CreateAllocatedImage("HiZ", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32_SFLOAT, usage, true);
+        VulkanResourceManager::CreateBuffer("HiZAtomicCounter", sizeof(uint32_t), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+
+        // AMD Reflection DNSR's intersection contract is RGB incident radiance
+        // with the reflection-ray length in alpha.
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDRayInput", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDInput", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+
+        // FidelityFX Reflection DNSR resources are render-resolution resources.
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDExtractedRoughness", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8_UNORM, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDNormalHistory", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDRoughnessHistory", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8_UNORM, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDDepthHistory", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDVariance", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDVarianceHistory", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDSampleCount", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDSampleCountHistory", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDPrefilteredVariance", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDReprojected", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDAverage", indirectSpecularAMDAverageExtent.width, indirectSpecularAMDAverageExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B10G11R11_UFLOAT_PACK32, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDAverageHistory", indirectSpecularAMDAverageExtent.width, indirectSpecularAMDAverageExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B10G11R11_UFLOAT_PACK32, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDFiltered", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDTemporal", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDHistory", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+
+        const VkDeviceSize amdReflectionPixelCount = static_cast<VkDeviceSize>(gBufferExtent.width) * gBufferExtent.height;
+        VulkanResourceManager::CreateBuffer("IndirectSpecularAMDRayCounter", sizeof(uint32_t) * 4, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+        VulkanResourceManager::CreateBuffer("IndirectSpecularAMDDenoiserTileList", amdReflectionPixelCount * sizeof(uint32_t), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+        VulkanResourceManager::CreateBuffer("IndirectSpecularAMDIndirectArgs", sizeof(uint32_t) * 6, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
 
         // DDGI
-        VulkanResourceManager::CreateAllocatedImage("IndirectDiffuse", indirectDiffuseExtent.width, indirectDiffuseExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
-        VulkanResourceManager::CreateAllocatedImage("IndirectDiffuseSurface", indirectDiffuseExtent.width, indirectDiffuseExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectDiffuse", halfResExtent.width, halfResExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("IndirectDiffuseSurface", halfResExtent.width, halfResExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
 
         // Hair
         VulkanResourceManager::CreateAllocatedImage("HairLighting", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_4_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, hairUsage);
@@ -46,6 +73,7 @@ namespace VulkanRenderer {
         VulkanResourceManager::CreateAllocatedImage("FinalImage", finalImageExtent.width, finalImageExtent.height, VK_SAMPLE_COUNT_1_BIT, finalImageFormat, usage);
 
         UpdateBindlessRenderTargetDescriptors();
+        ResetIndirectSpecularAMDHistory();
     }
 
     void CreatePresentRenderTarget(VkExtent2D extent) {

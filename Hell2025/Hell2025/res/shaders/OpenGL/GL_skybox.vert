@@ -16,7 +16,9 @@ uniform mat4 u_modelMatrix;
 
 void main() {
     ViewportIndex = gl_BaseInstance;
-    mat4 projectionView = viewportData[ViewportIndex].skyboxProjectionView;
+    mat4 jitterMatrix = viewportData[ViewportIndex].jitteredProjectionViewReverseZ *
+                        viewportData[ViewportIndex].inverseProjectionViewReverseZ;
+    mat4 projectionView = jitterMatrix * viewportData[ViewportIndex].skyboxProjectionView;
 
     float angle = radians(-90.0);
     float c = cos(angle);

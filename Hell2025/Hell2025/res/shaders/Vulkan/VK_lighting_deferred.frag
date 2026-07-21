@@ -21,19 +21,16 @@ layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
 layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamplers[];
 layout(set = 1, binding = 0) uniform accelerationStructureEXT u_RayQueryAccelerationStructure;
 
+#include "VK_point_shadows.glsl"
+
 #include "VK_ddgi_upsample.glsl"
+#include "VK_indirect_specular_amd_apply.glsl"
 
 layout(early_fragment_tests) in;
 layout(location = 0) out vec4 out_color;
 
 #define LIGHT_COUNT 9             // TODO "tile based deferred" me the fuck outta here
 #define ALPHA_TEST_THRESHOLD 0.25 // TODO: Make me instance specific, which means adding it to the RenderItem struct
-
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer { ViewportData viewportDataArr[]; };
-layout(buffer_reference, scalar) readonly buffer RendererDataBuffer { RendererData rendererData; };
-layout(buffer_reference, scalar) readonly buffer LightBuffer        { Light lights[]; };
-layout(buffer_reference, scalar) readonly buffer TileLightsBuffer   { TileLights data[];};
-layout(buffer_reference, scalar) readonly buffer MaterialBuffer     { Material materials[]; };
 
 // Must match the ray query vertex buffer layout
 struct PackedVertex {
@@ -109,7 +106,7 @@ layout(buffer_reference, scalar) readonly buffer RayQueryMeshInstanceDataBuffer 
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDeferredLighting data;
-} pushConstant;
+} pc;
 
 //vec3 FresnelSchlick(float cosTheta, vec3 f0) {
 //    return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
@@ -146,17 +143,6 @@ vec3 GetJitterRay(vec3 dir, float lightSize, float sampleIndex) {
     vec2 disk = vec2(cos(angle), sin(angle)) * radius;
 
     return normalize(n + tangent * disk.x + bitangent * disk.y);
-}
-
-float GetSingleRaySpecularWeight(vec3 fresnel, float roughness) {
-    // Remove weak and rough reflections after tracing
-    if (MaxComponent(fresnel) < 0.02 || roughness >= 0.85) {
-        return 0.0;
-    }
-
-    // TODO: Replace this fade with filtered, roughness aware half-res reflections
-    // TODO: Maybe include DDGI at ray hits if it aint too slow
-    return 1.0 - smoothstep(0.35, 0.85, roughness);
 }
 
 vec3 EvaluatePointLight(vec3 lightPos, vec3 lightColor, float lightRadius, float lightStrength, vec3 surfacePos, vec3 normal, vec3 baseColor, float roughness, float metallic, vec3 viewPos) {
@@ -208,7 +194,7 @@ bool PassesAlphaTest(RayQueryMeshInstanceData meshInstanceData, uint primitiveIn
     vec3 weights = vec3(1.0 - barycentrics.x - barycentrics.y, barycentrics.x, barycentrics.y);
     vec2 uv = vec2(v0.u, v0.v) * weights.x + vec2(v1.u, v1.v) * weights.y + vec2(v2.u, v2.v) * weights.z;
 
-    MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
+    MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
     Material material = materialBuffer.materials[meshInstanceData.material.materialIndex];
     if (material.basecolor < 0) {
         return false;
@@ -230,7 +216,7 @@ Surface SurfaceFromRayHit(RayHit rayhit) {
     surface.metallic = 0.0;
 
     // Sample the linear base color
-    MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
+    MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
     Material material = materialBuffer.materials[rayhit.materialIndex];
 
     uint textureIndex = uint(material.basecolor);
@@ -251,7 +237,8 @@ Surface SurfaceFromRayHit(RayHit rayhit) {
 bool AnyHit(vec3 rayOrigin, vec3 rayDir, float maxDistance) {
     // Return true when anything blocks this shadow ray
     rayQueryEXT rayQuery;
-    rayQueryInitializeEXT(rayQuery, u_RayQueryAccelerationStructure, 0u, 0xff, rayOrigin, 0.001, rayDir, maxDistance);
+    // Shadow flags, blending modes, and alpha masks must be checked for every triangle.
+    rayQueryInitializeEXT(rayQuery, u_RayQueryAccelerationStructure, gl_RayFlagsNoOpaqueEXT, 0xff, rayOrigin, 0.001, rayDir, maxDistance);
 
     // Walk candidates until a blocker is accepted or the BVH ends
     while (rayQueryProceedEXT(rayQuery)) {
@@ -260,8 +247,8 @@ bool AnyHit(vec3 rayOrigin, vec3 rayDir, float maxDistance) {
             continue;
         }
 
-        RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pushConstant.data.rayQueryBLASInstanceDataDeviceAddress);
-        RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pushConstant.data.rayQueryMeshInstanceDataDeviceAddress);
+        RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pc.data.rayQueryBLASInstanceDataDeviceAddress);
+        RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pc.data.rayQueryMeshInstanceDataDeviceAddress);
 
         // instanceCustomIndex points to the BLAS instance table
         uint instanceIndex = rayQueryGetIntersectionInstanceCustomIndexEXT(rayQuery, false);
@@ -330,8 +317,8 @@ RayHit ClosestHit(vec3 rayOrigin, vec3 rayDir, float maxDistance) {
             continue;
         }
 
-        RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pushConstant.data.rayQueryBLASInstanceDataDeviceAddress);
-        RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pushConstant.data.rayQueryMeshInstanceDataDeviceAddress);
+        RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pc.data.rayQueryBLASInstanceDataDeviceAddress);
+        RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pc.data.rayQueryMeshInstanceDataDeviceAddress);
 
         uint instanceIndex = rayQueryGetIntersectionInstanceCustomIndexEXT(rayQuery, false);
         RayQueryBLASInstanceData blasInstanceData = rayQueryBLASInstanceDataBuffer.blasInstanceData[instanceIndex];
@@ -351,7 +338,7 @@ RayHit ClosestHit(vec3 rayOrigin, vec3 rayDir, float maxDistance) {
             continue;
         }
 
-        MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
+        MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
         Material material = materialBuffer.materials[meshInstanceData.material.materialIndex];
         if (material.basecolor < 0) {
             continue;
@@ -380,8 +367,8 @@ RayHit ClosestHit(vec3 rayOrigin, vec3 rayDir, float maxDistance) {
     }
 
     // Resolve the committed mesh and triangle
-    RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pushConstant.data.rayQueryBLASInstanceDataDeviceAddress);
-    RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pushConstant.data.rayQueryMeshInstanceDataDeviceAddress);
+    RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pc.data.rayQueryBLASInstanceDataDeviceAddress);
+    RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pc.data.rayQueryMeshInstanceDataDeviceAddress);
 
     uint instanceIndex = rayQueryGetIntersectionInstanceCustomIndexEXT(rayQuery, true);
     RayQueryBLASInstanceData blasInstanceData = rayQueryBLASInstanceDataBuffer.blasInstanceData[instanceIndex];
@@ -438,7 +425,7 @@ RayHit ClosestHit(vec3 rayOrigin, vec3 rayDir, float maxDistance) {
     vec3 worldBitangent = cross(result.hitNormal, worldTangent);
 
     // Apply the material normal map
-    MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
+    MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
     Material material = materialBuffer.materials[result.materialIndex];
     if (material.normal >= 0) {
         uint normalTextureIndex = uint(material.normal);
@@ -486,74 +473,10 @@ float GetShadowVisibility(vec3 rayOrigin, vec3 target) {
     return visibility / float(shadowSampleCount);
 }
 
-vec3 GetReflectedRadiance(Surface surface, vec3 viewPos) {
-    vec3 reflectedRadiance = vec3(0.0);
-    vec3 viewDirToCamera = normalize(viewPos - surface.worldPos);
-    float reflectionNoV = clamp(dot(surface.normal, viewDirToCamera), 0.0, 1.0);
-    vec3 reflectionRayDir = normalize(reflect(-viewDirToCamera, surface.normal));
-
-    if (reflectionNoV > 0.0) {
-        vec3 reflectionOrigin = surface.worldPos + surface.normal * 0.01;
-        RayHit reflectedHit = ClosestHit(reflectionOrigin, reflectionRayDir, 80.0);
-
-        if (reflectedHit.found) {
-            Surface reflectedSurface = SurfaceFromRayHit(reflectedHit);
-
-            LightBuffer reflectionLightBuffer = LightBuffer(pushConstant.data.frame.lightsDeviceAddress);
-            for (int i = 0; i < LIGHT_COUNT; i++) {
-                Light light = reflectionLightBuffer.lights[i];
-                if (light.radius <= 0.0 || light.strength <= 0.0) {
-                    continue;
-                }
-
-                vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
-                vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
-                vec3 lightBoundsMin = light.worldBoundsMin.xyz;
-                vec3 lightBoundsMax = light.worldBoundsMax.xyz;
-
-                if (!PointInAABB(reflectedSurface.worldPos, lightBoundsMin, lightBoundsMax)) {
-                    continue;
-                }
-
-                vec3 toLight = lightPosition - reflectedSurface.worldPos;
-                float dist = length(toLight);
-                vec3 lightDir = toLight / max(dist, 0.0001);
-                float attenuation = smoothstep(light.radius, 0.0, dist) * light.strength;
-                float ndotl = max(dot(reflectedSurface.normal, lightDir), 0.0);
-                if (ndotl <= 0.0 || attenuation <= 0.0) {
-                    continue;
-                }
-
-                float candelas = 1.0;
-
-                if (light.iesTextureIndex != 0) {
-                    uint iesTextureIndex = uint(light.iesTextureIndex);
-                    candelas = ApplyIESProfile(reflectedSurface.worldPos , light, textures[nonuniformEXT(iesTextureIndex)], textureSamplers[nonuniformEXT(iesTextureIndex)]);
-                }
-
-                if (candelas == 0) {
-                    continue;
-                }
-
-                float visibility = GetShadowVisibility(reflectedSurface.worldPos + reflectedSurface.normal * 0.001, lightPosition);
-                if (visibility <= 0.0) {
-                    continue;
-                }
-
-                visibility *= candelas;
-
-                reflectedRadiance += EvaluatePointLight(lightPosition, lightColor, light.radius, light.strength, reflectedSurface.worldPos, reflectedSurface.normal, reflectedSurface.linearBaseColor, reflectedSurface.roughness, reflectedSurface.metallic, surface.worldPos) * visibility;
-            }
-        }
-    }
-
-    return reflectedRadiance;
-}
-
 void main() {
-    ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
-    RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress);
-    TileLightsBuffer tileLights = TileLightsBuffer(pushConstant.data.tileLightsDeviceAddress);
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
+    RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
+    TileLightsBuffer tileLights = pc.data.frame.tileLightBuffer;
 
     RendererData rendererData = rendererDataBuffer.rendererData;
 
@@ -562,7 +485,7 @@ void main() {
     ivec2 outputImageSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_BASE_COLOR_METALLIC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
     uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, outputImageSize, rendererDataBuffer.rendererData.splitscreenMode);
-    ViewportData viewportData = viewportDataBuffer.viewportDataArr[viewportIndex];
+    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
     vec3 viewPos = viewportData.viewPos.xyz;
 
     // Fetch GBuffer
@@ -597,124 +520,85 @@ void main() {
     // Direct light
     vec3 directLighting = vec3(0.0);
 
-    if (!isMirrorSurface) {
+    
+    LightBuffer lightBuffer = pc.data.frame.lightBuffer;
 
-        LightBuffer lightBuffer = LightBuffer(pushConstant.data.frame.lightsDeviceAddress);
+    // Tile data
+    uvec2 tileCoord = uvec2(px) / uint(TILE_SIZE);
+    uint tileIndex = tileCoord.y * rendererData.tileCountX + tileCoord.x;
+    uint tileLightCount = tileLights.tileLights[tileIndex].lightCount;
 
-        //tileLightsBuffer
-        //
-        //TileLightsBuffer tileLightsBuffer = TileLightsBuffer(pushConstant.data.tileLightsDeviceAddress);
+    // Direct lighting
+    for (int i = 0; i < tileLightCount; i++) {
 
-        // Tile data
-        uvec2 tileCoord = uvec2(px) / uint(TILE_SIZE);
-        uint tileIndex = tileCoord.y * rendererData.tileCountX + tileCoord.x;
-        uint tileLightCount = tileLights.data[tileIndex].lightCount;
+        int lightIndex = int(tileLights.tileLights[tileIndex].lightIndices[i]);
+        Light light = lightBuffer.lights[lightIndex];
 
+        vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+        vec3 lightColor =  vec3(light.colorR, light.colorG, light.colorB);
 
+        vec3 lightBoundsMin = light.worldBoundsMin.xyz;
+        vec3 lightBoundsMax = light.worldBoundsMax.xyz;
 
-        for (int i = 0; i < tileLightCount; i++) {
+        float candelas = 1.0;
 
-            int lightIndex = int(tileLights.data[tileIndex].lightIndices[i]);
-            Light light = lightBuffer.lights[lightIndex];
-
-
-        // Hardcoded light loop until tiled deferred is back
-        //for (int i = 0; i < LIGHT_COUNT; i++) {
-        //    Light light = lightBuffer.lights[i];
-         //  if (light.radius <= 0.0 || light.strength <= 0.0) {
-         //      continue;
-         //  }
-
-            vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
-            vec3 lightColor =  vec3(light.colorR, light.colorG, light.colorB);
-
-            vec3 lightBoundsMin = light.worldBoundsMin.xyz;
-            vec3 lightBoundsMax = light.worldBoundsMax.xyz;
-
-            //if (!PointInAABB(worldPos, lightBoundsMin, lightBoundsMax)) {
-            //    continue;
-            //}
-
-            vec3 toLight = lightPosition - worldPos;
-            float dist = length(toLight);
-            vec3 lightDir = toLight / max(dist, 0.0001);
-            float attenuation = smoothstep(light.radius, 0.0, dist) * light.strength;
-            float ndotl = max(dot(normal, lightDir), 0.0);
-            if (ndotl <= 0.0 || attenuation <= 0.0) {
-                continue;
-            }
-
-            float candelas = 1.0;
-
-            if (light.iesTextureIndex != 0) {
-                uint iesTextureIndex = uint(light.iesTextureIndex);
-                candelas = ApplyIESProfile(worldPos, light, textures[nonuniformEXT(iesTextureIndex)], textureSamplers[nonuniformEXT(iesTextureIndex)]);
-            }
-
-            if (candelas == 0) {
-                continue;
-            }
-
-            float visibility = GetShadowVisibility(worldPos + normal * 0.001, lightPosition);
-            visibility *= candelas;
-
-            if (visibility <= 0.0) {
-                continue;
-            }
-
-            vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, viewPos) * visibility;
-            directLighting += directLight;
+        if (light.iesTextureIndex != 0) {
+            uint iesTextureIndex = uint(light.iesTextureIndex);
+            candelas = ApplyIESProfile(worldPos, light, textures[nonuniformEXT(iesTextureIndex)], textureSamplers[nonuniformEXT(iesTextureIndex)]);
         }
+
+        if (candelas == 0) {
+            continue;
+        }
+
+        float visibility = rendererData.directPointShadowMode == POINT_SHADOW_MODE_RAY_QUERY
+            ? GetShadowVisibility(worldPos + normal * 0.001, lightPosition)
+            : GetPointShadowMapVisibilitySkin(light, worldPos, normal, viewPos);
+        visibility *= candelas;
+
+        if (visibility <= 0.0) {
+            continue;
+        }
+
+        vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, viewPos) * visibility;
+        directLighting += directLight;
     }
 
-    // Reflections
-    vec3 viewDirToCamera = normalize(viewPos - surface.worldPos);
-    float reflectionNoV = clamp(dot(surface.normal, viewDirToCamera), 0.0, 1.0);
-    //vec3 reflectedRadiance = GetReflectedRadiance(surface, viewPos);
-    //vec3 reflectedRadiance = vec3(0);
+    ivec4 viewportRect = ivec4(viewportData.xOffset, viewportData.yOffset, viewportData.width, viewportData.height);
 
+    // Indirect specular
+    vec3 indirectSpecular = vec3(0, 0, 0);
 
-    // Filtered reflected radiance
-    float reflectionRoughnessPower = 1.1;
-    float reflectionMipScale = 1.0;
-    float reflectionMipBias = 0.0;
+    if (rendererData.enableIndirectSpecular) {
+        indirectSpecular = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_TEMPORAL], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).rgb;
+        float amdAlphaRoughness = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_MATERIAL_ROUGHNESS], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
+        float amdPerceptualRoughness = sqrt(clamp(amdAlphaRoughness, 0.0, 1.0));
+        vec3 viewDirToCamera = normalize(viewPos - worldPos);
 
-    int mipCount = textureQueryLevels(sampler2D(textures[VULKAN_TEXTURE_IDX_REFLECTED_RADIANCE], samplers[VULKAN_SAMPLER_IDX_LINEAR]));
-    float maxMip = float(mipCount) - 1;
+        vec3 primaryBaseColor = isMirrorSurface ? vec3(1.0) : linearBaseColor;
+        float primaryMetallic = isMirrorSurface ? 1.0 : metallic;
+        vec3 primaryResponse = GetAMDIndirectSpecularPrimaryResponse(primaryBaseColor, primaryMetallic, amdPerceptualRoughness, normal, viewDirToCamera, pc.data.brdfLutTextureIndex);
+        float indirectSpecularFactor = isMirrorSurface ? 1.0 : rendererData.indirectSpecularFactor; // Mirrors always get a boost factor of 1.0, any other reflective surface uses the RendererData value
 
-    float reflectionLod = pow(surface.roughness, reflectionRoughnessPower) * maxMip * reflectionMipScale + reflectionMipBias;
-    reflectionLod = clamp(reflectionLod, 0.0, maxMip);
-
-    reflectionLod = 0;
-
-   vec3 reflectedRadiance = textureLod(sampler2D(textures[VULKAN_TEXTURE_IDX_REFLECTED_RADIANCE], samplers[VULKAN_SAMPLER_IDX_NEAREST]), screenUV, reflectionLod).rgb;
-
-    vec3 reflectionWeight = vec3(1.0);
-    if (!isMirrorSurface) {
-        vec3 f0 = mix(vec3(0.04), surface.linearBaseColor, surface.metallic);
-        vec3 fresnel = FresnelSchlick(reflectionNoV, f0);
-        reflectionWeight = fresnel * GetSingleRaySpecularWeight(fresnel, surface.roughness);
+        indirectSpecular = ApplyAMDIndirectSpecularBRDF(indirectSpecular, primaryResponse) * indirectSpecularFactor;
     }
-
-    vec3 reflectionLighting = reflectedRadiance * reflectionWeight;
 
     // Indirect diffuse
     vec3 indirectDiffuse = vec3(0.0);
 
-    if (!isMirrorSurface && rendererDataBuffer.rendererData.enableIrradianceProbeSampling) {
-        ivec4 viewportRect = ivec4(viewportData.xOffset, viewportData.yOffset, viewportData.width, viewportData.height);
+    if (!isMirrorSurface && rendererData.enableIrradianceProbeSampling) {
         vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral_VK(screenUV, normal, fragDistance, outputImageSize, viewportRect);
         vec3 diffuseAlbedo = linearBaseColor.rgb * (1.0 - metallic);
         indirectDiffuse = probeIrradiance * diffuseAlbedo;
     }
 
     // Final composite
-    vec3 finalLighting = directLighting + indirectDiffuse + reflectionLighting;
+    vec3 finalLighting = directLighting + indirectDiffuse + indirectSpecular;
 
     out_color = vec4(finalLighting, 1.0);
 
 
-    //out_color = vec4(reflectedRadiance, 1.0);
+   // out_color = vec4(indirectSpecular, 1.0);
 
 
     // Normals test
@@ -779,7 +663,7 @@ void main() {
                 vec2 uv = reflectedHit.uv; // write/read this
                 uint materialIndex = uint(reflectedHit.materialIndex); // write/read this
 
-                MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
+                MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
                 Material material = materialBuffer.materials[int(materialIndex)];
                 if (material.basecolor >= 0) {
                     uint textureIndex = uint(material.basecolor);

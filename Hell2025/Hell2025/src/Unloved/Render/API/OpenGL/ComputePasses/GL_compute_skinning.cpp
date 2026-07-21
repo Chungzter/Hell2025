@@ -15,12 +15,14 @@ namespace OpenGL::Renderer {
         const std::vector<SkinningDispatchGroup>& skinningDispatchGroups = Unloved::RenderDataManager::GetSkinningDispatchGroups();
         const std::vector<SkinningJob>& skinningJobs = Unloved::RenderDataManager::GetSkinningJobs();
         const std::vector<glm::mat4>& skinningTransforms = Unloved::RenderDataManager::GetSkinningTransforms();
+        const std::vector<glm::mat4>& previousSkinningTransforms = Unloved::RenderDataManager::GetPreviousSkinningTransforms();
 
         uint32_t totalVertexCount = Unloved::RenderDataManager::GetRequiredSkinnedVertexCount();
 
         if (skinningDispatchGroups.empty()) return;
         if (skinningJobs.empty()) return;
         if (skinningTransforms.empty()) return;
+        if (previousSkinningTransforms.size() != skinningTransforms.size()) return;
 
         // Calculate total amount of vertices to skin and allocate space
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
@@ -32,6 +34,7 @@ namespace OpenGL::Renderer {
         UpdateSSBO("SkinningDispatchGroups", skinningDispatchGroups.size() * sizeof(SkinningDispatchGroup), skinningDispatchGroups.data());
         UpdateSSBO("SkinningJobs", skinningJobs.size() * sizeof(SkinningJob), skinningJobs.data());
         UpdateSSBO("SkinningTransforms", skinningTransforms.size() * sizeof(glm::mat4), skinningTransforms.data());
+        UpdateSSBO("PreviousSkinningTransforms", previousSkinningTransforms.size() * sizeof(glm::mat4), previousSkinningTransforms.data());
 
         BindSSBO(0, BackEnd::GetSkinnedVertexDataVBO());
         BindSSBO(1, glMeshBuffer.GetVBO());
@@ -39,6 +42,8 @@ namespace OpenGL::Renderer {
         BindSSBO(3, glMeshBuffer.GetVertexWeightSSBO());
         BindSSBO(4, "SkinningJobs");
         BindSSBO(5, "SkinningDispatchGroups");
+        BindSSBO(6, "PreviousSkinningTransforms");
+        BindSSBO(7, BackEnd::GetPreviousSkinnedPositionBuffer());
 
         BindShader("ComputeSkinning");
         DispatchCompute(skinningDispatchGroups.size(), 1, 1);

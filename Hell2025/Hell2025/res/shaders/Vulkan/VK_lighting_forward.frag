@@ -19,6 +19,8 @@ layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
 layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamplers[];
 layout(set = 1, binding = 0) uniform accelerationStructureEXT u_RayQueryAccelerationStructure;
 
+#include "VK_point_shadows.glsl"
+
 #include "VK_ddgi_upsample.glsl"
 
 layout(location = 0) out vec4 LightingOut;
@@ -29,26 +31,6 @@ layout(location = 2) centroid in vec3 v_tangent;
 layout(location = 3) centroid in vec4 v_worldPos;
 layout(location = 4) flat in uint v_globalInstanceIndex;
 layout(location = 5) flat in uint v_viewportIndex;
-
-layout(buffer_reference, scalar) readonly buffer RenderItemBuffer {
-    RenderItem renderItems[];
-};
-
-layout(buffer_reference, scalar) readonly buffer MaterialBuffer {
-    Material materials[];
-};
-
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
-    ViewportData viewportData[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RendererDataBuffer {
-    RendererData rendererData;
-};
-
-layout(buffer_reference, scalar) readonly buffer LightBuffer {
-    Light lights[];
-};
 
 struct PackedVertex {
     float vx, vy, vz;
@@ -103,7 +85,7 @@ layout(buffer_reference, scalar) readonly buffer RayQueryMeshInstanceDataBuffer 
 
 layout(push_constant, scalar) uniform PushConstants {
     PushConstantsDeferredLighting data;
-} pushConstant;
+} pc;
 
 const int MAX_GPU_LIGHTS = 16;
 const float ALPHA_TEST_THRESHOLD = 0.25;
@@ -149,7 +131,7 @@ bool SampleRayQueryBaseColor(RayQueryMeshInstanceData meshInstanceData, uint pri
     vec3 weights = vec3(1.0 - barycentrics.x - barycentrics.y, barycentrics.x, barycentrics.y);
     vec2 uv = vec2(v0.u, v0.v) * weights.x + vec2(v1.u, v1.v) * weights.y + vec2(v2.u, v2.v) * weights.z;
 
-    MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
+    MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
     Material material = materialBuffer.materials[meshInstanceData.material.materialIndex];
     if (material.basecolor < 0) {
         return false;
@@ -183,8 +165,8 @@ float RayQueryLineOfSight(vec3 rayOrigin, vec3 target) {
             continue;
         }
 
-        RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pushConstant.data.rayQueryBLASInstanceDataDeviceAddress);
-        RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pushConstant.data.rayQueryMeshInstanceDataDeviceAddress);
+        RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pc.data.rayQueryBLASInstanceDataDeviceAddress);
+        RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pc.data.rayQueryMeshInstanceDataDeviceAddress);
 
         uint instanceIndex = rayQueryGetIntersectionInstanceCustomIndexEXT(rayQuery, false);
         RayQueryBLASInstanceData blasInstanceData = rayQueryBLASInstanceDataBuffer.blasInstanceData[instanceIndex];
@@ -220,15 +202,12 @@ float RayQueryLineOfSight(vec3 rayOrigin, vec3 target) {
 }
 
 float DirectLightVisibility(vec3 worldPos, vec3 normal, vec3 lightPos) {
-    if (pushConstant.data.rayQueryEnabled == 0u) {
-        return 1.0;
-    }
-
     return RayQueryLineOfSight(worldPos + normal * 0.001, lightPos);
 }
 
 vec3 ComputeDirectLighting(LightBuffer lightBuffer, vec3 worldPos, vec3 normal, vec3 baseColor, float roughness, float metallic, vec3 viewPos) {
     vec3 directLighting = vec3(0.0);
+    RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
 
     for (int i = 0; i < MAX_GPU_LIGHTS; i++) {
         Light light = lightBuffer.lights[i];
@@ -240,7 +219,9 @@ vec3 ComputeDirectLighting(LightBuffer lightBuffer, vec3 worldPos, vec3 normal, 
         vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
         float visibility = 1.0;
         if (light.hiResShadowMapIndex != -1 || light.lowResShadowMapIndex != -1) {
-            visibility = DirectLightVisibility(worldPos, normal, lightPosition);
+            visibility = rendererData.directPointShadowMode == POINT_SHADOW_MODE_RAY_QUERY
+                ? DirectLightVisibility(worldPos, normal, lightPosition)
+                : GetPointShadowMapVisibility(light, worldPos, normal, viewPos);
         }
 
         if (visibility <= 0.0) {
@@ -274,11 +255,11 @@ vec3 BuildNormal(vec3 vertexNormal, vec3 vertexTangent, vec3 normalMap) {
 }
 
 void main() {
-    RenderItemBuffer renderItemBuffer = RenderItemBuffer(pushConstant.data.frame.renderItemsDeviceAddress);
-    MaterialBuffer materialBuffer = MaterialBuffer(pushConstant.data.frame.materialsDeviceAddress);
-    RendererDataBuffer rendererDataBuffer = RendererDataBuffer(pushConstant.data.frame.rendererDataDeviceAddress);
-    ViewportDataBuffer viewportDataBuffer = ViewportDataBuffer(pushConstant.data.frame.viewportDataDeviceAddress);
-    LightBuffer lightBuffer = LightBuffer(pushConstant.data.frame.lightsDeviceAddress);
+    RenderItemBuffer renderItemBuffer = pc.data.frame.renderItemBuffer;
+    MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
+    RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
+    LightBuffer lightBuffer = pc.data.frame.lightBuffer;
 
     RenderItem renderItem = renderItemBuffer.renderItems[v_globalInstanceIndex];
     Material material = materialBuffer.materials[renderItem.materialIndex];

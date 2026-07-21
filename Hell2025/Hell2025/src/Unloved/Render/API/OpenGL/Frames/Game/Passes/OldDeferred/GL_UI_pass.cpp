@@ -21,7 +21,7 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindShader("UI");
 
-        OpenGL::BindSSBO(0, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(6, "RenderItemsUI");
 
         OpenGL::SetUniformFloat("u_renderTargetWidth", resolutions.ui.x);

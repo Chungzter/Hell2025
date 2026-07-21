@@ -5,6 +5,7 @@
 #include "Hell/Logging.h"
 #include "Hell/Math/Rotation.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Render/RendererUtil.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
@@ -76,6 +77,8 @@ Decal::Decal(uint64_t id, const DecalCreateInfo& createInfo) {
     m_renderItem.materialIndex = m_materialIndex;
     m_renderItem.baseVertex = mesh->baseVertex;
     m_renderItem.baseIndex = mesh->baseIndex;
+    m_renderItem.vertexCount = mesh->vertexCount;
+    m_renderItem.indexCount = mesh->indexCount;
     m_renderItem.shadowFlags = SHADOW_FLAG_NONE;
     m_renderItem.blendingMode = static_cast<int32_t>(BlendingMode::ALPHA_DISCARD);
 }
@@ -86,21 +89,21 @@ void Decal::CleanUp() {
 
 void Decal::Update() {
     glm::vec3 position = GetParentWorldMatrix() * glm::vec4(m_localPosition, 1.0f);
-   // DebugDraw::DrawPoint(position, OUTLINE_COLOR);
 
     m_worldNormal = GetParentWorldMatrix() * glm::vec4(m_localNormal, 0.0f);
     m_worldMatrix = GetParentWorldMatrix() * m_localMatrix;
 
-    //DebugDraw::DrawLine(position, position + (m_worldNormal * 0.05f), WHITE);
-
     glm::vec3 boundsMin = glm::vec3(-0.5f);
     glm::vec3 boundsMax = glm::vec3(0.5f);
+
     AABB m_localAABB(boundsMin, boundsMax);
 
+    m_renderItem.prevModelMatrix = m_renderItem.modelMatrix;
     m_renderItem.modelMatrix = m_worldMatrix;
     m_renderItem.inverseModelMatrix = glm::inverse(m_renderItem.modelMatrix);
     m_renderItem.aabbMin = glm::vec4(GetPosition() - m_localAABB.GetBoundsMin(), 1.0);
     m_renderItem.aabbMax = glm::vec4(GetPosition() + m_localAABB.GetBoundsMax(), 1.0);
+
     RendererUtil::UpdateRenderItemAABB(m_renderItem);
 
     RenderDataManager::SubmitRenderItem({ m_renderItem });

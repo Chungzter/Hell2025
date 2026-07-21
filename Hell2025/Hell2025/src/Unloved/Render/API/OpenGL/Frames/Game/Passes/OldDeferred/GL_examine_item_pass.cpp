@@ -64,6 +64,7 @@ namespace OpenGL::Renderer {
         glm::mat4 viewMatrix = glm::inverse(cameraTransform.to_mat4());
 
         OpenGL::BindShader("ExamineItem");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::SetUniformMat4("u_model", glm::mat4(1));
         OpenGL::SetUniformMat4("u_viewMatrix", viewMatrix);
         OpenGL::SetUniformVec3("u_viewPos", cameraPosition);

@@ -115,16 +115,17 @@ void main() {
     ivec2 resolution = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
 
     uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, resolution, rendererData.splitscreenMode);
-    mat4 projectionView = viewportData[viewportIndex].projectionView;
-    mat4 inverseProjection = viewportData[viewportIndex].inverseProjection;
-    mat4 inverseView = viewportData[viewportIndex].inverseView;
+    mat4 projectionView = viewportData[viewportIndex].jitteredProjectionViewReverseZ;
+    mat4 inverseProjectionView = viewportData[viewportIndex].inverseJitteredProjectionViewReverseZ;
     vec3 viewPos = viewportData[viewportIndex].viewPos.xyz;
 
     vec2 screenUV = (vec2(pixelCoords) + 0.5) / vec2(resolution);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData[viewportIndex]);
 
     vec3 rayOrigin = viewPos;
-    vec3 rayDir = RayDirectionFromViewportUV(viewportUV, inverseProjection, inverseView);
+    vec2 viewportOrigin = vec2(viewportData[viewportIndex].xOffset, viewportData[viewportIndex].yOffset);
+    vec2 viewportSize = vec2(viewportData[viewportIndex].width, viewportData[viewportIndex].height);
+    vec3 rayDir = GetWorldRay_GL(vec2(pixelCoords) + 0.5, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
 
     vec3 proxyCenter = u_model[3].xyz;
     float proxyRadius = length(u_model[0].xyz);

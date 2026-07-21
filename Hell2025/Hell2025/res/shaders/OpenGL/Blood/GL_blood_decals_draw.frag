@@ -3,6 +3,7 @@
 
 #include "../../common/constants.glsl"
 #include "../../common/flags.glsl"
+#include "../../common/reconstruction.glsl"
 #include "../../common/util.glsl"
 
 layout (location = 0) out vec4 DecalMaskOut;
@@ -40,12 +41,12 @@ void main() {
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
 
     ViewportData viewportData = viewportDataArr[viewportIndex];
-    mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
+    mat4 inverseProjectionView = viewportData.inverseJitteredProjectionViewReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
     if (depth <= 0.0) discard;
 
-    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionView);
+    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionView);
 
     vec3 positionDx = dFdx(worldPos);
     vec3 positionDy = dFdy(worldPos);

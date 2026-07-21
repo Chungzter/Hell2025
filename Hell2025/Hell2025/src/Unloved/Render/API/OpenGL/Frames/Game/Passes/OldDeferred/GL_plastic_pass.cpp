@@ -13,7 +13,6 @@
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
-#include "res/shaders/common/OpenGL/GL_binding_indices.glsl"
 
 namespace OpenGL::Renderer {
 
@@ -42,6 +41,11 @@ namespace OpenGL::Renderer {
 		gBuffer->DrawBuffers({ "Lighting" });
 
 		OpenGL::BindShader("Plastic");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
 
         OpenGL::BindSSBO(6, "TileLights");
@@ -61,7 +65,7 @@ namespace OpenGL::Renderer {
 			OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
 			OpenGL::BindShader("Plastic");
-			OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+			OpenGL::SetUniformMat4("u_projectionView", viewportData[i].jitteredProjectionViewReverseZ);
 			OpenGL::SetUniformMat4("u_view", viewportData[i].view);
 
 			glDepthFunc(GL_GREATER);
@@ -105,7 +109,7 @@ namespace OpenGL::Renderer {
 			OpenGL::Renderer::SetViewport(gBuffer, viewport);
 
 			OpenGL::BindShader("Plastic");
-            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].projectionViewReverseZ);
+            OpenGL::SetUniformMat4("u_projectionView", viewportData[i].jitteredProjectionViewReverseZ);
             OpenGL::SetUniformMat4("u_view", viewportData[i].view);
             OpenGL::SetUniformVec3("u_viewPos", viewportData[i].viewPos);
 
@@ -155,6 +159,11 @@ namespace OpenGL::Renderer {
 		gBuffer->DrawBuffers({ "Lighting" });
 
 		OpenGL::BindShader("Plastic");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
 
 		OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 		EditorRasterizerStateOverride();

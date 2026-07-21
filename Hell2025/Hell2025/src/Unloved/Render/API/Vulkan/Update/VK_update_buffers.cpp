@@ -84,10 +84,12 @@ namespace VulkanRenderer {
         const std::vector<SkinningDispatchGroup>& skinningDispatchGroups= Unloved::RenderDataManager::GetSkinningDispatchGroups();
         const std::vector<SkinningJob>& skinningJobs = Unloved::RenderDataManager::GetSkinningJobs();
         const std::vector<glm::mat4>& skinningTransforms = Unloved::RenderDataManager::GetSkinningTransforms();
+        const std::vector<glm::mat4>& previousSkinningTransforms = Unloved::RenderDataManager::GetPreviousSkinningTransforms();
 
         UpdateVectorBuffer(frameData.buffers.skinningDispatchGroups, skinningDispatchGroups);
         UpdateVectorBuffer(frameData.buffers.skinningJobs, skinningJobs);
         UpdateVectorBuffer(frameData.buffers.skinningTransforms, skinningTransforms);
+        UpdateVectorBuffer(frameData.buffers.previousSkinningTransforms, previousSkinningTransforms);
 
         // Viewport data
 

@@ -21,6 +21,7 @@
 #include "Hell/Input.h"
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
+#include "Hell/Profiling/CPUProfiler.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/ResourceManagement/TextureUploader.h"
 #include "Hell/Time.h"
@@ -55,7 +56,7 @@ namespace Hell::BackEnd {
 
     void CheckForRenderDoc();
 
-    bool Init(API api, WindowedMode windowMode, const std::string& title) {
+    bool Init(API api, WindowedMode windowMode, const std::string& title, uint32_t maxCompressedTextureResolution) {
         Logging::EnableLevel(Logging::Level::INIT);
         Logging::EnableLevel(Logging::Level::DEBUG);
         Logging::EnableLevel(Logging::Level::ERROR);
@@ -92,13 +93,15 @@ namespace Hell::BackEnd {
         InputMulti::Init();
 
         AssetCompiler::CompileOutOfDateAssets();
-        AssetLoader::Init();
+        AssetLoader::Init(maxCompressedTextureResolution);
 
         glfwShowWindow(static_cast<GLFWwindow*>(GetWindowPointer()));
         return true;
     }
 
     void BeginFrame() {
+        ProfilerCPUZoneFunction();
+
         Time::Update();
         GLFW::BeginFrame(g_api);
         Input::Update();
@@ -123,6 +126,8 @@ namespace Hell::BackEnd {
     }
 
     void EndFrame() {
+        ProfilerCPUZoneFunction();
+
         InputMulti::ResetMouseOffsets();
         GLFW::EndFrame(g_api);
     }

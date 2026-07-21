@@ -36,6 +36,7 @@
 #include "Unloved/Systems/DDGI/DDGIManager.h"
 #include "Unloved/Systems/DDGI/DDGIVolume.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
+#include "Unloved/Systems/NavMesh/NavMesh.h"
 
 namespace Unloved::World {
 
@@ -190,6 +191,7 @@ namespace Unloved::World {
         Editor::AssignEditorName(createInfo, GetDoors());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::DOOR);
         GetDoors().emplace_with_id(id, id, createInfo, spawnOffset);
+        NavMeshManager::MarkDynamicDirty();
         HouseBuilder::MarkDirty();
         return id;
     }
@@ -261,6 +263,7 @@ namespace Unloved::World {
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::GENERIC_OBJECT);
 
         GetGenericObjects().emplace_with_id(id, id, createInfo, spawnOffset);
+        NavMeshManager::MarkStaticDirty();
         return id;
     }
 
@@ -356,6 +359,7 @@ namespace Unloved::World {
         Editor::AssignEditorName(createInfo, GetPianos());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::PIANO);
         GetPianos().emplace_with_id(id, id, createInfo, spawnOffset);
+        NavMeshManager::MarkStaticDirty();
         return id;
     }
 
@@ -904,6 +908,18 @@ namespace Unloved::World {
             HouseBuilder::MarkDirty();
         }
 
+        if (removed && objectType == ObjectType::DOOR) {
+            NavMeshManager::MarkDynamicDirty();
+        }
+
+        if (removed &&
+            (objectType == ObjectType::FIREPLACE ||
+             objectType == ObjectType::GENERIC_OBJECT ||
+             objectType == ObjectType::WORLD_PLANE ||
+             objectType == ObjectType::PIANO)) {
+            NavMeshManager::MarkStaticDirty();
+        }
+
         return removed;
     }
 
@@ -985,6 +1001,8 @@ namespace Unloved::World {
         CleanUpSlotMap(g_walls);
         CleanUpSlotMap(g_wires);
         CleanUpSlotMap(g_windows);
+        NavMeshManager::MarkStaticDirty();
+        NavMeshManager::MarkDynamicDirty();
     }
 
 }

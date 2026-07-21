@@ -4,12 +4,12 @@
 #include "Hell/Input.h"
 #include "Hell/Time.h"
 
-#include "Legacy/World/LegacyWorld.h"
 #include "Unloved/Render/Renderer.h" // For ragdoll draw settings. TODO: get me out of here
 
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/World/World.h"
 
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
@@ -152,7 +152,7 @@ void Player::Update(float deltaTime) {
 
     UpdateViewWeaponVisibility();
 
-    if (LegacyWorld::HasOcean()) {
+    if (World::HasOcean()) {
         float feetHeight = GetFootPosition().y;
         float waterHeight = Ocean::GetWaterHeightAtPlayer(m_viewportIndex);
         m_waterState.feetUnderWaterPrevious = m_waterState.feetUnderWater;

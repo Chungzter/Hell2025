@@ -49,8 +49,7 @@ void main() {
     // Velocity
     vec2 currNDC = v_currPos.xy / v_currPos.w;
     vec2 prevNDC = v_prevPos.xy / v_prevPos.w;
-    vec2 velocity = currNDC - prevNDC;
-    velocity *= 0.5;
+    vec2 velocityNDC = currNDC - prevNDC;
 
     // Fix fireflies
     float variation = length(fwidth(normal));
@@ -77,7 +76,7 @@ void main() {
     NormalXYRoughnessMiscOut.a = 0.0; // Misc 4 bit value
 
     // Velocity / Occlusion / Subsurface out
-    VelocityXYOcclusionSubSurfaceOut.rg = velocity;
+    VelocityXYOcclusionSubSurfaceOut.rg = velocityNDC;
     VelocityXYOcclusionSubSurfaceOut.b = ao;
     VelocityXYOcclusionSubSurfaceOut.a = 0.0; // Subsurface. Not quite sure what this is yet
 }

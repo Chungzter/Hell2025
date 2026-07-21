@@ -119,6 +119,8 @@ void ChristmasLightSet::RecreateLightRenderItems() {
 
         renderItem.baseVertex = mesh->baseVertex;
         renderItem.baseIndex = mesh->baseIndex;
+        renderItem.vertexCount = mesh->vertexCount;
+        renderItem.indexCount = mesh->indexCount;
 
         renderItem.prevModelMatrix = renderItem.modelMatrix;
     }

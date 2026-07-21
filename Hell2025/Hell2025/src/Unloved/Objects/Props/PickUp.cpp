@@ -78,12 +78,14 @@ void PickUp::MarkDirtyInTracker() {
 }
 
 void PickUp::SetPosition(const glm::vec3& position) {
+    MarkDirtyInTracker();
     m_createInfo.position = position;
     m_initialTransform.position = position;
     m_meshNodes.ResetFirstFrame();
 }
 
 void PickUp::SetRotation(const glm::vec3& rotation) {
+    MarkDirtyInTracker();
     m_createInfo.rotation = rotation;
     m_initialTransform.rotation = rotation;
     m_meshNodes.ResetFirstFrame();

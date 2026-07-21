@@ -168,9 +168,8 @@ void main() {
     // Velocity
     vec2 currNDC = v_currPos.xy / v_currPos.w;
     vec2 prevNDC = v_prevPos.xy / v_prevPos.w;
-    vec2 velocity = currNDC - prevNDC;
-    velocity *= 0.5;
-    VelocityXYOcclusionSubSurfaceOut = vec4(velocity, ao, 1.0);
+    vec2 velocityNDC = currNDC - prevNDC;
+    VelocityXYOcclusionSubSurfaceOut = vec4(velocityNDC, ao, 1.0);
 
 
     // BaseColorMetallicOut.rgb = vec3(woundMask);

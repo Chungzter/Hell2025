@@ -5,6 +5,7 @@
 #include "Legacy/Timer.hpp"
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Systems/DDGI/DDGIManager.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
 
 #include "Hell/MemoryTracker/MemoryTracker.h"
 
@@ -13,14 +14,7 @@ namespace Input = Hell::Input;
 
 namespace OpenGL::Renderer {
 
-    int g_fftDisplayMode = 0;
-    int g_fftEditBand = 0;
-
     void ClearRenderTargets();
-
-    int GetFftDisplayMode() {
-        return g_fftDisplayMode;
-    }
 
     void RenderGame() {
         ProfilerOpenGLFrame();
@@ -54,11 +48,10 @@ namespace OpenGL::Renderer {
 
 
         DecalPaintingPass();
-        HouseGeometryPass();
+        ProceduralGeometryPass();
         GeometryPass();
         GrassPass();
         MirrorGeometryPass();
-        WeatherBoardsPass();
         VatBloodPass();
 
         ComputeTileWorldBounds();
@@ -71,12 +64,12 @@ namespace OpenGL::Renderer {
         // GI
         UpdateGlobalIllumintation();
 
-        OpenGL::BindSSBO(0, "Samplers");
-        OpenGL::BindSSBO(1, "Materials");
-        OpenGL::BindSSBO(2, "RendererData");
-        OpenGL::BindSSBO(3, "ViewportData");
-        OpenGL::BindSSBO(4, "InstanceData");
-        OpenGL::BindSSBO(5, "Lights");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::BindSSBO(6, "TileLights");
         OpenGL::BindSSBO(7, "TileWorldBounds");
 
@@ -96,7 +89,7 @@ namespace OpenGL::Renderer {
         //DepthPeeledTransparencyPass();
         PlasticPass();
         RayMarchFog();
-        GaussianBlur();
+        OceanUnderwaterBlurPass();
         OceanUnderwaterCompositePass();
         StainedGlassPass();
         WinstonPass();
@@ -166,16 +159,21 @@ namespace OpenGL::Renderer {
 
         // DEBUG RENDER FFT TEXTURES TO THE SCREEN
         if (Input::KeyPressed(HELL_KEY_5)) {
-            g_fftDisplayMode = 1;
-            g_fftEditBand = 0;
+            Ocean::Settings settings = Ocean::GetSettings();
+            settings.displayMode = Ocean::DisplayMode::BAND_0;
+            Ocean::SetSettings(settings);
         }
         if (Input::KeyPressed(HELL_KEY_6)) {
-            g_fftDisplayMode = 2;
-            g_fftEditBand = 1;
+            Ocean::Settings settings = Ocean::GetSettings();
+            settings.displayMode = Ocean::DisplayMode::BAND_1;
+            Ocean::SetSettings(settings);
         }
         if (Input::KeyPressed(HELL_KEY_7)) {
-            g_fftDisplayMode = 0;
+            Ocean::Settings settings = Ocean::GetSettings();
+            settings.displayMode = Ocean::DisplayMode::COMBINED;
+            Ocean::SetSettings(settings);
         }
+
     }
 
     void ClearRenderTargets() {

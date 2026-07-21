@@ -10,6 +10,7 @@
 readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 #endif
 
+layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray flashlightShadowMapArray;
 layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
 layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowMapArray;
 
@@ -153,6 +154,15 @@ void main() {
         #endif
 
         directLighting += directLight;
+    }
+
+    if (rendererData.flashlightIESTextureIndex >= 0) {
+        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
+        float fragDistance = distance(WorldPos.xyz, viewPos);
+        for (int i = 0; i < 2; i++) {
+            ViewportData flashlightViewportData = viewportData[i];
+            directLighting += GetFlashlightContribution(i, uint(v_viewportIndex), flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), rendererData, normal.xyz, WorldPos.xyz, gammaBaseColor.rgb, roughness, metallic, fragDistance, -1000.0, flashlightIES, flashlightShadowMapArray);
+        }
     }
 
     vec3 indirectDiffuse = vec3(0.0);

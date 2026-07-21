@@ -1,6 +1,5 @@
 #include "GL_renderer.h"
 #include "Hell/Render/API/OpenGL/Types/GL_texture.h"
-#include "Unloved/Systems/Map/MapManager.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
 
@@ -26,9 +25,9 @@ namespace OpenGL::Renderer {
         // Ocean
         if (false) {
             DebugBlitFrameBufferTexture("FFT_band0", "Displacement", 0, 0, 300, 300);
-            DebugBlitFrameBufferTexture("FFT_band0", "Normals", 300, 0, 300, 300);
+            DebugBlitFrameBufferTexture("FFT_band0", "Slope", 300, 0, 300, 300);
             DebugBlitFrameBufferTexture("FFT_band1", "Displacement", 0, 300, 300, 300);
-            DebugBlitFrameBufferTexture("FFT_band1", "Normals", 300, 300, 300, 300);
+            DebugBlitFrameBufferTexture("FFT_band1", "Slope", 300, 300, 300, 300);
         }
 
         // Fog
@@ -45,14 +44,6 @@ namespace OpenGL::Renderer {
             }
         }
 
-        // Heightmap
-        if (false) {
-            MapData* mapData = MapManager::GetMapDataByName("Shit");
-            if (mapData) {
-                OpenGLTexture& glTexture = mapData->GetHeightMapGLTexture();
-                DebugBlitOpenGLTexture(glTexture.GetHandle(), 1.0f);
-            }
-        }
     }
 
     void DebugBlitOpenGLTexture(GLuint textureHandle, float scale) {

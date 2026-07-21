@@ -7,7 +7,6 @@
 #include "Hell/Common/String.h"
 #include "Hell/Logging.h"
 #include "Hell/Math/Range.h"
-#include "Hell/MemoryTracker/MemoryTracker.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/UI/TextBlitter.h"
 #include "Hell/Physics/Physics.h"
@@ -24,7 +23,6 @@
 #include "Unloved/World/World.h"
 #include "Unloved/Systems/PianoPlayback/PianoPlaybackManager.h"
 
-#include "Unloved/Render/Renderer.h"
 #include "Unloved/Render/RenderDataManager.h"
 
 #include "World/LegacyWorld.h"
@@ -60,9 +58,6 @@ namespace Debug {
         }
     }
 
-    void DisplayGlobalDebugText();
-    void DisplayMemoryTrackerInfo();
-    void DisplayProfilingInfo();
     void DisplayQuickMessage();
 
     void UpdateDebugPointsAndLines();
@@ -72,11 +67,11 @@ namespace Debug {
         UpdateDebugPointsAndLines();
         UpdateDebugText();
 
-        if (Debug::GetDebugTextMode() == DebugTextMode::GLOBAL)         DisplayGlobalDebugText();
-        if (Debug::GetDebugTextMode() == DebugTextMode::MEMORY_TRACKER) DisplayMemoryTrackerInfo();
-        if (Debug::GetDebugTextMode() == DebugTextMode::PROFILING)      DisplayProfilingInfo();
-
         DisplayQuickMessage();
+
+        if (IsMenuVisible()) {
+            UpdateMenu();
+        }
     }
 
     void UpdateDebugText() {
@@ -196,76 +191,6 @@ namespace Debug {
         g_quickMessage = message;
     }
 
-    void DisplayGlobalDebugText() {
-        std::string text = Debug::GetText();
-        UIBackEnd::BlitText(text, "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
-    }
-
-    void DisplayMemoryTrackerInfo() {
-        using namespace Hell::MemoryTracker;
-
-        constexpr char fontName[] = "StandardFont";
-        constexpr float scale = 2.0f;
-        constexpr uint32_t spacing = 50;
-
-        const std::string headingColor = "[COL=0.56,0.93,0.56,1.0]";
-        const std::string rowColor = "[COL=1.0,0.65,0.0,1.0]";
-
-        std::string names = "\n";
-        std::string cpuBytes = headingColor + "CPU\n";
-        std::string gpuBytes = headingColor + "GPU\n";
-
-        MemoryReport memoryReport = GetMemoryReport();
-
-        for (const MemoryReportCategory& category : memoryReport.categories) {
-            names += rowColor + category.name + "\n";
-            gpuBytes += rowColor + FormatMemorySize(category.GetTotalGPUBytes()) + "\n";
-            cpuBytes += rowColor + FormatMemorySize(category.GetTotalCPUBytes()) + "\n";
-        }
-
-        names += "\n" + headingColor + "Total\n";
-        gpuBytes += "\n" + headingColor + FormatMemorySize(memoryReport.GetTotalGPUBytes()) + "\n";
-        cpuBytes += "\n" + headingColor + FormatMemorySize(memoryReport.GetTotalCPUBytes()) + "\n";
-
-        const int namesWidth = TextBlitter::GetTextSize(names, fontName, scale).x;
-        const int gpuWidth = TextBlitter::GetTextSize(gpuBytes, fontName, scale).x;
-        const int gpuX = namesWidth + static_cast<int>(spacing);
-        const int cpuX = gpuX + gpuWidth + static_cast<int>(spacing);
-
-        UIBackEnd::BlitText(names, fontName, 0, 0, Alignment::TOP_LEFT, scale);
-        UIBackEnd::BlitText(gpuBytes, fontName, gpuX, 0, Alignment::TOP_LEFT, scale);
-        UIBackEnd::BlitText(cpuBytes, fontName, cpuX, 0, Alignment::TOP_LEFT, scale);
-    }
-
-    void DisplayProfilingInfo() {
-        float scale = 1.25f;
-        int margin = 35;
-        TextureFilter textureFilter = TextureFilter::LINEAR;
-
-        const std::string white = "[COL=1.0,1.0,1.0,1.0]";
-        const std::string orange = "[COL=1.0,0.65,0.0,1.0]";
-        const std::string yellow = "[COL=1.0,1.0,0.0,1.0]";
-        const std::string red = "[COL=1.0,0.0,0.0,1.0]";
-        const std::string lightBlue = "[COL=0.68,0.85,0.9,1.0]";
-        const std::string lightGreen = "[COL=0.56,0.93,0.56,1.0]";
-
-        const std::string headingColor = lightGreen;
-
-        std::string names = "\n" + Renderer::GetZoneNames();
-        std::string timingsGPU = headingColor + "GPU\n" + Renderer::GetZoneGPUTimings();
-        std::string timingsCPU = headingColor + "CPU\n" + Renderer::GetZoneCPUTimings();
-        glm::ivec2 namesSize = TextBlitter::GetTextSize(names, "StandardFont", scale);
-        glm::ivec2 timingsGPUSize = TextBlitter::GetTextSize(timingsGPU, "StandardFont", scale);
-        glm::ivec2 timingsCPUSize = TextBlitter::GetTextSize(timingsCPU, "StandardFont", scale);
-
-        if (names.length() != 0) {
-            timingsGPU += "\n" + headingColor + "Total GPU : " + Renderer::GetTotalGPUTime();
-            UIBackEnd::BlitText(timingsGPU, "StandardFont", 0, 0, Alignment::TOP_LEFT, scale, textureFilter);
-            UIBackEnd::BlitText(timingsCPU, "StandardFont", timingsGPUSize.x + margin, 0, Alignment::TOP_LEFT, scale, textureFilter);
-            UIBackEnd::BlitText(names, "StandardFont", timingsGPUSize.x + margin + timingsCPUSize.x + margin, 0, Alignment::TOP_LEFT, scale, textureFilter);
-        }
-    }
-
     void DisplayQuickMessage() {
         if (g_quickMessageTimer > 0) {
             g_quickMessageTimer -= Hell::Time::DeltaTime();
@@ -353,21 +278,11 @@ namespace Debug {
 
     void EndFrame() {
         g_text = "";
+        EndMenuFrame();
     }
 
-    void NextDebugTextMode() {
-        Audio::PlayAudio(AUDIO_SELECT, 1.00f);
-
-        g_debugTextMode = (DebugTextMode)(int(g_debugTextMode) + 1);
-        if (g_debugTextMode == DebugTextMode::DEBUG_TEXT_MODE_COUNT) {
-            g_debugTextMode = (DebugTextMode)0;
-        }
-        std::cout << "Debug text mode: " << Hell::Enum::ToString(g_debugTextMode) << "\n";
-
-        if (g_debugTextMode == DebugTextMode::GLOBAL) {
-            std::cout << ".. skipping DebugTextMode::GLOBAL\n";
-            NextDebugTextMode();
-        }
+    void SetDebugTextMode(DebugTextMode mode) {
+        g_debugTextMode = mode;
     }
 
     void SetDebugRenderMode(DebugRenderMode mode) {

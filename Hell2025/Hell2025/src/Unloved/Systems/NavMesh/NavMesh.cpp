@@ -89,6 +89,11 @@ namespace Unloved::NavMeshManager {
         NavMesh(uint64_t id, float agentRadius);
         void Update();
         void Reset();
+        void MarkStaticDirty() {
+            m_staticPathsDirty = true;
+            m_dynamicPathsDirty = true;
+        }
+        void MarkDynamicDirty() { m_dynamicPathsDirty = true; }
         void DrawTris();
         std::vector<glm::vec3> FindPath(const glm::vec3& start, const glm::vec3& dest);
         std::vector<glm::vec3> PullPath(const std::vector<glm::vec3>& path);
@@ -180,8 +185,8 @@ namespace Unloved::NavMeshManager {
 
         if (m_staticPathsDirty || m_dynamicPathsDirty) UpdateNavMesh();
 
-        //m_staticPathsDirty = false;
-        //m_dynamicPathsDirty = false;
+        m_staticPathsDirty = false;
+        m_dynamicPathsDirty = false;
     }
 
     void NavMesh::UpdateStaticPaths() {
@@ -1044,6 +1049,18 @@ namespace Unloved::NavMeshManager {
 
         for (NavMesh& navMesh : g_navMeshes) {
             navMesh.DrawTris();
+        }
+    }
+
+    void MarkStaticDirty() {
+        for (NavMesh& navMesh : g_navMeshes) {
+            navMesh.MarkStaticDirty();
+        }
+    }
+
+    void MarkDynamicDirty() {
+        for (NavMesh& navMesh : g_navMeshes) {
+            navMesh.MarkDynamicDirty();
         }
     }
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Hell/ResourceManagement/Types/Texture.h"
-
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Common/CreateInfo.h"
 
@@ -30,21 +28,18 @@ namespace Unloved {
         int32_t GetChunkCountZ() const { return m_chunkCountZ; }
         int32_t GetTextureWidth() const { return m_chunkCountX * HEIGHT_MAP_CHUNK_PIXEL_SIZE; }
         int32_t GetTextureHeight() const { return m_chunkCountZ * HEIGHT_MAP_CHUNK_PIXEL_SIZE; }
-        OpenGLTexture& GetHeightMapGLTexture() { return m_heightMapGLTexture; }
-        // VulkanTexture& GetHeightMapVKTexture() { return m_heightMapVKTexture; }
         AdditionalMapData& GetAdditionalMapData() { return m_additionalMapData; }
         const AdditionalMapData& GetAdditionalMapData() const { return m_additionalMapData; }
         CreateInfoCollection& GetCreateInfoCollection() { return m_createInfoCollection; }
         const CreateInfoCollection& GetCreateInfoCollection() const { return m_createInfoCollection; }
         std::vector<float>& GetHeightMapData() { return m_heightMapData; }
+        const std::vector<float>& GetHeightMapData() const { return m_heightMapData; }
 
     private:
         std::string m_filename;
         int32_t m_chunkCountX = 8;
         int32_t m_chunkCountZ = 8;
         std::vector<float> m_heightMapData;
-        OpenGLTexture m_heightMapGLTexture;
-        // VulkanTexture m_heightMapVKTexture;
         CreateInfoCollection m_createInfoCollection;
         AdditionalMapData m_additionalMapData;
     };

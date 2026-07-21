@@ -42,7 +42,7 @@ void main()
 
     v_uv = a_uv;
 
-    mat4 projectionView = viewportData[viewportIndex].projectionViewReverseZ;
+    mat4 projectionView = viewportData[viewportIndex].jitteredProjectionViewReverseZ;
     mat4 modelMatrix = renderItem.modelMatrix;
 
     vec4 worldPos = modelMatrix * vec4(a_position, 1.0);

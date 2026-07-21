@@ -119,13 +119,6 @@ mat3 RotateZ(float theta) {
     );
 }
 
-vec3 GetFlashLightColor() {
-    //vec3 spotLightColor = vec3(0.9, 0.95, 1.1);
-    vec3 flashLightColor = vec3(0.7, 0.75, 1.0);
-    vec3 defaultLightColor = vec3(1.0, 0.7799999713897705, 0.5289999842643738);
-    return mix(defaultLightColor, flashLightColor, 0.875) * 0.9;
-}
-
 vec3 GetMoonLightColor() {
     return vec3(0.881875, 0.894375, 0.73525);
     //const vec3 UNDER_WATER_TINT = mix(vec3(0.4, 0.8, 0.6) * 1.75, vec3(0.01, 0.03, 0.04), 0.25); // sort out your includes then make this come from constants.glsl
@@ -236,10 +229,10 @@ bool PointInSphere(vec3 p, vec3 center, float radius) {
     return distSq <= (radius * radius);
 }
 
-vec3 ReconstructWorldPos(vec2 uv, float depth, mat4 invProjectionView) {
-    vec2 clipXY = uv * 2.0 - 1.0;
-    clipXY.y = -clipXY.y;
-    vec4 clip = vec4(clipXY, depth, 1.0);
-    vec4 worldH = invProjectionView * clip;
-    return worldH.xyz / worldH.w;
-}
+//vec3 ReconstructWorldPos(vec2 uv, float depth, mat4 invProjectionView) {
+//    vec2 clipXY = uv * 2.0 - 1.0;
+//    clipXY.y = -clipXY.y;
+//    vec4 clip = vec4(clipXY, depth, 1.0);
+//    vec4 worldH = invProjectionView * clip;
+//    return worldH.xyz / worldH.w;
+//}

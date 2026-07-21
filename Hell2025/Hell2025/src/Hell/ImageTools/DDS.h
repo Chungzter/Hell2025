@@ -19,6 +19,9 @@ namespace Hell::ImageTools::DDS {
     inline constexpr uint32_t FourCCBc4U = 0x55344342; // "BC4U"
     inline constexpr uint32_t FourCCBc5U = 0x55354342; // "BC5U"
 
+    inline constexpr uint32_t PixelFormatFlagAlphaPixels = 0x00000001;
+    inline constexpr uint32_t PixelFormatFlagRGB = 0x00000040;
+
     inline constexpr uint32_t Caps2Cubemap = 0x00000200;
     inline constexpr uint32_t Caps2Volume = 0x00200000;
     inline constexpr uint32_t ResourceDimensionTexture2D = 3;
@@ -63,6 +66,8 @@ namespace Hell::ImageTools::DDS {
     struct FormatInfo {
         ImageFormat format = ImageFormat::UNDEFINED;
         uint32_t blockSize = 0;
+        uint32_t blockWidth = 4;
+        uint32_t blockHeight = 4;
     };
 
     inline std::optional<FormatInfo> GetFormatInfo(const Header& header, const HeaderDX10* dx10Header) {
@@ -81,6 +86,16 @@ namespace Hell::ImageTools::DDS {
         }
         if (header.fourCC == FourCCAti2 || header.fourCC == FourCCBc5U) {
             return FormatInfo{ ImageFormat::BC5_RG_UNORM, 16 };
+        }
+        if ((header.pixelFormatFlags & (PixelFormatFlagRGB | PixelFormatFlagAlphaPixels)) ==
+                (PixelFormatFlagRGB | PixelFormatFlagAlphaPixels) &&
+            header.fourCC == 0 &&
+            header.rgbBitCount == 32 &&
+            header.rBitMask == 0x000000ff &&
+            header.gBitMask == 0x0000ff00 &&
+            header.bBitMask == 0x00ff0000 &&
+            header.aBitMask == 0xff000000) {
+            return FormatInfo{ ImageFormat::RGBA8_UNORM, 4, 1, 1 };
         }
         if (header.fourCC == FourCCDx10 && dx10Header) {
             switch (dx10Header->dxgiFormat) {

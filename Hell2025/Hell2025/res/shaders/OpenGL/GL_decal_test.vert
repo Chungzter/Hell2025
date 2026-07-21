@@ -24,6 +24,6 @@ void main() {
     localPosition.xy *= decalAspectScale;
     localPosition.z *= decalDepthScale;
 
-    mat4 projectionView = viewportData[u_viewportIndex].projectionViewReverseZ;
+    mat4 projectionView = viewportData[u_viewportIndex].jitteredProjectionViewReverseZ;
     gl_Position = projectionView * u_modelMatrix * vec4(localPosition, 1.0);
 }

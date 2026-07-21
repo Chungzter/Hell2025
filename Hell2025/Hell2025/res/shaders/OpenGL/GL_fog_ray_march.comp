@@ -1,5 +1,7 @@
 #version 460
+#extension GL_ARB_bindless_texture : enable
 #include "../common/lighting.glsl"
+#include "../common/reconstruction.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 
@@ -9,6 +11,7 @@ layout (binding = 1) uniform sampler2D u_depthTexture;
 layout (binding = 2) uniform sampler3D uNoiseVol;
 layout (binding = 4, rgba16f) uniform image2D OutputFogImage;
 
+readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportData[]; };
 
@@ -177,13 +180,12 @@ void main() {
     vec3 origin = viewportData[viewportIndex].viewPos.xyz;
     vec2 screenUV = (vec2(px) + 0.5) / vec2(resolution);
     vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData[viewportIndex]);
-    vec3 dir = RayDirectionFromViewportUV(viewportUV, viewportData[viewportIndex].inverseProjectionReverseZ, viewportData[viewportIndex].inverseView);
-
     // Depth reconstruction
-    mat4 inverseProjectionViewReverseZ = viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    mat4 inverseProjectionViewReverseZ = viewportData[viewportIndex].inverseJitteredProjectionViewReverseZ;
     ivec2 depthPx = ivec2((vec2(px) + 0.5) * vec2(textureSize(u_depthTexture, 0)) / vec2(resolution));
     float depth = texelFetch(u_depthTexture, depthPx, 0).r;
-    vec3 worldPos = ReconstructWorldPos(viewportUV, depth, inverseProjectionViewReverseZ);
+    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionViewReverseZ);
+    vec3 dir = normalize(worldPos - origin);
 
     // Calculate distances
     float totalDist = dot(worldPos - origin, dir);
@@ -212,13 +214,12 @@ void main() {
     bool hitsHouse = RayAABBIntersection(origin, dir, aabbMin, aabbMax, tNearAABB, tFarAABB);
 
     // Hoist flashlights
-    vec3 fColors[2]; vec3 fPositions[2]; vec3 fDirs[2]; float fInners[2];
+    vec3 fColors[2]; vec3 fPositions[2]; vec3 fDirs[2];
     for (int i = 0; i < 2; ++i) {
         fPositions[i] = viewportData[i].flashlightPosition.xyz;
         if (i != viewportIndex) fPositions[i].y -= 0.4;
         fDirs[i] = viewportData[i].flashlightDir.xyz;
-        fInners[i] = cos(radians(5.0 * viewportData[i].flashlightModifer));
-        fColors[i] = GetFlashLightColor() * viewportData[i].flashlightModifer * 0.75;
+        fColors[i] = rendererData.flashlightColor.rgb * viewportData[i].flashlightModifer * 0.75;
 
         // Brighten other players flashlights more
         if (i != viewportIndex) fColors[i] *= 150.0;
@@ -250,14 +251,11 @@ void main() {
 
         vec3 fLighting = vec3(0.0);
         float fadeF = clamp((t - nearFadeFlashlight) / (farFadeFlashlight - nearFadeFlashlight), 0.0, 1.0);
-        if (fadeF > 1e-4) {
+        if (fadeF > 1e-4 && rendererData.flashlightIESTextureIndex >= 0) {
+            sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
             for (int fIdx = 0; fIdx < 2; ++fIdx) {
-                vec3 dVec = fPositions[fIdx] - raySamplePos;
-                float d2 = dot(dVec, dVec);
-                float invD = inversesqrt(max(d2, 1e-12));
-                float spot = smoothstep(cos(radians(25.0)), fInners[fIdx], dot(dVec * invD, -fDirs[fIdx]));
-                float distF = clamp(1.0 - (d2 * invD) * 0.1, 0.0, 1.0); // 0.1 is 1/radius
-                fLighting += spot * (distF * distF) * 0.5 * fColors[fIdx];
+                float attenuation = GetFlashlightIESAttenuation(raySamplePos, fPositions[fIdx], fDirs[fIdx], rendererData, flashlightIES);
+                fLighting += attenuation * 0.5 * fColors[fIdx];
             }
             fLighting *= fadeF;
         }
