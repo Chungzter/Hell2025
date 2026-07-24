@@ -169,6 +169,11 @@ namespace Unloved::Editor {
         kangaroo.insertMode = PlacementInsertMode::DIRECT;
         kangaroo.defaultEditorName = "Kangaroo";
 
+        PlacementToolInfo& jetty = g_placementTools[PlacementTool::JETTY];
+        jetty.rayMode = PlacementRayMode::WORLD;
+        jetty.insertMode = PlacementInsertMode::DIRECT;
+        jetty.defaultEditorName = "Tasmanian Fisherman's Jetty";
+
         PlacementToolInfo& ladder = g_placementTools[PlacementTool::LADDER];
         ladder.rayMode = PlacementRayMode::WORLD;
         ladder.insertMode = PlacementInsertMode::DIRECT;

@@ -7,6 +7,7 @@
 #include "Unloved/Characters/Enemies/Shark/Shark.h"
 #include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
 #include "Unloved/Objects/Exterior/Fence.h"
+#include "Unloved/Objects/Exterior/Jetty.h"
 #include "Unloved/Objects/Exterior/PowerPoleSet.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/House/Fireplace.h"
@@ -80,6 +81,7 @@ namespace Unloved::Editor {
         AddEditorObjectNameGroup("Fireplaces", World::GetFireplaces());
         AddEditorObjectNameGroup("Floors", World::GetWorldPlanes(), WorldPlaneType::FLOOR);
         AddEditorObjectNameGroup("Generic Objects", World::GetGenericObjects());
+        AddEditorObjectNameGroup("Jetties", World::GetJetties());
         AddEditorObjectNameGroup("Kangaroos", World::GetKangaroos());
         AddEditorObjectNameGroup("Ladders", World::GetLadders());
         AddEditorObjectNameGroup("Lights", World::GetLights());

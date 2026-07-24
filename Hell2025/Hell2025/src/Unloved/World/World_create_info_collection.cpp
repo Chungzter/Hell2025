@@ -4,6 +4,7 @@
 #include "Unloved/Characters/Enemies/Shark/Shark.h"
 #include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
 #include "Unloved/Objects/Exterior/Fence.h"
+#include "Unloved/Objects/Exterior/Jetty.h"
 #include "Unloved/Objects/Exterior/PowerPoleSet.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/House/Fireplace.h"
@@ -33,6 +34,7 @@ namespace Unloved::World {
         for (const FireplaceCreateInfo& createInfo : createInfoCollection.fireplaces)             AddFireplace(createInfo, spawnOffset);
         for (const GenericObjectCreateInfo& createInfo : createInfoCollection.genericObjects)     AddGenericObject(createInfo, spawnOffset);
         for (const LightCreateInfo& createInfo : createInfoCollection.lights)                     AddLight(createInfo, spawnOffset);
+        for (const JettyCreateInfo& createInfo : createInfoCollection.jetties)                    AddJetty(createInfo, spawnOffset);
         for (const MermaidCreateInfo& createInfo : createInfoCollection.mermaids)                 AddMermaid(createInfo, spawnOffset);
         for (const LadderCreateInfo& createInfo : createInfoCollection.ladders)                   AddLadder(createInfo, spawnOffset);
         for (const PianoCreateInfo& createInfo : createInfoCollection.pianos)                     AddPiano(createInfo, spawnOffset);
@@ -78,6 +80,7 @@ namespace Unloved::World {
         for (Fireplace& object : GetFireplaces())                 AddObject(object, createInfoCollection.fireplaces);
         for (GenericObject& object : GetGenericObjects())         AddObject(object, createInfoCollection.genericObjects);
         for (Ladder& object : GetLadders())                       AddObject(object, createInfoCollection.ladders);
+        for (Jetty& object : GetJetties())                        AddObject(object, createInfoCollection.jetties);
         for (Mermaid& object : GetMermaids())                     AddObject(object, createInfoCollection.mermaids);
         for (Piano& object : GetPianos())                         AddObject(object, createInfoCollection.pianos);
         for (PictureFrame& object : GetPictureFrames())           AddObject(object, createInfoCollection.pictureFrames);

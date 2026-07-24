@@ -161,6 +161,16 @@ struct GenericObjectCreateInfo {
     GenericObjectType type = GenericObjectType::UNDEFINED;
 };
 
+struct JettyCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    glm::vec3 scale = glm::vec3(0.0f);
+    uint32_t boardCount = 8;
+    float poleSpacing = 1.0f;
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Jetty";
+};
+
 struct WorldPlaneCreateInfo {
     glm::vec3 p0 = glm::vec3(0.0f);
     glm::vec3 p1 = glm::vec3(0.0f);
@@ -375,6 +385,7 @@ struct CreateInfoCollection {
     std::vector<FenceCreateInfo> fences;
     std::vector<FireplaceCreateInfo> fireplaces;
     std::vector<GenericObjectCreateInfo> genericObjects;
+    std::vector<JettyCreateInfo> jetties;
     std::vector<WorldPlaneCreateInfo> worldPlanes;
     std::vector<LadderCreateInfo> ladders;
     std::vector<LightCreateInfo> lights;

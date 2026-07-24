@@ -71,27 +71,33 @@ struct ViewportData {
 
 struct RendererData {
     glm::vec4 moonLightDir = glm::vec4(0.0f);
+
     float nearPlane;
     float farPlane;
     float gBufferWidth;
     float gBufferHeight;
+
     float hairBufferWidth;
     float hairBufferHeight;
     float time;
     int splitscreenMode;
+
     int rendererOverrideState;
     float normalizedMouseX;
     float normalizedMouseY;
     int tileCountX;
+
     int tileCountY;
     uint32_t lightCount; // Boolean
     uint32_t enableDDGI; // Boolean
     uint32_t enableIndirectSpecular; // Boolean
+
     uint32_t enableTAA;  // Boolean
-    glm::vec2 taaJitterPx = glm::vec2(0.0f);
     float indirectSpecularFactor = 1.0f;
     float indirectSpecularRoughnessDampening = 1.0;
     uint32_t directPointShadowMode = 0;
+
+    glm::vec2 taaJitterPx = glm::vec2(0.0f);
     uint32_t padding0 = 0;
     uint32_t padding1 = 0;
 
@@ -120,7 +126,7 @@ struct RendererData {
     float flashlightCenterSpotOuterAngle = 5.0f;
     uint32_t flashlightCenterSpotEnabled = 1;
     uint32_t padding3 = 0;
-    uint32_t padding4 = 0;
+    uint32_t enableDDGIReflections = 0;
 };
 
 struct RenderItem {

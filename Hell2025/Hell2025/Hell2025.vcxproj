@@ -254,6 +254,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_ocean.cpp" />
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_profiling.cpp" />
     <ClCompile Include="src\Unloved\LazyKeyPresses.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Exterior\Jetty.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\PointAnimationInstance.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\VATInstance.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_blit_road.cpp" />
@@ -785,6 +786,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Debug\DebugTypes.h" />
     <ClInclude Include="src\Unloved\Debug\Scratch.h" />
     <ClInclude Include="src\Unloved\Debug\Menu\Debug_menu.h" />
+    <ClInclude Include="src\Unloved\Objects\Exterior\Jetty.h" />
     <ClInclude Include="src\Unloved\Objects\ObjectEnums.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\BoneSegment.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\PointAnimationInstance.h" />

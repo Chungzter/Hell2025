@@ -59,7 +59,7 @@ namespace Hell::Physics {
             g_pvd->connect(*transport, physx::PxPvdInstrumentationFlag::eALL);
         }
         g_physics = PxCreatePhysics(PX_PHYSICS_VERSION, *g_foundation, physx::PxTolerancesScale(), true, g_pvd);
-        
+
         g_dispatcher = physx::PxDefaultCpuDispatcherCreate(2);
 
         physx::PxSceneDesc sceneDesc(g_physics->getTolerancesScale());

@@ -17,5 +17,4 @@ struct Mesh {
     float boundingSphereRadius = 0;
     glm::mat4 localTransform = glm::mat4(1.0f);
     glm::mat4 inverseBindTransform = glm::mat4(1.0f);
-
 };

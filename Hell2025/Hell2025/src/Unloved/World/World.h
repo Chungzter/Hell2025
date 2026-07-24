@@ -23,7 +23,7 @@ namespace Unloved {
     struct Fireplace;
     struct GameObject;
     struct GenericObject;
-    struct WorldPlane;
+    struct Jetty;
     struct Kangaroo;
     struct Ladder;
     struct Light;
@@ -50,6 +50,7 @@ namespace Unloved {
     struct WireCreateInfo;
     struct Window;
     struct HouseData;
+    struct WorldPlane;
 }
 
 namespace Unloved::World {
@@ -116,6 +117,7 @@ namespace Unloved::World {
     uint64_t AddWorldPlane(WorldPlaneCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddKangaroo(KangarooCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddLadder(LadderCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddJetty(JettyCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddLight(LightCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddMermaid(MermaidCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddPiano(PianoCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
@@ -147,6 +149,7 @@ namespace Unloved::World {
     GenericObject* GetGenericObjectById(uint64_t objectId);
     WorldPlane* GetWorldPlaneByObjectId(uint64_t objectId);
     Kangaroo* GetKangarooByObjectId(uint64_t objectId);
+    Jetty* GetJettyById(uint64_t objectId);
     Ladder* GetLadderByObjectId(uint64_t objectId);
     Light* GetLightByObjectId(uint64_t objectId);
     Light* GetLightByIndex(int32_t index);
@@ -183,6 +186,7 @@ namespace Unloved::World {
     Hell::SlotMap<GenericObject>& GetGenericObjects();
     Hell::SlotMap<WorldPlane>& GetWorldPlanes();
     Hell::SlotMap<Kangaroo>& GetKangaroos();
+    Hell::SlotMap<Jetty>& GetJetties();
     Hell::SlotMap<Ladder>& GetLadders();
     Hell::SlotMap<Light>& GetLights();
     std::vector<Map>& GetMaps();

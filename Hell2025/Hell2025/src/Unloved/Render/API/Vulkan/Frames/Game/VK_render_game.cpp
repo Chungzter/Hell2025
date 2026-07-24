@@ -50,7 +50,7 @@ namespace VulkanRenderer {
         ComputeTileWorldBounds(frame.commandBuffer);
         LightCullingPass(frame.commandBuffer);
 
-        if (Unloved::Renderer::DDGIEnabled()) {
+        if (Unloved::Renderer::IndirectSpecularEnabled()) {
             IndirectSpecularClassifyTilesPass(frame.commandBuffer);
             IndirectSpecularInputPass(frame.commandBuffer);
             IndirectSpecularReprojectPass(frame.commandBuffer);

@@ -12,6 +12,7 @@
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Objects/Effects/Decal.h"
 #include "Unloved/Objects/Exterior/Fence.h"
+#include "Unloved/Objects/Exterior/Jetty.h"
 #include "Unloved/Objects/Exterior/PowerPoleSet.h"
 #include "Unloved/Objects/Exterior/Road.h"
 #include "Unloved/Objects/Exterior/Wire.h"
@@ -67,6 +68,7 @@ void SubmitRenderItems() {
     for (ChristmasTree& object : Unloved::World::GetChristmasTrees())          RenderDataManager::SubmitRenderItems(object.GetRenderItems());
     for (ChristmasLightSet& object : Unloved::World::GetChristmasLightSets())  RenderDataManager::SubmitRenderItems(object.GetRenderItems());
     for (Fence& object : Unloved::World::GetFences())                          RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+    for (Jetty& object : Unloved::World::GetJetties())                         RenderDataManager::SubmitRenderItems(object.GetRenderItems());
     for (Ladder& object : Unloved::World::GetLadders())                        RenderDataManager::SubmitRenderItems(object.GetRenderItems());
     for (Light& object : Unloved::World::GetLights())                          RenderDataManager::SubmitRenderItems(object.GetRenderItems());
     for (Staircase& object : Unloved::World::GetStaircases())                  RenderDataManager::SubmitRenderItems(object.GetRenderItems());

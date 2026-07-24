@@ -8,13 +8,22 @@
 namespace Unloved::Editor {
 
     void PlaceDirectObject(PlacementTool tool, const EditorRayResult& rayResult, const PlacementToolInfo& toolInfo) {
-        
+
         // Dobermanns
         if (tool == PlacementTool::DOBERMANN) {
             DobermannCreateInfo createInfo;
             createInfo.position = rayResult.position;
             createInfo.defaultEditorName = toolInfo.defaultEditorName;
             World::AddDobermann(createInfo, SpawnOffset());
+            return;
+        }
+
+        // Jetties
+        if (tool == PlacementTool::JETTY) {
+            JettyCreateInfo createInfo;
+            createInfo.position = rayResult.position;
+            createInfo.defaultEditorName = toolInfo.defaultEditorName;
+            World::AddJetty(createInfo, SpawnOffset());
             return;
         }
 

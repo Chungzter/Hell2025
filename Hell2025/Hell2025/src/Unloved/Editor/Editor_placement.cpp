@@ -5,6 +5,7 @@
 #include "PlacementSequencePoints.h"
 
 #include "Hell/Input.h"
+#include "Hell/Logging.h"
 
 namespace Input = Hell::Input;
 
@@ -52,6 +53,7 @@ namespace Unloved::Editor {
         // Bail if no tool info for the current tool
         const PlacementToolInfo* toolInfo = GetPlacementToolInfo(g_currentPlacementTool);
         if (!toolInfo) {
+            Logging::Error() << "Your map editor fucked up m8, look here\n";
             CancelPlacement();
             return;
         }
@@ -70,7 +72,7 @@ namespace Unloved::Editor {
                 FinishPlacement();
             }
         }
-        
+
         // Point sequence objects
         if (toolInfo->insertMode == PlacementInsertMode::POINT_SEQUENCE) {
             glm::vec3 livePointOffset = toolInfo->rayMode == PlacementRayMode::HEIGHT_MAP ? glm::vec3(0.1f, 0.0f, 0.0f) : rayResult.normal * 0.1f;
@@ -133,6 +135,8 @@ namespace Unloved::Editor {
         g_sequencePoints.clear();
 
         SetEditorState(EditorState::IDLE);
+
+        Logging::Editor() << "Canceled object placement\n";
     }
 
     void FinishPlacement() {
@@ -143,5 +147,7 @@ namespace Unloved::Editor {
 
         SetEditorState(EditorState::IDLE);
         UpdateOutliner();
+
+        Logging::Editor() << "Finished object placement\n";
     }
 }

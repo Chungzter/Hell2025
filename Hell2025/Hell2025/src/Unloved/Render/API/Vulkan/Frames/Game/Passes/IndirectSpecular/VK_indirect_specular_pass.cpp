@@ -135,7 +135,7 @@ namespace VulkanRenderer {
 
     void IndirectSpecularInputPass(VkCommandBuffer commandBuffer) {
         ProfilerVulkanZoneFunction();
-        
+
         const VulkanFrameData& frameData = GetCurrentFrameData();
 
         AllocatedImage* rayInputImage = VulkanResourceManager::GetAllocatedImage("IndirectSpecularAMDRayInput");
@@ -428,7 +428,7 @@ namespace VulkanRenderer {
         }
 
         // AMD Prefilter writes into the previous radiance ping-pong image.
-        // Its compact dispatch leaves skipped tiles holding resolved history, 
+        // Its compact dispatch leaves skipped tiles holding resolved history,
         // which Resolve Temporal can read through its four-pixel neighborhood halo
 
         CopyAMDColorImage(commandBuffer, radianceHistoryImage, filteredImage);

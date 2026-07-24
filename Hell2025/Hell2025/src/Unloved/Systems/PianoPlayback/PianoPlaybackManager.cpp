@@ -69,7 +69,7 @@ namespace Unloved::PianoPlaybackManager {
                 return &pianos[MIDI_PLAYBACK_PIANO_INDEX];
             }
 
-            return &pianos[0];
+            return &pianos[1];
         }
     }
 

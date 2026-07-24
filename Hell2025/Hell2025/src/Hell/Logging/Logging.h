@@ -13,7 +13,8 @@ namespace Logging {
         FATAL,
         TODO,
         FUNCTION,
-        SUPPORT
+        SUPPORT,
+        EDITOR
     };
 
     struct MessageStream {
@@ -58,8 +59,9 @@ namespace Logging {
     inline MessageStream Warning() { return MessageStream(Level::WARNING); }
     inline MessageStream Error()   { return MessageStream(Level::ERROR); }
     inline MessageStream Fatal()   { return MessageStream(Level::FATAL); }
-	inline MessageStream ToDo()    { return MessageStream(Level::TODO); }
-	inline MessageStream Support() { return MessageStream(Level::SUPPORT); }
+    inline MessageStream ToDo()    { return MessageStream(Level::TODO); }
+    inline MessageStream Support() { return MessageStream(Level::SUPPORT); }
+    inline MessageStream Editor()  { return MessageStream(Level::EDITOR); }
 
     inline MessageStream Function(const char* funcName) { return MessageStream(Level::FUNCTION) << funcName << "()"; }
 }

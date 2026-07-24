@@ -98,7 +98,7 @@ void main() {
     uint i0 = indices[triangleIndexOffset + 0] + renderItem.baseVertex;
     uint i1 = indices[triangleIndexOffset + 1] + renderItem.baseVertex;
     uint i2 = indices[triangleIndexOffset + 2] + renderItem.baseVertex;
-   
+
     PackedVertex v0 = vertices[i0];
     PackedVertex v1 = vertices[i1];
     PackedVertex v2 = vertices[i2];

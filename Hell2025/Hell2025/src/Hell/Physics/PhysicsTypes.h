@@ -55,7 +55,7 @@ struct PhysicsFilterData {
 struct PhysicsUserData {
     uint64_t physicsId = 0;
     uint64_t objectId = 0;
-    PhysicsType physicsType = PhysicsType::NONE;
+    PhysicsType physicsType = PhysicsType::NONE; // REDUNDANT: this is now bakedc into physicsId. Check nothi8ng reference sme then remove this
 };
 
 struct PhysXRayResult {

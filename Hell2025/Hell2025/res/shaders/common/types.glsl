@@ -18,7 +18,7 @@ struct ViewportData {
     mat4 skyboxProjectionView;
     mat4 flashlightProjectionView;
     mat4 previousProjectionView;
-    
+
     mat4 jitteredProjectionViewReverseZ;
     mat4 inverseJitteredProjectionViewReverseZ;
 
@@ -85,13 +85,15 @@ struct RendererData {
     uint lightCount;
     bool enableIrradianceProbeSampling;
     bool enableIndirectSpecular;
-    
+
     bool enableTAA;
-    vec2 taaJitterPx;
     float indirectSpecularFactor;
     float indirectSpecularRoughnessDampening;
     uint directPointShadowMode;
+
+    vec2 taaJitterPx; // WARNING SKETCHY
     uint padding0;
+    uint padding1;
 
     vec4 flashlightColor;
 
@@ -118,7 +120,7 @@ struct RendererData {
     float flashlightCenterSpotOuterAngle;
     uint flashlightCenterSpotEnabled;
     uint padding3;
-    uint padding4;
+    bool enableDDGIReflections;
 };
 
 struct RenderItem {

@@ -266,7 +266,7 @@ RayHit ClosestHit(vec3 rayOrigin, vec3 rayDir, float minDistance, float maxDista
         }
 
         RayQueryMeshInstanceData meshInstanceData = rayQueryMeshInstanceDataBuffer.meshInstanceData[blasInstanceData.meshInstanceDataOffset + geometryIndex];
-       
+
         if (meshInstanceData.material.blendingMode == BLENDING_MODE_MIRROR ||
             meshInstanceData.material.materialIndex < 0) {
             continue;
@@ -350,10 +350,10 @@ RayHit ClosestHit(vec3 rayOrigin, vec3 rayDir, float minDistance, float maxDista
         vec3(v2.tx, v2.ty, v2.tz) * weights.z;
 
     result.hitNormal = normalize(objectToWorld * vec4(objectNormal, 0.0));
-    
+
     vec3 unnormalizedWorldTangent = objectToWorld * vec4(objectTangent, 0.0);
     bool hasWorldTangent = any(greaterThan(abs(unnormalizedWorldTangent), vec3(0.0)));
-    
+
     vec3 worldTangent = hasWorldTangent
         ? normalize(unnormalizedWorldTangent)
         : vec3(0.0);
@@ -365,7 +365,7 @@ RayHit ClosestHit(vec3 rayOrigin, vec3 rayDir, float minDistance, float maxDista
     MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
     Material material = materialBuffer.materials[result.materialIndex];
 
-    if (material.normal >= 0 && hasWorldTangent) {uint normalTextureIndex = uint(material.normal); 
+    if (material.normal >= 0 && hasWorldTangent) {uint normalTextureIndex = uint(material.normal);
         vec3 normalMap = textureLod(sampler2D(textures[nonuniformEXT(normalTextureIndex)], textureSamplers[nonuniformEXT(normalTextureIndex)]), result.uv, 2.0).rgb;
         normalMap = normalMap * 2.0 - 1.0;
 
@@ -406,7 +406,7 @@ vec3 SampleAMDGGXVNDF(vec3 viewDirection, float alphaX, float alphaY, vec2 rando
     t2 = (1.0 - s) * sqrt(1.0 - t1 * t1) + s * t2;
 
     vec3 hemisphereNormal = t1 * tangent1 + t2 * tangent2 + sqrt(max(0.0, 1.0 - t1 * t1 - t2 * t2)) * stretchedView;
-    
+
     return normalize(vec3(
         alphaX * hemisphereNormal.x,
         alphaY * hemisphereNormal.y,
@@ -598,13 +598,13 @@ vec3 GetIndirectSpecularSample(Surface surface, vec3 viewDirToCamera, vec3 camer
             }
 
             float visibility = GetPointShadowMapVisibility(light, reflectedSurface.worldPos, reflectedSurface.normal, cameraWorldPos);
-            
+
             if (visibility <= 0.0) {
                 continue;
             }
 
             vec3 directLight = EvaluatePointLight(lightPosition, lightColor, light.radius, light.strength, reflectedSurface.worldPos, reflectedSurface.normal, reflectedSurface.linearBaseColor, reflectedSurface.roughness, reflectedSurface.metallic, cameraWorldPos);
-            
+
             incidentRadiance += directLight * visibility * candelas;
         }
     }
@@ -627,7 +627,7 @@ bool IsAMDBaseRay(uvec2 pixel, uint samplesPerQuad) {
     if (samplesPerQuad == 2u) {
         return quadLane.x == quadLane.y;
     }
-    
+
     return true;
 }
 
@@ -646,12 +646,12 @@ void WriteAMDRayCopyMarker(uvec2 pixel, uint samplesPerQuad) {
         out_color = vec4(0.0, 0.0, 0.0, VK_INDIRECT_SPECULAR_AMD_COPY_HORIZONTAL);
         return;
     }
-    
+
     if (quadLane.x == 0u && quadLane.y != 0u) {
         out_color = vec4(0.0, 0.0, 0.0, VK_INDIRECT_SPECULAR_AMD_COPY_VERTICAL);
         return;
     }
-    
+
     out_color = vec4(0.0, 0.0, 0.0, VK_INDIRECT_SPECULAR_AMD_COPY_DIAGONAL);
 }
 
@@ -663,7 +663,7 @@ void main() {
 
     ivec2 fullSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
     float amdRoughness = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_EXTRACTED_ROUGHNESS], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
-    
+
     // Bail if above roughness threshold
     if (amdRoughness >= VK_INDIRECT_SPECULAR_AMD_ROUGHNESS_THRESHOLD) {
         WriteEmptyIndirectSpecularPixel();
@@ -671,13 +671,13 @@ void main() {
     }
 
     uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, fullSize, rendererDataBuffer.rendererData.splitscreenMode);
-    
+
     ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
     vec3 viewPos = viewportData.viewPos.xyz;
 
     // Match AMD's classifier input and reject background before reconstruction or ray traversal
     float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
-    
+
     if (!IsFinite(depth) || depth <= 0.000001) {
         WriteEmptyIndirectSpecularPixel();
         return;
@@ -686,7 +686,7 @@ void main() {
     // AMD keeps every mirror ray, but schedules only one or two base rays denoised glossy 2x2 quads
     // Non-base pixels are filled after this pass
     bool needsDenoiser = amdRoughness >= VK_INDIRECT_SPECULAR_AMD_MIRROR_ROUGHNESS_THRESHOLD && amdRoughness < VK_INDIRECT_SPECULAR_AMD_ROUGHNESS_THRESHOLD;
-    
+
     if (needsDenoiser && !IsAMDBaseRay(uvec2(px), pc.data.samplesPerQuad)) {
         WriteAMDRayCopyMarker(uvec2(px), pc.data.samplesPerQuad);
         return;
@@ -703,13 +703,13 @@ void main() {
     }
 
     bool isDeltaSample = amdRoughness < 0.001;
-    
+
     vec2 screenUV = (vec2(px) + 0.5) / vec2(fullSize);
     vec2 viewportOrigin = vec2(viewportData.xOffset, fullSize.y - viewportData.yOffset - viewportData.height);
     vec2 viewportUV = (screenUV * vec2(fullSize) - viewportOrigin) / vec2(viewportData.width, viewportData.height);
     vec3 worldPos = WorldPosFromDepth_VK(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
     float fragDistance = distance(worldPos, viewPos);
-    
+
     if (!IsFinite(worldPos) || !IsFinite(fragDistance) || fragDistance <= 0.0) {
         WriteEmptyIndirectSpecularPixel();
         return;
@@ -723,7 +723,7 @@ void main() {
     }
 
     vec3 viewDirToCamera = normalize(viewPos - worldPos);
-   
+
     if (!IsFinite(viewDirToCamera)) {
         WriteEmptyIndirectSpecularPixel();
         return;
@@ -746,7 +746,12 @@ void main() {
 
     float reflectedHitDistance;
 
-    bool useDDGIReflections = pc.data.enableDDGIReflections != 0u || isMirrorSurface;
+    bool useDDGIReflections = rendererDataBuffer.rendererData.enableDDGIReflections;
+
+    // not sure about mirrors yet
+    // || isMirrorSurface
+
+ //   pc.data.enableDDGIReflections != 0u;//pc.data.enableDDGIReflections != 0u || isMirrorSurface;
 
     vec3 incidentRadiance = GetIndirectSpecularSample(surface, viewDirToCamera, viewPos, viewportData.view, viewportData.inverseView, reflectionOrigin, randomSample, roughnessDampening, useDDGIReflections, reflectedHitDistance);
     vec4 amdRadianceAndDistance = vec4(incidentRadiance, reflectedHitDistance);

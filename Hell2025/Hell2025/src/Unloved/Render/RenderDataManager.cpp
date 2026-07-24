@@ -430,6 +430,7 @@ namespace Unloved::RenderDataManager {
         g_rendererData.lightCount = static_cast<uint32_t>(g_gpuLights.size());
         g_rendererData.moonLightDir = glm::vec4(World::GetMoonlightDirection(), 0.0f);
         g_rendererData.enableDDGI = rendererSettings.enableDDGI;
+        g_rendererData.enableDDGIReflections = rendererSettings.enableDDGIReflections;
         g_rendererData.enableIndirectSpecular = rendererSettings.enableIndirectSpecular;
         g_rendererData.taaJitterPx = g_jitterPx;
         g_rendererData.enableTAA = rendererSettings.enableTAA;

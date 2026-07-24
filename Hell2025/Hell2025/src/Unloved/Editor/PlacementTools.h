@@ -38,6 +38,7 @@ namespace Unloved::Editor {
         GENERIC_TEST_MODEL4,
         GENERIC_TOILET,
         HOUSE_LOCATION_TEST_HOUSE,
+        JETTY,
         KANGAROO,
         LADDER,
         LIGHT_HANGING,

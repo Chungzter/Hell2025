@@ -65,6 +65,7 @@ namespace Hell::BackEnd {
         Logging::EnableLevel(Logging::Level::WARNING);
         Logging::EnableLevel(Logging::Level::FUNCTION);
         Logging::EnableLevel(Logging::Level::SUPPORT);
+        Logging::EnableLevel(Logging::Level::EDITOR);
 
         g_api = api;
         g_title = title;

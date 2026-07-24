@@ -393,6 +393,27 @@
         0.0
       ],
       "Type": "STANDARD_A"
+    },
+    {
+      "DeadLockedAtStart": false,
+      "EditorName": "Door",
+      "HasDeadLock": false,
+      "MaterialTypeBack": "WHITE_PAINT",
+      "MaterialTypeFrameBack": "WHITE_PAINT",
+      "MaterialTypeFrameFront": "WHITE_PAINT",
+      "MaterialTypeFront": "WHITE_PAINT",
+      "MaxOpenValue": 2.0999999046325684,
+      "Position": [
+        1.5,
+        0.0,
+        0.800000011920929
+      ],
+      "Rotation": [
+        0.0,
+        -1.570451021194458,
+        0.0
+      ],
+      "Type": "STAINED_GLASS"
     }
   ],
   "Drawers": [
@@ -977,6 +998,84 @@
         3.1415927410125732
       ],
       "Type": "WOOD_STOVE"
+    }
+  ],
+  "Jetties": [
+    {
+      "BoardCount": 24,
+      "PoleSpacing": 1.0,
+      "Position": [
+        -4.584259033203125,
+        0.003581821918487549,
+        1.6095752716064453
+      ],
+      "Rotation": [
+        0.0,
+        -3.161513328552246,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "BoardCount": 25,
+      "PoleSpacing": 1.0,
+      "Position": [
+        -12.149999618530273,
+        0.0,
+        0.30000001192092896
+      ],
+      "Rotation": [
+        0.0,
+        -1.583139419555664,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "BoardCount": 8,
+      "PoleSpacing": 1.0,
+      "Position": [
+        -15.064777374267578,
+        36.47532653808594,
+        -1.5498206615447998
+      ],
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "BoardCount": 26,
+      "PoleSpacing": 1.0,
+      "Position": [
+        -13.600000381469727,
+        0.0,
+        5.599999904632568
+      ],
+      "Rotation": [
+        0.0,
+        -3.141592502593994,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
     }
   ],
   "Ladders": [
@@ -2251,13 +2350,13 @@
     },
     {
       "Position": [
-        2.75,
-        1.7000000476837158,
-        6.101787567138672
+        1.5,
+        -0.3499999940395355,
+        0.15000000596046448
       ],
       "Rotation": [
         0.0,
-        1.5707963705062866,
+        -4.712043762207031,
         0.0
       ]
     },

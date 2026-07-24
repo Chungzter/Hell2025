@@ -20,9 +20,9 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const FireplaceCreateInfo& info);
     void to_json(nlohmann::json& j, const GenericObjectCreateInfo& info);
     void to_json(nlohmann::json& j, const HouseLocation& houseLocation);
-    void to_json(nlohmann::json& j, const WorldPlaneCreateInfo& info);
+    void to_json(nlohmann::json& j, const JettyCreateInfo& info);
     void to_json(nlohmann::json& j, const LadderCreateInfo& info);
-    void to_json(nlohmann::json& j, const LightCreateInfo& info);   
+    void to_json(nlohmann::json& j, const LightCreateInfo& info);
     void to_json(nlohmann::json& j, const MermaidCreateInfo& info);
     void to_json(nlohmann::json& j, const PianoCreateInfo& info);
     void to_json(nlohmann::json& j, const PickUpCreateInfo& info);
@@ -34,6 +34,7 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const TreeCreateInfo& info);
     void to_json(nlohmann::json& j, const WallCreateInfo& info);
     void to_json(nlohmann::json& j, const WindowCreateInfo& info);
+    void to_json(nlohmann::json& j, const WorldPlaneCreateInfo& info);
 
     void from_json(const nlohmann::json& j, Unloved::SequencePoint& sequencePoint);
     void from_json(const nlohmann::json& j, ChristmasLightsCreateInfo& info);
@@ -44,8 +45,8 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, FireplaceCreateInfo& info);
     void from_json(const nlohmann::json& j, GenericObjectCreateInfo& info);
     void from_json(const nlohmann::json& j, HouseLocation& houseLocation);
-    void from_json(const nlohmann::json& j, WorldPlaneCreateInfo& info);
-    void from_json(const nlohmann::json& j, LadderCreateInfo& info);
+    void from_json(const nlohmann::json& j, HouseLocation& houseLocation);
+    void from_json(const nlohmann::json& j, JettyCreateInfo& info);
     void from_json(const nlohmann::json& j, LightCreateInfo& info);
     void from_json(const nlohmann::json& j, MermaidCreateInfo& info);
     void from_json(const nlohmann::json& j, PianoCreateInfo& info);
@@ -58,6 +59,7 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, TreeCreateInfo& info);
     void from_json(const nlohmann::json& j, WallCreateInfo& info);
     void from_json(const nlohmann::json& j, WindowCreateInfo& info);
+    void from_json(const nlohmann::json& j, WorldPlaneCreateInfo& info);
 
     void to_json(nlohmann::json& j, const std::map<Hell::ivecXZ, std::string>& map);
 }

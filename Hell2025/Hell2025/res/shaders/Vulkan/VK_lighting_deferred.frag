@@ -520,7 +520,7 @@ void main() {
     // Direct light
     vec3 directLighting = vec3(0.0);
 
-    
+
     LightBuffer lightBuffer = pc.data.frame.lightBuffer;
 
     // Tile data
@@ -586,11 +586,14 @@ void main() {
     // Indirect diffuse
     vec3 indirectDiffuse = vec3(0.0);
 
-    if (!isMirrorSurface && rendererData.enableIrradianceProbeSampling) {
-        vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral_VK(screenUV, normal, fragDistance, outputImageSize, viewportRect);
-        vec3 diffuseAlbedo = linearBaseColor.rgb * (1.0 - metallic);
-        indirectDiffuse = probeIrradiance * diffuseAlbedo;
+    if (rendererData.enableIrradianceProbeSampling) {
+        if (!isMirrorSurface) {
+            vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral_VK(screenUV, normal, fragDistance, outputImageSize, viewportRect);
+            vec3 diffuseAlbedo = linearBaseColor.rgb * (1.0 - metallic);
+            indirectDiffuse = probeIrradiance * diffuseAlbedo;
+        }
     }
+
 
     // Final composite
     vec3 finalLighting = directLighting + indirectDiffuse + indirectSpecular;

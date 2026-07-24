@@ -36,10 +36,10 @@ namespace Logging {
         return 1u << static_cast<uint32_t>(level);
     }
 
-    void EnableLevel(Level level) { 
+    void EnableLevel(Level level) {
         g_levelMask.fetch_or(Bit(level), std::memory_order_relaxed);
     }
-    
+
     void DisableLevel(Level level) {
         g_levelMask.fetch_and(~Bit(level), std::memory_order_relaxed);
     }
@@ -74,8 +74,9 @@ namespace Logging {
             case Level::WARNING:    return orange;
             case Level::FATAL:      return red_fatal;
 			case Level::TODO:       return green_lime;
-			case Level::FUNCTION:   return green_lime; // bblue;
-			case Level::SUPPORT:    return green_lime;
+            case Level::FUNCTION:   return green_lime; // bblue;
+            case Level::SUPPORT:    return green_lime;
+            case Level::EDITOR:     return green_lime;
             default:                return bwhite;
         }
     }
@@ -87,7 +88,8 @@ namespace Logging {
             case Level::ERROR:      return "ERROR";
             case Level::WARNING:    return "WARNING";
             case Level::FATAL:      return "FATAL";
-			case Level::SUPPORT:    return "SUPPORT";
+            case Level::SUPPORT:    return "SUPPORT";
+            case Level::EDITOR:    return  "EDITOR";
         }
         return "UNDEFINED";
     }
