@@ -1,5 +1,7 @@
 #include "CPUProfiler.h"
 
+#include "Hell/Common/String.h"
+
 #include <algorithm>
 #include <chrono>
 #include <deque>
@@ -266,6 +268,15 @@ namespace Hell::CPUProfiler {
 
     const Report& GetReport() {
         return GetState().report;
+    }
+
+    float GetZoneTime(const std::string& zoneName) {
+        for (ActiveZone& zone : GetState().activeZones) {
+            if (GetState().nodes[zone.nodeIndex].name == zoneName) {
+                return GetState().nodes[zone.nodeIndex].rollingAverage.GetValue();
+            }
+        }
+        return 0.0f;
     }
 
     FrameScope::FrameScope() {

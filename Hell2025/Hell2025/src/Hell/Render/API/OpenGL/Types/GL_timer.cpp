@@ -146,6 +146,7 @@ void OpenGLFrameTimer::BuildStringsFromCurrentFrame() {
 
 	m_totalCpuFrameTime = "Total: " + FormatMs(mCpuFrameRollingAverage.GetValue(), kOutputPrecision);
 	m_totalGpuFrameTime = "Total: " + FormatMs(mGpuFrameRollingAverage.GetValue(), kOutputPrecision);
+    m_totalGpuFrameTimeFloat = mGpuFrameRollingAverage.GetValue();
 }
 
 void OpenGLFrameTimer::BeginFrame() {
@@ -327,6 +328,10 @@ const std::string& OpenGLFrameTimer::GetTotalCPUFrameTime() const {
 
 const std::string& OpenGLFrameTimer::GetTotalGPUFrameTime() const {
 	return m_totalGpuFrameTime;
+}
+
+float OpenGLFrameTimer::GetTotalGPUFrameTimeFloat() const  {
+    return m_totalGpuFrameTimeFloat;
 }
 
 OpenGLFrameTimer::ZoneScope::ZoneScope(OpenGLFrameTimer& timer, const char* name, OpenGLFrameTimer::ZoneColor color) {

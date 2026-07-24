@@ -194,6 +194,10 @@ namespace VulkanRenderer {
         return ProfilerVulkanTotalCPU();
     }
 
+    float GetTotalGPUTimeFloat() {
+        return ProfilerVulkanTotalGPUFloat();
+    }
+
     bool BeginSwapchainFrame(SwapchainFrame& frame) {
         VkDevice device = VulkanDeviceManager::GetDevice();
         std::vector<VkImage>& swapchainImages = VulkanSwapchainManager::GetSwapchainImages();

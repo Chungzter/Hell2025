@@ -61,11 +61,11 @@ namespace Bible {
         aks74u.audioFiles.fire.push_back("AKS74U_Fire3.wav");
         aks74u.audioFiles.reload = "AKS74U_Reload.wav";
         aks74u.audioFiles.reloadEmpty = "AKS74U_ReloadEmpty.wav";
-        aks74u.animationSpeeds.fire = 1.625f;
-        aks74u.animationSpeeds.adsFire = 1.625f;
+        aks74u.animationSpeeds.fire = 1.825f;
+        aks74u.animationSpeeds.adsFire = 1.825f;
         aks74u.animationSpeeds.draw = 1.0f;
-        aks74u.animationSpeeds.adsIn = 2.0f;
-        aks74u.animationSpeeds.adsOut = 2.0f;
+        aks74u.animationSpeeds.adsIn = 3.5f;
+        aks74u.animationSpeeds.adsOut = 3.5f;
         aks74u.muzzleFlashBoneName = "Muzzle";
         aks74u.casingEjectionBoneName = "EjectionPort";
         aks74u.muzzleFlashScale = 1.5f;

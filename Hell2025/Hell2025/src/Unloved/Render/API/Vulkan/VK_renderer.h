@@ -26,6 +26,7 @@ namespace VulkanRenderer {
     const std::string& GetZoneCPUTimings();
     const std::string& GetTotalGPUTime();
     const std::string& GetTotalCPUTime();
+    float GetTotalGPUTimeFloat();
 
     void RenderUIPass(VkCommandBuffer commandBuffer);
 }

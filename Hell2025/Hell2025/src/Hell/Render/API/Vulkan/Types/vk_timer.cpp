@@ -361,6 +361,10 @@ const std::string& VulkanFrameTimer::GetTotalGPUFrameTime() const {
     return m_totalGpuFrameTime;
 }
 
+float VulkanFrameTimer::GetTotalGPUFrameTimeFloat() const {
+    return mGpuFrameRollingAverage.GetValue();
+}
+
 VulkanFrameTimer::ZoneScope::ZoneScope(VkCommandBuffer commandBuffer, VulkanFrameTimer& timer, const char* name, VulkanFrameTimer::ZoneColor color) {
     mTimer = &timer;
     mCommandBuffer = commandBuffer;

@@ -434,6 +434,10 @@ namespace OpenGL::Renderer {
         return ProfilerOpenGLTotalCPU();
     }
 
+    float GetTotalGPUTimeFloat() {
+        return ProfilerOpenGLTotalGPUFloat();
+    }
+
     uint32_t GetTileCount() { return Unloved::Renderer::GetTileCount(); }
 	uint32_t GetTileCountX() { return Unloved::Renderer::GetTileCountX(); }
 	uint32_t GetTileCountY() { return Unloved::Renderer::GetTileCountY(); }

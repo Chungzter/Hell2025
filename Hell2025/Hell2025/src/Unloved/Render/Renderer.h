@@ -62,6 +62,7 @@ namespace Unloved::Renderer {
     const std::string& GetZoneCPUTimings();
     const std::string& GetTotalGPUTime();
     const std::string& GetTotalCPUTime();
+    float GetTotalGPUTimeFloat();
 
     bool GameIsRendering();
 }

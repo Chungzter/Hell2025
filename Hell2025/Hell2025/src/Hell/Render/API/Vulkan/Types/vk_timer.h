@@ -91,6 +91,7 @@ struct VulkanFrameTimer {
     bool TryGetZoneTiming(std::string_view zoneName, double& cpuMilliseconds, double& gpuMilliseconds) const;
     const std::string& GetTotalCPUFrameTime() const;
     const std::string& GetTotalGPUFrameTime() const;
+    float GetTotalGPUFrameTimeFloat() const;
 
 private:
     struct FrameZoneRecord {
@@ -160,6 +161,7 @@ VulkanFrameTimer& GetVulkanTimer();
 #define ProfilerVulkanGpuTimings() (GetVulkanTimer().GetGPUTimingList())
 #define ProfilerVulkanTotalCPU() (GetVulkanTimer().GetTotalCPUFrameTime())
 #define ProfilerVulkanTotalGPU() (GetVulkanTimer().GetTotalGPUFrameTime())
+#define ProfilerVulkanTotalGPUFloat() (GetVulkanTimer().GetTotalGPUFrameTimeFloat())
 
 static inline std::string ProfilerVulkanStripToFinalFunctionName(const char* functionString) {
     std::string_view v = functionString ? functionString : "";
@@ -206,6 +208,9 @@ struct VulkanFrameTimer {
     bool TryGetZoneTiming(std::string_view, double& cpuMilliseconds, double& gpuMilliseconds) const { cpuMilliseconds = 0.0; gpuMilliseconds = 0.0; return false; }
     const std::string& GetTotalCPUFrameTime() const { static std::string s; return s; }
     const std::string& GetTotalGPUFrameTime() const { static std::string s; return s; }
+
+    float GetTotalGPUFrameTimeFloat222() const { return mGpuFrameRollingAverage.GetValue(); }
+
     struct ZoneScope {
         ZoneScope(VkCommandBuffer, VulkanFrameTimer&, const char*, ZoneColor) {}
         ZoneScope(VkCommandBuffer, VulkanFrameTimer&, const std::string&, ZoneColor) {}
@@ -235,6 +240,7 @@ inline VulkanFrameTimer& GetVulkanTimer() {
 #define ProfilerVulkanGpuTimings() (GetVulkanTimer().GetGPUTimingList())
 #define ProfilerVulkanTotalCPU() (GetVulkanTimer().GetTotalCPUFrameTime())
 #define ProfilerVulkanTotalGPU() (GetVulkanTimer().GetTotalGPUFrameTime())
+#define ProfilerVulkanTotalGPUFloat() (GetVulkanTimer().GetTotalGPUFrameTimeFloat())
 #define ProfilerVulkanZoneFunctionColor(color)
 #define ProfilerVulkanZoneFunction()
 #define ProfilerVulkanZoneFunctionRed()

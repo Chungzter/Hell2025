@@ -10,6 +10,7 @@
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/UI/TextBlitter.h"
 #include "Hell/Physics/Physics.h"
+#include "Hell/Profiling/CPUProfiler.h"
 #include "Hell/UI/UIBackEnd.h"
 #include "Hell/Backend/BackEnd.h"
 
@@ -24,6 +25,7 @@
 #include "Unloved/Systems/PianoPlayback/PianoPlaybackManager.h"
 
 #include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/Renderer.h"
 
 #include "World/LegacyWorld.h"
 
@@ -74,14 +76,64 @@ namespace Debug {
         }
     }
 
+    std::string GetFPSString() {
+        Hell::CPUProfiler::Report report = Hell::CPUProfiler::GetReport();
+        if (report.timingColumns.empty()) return "UNKNOWN FPS";
+
+        float ms = std::stof(report.timingColumns[0]);
+        float fps = 1000.0f / ms;
+        int fpsRounded = std::round(fps);
+        return std::to_string(fpsRounded) + " FPS";
+    }
+
+    void BlitDebugStats() {
+        // Blit time stats top right
+        float renderTime = Unloved::Renderer::GetTotalGPUTimeFloat();
+        float updateTime = Hell::CPUProfiler::GetZoneTime("Unloved::Update");
+
+        std::string renderTimeStr = Hell::String::FormatFloat(renderTime, 2) + " ms";
+        std::string updateTImeStr = Hell::String::FormatFloat(updateTime, 2) + " ms";
+
+        static std::string spacing = "   ";
+        static std::string color = "[COL=1.0,0.698039,0.2]";
+
+        float scale = 2.0f;
+        float size0 = TextBlitter::GetTextSize("60 FPS", "StandardFont", scale).x;
+        float size1 = TextBlitter::GetTextSize("0.00 ms" + spacing + "60 FPS", "StandardFont", scale).x;
+        float size2 = TextBlitter::GetTextSize("Render: 0.00 ms" + spacing + "60 FPS", "StandardFont", scale).x;
+        float size3 = TextBlitter::GetTextSize("0.00 ms" + spacing + "Render: 0.00 ms" + spacing + "60 FPS", "StandardFont", scale).x;
+        float spaceSize = TextBlitter::GetTextSize(" ", "StandardFont", scale).x;
+
+        if (renderTime >= 10.0f) {
+            size1 += spaceSize;
+            size2 += spaceSize;
+            size3 += spaceSize;
+        }
+
+        if (updateTime >= 10.0f) {
+            size3 += spaceSize;
+        }
+
+        UIBackEnd::BlitText(color + GetFPSString(), "StandardFont", 1920, 0, Alignment::TOP_RIGHT, scale);
+        UIBackEnd::BlitText(color + renderTimeStr + spacing, "StandardFont", 1920 - size0, 0, Alignment::TOP_RIGHT, scale);
+        UIBackEnd::BlitText(color + "Render: ", "StandardFont", 1920 - size1, 0, Alignment::TOP_RIGHT, scale);
+        UIBackEnd::BlitText(color + updateTImeStr + spacing, "StandardFont", 1920 - size2, 0, Alignment::TOP_RIGHT, scale);
+        UIBackEnd::BlitText(color + "Update: ", "StandardFont", 1920 - size3, 0, Alignment::TOP_RIGHT, scale);
+    }
+
+    void BlitPianoInfo() {
+        UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextTime(), "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
+        UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextEvents(), "StandardFont", 250, 0, Alignment::TOP_LEFT, 2.0f);
+        UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextVelocity(), "StandardFont", 500, 0, Alignment::TOP_LEFT, 2.0f);
+        UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextTimeDurations(), "StandardFont", 750, 0, Alignment::TOP_LEFT, 2.0f);
+    }
+
     void UpdateDebugText() {
+        BlitDebugStats();
 
         // Midi notes override
         if (Unloved::PianoPlaybackManager::IsPlaying()) {
-            UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextTime(), "StandardFont", 0, 0, Alignment::TOP_LEFT, 2.0f);
-            UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextEvents(), "StandardFont", 250, 0, Alignment::TOP_LEFT, 2.0f);
-            UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextVelocity(), "StandardFont", 500, 0, Alignment::TOP_LEFT, 2.0f);
-            UIBackEnd::BlitText(Unloved::PianoPlaybackManager::GetDebugTextTimeDurations(), "StandardFont", 750, 0, Alignment::TOP_LEFT, 2.0f);
+            BlitPianoInfo();
             return;
         }
 

@@ -17,6 +17,7 @@ namespace Hell::CPUProfiler {
     };
 
     const Report& GetReport();
+    float GetZoneTime(const std::string& zoneName);
 
     class FrameScope {
     public:

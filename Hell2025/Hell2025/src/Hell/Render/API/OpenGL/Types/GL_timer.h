@@ -110,8 +110,9 @@ struct OpenGLFrameTimer {
 	const std::string& GetGPUTimingList() const;
 	bool TryGetZoneTiming(std::string_view zoneName, double& cpuMilliseconds, double& gpuMilliseconds) const;
 
-	const std::string& GetTotalCPUFrameTime() const;
-	const std::string& GetTotalGPUFrameTime() const;
+    const std::string& GetTotalCPUFrameTime() const;
+    const std::string& GetTotalGPUFrameTime() const;
+    float GetTotalGPUFrameTimeFloat() const;
 
 	std::unordered_map<std::string, Zone> mZones;
 
@@ -137,6 +138,8 @@ private:
 
 	std::string m_totalCpuFrameTime;
 	std::string m_totalGpuFrameTime;
+
+    float m_totalGpuFrameTimeFloat = 0.0f;
 };
 
 OpenGLFrameTimer& GetTimer();
@@ -164,11 +167,12 @@ OpenGLFrameTimer& GetTimer();
 #define ProfilerOpenGLSetDefaultZoneColor(color) \
     OpenGLFrameTimer::s_DefaultColor = OpenGLFrameTimer::ZoneColor::color
 
-#define ProfilerOpenGLZoneNames()   (GetTimer().GetZoneList())
-#define ProfilerOpenGLCpuTimings()  (GetTimer().GetCPUTimingList())
-#define ProfilerOpenGLGpuTimings()  (GetTimer().GetGPUTimingList())
-#define ProfilerOpenGLTotalCPU()    (GetTimer().GetTotalCPUFrameTime())
-#define ProfilerOpenGLTotalGPU()    (GetTimer().GetTotalGPUFrameTime())
+#define ProfilerOpenGLZoneNames()     (GetTimer().GetZoneList())
+#define ProfilerOpenGLCpuTimings()    (GetTimer().GetCPUTimingList())
+#define ProfilerOpenGLGpuTimings()    (GetTimer().GetGPUTimingList())
+#define ProfilerOpenGLTotalCPU()      (GetTimer().GetTotalCPUFrameTime())
+#define ProfilerOpenGLTotalGPU()      (GetTimer().GetTotalGPUFrameTime())
+#define ProfilerOpenGLTotalGPUFloat() (GetTimer().GetTotalGPUFrameTimeFloat())
 
 static inline std::string ProfilerOpenGLStripToFinalFunctionName(const char* functionString) {
 	std::string_view v = functionString ? functionString : "";

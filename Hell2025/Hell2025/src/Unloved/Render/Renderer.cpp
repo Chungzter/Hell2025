@@ -201,6 +201,17 @@ namespace Unloved::Renderer {
         return empty;
     }
 
+    float GetTotalGPUTimeFloat() {
+        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
+            return OpenGL::Renderer::GetTotalGPUTimeFloat();
+        }
+        else if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+            return VulkanRenderer::GetTotalGPUTimeFloat();
+        }
+
+        return 0.0f;
+    }
+
     const std::string& GetTotalCPUTime() {
         if (Hell::BackEnd::GetAPI() == API::OPENGL) {
             return OpenGL::Renderer::GetTotalCPUTime();
