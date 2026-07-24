@@ -32,12 +32,13 @@ namespace VulkanRenderer {
     }
 
     void UpdateBuffers() {
-        const VulkanFrameData& frameData = GetCurrentFrameData();
+        VulkanFrameData& frameData = GetCurrentFrameData();
 
         // DDGI
 
         const std::vector<GPUAABB>& dirtyDoorAABBs = Unloved::DirtyTracker::GetDirtyDoorAABBs();
         UpdateVectorBuffer(frameData.ddgi.dirtyDoorAABBs, dirtyDoorAABBs);
+        frameData.ddgi.dirtyDoorAABBCount = static_cast<uint32_t>(dirtyDoorAABBs.size());
 
         // Instance data
 

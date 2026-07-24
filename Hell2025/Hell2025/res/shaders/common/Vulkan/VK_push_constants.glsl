@@ -169,6 +169,27 @@ struct PushConstantsHair {
     FrameAddressTable frame;
 };
 
+struct PushConstantsEmissive {
+    FrameAddressTable frame;
+};
+
+struct PushConstantsEmissiveBloomFilter {
+    ivec2 sourceOffset;
+    ivec2 sourceExtent;
+    ivec2 outputExtent;
+    ivec2 direction;
+    int sourceMip;
+    float filterScale;
+    uint sourceTextureIndex;
+    uint outputImageIndex;
+};
+
+struct PushConstantsEmissiveBloomComposite {
+    ivec2 viewportOffset;
+    ivec2 viewportExtent;
+    ivec2 bloomExtents[3];
+};
+
 struct PushConstantsTileWorldBounds {
     FrameAddressTable frame;
     int tileXCount;

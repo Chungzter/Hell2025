@@ -1,4 +1,5 @@
 #version 450 core
+#extension GL_ARB_bindless_texture : enable
 #include "../../common/lighting.glsl"
 #include "../../common/ocean.glsl"
 #include "../../common/post_processing.glsl"
@@ -14,7 +15,9 @@ layout (binding = 2) uniform sampler2D DisplacementTexture_band1;
 layout (binding = 3) uniform sampler2D SlopeTexture_band1;
 layout (binding = 4) uniform samplerCube cubeMap;
 layout (binding = 5) uniform sampler2D DetailRippleNormal;
+layout (binding = 6) uniform sampler2DArray u_flashlighShadowMapArrayTexture;
 
+readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
@@ -159,6 +162,14 @@ void main() {
     surfaceLighting += Lo_direct;
     surfaceLighting += diffuse_IBL;
     surfaceLighting += specular_IBL;
+
+    if (rendererData.flashlightIESTextureIndex >= 0) {
+        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
+        for (int i = 0; i < 2; i++) {
+            ViewportData flashlightViewportData = viewportDataArr[i];
+            surfaceLighting += GetFlashlightContribution(i, uint(u_viewportIndex), flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), rendererData, N, WorldPos, u_surface.albedo, roughness, 0.0, viewDist, u_oceanOriginY, flashlightIES, u_flashlighShadowMapArrayTexture);
+        }
+    }
 
     // SSS
     float sssStrength = gl_FrontFacing ? u_surface.sssStrength : u_surface.underwaterSssStrength;

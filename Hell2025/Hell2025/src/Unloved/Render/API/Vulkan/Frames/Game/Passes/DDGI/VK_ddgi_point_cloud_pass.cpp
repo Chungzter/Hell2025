@@ -6,6 +6,7 @@
 #include "Hell/Render/API/Vulkan/Types/vk_descriptor_set.h"
 #include "Hell/Render/API/Vulkan/Types/vk_pipeline.h"
 #include "Hell/Render/DrawCommandTypes.h"
+#include "Hell/Time.h"
 
 #include "Unloved/Render/API/Vulkan/VK_descriptor_indices.h"
 #include "Unloved/Render/RenderDataManager.h"
@@ -39,9 +40,11 @@ namespace {
     };
 
     uint64_t g_uploadedProbeResetVersion = std::numeric_limits<uint64_t>::max();
+    float g_probeInitializationTime = 0.0f;
     bool g_ddgiReflectionVolumeDataReady = false;
     std::vector<uint64_t> g_updatedDDGIVolumeIds;
     std::unordered_map<uint64_t, ProbeAtlasBindlessImages> g_probeAtlasBindlessImages;
+    std::unordered_map<uint64_t, uint64_t> g_probeAtlasResetVersions;
     uint32_t g_nextProbeAtlasStorageImageIndex = VULKAN_STORAGE_IMAGE_IDX_FIRST_DYNAMIC;
 
     VulkanBuffer* GetOrCreateDDGIBuffer(const std::string& name, VkDeviceSize size) {
@@ -142,6 +145,14 @@ namespace {
 
         if (!CreateOrResizeProbeAtlasImage(commandBuffer, ddgiVolume.GetProbeDistanceTextureArrayName(), distanceWidth, distanceHeight, probeCountY, VK_FORMAT_R16G16_SFLOAT, distanceAtlas)) return false;
         if (!CreateOrResizeProbeAtlasImage(commandBuffer, ddgiVolume.GetProbeIrradianceTextureArrayName(), irradianceWidth, irradianceHeight, probeCountY, VK_FORMAT_R16G16B16A16_SFLOAT, irradianceAtlas)) return false;
+
+        const uint64_t volumeId = ddgiVolume.GetObjectId();
+        const uint64_t resetVersion = DDGIManager::GetProbeResetVersion();
+        auto [resetVersionIt, inserted] = g_probeAtlasResetVersions.try_emplace(volumeId, resetVersion);
+        if (inserted || resetVersionIt->second != resetVersion) {
+            ClearColorImage(commandBuffer, irradianceAtlas);
+            resetVersionIt->second = resetVersion;
+        }
         return true;
     }
 
@@ -258,6 +269,7 @@ namespace {
             if (!UpdateBuffer(probeStatesBuffer, probeStates.data(), probeStatesSize)) return false;
 
             RecordBufferBarrier(commandBuffer, probeStatesBuffer, VK_ACCESS_HOST_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+            g_probeInitializationTime = 0.0f;
             g_uploadedProbeResetVersion = resetVersion;
         }
 
@@ -439,8 +451,6 @@ namespace {
         if (totalProbes == 0) return false;
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
-        const RendererData& rendererData = RenderDataManager::GetRendererData();
-
         PushConstantsDDGIProbeStateUpdate pushConstants{};
         pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
@@ -451,7 +461,8 @@ namespace {
         pushConstants.probeOffset = volume.probeOffset;
         pushConstants.totalProbes = totalProbes;
         pushConstants.dirtyDoorAABBCount = dirtyDoorAABBCount;
-        pushConstants.time = rendererData.time;
+        g_probeInitializationTime += Hell::Time::DeltaTime();
+        pushConstants.time = g_probeInitializationTime;
         if (pushConstants.probeStatesDeviceAddress == 0 || pushConstants.dirtyDoorAABBsDeviceAddress == 0) return false;
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
@@ -1075,8 +1086,10 @@ uint64_t GetDDGIReflectionVolumeDataDeviceAddress() {
 }
 
 void CleanUpDDGIProbeAtlasBindlessImages() {
+    g_probeInitializationTime = 0.0f;
     g_ddgiReflectionVolumeDataReady = false;
     g_probeAtlasBindlessImages.clear();
+    g_probeAtlasResetVersions.clear();
     g_nextProbeAtlasStorageImageIndex = VULKAN_STORAGE_IMAGE_IDX_FIRST_DYNAMIC;
 }
 

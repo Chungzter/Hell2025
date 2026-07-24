@@ -10,11 +10,35 @@
 #include "Unloved/Objects/House/WorldPlane.h"
 #include "Unloved/World/World.h"
 
+#include <limits>
 #include <utility>
 
 namespace Unloved::DDGIGeometryBuilder {
 
     uint64_t g_doorProxyMeshBvhId = 0;
+
+    constexpr float DOOR_PROXY_PADDING_POS_X = 0.01f;
+    constexpr float DOOR_PROXY_PADDING_POS_Y = 0.03f;
+    constexpr float DOOR_PROXY_PADDING_POS_Z = 0.02f;
+    constexpr float DOOR_PROXY_PADDING_NEG_X = 0.08f;
+    constexpr float DOOR_PROXY_PADDING_NEG_Y = 0.03f;
+    constexpr float DOOR_PROXY_PADDING_NEG_Z = 0.02f;
+
+    AABB CalculateDoorProxyWorldAABB(const glm::mat4& worldTransform) {
+        const glm::vec3 localBoundsMin(-DOOR_DEPTH - DOOR_PROXY_PADDING_NEG_X, -DOOR_PROXY_PADDING_NEG_Y, -DOOR_WIDTH - DOOR_PROXY_PADDING_NEG_Z);
+        const glm::vec3 localBoundsMax(DOOR_PROXY_PADDING_POS_X, DOOR_HEIGHT + DOOR_PROXY_PADDING_POS_Y, DOOR_PROXY_PADDING_POS_Z);
+        glm::vec3 worldBoundsMin(std::numeric_limits<float>::max());
+        glm::vec3 worldBoundsMax(std::numeric_limits<float>::lowest());
+
+        for (uint32_t cornerIndex = 0; cornerIndex < 8; cornerIndex++) {
+            const glm::vec3 localCorner((cornerIndex & 1) ? localBoundsMax.x : localBoundsMin.x, (cornerIndex & 2) ? localBoundsMax.y : localBoundsMin.y, (cornerIndex & 4) ? localBoundsMax.z : localBoundsMin.z);
+            const glm::vec3 worldCorner = glm::vec3(worldTransform * glm::vec4(localCorner, 1.0f));
+            worldBoundsMin = glm::min(worldBoundsMin, worldCorner);
+            worldBoundsMax = glm::max(worldBoundsMax, worldCorner);
+        }
+
+        return AABB(worldBoundsMin, worldBoundsMax);
+    }
 
     bool TriangleIntersectsBounds(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& boundsMin, const glm::vec3& boundsMax) {
         const glm::vec3 triangleBoundsMin = glm::min(glm::min(p0, p1), p2);
@@ -205,19 +229,18 @@ namespace Unloved::DDGIGeometryBuilder {
         instances.reserve(doors.size());
 
         for (Door& door : doors) {
-            const AABB& doorAabb = door.GetPhsyicsAABB();
-            if (!doorAabb.IntersectsAABB(boundsMin, boundsMax)) {
-                continue;
-            }
-
             MeshNode* meshNode = door.GetMeshNodes().GetMeshNodeByMeshName("Door_Hinges");
             if (!meshNode) continue;
+
+            glm::mat4 worldTransform = meshNode->worldMatrix;
+            worldTransform[3][1] = door.GetDoorModelMatrix()[3][1];
+            const AABB doorAabb = CalculateDoorProxyWorldAABB(worldTransform);
+            if (!doorAabb.IntersectsAABB(boundsMin, boundsMax)) continue;
 
             DDGIDoorProxyInstance& instance = instances.emplace_back();
             instance.objectId = door.GetObjectId();
             instance.worldAabb = doorAabb;
-            instance.worldTransform = meshNode->worldMatrix;
-            instance.worldTransform[3][1] = door.GetDoorModelMatrix()[3][1];
+            instance.worldTransform = worldTransform;
         }
 
         return instances;
@@ -228,21 +251,14 @@ namespace Unloved::DDGIGeometryBuilder {
         const float h = DOOR_HEIGHT;
         const float d = DOOR_WIDTH;
 
-        const float paddingPosX = 0.01f;
-        const float paddingPosY = 0.03f;
-        const float paddingPosZ = 0.02f;
-        const float paddingNegX = 0.08f;
-        const float paddingNegY = 0.03f;
-        const float paddingNegZ = 0.02f;
-
-        const glm::vec3 p0 = glm::vec3(0 + paddingPosX, 0 - paddingNegY, 0 + paddingPosZ);
-        const glm::vec3 p1 = glm::vec3(-w - paddingNegX, 0 - paddingNegY, 0 + paddingPosZ);
-        const glm::vec3 p2 = glm::vec3(-w - paddingNegX, h + paddingPosY, 0 + paddingPosZ);
-        const glm::vec3 p3 = glm::vec3(0 + paddingPosX, h + paddingPosY, 0 + paddingPosZ);
-        const glm::vec3 p4 = glm::vec3(0 + paddingPosX, 0 - paddingNegY, -d - paddingNegZ);
-        const glm::vec3 p5 = glm::vec3(-w - paddingNegX, 0 - paddingNegY, -d - paddingNegZ);
-        const glm::vec3 p6 = glm::vec3(-w - paddingNegX, h + paddingPosY, -d - paddingNegZ);
-        const glm::vec3 p7 = glm::vec3(0 + paddingPosX, h + paddingPosY, -d - paddingNegZ);
+        const glm::vec3 p0 = glm::vec3(0 + DOOR_PROXY_PADDING_POS_X, 0 - DOOR_PROXY_PADDING_NEG_Y, 0 + DOOR_PROXY_PADDING_POS_Z);
+        const glm::vec3 p1 = glm::vec3(-w - DOOR_PROXY_PADDING_NEG_X, 0 - DOOR_PROXY_PADDING_NEG_Y, 0 + DOOR_PROXY_PADDING_POS_Z);
+        const glm::vec3 p2 = glm::vec3(-w - DOOR_PROXY_PADDING_NEG_X, h + DOOR_PROXY_PADDING_POS_Y, 0 + DOOR_PROXY_PADDING_POS_Z);
+        const glm::vec3 p3 = glm::vec3(0 + DOOR_PROXY_PADDING_POS_X, h + DOOR_PROXY_PADDING_POS_Y, 0 + DOOR_PROXY_PADDING_POS_Z);
+        const glm::vec3 p4 = glm::vec3(0 + DOOR_PROXY_PADDING_POS_X, 0 - DOOR_PROXY_PADDING_NEG_Y, -d - DOOR_PROXY_PADDING_NEG_Z);
+        const glm::vec3 p5 = glm::vec3(-w - DOOR_PROXY_PADDING_NEG_X, 0 - DOOR_PROXY_PADDING_NEG_Y, -d - DOOR_PROXY_PADDING_NEG_Z);
+        const glm::vec3 p6 = glm::vec3(-w - DOOR_PROXY_PADDING_NEG_X, h + DOOR_PROXY_PADDING_POS_Y, -d - DOOR_PROXY_PADDING_NEG_Z);
+        const glm::vec3 p7 = glm::vec3(0 + DOOR_PROXY_PADDING_POS_X, h + DOOR_PROXY_PADDING_POS_Y, -d - DOOR_PROXY_PADDING_NEG_Z);
 
         vertices.clear();
         vertices.reserve(24);

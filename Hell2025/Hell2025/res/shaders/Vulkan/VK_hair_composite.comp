@@ -8,6 +8,7 @@ layout(local_size_x = 24, local_size_y = 24, local_size_z = 1) in;
 layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2DMS texturesMS[];
 layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D rgba16fImages[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA8, rgba8) uniform image2D rgba8Images[];
 
 void main() {
     ivec2 px = ivec2(gl_GlobalInvocationID.xy);
@@ -27,4 +28,5 @@ void main() {
     vec3 finalColor = hair.rgb + lighting.rgb * (1.0 - hair.a);
 
     imageStore(rgba16fImages[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px, vec4(finalColor, 1.0));
+    imageStore(rgba8Images[VULKAN_STORAGE_IMAGE_RGBA8_IDX_EMISSIVE], px, vec4(0.0, 0.0, 0.0, 1.0));
 }

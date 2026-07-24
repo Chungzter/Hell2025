@@ -1,4 +1,5 @@
 #version 450 core
+#extension GL_ARB_bindless_texture : enable
 #include "../../common/ocean.glsl"
 #include "../../common/types.glsl"
 

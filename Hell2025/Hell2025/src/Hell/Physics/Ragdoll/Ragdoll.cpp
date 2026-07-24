@@ -321,6 +321,44 @@ bool Ragdoll::IsMarkedForRemoval() const {
     return m_markedForRemoval;
 }
 
+void Ragdoll::AddForce(const std::string& boneName, const glm::vec3& force, bool wakeIfDisabled) {
+    const size_t count = std::min(m_markerBoneNames.size(), m_pxRigidDynamics.size());
+
+    for (size_t i = 0; i < count; i++) {
+        if (m_markerBoneNames[i] != boneName) continue;
+
+        PxRigidDynamic* pxRigidDynamic = m_pxRigidDynamics[i];
+        if (!pxRigidDynamic) return;
+
+        if (!m_simulationEnabled) {
+            if (!wakeIfDisabled) return;
+            EnableSimulation();
+        }
+
+        pxRigidDynamic->addForce(PxVec3(force.x, force.y, force.z), PxForceMode::eVELOCITY_CHANGE, true);
+        return;
+    }
+}
+
+void Ragdoll::SetAngularVelocity(const std::string& boneName, const glm::vec3& angularVelocity, bool wakeIfDisabled) {
+    const size_t count = std::min(m_markerBoneNames.size(), m_pxRigidDynamics.size());
+
+    for (size_t i = 0; i < count; i++) {
+        if (m_markerBoneNames[i] != boneName) continue;
+
+        PxRigidDynamic* pxRigidDynamic = m_pxRigidDynamics[i];
+        if (!pxRigidDynamic) return;
+
+        if (!m_simulationEnabled) {
+            if (!wakeIfDisabled) return;
+            EnableSimulation();
+        }
+
+        pxRigidDynamic->setAngularVelocity(PxVec3(angularVelocity.x, angularVelocity.y, angularVelocity.z), true);
+        return;
+    }
+}
+
 void Ragdoll::AddForce(uint64_t physicsId, const glm::vec3& force, bool wakeIfDisabled) {
     for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
         if (!pxRigidDynamic) continue;

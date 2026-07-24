@@ -284,6 +284,26 @@ namespace {
         state.rasterizer.cullFaceEnabled = false;
     }
 
+    void CreateEmissiveForwardRenderState() {
+        VulkanRenderState& state = VulkanResourceManager::CreateRenderState("EmissiveForward");
+
+        VulkanRenderTargetInfo& emissive = state.AddColorTarget("Emissive");
+        emissive.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        emissive.clearValue.color.float32[0] = 0.0f;
+        emissive.clearValue.color.float32[1] = 0.0f;
+        emissive.clearValue.color.float32[2] = 0.0f;
+        emissive.clearValue.color.float32[3] = 0.0f;
+
+        VulkanRenderTargetInfo& depth = state.SetDepthTarget("Depth");
+        depth.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        state.rasterizer.depthTestEnabled = true;
+        state.rasterizer.depthWriteEnabled = false;
+        state.rasterizer.depthCompareOp = VK_COMPARE_OP_EQUAL;
+        state.rasterizer.blendEnabled = false;
+        state.rasterizer.cullFaceEnabled = false;
+    }
+
     void CreateHairLightingRenderState() {
         VulkanRenderState& state = VulkanResourceManager::CreateRenderState("HairLighting");
 
@@ -308,6 +328,7 @@ namespace VulkanRenderer {
         CreateMaterialResolveRenderState();
         CreateLightingDeferredRenderState();
         CreateLightingForwardBlendedRenderState();
+        CreateEmissiveForwardRenderState();
         CreateSpriteSheetRenderState();
         CreateSkyboxRenderState();
         CreateDebug3DRenderState();

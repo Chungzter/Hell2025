@@ -247,6 +247,34 @@ namespace {
         pipeline.Build();
     }
 
+    // Emissive bloom
+
+    void CreateEmissiveForwardPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("EmissiveForward");
+        pipeline.SetShader("EmissiveForward");
+        pipeline.SetRenderState("EmissiveForward");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsEmissive), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+        pipeline.SetVertexDescription<Vertex>();
+        pipeline.Build();
+    }
+
+    void CreateEmissiveBloomFilterPipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("EmissiveBloomFilter");
+        pipeline.SetShader("EmissiveBloomFilter");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsEmissiveBloomFilter), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
+    void CreateEmissiveBloomCompositePipeline() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("EmissiveBloomComposite");
+        pipeline.SetShader("EmissiveBloomComposite");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.AddPushConstant(sizeof(PushConstantsEmissiveBloomComposite), VK_SHADER_STAGE_COMPUTE_BIT);
+        pipeline.Build();
+    }
+
     // Hierarchical depth buffer
 
     void CreateHiZPipeline() {
@@ -558,6 +586,9 @@ namespace VulkanRenderer {
         CreateVisibilityPipeline();
         CreateVisibilityAlphaDiscardPipeline();
         CreateMaterialResolvePipeline();
+        CreateEmissiveForwardPipeline();
+        CreateEmissiveBloomFilterPipeline();
+        CreateEmissiveBloomCompositePipeline();
         CreateLightingDeferredPipeline();
         CreateLightingForwardBlendedPipeline();
         CreatePointShadowPipelines();

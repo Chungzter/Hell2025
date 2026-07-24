@@ -277,6 +277,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_ddgi_raytrace_scene_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\DDGI\VK_ddgi_point_cloud_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_hair_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_emissive_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_debug_passes.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_lighting_forward_blended_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_post_processing_pass.cpp" />
@@ -709,6 +710,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\Vulkan\VK_debug_vertex.frag" />
     <None Include="res\shaders\Vulkan\VK_debug_vertex_2D.vert" />
     <None Include="res\shaders\Vulkan\VK_debug_vertex_3D.vert" />
+    <None Include="res\shaders\Vulkan\VK_emissive_bloom_composite.comp" />
+    <None Include="res\shaders\Vulkan\VK_emissive_bloom_filter.comp" />
+    <None Include="res\shaders\Vulkan\VK_emissive_forward.frag" />
+    <None Include="res\shaders\Vulkan\VK_emissive_forward.vert" />
     <None Include="res\shaders\Vulkan\VK_fullscreen_triangle.vert" />
     <None Include="res\shaders\Vulkan\VK_indirect_specular_amd_config.glsl" />
     <None Include="res\shaders\Vulkan\VK_material_resolve.frag" />

@@ -226,7 +226,7 @@ void main() {
         else                    fColors[i] *= 10.0;
     }
 
-    // --- RAYMARCHING LOOP (Near Fog) ---
+    // RAYMARCHING LOOP (Near Fog)
     for (int i = 0; i < NUM_STEPS; ++i) {
         float t = adaptiveDt * (float(i) + jitter);
         if (t >= marchDist) break;
@@ -250,15 +250,15 @@ void main() {
         float ext = exp(-dens * adaptiveDt);
 
         vec3 fLighting = vec3(0.0);
-        float fadeF = clamp((t - nearFadeFlashlight) / (farFadeFlashlight - nearFadeFlashlight), 0.0, 1.0);
-        if (fadeF > 1e-4 && rendererData.flashlightIESTextureIndex >= 0) {
-            sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
-            for (int fIdx = 0; fIdx < 2; ++fIdx) {
-                float attenuation = GetFlashlightIESAttenuation(raySamplePos, fPositions[fIdx], fDirs[fIdx], rendererData, flashlightIES);
-                fLighting += attenuation * 0.5 * fColors[fIdx];
-            }
-            fLighting *= fadeF;
-        }
+        //float fadeF = clamp((t - nearFadeFlashlight) / (farFadeFlashlight - nearFadeFlashlight), 0.0, 1.0);
+        //if (fadeF > 1e-4 && rendererData.flashlightIESTextureIndex >= 0) {
+        //    sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
+        //    for (int fIdx = 0; fIdx < 2; ++fIdx) {
+        //        float attenuation = GetFlashlightIESAttenuation(raySamplePos, fPositions[fIdx], fDirs[fIdx], rendererData, flashlightIES);
+        //        fLighting += attenuation * 0.5 * fColors[fIdx];
+        //    }
+        //    fLighting *= fadeF;
+        //}
 
         float fadeA = clamp((t - nearFadeAmbient) / (farFadeAmbient - nearFadeAmbient), 0.0, 1.0);
         vec3 stepScatter = (vec3(fadeA) + fLighting) * (1.0 - ext);

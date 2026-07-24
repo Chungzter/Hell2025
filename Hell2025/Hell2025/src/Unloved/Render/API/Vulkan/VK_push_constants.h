@@ -100,6 +100,33 @@ struct PushConstantsHair {
 
 static_assert(sizeof(PushConstantsHair) == 8);
 
+struct PushConstantsEmissive {
+    uint64_t frameAddressTableDeviceAddress = 0;
+};
+
+static_assert(sizeof(PushConstantsEmissive) == 8);
+
+struct PushConstantsEmissiveBloomFilter {
+    glm::ivec2 sourceOffset = glm::ivec2(0);
+    glm::ivec2 sourceExtent = glm::ivec2(0);
+    glm::ivec2 outputExtent = glm::ivec2(0);
+    glm::ivec2 direction = glm::ivec2(0);
+    int32_t sourceMip = 0;
+    float filterScale = 1.0f;
+    uint32_t sourceTextureIndex = 0;
+    uint32_t outputImageIndex = 0;
+};
+
+static_assert(sizeof(PushConstantsEmissiveBloomFilter) == 48);
+
+struct PushConstantsEmissiveBloomComposite {
+    glm::ivec2 viewportOffset = glm::ivec2(0);
+    glm::ivec2 viewportExtent = glm::ivec2(0);
+    glm::ivec2 bloomExtents[3] = {};
+};
+
+static_assert(sizeof(PushConstantsEmissiveBloomComposite) == 40);
+
 // Tile culling
 
 struct PushConstantsTileLightCulling {

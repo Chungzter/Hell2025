@@ -120,10 +120,12 @@ namespace OpenGL::Renderer {
         OpenGLFrameBuffer& fftBand1Fbo = OpenGL::ResourceManager::GetFrameBuffer("FFT_band1");
         OpenGLFrameBuffer& gBuffer = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         OpenGLFrameBuffer& waterFbo = OpenGL::ResourceManager::GetFrameBuffer("Water");
+        OpenGLShadowMap& flashlightShadowMaps = OpenGL::ResourceManager::GetShadowMap("FlashlightShadowMaps");
 
         constexpr int vertexCount = OCEAN_MESH_CONFIG.gridSize * OCEAN_MESH_CONFIG.gridSize * OCEAN_VERTICES_PER_QUAD * OCEAN_MESH_CONFIG.lodLevelCount;
 
         OpenGL::BindShader("OceanLighting");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         SetOceanFFTBandUniforms();
@@ -139,6 +141,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindTextureUnit(3, fftBand1Fbo.GetColorAttachmentHandleByName("Slope"));
         OpenGL::BindTextureUnit(4, skyboxCubemapView.GetHandle());
         OpenGL::BindTextureUnit(5, GetTextureHandleByName("WaterNormals"));
+        OpenGL::BindTextureUnit(6, flashlightShadowMaps.GetDepthTextureHandle());
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;

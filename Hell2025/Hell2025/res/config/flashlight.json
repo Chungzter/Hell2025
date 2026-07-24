@@ -16,7 +16,7 @@
     "falloffExponent": 5.000016212463379,
     "ies": {
         "coneScale": 1.0,
-        "contrast": 0.30000001192092896,
+        "contrast": 0.3999999165534973,
         "enabled": true,
         "innerAngle": 14.0,
         "outerAngle": 40.0

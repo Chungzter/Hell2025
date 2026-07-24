@@ -145,6 +145,14 @@ namespace Unloved {
 
                     m_hasBitPlayer = true;
                     player->Kill(false);
+
+                    if (Ragdoll* ragdoll = player->GetRagdoll()) {
+                        glm::vec3 biteForce = glm::normalize(GetForwardVector() + glm::vec3(0.0f, 0.15f, 0.35f)) * 2.5f;
+                        glm::vec3 biteSpinAxis = glm::normalize(glm::cross(GetForwardVector(), glm::vec3(0.0f, 1.0f, 0.5f)));
+                        ragdoll->AddForce("CC_Base_Head", biteForce, false);
+                        ragdoll->SetAngularVelocity("CC_Base_Hip", biteSpinAxis * 14.0f, false);
+                    }
+
                     //Game::g_sharkKills++; 
                     //std::ofstream out("SharkKills.txt");
                     //out << Game::g_sharkKills;

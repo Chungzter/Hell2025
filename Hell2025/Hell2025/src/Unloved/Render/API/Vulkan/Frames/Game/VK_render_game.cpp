@@ -40,6 +40,7 @@ namespace VulkanRenderer {
 
         VisibilityPass(frame.commandBuffer);
         MaterialResolvePass(frame.commandBuffer);
+        EmissiveForwardPass(frame.commandBuffer);
 
         if (Unloved::Renderer::DDGIEnabled()) {
             DDGIProbeUpdatePass(frame.commandBuffer);
@@ -62,6 +63,7 @@ namespace VulkanRenderer {
         LightingForwardBlendedPass(frame.commandBuffer);
         SkyboxPass(frame.commandBuffer);
         HairPass(frame.commandBuffer);
+        EmissiveBloomPass(frame.commandBuffer);
         SpriteSheetPass(frame.commandBuffer); // Muzzle flash, etc
 
         PostProcessingPass(frame.commandBuffer);

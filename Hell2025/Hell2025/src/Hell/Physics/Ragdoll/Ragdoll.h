@@ -27,6 +27,8 @@ struct Ragdoll {
     void SetSpawnRotation(const glm::vec3& rotation);
     void SetToInitialPose();
     void MarkForRemoval();
+    void AddForce(const std::string& boneName, const glm::vec3& force, bool wakeIfDisabled);
+    void SetAngularVelocity(const std::string& boneName, const glm::vec3& angularVelocity, bool wakeIfDisabled);
     void AddForce(uint64_t physicsId, const glm::vec3& force, bool wakeIfDisabled);
     void AddImpulse(uint64_t physicsId, const glm::vec3& impulse, bool wakeIfDisabled);
     void AddImpulseAtPosition(uint64_t physicsId, const glm::vec3& impulse, const glm::vec3& position, bool wakeIfDisabled);

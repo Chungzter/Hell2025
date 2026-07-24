@@ -94,6 +94,8 @@ namespace VulkanRenderer {
     void DDGIIrradianceTexturePass(VkCommandBuffer commandBuffer);
     uint64_t GetDDGIReflectionVolumeDataDeviceAddress();
     void DDGIRaytraceScenePass(VkCommandBuffer commandBuffer);
+    void EmissiveForwardPass(VkCommandBuffer commandBuffer);
+    void EmissiveBloomPass(VkCommandBuffer commandBuffer);
     void HairPass(VkCommandBuffer commandBuffer);
     void PostProcessingPass(VkCommandBuffer commandBuffer);
     void ComputeTileWorldBounds(VkCommandBuffer commandBuffer);

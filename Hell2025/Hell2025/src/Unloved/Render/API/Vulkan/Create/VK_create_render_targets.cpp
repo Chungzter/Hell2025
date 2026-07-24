@@ -5,6 +5,8 @@
 #include "Hell/Render/API/Vulkan/Managers/vk_swapchain_manager.h"
 #include "Unloved/Config/Config.h"
 
+#include <algorithm>
+
 namespace VulkanRenderer {
 
     void CreateRenderTargets() {
@@ -12,6 +14,10 @@ namespace VulkanRenderer {
 
         VkExtent2D gBufferExtent = { static_cast<uint32_t>(resolutions.gBuffer.x), static_cast<uint32_t>(resolutions.gBuffer.y) };
         VkExtent2D halfResExtent = { static_cast<uint32_t>(resolutions.gBufferHalfRes.x), static_cast<uint32_t>(resolutions.gBufferHalfRes.y) };
+        constexpr uint32_t emissiveBloomMipAlignment = 4;
+        VkExtent2D emissiveBloomExtent = { std::max((gBufferExtent.width + 1) / 2, 1u), std::max((gBufferExtent.height + 1) / 2, 1u) };
+        emissiveBloomExtent.width = ((emissiveBloomExtent.width + emissiveBloomMipAlignment - 1) / emissiveBloomMipAlignment) * emissiveBloomMipAlignment;
+        emissiveBloomExtent.height = ((emissiveBloomExtent.height + emissiveBloomMipAlignment - 1) / emissiveBloomMipAlignment) * emissiveBloomMipAlignment;
         VkExtent2D indirectSpecularAMDAverageExtent = { (gBufferExtent.width + 7) / 8, (gBufferExtent.height + 7) / 8 };
         VkExtent2D finalImageExtent = { static_cast<uint32_t>(resolutions.finalImage.x), static_cast<uint32_t>(resolutions.finalImage.y) };
         VkFormat finalImageFormat = VulkanSwapchainManager::GetSwapchainImageFormat();
@@ -27,7 +33,12 @@ namespace VulkanRenderer {
         VulkanResourceManager::CreateAllocatedImage("IndirectSpecularAMDMaterialRoughness", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8_UNORM, usage);
         VulkanResourceManager::CreateAllocatedImage("Visibility", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32G32_UINT, usage);
         VulkanResourceManager::CreateAllocatedImage("Lighting", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, usage);
+        VulkanResourceManager::CreateAllocatedImage("Emissive", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, usage);
         VulkanResourceManager::CreateAllocatedImage("Depth", gBufferExtent.width, gBufferExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, depthUsage);
+
+        // One viewport-local pyramid is reused after each viewport has been completely composited.
+        VulkanResourceManager::CreateAllocatedImage("EmissiveBloomA", emissiveBloomExtent.width, emissiveBloomExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B10G11R11_UFLOAT_PACK32, usage, true);
+        VulkanResourceManager::CreateAllocatedImage("EmissiveBloomB", emissiveBloomExtent.width, emissiveBloomExtent.height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B10G11R11_UFLOAT_PACK32, usage, true);
 
         // Reverse-Z hierarchical depth buffer. It is generated at the end of
         // the frame and consumed as the next frame's occlusion structure.

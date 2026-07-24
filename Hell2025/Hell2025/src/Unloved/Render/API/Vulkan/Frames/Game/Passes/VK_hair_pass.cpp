@@ -225,16 +225,19 @@ namespace VulkanRenderer {
 
         AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("Lighting");
         AllocatedImage* hairLightingImage = VulkanResourceManager::GetAllocatedImage("HairLighting");
+        AllocatedImage* emissiveImage = VulkanResourceManager::GetAllocatedImage("Emissive");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("HairComposite");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
 
         if (!lightingImage) return;
         if (!hairLightingImage) return;
+        if (!emissiveImage) return;
         if (!pipeline) return;
         if (!staticDescriptorSet) return;
 
         hairLightingImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
         lightingImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
+        emissiveImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);

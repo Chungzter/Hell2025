@@ -60,6 +60,27 @@ namespace VulkanRenderer {
             descriptorSet.WriteImage(DESC_IDX_SHADOW_SAMPLERS, VK_NULL_HANDLE, image->GetSampler(), VK_IMAGE_LAYOUT_UNDEFINED, VK_DESCRIPTOR_TYPE_SAMPLER, arrayElement);
             return true;
         }
+
+        bool TryWriteStorageImageMips(VulkanDescriptorSet& descriptorSet, uint32_t binding, const std::string& imageName, uint32_t firstArrayElement, uint32_t descriptorCount) {
+            if (!VulkanResourceManager::AllocatedImageExists(imageName)) return false;
+
+            AllocatedImage* image = VulkanResourceManager::GetAllocatedImage(imageName);
+            if (!image || image->GetMipLevelCount() == 0) return false;
+
+            const uint32_t lastMip = image->GetMipLevelCount() - 1;
+            bool dirty = false;
+
+            for (uint32_t descriptorIndex = 0; descriptorIndex < descriptorCount; descriptorIndex++) {
+                const uint32_t mipLevel = std::min(descriptorIndex, lastMip);
+                const VkImageView mipImageView = image->GetMipImageView(mipLevel);
+                if (mipImageView == VK_NULL_HANDLE) continue;
+
+                descriptorSet.WriteImage(binding, mipImageView, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, firstArrayElement + descriptorIndex);
+                dirty = true;
+            }
+
+            return dirty;
+        }
     }
 
     void UpdateBindlessRenderTargetDescriptors() {
@@ -96,6 +117,10 @@ namespace VulkanRenderer {
         dirty |= TryWriteSampledImage(*staticDescriptorSet, DESC_IDX_TEXTURES, "IndirectSpecularAMDTemporal", VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_TEMPORAL);
         dirty |= TryWriteSampledImage(*staticDescriptorSet, DESC_IDX_TEXTURES, "HiZ", VULKAN_TEXTURE_IDX_HIZ);
         dirty |= TryWriteSampledImage(*staticDescriptorSet, DESC_IDX_TEXTURES, "HairLighting", VULKAN_TEXTURE_IDX_HAIR_LIGHTING);
+        dirty |= TryWriteSampledImage(*staticDescriptorSet, DESC_IDX_TEXTURES, "Emissive", VULKAN_TEXTURE_IDX_EMISSIVE);
+        dirty |= TryWriteSampledImage(*staticDescriptorSet, DESC_IDX_TEXTURES, "EmissiveBloomA", VULKAN_TEXTURE_IDX_EMISSIVE_BLOOM_A);
+        dirty |= TryWriteSampledImage(*staticDescriptorSet, DESC_IDX_TEXTURES, "EmissiveBloomB", VULKAN_TEXTURE_IDX_EMISSIVE_BLOOM_B);
+
         dirty |= TryWritePointShadowMap(*staticDescriptorSet, "PointShadowHiRes", VULKAN_POINT_SHADOW_IDX_HIGH_RES);
         dirty |= TryWritePointShadowMap(*staticDescriptorSet, "PointShadowLowRes", VULKAN_POINT_SHADOW_IDX_LOW_RES);
 
@@ -116,25 +141,11 @@ namespace VulkanRenderer {
         dirty |= TryWriteStorageImage(*staticDescriptorSet, DESC_IDX_STORAGE_IMAGES_R8, "IndirectSpecularAMDExtractedRoughness", VULKAN_STORAGE_IMAGE_R8_IDX_INDIRECT_SPECULAR_AMD_EXTRACTED_ROUGHNESS);
         dirty |= TryWriteStorageImage(*staticDescriptorSet, DESC_IDX_STORAGE_IMAGES_R11G11B10F, "IndirectSpecularAMDAverage", VULKAN_STORAGE_IMAGE_R11G11B10F_IDX_INDIRECT_SPECULAR_AMD_AVERAGE);
         dirty |= TryWriteStorageImage(*staticDescriptorSet, DESC_IDX_STORAGE_IMAGES_R11G11B10F, "IndirectSpecularAMDAverageHistory", VULKAN_STORAGE_IMAGE_R11G11B10F_IDX_INDIRECT_SPECULAR_AMD_AVERAGE_HISTORY);
+        dirty |= TryWriteStorageImage(*staticDescriptorSet, DESC_IDX_STORAGE_IMAGES_RGBA8, "Emissive", VULKAN_STORAGE_IMAGE_RGBA8_IDX_EMISSIVE);
 
-        AllocatedImage* hiZImage = VulkanResourceManager::GetAllocatedImage("HiZ");
-        if (hiZImage && hiZImage->GetMipLevelCount() > 0) {
-            const uint32_t lastMip = hiZImage->GetMipLevelCount() - 1;
-            for (uint32_t descriptorIndex = 0; descriptorIndex < VULKAN_STORAGE_IMAGE_R32F_HIZ_MIP_COUNT; descriptorIndex++) {
-                const uint32_t mipLevel = std::min(descriptorIndex, lastMip);
-                const VkImageView mipImageView = hiZImage->GetMipImageView(mipLevel);
-                if (mipImageView == VK_NULL_HANDLE) continue;
-
-                staticDescriptorSet->WriteImage(
-                    DESC_IDX_STORAGE_IMAGES_R32F,
-                    mipImageView,
-                    VK_NULL_HANDLE,
-                    VK_IMAGE_LAYOUT_GENERAL,
-                    VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-                    VULKAN_STORAGE_IMAGE_R32F_IDX_HIZ_MIP_0 + descriptorIndex);
-                dirty = true;
-            }
-        }
+        dirty |= TryWriteStorageImageMips(*staticDescriptorSet, DESC_IDX_STORAGE_IMAGES_R32F, "HiZ", VULKAN_STORAGE_IMAGE_R32F_IDX_HIZ_MIP_0, VULKAN_STORAGE_IMAGE_R32F_HIZ_MIP_COUNT);
+        dirty |= TryWriteStorageImageMips(*staticDescriptorSet, DESC_IDX_STORAGE_IMAGES_R11G11B10F, "EmissiveBloomA", VULKAN_STORAGE_IMAGE_R11G11B10F_IDX_BLOOM_A_MIP_0, VULKAN_STORAGE_IMAGE_R11G11B10F_BLOOM_MIP_COUNT);
+        dirty |= TryWriteStorageImageMips(*staticDescriptorSet, DESC_IDX_STORAGE_IMAGES_R11G11B10F, "EmissiveBloomB", VULKAN_STORAGE_IMAGE_R11G11B10F_IDX_BLOOM_B_MIP_0, VULKAN_STORAGE_IMAGE_R11G11B10F_BLOOM_MIP_COUNT);
 
         VulkanBuffer* hiZAtomicCounter = VulkanResourceManager::GetBuffer("HiZAtomicCounter");
         if (hiZAtomicCounter) {

@@ -46,6 +46,11 @@ namespace VulkanRenderer {
         // Material Resolve
         VulkanResourceManager::CreateShader("MaterialResolve", { "VK_fullscreen_triangle.vert", "VK_material_resolve.frag" });
 
+        // Emissive bloom
+        VulkanResourceManager::CreateShader("EmissiveForward", { "VK_emissive_forward.vert", "VK_emissive_forward.frag" });
+        VulkanResourceManager::CreateShader("EmissiveBloomFilter", { "VK_emissive_bloom_filter.comp" });
+        VulkanResourceManager::CreateShader("EmissiveBloomComposite", { "VK_emissive_bloom_composite.comp" });
+
         // Lighting
         VulkanResourceManager::CreateShader("LightingDeferred", { "VK_fullscreen_triangle.vert", "VK_lighting_deferred.frag" });
         VulkanResourceManager::CreateShader("LightingForward", { "VK_lighting_forward.vert", "VK_lighting_forward.frag" });

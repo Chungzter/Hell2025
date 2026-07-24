@@ -283,6 +283,7 @@ namespace VulkanRenderer {
         AllocatedImage* velocityImage = VulkanResourceManager::GetAllocatedImage("VelocityXYOcclusionSubSurface");
         AllocatedImage* visibilityImage = VulkanResourceManager::GetAllocatedImage("Visibility");
         AllocatedImage* depthImage = VulkanResourceManager::GetAllocatedImage("Depth");
+        AllocatedImage* emissiveImage = VulkanResourceManager::GetAllocatedImage("Emissive");
         AllocatedImage* indirectDiffuseImage = VulkanResourceManager::GetAllocatedImage("IndirectDiffuse");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("DebugView");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
@@ -298,6 +299,7 @@ namespace VulkanRenderer {
         if (!velocityImage) return;
         if (!visibilityImage) return;
         if (!depthImage) return;
+        if (!emissiveImage) return;
         if (!indirectDiffuseImage) return;
         if (!viewportDataBuffer) return;
         if (!rendererDataBuffer) return;
@@ -308,6 +310,7 @@ namespace VulkanRenderer {
         velocityImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         visibilityImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         depthImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
+        emissiveImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         indirectDiffuseImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         lightingImage->Sync(commandBuffer, VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 

@@ -192,6 +192,10 @@ vec3 GetDepth(ivec2 px) {
     return vec3(depth, 0.0, 0.0);
 }
 
+vec3 GetEmissive(ivec2 px) {
+    return texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_EMISSIVE], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).rgb;
+}
+
 vec3 GetWorldPosition(ivec2 px, ivec2 outputImageSize, RendererData rendererData, ViewportDataBuffer viewportDataBuffer) {
     uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, outputImageSize, rendererData.splitscreenMode);
     ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
@@ -225,6 +229,7 @@ void main() {
     if (rendererData.rendererOverrideState == OVERRIDE_VIS_BUFFER)                 finalColor = GetVisBuffer(px);
     if (rendererData.rendererOverrideState == OVERRIDE_DEPTH)                      finalColor = GetDepth(px);
     if (rendererData.rendererOverrideState == OVERRIDE_WORLD_POSITION)             finalColor = GetWorldPosition(px, outputImageSize, rendererData, viewportDataBuffer);
+    if (rendererData.rendererOverrideState == OVERRIDE_EMISSIVE)                   finalColor = GetEmissive(px);
     if (rendererData.rendererOverrideState == OVERRIDE_INDIRECT_DIFFUSE)           finalColor = GetIndirectDiffuse(px, outputImageSize);
     if (rendererData.rendererOverrideState == OVERRIDE_HIZ) finalColor = GetHiZ(px, outputImageSize);
     if (rendererData.rendererOverrideState == OVERRIDE_INDIRECT_SPECULAR_AMD_SAMPLE_COUNT) finalColor = GetIndirectSpecularAMDSampleCount(px, outputImageSize);

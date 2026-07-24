@@ -26,7 +26,7 @@ int main() {
     std::cout << "We are all alone on life's journey, held captive by the limitations of human consciousness.\n";
 
     // Engine Init
-    if (!Hell::BackEnd::Init(API::OPENGL, WindowedMode::WINDOWED, "Unloved", 2048)) {
+    if (!Hell::BackEnd::Init(API::VULKAN, WindowedMode::WINDOWED, "Unloved", 2048)) {
         return -1;
     }
 
