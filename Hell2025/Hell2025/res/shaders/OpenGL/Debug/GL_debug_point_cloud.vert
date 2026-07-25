@@ -1,7 +1,8 @@
 #version 460 core
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/types.glsl"
 
-layout(std430, binding = 8) readonly buffer PointCloudBuffer { CloudPoint points[]; };
+layout(std430, binding = SSBO_IDX_DEBUG_POINT_CLOUD_POINTS) readonly buffer PointCloudBuffer { CloudPoint points[]; };
 
 uniform int u_viewportIndex;
 uniform mat4 u_projectionView;

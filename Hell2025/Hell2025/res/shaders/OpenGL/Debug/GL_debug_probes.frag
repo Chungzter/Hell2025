@@ -1,4 +1,5 @@
 #version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/ddgi.glsl"
 #include "../../common/types.glsl"
 
@@ -7,8 +8,8 @@ layout (location = 0) out vec4 FragOut;
 layout(binding = 0) uniform sampler2DArray u_distanceAtlas;
 layout(binding = 1) uniform sampler2DArray u_irradianceAtlas;
 
-layout(std430, binding = 7) readonly buffer DDGIVolumeBuffer  { DDGIVolume volume; };
-layout(std430, binding = 8) readonly buffer ProbeStatesBuffer { ProbeState probeStates[]; };
+layout(std430, binding = SSBO_IDX_DEBUG_PROBES_VOLUME) readonly buffer DDGIVolumeBuffer { DDGIVolume volume; };
+layout(std430, binding = SSBO_IDX_DEBUG_PROBES_STATES) readonly buffer ProbeStatesBuffer { ProbeState probeStates[]; };
 
 flat in int v_probeIndex;
 flat in ivec3 v_voxelCoord;

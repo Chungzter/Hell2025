@@ -27,7 +27,7 @@ namespace OpenGL::Renderer {
 
         static GLuint roadPointsWorldSsbo = 0;
         if (roadPointsWorldSsbo == 0) glGenBuffers(1, &roadPointsWorldSsbo);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, roadPointsWorldSsbo);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_ROAD_BLIT_POINTS, roadPointsWorldSsbo);
         glBufferData(GL_SHADER_STORAGE_BUFFER, controlPoints.size() * sizeof(glm::vec4), controlPoints.data(), GL_DYNAMIC_DRAW);
 
         GLuint roadMapTextureHandle = roadFramebuffer->GetColorAttachmentHandleByName("RoadMask");

@@ -1,4 +1,5 @@
 #version 460 core
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/types.glsl"
 #include "../../common/ddgi.glsl"
 
@@ -11,10 +12,10 @@ in vec2 v_uv;
 in vec3 v_baseColor;
 flat in uint v_vertexId;
 
-layout(std430, binding = 4) readonly buffer lightsBuffer      { Light lights[]; };
-layout(std430, binding = 5) readonly buffer GridOffsetsBuffer { uint cellOffsets[]; };
-layout(std430, binding = 6) readonly buffer GridCountsBuffer  { uint cellCounts[]; };
-layout(std430, binding = 7) buffer PointCloudDirtyFlagsBuffer { uint pointCloudDirtyFlags[]; };
+layout(std430, binding = SSBO_IDX_DEBUG_POINT_CLOUD_LIGHTS) readonly buffer lightsBuffer { Light lights[]; };
+layout(std430, binding = SSBO_IDX_DEBUG_POINT_CLOUD_GRID_OFFSETS) readonly buffer GridOffsetsBuffer { uint cellOffsets[]; };
+layout(std430, binding = SSBO_IDX_DEBUG_POINT_CLOUD_GRID_COUNTS) readonly buffer GridCountsBuffer { uint cellCounts[]; };
+layout(std430, binding = SSBO_IDX_DEBUG_POINT_CLOUD_DIRTY_FLAGS) buffer PointCloudDirtyFlagsBuffer { uint pointCloudDirtyFlags[]; };
 
 uniform ivec3 u_pointCloudGridDimensions;
 uniform float u_pointCloudCellSize;

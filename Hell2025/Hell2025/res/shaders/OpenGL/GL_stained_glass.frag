@@ -14,10 +14,11 @@ layout (binding = 5) uniform sampler2D normalTexture;
 layout (binding = 6) uniform sampler2D rmaTexture;
 layout (binding = 8) uniform sampler2D MainImageGuassianBlurredTexture; // Contains the final lit scene
 
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData  rendererData;   };
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData  viewportData[]; };
-readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light         lights[];       };
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData  rendererData;   };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData  viewportData[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer       { Light         lights[];       };
+readonly restrict layout(std430, binding = SSBO_IDX_SPOT_LIGHTS) buffer spotLightsBuffer { SpotLight spotLights[]; };
 
 in vec2 TexCoord;
 in vec3 Normal;
@@ -93,12 +94,9 @@ void main() {
     vec3 worldSpacePosition = WorldPos.xyz;
     float fragDistance = distance(viewPos, worldSpacePosition);
 
-    if (rendererData.flashlightIESTextureIndex >= 0) {
-        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
-        for (int i = 0; i < 2; i++) {
-            ViewportData flashlightViewportData = viewportData[i];
-            directLighting += GetFlashlightContribution(i, uint(u_viewportIndex), flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), rendererData, normal.xyz, worldSpacePosition, gammaBaseColor.rgb, roughness, metallic, fragDistance, -1000.0, flashlightIES, FlashlighShadowMapTextureArray);
-        }
+    sampler2D flashlightIES = sampler2D(textureSamplers[max(rendererData.flashlightIESTextureIndex, 0)]);
+    for (uint i = 0u; i < rendererData.spotLightCount; i++) {
+        directLighting += GetSpotLightContribution(spotLights[i], rendererData, uint(u_viewportIndex), viewPos, normal.xyz, worldSpacePosition, gammaBaseColor.rgb, roughness, metallic, fragDistance, -1000.0, flashlightIES, FlashlighShadowMapTextureArray);
     }
 
 

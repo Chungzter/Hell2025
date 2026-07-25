@@ -1,5 +1,6 @@
 #version 460
 
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/constants.glsl"
 #include "../../common/renderer_override_modes.glsl"
 #include "../../common/types.glsl"
@@ -13,15 +14,15 @@ uniform float u_viewportWidth;
 uniform float u_viewportHeight;
 uniform int u_tileXCount;
 uniform int u_tileYCount;
-uniform int u_debugMode;
 
 shared vec3 sharedDebugOutputColor;
 
-readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer        { RendererData rendererData; };
-readonly restrict layout(std430, binding = 5) buffer lightsBuffer              { Light lights[]; };
-readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer          { TileLights tileLights[]; };
-readonly restrict layout(std430, binding = 8) buffer tileBloodDecalsBuffer     { TileInstanceData tileBloodDecals[]; };
-readonly restrict layout(std430, binding = 9) buffer tileChristmasLightsBuffer { TileInstanceData tileChristmasLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer        { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer              { Light lights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_DEBUG_TILES_TILE_LIGHTS) buffer tileLightsBuffer          { TileLights tileLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_DEBUG_TILES_TILE_BLOOD_DECALS) buffer tileBloodDecalsBuffer     { TileInstanceData tileBloodDecals[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_DEBUG_TILES_TILE_CHRISTMAS_LIGHTS) buffer tileChristmasLightsBuffer { TileInstanceData tileChristmasLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_DEBUG_TILES_TILE_SPOT_LIGHTS) buffer tileSpotLightsBuffer { TileSpotLights tileSpotLights[]; };
 
 void main() {
 
@@ -46,19 +47,24 @@ void main() {
 		uint tileIndex = gl_WorkGroupID.y * u_tileXCount + gl_WorkGroupID.x;
 
 		// Lights
-		float count = 0;
+		uint selectedCount = 0u;
 
-		if (u_debugMode == 0) {
-			count = tileLights[tileIndex].lightCount / 8.0;
+		if (rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_LIGHTS) {
+			selectedCount = tileLights[tileIndex].lightCount;
 		}
-		if (u_debugMode == 1) {
-			count = tileBloodDecals[tileIndex].count / 8.0;
-		}
-
-		if (u_debugMode == 2) {
-			count = tileChristmasLights[tileIndex].count / 8.0;
+		if (rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_BLOOD_DECALS) {
+			selectedCount = tileBloodDecals[tileIndex].count;
 		}
 
+		if (rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_CHRISTMAS_LIGHTS) {
+			selectedCount = tileChristmasLights[tileIndex].count;
+		}
+
+		if (rendererData.rendererOverrideState == OVERRIDE_TILE_HEATMAP_SPOT_LIGHTS) {
+			selectedCount = tileSpotLights[tileIndex].lightCount;
+		}
+
+		float count = float(selectedCount) / 8.0;
 		count = clamp(count, 0, 1);
 		float level = count * 3.14159265/2;
 		vec3 col;
@@ -67,19 +73,9 @@ void main() {
 		col.b = cos(level);
 		sharedDebugOutputColor = lightingColor * 0.5 + col * col;
 		sharedDebugOutputColor = (lightingColor * 0.1) + (col * col);
-		if (tileLights[tileIndex].lightCount == 0) {
+		if (selectedCount == 0u) {
 			sharedDebugOutputColor = vec3(0,0,0);
 		}
-
-        //if (count == 0) {
-		//	sharedDebugOutputColor = vec3(0,1,0);
-        //}
-
-		//if (u_debugMode == 1) {
-		//	value = tileBloodDecals[tileIndex].decalCount;
-		//	float debugFloat = float(value) / 255.0;
-		//	sharedDebugOutputColor = vec3(debugFloat);
-		//}
 	}
 	barrier();
 

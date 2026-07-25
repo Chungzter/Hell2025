@@ -217,7 +217,7 @@ namespace Unloved::BulletSystem {
 
                 bool glassHit = meshNode && (meshNode->blendingMode == BlendingMode::GLASS ||
                                              meshNode->blendingMode == BlendingMode::MIRROR ||
-                                             meshNode->blendingMode == BlendingMode::STAINED_GLASS);
+                                             meshNode->blendingMode == BlendingMode::GLASS);
 
                 bool createDecal = (meshNode && meshNode->decalType != DecalType::UNDEFINED) ||
                                    (Hell::Physics::GetRigidStaitcById(physicsId) != nullptr);

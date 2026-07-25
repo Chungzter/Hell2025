@@ -59,6 +59,9 @@ struct DrawCommandsSet {
 };
 
 struct FlashLightShadowMapDrawInfo {
-    std::vector<DrawIndexedIndirectCommand> flashlightShadowMapGeometry[4];
-    std::vector<uint32_t> heightMapChunkIndices[4];
+    std::vector<DrawIndexedIndirectCommand> flashlightShadowMapGeometry[MAX_SHADOWED_SPOT_LIGHTS];
+    std::vector<uint32_t> heightMapChunkIndices[MAX_SHADOWED_SPOT_LIGHTS];
+    glm::mat4 projectionView[MAX_SHADOWED_SPOT_LIGHTS]{};
+    int32_t ownerViewportIndex[MAX_SHADOWED_SPOT_LIGHTS] = { -1, -1, -1, -1 };
+    bool active[MAX_SHADOWED_SPOT_LIGHTS]{};
 };

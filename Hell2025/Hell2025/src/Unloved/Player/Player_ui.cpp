@@ -277,7 +277,6 @@ void Player::UpdateUI(float deltaTime) {
                 text += "RenderItems MIRROR: " + std::to_string(RenderDataManager::GetRenderItemsMirror().size()) + "\n";
                 text += "RenderItems TOILET_WATER: " + std::to_string(RenderDataManager::GetRenderItemsToiletWater().size()) + "\n";
                 text += "RenderItems PLASTIC: " + std::to_string(RenderDataManager::GetRenderItemsPlastic().size()) + "\n";
-                text += "RenderItems STAINED_GLASS: " + std::to_string(RenderDataManager::GetRenderItemsStainedGlass().size()) + "\n";
                 text += "\n";
                 text += "RenderItems Skinned ALPHA_DISCARD: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsAlphaDiscard().size()) + "\n";
                 text += "RenderItems Skinned BLENDED: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsBlended().size()) + "\n";

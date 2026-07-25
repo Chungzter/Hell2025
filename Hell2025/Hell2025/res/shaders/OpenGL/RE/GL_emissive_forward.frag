@@ -1,15 +1,16 @@
 #version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #extension GL_ARB_bindless_texture : enable
 #include "../../common/normal_encoding.glsl"
 #include "../../common/types.glsl"
 
 layout (location = 0) out vec4 EmissiveOut;
 
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
-readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
-readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
 
 in flat int v_globalInstanceIndex;
 

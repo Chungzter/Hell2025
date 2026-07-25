@@ -36,8 +36,11 @@ namespace OpenGL::Renderer {
         UpdateSSBOVector("GlassInstanceData", Unloved::RenderDataManager::GetGlassInstanceData());
         UpdateSSBOVector("GlassLightRanges", Unloved::RenderDataManager::GetGlassLightRanges());
         UpdateSSBOVector("GlassLightIndices", Unloved::RenderDataManager::GetGlassLightIndices());
+        UpdateSSBOVector("GlassSpotLightRanges", Unloved::RenderDataManager::GetGlassSpotLightRanges());
+        UpdateSSBOVector("GlassSpotLightIndices", Unloved::RenderDataManager::GetGlassSpotLightIndices());
         UpdateSSBOVector("InstanceData", Unloved::RenderDataManager::GetInstanceData());
         UpdateSSBOVector("Lights", Unloved::RenderDataManager::GetGPULights());
+        UpdateSSBOVector("SpotLights", Unloved::RenderDataManager::GetGPUSpotLights());
         UpdateSSBOVector("Materials", Hell::ResourceManager::GetMaterials());
         UpdateSSBOVector("RenderItemsUI", UIBackEnd::GetRenderItems());
         UpdateSSBOVector("Samplers", OpenGL::BackEnd::GetBindlessTextureIDs());
@@ -53,5 +56,6 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
     }
 }

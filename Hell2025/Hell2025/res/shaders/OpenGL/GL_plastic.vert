@@ -13,9 +13,9 @@ layout (location = 1) in vec3 vNormal;
 layout (location = 2) in vec2 vUV;
 layout (location = 3) in vec3 vTangent;
 
-layout(std430, binding = 3) readonly restrict buffer viewportDataBuffer { ViewportData viewportData[]; };
-layout(std430, binding = 1) readonly restrict buffer materialsBuffer    { Material materials[]; };
-layout(std430, binding = 4) readonly buffer renderItemsBuffer           { RenderItem renderItems[]; };
+layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) readonly restrict buffer viewportDataBuffer { ViewportData viewportData[]; };
+layout(std430, binding = SSBO_IDX_MATERIALS) readonly restrict buffer materialsBuffer    { Material materials[]; };
+layout(std430, binding = SSBO_IDX_INSTANCE_DATA) readonly buffer renderItemsBuffer           { RenderItem renderItems[]; };
 
 out vec2 TexCoord;
 out vec4 WorldPos;
@@ -78,6 +78,7 @@ void main() {
 */
 
 #version 460
+#include "../common/OpenGL/GL_binding_indices.glsl"
 
 layout (location = 0) in vec3 vPosition;
 layout (location = 1) in vec3 vNormal;

@@ -36,14 +36,14 @@ namespace OpenGL::Renderer {
         UpdateSSBO("SkinningTransforms", skinningTransforms.size() * sizeof(glm::mat4), skinningTransforms.data());
         UpdateSSBO("PreviousSkinningTransforms", previousSkinningTransforms.size() * sizeof(glm::mat4), previousSkinningTransforms.data());
 
-        BindSSBO(0, BackEnd::GetSkinnedVertexDataVBO());
-        BindSSBO(1, glMeshBuffer.GetVBO());
-        BindSSBO(2, "SkinningTransforms");
-        BindSSBO(3, glMeshBuffer.GetVertexWeightSSBO());
-        BindSSBO(4, "SkinningJobs");
-        BindSSBO(5, "SkinningDispatchGroups");
-        BindSSBO(6, "PreviousSkinningTransforms");
-        BindSSBO(7, BackEnd::GetPreviousSkinnedPositionBuffer());
+        BindSSBO(SSBO_IDX_SKINNING_OUTPUT_VERTICES, BackEnd::GetSkinnedVertexDataVBO());
+        BindSSBO(SSBO_IDX_SKINNING_INPUT_VERTICES, glMeshBuffer.GetVBO());
+        BindSSBO(SSBO_IDX_SKINNING_ANIMATED_TRANSFORMS, "SkinningTransforms");
+        BindSSBO(SSBO_IDX_SKINNING_WEIGHTS, glMeshBuffer.GetVertexWeightSSBO());
+        BindSSBO(SSBO_IDX_SKINNING_JOBS, "SkinningJobs");
+        BindSSBO(SSBO_IDX_SKINNING_DISPATCH_GROUPS, "SkinningDispatchGroups");
+        BindSSBO(SSBO_IDX_SKINNING_PREVIOUS_TRANSFORMS, "PreviousSkinningTransforms");
+        BindSSBO(SSBO_IDX_SKINNING_PREVIOUS_POSITIONS, BackEnd::GetPreviousSkinnedPositionBuffer());
 
         BindShader("ComputeSkinning");
         DispatchCompute(skinningDispatchGroups.size(), 1, 1);

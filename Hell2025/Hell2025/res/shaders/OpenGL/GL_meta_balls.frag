@@ -1,4 +1,5 @@
 #version 460
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 
@@ -11,9 +12,9 @@ layout (location = 2) out vec4 RMAOut;
 layout (location = 3) out vec4 WorldPositionOut;
 layout (location = 4) out vec4 EmissiveOut;
 
-readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportData[]; };
-readonly restrict layout(std430, binding = 6) buffer metaBallBuffer { MetaBall metaballs[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportData[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_META_BALLS) buffer metaBallBuffer { MetaBall metaballs[]; };
 
 layout (binding = 0) uniform sampler3D u_noiseTexture;
 

@@ -1,5 +1,6 @@
 #version 460
 #extension GL_ARB_bindless_texture : enable
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/lighting.glsl"
 #include "../../common/types.glsl"
 
@@ -10,9 +11,10 @@ uniform float u_time;
 
 layout (binding = 0) uniform samplerCube cubeMap;
 
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SPOT_LIGHTS) buffer spotLightsBuffer { SpotLight spotLights[]; };
 
 // -90 degrees y rotation
 const mat3 kRotateYMinus90 = mat3(
@@ -167,23 +169,18 @@ void main() {
     //totalSpecular = vec3(0);
     //totalOpacity = 0;
 
-    if (rendererData.flashlightIESTextureIndex >= 0) {
-        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
-        for (int i = 0; i < 2; i++) {
-            float modifier = viewportDataArr[i].flashlightModifer;
-            if (modifier <= 0.05) continue;
-
-            vec3 spotLightPos = viewportDataArr[i].flashlightPosition.xyz;
-            vec3 spotLightDir = normalize(viewportDataArr[i].flashlightDir.xyz);
+    sampler2D flashlightIES = sampler2D(textureSamplers[max(rendererData.flashlightIESTextureIndex, 0)]);
+    for (uint i = 0u; i < rendererData.spotLightCount; i++) {
+            SpotLight spotLight = spotLights[i];
+            vec3 spotLightPos = spotLight.positionModifier.xyz;
             vec3 L_flash = normalize(spotLightPos - worldPos);
             vec3 H_flash = normalize(L_flash + vd);
             float flashSpec = pow(max(dot(n, H_flash), 0.0), 512.0) * 5.0;
-            float attenuation = GetFlashlightIESAttenuation(worldPos, spotLightPos, spotLightDir, rendererData, flashlightIES) * modifier;
+            float attenuation = GetSpotLightAttenuation(spotLight, rendererData, worldPos, flashlightIES);
 
             totalSpecular += rendererData.flashlightColor.rgb * flashSpec * attenuation;
             totalOpacity += flashSpec * 0.4 * attenuation;
             totalOpacity += fresnel * 0.75 + length(irid) * 0.12;
-        }
     }
 
     vec3 surface = refrCol * (1.0 - fresnel)

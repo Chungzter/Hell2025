@@ -1,4 +1,5 @@
 #version 460 core
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 
 #include "../../common/util.glsl"
 #include "../../common/types.glsl"
@@ -19,7 +20,7 @@ out vec3 Tangent;
 out vec3 BiTangent;
 out vec3 ViewPos;
 
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 

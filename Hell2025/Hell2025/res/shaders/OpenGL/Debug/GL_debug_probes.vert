@@ -1,12 +1,13 @@
  #version 450
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/ddgi.glsl"
 #include "../../common/types.glsl"
 
 layout (location = 0) in vec3 a_position;
 layout (location = 1) in vec3 a_normal;
 
-layout(std430, binding = 7) readonly buffer DDGIVolumeBuffer  { DDGIVolume volume; };
-layout(std430, binding = 8) readonly buffer ProbeStatesBuffer { ProbeState probeStates[]; };
+layout(std430, binding = SSBO_IDX_DEBUG_PROBES_VOLUME) readonly buffer DDGIVolumeBuffer { DDGIVolume volume; };
+layout(std430, binding = SSBO_IDX_DEBUG_PROBES_STATES) readonly buffer ProbeStatesBuffer { ProbeState probeStates[]; };
 
 uniform mat4 u_projectionView;
 flat out int v_probeIndex; 

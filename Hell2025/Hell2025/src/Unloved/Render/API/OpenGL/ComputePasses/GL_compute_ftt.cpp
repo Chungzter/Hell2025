@@ -103,12 +103,12 @@ namespace OpenGL::Renderer {
         constexpr GLuint localSize = 16;
         constexpr GLuint dispatchSize = (Ocean::FFT_RESOLUTION + localSize - 1) / localSize;
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, resources.h0SSBOs[bandIndex]->GetHandle());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, resources.spectrumInSSBO->GetHandle());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, resources.dispXInSSBO->GetHandle());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, resources.dispZInSSBO->GetHandle());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, resources.gradXInSSBO->GetHandle());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, resources.gradZInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_SPECTRUM_H0, resources.h0SSBOs[bandIndex]->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_SPECTRUM_H, resources.spectrumInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_SPECTRUM_DISPLACEMENT_X, resources.dispXInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_SPECTRUM_DISPLACEMENT_Z, resources.dispZInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_SPECTRUM_GRADIENT_X, resources.gradXInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_SPECTRUM_GRADIENT_Z, resources.gradZInSSBO->GetHandle());
 
         OpenGL::BindShader("OceanCalculateSpectrum");
         OpenGL::SetUniformFloat("u_domainSize", Ocean::GetDomainSize(bandIndex));
@@ -132,11 +132,11 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindImageTexture(0, resources.frameBuffers[bandIndex]->GetColorAttachmentHandleByName("Displacement"), GL_WRITE_ONLY, GL_RGBA32F);
         OpenGL::BindImageTexture(1, resources.frameBuffers[bandIndex]->GetColorAttachmentHandleByName("Slope"), GL_WRITE_ONLY, GL_RGBA32F);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, resources.spectrumInSSBO->GetHandle());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, resources.dispXInSSBO->GetHandle());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, resources.dispZInSSBO->GetHandle());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, resources.gradXInSSBO->GetHandle());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, resources.gradZInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_UPDATE_H, resources.spectrumInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_UPDATE_DISPLACEMENT_X, resources.dispXInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_UPDATE_DISPLACEMENT_Z, resources.dispZInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_UPDATE_GRADIENT_X, resources.gradXInSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_UPDATE_GRADIENT_Z, resources.gradZInSSBO->GetHandle());
 
         OpenGL::BindShader("OceanUpdateTextures");
         OpenGL::SetUniformFloat("u_dispScale", Ocean::GetDisplacementScale());

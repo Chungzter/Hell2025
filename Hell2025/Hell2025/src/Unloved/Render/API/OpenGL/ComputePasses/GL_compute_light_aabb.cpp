@@ -180,7 +180,7 @@ namespace OpenGL::Renderer {
         glBindTexture(GL_TEXTURE_CUBE_MAP, fbo.GetColorHandle());
         OpenGL::SetUniformInt("u_WorldPosCubemap", 0);
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, ssbo->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_LIGHT_AABB_OUTPUT, ssbo->GetHandle());
 
         uint32_t numGroups = fbo.GetSize() / 16;
         //OpenGL::DispatchCompute(numGroups, numGroups, 1);
@@ -204,8 +204,8 @@ namespace OpenGL::Renderer {
 
 		OpenGL::BindShader("DebugLightAABB");
 
-		OpenGL::BindSSBO(4, "Lights");
-		OpenGL::BindSSBO(5, "LightAABBs");
+		OpenGL::BindSSBO(SSBO_IDX_LIGHT_AABB_DEBUG_LIGHTS, "Lights");
+		OpenGL::BindSSBO(SSBO_IDX_LIGHT_AABB_DEBUG_BOUNDS, "LightAABBs");
 
 		glBindVertexArray(vao);
 

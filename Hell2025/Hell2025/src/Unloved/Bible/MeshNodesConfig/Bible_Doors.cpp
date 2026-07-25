@@ -7,7 +7,7 @@ namespace Bible {
         std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 
         // Deadlock stuff
-        if (createInfo.type != DoorType::STAINED_GLASS2) {
+        if (createInfo.type != DoorType::GLASS2) {
             MeshNodeCreateInfo& deadLock = meshNodeCreateInfoSet.emplace_back();
             deadLock.meshName = "Door_Deadlock";
             deadLock.materialName = "DoorMetals";
@@ -135,7 +135,7 @@ namespace Bible {
             }
         }
 
-        if (createInfo.type == DoorType::STAINED_GLASS) {
+        if (createInfo.type == DoorType::GLASS) {
 
             // Collision mesh node
             MeshNodeCreateInfo& door = meshNodeCreateInfoSet.emplace_back();
@@ -186,49 +186,49 @@ namespace Bible {
             MeshNodeCreateInfo& glassClear = meshNodeCreateInfoSet.emplace_back();
             glassClear.meshName = "DoorGlassArt_Clear";
             glassClear.materialName = "DoorGlass";
-            glassClear.blendingMode = BlendingMode::STAINED_GLASS;
+            glassClear.blendingMode = BlendingMode::GLASS;
             glassClear.decalType = DecalType::GLASS;
             glassClear.tintColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
             MeshNodeCreateInfo& glassGreen = meshNodeCreateInfoSet.emplace_back();
             glassGreen.meshName = "DoorGlassArt_Green";
             glassGreen.materialName = "DoorGlass";
-            glassGreen.blendingMode = BlendingMode::STAINED_GLASS;
+            glassGreen.blendingMode = BlendingMode::GLASS;
             glassGreen.decalType = DecalType::GLASS;
             glassGreen.tintColor = glm::vec3(0.0f, 0.95f, 0.5f);
 
             MeshNodeCreateInfo& glassOrange = meshNodeCreateInfoSet.emplace_back();
             glassOrange.meshName = "DoorGlassArt_Orange";
             glassOrange.materialName = "DoorGlass";
-            glassOrange.blendingMode = BlendingMode::STAINED_GLASS;
+            glassOrange.blendingMode = BlendingMode::GLASS;
             glassOrange.decalType = DecalType::GLASS;
             glassOrange.tintColor = glm::vec3(0.6f, 0.2f, 0.0f);
 
             MeshNodeCreateInfo& glassPurple = meshNodeCreateInfoSet.emplace_back();
             glassPurple.meshName = "DoorGlassArt_Purple";
             glassPurple.materialName = "DoorGlass";
-            glassPurple.blendingMode = BlendingMode::STAINED_GLASS;
+            glassPurple.blendingMode = BlendingMode::GLASS;
             glassPurple.decalType = DecalType::GLASS;
             glassPurple.tintColor = glm::vec3(0.15f, 0.0f, 0.5f);
 
             MeshNodeCreateInfo& glassRed = meshNodeCreateInfoSet.emplace_back();
             glassRed.meshName = "DoorGlassArt_Red";
             glassRed.materialName = "DoorGlass";
-            glassRed.blendingMode = BlendingMode::STAINED_GLASS;
+            glassRed.blendingMode = BlendingMode::GLASS;
             glassRed.decalType = DecalType::GLASS;
             glassRed.tintColor = glm::vec3(0.95f, 0.0f, 0.0f);
 
             MeshNodeCreateInfo& glassYellow = meshNodeCreateInfoSet.emplace_back();
             glassYellow.meshName = "DoorGlassArt_Yellow";
             glassYellow.materialName = "DoorGlass";
-            glassYellow.blendingMode = BlendingMode::STAINED_GLASS;
+            glassYellow.blendingMode = BlendingMode::GLASS;
             glassYellow.decalType = DecalType::GLASS;
             glassYellow.tintColor = glm::vec3(1.00f, 0.8f, 0.25f);
 
             MeshNodeCreateInfo& glassCenterCircle = meshNodeCreateInfoSet.emplace_back();
             glassCenterCircle.meshName = "DoorGlassArt_CenterCircle";
             glassCenterCircle.materialName = "DoorGlass";
-            glassCenterCircle.blendingMode = BlendingMode::STAINED_GLASS;
+            glassCenterCircle.blendingMode = BlendingMode::GLASS;
             glassCenterCircle.decalType = DecalType::GLASS;
             glassCenterCircle.tintColor = glm::vec3(0.5f, 0.35f, 0.0f);
 
@@ -256,7 +256,7 @@ namespace Bible {
             meshNodes->SetMaterialByMeshName("DoorGlassArtFrame", "DoorGlassFrame");
         }
 
-        if (createInfo.type == DoorType::STAINED_GLASS2) {
+        if (createInfo.type == DoorType::GLASS2) {
 
             // Collision mesh node
             MeshNodeCreateInfo& door = meshNodeCreateInfoSet.emplace_back();
@@ -293,7 +293,7 @@ namespace Bible {
             MeshNodeCreateInfo& glass = meshNodeCreateInfoSet.emplace_back();
             glass.meshName = "Glass";
             glass.materialName = "T_BlackDoor_Glass";
-            glass.blendingMode = BlendingMode::STAINED_GLASS;
+            glass.blendingMode = BlendingMode::GLASS;
             glass.decalType = DecalType::GLASS;
             glass.tintColor = glm::vec3(1.0f);
 
@@ -413,5 +413,7 @@ namespace Bible {
         meshNodes->SetMaterialByMeshName("DoorFrame_Hinges", "DoorMetals");
         meshNodes->SetMaterialByMeshName("DoorFrame_KnobLatch", "DoorOldKnob");
         meshNodes->EnableCSMShadows();
+        meshNodes->DisableShadowsByBlendingMode(BlendingMode::GLASS);
+        meshNodes->DisableShadowsByBlendingMode(BlendingMode::GLASS);
     }
 }

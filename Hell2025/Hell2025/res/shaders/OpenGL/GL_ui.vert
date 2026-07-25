@@ -1,4 +1,5 @@
 #version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
 
 layout(location = 0) in vec2 a_position;
 layout(location = 1) in vec2 a_uv;
@@ -29,7 +30,7 @@ struct RenderItemUI {
     int padding2;
 };
 
-layout(std430, binding = 6) readonly buffer RenderItems {
+layout(std430, binding = SSBO_IDX_UI_INSTANCE_DATA) readonly buffer RenderItems {
     RenderItemUI renderItems[];
 };
 

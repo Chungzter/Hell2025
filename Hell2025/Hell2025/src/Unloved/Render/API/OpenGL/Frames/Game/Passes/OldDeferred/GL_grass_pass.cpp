@@ -125,8 +125,8 @@ namespace OpenGL::Renderer {
 
         OpenGLShader* geometryShader = OpenGL::ResourceManager::GetShaderPtr("GrassGeometryGeneration");
         OpenGL::BindShader("GrassGeometryGeneration");
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_grassGeometryMesh.GetVBO());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, g_grassGeometryMesh.GetEBO());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_GRASS_GEOMETRY_OUTPUT_VERTICES, g_grassGeometryMesh.GetVBO());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_GRASS_GEOMETRY_OUTPUT_INDICES, g_grassGeometryMesh.GetEBO());
         OpenGL::DispatchCompute(bladeCount, 1, 1);
     }
 
@@ -151,10 +151,10 @@ namespace OpenGL::Renderer {
 
         // Bindings
         glBindVertexArray(g_grassGeometryMesh.GetVAO());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, g_indirectBuffer);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, bladeositionsSSBO->GetHandle());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, g_grassGeometryMesh.GetVBO());
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, g_grassGeometryMesh.GetEBO());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_GRASS_POSITION_INDIRECT_COMMAND, g_indirectBuffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_GRASS_POSITION_BLADE_POSITIONS, bladeositionsSSBO->GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_GRASS_POSITION_INPUT_VERTICES, g_grassGeometryMesh.GetVBO());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_GRASS_POSITION_INPUT_INDICES, g_grassGeometryMesh.GetEBO());
         glBindTextureUnit(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"));
         glBindTextureUnit(2, GetTextureHandleByName("Perlin"));
         glBindTextureUnit(3, roadFramebuffer->GetColorAttachmentHandleByName("RoadMask"));

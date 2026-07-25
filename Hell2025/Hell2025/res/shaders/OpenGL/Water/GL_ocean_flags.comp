@@ -1,4 +1,5 @@
 #version 460 core
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 
 #include "../../common/constants.glsl"
 #include "../../common/ocean.glsl"
@@ -12,8 +13,8 @@ layout(r8ui, binding = 1) readonly  uniform uimage2D u_oceanMaskImage;
 layout(binding = 2) uniform sampler2D DisplacementTexture_band0;
 layout(binding = 3) uniform sampler2D DisplacementTexture_band1;
 
-layout(std430, binding = 2) readonly restrict buffer rendererDataBuffer { RendererData rendererData; };
-layout(std430, binding = 3) readonly restrict buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+layout(std430, binding = SSBO_IDX_RENDERER_DATA) readonly restrict buffer rendererDataBuffer { RendererData rendererData; };
+layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) readonly restrict buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 uniform int u_displayMode;
 uniform float u_oceanOriginY;

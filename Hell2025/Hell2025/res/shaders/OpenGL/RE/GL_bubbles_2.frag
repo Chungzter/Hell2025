@@ -1,5 +1,6 @@
 #version 460
 #extension GL_ARB_bindless_texture : enable
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/lighting.glsl"
 #include "../../common/types.glsl"
 
@@ -13,9 +14,10 @@ uniform float u_particleAlphaFade;
 layout (binding = 0) uniform samplerCube cubeMap;
 layout (binding = 1) uniform sampler2D u_texture;
 
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SPOT_LIGHTS) buffer spotLightsBuffer { SpotLight spotLights[]; };
 
 void main() {
     // Sample the flip book texture
@@ -29,18 +31,10 @@ void main() {
     // Base moonlight contribution
     vec3 finalLight = vec3(0.2);
 
-    // Flashlights
-    if (rendererData.flashlightIESTextureIndex >= 0) {
-        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
-        for (int i = 0; i < 2; i++) {
-            float modifier = viewportDataArr[i].flashlightModifer;
-            if (modifier <= 0.05) continue;
-
-            vec3 spotLightPos = viewportDataArr[i].flashlightPosition.xyz;
-            vec3 spotLightDir = normalize(viewportDataArr[i].flashlightDir.xyz);
-            float attenuation = GetFlashlightIESAttenuation(v_worldPos, spotLightPos, spotLightDir, rendererData, flashlightIES);
-            finalLight += rendererData.flashlightColor.rgb * attenuation * modifier;
-        }
+    sampler2D flashlightIES = sampler2D(textureSamplers[max(rendererData.flashlightIESTextureIndex, 0)]);
+    for (uint i = 0u; i < rendererData.spotLightCount; i++) {
+        float attenuation = GetSpotLightAttenuation(spotLights[i], rendererData, v_worldPos, flashlightIES);
+        finalLight += rendererData.flashlightColor.rgb * attenuation;
     }
 
     // Final color

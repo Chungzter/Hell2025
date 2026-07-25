@@ -60,6 +60,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
         OpenGL::SetUniformFloat("u_time", time);
         OpenGL::SetUniformInt("u_noiseSeed", noiseSeed);
         OpenGL::BindImageTexture(4, fogFbo->GetColorAttachmentHandleByName("Color"), GL_WRITE_ONLY, GL_RGBA16F);

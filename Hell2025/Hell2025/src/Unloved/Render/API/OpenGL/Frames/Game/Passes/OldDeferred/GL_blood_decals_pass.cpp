@@ -69,9 +69,9 @@ namespace OpenGL::Renderer {
         state.colorMask = true;
         OpenGL::RasterizerStateManager::ForceRasterizerState(state);
 
-        OpenGL::BindSSBO(8, "TileBloodDecals");
-        OpenGL::BindSSBO(9, "BloodDecalInstances");
-        OpenGL::BindSSBO(10, "BloodDecalIndices");
+        OpenGL::BindSSBO(SSBO_IDX_BLOOD_DRAW_TILE_DECALS, "TileBloodDecals");
+        OpenGL::BindSSBO(SSBO_IDX_BLOOD_DRAW_DECALS, "BloodDecalInstances");
+        OpenGL::BindSSBO(SSBO_IDX_BLOOD_DRAW_INDEX_POOL, "BloodDecalIndices");
 
         //glBindTextureUnit(0, gBuffer->GetColorAttachmentHandleByName("RMA"));
         glBindTextureUnit(1, gBuffer->GetColorAttachmentHandleByName("NormalXYRoughnessMisc"));

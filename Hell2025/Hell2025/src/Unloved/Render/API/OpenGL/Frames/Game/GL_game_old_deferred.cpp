@@ -70,10 +70,10 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
-        OpenGL::BindSSBO(6, "TileLights");
-        OpenGL::BindSSBO(7, "TileWorldBounds");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
+        OpenGL::BindSSBO(SSBO_IDX_TILE_WORLD_BOUNDS_OUTPUT, "TileWorldBounds");
 
-        OpenGL::BindSSBO(11, "ProbeStates");
+        OpenGL::BindSSBO(SSBO_IDX_OLD_DEFERRED_PROBE_STATES, "ProbeStates");
 
         LightingPass();
 
@@ -91,7 +91,6 @@ namespace OpenGL::Renderer {
         RayMarchFog();
         OceanUnderwaterBlurPass();
         OceanUnderwaterCompositePass();
-        StainedGlassPass();
         WinstonPass();
         SpriteSheetPass(); // Muzzle flash, etc
         InventoryGaussianPass();

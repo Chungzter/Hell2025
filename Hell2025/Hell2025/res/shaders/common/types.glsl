@@ -2,6 +2,8 @@
 #ifndef COMMON_TYPES_GLSL
 #define COMMON_TYPES_GLSL
 
+#define MAX_SPOT_LIGHTS 7
+
 struct ViewportData {
     mat4 projectionReverseZ;
     mat4 inverseProjectionReverseZ;
@@ -18,7 +20,7 @@ struct ViewportData {
     mat4 skyboxProjectionView;
     mat4 flashlightProjectionView;
     mat4 previousProjectionView;
-    
+
     mat4 jitteredProjectionViewReverseZ;
     mat4 inverseJitteredProjectionViewReverseZ;
 
@@ -85,13 +87,15 @@ struct RendererData {
     uint lightCount;
     bool enableIrradianceProbeSampling;
     bool enableIndirectSpecular;
-    
+
     bool enableTAA;
-    vec2 taaJitterPx;
     float indirectSpecularFactor;
     float indirectSpecularRoughnessDampening;
     uint directPointShadowMode;
+
+    vec2 taaJitterPx; // WARNING SKETCHY
     uint padding0;
+    uint padding1;
 
     vec4 flashlightColor;
 
@@ -118,7 +122,12 @@ struct RendererData {
     float flashlightCenterSpotOuterAngle;
     uint flashlightCenterSpotEnabled;
     uint padding3;
+    bool enableDDGIReflections;
+
+    uint spotLightCount;
     uint padding4;
+    uint padding5;
+    uint padding6;
 };
 
 struct RenderItem {
@@ -205,9 +214,23 @@ struct Light {
     vec4 worldBoundsMax;
 };
 
+struct SpotLight {
+    mat4 projectionView;
+    vec4 positionModifier;
+    vec4 direction;
+    vec4 worldBoundsMin;
+    vec4 worldBoundsMax;
+    ivec4 metadata;
+};
+
 struct TileLights {
     uint lightCount;
     uint lightIndices[127];
+};
+
+struct TileSpotLights {
+    uint lightCount;
+    uint lightIndices[MAX_SPOT_LIGHTS];
 };
 
 struct TileWorldBounds {

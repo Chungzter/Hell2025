@@ -12,6 +12,8 @@
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Unloved/UI/Imgui/Types/Types.h"
 
+#include "Unloved/Objects/Exterior/Jetty.h"
+
 #include <imgui/imgui.h>
 
 namespace Unloved::Editor {
@@ -71,6 +73,8 @@ namespace Unloved::Editor {
     EditorUI::CheckBox g_pickUpDisablePhysicsAtSpawn;
     EditorUI::CheckBox g_pickUpRespawn;
 
+    EditorUI::IntegerInput g_jettyBoardCount;
+
     void InitLeftPanel() {
         g_mapPropertiesHeader.SetTitle("Map Editor");
         g_objectPropertiesHeader.SetTitle("Properties");
@@ -118,6 +122,9 @@ namespace Unloved::Editor {
 
         g_pickUpDisablePhysicsAtSpawn.SetText("No PhysX at Start");
         g_pickUpRespawn.SetText("Respawn");
+
+        g_jettyBoardCount.SetText("Board Count");
+        g_jettyBoardCount.SetRange(4, 666);
     }
 
 
@@ -298,8 +305,8 @@ namespace Unloved::Editor {
                     std::vector<std::string> types;
                     types.push_back(Hell::Enum::ToString(DoorType::STANDARD_A));
                     types.push_back(Hell::Enum::ToString(DoorType::STANDARD_B));
-                    types.push_back(Hell::Enum::ToString(DoorType::STAINED_GLASS));
-                    types.push_back(Hell::Enum::ToString(DoorType::STAINED_GLASS2));
+                    types.push_back(Hell::Enum::ToString(DoorType::GLASS));
+                    types.push_back(Hell::Enum::ToString(DoorType::GLASS2));
 
                     std::vector<std::string> materialTypes;
                     materialTypes.push_back(Hell::Enum::ToString(DoorMaterialType::RESIDENT_EVIL));
@@ -348,6 +355,18 @@ namespace Unloved::Editor {
                     }
                 }
 
+                // Jetties
+                if (GetSelectedObjectType() == ObjectType::JETTY) {
+                    if (Jetty* jetty = Unloved::World::GetJettyById(GetSelectedObjectId())) {
+                        g_jettyBoardCount.SetValue(jetty->GetBoardCount());
+
+
+                        if (g_jettyBoardCount.CreateImGuiElements()) {
+                            jetty->SetBoardCount(g_jettyBoardCount.GetValue());
+                        }
+
+                    }
+                }
 
                 // Pick Ups
                 if (GetSelectedObjectType() == ObjectType::PICK_UP) {

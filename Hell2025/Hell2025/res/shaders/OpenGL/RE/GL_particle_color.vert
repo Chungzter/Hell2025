@@ -1,4 +1,5 @@
 #version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/types.glsl"
 
 uniform mat4 u_view;
@@ -11,8 +12,8 @@ out vec3 v_worldPos;
 
 out float v_lifetime;
 
-restrict layout(std430, binding = 7) readonly buffer Buffer6 { Particle particlePool[]; };
-restrict layout(std430, binding = 8) readonly buffer Buffer7 { uint particleActiveIndices[]; };
+restrict layout(std430, binding = SSBO_IDX_PARTICLE_DRAW_POOL) readonly buffer Buffer6 { Particle particlePool[]; };
+restrict layout(std430, binding = SSBO_IDX_PARTICLE_DRAW_ACTIVE_INDICES) readonly buffer Buffer7 { uint particleActiveIndices[]; };
 
 //uniform int u_particleIndex;
 

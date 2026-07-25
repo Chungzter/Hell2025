@@ -62,15 +62,18 @@ Window::Window(uint64_t id, const WindowCreateInfo& createInfo, const SpawnOffse
     glassTop.materialName = glassTopMaterial;
     glassTop.blendingMode = BlendingMode::GLASS;
     glassTop.decalType = DecalType::GLASS;
+    glassTop.tintColor = glm::vec3(1.0f, 0.5, 0.0f);
 
     MeshNodeCreateInfo& glassBottom = meshNodeCreateInfoSet.emplace_back();
     glassBottom.meshName = "GlassBottom";
     glassBottom.materialName = glassBottomMaterial;
     glassBottom.blendingMode = BlendingMode::GLASS;
     glassBottom.decalType = DecalType::GLASS;
+    glassBottom.tintColor = glm::vec3(1.0f, 1.0, 0.0f);
 
     m_meshNodes.Init(m_objectId, "Window", meshNodeCreateInfoSet);
     m_meshNodes.EnableCSMShadows();
+    m_meshNodes.DisableShadowsByBlendingMode(BlendingMode::GLASS);
     m_meshNodes.Update(m_transform.to_mat4());
 
     // Glass PhysX shapes

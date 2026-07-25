@@ -28,6 +28,7 @@ namespace Unloved {
 
 void Player::Init(uint64_t playerId, const glm::vec3& position, const glm::vec3& rotation, int32_t viewportIndex) {
     m_playerId = playerId;
+    m_flashlightSpotLightId = World::AddSpotLight(playerId, viewportIndex);
 
     m_camera.SetPosition(position + glm::vec3(0.0f, m_viewHeightStanding, 0.0f));
     m_camera.SetEulerRotation(rotation);

@@ -135,7 +135,7 @@ namespace Unloved::Editor {
         //}
         //DebugDraw::DrawPoint(testPoint, color);
 
-        
+
 
 
         // Render selected wall/plane lines and vertices

@@ -1,4 +1,5 @@
 #version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
 
 uniform mat4 u_projectionView;
 
@@ -14,15 +15,15 @@ struct Vertex {
     float normZ;
 };
 
-layout(std430, binding = 9) buffer bladePositions {
+layout(std430, binding = SSBO_IDX_GRASS_POSITION_BLADE_POSITIONS) buffer bladePositions {
     vec4 BladePositions[];
 };
 
-layout(std430, binding = 10) buffer inputVertexBuffer {
+layout(std430, binding = SSBO_IDX_GRASS_POSITION_INPUT_VERTICES) buffer inputVertexBuffer {
     Vertex InputVertexBuffer[];
 };
 
-layout(std430, binding = 11) buffer inputIndexBuffer {
+layout(std430, binding = SSBO_IDX_GRASS_POSITION_INPUT_INDICES) buffer inputIndexBuffer {
     uint InputIndexBuffer[];
 };
 

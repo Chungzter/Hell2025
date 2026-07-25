@@ -94,9 +94,13 @@ namespace OpenGL::Renderer {
     }
 
     void DebugViewPass() {
-        if (!Unloved::Renderer::OverrideStateUsesDebugViewPass()) return;
-
         RendererSettings& rendererSettings = Unloved::Renderer::GetCurrentRendererSettings();
+        const bool spotLightTileView = rendererSettings.rendererOverrideState == RendererOverrideState::TILE_HEATMAP_SPOT_LIGHTS;
+        if (!Unloved::Renderer::OverrideStateUsesDebugViewPass() &&
+            !Unloved::Renderer::OverrideStateUsesDebugTileViewPass() &&
+            !spotLightTileView) {
+            return;
+        }
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         OpenGLFrameBuffer* indirectDiffuseFbo = OpenGL::ResourceManager::GetFrameBufferPtr("IndirectDiffuse");
@@ -109,7 +113,8 @@ namespace OpenGL::Renderer {
         // Tile based deferred heat map
         if (rendererSettings.rendererOverrideState == RendererOverrideState::TILE_HEATMAP_LIGHTS ||
             rendererSettings.rendererOverrideState == RendererOverrideState::TILE_HEATMAP_BLOOD_DECALS ||
-            rendererSettings.rendererOverrideState == RendererOverrideState::TILE_HEATMAP_CHRISTMAS_LIGHTS) {
+            rendererSettings.rendererOverrideState == RendererOverrideState::TILE_HEATMAP_CHRISTMAS_LIGHTS ||
+            rendererSettings.rendererOverrideState == RendererOverrideState::TILE_HEATMAP_SPOT_LIGHTS) {
 
             OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("DebugTileView");
             if (!shader) return;
@@ -122,16 +127,10 @@ namespace OpenGL::Renderer {
             OpenGL::SetUniformInt("u_tileXCount", gBuffer->GetWidth() / TILE_SIZE);
             OpenGL::SetUniformInt("u_tileYCount", gBuffer->GetHeight() / TILE_SIZE);
 
-            int debugMode = -1;
-            if (rendererSettings.rendererOverrideState == RendererOverrideState::TILE_HEATMAP_LIGHTS)           debugMode = 0;
-            if (rendererSettings.rendererOverrideState == RendererOverrideState::TILE_HEATMAP_BLOOD_DECALS)     debugMode = 1;
-            if (rendererSettings.rendererOverrideState == RendererOverrideState::TILE_HEATMAP_CHRISTMAS_LIGHTS) debugMode = 2;
-
-            OpenGL::SetUniformInt("u_debugMode", debugMode);
-
-            OpenGL::BindSSBO(6, "TileLights");
-            OpenGL::BindSSBO(8, "TileBloodDecals");
-            OpenGL::BindSSBO(9, "TileChristmasLights");
+            OpenGL::BindSSBO(SSBO_IDX_DEBUG_TILES_TILE_LIGHTS, "TileLights");
+            OpenGL::BindSSBO(SSBO_IDX_DEBUG_TILES_TILE_BLOOD_DECALS, "TileBloodDecals");
+            OpenGL::BindSSBO(SSBO_IDX_DEBUG_TILES_TILE_CHRISTMAS_LIGHTS, "TileChristmasLights");
+            OpenGL::BindSSBO(SSBO_IDX_DEBUG_TILES_TILE_SPOT_LIGHTS, "TileSpotLights");
 
 			uint32_t attachmentHandle = 0;
 

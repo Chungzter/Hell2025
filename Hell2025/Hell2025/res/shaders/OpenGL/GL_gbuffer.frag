@@ -1,11 +1,12 @@
 #version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #ifndef ENABLE_BINDLESS
     #define ENABLE_BINDLESS 1
 #endif
 
 #if ENABLE_BINDLESS == 1
     #extension GL_ARB_bindless_texture : enable
-    readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer {
+    readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer {
 	    uvec2 textureSamplers[];
     };
     in flat int MaterialIndex;
@@ -28,7 +29,7 @@ layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
 #include "../common/normal_encoding.glsl"
 #include "../common/post_processing.glsl"
 
-readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
 
 layout (location = 0) out vec4 BaseColorMetallicOut;
 layout (location = 1) out vec4 NormalXYRoughnessMiscOut;

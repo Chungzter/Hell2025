@@ -119,6 +119,9 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS, "TileSpotLights");
         SetUniformFloat("u_renderResolutionScale", 1.0f);
 
         BindShadowMapsRE();
@@ -143,6 +146,9 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS, "TileSpotLights");
         SetUniformBool("u_solidAlpha", true);
 
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");

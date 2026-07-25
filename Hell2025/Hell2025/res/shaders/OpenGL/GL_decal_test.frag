@@ -1,4 +1,5 @@
 #version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
 
 #include "../common/reconstruction.glsl"
 #include "../common/util.glsl"
@@ -11,7 +12,7 @@ layout(location = 2) out vec4 VelocityXYOcclusionSubSurfaceOut;
 layout(binding = 0) uniform sampler2D u_decalTexture;
 layout(binding = 1) uniform sampler2D u_depthTexture;
 
-layout(std430, binding = 3) readonly restrict buffer viewportDataBuffer {
+layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) readonly restrict buffer viewportDataBuffer {
     ViewportData viewportData[];
 };
 

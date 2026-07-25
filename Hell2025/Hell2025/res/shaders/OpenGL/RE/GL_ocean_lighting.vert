@@ -1,4 +1,5 @@
 #version 450 core
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #extension GL_ARB_bindless_texture : enable
 #include "../../common/ocean.glsl"
 #include "../../common/types.glsl"
@@ -8,7 +9,7 @@ uniform int u_displayMode = OCEAN_DISPLAY_MODE_COMBINED;
 layout(binding = 0) uniform sampler2D DisplacementTexture_band0;
 layout(binding = 2) uniform sampler2D DisplacementTexture_band1;
 
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 uniform int u_viewportIndex;
 uniform float u_oceanOriginY;

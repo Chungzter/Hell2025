@@ -128,6 +128,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
         SetOceanFFTBandUniforms();
         SetOceanSurfaceUniforms();
         SetOceanMeshUniforms();
@@ -348,7 +349,7 @@ namespace OpenGL::Renderer {
                 readbackSyncs[idx] = 0;
             }
         }
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, readbackSSBOs[idx]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_OCEAN_POSITION_READBACK, readbackSSBOs[idx]);
         OpenGL::BindShader("OceanPositionReadback");
         SetOceanFFTBandUniforms();
         OpenGL::SetUniformFloat("u_oceanOriginY", Ocean::GetOceanOriginY());

@@ -7,7 +7,7 @@
 
 #if ENABLE_BINDLESS
     #extension GL_ARB_bindless_texture : enable        
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer {
 	    uvec2 textureSamplers[];
     };    
     in flat int MaterialIndex;
@@ -28,14 +28,16 @@ layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray flashlig
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 
-readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
 
 layout (location = 0) out vec4 FragOut;
 layout (location = 1) out vec4 ViewSpaceDepthPreviousOut;
-readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData  rendererData;   };
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData  viewportData[]; };
-readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light         lights[];       };
-readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer   { TileLights    tileLights[];   };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData  rendererData;   };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData  viewportData[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer       { Light         lights[];       };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_LIGHTS) buffer tileLightsBuffer   { TileLights    tileLights[];   };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS) buffer tileSpotLightsBuffer { TileSpotLights tileSpotLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SPOT_LIGHTS) buffer spotLightsBuffer { SpotLight spotLights[]; };
 
 in vec2 TexCoord;
 in vec3 Normal;
@@ -117,14 +119,12 @@ void main() {
     float sssStrength = 5.0;
     float fragDistance = distance(WorldPos.xyz, ViewPos); // is this right?
 
-    // Flashlights
 #if ENABLE_BINDLESS
-    if (rendererData.flashlightIESTextureIndex >= 0) {
-        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
-        for (int i = 0; i < 2; i++) {
-            ViewportData flashlightViewportData = viewportData[i];
-            directLighting += GetFlashlightContribution(i, uint(ViewportIndex), flashlightViewportData.flashlightModifer, flashlightViewportData.flashlightProjectionView, flashlightViewportData.flashlightDir.xyz, flashlightViewportData.flashlightPosition.xyz, flashlightViewportData.inverseView[3].xyz, bool(flashlightViewportData.isInShop), rendererData, normal.xyz, WorldPos.xyz, baseColor.rgb, roughness, metallic, fragDistance, -1000.0, flashlightIES, flashlightShadowMapArray);
-        }
+    uint spotLightCount = tileSpotLights[tileIndex].lightCount;
+    for (uint i = 0u; i < spotLightCount; i++) {
+        SpotLight spotLight = spotLights[tileSpotLights[tileIndex].lightIndices[i]];
+        sampler2D iesTexture = sampler2D(textureSamplers[max(rendererData.flashlightIESTextureIndex, 0)]);
+        directLighting += GetSpotLightContribution(spotLight, rendererData, uint(ViewportIndex), ViewPos, normal.xyz, WorldPos.xyz, baseColor.rgb, roughness, metallic, fragDistance, -1000.0, iesTexture, flashlightShadowMapArray);
     }
 #endif
    

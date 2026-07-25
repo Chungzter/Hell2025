@@ -1,4 +1,5 @@
 #version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/constants.glsl"
 #include "../common/reconstruction.glsl"
 #include "../common/util.glsl"
@@ -23,17 +24,17 @@ struct Vertex {
     float normal[3];
 };
 
-layout(std430, binding = 6) buffer IndirectDraw {
+layout(std430, binding = SSBO_IDX_GRASS_POSITION_INDIRECT_COMMAND) buffer IndirectDraw {
     uint count;
     uint instanceCount;
     uint firstVertex;
     int baseInstance;
 } drawCmd;
 
-readonly layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
-layout(std430, binding = 10) buffer inputVertexBuffer { Vertex InputVertexBuffer[]; };
-layout(std430, binding = 11) buffer inputIndexBuffer { uint InputIndexBuffer[]; };
-layout(std430, binding = 9) buffer BladePositions { vec4 bladePositions[]; };
+readonly layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+layout(std430, binding = SSBO_IDX_GRASS_POSITION_INPUT_VERTICES) buffer inputVertexBuffer { Vertex InputVertexBuffer[]; };
+layout(std430, binding = SSBO_IDX_GRASS_POSITION_INPUT_INDICES) buffer inputIndexBuffer { uint InputIndexBuffer[]; };
+layout(std430, binding = SSBO_IDX_GRASS_POSITION_BLADE_POSITIONS) buffer BladePositions { vec4 bladePositions[]; };
 
 float SignedDistance(vec3 point, vec4 plane) {
     return dot(plane.xyz, point) + plane.w;

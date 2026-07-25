@@ -1,6 +1,8 @@
 #include "RendererUtil.h"
 
+#include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+
 #include "Unloved/Config/Config.h"
 
 #include <glm/ext/matrix_clip_space.hpp>
@@ -13,12 +15,108 @@
 
 namespace Unloved::RendererUtil {
 
+RenderItem CreateAssetGeometryRenderItem(const std::string& modelName, const std::string& meshName, const glm::mat4& worldMatrix, const int32_t materialIndex, const uint64_t objectId) {
+    RenderItem renderItem;
+
+    uint32_t meshId = Hell::ResourceManager::GetModelMeshIdByName(modelName, meshName);
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+
+    Mesh* mesh = meshBuffer.GetMeshById(meshId);
+
+    if (!mesh) {
+        Logging::Error() << "RendererUtil::CreateAssetGeometryRenderItem(..) mesh name '" << meshName << "' not found in AssetGeomtry mesh buffer\n";
+        return renderItem;
+    }
+
+    if (materialIndex < 0) {
+        Logging::Error() << "RendererUtil::CreateAssetGeometryRenderItem(..) called with invalid materialIndex\n";
+        return renderItem;
+    }
+
+    // Mesh Id
+    renderItem.meshId = meshId;
+
+    // Vertex info
+    renderItem.vertexCount = mesh->vertexCount;
+    renderItem.indexCount = mesh->indexCount;
+    renderItem.baseVertex = mesh->baseVertex;
+    renderItem.baseIndex = mesh->baseIndex;
+
+    // Matrices
+    renderItem.modelMatrix = worldMatrix;
+    renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
+    renderItem.prevModelMatrix = worldMatrix;
+
+    // Material
+    renderItem.materialIndex = materialIndex;
+
+    // Object ID
+    Hell::Bit::PackUint64(objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+
+    // Emissive
+    int32_t localMeshNodeIndex = 0;
+    renderItem.emissiveR = 0.0f;
+    renderItem.emissiveG = 0.0f;
+    renderItem.emissiveB = 0.0f;
+
+    // Tint
+    renderItem.tintColorR = 1.0f;
+    renderItem.tintColorG = 1.0f;
+    renderItem.tintColorB = 1.0f;
+
+    // Blending mode
+    renderItem.blendingMode = static_cast<uint32_t>(BlendingMode::DEFAULT);
+
+    // World AABB
+    glm::vec3 minBounds(std::numeric_limits<float>::max());
+    glm::vec3 maxBounds(-std::numeric_limits<float>::max());
+
+    const glm::vec3 localMin = mesh->aabbMin;
+    const glm::vec3 localMax = mesh->aabbMax;
+    const glm::vec3 localCenter = 0.5f * (localMin + localMax);
+    const glm::vec3 localExtents = 0.5f * (localMax - localMin);
+    const glm::vec3 worldCenter = glm::vec3(worldMatrix * glm::vec4(localCenter, 1.0f));
+    const glm::vec3 col0 = glm::vec3(worldMatrix[0]);
+    const glm::vec3 col1 = glm::vec3(worldMatrix[1]);
+    const glm::vec3 col2 = glm::vec3(worldMatrix[2]);
+    const glm::vec3 worldExtents = glm::abs(col0) * localExtents.x +
+        glm::abs(col1) * localExtents.y +
+        glm::abs(col2) * localExtents.z;
+
+    renderItem.aabbMin = glm::vec4(worldCenter - worldExtents, 0.0f);
+    renderItem.aabbMax = glm::vec4(worldCenter + worldExtents, 0.0f);
+
+    // TODO: Add function params to set these
+    renderItem.miscFlags = 0;
+    renderItem.shadowFlags = 0;
+    renderItem.vulkanFlags = 0;
+
+    // Unused or not applicable, but explicitly set reasonable defaults
+    renderItem.baseVertexWeight = 0;
+    renderItem.baseSkinningTransformIndex = 0;
+    renderItem.woundMaskTextureIndex = -1;
+    renderItem.exclusiveViewportIndex = -1;
+    renderItem.ignoredViewportIndex = -1;
+    renderItem.customId = 0;
+    renderItem.openableId = 0;
+    renderItem.woundMaterialIndex = -1;
+    renderItem.padding = 0;
+
+    return renderItem;
+}
+
 void UpdateRenderItemAABB(RenderItem& renderItem) {
     Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
     if (!mesh) return;
 
     glm::vec3 aabbMin = glm::vec3(std::numeric_limits<float>::max());
     glm::vec3 aabbMax = glm::vec3(-std::numeric_limits<float>::max());
+
+    static int warning = 0;
+    warning++;
+    if (warning < 20) {
+        Logging::Warning() << "You are calling Unloved::RendererUtil::UpdateRenderItemAABB(..) all over this fucking engine and it is terrible slow. Free FPS real estate if you rewrite this\n";
+    }
 
     const std::array<glm::vec3, 8> corners = {
         glm::vec3(renderItem.modelMatrix * glm::vec4(mesh->aabbMin.x, mesh->aabbMax.y, mesh->aabbMax.z, 1.0f)),

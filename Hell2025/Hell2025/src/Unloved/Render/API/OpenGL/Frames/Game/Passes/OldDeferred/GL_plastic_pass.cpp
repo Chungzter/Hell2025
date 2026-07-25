@@ -48,7 +48,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
 
-        OpenGL::BindSSBO(6, "TileLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
 
 		OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 

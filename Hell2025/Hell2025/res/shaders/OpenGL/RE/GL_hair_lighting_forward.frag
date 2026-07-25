@@ -3,7 +3,7 @@
 #extension GL_ARB_bindless_texture : enable
 #include "../../common/OpenGL/GL_binding_indices.glsl"
 
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
 layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray u_flashlighShadowMapArrayTexture;
 layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
@@ -24,12 +24,14 @@ layout(early_fragment_tests) in;
 #include "../../common/util.glsl"
 #include "../../common/ddgi_upsample.glsl"
 
-readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
-readonly restrict layout(std430, binding = 2) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportData[]; };
-readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
-readonly restrict layout(std430, binding = 5) buffer lightsBuffer       { Light lights[]; };
-readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer   { TileLights tileLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportData[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer       { Light lights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_LIGHTS) buffer tileLightsBuffer   { TileLights tileLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS) buffer tileSpotLightsBuffer { TileSpotLights tileSpotLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SPOT_LIGHTS) buffer spotLightsBuffer { SpotLight spotLights[]; };
 
 layout (location = 0) out vec4 LightingOut;
 
@@ -256,44 +258,40 @@ void main() {
 
     float fragDistance = distance(v_worldPos.xyz, viewPos);
 
-    // Flashlight direct lighting
-    if (rendererData.flashlightIESTextureIndex >= 0) {
-        sampler2D flashlightIES = sampler2D(textureSamplers[rendererData.flashlightIESTextureIndex]);
-        for (int i = 0; i < 2; i++) {
-            ViewportData flashlightViewportData = viewportData[i];
-            float flashlightModifer = flashlightViewportData.flashlightModifer;
-            if (flashlightModifer <= 0.05) continue;
+    sampler2D flashlightIES = sampler2D(textureSamplers[max(rendererData.flashlightIESTextureIndex, 0)]);
+    uint spotLightCount = tileSpotLights[tileIndex].lightCount;
+    for (uint i = 0u; i < spotLightCount; i++) {
+            SpotLight spotLight = spotLights[tileSpotLights[tileIndex].lightIndices[i]];
+            float modifier = spotLight.positionModifier.w;
+            if (modifier <= 0.05) continue;
 
-            vec3 spotLightPos = flashlightViewportData.flashlightPosition.xyz;
-            vec3 spotLightDir = normalize(flashlightViewportData.flashlightDir.xyz);
-            vec3 spotLightColor = rendererData.flashlightColor.rgb;
-
-            if (i != int(v_viewportIndex)) {
-                spotLightPos += spotLightDir * 0.2;
-                spotLightColor *= 0.825;
-            }
+            vec3 spotLightPos;
+            vec3 spotLightDir;
+            vec3 spotLightColor;
+            GetSpotLightShadingInputs(spotLight, rendererData, uint(v_viewportIndex), spotLightPos, spotLightDir, spotLightColor);
 
             vec3 lightVector = spotLightPos - v_worldPos.xyz;
             float distanceSquared = max(dot(lightVector, lightVector), 0.0001);
             vec3 L = lightVector * inversesqrt(distanceSquared);
             float attenuation = GetFlashlightIESAttenuation(v_worldPos.xyz, spotLightPos, spotLightDir, rendererData, flashlightIES);
-            attenuation *= GetFlashlightViewDistanceScale(fragDistance);
+            uint flags = uint(spotLight.metadata.z);
+            if ((flags & (1u << 2)) != 0u) attenuation *= GetFlashlightViewDistanceScale(fragDistance);
             if (attenuation <= 0.0) continue;
 
-            mat4 lightProjectionView = flashlightViewportData.flashlightProjectionView;
-            vec4 fragPosLightSpace = lightProjectionView * vec4(v_worldPos.xyz, 1.0);
             float shadow = 0.0;
-            bool flashlightIsInShop = bool(flashlightViewportData.isInShop);
-            if (!(i == int(v_viewportIndex) && flashlightIsInShop)) {
-                shadow = SpotlightShadowCalculation(fragPosLightSpace, finalNormal, spotLightDir, v_worldPos.xyz, spotLightPos, flashlightViewportData.inverseView[3].xyz, u_flashlighShadowMapArrayTexture, i);
+            int shadowLayer = spotLight.metadata.x;
+            int ownerViewportIndex = spotLight.metadata.y;
+            bool skipOwnerShadow = ownerViewportIndex == v_viewportIndex && (flags & (1u << 1)) != 0u;
+            if (shadowLayer >= 0 && (flags & (1u << 0)) != 0u && !skipOwnerShadow) {
+                vec4 fragPosLightSpace = spotLight.projectionView * vec4(v_worldPos.xyz, 1.0);
+                shadow = SpotlightShadowCalculation(fragPosLightSpace, finalNormal, spotLightDir, v_worldPos.xyz, spotLightPos, viewPos, u_flashlighShadowMapArrayTexture, shadowLayer);
             }
 
             float visibility = 1.0 - shadow;
             if (visibility <= 0.0) continue;
 
             vec3 lightContribution = EvaluateHairLight(hairBaseColor, finalTangent, V, L, t1, t2, alpha1, alpha2, spotLightColor, visibility);
-            directLighting += lightContribution * attenuation * flashlightModifer;
-        }
+            directLighting += lightContribution * attenuation * modifier;
     }
 
     vec3 indirectDiffuse = vec3(0.0);

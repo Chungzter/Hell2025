@@ -20,6 +20,7 @@ enum class ObjectType : uint16_t {
     HEIGHT_MAP,
     WORLD_PLANE,
     KANGAROO,
+    JETTY,
     LADDER,
     LIGHT,
     MIRROR,
@@ -51,6 +52,7 @@ enum class ObjectType : uint16_t {
     BULLET_CASING,
     MERMAID,
     WIRE,
+    SPOT_LIGHT,
 
     UNDEFINED
 };

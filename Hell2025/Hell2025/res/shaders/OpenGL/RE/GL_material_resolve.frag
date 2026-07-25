@@ -47,9 +47,9 @@ readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsB
 readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
-readonly restrict layout(std430, binding = 6) buffer vertexBuffer { PackedVertex vertices[]; };
-readonly restrict layout(std430, binding = 7) buffer indexBuffer { uint indices[]; };
-readonly restrict layout(std430, binding = 8) buffer previousPositionBuffer { PackedPosition previousSkinnedPositions[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_MATERIAL_RESOLVE_VERTICES) buffer vertexBuffer { PackedVertex vertices[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_MATERIAL_RESOLVE_INDICES) buffer indexBuffer { uint indices[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_MATERIAL_RESOLVE_PREVIOUS_POSITIONS) buffer previousPositionBuffer { PackedPosition previousSkinnedPositions[]; };
 
 float Cross2D(vec2 a, vec2 b) {
     return a.x * b.y - a.y * b.x;
@@ -98,7 +98,7 @@ void main() {
     uint i0 = indices[triangleIndexOffset + 0] + renderItem.baseVertex;
     uint i1 = indices[triangleIndexOffset + 1] + renderItem.baseVertex;
     uint i2 = indices[triangleIndexOffset + 2] + renderItem.baseVertex;
-   
+
     PackedVertex v0 = vertices[i0];
     PackedVertex v1 = vertices[i1];
     PackedVertex v2 = vertices[i2];

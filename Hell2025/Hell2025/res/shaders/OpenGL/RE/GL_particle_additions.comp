@@ -1,17 +1,18 @@
 #version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/types.glsl"
 
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
-restrict layout(std430, binding = 6) readonly buffer ParticleAdditionsBuffer {
+restrict layout(std430, binding = SSBO_IDX_PARTICLE_ADD_ADDITIONS) readonly buffer ParticleAdditionsBuffer {
     Particle particleAdditions[];
 };
 
-restrict layout(std430, binding = 7) buffer ParticlePoolBuffer {
+restrict layout(std430, binding = SSBO_IDX_PARTICLE_ADD_POOL) buffer ParticlePoolBuffer {
     Particle particlePool[];
 };
 
-restrict layout(std430, binding = 10) buffer ParticleAdditionCounterBuffer {
+restrict layout(std430, binding = SSBO_IDX_PARTICLE_ADD_COUNTER) buffer ParticleAdditionCounterBuffer {
     uint particleAdditionCounter;
 };
 

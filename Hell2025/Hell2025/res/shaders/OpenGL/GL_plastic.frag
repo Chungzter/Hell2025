@@ -1,7 +1,7 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : enable
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
 #include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/lighting.glsl"
@@ -9,7 +9,7 @@ readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uve
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 
-readonly restrict layout(std430, binding = 6) buffer tileLightsBuffer   { TileLights tileLights[];   };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_LIGHTS) buffer tileLightsBuffer { TileLights tileLights[]; };
 
 layout (location = 0) out vec4 ColorOut;
 layout (location = 1) out float ViewSpaceDepthPreviousOut;
@@ -38,7 +38,7 @@ uniform mat4 u_view;
 uniform vec3 u_viewPos;
 uniform int u_tileXCount;
 
-readonly restrict layout(std430, binding = 5) buffer lightsBuffer { Light lights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer { Light lights[]; };
 
 float InterleavedGradientNoise(vec2 uv) {
     vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);

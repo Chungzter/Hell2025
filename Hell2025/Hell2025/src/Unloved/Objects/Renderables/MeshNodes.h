@@ -93,6 +93,7 @@ struct MeshNodes {
     void EnablePointLightShadows();
     void DisablePointLightShadows();
     void DisableCSMShadows();
+    void DisableShadowsByBlendingMode(BlendingMode blendingMode);
     void DisableMarkingStaticSceneBvhAsDirty();
 
     //const void SubmitRenderItems() const;

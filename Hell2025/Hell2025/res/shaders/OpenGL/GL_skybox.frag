@@ -1,4 +1,5 @@
 #version 460
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/types.glsl"
 
 layout (location = 0) out vec4 FinalLightingOut;
@@ -8,7 +9,7 @@ layout (binding = 0) uniform samplerCube cubeMap;
 in vec3 TexCoords;
 in flat int ViewportIndex;
 
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer {
     ViewportData viewportData[];
 };
 

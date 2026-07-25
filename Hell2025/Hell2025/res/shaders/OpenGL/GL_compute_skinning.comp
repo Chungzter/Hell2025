@@ -1,4 +1,5 @@
 #version 450 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
 layout (local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 
 struct Vertex {
@@ -36,14 +37,14 @@ struct PackedPosition {
     float x, y, z;
 };
 
-layout(std430, binding = 0) buffer          outputVertexBuffer           { Vertex OutputVertexBuffer[]; };
-layout(std430, binding = 1) readonly buffer inputVertexBuffer            { Vertex InputVertexBuffer[]; };
-layout(std140, binding = 2) readonly buffer transformsBuffer             { mat4 data[];} animatedTransforms;
-layout(std430, binding = 3) readonly buffer weightsBuffer                { VertexWeight vertexWeights[]; };
-layout(std430, binding = 4) readonly buffer SkinningJobBuffer            { SkinningJob skinningJobs[]; };
-layout(std430, binding = 5) readonly buffer SkinningDispatchGroupBuffer  { SkinningDispatchGroup skinningDispatchGroups[]; };
-layout(std140, binding = 6) readonly buffer previousTransformsBuffer     { mat4 data[];} previousAnimatedTransforms;
-layout(std430, binding = 7) buffer          previousPositionBuffer       { PackedPosition previousSkinnedPositions[]; };
+layout(std430, binding = SSBO_IDX_SKINNING_OUTPUT_VERTICES) buffer          outputVertexBuffer           { Vertex OutputVertexBuffer[]; };
+layout(std430, binding = SSBO_IDX_SKINNING_INPUT_VERTICES) readonly buffer inputVertexBuffer            { Vertex InputVertexBuffer[]; };
+layout(std140, binding = SSBO_IDX_SKINNING_ANIMATED_TRANSFORMS) readonly buffer transformsBuffer             { mat4 data[];} animatedTransforms;
+layout(std430, binding = SSBO_IDX_SKINNING_WEIGHTS) readonly buffer weightsBuffer                { VertexWeight vertexWeights[]; };
+layout(std430, binding = SSBO_IDX_SKINNING_JOBS) readonly buffer SkinningJobBuffer            { SkinningJob skinningJobs[]; };
+layout(std430, binding = SSBO_IDX_SKINNING_DISPATCH_GROUPS) readonly buffer SkinningDispatchGroupBuffer  { SkinningDispatchGroup skinningDispatchGroups[]; };
+layout(std140, binding = SSBO_IDX_SKINNING_PREVIOUS_TRANSFORMS) readonly buffer previousTransformsBuffer     { mat4 data[];} previousAnimatedTransforms;
+layout(std430, binding = SSBO_IDX_SKINNING_PREVIOUS_POSITIONS) buffer          previousPositionBuffer       { PackedPosition previousSkinnedPositions[]; };
 
 void main() {
     SkinningDispatchGroup group = skinningDispatchGroups[gl_WorkGroupID.x];

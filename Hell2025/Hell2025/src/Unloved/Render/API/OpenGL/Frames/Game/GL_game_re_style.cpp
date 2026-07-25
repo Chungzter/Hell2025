@@ -83,10 +83,12 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
-        OpenGL::BindSSBO(6, "TileLights");
-        // TODO: OpenGL::BindSSBO(9, "TileChristmasLights");
-        // TODO: OpenGL::BindSSBO(10, "ChristmasLightInstances");
-        // TODO: OpenGL::BindSSBO(11, "ChristmasLightIndices");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS, "TileSpotLights");
+        // TODO: OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_CHRISTMAS_LIGHTS, "TileChristmasLights");
+        // TODO: OpenGL::BindSSBO(SSBO_IDX_LIGHTING_CHRISTMAS_LIGHTS, "ChristmasLightInstances");
+        // TODO: OpenGL::BindSSBO(SSBO_IDX_LIGHTING_CHRISTMAS_INDEX_POOL, "ChristmasLightIndices");
 
         LightingPassRE();
         BlendedLighting();
@@ -107,7 +109,7 @@ namespace OpenGL::Renderer {
         OceanUnderwaterCompositePass();
 
         WinstonPass();
-        StainedGlassPass();
+        //StainedGlassPass();
 
         if (Unloved::World::HasOcean()) {
             BubblesPass2(); // wtf is this
@@ -229,6 +231,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
         OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
         OpenGL::BindTextureUnit(0, skyboxCubemapView.GetHandle());
         OpenGL::BindTextureUnit(1, GetTextureHandleByName("Bubbles_10x10"));
@@ -286,6 +289,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
         OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
         OpenGL::BindTextureUnit(0, GetTextureHandleByName("UnderwaterBulletBubble"));
 
@@ -320,6 +324,9 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS, "TileSpotLights");
         BindShadowMapsRE();
         OpenGL::SetUniformFloat("u_oceanHeight", Unloved::World::HasOcean() ? Ocean::GetOceanOriginY() : -1000.0f);
 

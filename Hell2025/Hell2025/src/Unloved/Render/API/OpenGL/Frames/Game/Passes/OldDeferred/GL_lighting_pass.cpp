@@ -56,6 +56,9 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS, "TileSpotLights");
 
         OpenGL::SetUniformFloat("u_viewportWidth", gBuffer->GetWidth());
         OpenGL::SetUniformFloat("u_viewportHeight", gBuffer->GetHeight());
@@ -99,9 +102,9 @@ namespace OpenGL::Renderer {
         glBindTextureUnit(10, indirectDiffuseFbo->GetColorAttachmentHandleByName("Color"));
         glBindTextureUnit(11, indirectDiffuseFbo->GetColorAttachmentHandleByName("Surface"));
 
-        OpenGL::BindSSBO(9, "TileChristmasLights");
-        OpenGL::BindSSBO(10, "ChristmasLightInstances");
-        OpenGL::BindSSBO(11, "ChristmasLightIndices");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_CHRISTMAS_LIGHTS, "TileChristmasLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_CHRISTMAS_LIGHTS, "ChristmasLightInstances");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_CHRISTMAS_INDEX_POOL, "ChristmasLightIndices");
 
         glBindImageTexture(0, gBuffer->GetColorAttachmentHandleByName("Lighting"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 

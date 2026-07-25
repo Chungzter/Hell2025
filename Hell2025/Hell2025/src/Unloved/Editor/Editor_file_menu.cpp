@@ -46,8 +46,9 @@ namespace Unloved::Editor {
             enemies.AddChild("Shark",           Shortcut::NONE, BeginPlacement, PlacementTool::SHARK);
 
             EditorUI::FileMenuNode& exterior = insert.AddChild("Exterior", Shortcut::NONE);
-            exterior.AddChild("Power Poles",   Shortcut::NONE, BeginPlacement, PlacementTool::POWER_POLES);
             exterior.AddChild("Fence (Farm)",  Shortcut::NONE, Editor::SetEditorState, EditorState::PLACE_FENCE);
+            exterior.AddChild("Jetty",         Shortcut::NONE, BeginPlacement, PlacementTool::JETTY);
+            exterior.AddChild("Power Poles",   Shortcut::NONE, BeginPlacement, PlacementTool::POWER_POLES);
 
             EditorUI::FileMenuNode& interior = insert.AddChild("Interior", Shortcut::NONE);
             interior.AddChild("Chair RE",           Shortcut::NONE, BeginPlacement, PlacementTool::GENERIC_CHAIR_RE);

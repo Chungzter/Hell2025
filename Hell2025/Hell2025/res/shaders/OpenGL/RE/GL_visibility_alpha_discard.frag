@@ -1,4 +1,5 @@
 #version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #extension GL_ARB_bindless_texture : require
 #include "../../common/types.glsl"
 
@@ -7,9 +8,9 @@ layout(location = 0) out uvec2 FragmentOutput;
 layout(location = 0) flat in int v_globalInstanceIndex;
 layout(location = 1) in vec2 v_uv;
 
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-readonly restrict layout(std430, binding = 1) buffer materialsBuffer { Material materials[]; };
-readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
 
 const float bayerMatrix[16] = float[16](
     0.0,    0.5,    0.125,  0.625,

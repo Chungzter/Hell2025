@@ -8,7 +8,7 @@
 layout(location = 0) in vec3 vPosition;
 layout(location = 2) in vec2 vTexCoord;
 
-layout(std430, binding = 4) readonly buffer renderItemsBuffer {
+layout(std430, binding = SSBO_IDX_INSTANCE_DATA) readonly buffer renderItemsBuffer {
     RenderItem renderItems[];
 };
 

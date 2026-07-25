@@ -1,4 +1,5 @@
 #version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #extension GL_ARB_bindless_texture : enable
 
 #include "../common/types.glsl"
@@ -21,11 +22,11 @@ uniform int u_rotationTextureIndex;
 uniform int u_lookupTextureIndex;
 uniform bool u_mirror;
 
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer {
     uvec2 textureSamplers[];
 };
 
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 

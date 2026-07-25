@@ -1,4 +1,5 @@
 #version 460
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"
@@ -28,7 +29,7 @@ in vec4 WorldPos;
 
 uniform mat4 u_view;
 
-readonly restrict layout(std430, binding = 5) buffer lightsBuffer { Light lights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer { Light lights[]; };
 
 float InterleavedGradientNoise(vec2 uv) {
     vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);

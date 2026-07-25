@@ -2,11 +2,10 @@
 #include "../common/types.glsl"
 
 #if defined(VULKAN)
-float ApplyIESProfile(vec3 worldPos, Light light, texture2D iesTexture, sampler iesSampler) {
+float ApplyIESProfilePrecomputed(vec3 lightToPointDirection, float lightDistance, Light light, texture2D iesTexture, sampler iesSampler) {
 #else
-float ApplyIESProfile(vec3 worldPos, Light light, sampler2D iesSampler) {
+float ApplyIESProfilePrecomputed(vec3 lightToPointDirection, float lightDistance, Light light, sampler2D iesSampler) {
 #endif
-    vec3 lightPos = vec3(light.posX, light.posY, light.posZ);
     vec3 forward = light.forward_iesMaxIntensity.rgb;
     vec3 right = light.right_iesExposure.rgb;
     vec3 up = light.up.rgb;
@@ -19,17 +18,12 @@ float ApplyIESProfile(vec3 worldPos, Light light, sampler2D iesSampler) {
     float exposure = light.right_iesExposure.w;
     const float globalDampener = 0.005;
 
-    vec3 L = worldPos - lightPos;
-    float dist = length(L);
-
-    if (dist > lightRadius) return 0.0;
-
-    vec3 dir = L / dist; // Normalized direction
+    if (lightDistance > lightRadius) return 0.0;
 
     // Project into local space
-    float dotF = dot(dir, forward);
-    float dotR = dot(dir, right);
-    float dotU = dot(dir, up);
+    float dotF = dot(lightToPointDirection, forward);
+    float dotR = dot(lightToPointDirection, right);
+    float dotU = dot(lightToPointDirection, up);
 
     // U
     float theta = acos(clamp(dotF, -1.0, 1.0)) * 57.29578;
@@ -45,9 +39,23 @@ float ApplyIESProfile(vec3 worldPos, Light light, sampler2D iesSampler) {
 #else
     float mask = texture(iesSampler, vec2(u, v)).r;
 #endif
-    float atten = pow(clamp(1.0 - pow(dist / lightRadius, 4.0), 0.0, 1.0), 2.0) / (dist * dist + 1.0);
+    float atten = pow(clamp(1.0 - pow(lightDistance / lightRadius, 4.0), 0.0, 1.0), 2.0) / (lightDistance * lightDistance + 1.0);
     return mask * maxIntensity * atten * exposure * globalDampener;
 }
+
+#if defined(VULKAN)
+float ApplyIESProfile(vec3 worldPos, Light light, texture2D iesTexture, sampler iesSampler) {
+    vec3 lightToPoint = worldPos - vec3(light.posX, light.posY, light.posZ);
+    float lightDistance = length(lightToPoint);
+    return ApplyIESProfilePrecomputed(lightToPoint / max(lightDistance, 0.000001), lightDistance, light, iesTexture, iesSampler);
+}
+#else
+float ApplyIESProfile(vec3 worldPos, Light light, sampler2D iesSampler) {
+    vec3 lightToPoint = worldPos - vec3(light.posX, light.posY, light.posZ);
+    float lightDistance = length(lightToPoint);
+    return ApplyIESProfilePrecomputed(lightToPoint / max(lightDistance, 0.000001), lightDistance, light, iesSampler);
+}
+#endif
 
 vec3 GetDirectLighting(vec3 lightPos, vec3 lightColor, float radius, float strength, vec3 Normal, vec3 WorldPos, vec3 baseColor, float roughness, float metallic, vec3 viewPos) {
     vec3 toLight = lightPos - WorldPos;
@@ -178,28 +186,18 @@ float SpotlightShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 light
     return shadow * (1.0 / 25.0);
 }
 
-float SpotlightShadowCalculationFast(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir, vec3 fragWorldPos, vec3 lightPos, vec3 viewPos, sampler2DArray shadowMapArray, int layerIndex) {
-    // Project and bias
+float GetSpotlightVisibilitySingleSample(vec4 fragPosLightSpace, float lightDistance, sampler2DArray shadowMapArray, int layerIndex) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w * 0.5 + 0.5;
     projCoords.y = 1.0 - projCoords.y;
-    float currentDepth = projCoords.z;
 
-    // Fold slope bias and constant bias into one
-    float dist = length(lightPos - fragWorldPos);
-    float bias = 0.0001 + 0.028/(dist + 0.001);
+    if (fragPosLightSpace.w <= 0.0 || any(lessThan(projCoords, vec3(0.0))) || any(greaterThan(projCoords, vec3(1.0)))) {
+        return 1.0;
+    }
 
-    // Precompute texel size
-    ivec2 size = textureSize(shadowMapArray, 0).xy;
-    vec2 texelSize = 1.0/vec2(size);
+    float bias = 0.0001 + 0.028 / (lightDistance + 0.001);
+    float closestDepth = texture(shadowMapArray, vec3(projCoords.xy, layerIndex)).r;
 
-    // Single sample (no PCF)
-    float d = texture(shadowMapArray, vec3(projCoords.xy, layerIndex)).r;
-
-    // Apply bias and check shadow
-    float shadow = (currentDepth - bias > d) ? 1.0 : 0.0;
-
-    // Return the final shadow factor
-    return shadow;
+    return projCoords.z - bias <= closestDepth ? 1.0 : 0.0;
 }
 
 
@@ -414,6 +412,149 @@ vec3 GetFlashlightContribution(int flashlightIndex, uint viewportIndex, float fl
     spotLighting *= vec3(1 - shadow);
 
     return vec3(spotLighting) * flashlightModifer;
+}
+
+vec3 GetFlashlightContributionSingleSample(int flashlightIndex, uint viewportIndex, float flashlightModifer, mat4 flashlightProjectionView, vec3 flashlightDir, vec3 flashlightPosition, vec3 flashlightViewPos, bool flashlightIsInShop, RendererData flashlightSettings, vec3 normal, vec3 worldPos, vec3 baseColor, float roughness, float metallic, float fragDistance, float oceanHeight, sampler2D flashlightIESTexture, sampler2DArray flashlightShadowMapArrayTexture) {
+    if (flashlightModifer <= 0.05) return vec3(0.0);
+
+    vec3 spotLightPos = flashlightPosition;
+    vec3 spotLightDir = normalize(flashlightDir);
+    vec3 spotLightColor = flashlightSettings.flashlightColor.rgb;
+
+    if (flashlightIndex != int(viewportIndex)) {
+        spotLightPos += spotLightDir * 0.2;
+        spotLightColor *= 0.825;
+    }
+
+    vec3 toLight = spotLightPos - worldPos;
+    float lightDistance = length(toLight);
+    vec3 lightDirection = toLight / max(lightDistance, 0.000001);
+    float nDotL = dot(normal, lightDirection);
+    if (nDotL <= 0.0) return vec3(0.0);
+
+    float attenuation = GetFlashlightIESAttenuation(worldPos, spotLightPos, spotLightDir, flashlightSettings, flashlightIESTexture);
+    if (worldPos.y < oceanHeight - 0.1) {
+        attenuation *= 2.0;
+    }
+    if (attenuation <= 0.0) return vec3(0.0);
+
+    float visibility = 1.0;
+    if (flashlightIndex != int(viewportIndex) || !flashlightIsInShop) {
+        vec4 fragPosLightSpace = flashlightProjectionView * vec4(worldPos, 1.0);
+        visibility = GetSpotlightVisibilitySingleSample(fragPosLightSpace, lightDistance, flashlightShadowMapArrayTexture, flashlightIndex);
+        if (visibility <= 0.0) return vec3(0.0);
+    }
+
+    vec3 viewDirection = normalize(flashlightViewPos - worldPos);
+    vec3 brdf = microfacetBRDFSpecularOnly(lightDirection, viewDirection, normal, baseColor, metallic, 1.0, roughness);
+    vec3 spotLighting = brdf * (nDotL * attenuation) * clamp(spotLightColor, 0.0, 1.0);
+    spotLighting *= GetFlashlightViewDistanceScale(fragDistance);
+
+    return spotLighting * visibility * flashlightModifer;
+}
+
+void GetSpotLightShadingInputs(SpotLight light, RendererData settings, uint viewportIndex, out vec3 lightPosition, out vec3 lightDirection, out vec3 lightColor) {
+    lightPosition = light.positionModifier.xyz;
+    lightDirection = normalize(light.direction.xyz);
+    lightColor = settings.flashlightColor.rgb;
+
+    int ownerViewportIndex = light.metadata.y;
+    if (ownerViewportIndex >= 0 && ownerViewportIndex != int(viewportIndex)) {
+        // Keep the player-owned light out of the back of its owner's head when
+        // viewed by somebody else. World/enemy spotlights have no such offset.
+        lightPosition += lightDirection * 0.2;
+        lightColor *= 0.825;
+    }
+}
+
+float GetSpotLightAttenuation(SpotLight light, RendererData settings, vec3 worldPos, sampler2D iesTexture) {
+    float modifier = light.positionModifier.w;
+    if (modifier <= 0.05) return 0.0;
+
+    vec3 lightPosition = light.positionModifier.xyz;
+    if (distance(lightPosition, worldPos) >= settings.flashlightRange) return 0.0;
+
+    float attenuation = GetFlashlightIESAttenuation(worldPos, lightPosition, normalize(light.direction.xyz), settings, iesTexture);
+    return attenuation * modifier;
+}
+
+vec3 GetSpotLightContribution(SpotLight light, RendererData settings, uint viewportIndex, vec3 viewPos, vec3 normal, vec3 worldPos, vec3 baseColor, float roughness, float metallic, float fragDistance, float oceanHeight, sampler2D iesTexture, sampler2DArray shadowMapArray) {
+    float modifier = light.positionModifier.w;
+    if (modifier <= 0.05) return vec3(0.0);
+
+    vec3 lightPosition;
+    vec3 lightDirection;
+    vec3 lightColor;
+    GetSpotLightShadingInputs(light, settings, viewportIndex, lightPosition, lightDirection, lightColor);
+
+    vec3 toLight = lightPosition - worldPos;
+    float lightDistance = length(toLight);
+    if (lightDistance >= settings.flashlightRange) return vec3(0.0);
+
+    vec3 surfaceToLight = toLight / max(lightDistance, 0.000001);
+    if (dot(normal, surfaceToLight) <= 0.0) return vec3(0.0);
+
+    float attenuation = GetFlashlightIESAttenuation(worldPos, lightPosition, lightDirection, settings, iesTexture);
+    if (worldPos.y < oceanHeight - 0.1) attenuation *= 2.0;
+    if (attenuation <= 0.0) return vec3(0.0);
+
+    vec3 lighting = GetFlashlightIESLighting(lightPosition, lightColor, attenuation, normal, worldPos, baseColor, roughness, metallic, viewPos);
+
+    const uint castShadowsFlag = 1u << 0;
+    const uint skipOwnerShadowFlag = 1u << 1;
+    uint flags = uint(light.metadata.z);
+    int shadowLayer = light.metadata.x;
+    int ownerViewportIndex = light.metadata.y;
+    bool skipOwnerShadow = ownerViewportIndex == int(viewportIndex) && (flags & skipOwnerShadowFlag) != 0u;
+    if (shadowLayer >= 0 && (flags & castShadowsFlag) != 0u && !skipOwnerShadow) {
+        vec4 fragPosLightSpace = light.projectionView * vec4(worldPos, 1.0);
+        float shadow = SpotlightShadowCalculation(fragPosLightSpace, normal, lightDirection, worldPos, lightPosition, viewPos, shadowMapArray, shadowLayer);
+        lighting *= 1.0 - shadow;
+    }
+
+    if ((flags & (1u << 2)) != 0u) lighting *= GetFlashlightViewDistanceScale(fragDistance);
+    return lighting * modifier;
+}
+
+vec3 GetSpotLightContributionSingleSample(SpotLight light, RendererData settings, uint viewportIndex, vec3 viewPos, vec3 normal, vec3 worldPos, vec3 baseColor, float roughness, float metallic, float fragDistance, float oceanHeight, sampler2D iesTexture, sampler2DArray shadowMapArray) {
+    float modifier = light.positionModifier.w;
+    if (modifier <= 0.05) return vec3(0.0);
+
+    vec3 lightPosition;
+    vec3 lightDirection;
+    vec3 lightColor;
+    GetSpotLightShadingInputs(light, settings, viewportIndex, lightPosition, lightDirection, lightColor);
+
+    vec3 toLight = lightPosition - worldPos;
+    float lightDistance = length(toLight);
+    if (lightDistance >= settings.flashlightRange) return vec3(0.0);
+
+    vec3 surfaceToLight = toLight / max(lightDistance, 0.000001);
+    float nDotL = dot(normal, surfaceToLight);
+    if (nDotL <= 0.0) return vec3(0.0);
+
+    float attenuation = GetFlashlightIESAttenuation(worldPos, lightPosition, lightDirection, settings, iesTexture);
+    if (worldPos.y < oceanHeight - 0.1) attenuation *= 2.0;
+    if (attenuation <= 0.0) return vec3(0.0);
+
+    const uint castShadowsFlag = 1u << 0;
+    const uint skipOwnerShadowFlag = 1u << 1;
+    uint flags = uint(light.metadata.z);
+    int shadowLayer = light.metadata.x;
+    int ownerViewportIndex = light.metadata.y;
+    bool skipOwnerShadow = ownerViewportIndex == int(viewportIndex) && (flags & skipOwnerShadowFlag) != 0u;
+    float visibility = 1.0;
+    if (shadowLayer >= 0 && (flags & castShadowsFlag) != 0u && !skipOwnerShadow) {
+        vec4 fragPosLightSpace = light.projectionView * vec4(worldPos, 1.0);
+        visibility = GetSpotlightVisibilitySingleSample(fragPosLightSpace, lightDistance, shadowMapArray, shadowLayer);
+        if (visibility <= 0.0) return vec3(0.0);
+    }
+
+    vec3 viewDirection = normalize(viewPos - worldPos);
+    vec3 brdf = microfacetBRDFSpecularOnly(surfaceToLight, viewDirection, normal, baseColor, metallic, 1.0, roughness);
+    vec3 lighting = brdf * (nDotL * attenuation) * clamp(lightColor, 0.0, 1.0);
+    if ((flags & (1u << 2)) != 0u) lighting *= GetFlashlightViewDistanceScale(fragDistance);
+    return lighting * visibility * modifier;
 }
 #endif
 

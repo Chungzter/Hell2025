@@ -40,9 +40,12 @@ namespace OpenGL::Renderer{
         OpenGL::ResourceManager::CreateSSBO("GlassInstanceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("GlassLightRanges").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("GlassLightIndices").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("GlassSpotLightRanges").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("GlassSpotLightIndices").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("InstanceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("SpriteSheetInstanceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("Lights").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("SpotLights").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("PointShadowStaticHiResFaceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("PointShadowStaticLowResFaceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("PointShadowHiResFaceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
@@ -99,6 +102,7 @@ namespace OpenGL::Renderer{
         OpenGL::ResourceManager::CreateSSBO("TileChristmasLights").Create(GetTileCount() * sizeof(TileInstanceData), HELL_NONE_BIT);
         OpenGL::ResourceManager::CreateSSBO("TileBloodDecals").Create(GetTileCount() * sizeof(TileInstanceData), HELL_NONE_BIT);
         OpenGL::ResourceManager::CreateSSBO("TileLights").Create(GetTileCount() * sizeof(TileLights), HELL_NONE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("TileSpotLights").Create(GetTileCount() * sizeof(TileSpotLights), HELL_NONE_BIT);
         OpenGL::ResourceManager::CreateSSBO("TileWorldBounds").Create(GetTileCount() * sizeof(TileWorldBounds), HELL_NONE_BIT);
 
         // Instance data

@@ -86,21 +86,20 @@ void Player::UpdateCamera(float deltaTime) {
     float viewHeightTarget = m_crouching ? m_viewHeightCrouching : m_viewHeightStanding;
     m_currentViewHeight = Hell::Math::InterpTo(m_currentViewHeight, viewHeightTarget, deltaTime, crouchDownSpeed);
 
-    static float viewHeightModifer = 0.0f;
     if (!IsPlayingPiano()) {
         if (Input::KeyDown(HELL_KEY_EQUAL)) {
-            viewHeightModifer += 1.0f * deltaTime;
+            m_cameraHeightModifier += 1.0f * deltaTime;
         }
         if (Input::KeyDown(HELL_KEY_MINUS)) {
-            viewHeightModifer -= 1.0f * deltaTime;
+            m_cameraHeightModifier -= 1.0f * deltaTime;
         }
         if (Input::KeyDown(HELL_KEY_BACKSPACE)) {
-            viewHeightModifer = 0.0f;
+            m_cameraHeightModifier = 0.0f;
         }
     }
 
     // Set cosition position
-    m_camera.SetPosition(GetFootPosition() + glm::vec3(0, m_currentViewHeight + viewHeightModifer, 0) + m_headBob + m_breatheBob);
+    m_camera.SetPosition(GetFootPosition() + glm::vec3(0, m_currentViewHeight + m_cameraHeightModifier, 0) + m_headBob + m_breatheBob);
 
     // Calculate view weapon camera matrix
     AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();

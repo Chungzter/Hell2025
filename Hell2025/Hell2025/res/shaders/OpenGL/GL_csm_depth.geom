@@ -1,9 +1,10 @@
 #version 450 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
 
 layout(triangles, invocations = 5) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-readonly restrict layout(std430, binding = 0) buffer lightSpaceMatricesBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_CSM_LIGHT_SPACE_MATRICES) buffer lightSpaceMatricesBuffer {
 	mat4 lightSpaceMatrices[];
 };
 

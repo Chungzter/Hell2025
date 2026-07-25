@@ -1,4 +1,5 @@
 #version 460
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/util.glsl"
 #include "../common/types.glsl"
 #include "../common/constants.glsl"
@@ -10,11 +11,11 @@
 layout (location = 0) in vec3 a_position;
 layout (location = 2) in vec2 a_uv;
 
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 
-layout(std430, binding = 4) readonly buffer renderItemsBuffer {
+layout(std430, binding = SSBO_IDX_INSTANCE_DATA) readonly buffer renderItemsBuffer {
     RenderItem renderItems[];
 };
 

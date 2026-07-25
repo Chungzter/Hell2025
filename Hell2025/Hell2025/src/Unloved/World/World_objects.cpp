@@ -11,6 +11,7 @@
 #include "Unloved/Editor/ObjectNames.h"
 #include "Unloved/ObjectId.h"
 #include "Unloved/Objects/Exterior/Fence.h"
+#include "Unloved/Objects/Exterior/Jetty.h"
 #include "Unloved/Objects/Exterior/PowerPoleSet.h"
 #include "Unloved/Objects/Exterior/Wire.h"
 #include "Unloved/Objects/Effects/Decal.h"
@@ -23,6 +24,7 @@
 #include "Unloved/Objects/Interior/Piano.h"
 #include "Unloved/Objects/Interior/PictureFrame.h"
 #include "Unloved/Objects/Lighting/Light.h"
+#include "Unloved/Objects/Lighting/SpotLight.h"
 #include "Unloved/Objects/Props/BulletCasing.h"
 #include "Unloved/Objects/Props/Christmas/ChristmasLights.h"
 #include "Unloved/Objects/Props/Christmas/ChristmasTree.h"
@@ -53,8 +55,10 @@ namespace Unloved::World {
     Hell::SlotMap<GenericObject> g_genericObjects;
     Hell::SlotMap<WorldPlane> g_worldPlanes;
     Hell::SlotMap<Kangaroo> g_kangaroos;
+    Hell::SlotMap<Jetty> g_jetties;
     Hell::SlotMap<Ladder> g_ladders;
     Hell::SlotMap<Light> g_lights;
+    Hell::SlotMap<SpotLight> g_spotLights;
     Hell::SlotMap<Mermaid> g_mermaids;
     Hell::SlotMap<Piano> g_pianos;
     Hell::SlotMap<PickUp> g_pickUps;
@@ -83,8 +87,10 @@ namespace Unloved::World {
     Hell::SlotMap<GenericObject>& GetGenericObjects()           { return g_genericObjects; }
     Hell::SlotMap<WorldPlane>& GetWorldPlanes()                 { return g_worldPlanes; }
     Hell::SlotMap<Kangaroo>& GetKangaroos()                     { return g_kangaroos; }
+    Hell::SlotMap<Jetty>& GetJetties()                          { return g_jetties; }
     Hell::SlotMap<Ladder>& GetLadders()                         { return g_ladders; }
     Hell::SlotMap<Light>& GetLights()                           { return g_lights; }
+    Hell::SlotMap<SpotLight>& GetSpotLights()                   { return g_spotLights; }
     Hell::SlotMap<Mermaid>& GetMermaids()                       { return g_mermaids; }
     Hell::SlotMap<Piano>& GetPianos()                           { return g_pianos; }
     Hell::SlotMap<PickUp>& GetPickUps()                         { return g_pickUps; }
@@ -271,12 +277,21 @@ namespace Unloved::World {
         return GetGenericObjects().get(objectId);
     }
 
+    // Jetties
+
+    uint64_t AddJetty(JettyCreateInfo createInfo, SpawnOffset spawnOffset) {
+        Editor::AssignEditorName(createInfo, g_jetties);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::JETTY);
+        g_jetties.emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
     // Kangaroos
 
     uint64_t AddKangaroo(KangarooCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetKangaroos());
+        Editor::AssignEditorName(createInfo, g_kangaroos);
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::KANGAROO);
-        GetKangaroos().emplace_with_id(id, id, createInfo, spawnOffset);
+        g_kangaroos.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
 
@@ -306,9 +321,14 @@ namespace Unloved::World {
         return id;
     }
 
+    Jetty* GetJettyById(uint64_t objectId) {
+        return GetJetties().get(objectId);
+
+    }
     Light* GetLightByObjectId(uint64_t objectId) {
         return GetLights().get(objectId);
     }
+
 
     Light* GetLightByIndex(int32_t index) {
         if (index >= 0 && index < static_cast<int32_t>(GetLights().size())) {
@@ -334,6 +354,16 @@ namespace Unloved::World {
         }
 
         return ids;
+    }
+
+    uint64_t AddSpotLight(uint64_t ownerObjectId, int32_t ownerViewportIndex) {
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::SPOT_LIGHT);
+        GetSpotLights().emplace_with_id(id, id, ownerObjectId, ownerViewportIndex);
+        return id;
+    }
+
+    SpotLight* GetSpotLightByObjectId(uint64_t objectId) {
+        return GetSpotLights().get(objectId);
     }
 
     // Mermaids
@@ -594,18 +624,21 @@ namespace Unloved::World {
         case ObjectType::GAME_OBJECT:    updated = SetPosition_T(GetGameObjects(), objectId, position); break;
         case ObjectType::GENERIC_OBJECT: updated = SetPosition_T(GetGenericObjects(), objectId, position); break;
         case ObjectType::WORLD_PLANE:    updated = SetPosition_T(GetWorldPlanes(), objectId, position); break;
+        case ObjectType::JETTY:          updated = SetPosition_T(GetJetties(), objectId, position); break;
         case ObjectType::LADDER:         updated = SetPosition_T(GetLadders(), objectId, position); break;
         case ObjectType::LIGHT:          updated = SetPosition_T(GetLights(), objectId, position); break;
         case ObjectType::MERMAID:        updated = SetPosition_T(GetMermaids(), objectId, position); break;
         case ObjectType::PIANO:          updated = SetPosition_T(GetPianos(), objectId, position); break;
         case ObjectType::PICK_UP:        updated = SetPosition_T(GetPickUps(), objectId, position); break;
         case ObjectType::PICTURE_FRAME:  updated = SetPosition_T(GetPictureFrames(), objectId, position); break;
+
         case ObjectType::SHARK:
             if (Shark* shark = GetSharkByObjectId(objectId)) {
                 shark->SetPatrolCenter(position);
                 updated = true;
             }
             break;
+
         case ObjectType::STAIRCASE:      updated = SetPosition_T(GetStaircases(), objectId, position); break;
         case ObjectType::WALL:           updated = SetPosition_T(GetWalls(), objectId, position); break;
         case ObjectType::WINDOW:         updated = SetPosition_T(GetWindows(), objectId, position); break;
@@ -638,6 +671,7 @@ namespace Unloved::World {
         case ObjectType::FIREPLACE:      return SetRotation_T(GetFireplaces(), objectId, rotation);
         case ObjectType::GAME_OBJECT:    return SetRotation_T(GetGameObjects(), objectId, rotation);
         case ObjectType::GENERIC_OBJECT: return SetRotation_T(GetGenericObjects(), objectId, rotation);
+        case ObjectType::JETTY:          return SetRotation_T(GetJetties(), objectId, rotation);
         case ObjectType::LADDER:         return SetRotation_T(GetLadders(), objectId, rotation);
         case ObjectType::LIGHT:          return SetRotation_T(GetLights(), objectId, rotation);
         case ObjectType::MERMAID:        return SetRotation_T(GetMermaids(), objectId, rotation);
@@ -699,6 +733,7 @@ namespace Unloved::World {
         case ObjectType::WORLD_PLANE:            position = GetWorldSpaceCenter_T(GetWorldPlanes(), objectId); break;
         case ObjectType::KANGAROO:               position = GetPosition_T(GetKangaroos(), objectId); break;
         case ObjectType::LADDER:                 position = GetPosition_T(GetLadders(), objectId); break;
+        case ObjectType::JETTY:                  position = GetPosition_T(GetJetties(), objectId); break;
         case ObjectType::LIGHT:                  position = GetPosition_T(GetLights(), objectId); break;
         case ObjectType::MERMAID:                position = GetPosition_T(GetMermaids(), objectId); break;
         case ObjectType::PIANO:                  position = GetPosition_T(GetPianos(), objectId); break;
@@ -763,6 +798,7 @@ namespace Unloved::World {
         case ObjectType::GAME_OBJECT:            rotation = GetRotation_T(GetGameObjects(), objectId); break;
         case ObjectType::GENERIC_OBJECT:         rotation = GetRotation_T(GetGenericObjects(), objectId); break;
         case ObjectType::KANGAROO:               rotation = GetRotation_T(GetKangaroos(), objectId); break;
+        case ObjectType::JETTY:                  rotation = GetRotation_T(GetJetties(), objectId); break;
         case ObjectType::LADDER:                 rotation = GetRotation_T(GetLadders(), objectId); break;
         case ObjectType::LIGHT:                  rotation = GetRotation_T(GetLights(), objectId); break;
         case ObjectType::MERMAID:                rotation = GetCreateInfoRotation_T(GetMermaids(), objectId); break;
@@ -881,6 +917,7 @@ namespace Unloved::World {
         case ObjectType::KANGAROO:                removed = RemoveFromSlotMap(GetKangaroos(), objectId); break;
         case ObjectType::LADDER:                  removed = RemoveFromSlotMap(GetLadders(), objectId); break;
         case ObjectType::LIGHT:                   removed = RemoveFromSlotMap(GetLights(), objectId); break;
+        case ObjectType::SPOT_LIGHT:              removed = RemoveFromSlotMap(GetSpotLights(), objectId); break;
         case ObjectType::MERMAID:                 removed = RemoveFromSlotMap(GetMermaids(), objectId); break;
         case ObjectType::PIANO:                   removed = RemoveFromSlotMap(GetPianos(), objectId); break;
         case ObjectType::PICK_UP:                 removed = RemoveFromSlotMap(GetPickUps(), objectId); break;
@@ -985,9 +1022,11 @@ namespace Unloved::World {
         CleanUpSlotMap(g_gameObjects);
         CleanUpSlotMap(g_genericObjects);
         CleanUpSlotMap(g_worldPlanes);
+        CleanUpSlotMap(g_jetties);
         CleanUpSlotMap(g_kangaroos);
         CleanUpSlotMap(g_ladders);
         CleanUpSlotMap(g_lights);
+        CleanUpSlotMap(g_spotLights);
         CleanUpSlotMap(g_mermaids);
         CleanUpSlotMap(g_pianos);
         CleanUpSlotMap(g_pickUps);

@@ -1,4 +1,5 @@
 #version 450
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #extension GL_ARB_bindless_texture : enable
 
 #include "../../common/constants.glsl"
@@ -11,12 +12,12 @@ layout (location = 0) out vec4 DecalMaskOut;
 layout(binding = 1) uniform sampler2D GBufferNormalXYRoughnessMiscTexture;
 layout(binding = 2) uniform sampler2D u_depthTexture;
 
-layout(std430, binding = 0)  readonly restrict buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-layout(std430, binding = 2)  readonly restrict buffer rendererDataBuffer    { RendererData rendererData; };
-layout(std430, binding = 3)  readonly restrict buffer viewportDataBuffer    { ViewportData viewportDataArr[]; };
-layout(std430, binding = 8)  restrict          buffer tileBloodDecalsBuffer { TileInstanceData tileBloodDecals[]; };
-layout(std430, binding = 9)  readonly restrict buffer BloodDecalBuffer      { BloodDecal bloodDecals[]; };
-layout(std430, binding = 10) restrict          buffer DecalIndexPool        { uint globalBloodDecalIndices[]; };
+layout(std430, binding = SSBO_IDX_SAMPLERS)  readonly restrict buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+layout(std430, binding = SSBO_IDX_RENDERER_DATA)  readonly restrict buffer rendererDataBuffer    { RendererData rendererData; };
+layout(std430, binding = SSBO_IDX_VIEWPORT_DATA)  readonly restrict buffer viewportDataBuffer    { ViewportData viewportDataArr[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_DRAW_TILE_DECALS)  restrict          buffer tileBloodDecalsBuffer { TileInstanceData tileBloodDecals[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_DRAW_DECALS)  readonly restrict buffer BloodDecalBuffer      { BloodDecal bloodDecals[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_DRAW_INDEX_POOL) restrict          buffer DecalIndexPool        { uint globalBloodDecalIndices[]; };
 
 uniform int u_tileXCount;
 uniform int u_tileYCount;

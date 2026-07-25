@@ -52,11 +52,14 @@ namespace Unloved::RenderDataManager {
     const std::vector<glm::mat4>& GetSkinningTransforms();
     const std::vector<glm::mat4>& GetPreviousSkinningTransforms();
     const std::vector<GPULight>& GetGPULights();
+    const std::vector<GPUSpotLight>& GetGPUSpotLights();
     const std::vector<DecalPaintingInfo>& GetDecalPaintingInfo();
     const std::vector<RenderItem>& GetInstanceData();
     const std::vector<RenderItem>& GetGlassInstanceData();
     const std::vector<GlassLightRange>& GetGlassLightRanges();
     const std::vector<uint32_t>& GetGlassLightIndices();
+    const std::vector<GlassLightRange>& GetGlassSpotLightRanges();
+    const std::vector<uint32_t>& GetGlassSpotLightIndices();
     const std::vector<SpriteSheetRenderItem>& GetSpriteSheetInstanceData();
     const std::vector<RenderItem>& GetCombinedSkinnedRenderItems();
     uint32_t GetRequiredSkinnedVertexCount();
@@ -70,7 +73,6 @@ namespace Unloved::RenderDataManager {
     const std::vector<RenderItem>& GetRenderItemsOutline();
     const std::vector<RenderItem>& GetRenderItemsPlastic();
     const std::vector<RenderItem>& GetRenderItemsProcedural();
-    const std::vector<RenderItem>& GetRenderItemsStainedGlass();
     const std::vector<RenderItem>& GetRenderItemsToiletWater();
     const std::vector<RenderItem>& GetRenderItemsPointLightShadows();
 

@@ -1,17 +1,18 @@
 #version 460
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/constants.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
-layout(std430, binding = 2)  readonly restrict  buffer rendererDataBuffer        { RendererData rendererData; };
-layout(std430, binding = 3)  readonly restrict  buffer viewportDataBuffer        { ViewportData viewportData[]; };
-layout(std430, binding = 7)  readonly restrict  buffer tileWorldBoundsBuffer     { TileWorldBounds tileWorldBounds[]; };
-layout(std430, binding = 9)  restrict           buffer tileChristmasLightsBuffer { TileInstanceData tileChristmasLights[]; };
-layout(std430, binding = 10) readonly restrict  buffer ChristmasLightsBuffer     { ChristmasLight christmasLights[]; };
-layout(std430, binding = 11) restrict           buffer ChristmasLightIndexPool   { uint globalChristmasLightIndices[]; };
-layout(std430, binding = 12) coherent restrict  buffer ChristmasLightCounter     { uint globalChristmasLightCounter; };
+layout(std430, binding = SSBO_IDX_RENDERER_DATA)  readonly restrict  buffer rendererDataBuffer        { RendererData rendererData; };
+layout(std430, binding = SSBO_IDX_VIEWPORT_DATA)  readonly restrict  buffer viewportDataBuffer        { ViewportData viewportData[]; };
+layout(std430, binding = SSBO_IDX_CHRISTMAS_CULLING_TILE_WORLD_BOUNDS)  readonly restrict  buffer tileWorldBoundsBuffer     { TileWorldBounds tileWorldBounds[]; };
+layout(std430, binding = SSBO_IDX_CHRISTMAS_CULLING_TILE_LIGHTS)  restrict           buffer tileChristmasLightsBuffer { TileInstanceData tileChristmasLights[]; };
+layout(std430, binding = SSBO_IDX_CHRISTMAS_CULLING_LIGHTS) readonly restrict  buffer ChristmasLightsBuffer     { ChristmasLight christmasLights[]; };
+layout(std430, binding = SSBO_IDX_CHRISTMAS_CULLING_INDEX_POOL) restrict           buffer ChristmasLightIndexPool   { uint globalChristmasLightIndices[]; };
+layout(std430, binding = SSBO_IDX_CHRISTMAS_CULLING_COUNTER) coherent restrict  buffer ChristmasLightCounter     { uint globalChristmasLightCounter; };
 
 uniform int u_christmasLightCount;
 uniform int u_tileXCount;

@@ -1,10 +1,11 @@
 #version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/types.glsl"
 
 layout(location = 0) out vec3 v_color;
 
-restrict layout(std430, binding = 4) readonly buffer lightsBuffer    { Light lights[]; };
-restrict layout(std430, binding = 5) buffer          LightAABBBuffer { AABB lightAABBs[]; };
+restrict layout(std430, binding = SSBO_IDX_LIGHT_AABB_DEBUG_LIGHTS) readonly buffer lightsBuffer    { Light lights[]; };
+restrict layout(std430, binding = SSBO_IDX_LIGHT_AABB_DEBUG_BOUNDS) buffer          LightAABBBuffer { AABB lightAABBs[]; };
 
 uniform int u_lightIndex;
 uniform mat4 u_projectionView;

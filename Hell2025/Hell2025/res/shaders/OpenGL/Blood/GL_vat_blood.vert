@@ -1,4 +1,5 @@
 #version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/util.glsl"
 #include "../../common/types.glsl"
 #include "../../common/constants.glsl"
@@ -21,7 +22,7 @@ uniform mat4 u_modelMatrix;
 uniform mat4 u_inverseModelMatrix;
 uniform float u_time;
 
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 

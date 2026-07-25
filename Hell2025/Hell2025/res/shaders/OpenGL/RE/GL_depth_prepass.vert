@@ -1,4 +1,5 @@
 #version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 
 #ifndef ENABLE_BINDLESS
     #define ENABLE_BINDLESS 1
@@ -10,8 +11,8 @@
 
 layout (location = 0) in vec3 a_position;
 
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer { ViewportData viewportData[]; };
-readonly restrict layout(std430, binding = 4) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportData[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
 
 uniform int u_globalInstanceIndex;
 uniform int u_viewportIndex;

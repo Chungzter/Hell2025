@@ -52,7 +52,7 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("Skybox", { "GL_skybox.vert", "GL_skybox.frag" });
         OpenGL::ResourceManager::LoadShader("SpriteSheet", { "GL_sprite_sheet.vert", "GL_sprite_sheet.frag" });
         OpenGL::ResourceManager::LoadShader("ScreenspaceReflections", { "GL_screenspace_reflections.comp" });
-        OpenGL::ResourceManager::LoadShader("StainedGlass", { "GL_stained_glass.vert", "GL_stained_glass.frag" });
+        OpenGL::ResourceManager::LoadShader("StainedGlass", { "GL_GLASS.vert", "GL_GLASS.frag" });
         OpenGL::ResourceManager::LoadShader("UI", { "GL_ui.vert", "GL_ui.frag" });
         OpenGL::ResourceManager::LoadShader("Winston", { "GL_winston.vert", "GL_winston.frag" });
         OpenGL::ResourceManager::LoadShader("CSMDepth", { "GL_csm_depth.vert", "GL_csm_depth.frag", "GL_csm_depth.geom" });

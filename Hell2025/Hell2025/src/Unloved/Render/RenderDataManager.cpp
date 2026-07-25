@@ -15,6 +15,7 @@
 #include "Unloved/Config/Config.h"
 #include "Unloved/Config/FlashlightConfig.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/Objects/Lighting/SpotLight.h"
 #include "Unloved/Objects/Renderables/AnimatedGameObject.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
@@ -48,6 +49,7 @@ namespace Unloved::RenderDataManager {
     RendererData g_rendererData;
     std::vector<DrawIndexedIndirectCommand> g_drawCommandsUI;
     std::vector<GPULight> g_gpuLights;
+    std::vector<GPUSpotLight> g_gpuSpotLights;
 
 	std::vector<RenderItem> g_renderItemsProcedural;
     std::vector<RenderItem> g_renderItems;
@@ -57,7 +59,6 @@ namespace Unloved::RenderDataManager {
     std::vector<RenderItem> g_renderItemsGlass;
 	std::vector<RenderItem> g_renderItemsMirror;
     std::vector<RenderItem> g_renderItemsPlastic;
-    std::vector<RenderItem> g_renderItemsStainedGlass;
     std::vector<RenderItem> g_renderItemsToiletWater;
 
     std::vector<RenderItem> g_renderItemsPointLightShadows;
@@ -77,6 +78,8 @@ namespace Unloved::RenderDataManager {
     std::vector<RenderItem> g_glassInstanceData;
     std::vector<GlassLightRange> g_glassLightRanges;
     std::vector<uint32_t> g_glassLightIndices;
+    std::vector<GlassLightRange> g_glassSpotLightRanges;
+    std::vector<uint32_t> g_glassSpotLightIndices;
     std::vector<ViewportData> g_viewportData;
 
     std::vector<DecalPaintingInfo> g_decalPaintingInfo;
@@ -125,6 +128,7 @@ namespace Unloved::RenderDataManager {
     const std::vector<RayQueryBLASInstance>& GetRayQueryBLASInstances()                   { return g_rayQueryBLASInstances; }
 
     void CreateGPULights();
+    void CreateGPUSpotLights();
     void UpdateViewportData();
     void UpdateRendererData();
     void UpdateDrawCommandsSet();
@@ -136,7 +140,7 @@ namespace Unloved::RenderDataManager {
     void CreateSkinningData(); // name me better
     void CreateSkinningDistpachGroups();
 
-    void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters = false);
+    void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters = false, int encodedViewportIndex = -1, uint64_t excludedObjectId = 0);
     void CreateHeightMapDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, Unloved::Frustum& frustum, int viewportIndex);
     void CreateDrawCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum = nullptr);
     void CreateDrawCommandsNonDeformingSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum = nullptr);
@@ -211,7 +215,6 @@ namespace Unloved::RenderDataManager {
         g_renderItemsOutline.clear();
         g_decalPaintingInfo.clear();
 		g_shadowCasterRenderItems.clear();
-		g_renderItemsStainedGlass.clear();
 		g_renderItemsGlass.clear();
 
         g_drawCommandsUI.clear();
@@ -227,6 +230,7 @@ namespace Unloved::RenderDataManager {
         ProfilerCPUZoneFunction();
 
         CreateGPULights();
+        CreateGPUSpotLights();
         CreateSkinningDistpachGroups();
 
         UpdateViewportData();
@@ -428,8 +432,10 @@ namespace Unloved::RenderDataManager {
         g_rendererData.tileCountX = Renderer::GetTileCountX();
         g_rendererData.tileCountY = Renderer::GetTileCountY();
         g_rendererData.lightCount = static_cast<uint32_t>(g_gpuLights.size());
+        g_rendererData.spotLightCount = static_cast<uint32_t>(g_gpuSpotLights.size());
         g_rendererData.moonLightDir = glm::vec4(World::GetMoonlightDirection(), 0.0f);
         g_rendererData.enableDDGI = rendererSettings.enableDDGI;
+        g_rendererData.enableDDGIReflections = rendererSettings.enableDDGIReflections;
         g_rendererData.enableIndirectSpecular = rendererSettings.enableIndirectSpecular;
         g_rendererData.taaJitterPx = g_jitterPx;
         g_rendererData.enableTAA = rendererSettings.enableTAA;
@@ -623,6 +629,8 @@ namespace Unloved::RenderDataManager {
         g_glassInstanceData.clear();
         g_glassLightRanges.clear();
         g_glassLightIndices.clear();
+        g_glassSpotLightRanges.clear();
+        g_glassSpotLightIndices.clear();
 
         for (int viewportIndex = 0; viewportIndex < 4; viewportIndex++) {
             std::vector<RenderItem>& renderItems = visibleGlassRenderItems[viewportIndex];
@@ -684,8 +692,22 @@ namespace Unloved::RenderDataManager {
 
                 lightRange.count = static_cast<uint32_t>(g_glassLightIndices.size()) - lightRange.offset;
 
+                GlassLightRange spotLightRange{};
+                spotLightRange.offset = static_cast<uint32_t>(g_glassSpotLightIndices.size());
+
+                // Spot-light cone bounds are maintained by SpotLight. The shader
+                // performs the exact cone/IES rejection after this conservative test.
+                for (uint32_t lightIndex = 0; lightIndex < g_gpuSpotLights.size(); lightIndex++) {
+                    const GPUSpotLight& light = g_gpuSpotLights[lightIndex];
+                    if (!renderItemBounds.IntersectsAABB(glm::vec3(light.worldBoundsMin), glm::vec3(light.worldBoundsMax))) continue;
+                    g_glassSpotLightIndices.push_back(lightIndex);
+                }
+
+                spotLightRange.count = static_cast<uint32_t>(g_glassSpotLightIndices.size()) - spotLightRange.offset;
+
                 g_glassInstanceData.push_back(renderItem);
                 g_glassLightRanges.push_back(lightRange);
+                g_glassSpotLightRanges.push_back(spotLightRange);
             }
         }
     }
@@ -708,8 +730,14 @@ namespace Unloved::RenderDataManager {
             set.emissive[i].clear();
             set.spriteSheets[i].clear();
 
+        }
+
+        for (int i = 0; i < MAX_SHADOWED_SPOT_LIGHTS; i++) {
             g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[i].clear();
             g_flashLightShadowMapDrawInfo.heightMapChunkIndices[i].clear();
+            g_flashLightShadowMapDrawInfo.projectionView[i] = glm::mat4(1.0f);
+            g_flashLightShadowMapDrawInfo.ownerViewportIndex[i] = -1;
+            g_flashLightShadowMapDrawInfo.active[i] = false;
         }
     }
 
@@ -767,21 +795,33 @@ namespace Unloved::RenderDataManager {
     void CreateFlashLightShadowMapDrawCommands() {
         ProfilerCPUZone("Flashlight commands");
 
-        for (int playerIndex = 0; playerIndex < Unloved::Session::GetLocalPlayerCount(); playerIndex++) {
-            Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(playerIndex);
-            if (!player) continue;
+        for (SpotLight& light : World::GetSpotLights()) {
+            const int32_t shadowLayer = light.GetShadowLayer();
+            if (!light.IsActive() || !light.CastsShadows()) continue;
+            if (shadowLayer < 0 || shadowLayer >= MAX_SHADOWED_SPOT_LIGHTS) continue;
 
-            Unloved::Frustum flashLightFrustum = player->GetFlashlightFrustum();
+            const int32_t ownerViewportIndex = light.GetOwnerViewportIndex();
+            Unloved::Frustum& spotLightFrustum = light.GetFrustum();
+            g_flashLightShadowMapDrawInfo.projectionView[shadowLayer] = light.GetData().projectionView;
+            g_flashLightShadowMapDrawInfo.ownerViewportIndex[shadowLayer] = ownerViewportIndex;
+            g_flashLightShadowMapDrawInfo.active[shadowLayer] = true;
 
             // Build multi draw commands for regular geometry
-            CreateDrawCommands(g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[playerIndex], g_renderItems, &flashLightFrustum, playerIndex, true);
+            CreateDrawCommands(
+                g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[shadowLayer],
+                g_renderItems,
+                &spotLightFrustum,
+                ownerViewportIndex,
+                true,
+                std::max(ownerViewportIndex, 0),
+                light.GetOwnerObjectId());
 
             // Frustum cull the heightmap chunks
             std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
             for (int i = 0; i < chunks.size(); i++) {
                 HeightMapChunk& chunk = chunks[i];
-                if (flashLightFrustum.IntersectsAABBFast(AABB(chunk.aabbMin, chunk.aabbMax))) {
-                    g_flashLightShadowMapDrawInfo.heightMapChunkIndices[playerIndex].push_back(i);
+                if (spotLightFrustum.IntersectsAABBFast(AABB(chunk.aabbMin, chunk.aabbMax))) {
+                    g_flashLightShadowMapDrawInfo.heightMapChunkIndices[shadowLayer].push_back(i);
                 }
             }
         }
@@ -979,7 +1019,7 @@ namespace Unloved::RenderDataManager {
     }
 
 
-    void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters) {
+    void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters, int encodedViewportIndex, uint64_t excludedObjectId) {
         // Store the instance offset for this list of commands
         int instanceStart = g_instanceData.size();
 
@@ -989,6 +1029,12 @@ namespace Unloved::RenderDataManager {
         // Append new render items to the global instance data
         for (const RenderItem& renderItem : renderItems) {
             bool shadowCasting = ((renderItem.shadowFlags & SHADOW_FLAG_POINT_LIGHT) != 0u);
+
+            if (excludedObjectId != 0) {
+                uint64_t renderItemObjectId = 0;
+                Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, renderItemObjectId);
+                if (renderItemObjectId == excludedObjectId) continue;
+            }
 
             if (ignoreNonShadowCasters && !shadowCasting) continue;
             if (renderItem.ignoredViewportIndex != -1 && renderItem.ignoredViewportIndex == viewportIndex) continue;
@@ -1006,7 +1052,8 @@ namespace Unloved::RenderDataManager {
 
         // Create indirect draw commands using the stored offset
         std::span<RenderItem> instanceView(g_instanceData.begin() + instanceStart, g_instanceData.end());
-        CreateMultiDrawIndirectCommands(drawCommands, instanceView, viewportIndex, instanceStart);
+        const int commandViewportIndex = encodedViewportIndex >= 0 ? encodedViewportIndex : std::max(viewportIndex, 0);
+        CreateMultiDrawIndirectCommands(drawCommands, instanceView, commandViewportIndex, instanceStart);
     }
 
     void CreateHeightMapDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, Unloved::Frustum& frustum, int viewportIndex) {
@@ -1308,7 +1355,6 @@ namespace Unloved::RenderDataManager {
     const std::vector<RenderItem>& GetRenderItemsOutline()      { return g_renderItemsOutline; }
     const std::vector<RenderItem>& GetRenderItemsPlastic()      { return g_renderItemsPlastic; }
     const std::vector<RenderItem>& GetRenderItemsProcedural()   { return g_renderItemsProcedural; }
-    const std::vector<RenderItem>& GetRenderItemsStainedGlass() { return g_renderItemsStainedGlass; }
     const std::vector<RenderItem>& GetRenderItemsToiletWater()  { return g_renderItemsToiletWater; }
     const std::vector<RenderItem>& GetRenderItemsPointLightShadows() { return g_renderItemsPointLightShadows; }
 
@@ -1342,6 +1388,14 @@ namespace Unloved::RenderDataManager {
         return g_glassLightIndices;
     }
 
+    const std::vector<GlassLightRange>& GetGlassSpotLightRanges() {
+        return g_glassSpotLightRanges;
+    }
+
+    const std::vector<uint32_t>& GetGlassSpotLightIndices() {
+        return g_glassSpotLightIndices;
+    }
+
     const std::vector<SpriteSheetRenderItem>& GetSpriteSheetInstanceData() {
         return g_spriteSheetInstanceData;
     }
@@ -1356,6 +1410,10 @@ namespace Unloved::RenderDataManager {
 
     const std::vector<GPULight>& GetGPULights() {
         return g_gpuLights;
+    }
+
+    const std::vector<GPUSpotLight>& GetGPUSpotLights() {
+        return g_gpuSpotLights;
     }
 
     const std::vector<glm::mat4>& GetSkinningTransforms() {
@@ -1446,6 +1504,57 @@ namespace Unloved::RenderDataManager {
                 gpuLight.right = finalRight;
                 gpuLight.up = finalUp;
             }
+        }
+    }
+
+    void CreateGPUSpotLights() {
+        g_gpuSpotLights.clear();
+
+        // Shadow layers are transient render resources, never stable light IDs.
+        // Keep each local player's layer stable, then give any remaining layers
+        // to remote-player/enemy flashlights in world order.
+        bool usedShadowLayers[MAX_SHADOWED_SPOT_LIGHTS]{};
+        for (SpotLight& light : World::GetSpotLights()) {
+            light.SetShadowLayer(-1);
+        }
+
+        for (SpotLight& light : World::GetSpotLights()) {
+            const int32_t ownerViewportIndex = light.GetOwnerViewportIndex();
+            if (!light.IsActive() || !light.CastsShadows()) continue;
+            if (ownerViewportIndex < 0 || ownerViewportIndex >= MAX_SHADOWED_SPOT_LIGHTS) continue;
+            if (usedShadowLayers[ownerViewportIndex]) continue;
+
+            light.SetShadowLayer(ownerViewportIndex);
+            usedShadowLayers[ownerViewportIndex] = true;
+        }
+
+        for (SpotLight& light : World::GetSpotLights()) {
+            if (!light.IsActive() || !light.CastsShadows() || light.GetShadowLayer() >= 0) continue;
+
+            for (int32_t layer = 0; layer < MAX_SHADOWED_SPOT_LIGHTS; layer++) {
+                if (usedShadowLayers[layer]) continue;
+                light.SetShadowLayer(layer);
+                usedShadowLayers[layer] = true;
+                break;
+            }
+        }
+
+        for (SpotLight& light : World::GetSpotLights()) {
+            if (!light.IsActive()) continue;
+
+            const SpotLightData& data = light.GetData();
+            uint32_t flags = 0;
+            if (data.castsShadows) flags |= SPOT_LIGHT_FLAG_CAST_SHADOWS;
+            if (data.skipOwnerShadow) flags |= SPOT_LIGHT_FLAG_SKIP_OWNER_SHADOW;
+            if (data.useFlashlightViewDistanceScale) flags |= SPOT_LIGHT_FLAG_VIEW_DISTANCE_SCALE;
+
+            GPUSpotLight& gpuLight = g_gpuSpotLights.emplace_back();
+            gpuLight.projectionView = data.projectionView;
+            gpuLight.positionModifier = glm::vec4(data.position, data.modifier);
+            gpuLight.direction = glm::vec4(data.direction, 0.0f);
+            gpuLight.worldBoundsMin = glm::vec4(light.GetWorldBoundsMin(), 0.0f);
+            gpuLight.worldBoundsMax = glm::vec4(light.GetWorldBoundsMax(), 0.0f);
+            gpuLight.metadata = glm::ivec4(light.GetShadowLayer(), light.GetOwnerViewportIndex(), static_cast<int32_t>(flags), 0);
         }
     }
 
@@ -1667,7 +1776,6 @@ namespace Unloved::RenderDataManager {
         case BlendingMode::HAIR:          g_renderItemsHair.push_back(renderItem); break;
         case BlendingMode::MIRROR:        g_renderItemsMirror.push_back(renderItem); break;
         case BlendingMode::TOILET_WATER:  g_renderItemsToiletWater.push_back(renderItem); break;
-        case BlendingMode::STAINED_GLASS: g_renderItemsStainedGlass.push_back(renderItem); break;
         case BlendingMode::PLASTIC:       g_renderItemsPlastic.push_back(renderItem); break;
         default: break;
         }

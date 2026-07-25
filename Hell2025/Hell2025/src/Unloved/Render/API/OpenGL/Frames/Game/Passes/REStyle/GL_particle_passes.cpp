@@ -59,9 +59,9 @@ namespace OpenGL::Renderer {
 
         OpenGL::UploadSSBOStatic("ParticleAdditions", gpuParticles.size() * sizeof(GpuParticle), gpuParticles.data());
 
-        OpenGL::BindSSBO(6, "ParticleAdditions");
-        OpenGL::BindSSBO(7, "ParticlePool");
-        OpenGL::BindSSBO(10, "ParticleAdditionCounter");
+        OpenGL::BindSSBO(SSBO_IDX_PARTICLE_ADD_ADDITIONS, "ParticleAdditions");
+        OpenGL::BindSSBO(SSBO_IDX_PARTICLE_ADD_POOL, "ParticlePool");
+        OpenGL::BindSSBO(SSBO_IDX_PARTICLE_ADD_COUNTER, "ParticleAdditionCounter");
 
         OpenGL::ClearSSBORange("ParticleAdditionCounter", 0, sizeof(uint32_t));
 
@@ -77,9 +77,9 @@ namespace OpenGL::Renderer {
     }
 
     void UpdateParticles() {
-        OpenGL::BindSSBO(7, "ParticlePool");
-        OpenGL::BindSSBO(8, "ParticleActiveIndices");
-        OpenGL::BindSSBO(9, "ParticleDrawCommand");
+        OpenGL::BindSSBO(SSBO_IDX_PARTICLE_UPDATE_POOL, "ParticlePool");
+        OpenGL::BindSSBO(SSBO_IDX_PARTICLE_UPDATE_ACTIVE_INDICES, "ParticleActiveIndices");
+        OpenGL::BindSSBO(SSBO_IDX_PARTICLE_UPDATE_INDIRECT_COMMAND, "ParticleDrawCommand");
 
         OpenGL::BindShader("ParticleUpdate");
         OpenGL::SetUniformFloat("u_deltaTime", Hell::Time::DeltaTime());
@@ -123,14 +123,15 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
         OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
 
         OpenGL::BindTextureUnit(0, GetTextureHandleByName("UnderwaterBulletBubble"));
 
         glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
-        OpenGL::BindSSBO(7, "ParticlePool");
-        OpenGL::BindSSBO(8, "ParticleActiveIndices");
+        OpenGL::BindSSBO(SSBO_IDX_PARTICLE_DRAW_POOL, "ParticlePool");
+        OpenGL::BindSSBO(SSBO_IDX_PARTICLE_DRAW_ACTIVE_INDICES, "ParticleActiveIndices");
 
         BindEmptyVAO();
         OpenGL::BindDrawIndirectBuffer("ParticleDrawCommand");
@@ -172,9 +173,9 @@ namespace OpenGL::Renderer {
             OpenGL::UpdateSSBO("BubblePositionCount", sizeof(uint64_t), &count);
 
             OpenGL::BindShader("BubbleDrawCommandArgs");
-            OpenGL::BindSSBO(6, "BubblePositions");
-            OpenGL::BindSSBO(7, "BubblePositionCount");
-            OpenGL::BindSSBO(8, "BubbleDrawCommand");
+            OpenGL::BindSSBO(SSBO_IDX_BUBBLE_DRAW_POSITIONS, "BubblePositions");
+            OpenGL::BindSSBO(SSBO_IDX_BUBBLE_DRAW_PARTICLE_COUNT, "BubblePositionCount");
+            OpenGL::BindSSBO(SSBO_IDX_BUBBLE_DRAW_INDIRECT_COMMAND, "BubbleDrawCommand");
             OpenGL::DispatchCompute(1, 1, 1);
         }
     }
@@ -209,12 +210,13 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
         OpenGL::SetUniformFloat("u_time", Unloved::Session::GetSessionTime());
         OpenGL::BindTextureUnit(0, skyboxCubemapView.GetHandle());
 
         glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
-        OpenGL::BindSSBO(6, "BubblePositions");
+        OpenGL::BindSSBO(SSBO_IDX_BUBBLE_DRAW_POSITIONS, "BubblePositions");
 
         BindEmptyVAO();
         OpenGL::BindDrawIndirectBuffer("BubbleDrawCommand");

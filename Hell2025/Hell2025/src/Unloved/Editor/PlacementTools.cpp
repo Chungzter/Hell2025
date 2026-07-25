@@ -39,12 +39,12 @@ namespace Unloved::Editor {
         doorStandardB.insertMode = PlacementInsertMode::DIRECT;
         doorStandardB.defaultEditorName = "Door";
 
-        PlacementToolInfo& doorStainedGlass = g_placementTools[PlacementTool::DOOR_STAINED_GLASS];
+        PlacementToolInfo& doorStainedGlass = g_placementTools[PlacementTool::DOOR_GLASS];
         doorStainedGlass.rayMode = PlacementRayMode::WORLD;
         doorStainedGlass.insertMode = PlacementInsertMode::DIRECT;
         doorStainedGlass.defaultEditorName = "Door";
 
-        PlacementToolInfo& doorStainedGlass2 = g_placementTools[PlacementTool::DOOR_STAINED_GLASS2];
+        PlacementToolInfo& doorStainedGlass2 = g_placementTools[PlacementTool::DOOR_GLASS2];
         doorStainedGlass2.rayMode = PlacementRayMode::WORLD;
         doorStainedGlass2.insertMode = PlacementInsertMode::DIRECT;
         doorStainedGlass2.defaultEditorName = "Door";
@@ -168,6 +168,11 @@ namespace Unloved::Editor {
         kangaroo.rayMode = PlacementRayMode::WORLD;
         kangaroo.insertMode = PlacementInsertMode::DIRECT;
         kangaroo.defaultEditorName = "Kangaroo";
+
+        PlacementToolInfo& jetty = g_placementTools[PlacementTool::JETTY];
+        jetty.rayMode = PlacementRayMode::WORLD;
+        jetty.insertMode = PlacementInsertMode::DIRECT;
+        jetty.defaultEditorName = "Tasmanian Fisherman's Jetty";
 
         PlacementToolInfo& ladder = g_placementTools[PlacementTool::LADDER];
         ladder.rayMode = PlacementRayMode::WORLD;

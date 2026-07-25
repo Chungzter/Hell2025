@@ -540,11 +540,11 @@ namespace OpenGL::Renderer {
         OpenGL::SetUniformFloat("u_pointCloudCellSize", pointCloud.GetGridCellSize());
         OpenGL::SetUniformVec3("u_volumeMinBounds", ddgiVolume.GetBoundsMin());
 
-        OpenGL::BindSSBO(4, "Lights");
-        OpenGL::BindSSBO(5, ddgiVolume.GetPointCloudGridOffsetsSSBOName());
-        OpenGL::BindSSBO(6, ddgiVolume.GetPointCloudGridCountsSSBOName());
-        OpenGL::BindSSBO(7, ddgiVolume.GetPointCloudDirtyFlagsSSBOName());
-        OpenGL::BindSSBO(8, ddgiVolume.GetPointCloudSSBOName());
+        OpenGL::BindSSBO(SSBO_IDX_DEBUG_POINT_CLOUD_LIGHTS, "Lights");
+        OpenGL::BindSSBO(SSBO_IDX_DEBUG_POINT_CLOUD_GRID_OFFSETS, ddgiVolume.GetPointCloudGridOffsetsSSBOName());
+        OpenGL::BindSSBO(SSBO_IDX_DEBUG_POINT_CLOUD_GRID_COUNTS, ddgiVolume.GetPointCloudGridCountsSSBOName());
+        OpenGL::BindSSBO(SSBO_IDX_DEBUG_POINT_CLOUD_DIRTY_FLAGS, ddgiVolume.GetPointCloudDirtyFlagsSSBOName());
+        OpenGL::BindSSBO(SSBO_IDX_DEBUG_POINT_CLOUD_POINTS, ddgiVolume.GetPointCloudSSBOName());
 
 		OpenGLRasterizerState state;
 		state.depthTestEnabled = true;
@@ -635,8 +635,8 @@ namespace OpenGL::Renderer {
             fbo->DrawBuffer("Lighting");
         }
 
-        OpenGL::BindSSBO(7, "DDGIVolume");
-        OpenGL::BindSSBO(8, "ProbeStates");
+        OpenGL::BindSSBO(SSBO_IDX_DEBUG_PROBES_VOLUME, "DDGIVolume");
+        OpenGL::BindSSBO(SSBO_IDX_DEBUG_PROBES_STATES, "ProbeStates");
 
         glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
 

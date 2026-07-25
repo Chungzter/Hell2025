@@ -1,4 +1,5 @@
 #version 450
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 
 uniform mat4 u_view;
 uniform mat4 u_projectionView;
@@ -8,7 +9,7 @@ const float SCALE = 0.1;
 
 out vec2 v_uv;
 
-layout(std430, binding = 6) readonly buffer BubblePositionsBuffer { vec4 bubblePositions[]; };
+layout(std430, binding = SSBO_IDX_BUBBLE_DRAW_POSITIONS) readonly buffer BubblePositionsBuffer { vec4 bubblePositions[]; };
 
 void main() {
     // Vertex positions

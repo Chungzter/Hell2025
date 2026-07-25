@@ -42,6 +42,7 @@ namespace Debug::Menu::Scratch {
     void ApplyEdit(uint32_t id, const Value& value);
     bool SaveTeleport(Unloved::Player& player);
     bool LoadTeleport(Unloved::Player& player);
+    void AddScratchBool(const std::string& name, bool defaultValue);
     void AddScratchStringList(const std::string& name, std::vector<std::string> values, int32_t defaultIndex = 0);
     bool ApplyScratchEdit(uint32_t id, const Value& value);
 
@@ -54,7 +55,8 @@ namespace Debug::Menu::Scratch {
     void BuildMenu() {
         g_bindings.clear();
 
-        AddScratchStringList("Glass Mode", { "0", "1", "2", "3" });
+        AddScratchStringList("Glass Mode", { "0", "1", "2", "3" }, 3);
+        AddScratchBool("Glass Shadows", true);
 
         AddLineBreak();
         AddAction(static_cast<uint32_t>(Action::SAVE_TELEPORT), "Save Teleport");
@@ -94,9 +96,11 @@ namespace Debug::Menu::Scratch {
 
         const glm::vec3 position = player.GetFootPosition();
         const glm::vec3 cameraEuler = player.GetCamera().GetEulerRotation();
+        const float cameraHeightModifier = player.GetCameraHeightModifier();
         json["teleport"] = {
             { "position", { position.x, position.y, position.z } },
-            { "cameraEuler", { cameraEuler.x, cameraEuler.y, cameraEuler.z } }
+            { "cameraEuler", { cameraEuler.x, cameraEuler.y, cameraEuler.z } },
+            { "cameraHeightModifier", cameraHeightModifier }
         };
 
         std::error_code errorCode;
@@ -117,8 +121,10 @@ namespace Debug::Menu::Scratch {
             const nlohmann::json& teleport = json.at("teleport");
             const glm::vec3 position = teleport.at("position").get<glm::vec3>();
             const glm::vec3 cameraEuler = teleport.at("cameraEuler").get<glm::vec3>();
+            const float cameraHeightModifier = teleport.value("cameraHeightModifier", player.GetCameraHeightModifier());
             player.SetFootPosition(position);
             player.GetCamera().SetEulerRotation(cameraEuler);
+            player.SetCameraHeightModifier(cameraHeightModifier);
         }
         catch (const nlohmann::json::exception& e) {
             Logging::Error() << "LoadTeleport() failed to read '" << SCRATCH_CONFIG_FILE_PATH << "': " << e.what() << "\n";

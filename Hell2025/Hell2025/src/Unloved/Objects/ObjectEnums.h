@@ -114,8 +114,8 @@ enum struct GenericObjectType {
 enum struct DoorType {
     STANDARD_A,
     STANDARD_B,
-    STAINED_GLASS,
-    STAINED_GLASS2,
+    GLASS,
+    GLASS2,
     UNDEFINED
 };
 

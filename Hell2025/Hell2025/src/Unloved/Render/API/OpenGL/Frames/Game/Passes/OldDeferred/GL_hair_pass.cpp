@@ -163,6 +163,9 @@ namespace OpenGL::Renderer {
             OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
             OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
             OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
+            OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
+            OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
+            OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS, "TileSpotLights");
             OpenGL::SetUniformVec3("u_moonlightDir", Unloved::World::GetMoonlightDirection());
             glBindTextureUnit(TEX_IDX_SHADOW_MAP_FLASHLIGHT, flashlightShadowMaps->GetDepthTextureHandle());
             glBindTextureUnit(TEX_IDX_SHADOW_MAP_HI_RES, hiResShadowMaps->GetDepthTexture());

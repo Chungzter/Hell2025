@@ -11,7 +11,6 @@ enum class BlendingMode {
     GLASS,
     PLASTIC,
     DO_NOT_RENDER,
-    STAINED_GLASS,
     UNDEFINED
 };
 
@@ -56,6 +55,7 @@ enum class RendererOverrideState {
     TILE_HEATMAP_LIGHTS,
     TILE_HEATMAP_BLOOD_DECALS,
     TILE_HEATMAP_CHRISTMAS_LIGHTS,
+    TILE_HEATMAP_SPOT_LIGHTS,
     INDIRECT_DIFFUSE,
     VELOCITY,
     VIS_BUFFER,

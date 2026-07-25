@@ -5,6 +5,10 @@
 #define HEIGHTMAP_SCALE_XZ 0.25
 #define TILE_SIZE 24
 
+#define SPOT_LIGHT_FLAG_CAST_SHADOWS       (1u << 0)
+#define SPOT_LIGHT_FLAG_SKIP_OWNER_SHADOW   (1u << 1)
+#define SPOT_LIGHT_FLAG_VIEW_DISTANCE_SCALE (1u << 2)
+
 // Blood decal projector dimensions in local space. The model matrix supplies
 // the uniform world scale; aspectScale stretches the two surface axes.
 const float BLOOD_DECAL_DEPTH_SCALE = 0.2;

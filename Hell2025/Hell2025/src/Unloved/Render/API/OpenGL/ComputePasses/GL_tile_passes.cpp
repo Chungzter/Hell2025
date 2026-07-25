@@ -28,7 +28,7 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(7, "TileWorldBounds");
+        OpenGL::BindSSBO(SSBO_IDX_TILE_WORLD_BOUNDS_OUTPUT, "TileWorldBounds");
 
         OpenGL::BindTextureUnit(0, depthHandle);
 
@@ -47,8 +47,10 @@ namespace OpenGL::Renderer {
 
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
-        OpenGL::BindSSBO(6, "TileLights");
-        OpenGL::BindSSBO(7, "TileWorldBounds");
+        OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHT_CULLING_TILE_LIGHTS, "TileLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHT_CULLING_TILE_WORLD_BOUNDS, "TileWorldBounds");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHT_CULLING_TILE_SPOT_LIGHTS, "TileSpotLights");
 
         OpenGL::DispatchCompute(GetTileCountX(), GetTileCountY(), 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -96,11 +98,11 @@ namespace OpenGL::Renderer {
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
         OpenGL::SetUniformInt("u_tileYCount", GetTileCountY());
 
-        OpenGL::BindSSBO(7, "TileWorldBounds");
-        OpenGL::BindSSBO(9, "TileChristmasLights");
-        OpenGL::BindSSBO(10, "ChristmasLightInstances");
-        OpenGL::BindSSBO(11, "ChristmasLightIndices");
-        OpenGL::BindSSBO(12, "ChristmasLightCounter");
+        OpenGL::BindSSBO(SSBO_IDX_CHRISTMAS_CULLING_TILE_WORLD_BOUNDS, "TileWorldBounds");
+        OpenGL::BindSSBO(SSBO_IDX_CHRISTMAS_CULLING_TILE_LIGHTS, "TileChristmasLights");
+        OpenGL::BindSSBO(SSBO_IDX_CHRISTMAS_CULLING_LIGHTS, "ChristmasLightInstances");
+        OpenGL::BindSSBO(SSBO_IDX_CHRISTMAS_CULLING_INDEX_POOL, "ChristmasLightIndices");
+        OpenGL::BindSSBO(SSBO_IDX_CHRISTMAS_CULLING_COUNTER, "ChristmasLightCounter");
 
         OpenGL::DispatchCompute(GetTileCountX(), GetTileCountY(), 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -119,11 +121,11 @@ namespace OpenGL::Renderer {
         OpenGL::SetUniformInt("u_tileXCount", static_cast<int>(GetTileCountX()));
         OpenGL::SetUniformInt("u_tileYCount", static_cast<int>(GetTileCountY()));
 
-        OpenGL::BindSSBO(7, "TileWorldBounds");
-        OpenGL::BindSSBO(8, "TileBloodDecals");
-        OpenGL::BindSSBO(9, "BloodDecalInstances");
-        OpenGL::BindSSBO(10, "BloodDecalIndices");
-        OpenGL::BindSSBO(11, "BloodDecalCounter");
+        OpenGL::BindSSBO(SSBO_IDX_BLOOD_CULLING_TILE_WORLD_BOUNDS, "TileWorldBounds");
+        OpenGL::BindSSBO(SSBO_IDX_BLOOD_CULLING_TILE_DECALS, "TileBloodDecals");
+        OpenGL::BindSSBO(SSBO_IDX_BLOOD_CULLING_DECALS, "BloodDecalInstances");
+        OpenGL::BindSSBO(SSBO_IDX_BLOOD_CULLING_INDEX_POOL, "BloodDecalIndices");
+        OpenGL::BindSSBO(SSBO_IDX_BLOOD_CULLING_COUNTER, "BloodDecalCounter");
 
         OpenGL::DispatchCompute(GetTileCountX(), GetTileCountY(), 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);

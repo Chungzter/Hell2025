@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Unloved/Render/RendererConstants.h"
 #include "Unloved/Render/RendererEnums.h"
 
 #include <glm/mat4x4.hpp>
@@ -71,27 +72,33 @@ struct ViewportData {
 
 struct RendererData {
     glm::vec4 moonLightDir = glm::vec4(0.0f);
+
     float nearPlane;
     float farPlane;
     float gBufferWidth;
     float gBufferHeight;
+
     float hairBufferWidth;
     float hairBufferHeight;
     float time;
     int splitscreenMode;
+
     int rendererOverrideState;
     float normalizedMouseX;
     float normalizedMouseY;
     int tileCountX;
+
     int tileCountY;
     uint32_t lightCount; // Boolean
     uint32_t enableDDGI; // Boolean
     uint32_t enableIndirectSpecular; // Boolean
+
     uint32_t enableTAA;  // Boolean
-    glm::vec2 taaJitterPx = glm::vec2(0.0f);
     float indirectSpecularFactor = 1.0f;
     float indirectSpecularRoughnessDampening = 1.0;
     uint32_t directPointShadowMode = 0;
+
+    glm::vec2 taaJitterPx = glm::vec2(0.0f);
     uint32_t padding0 = 0;
     uint32_t padding1 = 0;
 
@@ -120,7 +127,12 @@ struct RendererData {
     float flashlightCenterSpotOuterAngle = 5.0f;
     uint32_t flashlightCenterSpotEnabled = 1;
     uint32_t padding3 = 0;
+    uint32_t enableDDGIReflections = 0;
+
+    uint32_t spotLightCount = 0;
     uint32_t padding4 = 0;
+    uint32_t padding5 = 0;
+    uint32_t padding6 = 0;
 };
 
 struct RenderItem {
@@ -218,6 +230,16 @@ struct GPULight {
     glm::vec4 worldBoundsMax = glm::vec4(0.0f);
 };
 
+struct GPUSpotLight {
+    glm::mat4 projectionView = glm::mat4(1.0f);
+    glm::vec4 positionModifier = glm::vec4(0.0f);
+    glm::vec4 direction = glm::vec4(0.0f);
+    glm::vec4 worldBoundsMin = glm::vec4(0.0f);
+    glm::vec4 worldBoundsMax = glm::vec4(0.0f);
+    glm::ivec4 metadata = glm::ivec4(-1, -1, -1, 0);
+};
+static_assert(sizeof(GPUSpotLight) == 144);
+
 struct GPUAABB {
     glm::vec4 boundsMin{};
     glm::vec4 boundsMax{};
@@ -232,6 +254,12 @@ struct TileLights {
     uint32_t lightCount;
     uint32_t lightIndices[127];
 };
+
+struct TileSpotLights {
+    uint32_t lightCount;
+    uint32_t lightIndices[MAX_SPOT_LIGHTS];
+};
+static_assert(sizeof(TileSpotLights) == 32);
 
 struct TileWorldBounds {
     glm::vec4 boundsMin; // w: count of non-background pixels

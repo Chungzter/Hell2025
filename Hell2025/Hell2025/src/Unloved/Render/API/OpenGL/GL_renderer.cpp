@@ -14,6 +14,7 @@
 #include "Unloved/Player/Player.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Render/Renderer.h"
+#include "Unloved/Render/RendererConstants.h"
 #include "Hell/UI/UIBackEnd.h"
 #include "Hell/UI/TextBlitter.h"
 #include "Unloved/Objects/Props/GameObject.h"
@@ -63,7 +64,7 @@ namespace OpenGL::Renderer {
         perlinNoise.Create(128, GL_R32F, true);
 
         uint64_t flashlightShadowMapsId = OpenGL::ResourceManager::CreateShadowMap("FlashlightShadowMaps");
-        OpenGL::ResourceManager::GetShadowMapById(flashlightShadowMapsId) = OpenGLShadowMap("FlashlightShadowMaps", FLASHLIGHT_SHADOWMAP_SIZE, FLASHLIGHT_SHADOWMAP_SIZE, 4);
+        OpenGL::ResourceManager::GetShadowMapById(flashlightShadowMapsId) = OpenGLShadowMap("FlashlightShadowMaps", FLASHLIGHT_SHADOWMAP_SIZE, FLASHLIGHT_SHADOWMAP_SIZE, MAX_SHADOWED_SPOT_LIGHTS);
 
         CreateFramebuffers();
         CreateSSBOs();

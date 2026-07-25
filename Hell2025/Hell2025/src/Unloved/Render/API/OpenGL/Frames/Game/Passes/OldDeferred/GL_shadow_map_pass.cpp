@@ -10,6 +10,7 @@
 #include "World/LegacyWorld.h"
 
 #include <cstddef>
+#include <algorithm>
 #include <initializer_list>
 
 using namespace Hell;            // lil bit cursed dis
@@ -120,15 +121,13 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("ShadowMap");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
 
-        for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
+        for (int i = 0; i < MAX_SHADOWED_SPOT_LIGHTS; i++) {
             shadowMapsFBO->BindLayer(i);
             shadowMapsFBO->ClearLayer(i);
+            if (!flashLightShadowMapDrawInfo.active[i]) continue;
 
-            glm::mat4 lightProjectionView = Unloved::Session::GetLocalPlayerByViewportIndex(i)->GetFlashlightProjectionView();
+            const glm::mat4& lightProjectionView = flashLightShadowMapDrawInfo.projectionView[i];
             OpenGL::SetUniformMat4("u_projectionView", lightProjectionView);
-
-            Unloved::Frustum frustum;
-            frustum.Update(lightProjectionView);
 
             // Scene geometry
             OpenGL::SetUniformBool("u_useInstanceData", true);
@@ -156,7 +155,7 @@ namespace OpenGL::Renderer {
                     int baseIndex = mesh->baseIndex;
                     void* indexOffset = (GLvoid*)(baseIndex * sizeof(GLuint));
                     int instanceCount = 1;
-                    int viewportIndex = i;
+                    int viewportIndex = std::max(flashLightShadowMapDrawInfo.ownerViewportIndex[i], 0);
                     if (indexCount > 0) {
                         glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indexOffset, instanceCount, baseVertex, viewportIndex);
                     }

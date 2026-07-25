@@ -73,6 +73,8 @@ public:
     AnimatedGameObject* GetCharacterModelAnimatedGameObject();
     AnimatedGameObject* GetViewWeaponAnimatedGameObject();
     Unloved::Camera& GetCamera();
+    float GetCameraHeightModifier() const { return m_cameraHeightModifier; }
+    void SetCameraHeightModifier(float modifier) { m_cameraHeightModifier = modifier; }
 
 
 public:
@@ -317,6 +319,7 @@ private:
     glm::vec3 m_flashlightPosition;
     glm::vec3 m_flashlightDirection;
     glm::mat4 m_flashlightProjectionView;
+    uint64_t m_flashlightSpotLightId = 0;
     bool m_flashlightOn = false;
     float m_flashLightModifier = 0.0f;
 
@@ -353,6 +356,7 @@ private:
     float m_viewHeightStanding = m_realViewHeightStanding;
     float m_viewHeightCrouching = m_realViewHeightCrouching;
     float m_currentViewHeight = m_viewHeightStanding;
+    float m_cameraHeightModifier = 0.0f;
 
     // Misc
     int m_revolverReloadIterations = 0;
@@ -543,6 +547,7 @@ private:
         const glm::vec3 GetFlashlightDirection()                                { return m_flashlightDirection; };
         const glm::mat4 GetFlashlightProjectionView()                           { return m_flashlightProjectionView; };
         const float GetFlashLightModifer()                                      { return m_flashLightModifier; }
+        const uint64_t GetFlashlightSpotLightId()                               { return m_flashlightSpotLightId; }
         const AABB& GetCharacterControllerAABB()                                { return m_characterControllerAABB; }
 };
 

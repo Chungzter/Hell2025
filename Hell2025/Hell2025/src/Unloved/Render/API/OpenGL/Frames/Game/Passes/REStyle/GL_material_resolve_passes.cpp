@@ -30,8 +30,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
-        OpenGL::BindSSBO(6, meshBuffer.GetVBO());
-        OpenGL::BindSSBO(7, meshBuffer.GetEBO());
+        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_VERTICES, meshBuffer.GetVBO());
+        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_INDICES, meshBuffer.GetEBO());
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = false;
@@ -79,8 +79,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
-        OpenGL::BindSSBO(6, meshBuffer.GetVBO());
-        OpenGL::BindSSBO(7, meshBuffer.GetEBO());
+        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_VERTICES, meshBuffer.GetVBO());
+        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_INDICES, meshBuffer.GetEBO());
 
         int32_t dirtRoadMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("DirtRoad");
         int32_t groundMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Ground_MudVeg");
@@ -139,9 +139,9 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
-        OpenGL::BindSSBO(6, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
-        OpenGL::BindSSBO(7, OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
-        OpenGL::BindSSBO(8, OpenGL::BackEnd::GetPreviousSkinnedPositionBuffer());
+        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_VERTICES, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
+        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_INDICES, OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
+        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_PREVIOUS_POSITIONS, OpenGL::BackEnd::GetPreviousSkinnedPositionBuffer());
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = false;
@@ -190,8 +190,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
-        OpenGL::BindSSBO(6, proceduralMeshBuffer.GetVBO());
-        OpenGL::BindSSBO(7, proceduralMeshBuffer.GetEBO());
+        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_VERTICES, proceduralMeshBuffer.GetVBO());
+        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_INDICES, proceduralMeshBuffer.GetEBO());
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = false;
@@ -231,8 +231,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
-        OpenGL::BindSSBO(6, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
-        OpenGL::BindSSBO(7, OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
+        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_VERTICES, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
+        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_INDICES, OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = false;

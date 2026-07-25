@@ -1,4 +1,5 @@
 #version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #extension GL_ARB_bindless_texture : enable
 layout (location = 0) out vec4 ColorOut;
 
@@ -7,7 +8,7 @@ in vec2 v_uv;
 in flat uint v_filterMode;
 in flat uint v_textureIndex;
 
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer {
 	uvec2 textureSamplers[];
 };
 

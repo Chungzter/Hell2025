@@ -1,17 +1,18 @@
 #version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/constants.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
-layout(std430, binding = 2)  readonly restrict  buffer rendererDataBuffer    { RendererData rendererData; };
-layout(std430, binding = 3)  readonly restrict  buffer viewportDataBuffer    { ViewportData viewportData[]; };
-layout(std430, binding = 7)  readonly restrict  buffer tileWorldBoundsBuffer { TileWorldBounds tileWorldBounds[]; };
-layout(std430, binding = 8)  restrict           buffer tileBloodDecalsBuffer { TileInstanceData tileBloodDecals[]; };
-layout(std430, binding = 9)  readonly restrict  buffer BloodDecalBuffer      { BloodDecal bloodDecals[]; };
-layout(std430, binding = 10) restrict           buffer DecalIndexPool        { uint globalBloodDecalIndices[]; };
-layout(std430, binding = 11) coherent restrict  buffer DecalCounter          { uint globalBloodDecalCounter; };
+layout(std430, binding = SSBO_IDX_RENDERER_DATA)  readonly restrict  buffer rendererDataBuffer    { RendererData rendererData; };
+layout(std430, binding = SSBO_IDX_VIEWPORT_DATA)  readonly restrict  buffer viewportDataBuffer    { ViewportData viewportData[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_CULLING_TILE_WORLD_BOUNDS)  readonly restrict  buffer tileWorldBoundsBuffer { TileWorldBounds tileWorldBounds[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_CULLING_TILE_DECALS)  restrict           buffer tileBloodDecalsBuffer { TileInstanceData tileBloodDecals[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_CULLING_DECALS)  readonly restrict  buffer BloodDecalBuffer      { BloodDecal bloodDecals[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_CULLING_INDEX_POOL) restrict           buffer DecalIndexPool        { uint globalBloodDecalIndices[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_CULLING_COUNTER) coherent restrict  buffer DecalCounter          { uint globalBloodDecalCounter; };
 
 uniform int u_decalCount;
 uniform int u_tileXCount;

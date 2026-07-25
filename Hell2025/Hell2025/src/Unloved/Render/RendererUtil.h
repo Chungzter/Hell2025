@@ -7,9 +7,11 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
+#include <string>
 #include <vector>
 
 namespace Unloved::RendererUtil {
+    RenderItem CreateAssetGeometryRenderItem(const std::string& modelName, const std::string& meshName, const glm::mat4& worldMatrix, const int32_t materialIndex, const uint64_t objectId);
     void UpdateRenderItemAABB(RenderItem& renderItem);
     AABB ComputeWorldAABB(glm::vec3& localAabbMin, glm::vec3& localAabbMax, glm::mat4& modelMatrix);
     glm::mat4 GetLightSpaceMatrix(const glm::mat4& viewMatrix, glm::vec3 lightDir, const float viewportWidth, const float viewportHeight, const float fov, const float nearPlane, const float farPlane);

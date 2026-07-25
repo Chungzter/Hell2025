@@ -1,7 +1,8 @@
 #version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 
 #extension GL_ARB_bindless_texture : enable
-readonly restrict layout(std430, binding = 0) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 in flat int OpacityTextureIndex;
 
 in vec2 v_uv;

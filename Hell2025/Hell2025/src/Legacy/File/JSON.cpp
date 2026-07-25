@@ -111,6 +111,16 @@ namespace nlohmann {
         };
     }
 
+    void to_json(nlohmann::json& j, const JettyCreateInfo& info) {
+        j = nlohmann::json{
+            {"Position", info.position},
+            {"Rotation", info.rotation},
+            {"Scale", info.scale},
+            {"BoardCount", info.boardCount},
+            {"PoleSpacing", info.poleSpacing},
+        };
+    }
+
     void to_json(nlohmann::json& j, const LadderCreateInfo& createInfo) {
         j = nlohmann::json{
             {"Position", createInfo.position},
@@ -331,6 +341,15 @@ namespace nlohmann {
         info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), GenericObjectType::UNDEFINED);
     }
 
+    void from_json(const nlohmann::json& j, JettyCreateInfo& info) {
+        info.position = j.value("Position", glm::vec3(0.0f));
+        info.rotation = j.value("Rotation", glm::vec3(0.0f));
+        info.scale = j.value("Scale ", glm::vec3(1.0f));
+        info.boardCount = j.value("BoardCount", 10);
+        info.poleSpacing = j.value("PoleSpacing", 1.0f);
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
+    }
+
     void from_json(const nlohmann::json& j, HouseLocation& houseLocation) {
         houseLocation.position = j.value("Position", glm::vec3(0.0f));
         houseLocation.rotation = j.value("Rotation", 0.0f);
@@ -504,6 +523,7 @@ namespace JSON {
         createInfoCollection.fences = json.value("Fences", std::vector<FenceCreateInfo>{});
         createInfoCollection.fireplaces = json.value("Fireplaces", std::vector<FireplaceCreateInfo>{});
         createInfoCollection.genericObjects = json.value("Drawers", std::vector<GenericObjectCreateInfo>{});
+        createInfoCollection.jetties = json.value("Jetties", std::vector<JettyCreateInfo>{});
         createInfoCollection.worldPlanes = json.value("Planes", std::vector<WorldPlaneCreateInfo>{});
         createInfoCollection.ladders = json.value("Ladders", std::vector<LadderCreateInfo>{});
         createInfoCollection.lights = json.value("Lights", std::vector<LightCreateInfo>{});
@@ -534,6 +554,7 @@ namespace JSON {
         json["Fireplaces"] = createInfoCollection.fireplaces;
         json["Ladders"] = createInfoCollection.ladders;
         json["Lights"] = createInfoCollection.lights;
+        json["Jetties"] = createInfoCollection.jetties;
         json["Mermaids"] = createInfoCollection.mermaids;
         json["Pianos"] = createInfoCollection.pianos;
         json["PickUps"] = createInfoCollection.pickUps;

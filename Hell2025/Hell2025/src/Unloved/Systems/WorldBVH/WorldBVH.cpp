@@ -10,6 +10,7 @@
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Objects/Exterior/Fence.h"
 #include "Unloved/Objects/Exterior/PowerPoleSet.h"
+#include "Unloved/Objects/Exterior/Jetty.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/House/Fireplace.h"
 #include "Unloved/Objects/House/Window.h"
@@ -226,6 +227,7 @@ namespace Unloved::WorldBVH {
         // Render items
         for (ChristmasLightSet& object : World::GetChristmasLightSets())	CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
         for (Fence& object : World::GetFences())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (Jetty& object : World::GetJetties())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
         for (Ladder& object : World::GetLadders())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
         for (Mermaid& object : World::GetMermaids())						CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
         for (PowerPoleSet& object : World::GetPowerPoleSets())			    CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);

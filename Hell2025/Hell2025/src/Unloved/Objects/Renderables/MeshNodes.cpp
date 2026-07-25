@@ -754,6 +754,15 @@ void MeshNodes::DisableCSMShadows() {
     }
 }
 
+void MeshNodes::DisableShadowsByBlendingMode(BlendingMode blendingMode) {
+    for (MeshNode& meshNode : m_meshNodes) {
+        if (meshNode.blendingMode != blendingMode) continue;
+
+        meshNode.castShadows = false;
+        meshNode.castCSMShadows = false;
+    }
+}
+
 void MeshNodes::DisableMarkingStaticSceneBvhAsDirty() {
     m_marksStaticSceneBvhAsDirty = false;
 }

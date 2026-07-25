@@ -87,8 +87,6 @@ namespace OpenGL::Renderer {
     void MetaBallsPass();
     void MirrorGeometryPass();
     void GlassPass();
-    int32_t GetGlassMode();
-    void SetGlassMode(int32_t mode);
     void GrassPass();
     void HairPass();
     void HeightMapPass();
@@ -109,7 +107,6 @@ namespace OpenGL::Renderer {
     void SkyBoxPass();
     void SpriteSheetPass();
     void ScreenspaceReflectionsPass();
-    void StainedGlassPass();
     void UIPass();
     void VatBloodPass();
     void ChristmasLightsPass();

@@ -1,4 +1,5 @@
 #version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/util.glsl"
 #include "../common/types.glsl"
 #include "../common/constants.glsl"
@@ -8,7 +9,7 @@ layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec2 inUV;
 layout (location = 3) in vec3 inTangent;
 
-readonly restrict layout(std430, binding = 3) buffer viewportDataBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer {
 	ViewportData viewportData[];
 };
 

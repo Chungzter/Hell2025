@@ -10,6 +10,7 @@
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Objects/Effects/Decal.h"
 #include "Unloved/Objects/Exterior/Fence.h"
+#include "Unloved/Objects/Exterior/Jetty.h"
 #include "Unloved/Objects/Exterior/PowerPoleSet.h"
 #include "Unloved/Objects/Exterior/Road.h"
 #include "Unloved/Objects/House/Door.h"
@@ -110,10 +111,11 @@ namespace Unloved::World {
         UpdateAnimatedObjects(deltaTime);
         for (BulletCasing& object : GetBulletCasings())           object.Update(deltaTime);
         for (ChristmasLightSet& object : GetChristmasLightSets()) object.Update(deltaTime);
-        for (ChristmasTree& object : GetChristmasTrees()) object.Update(deltaTime);
-        for (Door& object : GetDoors())                   object.Update(deltaTime);
-        for (Fence& object : GetFences())                 object.Update();
-        for (Fireplace& object : GetFireplaces())         object.Update(deltaTime);
+        for (ChristmasTree& object : GetChristmasTrees())         object.Update(deltaTime);
+        for (Door& object : GetDoors())                           object.Update(deltaTime);
+        for (Fence& object : GetFences())                         object.Update();
+        for (Fireplace& object : GetFireplaces())                 object.Update(deltaTime);
+        for (Jetty& object : GetJetties())                        object.Update();
         UpdatePropsAndTraversal(deltaTime);
         UpdateEnemyObjects(deltaTime);
         UpdateLightingAndDecals(deltaTime);

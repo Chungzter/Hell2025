@@ -11,6 +11,7 @@
 #include "Unloved/Config/Config.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/World/World.h"
+#include "Unloved/Objects/Lighting/SpotLight.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -97,10 +98,6 @@ void Player::UpdateFlashlight(float deltaTime) {
     }
     else {
         m_flashLightModifier = Hell::Math::InterpTo(m_flashLightModifier, 1.0f, deltaTime, 10.5f);
-    }
-
-    if (!ViewportIsVisible()) {
-        return;
     }
 
     // Prevent NAN direction, which is the case on first spawn
@@ -191,6 +188,28 @@ void Player::UpdateFlashlight(float deltaTime) {
     // Prevent NAN bugs
     if (Hell::Math::IsNan(m_flashlightPosition)) {
         m_flashlightPosition = flashlightPositionTarget;
+    }
+
+    // The world owns flashlight spotlights. The player retains only the stable
+    // world ID and recreates the light if a world reset invalidated it.
+    SpotLight* spotLight = World::GetSpotLightByObjectId(m_flashlightSpotLightId);
+    if (!spotLight) {
+        m_flashlightSpotLightId = World::AddSpotLight(m_playerId, m_viewportIndex);
+        spotLight = World::GetSpotLightByObjectId(m_flashlightSpotLightId);
+    }
+
+    if (spotLight) {
+        SpotLightData data;
+        data.projectionView = m_flashlightProjectionView;
+        data.position = m_flashlightPosition;
+        data.direction = m_flashlightDirection;
+        data.range = flashlightSettings.range;
+        data.modifier = m_flashLightModifier;
+        data.shadowHalfAngleDegrees = shadowHalfAngleDegrees;
+        data.castsShadows = true;
+        data.skipOwnerShadow = IsInShop();
+        data.useFlashlightViewDistanceScale = true;
+        spotLight->SetData(data);
     }
 }
 

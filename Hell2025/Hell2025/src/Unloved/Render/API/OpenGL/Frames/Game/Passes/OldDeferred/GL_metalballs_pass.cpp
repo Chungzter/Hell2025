@@ -112,7 +112,7 @@ namespace OpenGL::Renderer {
         }
 
         OpenGL::UpdateSSBO("MetaBalls", metaBalls.size() * sizeof(GPUMetaBall), gpuMetaBalls.data());
-        OpenGL::BindSSBO(6, "MetaBalls");
+        OpenGL::BindSSBO(SSBO_IDX_META_BALLS, "MetaBalls");
 
 
         OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");

@@ -1,4 +1,5 @@
 #version 460 core
+#include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/lighting.glsl"
 #include "../../common/post_processing.glsl"
 #include "../../common/types.glsl"
@@ -16,7 +17,7 @@ in vec3 BiTangent;
 in vec4 WorldPos;
 in vec3 ViewPos;
 
-readonly restrict layout(std430, binding = 5) buffer lightsBuffer {
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer {
 	Light lights[];
 };
 

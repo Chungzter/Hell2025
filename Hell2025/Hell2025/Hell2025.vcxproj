@@ -254,6 +254,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_ocean.cpp" />
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_profiling.cpp" />
     <ClCompile Include="src\Unloved\LazyKeyPresses.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Exterior\Jetty.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\PointAnimationInstance.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\VATInstance.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_blit_road.cpp" />
@@ -333,7 +334,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_plastic_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_post_processing.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_screenspace_reflections.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_stained_glass_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_vat_blood_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_winston_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_hair_passes.cpp" />
@@ -599,6 +599,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_texture_readback.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\BulletCasing.cpp" />
     <ClCompile Include="src\Unloved\Objects\Lighting\Light.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Lighting\SpotLight.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\SpriteSheetObject.cpp" />
     <ClCompile Include="src\Unloved\Editor\Editor_debug.cpp" />
     <ClCompile Include="src\Unloved\Editor\Editor_camera.cpp" />
@@ -785,6 +786,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Debug\DebugTypes.h" />
     <ClInclude Include="src\Unloved\Debug\Scratch.h" />
     <ClInclude Include="src\Unloved\Debug\Menu\Debug_menu.h" />
+    <ClInclude Include="src\Unloved\Objects\Exterior\Jetty.h" />
     <ClInclude Include="src\Unloved\Objects\ObjectEnums.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\BoneSegment.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\PointAnimationInstance.h" />
@@ -1037,6 +1039,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_texture_readback.h" />
     <ClInclude Include="src\Unloved\Objects\Props\BulletCasing.h" />
     <ClInclude Include="src\Unloved\Objects\Lighting\Light.h" />
+    <ClInclude Include="src\Unloved\Objects\Lighting\SpotLight.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\SpriteSheetObject.h" />
     <ClInclude Include="src\Unloved\Weapons\WeaponCommon.h" />
     <ClInclude Include="src\Hell\Input\InputMulti.h" />

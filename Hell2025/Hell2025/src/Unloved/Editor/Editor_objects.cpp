@@ -20,6 +20,8 @@
 #include "Unloved/World/World.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
+#include "Unloved/Objects/Exterior/Jetty.h"
+
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
 
@@ -242,6 +244,11 @@ namespace Unloved::Editor {
                 Gizmo::SetRotation(ladder->GetRotation());
             }
 
+            if (Unloved::Jetty* object = Unloved::World::GetJettyById(GetSelectedObjectId())) {
+                Gizmo::SetPosition(object->GetPosition());
+                Gizmo::SetRotation(object->GetRotation());
+            }
+
             if (Light* light = Unloved::World::GetLightByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(light->GetPosition());
             }
@@ -347,7 +354,7 @@ namespace Unloved::Editor {
                 }
             }
 
-     
+
 
         }
         if (GetEditorState() == EditorState::GIZMO_ROTATING) {
