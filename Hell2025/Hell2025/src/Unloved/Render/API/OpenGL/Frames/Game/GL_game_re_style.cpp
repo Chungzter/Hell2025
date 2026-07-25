@@ -107,7 +107,7 @@ namespace OpenGL::Renderer {
         OceanUnderwaterCompositePass();
 
         WinstonPass();
-        StainedGlassPass();
+        //StainedGlassPass();
 
         if (Unloved::World::HasOcean()) {
             BubblesPass2(); // wtf is this

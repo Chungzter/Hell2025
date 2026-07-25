@@ -14,6 +14,8 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("DecalTest", { "GL_decal_test.vert", "GL_decal_test.frag" });
         OpenGL::ResourceManager::LoadShader("BloodDecalsNew", { "GL_blood_decals_new.vert", "GL_blood_decals_new.frag" });
 
+        OpenGL::ResourceManager::LoadShader("GlassNEW", { "GL_glass_new.vert", "GL_glass_new.frag" });
+
         OpenGL::ResourceManager::LoadShader("DownSample2xBox", { "GL_down_sample_2x_box.comp" });
         OpenGL::ResourceManager::LoadShader("EditorMesh", { "GL_editor_mesh.vert", "GL_editor_mesh.frag" });
         OpenGL::ResourceManager::LoadShader("EmissiveBloomFilter", { "GL_emissive_bloom_filter.comp" });

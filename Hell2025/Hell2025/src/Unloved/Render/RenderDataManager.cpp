@@ -1668,7 +1668,8 @@ namespace Unloved::RenderDataManager {
         case BlendingMode::HAIR:          g_renderItemsHair.push_back(renderItem); break;
         case BlendingMode::MIRROR:        g_renderItemsMirror.push_back(renderItem); break;
         case BlendingMode::TOILET_WATER:  g_renderItemsToiletWater.push_back(renderItem); break;
-        case BlendingMode::STAINED_GLASS: g_renderItemsStainedGlass.push_back(renderItem); break;
+        //case BlendingMode::STAINED_GLASS: g_renderItemsStainedGlass.push_back(renderItem); break;
+        case BlendingMode::STAINED_GLASS: g_renderItemsGlass.push_back(renderItem); break;
         case BlendingMode::PLASTIC:       g_renderItemsPlastic.push_back(renderItem); break;
         default: break;
         }
