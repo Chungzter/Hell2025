@@ -151,8 +151,8 @@ namespace VulkanRenderer {
         VulkanDescriptorSetResource* rayQueryDescriptorSetResource = VulkanResourceManager::GetDescriptorSetResource("RayQueryDescriptorSet");
         VulkanDescriptorSet* rayQueryDescriptorSet = rayQueryDescriptorSetResource ? &rayQueryDescriptorSetResource->GetSet(GetCurrentFrameIndex()) : nullptr;
         const uint64_t frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
-        VulkanBuffer* rayQueryBLASInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryBLASInstanceData);
-        VulkanBuffer* rayQueryMeshInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryMeshInstanceData);
+        VulkanBuffer* rayQueryBLASDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryBLASData);
+        VulkanBuffer* rayQuerySceneRenderItemIndexBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQuerySceneRenderItemIndices);
         const int32_t blueNoiseTextureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BlueNoiseRG", true);
         const RendererSettings& rendererSettings = Unloved::Renderer::GetCurrentRendererSettings();
         const uint64_t ddgiReflectionVolumeDataDeviceAddress = GetDDGIReflectionVolumeDataDeviceAddress();
@@ -170,8 +170,8 @@ namespace VulkanRenderer {
         if (!extractedRoughnessImage || !g_indirectSpecularAMDClassificationValid) return;
         if (!depthImage) return;
         if (frameAddressTableDeviceAddress == 0) return;
-        if (!rayQueryBLASInstanceDataBuffer) return;
-        if (!rayQueryMeshInstanceDataBuffer) return;
+        if (!rayQueryBLASDataBuffer) return;
+        if (!rayQuerySceneRenderItemIndexBuffer) return;
         if (blueNoiseTextureIndex < 0) return;
 
         VkExtent2D extent = indirectSpecularImage->GetExtent2D();
@@ -222,8 +222,8 @@ namespace VulkanRenderer {
 
         PushConstantsIndirectSpecularAMDInput pushConstants{};
         pushConstants.frameAddressTableDeviceAddress = frameAddressTableDeviceAddress;
-        pushConstants.rayQueryBLASInstanceDataDeviceAddress = rayQueryBLASInstanceDataBuffer->GetDeviceAddress();
-        pushConstants.rayQueryMeshInstanceDataDeviceAddress = rayQueryMeshInstanceDataBuffer->GetDeviceAddress();
+        pushConstants.rayQueryBLASDataDeviceAddress = rayQueryBLASDataBuffer->GetDeviceAddress();
+        pushConstants.rayQuerySceneRenderItemIndicesDeviceAddress = rayQuerySceneRenderItemIndexBuffer->GetDeviceAddress();
         pushConstants.blueNoiseTextureIndex = blueNoiseTextureIndex;
         pushConstants.frameIndex = g_frameIndex;
         pushConstants.samplesPerQuad = samplesPerQuad;

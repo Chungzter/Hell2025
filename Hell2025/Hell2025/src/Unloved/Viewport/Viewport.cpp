@@ -9,8 +9,6 @@
 
 #include "Unloved/Config/Config.h"
 
-namespace Input = Hell::Input;
-
 namespace Unloved {
 
 
@@ -33,50 +31,31 @@ Viewport::Viewport(uint32_t viewportIndex, const glm::vec2& position, const glm:
 void Viewport::UpdateSpaceCoords(SpaceCoords& spaceCoords, uint32_t fullResolutionWidth, uint32_t fullResolutionHeight) {
     spaceCoords.width = fullResolutionWidth * m_size.x;
     spaceCoords.height = fullResolutionHeight * m_size.y;
-    spaceCoords.localMouseX = Hell::Math::MapRange(Input::GetMouseX(), m_leftPixel, m_rightPixel, 0, spaceCoords.width);
-    spaceCoords.localMouseY = Hell::Math::MapRange(Input::GetMouseY(), m_bottomPixel, m_topPixel, 0, spaceCoords.height);
-
-    // Base coordinates y-down
-    spaceCoords.leftPixel = m_position.x * fullResolutionWidth;
-    spaceCoords.rightPixel = spaceCoords.leftPixel + spaceCoords.width;
-    spaceCoords.topPixel = fullResolutionHeight - (m_position.y * fullResolutionHeight);
-    spaceCoords.bottomPixel = spaceCoords.topPixel - spaceCoords.height;
-
-    // GPU coordinates y-up
-    spaceCoords.gpuLeftPixel = spaceCoords.leftPixel;
-    spaceCoords.gpuRightPixel = spaceCoords.rightPixel;
-    spaceCoords.gpuTopPixel = fullResolutionHeight - spaceCoords.topPixel;
-    spaceCoords.gpuBottomPixel = fullResolutionHeight - spaceCoords.bottomPixel;
-
-    // Local mouse UVs
-    spaceCoords.localMouseUV.x = glm::clamp(spaceCoords.localMouseX / spaceCoords.width, 0.0f, 1.0f);
-    spaceCoords.localMouseUV.y = 1.0f - glm::clamp(spaceCoords.localMouseY / spaceCoords.height, 0.0f, 1.0f);
+    spaceCoords.localMouseX = Hell::Math::MapRange(Hell::Input::GetMouseX(), m_leftPixel, m_rightPixel, 0, spaceCoords.width);
+    spaceCoords.localMouseY = Hell::Math::MapRange(Hell::Input::GetMouseY(), m_topPixel, m_bottomPixel, 0, spaceCoords.height);
 }
 
 void Viewport::Update() {
-    // Window space co-ordinates
-    m_windowSpaceCoords.width = m_size.x * Hell::BackEnd::GetCurrentWindowWidth();
-    m_windowSpaceCoords.height = m_size.y * Hell::BackEnd::GetCurrentWindowHeight();
-    m_windowSpaceCoords.localMouseX = Input::GetMouseX();
-    m_windowSpaceCoords.localMouseY = Input::GetMouseY();
+    const uint32_t windowWidth = Hell::BackEnd::GetCurrentWindowWidth();
+    const uint32_t windowHeight = Hell::BackEnd::GetCurrentWindowHeight();
 
     // Pixel bounds
-    m_leftPixel = m_position.x * Hell::BackEnd::GetCurrentWindowWidth();
-    m_rightPixel = m_leftPixel + m_windowSpaceCoords.width;
-    m_topPixel = Hell::BackEnd::GetCurrentWindowHeight() - (m_position.y * Hell::BackEnd::GetCurrentWindowHeight());
-    m_bottomPixel = m_topPixel - m_windowSpaceCoords.height;
+    m_leftPixel = m_position.x * windowWidth;
+    m_rightPixel = m_leftPixel + m_size.x * windowWidth;
+    m_topPixel = m_position.y * windowHeight;
+    m_bottomPixel = m_topPixel + m_size.y * windowHeight;
 
     // Space co-ordinates
     const Resolutions& resolutions = Config::GetResolutions();
+    UpdateSpaceCoords(m_windowSpaceCoords, windowWidth, windowHeight);
     UpdateSpaceCoords(m_gBufferSpaceCoords, resolutions.gBuffer.x, resolutions.gBuffer.y);
-    UpdateSpaceCoords(m_uiSpaceCoords, resolutions.ui.x, resolutions.ui.y);
 
     // Viewport mouse hover state
     m_hasHover = (
-        Input::GetMouseX() > m_leftPixel &&
-        Input::GetMouseX() < m_rightPixel &&
-        Input::GetMouseY() < m_topPixel &&
-        Input::GetMouseY() > m_bottomPixel
+        Hell::Input::GetMouseX() >= m_leftPixel &&
+        Hell::Input::GetMouseX() < m_rightPixel &&
+        Hell::Input::GetMouseY() >= m_topPixel &&
+        Hell::Input::GetMouseY() < m_bottomPixel
     );
 }
 
@@ -147,13 +126,10 @@ glm::vec2 Viewport::WorldToScreen(const glm::mat4& viewMatrix, const glm::vec3& 
 }
 
 glm::ivec2 Viewport::GetLocalMouseCoords() {
-    int w = static_cast<int>(GetWindowSpaceCoords().width);
-    int h = static_cast<int>(GetWindowSpaceCoords().height);
-    int mx = Input::GetMouseX();
-    int my = Input::GetMouseY();
+    int mx = Hell::Input::GetMouseX();
+    int my = Hell::Input::GetMouseY();
     int x = mx - GetLeftPixel();
-    int y = GetTopPixel() - my;
-    //y = my + GetTopPixel() - h;
+    int y = my - GetTopPixel();
 
     return glm::ivec2(x, y);
 }
@@ -198,10 +174,6 @@ SpaceCoords Viewport::GetWindowSpaceCoords() const {
 
 SpaceCoords Viewport::GetGBufferSpaceCoords() const {
     return m_gBufferSpaceCoords;
-}
-
-SpaceCoords Viewport::GetUISpaceCoords() const {
-    return m_uiSpaceCoords;
 }
 
 void Viewport::SetPosition(const glm::vec2& position) {

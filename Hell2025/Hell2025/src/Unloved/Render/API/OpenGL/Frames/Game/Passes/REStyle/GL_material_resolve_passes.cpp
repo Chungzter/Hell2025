@@ -29,7 +29,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
         OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_VERTICES, meshBuffer.GetVBO());
         OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_INDICES, meshBuffer.GetEBO());
 
@@ -78,7 +78,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
         OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_VERTICES, meshBuffer.GetVBO());
         OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_INDICES, meshBuffer.GetEBO());
 
@@ -138,7 +138,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
         OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_VERTICES, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
         OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_INDICES, OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
         OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_PREVIOUS_POSITIONS, OpenGL::BackEnd::GetPreviousSkinnedPositionBuffer());
@@ -189,7 +189,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
         OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_VERTICES, proceduralMeshBuffer.GetVBO());
         OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_INDICES, proceduralMeshBuffer.GetEBO());
 
@@ -230,7 +230,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
         OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_VERTICES, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
         OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_INDICES, OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetEBO());
 

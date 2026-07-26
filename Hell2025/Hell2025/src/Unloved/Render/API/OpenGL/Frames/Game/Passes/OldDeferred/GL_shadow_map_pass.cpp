@@ -21,7 +21,6 @@ namespace OpenGL::Renderer {
 
     namespace {
         constexpr uint32_t POINT_SHADOW_FACE_COUNT = 6;
-        constexpr uint32_t POINT_SHADOW_INSTANCE_INDEX_MASK = (1u << VIEWPORT_INDEX_SHIFT) - 1;
 
         struct alignas(16) OpenGLPointShadowFaceData {
             glm::mat4 projectionView = glm::mat4(1.0f);
@@ -31,6 +30,7 @@ namespace OpenGL::Renderer {
 
         struct OpenGLPointShadowDrawBatch {
             size_t byteOffset = 0;
+            uint32_t drawDataOffset = 0;
             GLsizei count = 0;
         };
 
@@ -59,26 +59,31 @@ namespace OpenGL::Renderer {
             return count;
         }
 
-        void AppendPointShadowDrawCommands(std::vector<DrawIndexedIndirectCommand>& destination, uint32_t faceDataIndex, std::initializer_list<const std::vector<DrawIndexedIndirectCommand>*> sources) {
+        void AppendPointShadowDrawCommands(std::vector<DrawIndexedIndirectCommand>& destinationCommands, std::vector<uint32_t>& destinationFaceDataIndices, uint32_t faceDataIndex, std::initializer_list<const std::vector<DrawIndexedIndirectCommand>*> sources) {
             for (const std::vector<DrawIndexedIndirectCommand>* source : sources) {
                 if (!source || source->empty()) continue;
                 for (const DrawIndexedIndirectCommand& command : *source) {
-                    DrawIndexedIndirectCommand& encodedCommand = destination.emplace_back(command);
-                    encodedCommand.baseInstance = (faceDataIndex << VIEWPORT_INDEX_SHIFT) | (command.baseInstance & POINT_SHADOW_INSTANCE_INDEX_MASK);
+                    destinationCommands.push_back(command);
+                    destinationFaceDataIndices.push_back(faceDataIndex);
                 }
             }
         }
 
-        OpenGLPointShadowDrawBatch AppendPointShadowDrawBatch(std::vector<DrawIndexedIndirectCommand>& destination, const std::vector<DrawIndexedIndirectCommand>& source) {
+        OpenGLPointShadowDrawBatch AppendPointShadowDrawBatch(std::vector<DrawIndexedIndirectCommand>& destinationCommands, std::vector<uint32_t>& destinationFaceDataIndices, const std::vector<DrawIndexedIndirectCommand>& sourceCommands, const std::vector<uint32_t>& sourceFaceDataIndices) {
             OpenGLPointShadowDrawBatch batch;
-            batch.byteOffset = destination.size() * sizeof(DrawIndexedIndirectCommand);
-            batch.count = static_cast<GLsizei>(source.size());
-            destination.insert(destination.end(), source.begin(), source.end());
+            if (sourceCommands.size() != sourceFaceDataIndices.size()) return batch;
+
+            batch.byteOffset = destinationCommands.size() * sizeof(DrawIndexedIndirectCommand);
+            batch.drawDataOffset = static_cast<uint32_t>(destinationFaceDataIndices.size());
+            batch.count = static_cast<GLsizei>(sourceCommands.size());
+            destinationCommands.insert(destinationCommands.end(), sourceCommands.begin(), sourceCommands.end());
+            destinationFaceDataIndices.insert(destinationFaceDataIndices.end(), sourceFaceDataIndices.begin(), sourceFaceDataIndices.end());
             return batch;
         }
 
         void DrawPointShadowBatch(const OpenGLPointShadowDrawBatch& batch) {
             if (batch.count == 0) return;
+            OpenGL::SetUniformInt("u_drawDataOffset", static_cast<int>(batch.drawDataOffset));
             glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, reinterpret_cast<const void*>(batch.byteOffset), batch.count, 0);
         }
     }
@@ -119,7 +124,8 @@ namespace OpenGL::Renderer {
         shadowMapsFBO->SetViewport();
 
         OpenGL::BindShader("ShadowMap");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
 
         for (int i = 0; i < MAX_SHADOWED_SPOT_LIGHTS; i++) {
             shadowMapsFBO->BindLayer(i);
@@ -130,7 +136,7 @@ namespace OpenGL::Renderer {
             OpenGL::SetUniformMat4("u_projectionView", lightProjectionView);
 
             // Scene geometry
-            OpenGL::SetUniformBool("u_useInstanceData", true);
+            OpenGL::SetUniformBool("u_useDrawRenderItemIndices", true);
             glCullFace(GL_FRONT);
             glBindVertexArray(glMeshBufferAssets.GetVAO());
 
@@ -138,7 +144,7 @@ namespace OpenGL::Renderer {
 
             // Heightfield chunks
             std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
-            OpenGL::SetUniformBool("u_useInstanceData", false);
+            OpenGL::SetUniformBool("u_useDrawRenderItemIndices", false);
             if (!chunks.empty()) {
                 MeshBuffer& heightMapMeshBuffer = Hell::ResourceManager::GetMeshBuffer("HeightMapGeometry");
                 OpenGLMeshBuffer& glHeightMapMeshBuffer = OpenGL::ResourceManager::GetMeshBuffer("HeightMapGeometry");
@@ -167,8 +173,10 @@ namespace OpenGL::Renderer {
 
             glBindVertexArray(glMeshBufferProcedural.GetVAO());
 
-            const std::vector<RenderItem>& renderItems = Unloved::RenderDataManager::GetRenderItemsProcedural();
-            for (const RenderItem& renderItem : renderItems) {
+            const std::vector<RenderItem>& sceneRenderItems = Unloved::RenderDataManager::GetSceneRenderItems();
+            const std::vector<uint32_t>& renderItemIndices = Unloved::RenderDataManager::GetRenderItemIndicesProcedural();
+            for (uint32_t renderItemIndex : renderItemIndices) {
+                const RenderItem& renderItem = sceneRenderItems[renderItemIndex];
 
                 Mesh* mesh = meshBufferProcedural.GetMeshById(renderItem.meshId);
                 if (!mesh) continue;
@@ -200,7 +208,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("ShadowCubeMap");
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
 
 		OpenGLRasterizerState state;
 		state.depthMask = true;
@@ -264,7 +273,8 @@ namespace OpenGL::Renderer {
 
         OpenGLSSBO* faceDataBuffer = OpenGL::ResourceManager::GetSSBOPtr(faceDataBufferName);
         OpenGLSSBO* drawCommandBuffer = OpenGL::ResourceManager::GetSSBOPtr(drawCommandBufferName);
-        if (!faceDataBuffer || !drawCommandBuffer) return;
+        OpenGLSSBO* drawFaceDataIndexBuffer = OpenGL::ResourceManager::GetSSBOPtr("PointShadowDrawFaceIndices");
+        if (!faceDataBuffer || !drawCommandBuffer || !drawFaceDataIndexBuffer) return;
 
         OpenGLMeshBuffer& meshBufferAssets = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
         OpenGLMeshBuffer& meshBufferProcedural = OpenGL::ResourceManager::GetMeshBuffer("Procedural");
@@ -286,6 +296,11 @@ namespace OpenGL::Renderer {
         std::vector<DrawIndexedIndirectCommand> opaqueSkinnedCommands;
         std::vector<DrawIndexedIndirectCommand> alphaTestedAssetCommands;
         std::vector<DrawIndexedIndirectCommand> alphaTestedSkinnedCommands;
+        std::vector<uint32_t> proceduralFaceDataIndices;
+        std::vector<uint32_t> opaqueAssetFaceDataIndices;
+        std::vector<uint32_t> opaqueSkinnedFaceDataIndices;
+        std::vector<uint32_t> alphaTestedAssetFaceDataIndices;
+        std::vector<uint32_t> alphaTestedSkinnedFaceDataIndices;
         faceData.reserve(shadowMapInfoSet.size() * POINT_SHADOW_FACE_COUNT);
 
         const size_t drawCommandCount = GetPointShadowDrawCommandCount(drawCommands, shadowMapInfoSet, shadowMaps->GetLayerCount());
@@ -294,6 +309,11 @@ namespace OpenGL::Renderer {
         opaqueSkinnedCommands.reserve(drawCommandCount / 5);
         alphaTestedAssetCommands.reserve(drawCommandCount / 5);
         alphaTestedSkinnedCommands.reserve(drawCommandCount / 5);
+        proceduralFaceDataIndices.reserve(drawCommandCount / 5);
+        opaqueAssetFaceDataIndices.reserve(drawCommandCount / 5);
+        opaqueSkinnedFaceDataIndices.reserve(drawCommandCount / 5);
+        alphaTestedAssetFaceDataIndices.reserve(drawCommandCount / 5);
+        alphaTestedSkinnedFaceDataIndices.reserve(drawCommandCount / 5);
 
         for (const ShadowMapInfo& shadowMapInfo : shadowMapInfoSet) {
             if (shadowMapInfo.shadowMapIndex < 0 || shadowMapInfo.shadowMapIndex >= MAX_SHADOW_MAP_ARRAY_LEVELS || shadowMapInfo.shadowMapIndex >= static_cast<int32_t>(shadowMaps->GetLayerCount())) continue;
@@ -309,29 +329,33 @@ namespace OpenGL::Renderer {
                 currentFaceData.lightPositionRadius = glm::vec4(light->GetPosition(), light->GetRadius());
                 currentFaceData.arrayLayer.x = shadowMapIndex * POINT_SHADOW_FACE_COUNT + faceIndex;
 
-                AppendPointShadowDrawCommands(proceduralCommands, faceDataIndex, { &drawCommands.procedural[shadowMapIndex][faceIndex] });
-                AppendPointShadowDrawCommands(opaqueAssetCommands, faceDataIndex, { &drawCommands.assetGeometry[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex] });
-                AppendPointShadowDrawCommands(opaqueSkinnedCommands, faceDataIndex, { &drawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex] });
-                AppendPointShadowDrawCommands(alphaTestedAssetCommands, faceDataIndex, { &drawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometryHair[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex] });
-                AppendPointShadowDrawCommands(alphaTestedSkinnedCommands, faceDataIndex, { &drawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex] });
+                AppendPointShadowDrawCommands(proceduralCommands, proceduralFaceDataIndices, faceDataIndex, { &drawCommands.procedural[shadowMapIndex][faceIndex] });
+                AppendPointShadowDrawCommands(opaqueAssetCommands, opaqueAssetFaceDataIndices, faceDataIndex, { &drawCommands.assetGeometry[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex] });
+                AppendPointShadowDrawCommands(opaqueSkinnedCommands, opaqueSkinnedFaceDataIndices, faceDataIndex, { &drawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex] });
+                AppendPointShadowDrawCommands(alphaTestedAssetCommands, alphaTestedAssetFaceDataIndices, faceDataIndex, { &drawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometryHair[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex] });
+                AppendPointShadowDrawCommands(alphaTestedSkinnedCommands, alphaTestedSkinnedFaceDataIndices, faceDataIndex, { &drawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex] });
             }
         }
 
         if (faceData.empty() || drawCommandCount == 0) return;
 
         std::vector<DrawIndexedIndirectCommand> combinedCommands;
+        std::vector<uint32_t> combinedFaceDataIndices;
         combinedCommands.reserve(drawCommandCount);
-        const OpenGLPointShadowDrawBatch proceduralBatch = AppendPointShadowDrawBatch(combinedCommands, proceduralCommands);
-        const OpenGLPointShadowDrawBatch opaqueAssetBatch = AppendPointShadowDrawBatch(combinedCommands, opaqueAssetCommands);
-        const OpenGLPointShadowDrawBatch opaqueSkinnedBatch = AppendPointShadowDrawBatch(combinedCommands, opaqueSkinnedCommands);
-        const OpenGLPointShadowDrawBatch alphaTestedAssetBatch = AppendPointShadowDrawBatch(combinedCommands, alphaTestedAssetCommands);
-        const OpenGLPointShadowDrawBatch alphaTestedSkinnedBatch = AppendPointShadowDrawBatch(combinedCommands, alphaTestedSkinnedCommands);
+        combinedFaceDataIndices.reserve(drawCommandCount);
+        const OpenGLPointShadowDrawBatch proceduralBatch = AppendPointShadowDrawBatch(combinedCommands, combinedFaceDataIndices, proceduralCommands, proceduralFaceDataIndices);
+        const OpenGLPointShadowDrawBatch opaqueAssetBatch = AppendPointShadowDrawBatch(combinedCommands, combinedFaceDataIndices, opaqueAssetCommands, opaqueAssetFaceDataIndices);
+        const OpenGLPointShadowDrawBatch opaqueSkinnedBatch = AppendPointShadowDrawBatch(combinedCommands, combinedFaceDataIndices, opaqueSkinnedCommands, opaqueSkinnedFaceDataIndices);
+        const OpenGLPointShadowDrawBatch alphaTestedAssetBatch = AppendPointShadowDrawBatch(combinedCommands, combinedFaceDataIndices, alphaTestedAssetCommands, alphaTestedAssetFaceDataIndices);
+        const OpenGLPointShadowDrawBatch alphaTestedSkinnedBatch = AppendPointShadowDrawBatch(combinedCommands, combinedFaceDataIndices, alphaTestedSkinnedCommands, alphaTestedSkinnedFaceDataIndices);
 
         if (combinedCommands.empty()) return;
 
         faceDataBuffer->Update(sizeof(OpenGLPointShadowFaceData) * faceData.size(), faceData.data());
         drawCommandBuffer->Update(sizeof(DrawIndexedIndirectCommand) * combinedCommands.size(), combinedCommands.data());
+        drawFaceDataIndexBuffer->Update(sizeof(uint32_t) * combinedFaceDataIndices.size(), combinedFaceDataIndices.data());
         faceDataBuffer->Bind(SSBO_IDX_POINT_SHADOW_FACE_DATA);
+        drawFaceDataIndexBuffer->Bind(SSBO_IDX_POINT_SHADOW_DRAW_FACE_INDICES);
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawCommandBuffer->GetHandle());
 
         glViewport(0, 0, shadowMaps->GetSize(), shadowMaps->GetSize());
@@ -405,8 +429,9 @@ namespace OpenGL::Renderer {
             const ViewportData& viewportData = Unloved::RenderDataManager::GetViewportData()[j];
 
             OpenGL::BindShader("ShadowMap");
-            OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
-            OpenGL::SetUniformBool("u_useInstanceData", false);
+            OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+            OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
+            OpenGL::SetUniformBool("u_useDrawRenderItemIndices", false);
 
             size_t numLayers = SHADOW_CASCADE_COUNT;
 
@@ -431,18 +456,20 @@ namespace OpenGL::Renderer {
                 // Geometry
                 glBindVertexArray(glMeshBufferAssets.GetVAO());
 
-                OpenGL::SetUniformBool("u_useInstanceData", true);
+                OpenGL::SetUniformBool("u_useDrawRenderItemIndices", true);
                 MultiDrawIndirect(drawInfoSet.moonLightCascades[j][i]);
 
-                OpenGL::SetUniformBool("u_useInstanceData", false);
+                OpenGL::SetUniformBool("u_useDrawRenderItemIndices", false);
                 OpenGL::SetUniformMat4("u_modelMatrix", glm::mat4(1.0f));
 
                 // Procedural
                 glBindVertexArray(glMeshBufferProcedural.GetVAO());
 
                 //glDisable(GL_CULL_FACE);
-                const std::vector<RenderItem>& renderItems = Unloved::RenderDataManager::GetRenderItemsProcedural();
-                for (const RenderItem& renderItem : renderItems) {
+                const std::vector<RenderItem>& sceneRenderItems = Unloved::RenderDataManager::GetSceneRenderItems();
+                const std::vector<uint32_t>& renderItemIndices = Unloved::RenderDataManager::GetRenderItemIndicesProcedural();
+                for (uint32_t renderItemIndex : renderItemIndices) {
+                    const RenderItem& renderItem = sceneRenderItems[renderItemIndex];
                     Mesh* mesh = meshBufferProcedural.GetMeshById(renderItem.meshId);
                     if (!mesh) continue;
 

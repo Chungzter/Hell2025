@@ -24,10 +24,8 @@ void main() {
     ViewportDataBuffer viewportData = pc.data.frame.viewportDataBuffer;
     SpriteSheetRenderItemBuffer spriteSheetRenderItems = pc.data.frame.spriteSheetRenderItemBuffer;
 
-    uint baseInstance = uint(gl_BaseInstanceARB);
-    uint viewportIndex = baseInstance >> VIEWPORT_INDEX_SHIFT;
-    uint instanceOffset = baseInstance & uint((1 << VIEWPORT_INDEX_SHIFT) - 1);
-    uint globalInstanceIndex = instanceOffset + (uint(gl_InstanceIndex) - baseInstance);
+    uint viewportIndex = pc.data.viewportIndex;
+    uint globalInstanceIndex = uint(gl_InstanceIndex);
 
     SpriteSheetRenderItem renderItem = spriteSheetRenderItems.spriteSheetRenderItems[globalInstanceIndex];
 

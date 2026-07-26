@@ -12,6 +12,7 @@ layout(early_fragment_tests) in;
 #include "../../common/reconstruction.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
 
 layout (location = 0) out vec4 BaseColorMetallicOut;
 layout (location = 1) out vec4 NormalXYRoughnessMiscOut;
@@ -46,7 +47,7 @@ readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamp
 readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) buffer sceneRenderItemsBuffer { RenderItem sceneRenderItems[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_MATERIAL_RESOLVE_VERTICES) buffer vertexBuffer { PackedVertex vertices[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_MATERIAL_RESOLVE_INDICES) buffer indexBuffer { uint indices[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_MATERIAL_RESOLVE_PREVIOUS_POSITIONS) buffer previousPositionBuffer { PackedPosition previousSkinnedPositions[]; };
@@ -81,17 +82,21 @@ void main() {
     ivec2 px =  ivec2(gl_FragCoord.xy);;
     ivec2 outputImageSize = imageSize(u_VisibilityBuffer);
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    ViewportData viewportData = viewportDataArr[viewportIndex];
-
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+    vec2 viewportSize = vec2(viewportRect.zw);
+    mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
+    mat4 jitteredProjectionView = viewportDataArr[viewportIndex].jitteredProjectionViewReverseZ;
+    mat4 projectionView = viewportDataArr[viewportIndex].projectionViewReverseZ;
+    mat4 prevProjectionView = viewportDataArr[viewportIndex].prevProjectionViewReverseZ;
+    vec3 viewPosition = viewportDataArr[viewportIndex].viewPos.xyz;
+    vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
 
     uvec4 visibilityData = imageLoad(u_VisibilityBuffer, px);
-    uint globalInstanceIndex = visibilityData.x;
+    uint sceneRenderItemIndex = visibilityData.x;
     uint primitiveID = visibilityData.y;
 
-    RenderItem renderItem = renderItems[globalInstanceIndex];
+    RenderItem renderItem = sceneRenderItems[sceneRenderItemIndex];
     Material material = materials[renderItem.materialIndex];
     uint triangleIndexOffset = renderItem.baseIndex + (primitiveID * 3);
 
@@ -105,7 +110,7 @@ void main() {
 
     // Position from depth reconstruction
     float depth = texelFetch(u_DepthTexture, px, 0).r;
-    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, viewportData.inverseJitteredProjectionViewReverseZ);
+    vec3 worldPos = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
 
     // Transform vertices to world space
     mat4 modelMatrix = renderItem.modelMatrix;
@@ -114,22 +119,18 @@ void main() {
     vec3 ws2 = (modelMatrix * vec4(v2.vx, v2.vy, v2.vz, 1.0)).xyz;
 
     // Calculate world space edges
-    vec3 viewDir = normalize(worldPos - viewportData.viewPos.xyz);
+    vec3 viewDir = normalize(worldPos - viewPosition);
     vec3 e1 = ws1 - ws0;
     vec3 e2 = ws2 - ws0;
     vec3 geoNormal = normalize(cross(e1, e2));
     bool isFrontFacing = dot(geoNormal, viewDir) <= 0.0;
 
     // Match the jittered raster positions that produced gl_FragCoord.
-    vec4 clip0 = viewportData.jitteredProjectionViewReverseZ * vec4(ws0, 1.0);
-    vec4 clip1 = viewportData.jitteredProjectionViewReverseZ * vec4(ws1, 1.0);
-    vec4 clip2 = viewportData.jitteredProjectionViewReverseZ * vec4(ws2, 1.0);
+    vec4 clip0 = jitteredProjectionView * vec4(ws0, 1.0);
+    vec4 clip1 = jitteredProjectionView * vec4(ws1, 1.0);
+    vec4 clip2 = jitteredProjectionView * vec4(ws2, 1.0);
 
-    vec2 viewportPosition = gl_FragCoord.xy - vec2(viewportData.xOffset, viewportData.yOffset);
-    vec2 viewportSize = vec2(viewportData.width, viewportData.height);
-
-    vec2 p = viewportPosition / viewportSize * 2.0 - 1.0;
-    p.y = -p.y; // OpenGL only
+    vec2 p = ViewportNDCFromPixel(px, outputImageSize, viewportRect);
 
     vec2 s0 = clip0.xy / clip0.w;
     vec2 s1 = clip1.xy / clip1.w;
@@ -249,13 +250,13 @@ void main() {
             UnpackPosition(previousSkinnedPositions[i1]) * bary.y +
             UnpackPosition(previousSkinnedPositions[i2]) * bary.z;
 
-        currPos = viewportData.projectionViewReverseZ * renderItem.modelMatrix * vec4(currentLocalPos, 1.0);
-        prevPos = viewportData.prevProjectionViewReverseZ * renderItem.prevModelMatrix * vec4(previousLocalPos, 1.0);
+        currPos = projectionView * renderItem.modelMatrix * vec4(currentLocalPos, 1.0);
+        prevPos = prevProjectionView * renderItem.prevModelMatrix * vec4(previousLocalPos, 1.0);
     }
     else {
         vec4 localPos = renderItem.inverseModelMatrix * vec4(worldPos, 1.0);
-        currPos = viewportData.projectionViewReverseZ * vec4(worldPos, 1.0);
-        prevPos = viewportData.prevProjectionViewReverseZ * renderItem.prevModelMatrix * localPos;
+        currPos = projectionView * vec4(worldPos, 1.0);
+        prevPos = prevProjectionView * renderItem.prevModelMatrix * localPos;
     }
 
     vec2 currNDC = currPos.xy / currPos.w;

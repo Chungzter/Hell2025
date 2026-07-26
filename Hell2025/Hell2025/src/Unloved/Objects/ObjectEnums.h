@@ -26,8 +26,7 @@ enum struct TrimSetType {
 
 
 enum struct LightType {
-    LAMP_POST = 0,
-    HANGING_LIGHT,
+    HANGING_LIGHT = 0,
     FIREPLACE_FIRE,
     WALL_LAMP,
     UNDEFINED
@@ -114,8 +113,8 @@ enum struct GenericObjectType {
 enum struct DoorType {
     STANDARD_A,
     STANDARD_B,
-    GLASS,
-    GLASS2,
+    STAINED_GLASS,
+    STAINED_GLASS2,
     UNDEFINED
 };
 
@@ -130,4 +129,3 @@ enum struct ChainLinkType {
     DOOR_CHAIN,
     UNDEFINED
 };
-

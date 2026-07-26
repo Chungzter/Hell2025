@@ -25,13 +25,7 @@ namespace OpenGL::Renderer {
             if (!viewport->IsVisible()) continue;
             if (!player->InventoryIsOpen()) continue;
 
-            Unloved::SpaceCoords gBufferSpaceCooords = viewport->GetGBufferSpaceCoords();
-
-            BlitRect blitRect;
-            blitRect.x0 = gBufferSpaceCooords.gpuLeftPixel;
-            blitRect.x1 = gBufferSpaceCooords.gpuRightPixel;
-            blitRect.y0 = gBufferSpaceCooords.gpuTopPixel;
-            blitRect.y1 = gBufferSpaceCooords.gpuBottomPixel;
+            BlitRect blitRect = BlitRectFromFrameBufferViewport(&gBuffer, viewport);
 
             GaussianBlur(gBuffer, gBuffer, "Lighting", "Lighting", blitRect, blitRect, 5, 1);
         }

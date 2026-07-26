@@ -1,24 +1,30 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
-#include <vector>
+#include <unordered_map>
 
 struct FontSpriteSheet {
     struct CharData {
-        int width;
-        int height;
-        int offsetX;
-        int offsetY;
+        uint32_t id = 0;
+        int width = 0;
+        int height = 0;
+        int atlasX = 0;
+        int atlasY = 0;
+        int xOffset = 0;
+        int yOffset = 0;
+        int xAdvance = 0;
     };
 
     std::string m_name;
-    std::string m_characters;
-    int m_textureWidth;
-    int m_textureHeight;
-    int m_charHeight;
-    int m_lineSpacing;
-    int m_charSpacing;
-    std::vector<CharData> m_charDataList;
+    std::string m_textureName;
+    int m_textureWidth = 0;
+    int m_textureHeight = 0;
+    int m_lineHeight = 0;
+    int m_base = 0;
+    int m_charHeight = 0;
+    int m_lineSpacing = 0;
+    std::unordered_map<uint32_t, CharData> m_charData;
 };
 
 namespace FontSpriteSheetPacker {

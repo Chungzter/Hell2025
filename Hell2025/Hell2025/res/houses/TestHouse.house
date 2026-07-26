@@ -2,84 +2,6 @@
   "CampaignSpawns": [],
   "ChristmasLights": [
     {
-      "EditorName": "Christmas Lights 12",
-      "SequencePoints": [
-        {
-          "Normal": [
-            0.0,
-            1.0,
-            0.0
-          ],
-          "Position": [
-            8.100000381469727,
-            2.4553511142730713,
-            -0.4750787913799286
-          ],
-          "Value": 0.0
-        }
-      ],
-      "SpiarlHeight": 1.0,
-      "Spiral": false,
-      "SpiralRadius": 1.0,
-      "SprialTopCenter": [
-        0.0,
-        0.0,
-        0.0
-      ]
-    },
-    {
-      "EditorName": "Christmas Lights 8",
-      "SequencePoints": [
-        {
-          "Normal": [
-            0.0,
-            1.0,
-            0.0
-          ],
-          "Position": [
-            8.100000381469727,
-            2.519803762435913,
-            -2.732069969177246
-          ],
-          "Value": 0.0
-        }
-      ],
-      "SpiarlHeight": 1.0,
-      "Spiral": false,
-      "SpiralRadius": 1.0,
-      "SprialTopCenter": [
-        0.0,
-        0.0,
-        0.0
-      ]
-    },
-    {
-      "EditorName": "Christmas Lights 11",
-      "SequencePoints": [
-        {
-          "Normal": [
-            0.0,
-            1.0,
-            0.0
-          ],
-          "Position": [
-            6.3217549324035645,
-            1.9140968322753906,
-            -2.9791290760040283
-          ],
-          "Value": 0.0
-        }
-      ],
-      "SpiarlHeight": 1.0,
-      "Spiral": false,
-      "SpiralRadius": 1.0,
-      "SprialTopCenter": [
-        6.4859700202941895,
-        0.0,
-        -2.950000047683716
-      ]
-    },
-    {
       "EditorName": "Christmas Lights",
       "SequencePoints": [
         {
@@ -145,6 +67,7 @@
         2.7508363723754883,
         1.3822040557861328
       ],
+      "PointCloudSpacing": 0.4000000059604645,
       "ProbeSpacing": 0.75,
       "Rotation": [
         0.0,

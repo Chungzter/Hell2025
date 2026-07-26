@@ -7,6 +7,7 @@
 #include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/lighting.glsl"
 #include "../common/types.glsl"
+#include "../common/viewport.glsl"
 #include "../common/Vulkan/VK_push_constants.glsl"
 
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
@@ -30,7 +31,7 @@ layout(push_constant, scalar) uniform PushConstants {
 } pc;
 
 void main() {
-    RenderItemBuffer renderItemBuffer = pc.data.frame.renderItemBuffer;
+    RenderItemBuffer renderItemBuffer = pc.data.frame.sceneRenderItemBuffer;
     MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
     RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
     ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
@@ -112,9 +113,8 @@ void main() {
     vec3 indirectDiffuse = vec3(0.0);
 
     if (rendererDataBuffer.rendererData.enableIrradianceProbeSampling) {
-        vec2 resolution = vec2(rendererDataBuffer.rendererData.gBufferWidth, rendererDataBuffer.rendererData.gBufferHeight);
-        vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / resolution;
         ivec2 outputImageSize = ivec2(rendererDataBuffer.rendererData.gBufferWidth, rendererDataBuffer.rendererData.gBufferHeight);
+        vec2 screenUV = ScreenUVFromFragCoord(gl_FragCoord.xy, outputImageSize);
         ivec4 viewportRect = ivec4(vd.xOffset, vd.yOffset, vd.width, vd.height);
         vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral_VK(screenUV, normal, distance(v_worldPos.xyz, viewPos), outputImageSize, viewportRect);
         vec3 diffuseAlbedo = gammaBaseColor.rgb * (1.0 - metallic);

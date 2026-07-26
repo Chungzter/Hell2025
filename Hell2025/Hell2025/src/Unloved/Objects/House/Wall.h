@@ -41,6 +41,7 @@ struct Wall {
     void SetTextureOffsetU(float value);
     void SetTextureOffsetV(float value);
     void SetMaterial(const std::string& materialName);
+    void SetWallType(WallType wallType);
 
     void RecreateWeatherBoardMesh();
     void CleanUpWeatherBoardMesh();

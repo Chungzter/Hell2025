@@ -90,9 +90,9 @@ namespace VulkanRenderer {
         CreateRayQueryDescriptorSet();
         CreateDDGIRayQueryDescriptorSet();
         CreateFrameData();
-        CreatePointShadowMaps();
         CreateRenderTargets();
-        CreatePresentRenderTarget(VulkanSwapchainManager::GetSwapchainExtent());
+        CreatePointShadowMaps();
+        CreatePresentRenderTarget();
         CreateRenderStates();
         CreatePipelines();
         UpdateBindlessTextureDescriptors();
@@ -146,8 +146,7 @@ namespace VulkanRenderer {
             return false;
         }
 
-        buffer->UpdateData(data, size);
-        return true;
+        return buffer->UpdateData(data, size);
     }
 
     bool EnsureBufferSize(uint64_t id, VkDeviceSize size) {
@@ -223,7 +222,7 @@ namespace VulkanRenderer {
         if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR) {
             VulkanSwapchainManager::RecreateSwapchain();
             g_swapchainImageLayouts.clear();
-            CreatePresentRenderTarget(VulkanSwapchainManager::GetSwapchainExtent());
+            CreatePresentRenderTarget();
             return false;
         }
         if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR) {
@@ -292,7 +291,7 @@ namespace VulkanRenderer {
         if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
             VulkanSwapchainManager::RecreateSwapchain();
             g_swapchainImageLayouts.clear();
-            CreatePresentRenderTarget(VulkanSwapchainManager::GetSwapchainExtent());
+            CreatePresentRenderTarget();
         }
         else if (presentResult != VK_SUCCESS) {
             Logging::Error() << "VulkanRenderer::EndSwapchainFrame() failed to present swapchain image\n";

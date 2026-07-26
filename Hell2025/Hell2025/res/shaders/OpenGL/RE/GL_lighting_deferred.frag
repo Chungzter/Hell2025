@@ -10,6 +10,7 @@
 #include "../../common/types.glsl"
 #include "../../common/reconstruction.glsl"
 #include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
 #include "../../common/ddgi_upsample.glsl"
 
 layout (location = 0) out vec4 LightingOut;
@@ -29,7 +30,7 @@ layout (binding = 10) uniform sampler2D u_indirectDiffuseSurfaceTexture;
 readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) buffer renderItemsBuffer { RenderItem renderItems[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer       { Light lights[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_LIGHTS) buffer tileLightsBuffer   { TileLights tileLights[];   };
 readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS) buffer tileSpotLightsBuffer { TileSpotLights tileSpotLights[]; };
@@ -47,9 +48,10 @@ void main() {
 	ivec2 px = ivec2(gl_FragCoord.xy);
     ivec2 outputImageSize = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    vec2 screenUV = ScreenUVFromPixel(px, outputImageSize);
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+    vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
 
     vec4 normalXYRoughnessMisc = texelFetch(u_normalXYRoughnessMiscTexture, px, 0);
     vec3 normal = DecodeOct(normalXYRoughnessMisc.rg);
@@ -66,13 +68,12 @@ void main() {
     float subSurface = velocityXYOcclusionSubSurface.a;
     vec2 velocity = velocityXYOcclusionSubSurface.rg;
 
-    ViewportData viewportData = viewportDataArr[viewportIndex];
-    mat4 inverseProjection = viewportData.inverseProjection;
-    mat4 inverseProjectionViewReverseZ = viewportData.inverseJitteredProjectionViewReverseZ;
-    mat4 inverseView = viewportData.inverseView;
-    mat4 viewMatrix = viewportData.view;
-    vec3 viewPos = viewportData.viewPos.xyz;
-    bool thisViewportIsInShop = bool(viewportData.isInShop);
+    mat4 inverseProjection = viewportDataArr[viewportIndex].inverseProjection;
+    mat4 inverseProjectionViewReverseZ = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
+    mat4 inverseView = viewportDataArr[viewportIndex].inverseView;
+    mat4 viewMatrix = viewportDataArr[viewportIndex].view;
+    vec3 viewPos = viewportDataArr[viewportIndex].viewPos.xyz;
+    bool thisViewportIsInShop = bool(viewportDataArr[viewportIndex].isInShop);
 
     // Tile data
     uvec2 tileCoord = uvec2(px) / uint(TILE_SIZE);
@@ -81,7 +82,7 @@ void main() {
 
     // Depth reconstruction
     float depth = texelFetch(u_depthTexture, px, 0).r;
-    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionViewReverseZ);
+    vec3 worldPos = WorldPosFromDepth(viewportUV, depth, inverseProjectionViewReverseZ);
 
     float fragDistance = distance(worldPos, viewPos);
 
@@ -129,7 +130,6 @@ void main() {
     // Indirect diffuse
     vec3 indirectDiffuse = vec3(0);
     if (rendererData.enableIrradianceProbeSampling) {
-        ivec4 viewportRect = ivec4(viewportData.xOffset, viewportData.yOffset, viewportData.width, viewportData.height);
         vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral(u_indirectDiffuseTexture, u_indirectDiffuseSurfaceTexture, screenUV, normal, fragDistance, outputImageSize, viewportRect);
         vec3 diffuseAlbedo = linearBaseColor.rgb * (1.0 - metallic);
         indirectDiffuse = probeIrradiance * diffuseAlbedo;

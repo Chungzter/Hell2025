@@ -1,16 +1,66 @@
 ﻿#include "TextBlitter.h"
 #include "FontSpriteSheet.h"
+#include "Hell/File.h"
 #include "Hell/Logging.h"
 
 #include <algorithm>
 #include <unordered_map>
 
 namespace {
+    bool DecodeNextCodepoint(const std::string& text, size_t& offset, uint32_t& codepoint) {
+        if (offset >= text.size()) return false;
+
+        uint8_t first = static_cast<uint8_t>(text[offset++]);
+        if ((first & 0x80u) == 0) {
+            codepoint = first;
+            return true;
+        }
+
+        size_t continuationCount = 0;
+        if ((first & 0xe0u) == 0xc0u) {
+            codepoint = first & 0x1fu;
+            continuationCount = 1;
+        }
+        else if ((first & 0xf0u) == 0xe0u) {
+            codepoint = first & 0x0fu;
+            continuationCount = 2;
+        }
+        else if ((first & 0xf8u) == 0xf0u) {
+            codepoint = first & 0x07u;
+            continuationCount = 3;
+        }
+        else {
+            codepoint = 0xfffdu;
+            return true;
+        }
+
+        if (offset + continuationCount > text.size()) {
+            offset = text.size();
+            codepoint = 0xfffdu;
+            return true;
+        }
+
+        for (size_t i = 0; i < continuationCount; i++) {
+            uint8_t continuation = static_cast<uint8_t>(text[offset++]);
+            if ((continuation & 0xc0u) != 0x80u) {
+                codepoint = 0xfffdu;
+                return true;
+            }
+            codepoint = (codepoint << 6) | (continuation & 0x3fu);
+        }
+
+        return true;
+    }
+
+    const FontSpriteSheet::CharData* FindCharData(const FontSpriteSheet& spriteSheet, uint32_t codepoint) {
+        auto it = spriteSheet.m_charData.find(codepoint);
+        return it != spriteSheet.m_charData.end() ? &it->second : nullptr;
+    }
+
     glm::vec2 CalculateTextSize(const std::string& text, const FontSpriteSheet& spriteSheet, float scale) {
         float cursorX = 0;
         float width = 0;
         size_t lineCount = 1;
-        float charSpacing = spriteSheet.m_charSpacing * scale;
 
         for (size_t i = 0; i < text.length();) {
             if (text.compare(i, 5, "[COL=") == 0) {
@@ -21,37 +71,23 @@ namespace {
                 }
             }
 
-            char character = text[i];
+            uint32_t codepoint = 0;
+            if (!DecodeNextCodepoint(text, i, codepoint)) break;
 
-            if (character == ' ') {
-                size_t spaceIndex = spriteSheet.m_characters.find(' ');
-                int spaceWidth = (spaceIndex != std::string::npos) ? spriteSheet.m_charDataList[spaceIndex].width : 0;
-                cursorX += spaceWidth * scale;
-                width = std::max(width, cursorX);
-                i++;
-                continue;
-            }
-
-            if (character == '\n') {
+            if (codepoint == '\n') {
                 cursorX = 0;
                 lineCount++;
-                i++;
                 continue;
             }
 
-            size_t charIndex = spriteSheet.m_characters.find(character);
-            if (charIndex != std::string::npos) {
-                const FontSpriteSheet::CharData& charData = spriteSheet.m_charDataList[charIndex];
-                cursorX += charData.width * scale;
+            const FontSpriteSheet::CharData* charData = FindCharData(spriteSheet, codepoint);
+            if (charData) {
+                cursorX += charData->xAdvance * scale;
                 width = std::max(width, cursorX);
-                cursorX += charSpacing;
             }
-
-            i++;
         }
 
-        float height = spriteSheet.m_charHeight * scale;
-        height += (lineCount - 1) * (spriteSheet.m_charHeight + spriteSheet.m_lineSpacing) * scale;
+        float height = lineCount * spriteSheet.m_lineHeight * scale;
         return glm::vec2(width, height);
     }
 }
@@ -65,7 +101,7 @@ namespace TextBlitter {
     void Init() {
         // Export fonts, aka create spritesheets from single char files, no need to do every init but YOLO ¯\_(ツ)_/¯
         std::string name = "StandardFont";
-        std::string characters = R"(!"#$%&'*+,-./0123456789:;<=>?_ABCDEFGHIJKLMNOPQRSTUVWXYZ\^_`abcdefghijklmnopqrstuvwxyz [])";
+        std::string characters = R"(!"#$%&'*+,-./0123456789:;<=>?_ABCDEFGHIJKLMNOPQRSTUVWXYZ\^_`abcdefghijklmnopqrstuvwxyz )";
         std::string textureSourcePath = "res/fonts/raw_images/standard_font/";
         std::string outputPath = "res/fonts/";
         FontSpriteSheetPacker::Export(name, characters, 0, 1, textureSourcePath, outputPath);
@@ -76,7 +112,7 @@ namespace TextBlitter {
         FontSpriteSheetPacker::Export(name, characters, 0, 1, textureSourcePath, outputPath);
 
         name = "BebasNeue";
-        characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789’,. ";
+        characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-\xE2\x80\x99,. ";
         textureSourcePath = "res/fonts/raw_images/bebas_neue/";
         FontSpriteSheetPacker::Export(name, characters, 2, 1, textureSourcePath, outputPath);
 
@@ -85,10 +121,9 @@ namespace TextBlitter {
         textureSourcePath = "res/fonts/raw_images/roboto_condensed/";
         FontSpriteSheetPacker::Export(name, characters, 1, 1, textureSourcePath, outputPath);
 
-        AddFont(FontSpriteSheetPacker::Import("res/fonts/StandardFont.json"));
-        AddFont(FontSpriteSheetPacker::Import("res/fonts/AmmoFont.json"));
-        AddFont(FontSpriteSheetPacker::Import("res/fonts/BebasNeue.json"));
-        AddFont(FontSpriteSheetPacker::Import("res/fonts/RobotoCondensed.json"));
+        for (const auto& fileInfo : Hell::File::IterateDirectory("res/fonts", { "fnt" })) {
+            AddFont(FontSpriteSheetPacker::Import(fileInfo.path));
+        }
     }
     
     void BlitText(const std::string& text, const std::string& fontName, int originX, int originY, glm::ivec2 viewportSize, Alignment alignment, float scale, int32_t textureIndex, std::vector<Vertex2D>& vertices, std::vector<uint32_t>& indices) {
@@ -101,7 +136,6 @@ namespace TextBlitter {
         float cursorY = static_cast<float>(viewportSize.y - originY); // Top left corner
         float invTextureWidth = 1.0f / static_cast<float>(spriteSheet->m_textureWidth);
         float invTextureHeight = 1.0f / static_cast<float>(spriteSheet->m_textureHeight);
-        float charSpacing = spriteSheet->m_charSpacing * scale;
         glm::vec4 color(1.0f); // Default color
 
         // Reserve space for vertices and indices
@@ -122,61 +156,52 @@ namespace TextBlitter {
                     continue;
                 }
             }
-            char character = text[i];
-
-            // Handle spaces
-            if (character == ' ') {
-                size_t spaceIndex = spriteSheet->m_characters.find(' ');
-                int spaceWidth = (spaceIndex != std::string::npos) ? spriteSheet->m_charDataList[spaceIndex].width : 0;
-                cursorX += spaceWidth * scale;
-                i++;
-                continue;
-            }
+            uint32_t codepoint = 0;
+            if (!DecodeNextCodepoint(text, i, codepoint)) break;
 
             // Handle newlines
-            if (character == '\n') {
+            if (codepoint == '\n') {
                 cursorX = static_cast<float>(originX);
-                cursorY -= (spriteSheet->m_charHeight + spriteSheet->m_lineSpacing) * scale;
-                i++;
+                cursorY -= spriteSheet->m_lineHeight * scale;
                 continue;
             }
 
-            // Process regular characters
-            size_t charIndex = spriteSheet->m_characters.find(character);
+            const FontSpriteSheet::CharData* charData = FindCharData(*spriteSheet, codepoint);
+            if (charData) {
+                if (charData->width > 0 && charData->height > 0) {
+                    // Normalized uvs
+                    float u0 = charData->atlasX * invTextureWidth;
+                    float v0 = (charData->atlasY + charData->height) * invTextureHeight;
+                    float u1 = (charData->atlasX + charData->width) * invTextureWidth;
+                    float v1 = charData->atlasY * invTextureHeight;
 
-            if (charIndex != std::string::npos) {
-                const auto& charData = spriteSheet->m_charDataList[charIndex];
+                    float glyphX = cursorX + charData->xOffset * scale;
+                    float glyphY = cursorY - charData->yOffset * scale;
 
-                // Normalized uvs
-                float u0 = charData.offsetX * invTextureWidth;
-                float v0 = (charData.offsetY + charData.height) * invTextureHeight;
-                float u1 = (charData.offsetX + charData.width) * invTextureWidth;
-                float v1 = charData.offsetY * invTextureHeight;
+                    // Normalized quad position
+                    float x0 = (glyphX / viewportSize.x) * 2.0f - 1.0f;
+                    float y0 = (glyphY / viewportSize.y) * 2.0f - 1.0f;
+                    float x1 = ((glyphX + charData->width * scale) / viewportSize.x) * 2.0f - 1.0f;
+                    float y1 = ((glyphY - charData->height * scale) / viewportSize.y) * 2.0f - 1.0f;
 
-                // Normalized quad position
-                float x0 = (cursorX / viewportSize.x) * 2.0f - 1.0f;
-                float y0 = (cursorY / viewportSize.y) * 2.0f - 1.0f;
-                float x1 = ((cursorX + charData.width * scale) / viewportSize.x) * 2.0f - 1.0f;
-                float y1 = ((cursorY - charData.height * scale) / viewportSize.y) * 2.0f - 1.0f;
+                    // Vertices
+                    vertices.push_back({ {x0, y0}, {u0, v1}, color }); // Bottom left
+                    vertices.push_back({ {x1, y0}, {u1, v1}, color }); // Bottom right
+                    vertices.push_back({ {x1, y1}, {u1, v0}, color }); // Top right
+                    vertices.push_back({ {x0, y1}, {u0, v0}, color }); // Top left
 
-                // Vertices
-                vertices.push_back({ {x0, y0}, {u0, v1}, color }); // Bottom left
-                vertices.push_back({ {x1, y0}, {u1, v1}, color }); // Bottom right
-                vertices.push_back({ {x1, y1}, {u1, v0}, color }); // Top right
-                vertices.push_back({ {x0, y1}, {u0, v0}, color }); // Top left
+                    // Indices
+                    uint32_t vertexOffset = static_cast<uint32_t>(vertices.size()) - 4;
+                    indices.push_back(vertexOffset + 0);
+                    indices.push_back(vertexOffset + 1);
+                    indices.push_back(vertexOffset + 2);
+                    indices.push_back(vertexOffset + 0);
+                    indices.push_back(vertexOffset + 2);
+                    indices.push_back(vertexOffset + 3);
+                }
 
-                // Indices
-                uint32_t vertexOffset = static_cast<uint32_t>(vertices.size()) - 4;
-                indices.push_back(vertexOffset + 0);
-                indices.push_back(vertexOffset + 1);
-                indices.push_back(vertexOffset + 2);
-                indices.push_back(vertexOffset + 0);
-                indices.push_back(vertexOffset + 2);
-                indices.push_back(vertexOffset + 3);
-
-                cursorX += charData.width * scale + charSpacing;
+                cursorX += charData->xAdvance * scale;
             }
-            i++;
         }
 
         // Post process alignment

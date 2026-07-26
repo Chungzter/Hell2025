@@ -43,17 +43,16 @@ namespace VulkanRenderer {
     void CreatePipelines();
     void CreateRenderStates();
     void CreateRenderTargets();
-    void CreatePresentRenderTarget(VkExtent2D extent);
+    void CreatePresentRenderTarget();
     void CreateShaders();
     void CreateSkybox();
     void CreatePointShadowMaps();
 
     void UpdateBindlessRenderTargetDescriptors();
 
-    void UpdateBuffers();
-    void UpdateBuffersUI();
+    bool UpdateBuffers();
+    bool UpdateBuffersUI();
 
-    bool UpdateBuffer(VkBuffer* buffer, const void* data, VkDeviceSize size);
     bool UpdateBuffer(VulkanBuffer* buffer, const void* data, VkDeviceSize size);
     bool EnsureBufferSize(uint64_t id, VkDeviceSize size);
     bool EnsureBufferSize(VulkanBuffer* buffer, VkDeviceSize size);
@@ -110,7 +109,7 @@ namespace VulkanRenderer {
     void IndirectSpecularResolveTemporalPass(VkCommandBuffer commandBuffer);
     void ResetIndirectSpecularAMDHistory();
 
-    void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView);
+    void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView, VkExtent2D extent);
 
     bool BeginRenderState(VkCommandBuffer commandBuffer, const VulkanRenderState& state, VkExtent2D extent);
     void EndRenderState(VkCommandBuffer commandBuffer);

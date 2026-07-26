@@ -22,12 +22,13 @@ layout(early_fragment_tests) in;
 #include "../../common/lighting.glsl"
 #include "../../common/post_processing.glsl"
 #include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
 #include "../../common/ddgi_upsample.glsl"
 
 readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportData[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) buffer renderItemsBuffer { RenderItem renderItems[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer       { Light lights[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_LIGHTS) buffer tileLightsBuffer   { TileLights tileLights[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS) buffer tileSpotLightsBuffer { TileSpotLights tileSpotLights[]; };
@@ -298,10 +299,9 @@ void main() {
 
     // Indirect diffuse
     if (rendererData.enableIrradianceProbeSampling) {
-        vec2 resolution = vec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
-        vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / resolution;
         ViewportData vd = viewportData[v_viewportIndex];
         ivec2 outputImageSize = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
+        vec2 screenUV = ScreenUVFromFragCoord(gl_FragCoord.xy, outputImageSize);
         ivec4 viewportRect = ivec4(vd.xOffset, vd.yOffset, vd.width, vd.height);
         vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral(u_indirectDiffuseTexture, u_indirectDiffuseSurfaceTexture, screenUV, finalNormal, fragDistance, outputImageSize, viewportRect);
         vec3 diffuseAlbedo = hairBaseColor.rgb * (1.0 - metallic);

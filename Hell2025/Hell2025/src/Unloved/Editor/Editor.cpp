@@ -11,8 +11,9 @@
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor_placement.h"
-#include "Unloved/Editor/PlacementTools.h"
+#include "Unloved/EditorSession/PlacementTools.h"
 #include "Unloved/Editor/Gizmo.h"
+#include "Unloved/EditorSession/EditorSession.h"
 #include "Unloved/Systems/Map/MapManager.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/House/HouseManager.h"
@@ -32,7 +33,6 @@ namespace Unloved::Editor {
 
     EditorMode g_editorMode = EditorMode::UNDEFINED;
     int g_activeViewportIndex = 3;
-    bool g_isOpen = false;
     bool g_isOrthographic[4];
     bool g_editorStateWasIdleLastFrame = true;
     float g_OrthographicSizes[4];
@@ -62,7 +62,7 @@ namespace Unloved::Editor {
     SelectionRectangleState g_viewportSelectionRectangleState;
 
     void Init() {
-        Editor::InitPlacementTools();
+        EditorSession::InitPlacementTools();
         ResetViewports();
         ResetCameras();
 
@@ -89,7 +89,7 @@ namespace Unloved::Editor {
             SetEditorHouseName("TestHouse");
         }
 
-        g_isOpen = true;
+        EditorSession::Open();
     }
 
     void CloseEditor() {
@@ -129,7 +129,7 @@ namespace Unloved::Editor {
             }
         }
 
-        g_isOpen = false;
+        EditorSession::Close();
     }
 
     void Save() {
@@ -183,7 +183,7 @@ namespace Unloved::Editor {
         ProfilerCPUZoneFunction();
 
         // Close editor
-        if (Input::KeyPressed(HELL_KEY_TAB)) {
+        if (!EditorSession::WantsKeyboardCapture() && Input::KeyPressed(HELL_KEY_TAB)) {
             InputMulti::ClearKeyStates();
             Audio::PlayAudio(AUDIO_SELECT, 1.0f);
             CloseEditor();
@@ -199,33 +199,44 @@ namespace Unloved::Editor {
        // if (Input::KeyPressed(HELL_KEY_B)) {
        //     PlaceGenericObject(GenericObjectType::PLANT_BLACKBERRIES);
        // }
-       //
+        //
 
         g_editorStateWasIdleLastFrame = (g_editorState == EditorState::IDLE);
+        const bool editorSessionWantsMouseCapture = EditorSession::WantsMouseCapture();
+        const bool capturedMouseAction = editorSessionWantsMouseCapture && (
+            Input::LeftMouseDown() ||
+            Input::RightMouseDown() ||
+            Input::MiddleMouseDown() ||
+            Input::MouseWheelUp() ||
+            Input::MouseWheelDown()
+        );
+        const bool editorSessionOwnsInput = capturedMouseAction || EditorSession::WantsKeyboardCapture();
 
-        UpdateCamera();    // you swapped these two, maybe it was better before?
-        UpdateMouseRays(); // you swapped these two, maybe it was better before?
-        Gizmo::Update();
-        UpdateObjectHover();
-        UpdateObjectSelection();
-        UpdateObjectGizmoInteraction();
-        UpdateDividers();
-        UpdateInput();
-        UpdateUI();
-        UpdateCursor();
+        if (!editorSessionOwnsInput) {
+            UpdateCamera();    // you swapped these two, maybe it was better before?
+            UpdateMouseRays(); // you swapped these two, maybe it was better before?
+            Gizmo::Update();
+            UpdateObjectHover();
+            UpdateObjectSelection();
+            UpdateObjectGizmoInteraction();
+            UpdateInput();
+            if (!editorSessionWantsMouseCapture) UpdateCursor();
+        }
         UpdateDebug();
         UpdateCameraInterpolation(deltaTime);
         Gizmo::UpdateRenderItems();
 
 
-        if (GetEditorState() == EditorState::PLACEMENT) {
-            UpdatePlacement();
-        }
-        else if (GetEditorMode() == EditorMode::HOUSE_EDITOR || GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
-            UpdateObjectPlacement();
-        }
-        if (GetEditorState() == EditorState::IDLE) {
-            ExitObjectPlacement();
+        if (!editorSessionOwnsInput) {
+            if (GetEditorState() == EditorState::PLACEMENT) {
+                UpdatePlacement();
+            }
+            else if (GetEditorMode() == EditorMode::HOUSE_EDITOR || GetEditorMode() == EditorMode::MAP_OBJECT_EDITOR) {
+                UpdateObjectPlacement();
+            }
+            if (GetEditorState() == EditorState::IDLE) {
+                ExitObjectPlacement();
+            }
         }
 
         UpdateOutliner(); // make this nicer
@@ -235,17 +246,6 @@ namespace Unloved::Editor {
             case EditorMode::MAP_HEIGHT_EDITOR: UpdateMapHeightEditor();   break;
             case EditorMode::MAP_OBJECT_EDITOR: UpdateMapObjectEditor();   break;
             default: break;
-        }
-
-        if (Input::KeyPressed(HELL_KEY_Q)) {
-            if (GetEditorViewportSplitMode() == EditorViewportSplitMode::SINGLE) {
-                SetEditorViewportSplitMode(EditorViewportSplitMode::FOUR_WAY_SPLIT);
-                std::cout << "four way\n";
-            }
-            else {
-                SetEditorViewportSplitMode(EditorViewportSplitMode::SINGLE);
-                std::cout << "single\n";
-            }
         }
 
         // Draw world map perimeter and spawn points
@@ -315,12 +315,11 @@ namespace Unloved::Editor {
     }
 
     void ToggleEditorOpenState() {
-        g_isOpen = !g_isOpen;
-        if (g_isOpen) {
-            OpenEditor();
+        if (EditorSession::IsActive()) {
+            CloseEditor();
         }
         else {
-            CloseEditor();
+            OpenEditor();
         }
     }
 
@@ -393,11 +392,11 @@ namespace Unloved::Editor {
     }
 
     bool IsOpen() {
-        return g_isOpen;
+        return EditorSession::IsActive();
     }
 
     bool IsClosed() {
-        return !g_isOpen;
+        return EditorSession::IsInactive();
     }
 
     bool EditorIsIdle() {

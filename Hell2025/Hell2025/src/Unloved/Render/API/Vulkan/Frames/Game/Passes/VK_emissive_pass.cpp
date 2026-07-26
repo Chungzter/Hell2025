@@ -104,6 +104,8 @@ namespace VulkanRenderer {
             if (!viewport || !viewport->IsVisible()) continue;
 
             SetGameViewportAndScissor(commandBuffer, *viewport, extent);
+            pushConstants.viewportIndex = viewportIndex;
+            vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
             MultiDrawIndexedCommands(commandBuffer, emissiveCommands[viewportIndex]);
         }
 

@@ -11,7 +11,8 @@ layout (location = 2) in vec2 a_uv;
 layout (location = 3) in vec3 a_tangent;
 
 layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) readonly restrict buffer viewportDataBuffer { ViewportData viewportData[]; };
-layout(std430, binding = SSBO_IDX_INSTANCE_DATA) readonly restrict buffer renderItemsBuffer  { RenderItem renderItems[]; };
+layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) readonly restrict buffer sceneRenderItemsBuffer { RenderItem sceneRenderItems[]; };
+layout(std430, binding = SSBO_IDX_DRAW_RENDER_ITEM_INDICES) readonly restrict buffer drawRenderItemIndicesBuffer { uint drawRenderItemIndices[]; };
 
 centroid out vec2 v_texCoord;
 centroid out vec4 v_worldPos;
@@ -21,12 +22,13 @@ centroid out vec3 v_tangent;
 out flat int v_globalInstanceIndex;
 out flat int v_viewportIndex;
 
-void main() {
-    int instanceOffset = gl_BaseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
-    v_globalInstanceIndex = instanceOffset + gl_InstanceID;
-    v_viewportIndex = gl_BaseInstance >> VIEWPORT_INDEX_SHIFT;
+uniform int u_viewportIndex;
 
-    RenderItem renderItem = renderItems[v_globalInstanceIndex];
+void main() {
+    v_globalInstanceIndex = int(drawRenderItemIndices[gl_BaseInstance + gl_InstanceID]);
+    v_viewportIndex = u_viewportIndex;
+
+    RenderItem renderItem = sceneRenderItems[v_globalInstanceIndex];
     mat4 modelMatrix = renderItem.modelMatrix;
     mat4 inverseModelMatrix = renderItem.inverseModelMatrix;
     mat4 normalMatrix = transpose(inverseModelMatrix);

@@ -12,26 +12,22 @@
 #include <vector>
 
 namespace VulkanRenderer {
-    struct RayQueryBLASInstanceData {
-        uint32_t meshInstanceDataOffset = 0;
-        uint32_t meshInstanceDataCount = 0;
+    struct RayQueryBLASData {
+        uint64_t vertexBufferDeviceAddress = 0;
+        uint64_t indexBufferDeviceAddress = 0;
+        uint32_t sceneRenderItemIndexOffset = 0;
+        uint32_t sceneRenderItemIndexCount = 0;
         uint32_t padding0 = 0;
         uint32_t padding1 = 0;
     };
-
-    struct RayQueryMeshInstanceData {
-        uint64_t vertexBufferDeviceAddress = 0;
-        uint64_t indexBufferDeviceAddress = 0;
-        RayQueryMesh mesh;
-        RayQueryMaterial material;
-    };
+    static_assert(sizeof(RayQueryBLASData) == 32);
 
     struct RayQueryScene {
         void Clear();
-        void Reserve(size_t blasInstanceCount, size_t meshInstanceDataCount);
+        void Reserve(size_t blasInstanceCount, size_t sceneRenderItemIndexCount);
 
-        void AddBLASInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayQueryMeshInstance& meshInstance);
-        void AddBLASInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const std::vector<RayQueryMeshInstance>& meshInstances);
+        void AddBLASInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, uint32_t sceneRenderItemIndex, VkGeometryInstanceFlagsKHR opacityFlags);
+        void AddBLASInstance(uint64_t blasDeviceAddress, VkTransformMatrixKHR transform, uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const std::vector<uint32_t>& sceneRenderItemIndices);
 
         bool HasInstances() const;
         uint32_t GetInstanceCount() const;
@@ -43,15 +39,14 @@ namespace VulkanRenderer {
         bool BindDescriptor(VulkanFrameData& frameData, VulkanDescriptorSet* descriptorSet, uint32_t binding);
 
     private:
-        RayQueryMeshInstanceData CreateMeshInstanceData(uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayQueryMeshInstance& meshInstance) const;
         VkAccelerationStructureInstanceKHR CreateTLASInstance(uint64_t accelerationStructureAddress, VkTransformMatrixKHR transform, uint32_t instanceCustomIndex, VkGeometryInstanceFlagsKHR opacityFlags = 0) const;
 
         std::vector<VkAccelerationStructureInstanceKHR> m_instances;
-        std::vector<RayQueryBLASInstanceData> m_blasInstanceData;
-        std::vector<RayQueryMeshInstanceData> m_meshInstanceData;
+        std::vector<RayQueryBLASData> m_blasData;
+        std::vector<uint32_t> m_sceneRenderItemIndices;
 
         VulkanBuffer* m_instanceBuffer = nullptr;
-        VulkanBuffer* m_blasInstanceDataBuffer = nullptr;
-        VulkanBuffer* m_meshInstanceDataBuffer = nullptr;
+        VulkanBuffer* m_blasDataBuffer = nullptr;
+        VulkanBuffer* m_sceneRenderItemIndexBuffer = nullptr;
     };
 }

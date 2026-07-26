@@ -276,42 +276,66 @@ void Door::SetRotationY(float value) {
 
 void Door::SetEditorName(const std::string& name) {
     m_createInfo.editorName = name;
-    Bible::ConfigureDoorMeshNodes(m_objectId, m_createInfo, &m_meshNodes);
 }
 
 void Door::SetType(DoorType type) {
     m_createInfo.type = type;
-    Bible::ConfigureDoorMeshNodes(m_objectId, m_createInfo, &m_meshNodes);
+    Reset();
     HouseBuilder::MarkDirty();
 }
 
 void Door::SetFrontMaterial(DoorMaterialType type) {
     m_createInfo.materialTypeFront = type;
-    Bible::ConfigureDoorMeshNodes(m_objectId, m_createInfo, &m_meshNodes);
+    Reset();
 }
 
 void Door::SetBackMaterial(DoorMaterialType type) {
     m_createInfo.materialTypeBack = type;
-    Bible::ConfigureDoorMeshNodes(m_objectId, m_createInfo, &m_meshNodes);
+    Reset();
 }
 
 void Door::SetFrameFrontMaterial(DoorMaterialType type) {
     m_createInfo.materialTypeFrameFront = type;
-    Bible::ConfigureDoorMeshNodes(m_objectId, m_createInfo, &m_meshNodes);
+    Reset();
 }
 
 void Door::SetFrameBackMaterial(DoorMaterialType type) {
     m_createInfo.materialTypeFrameBack = type;
-    Bible::ConfigureDoorMeshNodes(m_objectId, m_createInfo, &m_meshNodes);
+    Reset();
 }
 
 void Door::SetDeadLockState(bool value) {
     m_createInfo.hasDeadLock = value;
-    Bible::ConfigureDoorMeshNodes(m_objectId, m_createInfo, &m_meshNodes);
+    Reset();
 }
 
 void Door::SetDeadLockedAtInitState(bool value) {
     m_createInfo.deadLockedAtInit = value;
+    Reset();
+}
+
+void Door::SetOpenAtStartState(bool value) {
+    m_createInfo.openAtStart = value;
+    Reset();
+}
+
+void Door::SetMaxOpenValue(float value) {
+    m_createInfo.maxOpenValue = value;
+    Reset();
+}
+
+void Door::Reset() {
     Bible::ConfigureDoorMeshNodes(m_objectId, m_createInfo, &m_meshNodes);
+
+    m_deadLocked = m_createInfo.deadLockedAtInit;
+    for (const MeshNode& meshNode : m_meshNodes.GetNodes()) {
+        if (meshNode.openableId == 0) continue;
+
+        if (m_deadLocked) OpenableManager::LockOpenablebyId(meshNode.openableId);
+        else OpenableManager::UnlockOpenablebyId(meshNode.openableId);
+    }
+
+    // Push the reset pose into the newly created physics
+    Update(0.0f);
 }
 }

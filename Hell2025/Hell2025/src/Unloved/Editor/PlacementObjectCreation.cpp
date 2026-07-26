@@ -6,6 +6,9 @@
 #include "Unloved/World/World.h"
 
 namespace Unloved::Editor {
+    using EditorSession::PlacementTool;
+    using EditorSession::PlacementToolInfo;
+
 
     void PlaceDirectObject(PlacementTool tool, const EditorRayResult& rayResult, const PlacementToolInfo& toolInfo) {
 

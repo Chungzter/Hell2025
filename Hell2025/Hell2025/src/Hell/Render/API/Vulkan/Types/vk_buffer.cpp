@@ -113,12 +113,17 @@ bool VulkanBuffer::EnsureSize(VkDeviceSize size) {
     return true;
 }
 
-void VulkanBuffer::UpdateData(const void* data, VkDeviceSize size, VkDeviceSize offset) {
-    if (!data || size == 0) return;
+bool VulkanBuffer::UpdateData(const void* data, VkDeviceSize size, VkDeviceSize offset) {
+    if (size == 0) return true;
+
+    if (!data) {
+        Logging::Error() << "VulkanBuffer::UpdateData(..) received null data for a non-empty upload\n";
+        return false;
+    }
 
     if (offset > m_size || size > m_size - offset) {
         Logging::Error() << "VulkanBuffer::UpdateData(..) upload exceeds destination buffer size\n";
-        return;
+        return false;
     }
 
     // Use the direct mapping path if the pointer exists
@@ -127,13 +132,18 @@ void VulkanBuffer::UpdateData(const void* data, VkDeviceSize size, VkDeviceSize 
 
         // Ensure changes are visible to the GPU if memory is not coherent
         if (!m_hostCoherent) {
-            vmaFlushAllocation(VulkanMemoryManager::GetAllocator(), m_allocation, offset, size);
+            if (vmaFlushAllocation(VulkanMemoryManager::GetAllocator(), m_allocation, offset, size) != VK_SUCCESS) {
+                Logging::Error() << "VulkanBuffer::UpdateData(..) failed to flush mapped memory\n";
+                return false;
+            }
         }
+
+        return true;
     }
-    else {
-        Logging::Error() << "VulkanBuffer::UpdateData(..) failed because it was called on a buffer with no mapped pointer!\n"
-                         << "Ensure the buffer was created with VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT and VMA_ALLOCATION_CREATE_MAPPED_BIT.\n";
-    }
+
+    Logging::Error() << "VulkanBuffer::UpdateData(..) failed because it was called on a buffer with no mapped pointer!\n"
+                     << "Ensure the buffer was created with VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT and VMA_ALLOCATION_CREATE_MAPPED_BIT.\n";
+    return false;
 }
 
 void VulkanBuffer::UploadData(const void* data, VkDeviceSize size, VkDeviceSize dstOffset) {

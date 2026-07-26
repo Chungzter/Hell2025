@@ -5,22 +5,20 @@
 
 layout (location = 0) in vec3 vPosition;
 
-layout(std430, binding = SSBO_IDX_INSTANCE_DATA) readonly buffer renderItemsBuffer {
-    RenderItem renderItems[];
-};
+layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) readonly buffer sceneRenderItemsBuffer { RenderItem sceneRenderItems[]; };
+layout(std430, binding = SSBO_IDX_DRAW_RENDER_ITEM_INDICES) readonly buffer drawRenderItemIndicesBuffer { uint drawRenderItemIndices[]; };
 
 uniform mat4 u_projectionView;
 uniform mat4 u_modelMatrix;
-uniform bool u_useInstanceData = false;
+uniform bool u_useDrawRenderItemIndices = false;
 
 void main() {
 
     // Regular render items
-    if (u_useInstanceData) {
-        int instanceOffset = gl_BaseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
-        int globalInstanceIndex = instanceOffset + gl_InstanceID;
-    
-        RenderItem renderItem = renderItems[globalInstanceIndex]; 
+    if (u_useDrawRenderItemIndices) {
+        uint drawIndex = uint(gl_BaseInstance + gl_InstanceID);
+        uint sceneRenderItemIndex = drawRenderItemIndices[drawIndex];
+        RenderItem renderItem = sceneRenderItems[sceneRenderItemIndex];
         mat4 modelMatrix = renderItem.modelMatrix;
 
         gl_Position = u_projectionView * modelMatrix * vec4(vPosition, 1.0);
@@ -30,4 +28,4 @@ void main() {
     else {
         gl_Position = u_projectionView * u_modelMatrix * vec4(vPosition, 1.0);
     }
-}  
+}

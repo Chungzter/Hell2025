@@ -367,6 +367,11 @@ void DDGIVolume::SetProbeSpacing(float spacing) {
     UpdateMembers();
 }
 
+void DDGIVolume::SetPointCloudSpacing(float spacing) {
+    m_createInfo.pointCloudSpacing = spacing;
+    UpdateMembers();
+}
+
 glm::vec3 DDGIVolume::GetProbeBaseWorldPosition(const glm::ivec3& probeCoords) const {
     const glm::vec3 counts = glm::vec3(m_probeCountX, m_probeCountY, m_probeCountZ);
     const glm::vec3 coords = glm::vec3(probeCoords);

@@ -18,6 +18,7 @@
 #include "Unloved/Session/Session.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorLayout.h"
 #include "Unloved/Objects/Effects/Decal.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
@@ -129,6 +130,8 @@ namespace Debug {
     }
 
     void UpdateDebugText() {
+        if (Editor::IsOpen()) return;
+
         BlitDebugStats();
 
         // Midi notes override
@@ -139,7 +142,6 @@ namespace Debug {
 
         if (Debug::GetDebugTextMode() == DebugTextMode::PER_PLAYER) return;
         if (Debug::GetDebugTextMode() == DebugTextMode::NONE)       return;
-        if (Editor::IsOpen())                                       return;
 
         // Regular global debug
         std::string text = "";
@@ -246,7 +248,16 @@ namespace Debug {
     void DisplayQuickMessage() {
         if (g_quickMessageTimer > 0) {
             g_quickMessageTimer -= Hell::Time::DeltaTime();
-            UIBackEnd::BlitText(g_quickMessage, "StandardFont", 0, Config::GetResolutions().gBuffer.y, Alignment::BOTTOM_LEFT, 2.0f);
+            if (Editor::IsOpen()) {
+                const glm::uvec2 internalResolution = UIBackEnd::GetCanvasResolution(UICanvas::INTERNAL);
+                const glm::uvec2 nativeResolution = UIBackEnd::GetCanvasResolution(UICanvas::NATIVE);
+                const float nativeToInternalScale = static_cast<float>(internalResolution.x) / static_cast<float>(nativeResolution.x);
+                const int32_t viewportLeft = static_cast<int32_t>(std::round(EditorSession::Layout::GetHierarchyPanel().rect.Right() * nativeToInternalScale));
+                UIBackEnd::BlitText(g_quickMessage, "StandardFont", viewportLeft, internalResolution.y, Alignment::BOTTOM_LEFT, 2.0f);
+            }
+            else {
+                UIBackEnd::BlitText(g_quickMessage, "StandardFont", 0, Config::GetResolutions().gBuffer.y, Alignment::BOTTOM_LEFT, 2.0f);
+            }
         }
     }
 

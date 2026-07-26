@@ -21,7 +21,8 @@ namespace OpenGL::Renderer {
 		ProfilerOpenGLZoneFunction();
 
 		const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
-		const std::vector<RenderItem>& renderItems = Unloved::RenderDataManager::GetRenderItemsPlastic();
+		const std::vector<RenderItem>& sceneRenderItems = Unloved::RenderDataManager::GetSceneRenderItems();
+		const std::vector<uint32_t>& renderItemIndices = Unloved::RenderDataManager::GetRenderItemIndicesPlastic();
 
         OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
         OpenGLFrameBuffer* miscFullSizeFbo = OpenGL::ResourceManager::GetFrameBufferPtr("MiscFullSize");
@@ -44,7 +45,6 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::SetUniformInt("u_tileXCount", GetTileCountX());
 
@@ -70,7 +70,8 @@ namespace OpenGL::Renderer {
 
 			glDepthFunc(GL_GREATER);
 
-			for (const RenderItem& renderItem : renderItems) {
+			for (uint32_t renderItemIndex : renderItemIndices) {
+				const RenderItem& renderItem = sceneRenderItems[renderItemIndex];
 				Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
 				if (!mesh) continue;
 
@@ -115,7 +116,8 @@ namespace OpenGL::Renderer {
 
 			glDepthFunc(GL_EQUAL);
 
-			for (const RenderItem& renderItem : renderItems) {
+			for (uint32_t renderItemIndex : renderItemIndices) {
+				const RenderItem& renderItem = sceneRenderItems[renderItemIndex];
 				Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
 				if (!mesh) continue;
 
@@ -139,55 +141,5 @@ namespace OpenGL::Renderer {
 		glDepthFunc(GL_GREATER);
 	}
 
-
-	void PlasticPass2() {
-
-		ProfilerOpenGLZoneFunction();
-
-		const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
-		const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
-
-		OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
-		OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("Plastic");
-
-		if (!gBuffer) return;
-		if (!shader) return;
-
-		glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
-
-		gBuffer->Bind();
-		gBuffer->DrawBuffers({ "Lighting" });
-
-		OpenGL::BindShader("Plastic");
-        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
-        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
-        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
-        OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
-
-		OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
-		EditorRasterizerStateOverride();
-
-		glDisable(GL_DEPTH_TEST);
-
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // THIS IS IMPORTANT. Some other pass disabled this. Classic OpenGL state machine.
-
-		// PLASTIC TEMPORARYILY RENDERER HERE FOR TESTING
-		for (int i = 0; i < 4; i++) {
-			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
-			if (viewport->IsVisible()) {
-				OpenGL::Renderer::SetViewport(gBuffer, viewport);
-				if (Hell::BackEnd::RenderDocFound()) {
-					SplitMultiDrawIndirect(shader, drawInfoSet.plastic[i], true, false);
-				}
-				else {
-					MultiDrawIndirect(drawInfoSet.plastic[i]);
-				}
-			}
-		}
-
-		glBindVertexArray(0);
-
-	}
 }
 

@@ -45,9 +45,8 @@ namespace VulkanRenderer {
         const VulkanFrameData& frameData = GetCurrentFrameData();
         VulkanDescriptorSet* rayQueryDescriptorSet = rayQueryDescriptorSetResource ? &rayQueryDescriptorSetResource->GetSet(GetCurrentFrameIndex()) : nullptr;
         const uint64_t frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
-        VulkanBuffer* rayQueryBLASInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryBLASInstanceData);
-        VulkanBuffer* rayQueryMeshInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryMeshInstanceData);
-        VulkanBuffer* tileLightsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.tileLights);
+        VulkanBuffer* rayQueryBLASDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryBLASData);
+        VulkanBuffer* rayQuerySceneRenderItemIndexBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQuerySceneRenderItemIndices);
         const int32_t brdfLutTextureIndex = Hell::ResourceManager::GetTextureBindlessIndexByName("BrdfLut", true);
 
         if (!pipeline) return;
@@ -61,10 +60,8 @@ namespace VulkanRenderer {
         if (!indirectDiffuseSurfaceImage) return;
         if (!amdTemporalImage || !amdMaterialRoughnessImage) return;
         if (frameAddressTableDeviceAddress == 0) return;
-        if (!rayQueryBLASInstanceDataBuffer) return;
-        if (!rayQueryMeshInstanceDataBuffer) return;
-        if (!tileLightsBuffer) return;
-
+        if (!rayQueryBLASDataBuffer) return;
+        if (!rayQuerySceneRenderItemIndexBuffer) return;
         VkExtent2D extent = lightingImage->GetExtent2D();
         baseColorImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         normalImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
@@ -90,8 +87,8 @@ namespace VulkanRenderer {
 
         PushConstantsDeferredLighting pushConstants{};
         pushConstants.frameAddressTableDeviceAddress = frameAddressTableDeviceAddress;
-        pushConstants.rayQueryBLASInstanceDataDeviceAddress = rayQueryBLASInstanceDataBuffer->GetDeviceAddress();
-        pushConstants.rayQueryMeshInstanceDataDeviceAddress = rayQueryMeshInstanceDataBuffer->GetDeviceAddress();
+        pushConstants.rayQueryBLASDataDeviceAddress = rayQueryBLASDataBuffer->GetDeviceAddress();
+        pushConstants.rayQuerySceneRenderItemIndicesDeviceAddress = rayQuerySceneRenderItemIndexBuffer->GetDeviceAddress();
         pushConstants.brdfLutTextureIndex = brdfLutTextureIndex;
         vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 

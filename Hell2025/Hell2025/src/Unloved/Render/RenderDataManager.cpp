@@ -6,7 +6,6 @@
 #include "Hell/Math/Math.h"
 #include "Hell/Math/Transform.h"
 #include "Hell/Profiling/CPUProfiler.h"
-#include "Hell/Render/API/Vulkan/Managers/vk_resource_manager.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/UI/UIBackEnd.h"
 
@@ -15,6 +14,9 @@
 #include "Unloved/Config/Config.h"
 #include "Unloved/Config/FlashlightConfig.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorSelection.h"
+#include "Unloved/EditorSession/EditorSession.h"
+#include "Unloved/EditorSession/EditorViewports.h"
 #include "Unloved/Objects/Lighting/SpotLight.h"
 #include "Unloved/Objects/Renderables/AnimatedGameObject.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
@@ -23,7 +25,6 @@
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/World/World.h"
 
-#include <span>
 
 // Get me out of here
 #include "World/LegacyWorld.h"
@@ -34,10 +35,9 @@
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Render/RendererUtil.h"
+#include <array>
 //
 #include "../../../res/shaders/common/flags.glsl"
-
-namespace Input = Hell::Input;
 
 using namespace Hell;
 
@@ -47,35 +47,34 @@ namespace Unloved::RenderDataManager {
     DrawCommandsSet g_drawCommandsSet;
     FlashLightShadowMapDrawInfo g_flashLightShadowMapDrawInfo;
     RendererData g_rendererData;
-    std::vector<DrawIndexedIndirectCommand> g_drawCommandsUI;
+    std::array<std::vector<DrawIndexedIndirectCommand>, static_cast<size_t>(UICanvas::COUNT)> g_drawCommandsUI;
     std::vector<GPULight> g_gpuLights;
     std::vector<GPUSpotLight> g_gpuSpotLights;
 
-	std::vector<RenderItem> g_renderItemsProcedural;
-    std::vector<RenderItem> g_renderItems;
-    std::vector<RenderItem> g_renderItemsBlended;
-    std::vector<RenderItem> g_renderItemsAlphaDiscarded;
-    std::vector<RenderItem> g_renderItemsHair;
-    std::vector<RenderItem> g_renderItemsGlass;
-	std::vector<RenderItem> g_renderItemsMirror;
-    std::vector<RenderItem> g_renderItemsPlastic;
-    std::vector<RenderItem> g_renderItemsToiletWater;
+	std::vector<RenderItem> g_sceneRenderItems;
+	std::vector<uint32_t> g_drawRenderItemIndices;
+	std::vector<uint32_t> g_heightMapRenderItemIndices;
 
-    std::vector<RenderItem> g_renderItemsPointLightShadows;
-    std::vector<RenderItem> g_renderItemsStaticPointLightShadows;
-    std::vector<RenderItem> g_renderItemsDynamicPointLightShadows;
-    std::vector<RenderItem> g_renderItemsMoonLightShadows;
+	std::vector<uint32_t> g_renderItemIndicesProcedural;
+    std::vector<uint32_t> g_renderItemIndices;
+    std::vector<uint32_t> g_renderItemIndicesBlended;
+    std::vector<uint32_t> g_renderItemIndicesAlphaDiscarded;
+    std::vector<uint32_t> g_renderItemIndicesHair;
+    std::vector<uint32_t> g_renderItemIndicesGlass;
+	std::vector<uint32_t> g_renderItemIndicesMirror;
+    std::vector<uint32_t> g_renderItemIndicesPlastic;
+    std::vector<uint32_t> g_renderItemIndicesToiletWater;
 
-    // Emissive
-    std::vector<RenderItem> g_renderItemsEmissive;
+    std::vector<uint32_t> g_renderItemIndicesPointLightShadows;
+    std::vector<uint32_t> g_renderItemIndicesStaticPointLightShadows;
+    std::vector<uint32_t> g_renderItemIndicesDynamicPointLightShadows;
+    std::vector<uint32_t> g_renderItemIndicesMoonLightShadows;
 
-    std::vector<RenderItem> g_shadowCasterRenderItems;
+    std::vector<uint32_t> g_renderItemIndicesEmissive;
+    std::vector<uint32_t> g_renderItemIndicesOutline;
+    std::vector<uint32_t> g_renderItemIndicesOutlineProcedural;
+    std::vector<uint32_t> g_renderItemIndicesOutlineSkinned;
 
-    std::vector<RenderItem> g_renderItemsOutline;
-    std::vector<RenderItem> g_shadowMapRenderItems;
-
-    std::vector<RenderItem> g_instanceData;
-    std::vector<RenderItem> g_glassInstanceData;
     std::vector<GlassLightRange> g_glassLightRanges;
     std::vector<uint32_t> g_glassLightIndices;
     std::vector<GlassLightRange> g_glassSpotLightRanges;
@@ -88,17 +87,16 @@ namespace Unloved::RenderDataManager {
 
     std::vector<glm::mat4> g_skinningTransforms;
     std::vector<glm::mat4> g_previousSkinningTransforms;
-    std::vector<RenderItem> g_combinedSkinnedRenderItems;
+    std::vector<uint32_t> g_combinedSkinnedRenderItemIndices;
+    std::vector<uint32_t> g_skinnedRenderItemIndicesDefault;
+    std::vector<uint32_t> g_skinnedRenderItemIndicesAlphaDiscard;
+    std::vector<uint32_t> g_skinnedRenderItemIndicesBlended;
+    std::vector<uint32_t> g_skinnedRenderItemIndicesHair;
 
-    std::vector<RenderItem> g_skinnedRenderItemsDefault;
-    std::vector<RenderItem> g_skinnedRenderItemsAlphaDiscard;
-    std::vector<RenderItem> g_skinnedRenderItemsBlended;
-    std::vector<RenderItem> g_skinnedRenderItemsHair;
-
-    std::vector<RenderItem> g_skinnedNonDeformingSkinnedMeshRenderItems;
-    std::vector<RenderItem> g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard;
-    std::vector<RenderItem> g_skinnedNonDeformingSkinnedMeshRenderItemsBlended;
-    std::vector<RenderItem> g_skinnedNonDeformingSkinnedMeshRenderItemsHair;
+    std::vector<uint32_t> g_skinnedNonDeformingRenderItemIndices;
+    std::vector<uint32_t> g_skinnedNonDeformingRenderItemIndicesAlphaDiscard;
+    std::vector<uint32_t> g_skinnedNonDeformingRenderItemIndicesBlended;
+    std::vector<uint32_t> g_skinnedNonDeformingRenderItemIndicesHair;
 
     std::vector<SpriteSheetRenderItem> g_spriteSheetRenderItems;
     std::vector<SpriteSheetRenderItem> g_spriteSheetInstanceData;
@@ -112,20 +110,19 @@ namespace Unloved::RenderDataManager {
     std::vector<SkinningJob> g_skinningJobs;
     std::vector<SkinningDispatchGroup> g_skinningDispatchGroups;
 
-    std::vector<TransientRayQueryBLASInstance> g_transientRayQueryBLASInstances;
-    std::vector<RayQueryMultiMeshBLAS> g_rayQueryMultiMeshBLASes;
-    std::vector<RayQueryBLASInstance> g_rayQueryBLASInstances;
-    uint64_t g_proceduralRayQueryBLASId = 0;
+    std::vector<std::vector<uint32_t>> g_transientRayQueryRenderItemGroups;
+    std::vector<uint32_t> g_proceduralRayQueryRenderItemIndices;
+    std::vector<uint32_t> g_persistentRayQueryRenderItemIndices;
 
     uint64_t g_frameIndex = 0;
     glm::vec2 g_jitterPx = glm::vec2(0.0f);
 
 
-    const std::vector<SkinningJob>& GetSkinningJobs()                           { return g_skinningJobs; }
-    const std::vector<SkinningDispatchGroup>& GetSkinningDispatchGroups()       { return g_skinningDispatchGroups; }
-    const std::vector<TransientRayQueryBLASInstance>& GetTransientRayQueryBLASInstances() { return g_transientRayQueryBLASInstances; }
-    const std::vector<RayQueryMultiMeshBLAS>& GetRayQueryMultiMeshBLASes()             { return g_rayQueryMultiMeshBLASes; }
-    const std::vector<RayQueryBLASInstance>& GetRayQueryBLASInstances()                   { return g_rayQueryBLASInstances; }
+    const std::vector<SkinningJob>& GetSkinningJobs()                                      { return g_skinningJobs; }
+    const std::vector<SkinningDispatchGroup>& GetSkinningDispatchGroups()                  { return g_skinningDispatchGroups; }
+    const std::vector<std::vector<uint32_t>>& GetTransientRayQueryRenderItemGroups()       { return g_transientRayQueryRenderItemGroups; }
+    const std::vector<uint32_t>& GetProceduralRayQueryRenderItemIndices()                  { return g_proceduralRayQueryRenderItemIndices; }
+    const std::vector<uint32_t>& GetPersistentRayQueryRenderItemIndices()                  { return g_persistentRayQueryRenderItemIndices; }
 
     void CreateGPULights();
     void CreateGPUSpotLights();
@@ -134,38 +131,39 @@ namespace Unloved::RenderDataManager {
     void UpdateDrawCommandsSet();
     void UpdatePointLightShadowMapDrawCommands();
     void ClearPointLightShadowMapDrawCommands(PointLightShadowMapDrawCommands& drawCommands);
-    void CreatePointLightShadowMapDrawCommands(PointLightShadowMapDrawCommands& drawCommands, const std::vector<ShadowMapInfo>& shadowMaps, std::vector<RenderItem>& renderItems, bool includeSkinned, bool includeProcedural);
+    void CreatePointLightShadowMapDrawCommands(PointLightShadowMapDrawCommands& drawCommands, const std::vector<ShadowMapInfo>& shadowMaps, const std::vector<uint32_t>& renderItemIndices, bool includeSkinned, bool includeProcedural);
 
     // Compute skinning
     void CreateSkinningData(); // name me better
     void CreateSkinningDistpachGroups();
 
-    void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters = false, int encodedViewportIndex = -1, uint64_t excludedObjectId = 0);
-    void CreateHeightMapDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, Unloved::Frustum& frustum, int viewportIndex);
-    void CreateDrawCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum = nullptr);
-    void CreateDrawCommandsNonDeformingSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum = nullptr);
+    void CreateDrawCommandsFromIndices(std::vector<DrawIndexedIndirectCommand>& drawCommands, const std::vector<uint32_t>& renderItemIndices, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters = false, uint64_t excludedObjectId = 0);
+    void CreateHeightMapRenderItems();
+    void CreateHeightMapDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, Unloved::Frustum& frustum);
+    void CreateDrawCommandsSkinnedFromIndices(std::vector<DrawIndexedIndirectCommand>& commands, const std::vector<uint32_t>& renderItemIndices, int viewportIndex, Unloved::Frustum* frustum = nullptr);
+    void CreateDrawCommandsNonDeformingSkinnedFromIndices(std::vector<DrawIndexedIndirectCommand>& commands, const std::vector<uint32_t>& renderItemIndices, int viewportIndex, Unloved::Frustum* frustum = nullptr);
 
-    void CreateMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
-    void CreateMultiDrawIndirectCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
-    void CreateMultiDrawIndirectCommandsSkinnedNonDeforming(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
-
-    void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex);
-	void CreateProceduralMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset);
+	void CreateDrawCommandProceduralFromIndices(std::vector<DrawIndexedIndirectCommand>& drawCommands, const std::vector<uint32_t>& renderItemIndices, Unloved::Frustum* frustum, int viewportIndex);
     void CreateSpriteSheetDrawCommands();
 
-    void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, uint32_t faceIndex, Light* light, BlendingMode blendingModeFilter);
+    void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, const std::vector<uint32_t>& renderItemIndices, uint32_t faceIndex, Light* light, BlendingMode blendingModeFilter);
     void CreateMoonLightShadowMapDrawCommands();
     void ClearDrawCommandsSet();
     void SortDrawCommandRenderItems();
     void CreateViewportDrawCommands();
     void CreateFlashLightShadowMapDrawCommands();
     void UpdateBloodScreenSpaceDecalInstances();
-
-
-    int EncodeBaseInstance(int playerIndex, int instanceOffset);
-    void DecodeBaseInstance(int baseInstance, int& playerIndex, int& instanceOffset);
+    uint32_t AddSceneRenderItem(const RenderItem& renderItem);
+    bool IsValidMesh(const Mesh* mesh);
+    void AddRenderItemToTransientRayQueryBLAS(uint32_t renderItemIndex, uint32_t& groupIndex);
+    void AddPersistentRayQueryRenderItem(uint32_t renderItemIndex);
+    void AddProceduralRayQueryRenderItem(uint32_t renderItemIndex);
 
     void BeginFrame() {
+        g_sceneRenderItems.clear();
+        g_drawRenderItemIndices.clear();
+        g_heightMapRenderItemIndices.clear();
+
         // Compute skinning
         g_skinningJobs.clear();
         g_skinningDispatchGroups.clear();
@@ -174,50 +172,52 @@ namespace Unloved::RenderDataManager {
         g_baseSkinnedVertex = 0;
 
         // Vulkan raytracing
-        g_transientRayQueryBLASInstances.clear();
-        g_rayQueryMultiMeshBLASes.clear();
-        g_rayQueryBLASInstances.clear();
+        g_transientRayQueryRenderItemGroups.clear();
+        g_proceduralRayQueryRenderItemIndices.clear();
+        g_persistentRayQueryRenderItemIndices.clear();
 
         // Skinned (deforming)
-        g_combinedSkinnedRenderItems.clear();
-        g_skinnedRenderItemsDefault.clear();
-        g_skinnedRenderItemsAlphaDiscard.clear();
-        g_skinnedRenderItemsBlended.clear();
-        g_skinnedRenderItemsHair.clear();
+        g_combinedSkinnedRenderItemIndices.clear();
+        g_skinnedRenderItemIndicesDefault.clear();
+        g_skinnedRenderItemIndicesAlphaDiscard.clear();
+        g_skinnedRenderItemIndicesBlended.clear();
+        g_skinnedRenderItemIndicesHair.clear();
 
         // Skinned (non deforming)
-        g_skinnedNonDeformingSkinnedMeshRenderItems.clear();
-        g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard.clear();
-        g_skinnedNonDeformingSkinnedMeshRenderItemsBlended.clear();
-        g_skinnedNonDeformingSkinnedMeshRenderItemsHair.clear();
+        g_skinnedNonDeformingRenderItemIndices.clear();
+        g_skinnedNonDeformingRenderItemIndicesAlphaDiscard.clear();
+        g_skinnedNonDeformingRenderItemIndicesBlended.clear();
+        g_skinnedNonDeformingRenderItemIndicesHair.clear();
 
 		g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent.clear();
 
-		g_renderItemsProcedural.clear();
+		g_renderItemIndicesProcedural.clear();
 
         g_spriteSheetRenderItems.clear();
         g_spriteSheetInstanceData.clear();
 
-        g_renderItems.clear();
-		g_renderItemsMirror.clear();
-		g_renderItemsPlastic.clear();
-        g_renderItemsBlended.clear();
-        g_renderItemsAlphaDiscarded.clear();
-        g_renderItemsHair.clear();
-        g_renderItemsEmissive.clear();
+        g_renderItemIndices.clear();
+		g_renderItemIndicesMirror.clear();
+		g_renderItemIndicesPlastic.clear();
+        g_renderItemIndicesBlended.clear();
+        g_renderItemIndicesAlphaDiscarded.clear();
+        g_renderItemIndicesHair.clear();
+        g_renderItemIndicesEmissive.clear();
+        g_renderItemIndicesToiletWater.clear();
 
-        g_renderItemsPointLightShadows.clear();
-        g_renderItemsStaticPointLightShadows.clear();
-        g_renderItemsDynamicPointLightShadows.clear();
-        g_renderItemsMoonLightShadows.clear();
+        g_renderItemIndicesPointLightShadows.clear();
+        g_renderItemIndicesStaticPointLightShadows.clear();
+        g_renderItemIndicesDynamicPointLightShadows.clear();
+        g_renderItemIndicesMoonLightShadows.clear();
 
         // Think about better names for these containers below
-        g_renderItemsOutline.clear();
+        g_renderItemIndicesOutline.clear();
+        g_renderItemIndicesOutlineProcedural.clear();
+        g_renderItemIndicesOutlineSkinned.clear();
         g_decalPaintingInfo.clear();
-		g_shadowCasterRenderItems.clear();
-		g_renderItemsGlass.clear();
+		g_renderItemIndicesGlass.clear();
 
-        g_drawCommandsUI.clear();
+        for (std::vector<DrawIndexedIndirectCommand>& drawCommands : g_drawCommandsUI) drawCommands.clear();
 
         g_blackTextureIndex = ResourceManager::GetTextureBindlessIndexByName("Black");
 
@@ -241,22 +241,30 @@ namespace Unloved::RenderDataManager {
     }
 
     void UpdateDrawCommandsUI() {
-        const std::vector<RenderItemUI>& renderItems = UIBackEnd::GetRenderItems();
-        g_drawCommandsUI.resize(renderItems.size());
+        for (size_t canvasIndex = 0; canvasIndex < static_cast<size_t>(UICanvas::COUNT); canvasIndex++) {
+            const UICanvas canvas = static_cast<UICanvas>(canvasIndex);
+            const std::vector<RenderItemUI>& renderItems = UIBackEnd::GetRenderItems(canvas);
+            std::vector<DrawIndexedIndirectCommand>& drawCommands = g_drawCommandsUI[canvasIndex];
+            drawCommands.resize(renderItems.size());
 
-        for (uint32_t i = 0; i < renderItems.size(); i++) {
-            const RenderItemUI& renderItem = renderItems[i];
-            DrawIndexedIndirectCommand& command = g_drawCommandsUI[i];
-            command.indexCount = renderItem.indexCount;
-            command.instanceCount = 1;
-            command.firstIndex = renderItem.baseIndex;
-            command.baseVertex = renderItem.baseVertex;
-            command.baseInstance = i;
+            const uint32_t baseInstance = UIBackEnd::GetRenderItemBaseInstance(canvas);
+            for (uint32_t i = 0; i < renderItems.size(); i++) {
+                const RenderItemUI& renderItem = renderItems[i];
+                DrawIndexedIndirectCommand& command = drawCommands[i];
+                command.indexCount = renderItem.indexCount;
+                command.instanceCount = 1;
+                command.firstIndex = renderItem.baseIndex;
+                command.baseVertex = renderItem.baseVertex;
+                command.baseInstance = baseInstance + i;
+            }
         }
     }
 
-    const std::vector<DrawIndexedIndirectCommand>& GetDrawCommandsUI() {
-        return g_drawCommandsUI;
+    const std::vector<DrawIndexedIndirectCommand>& GetDrawCommandsUI() { return GetDrawCommandsUI(UICanvas::INTERNAL); }
+
+    const std::vector<DrawIndexedIndirectCommand>& GetDrawCommandsUI(UICanvas canvas) {
+        const size_t canvasIndex = static_cast<size_t>(canvas);
+        return g_drawCommandsUI[canvasIndex < g_drawCommandsUI.size() ? canvasIndex : 0];
     }
 
     void UpdateViewportData() {
@@ -274,11 +282,11 @@ namespace Unloved::RenderDataManager {
             g_viewportData[i].isInShop = false;
 
             glm::mat4 viewMatrix = glm::mat4(1);
-            if (Editor::IsOpen()) {
-                viewMatrix = Editor::GetViewportViewMatrix(i);
-                g_viewportData[i].orthoSize = Editor::GetEditorOrthoSize(i);
-				g_viewportData[i].isOrtho = true;
-				g_viewportData[i].fov = 1.0f;
+            if (EditorSession::IsActive()) {
+                viewMatrix = EditorSession::Viewports::GetViewMatrix(i);
+                g_viewportData[i].orthoSize = viewport->GetOrthoSize();
+				g_viewportData[i].isOrtho = viewport->IsOrthographic();
+				g_viewportData[i].fov = viewport->GetPerspectiveFOV();
 
 				g_viewportData[i].vignetteIntensityScalar = 0.0f;
 				g_viewportData[i].vignetteColor = glm::vec4(0.0f);
@@ -424,11 +432,33 @@ namespace Unloved::RenderDataManager {
         g_rendererData.gBufferHeight = (float)resolutions.gBuffer.y;
         g_rendererData.hairBufferWidth = (float)resolutions.hair.x;
         g_rendererData.hairBufferHeight = (float)resolutions.hair.y;
-        g_rendererData.splitscreenMode = (int)Session::GetSplitscreenMode();
+        g_rendererData.viewportSplitX = 0.0f;
+        g_rendererData.viewportSplitY = 0.0f;
+
+        Unloved::Viewport* viewport1 = Unloved::ViewportManager::GetViewportByIndex(1);
+        Unloved::Viewport* viewport2 = Unloved::ViewportManager::GetViewportByIndex(2);
+        if (!viewport1->IsVisible()) {
+            g_rendererData.viewportLayout = (int)ViewportLayout::SINGLE;
+        }
+        else if (!viewport2->IsVisible()) {
+            if (g_viewportData[0].yOffset == g_viewportData[1].yOffset) {
+                g_rendererData.viewportLayout = (int)ViewportLayout::COLUMNS;
+                g_rendererData.viewportSplitX = g_viewportData[1].posX;
+            }
+            else {
+                g_rendererData.viewportLayout = (int)ViewportLayout::ROWS;
+                g_rendererData.viewportSplitY = g_viewportData[1].posY;
+            }
+        }
+        else {
+            g_rendererData.viewportLayout = (int)ViewportLayout::GRID;
+            g_rendererData.viewportSplitX = g_viewportData[1].posX;
+            g_rendererData.viewportSplitY = g_viewportData[2].posY;
+        }
         g_rendererData.time = Session::GetSessionTime();
         g_rendererData.rendererOverrideState = (int)rendererSettings.rendererOverrideState;
-        g_rendererData.normalizedMouseX = Hell::Math::MapRange(Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0.0f, 1.0f);
-        g_rendererData.normalizedMouseY = Hell::Math::MapRange(Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), 0.0f, 1.0f);
+        g_rendererData.normalizedMouseX = Hell::Math::MapRange(Hell::Input::GetMouseX(), 0, Hell::BackEnd::GetCurrentWindowWidth(), 0.0f, 1.0f);
+        g_rendererData.normalizedMouseY = Hell::Math::MapRange(Hell::Input::GetMouseY(), 0, Hell::BackEnd::GetCurrentWindowHeight(), 0.0f, 1.0f);
         g_rendererData.tileCountX = Renderer::GetTileCountX();
         g_rendererData.tileCountY = Renderer::GetTileCountY();
         g_rendererData.lightCount = static_cast<uint32_t>(g_gpuLights.size());
@@ -464,15 +494,9 @@ namespace Unloved::RenderDataManager {
         g_rendererData.flashlightCenterSpotEnabled = flashlightSettings.centerSpotEnabled ? 1u : 0u;
     }
 
-    void SortRenderItems(std::vector<RenderItem>& renderItems) {
-        std::sort(renderItems.begin(), renderItems.end(), [](const RenderItem& a, const RenderItem& b) {
-            return a.meshId < b.meshId;
-        });
-    }
-
-    void SortRenderItemsByMeshId(std::vector<RenderItem>& renderItems) {
-        std::sort(renderItems.begin(), renderItems.end(), [](const RenderItem& a, const RenderItem& b) {
-            return a.meshId < b.meshId;
+    void SortRenderItemIndices(std::vector<uint32_t>& renderItemIndices) {
+        std::sort(renderItemIndices.begin(), renderItemIndices.end(), [](uint32_t a, uint32_t b) {
+            return g_sceneRenderItems[a].meshId < g_sceneRenderItems[b].meshId;
         });
     }
 
@@ -513,9 +537,6 @@ namespace Unloved::RenderDataManager {
             }
         }
 
-        //std::vector<RenderItem> potentialRenderItems = g_renderItems; // First start with everything in the scene
-        //potentialRenderItems.insert(potentialRenderItems.end(), g_shadowCasterRenderItems.begin(), g_shadowCasterRenderItems.end());
-
         Unloved::Frustum frustum;
 
         for (int i = 0; i < viewportCount; i++) {
@@ -525,34 +546,10 @@ namespace Unloved::RenderDataManager {
             for (int j = 0; j < cascadeCount; j++) {
                 frustum.Update(g_viewportData[i].csmLightProjectionView[j]);
 
-                // Store the instance offset for this player
-                int instanceStart = g_instanceData.size();
-
-                // Preallocate an estimate
-                g_instanceData.reserve(g_instanceData.size() + g_renderItemsMoonLightShadows.size());
-
-                // Append new render items to the global instance data if its within this cascade's frustum
-                for (const RenderItem& renderItem : g_renderItemsMoonLightShadows) {
-                    if (frustum.IntersectsAABBFast(renderItem)) {
-                        g_instanceData.push_back(renderItem);
-                        //DebugDraw::DrawAABB(AABB(renderItem.aabbMin, renderItem.aabbMax), YELLOW);
-                    }
-                }
-
-                // Create indirect draw commands using the stored offset
-                std::span<RenderItem> instanceView(g_instanceData.begin() + instanceStart, g_instanceData.end());
-                CreateMultiDrawIndirectCommands(set.moonLightCascades[i][j], instanceView, -1, instanceStart);
+                CreateDrawCommandsFromIndices(set.moonLightCascades[i][j], g_renderItemIndicesMoonLightShadows, &frustum, i);
             }
         }
     }
-
-	const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItems() {
-		return g_skinnedNonDeformingSkinnedMeshRenderItems;
-	}
-
-	const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItemsAlphaDiscard() {
-		return g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard;
-	}
 
 	const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent() {
 		return g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent;
@@ -564,7 +561,7 @@ namespace Unloved::RenderDataManager {
         g_spriteSheetInstanceData.clear();
 
         Mesh* quadMesh = Hell::ResourceManager::GetQuadMesh();
-        if (!quadMesh) return;
+        if (!IsValidMesh(quadMesh)) return;
 
         auto& set = g_drawCommandsSet;
 
@@ -613,7 +610,7 @@ namespace Unloved::RenderDataManager {
             command.instanceCount = instanceCount;
             command.firstIndex = quadMesh->baseIndex;
             command.baseVertex = quadMesh->baseVertex;
-            command.baseInstance = EncodeBaseInstance(viewportIndex, instanceStart);
+            command.baseInstance = instanceStart;
         }
     }
 
@@ -622,20 +619,19 @@ namespace Unloved::RenderDataManager {
         ProfilerCPUZone("Glass commands");
 
         // Reuse these every frame
-        static std::vector<RenderItem> visibleGlassRenderItems[4];
+        static std::vector<uint32_t> visibleGlassRenderItemIndices[4];
 
         auto& set = g_drawCommandsSet;
-        // Pack all viewport glass into one SSBO
-        g_glassInstanceData.clear();
+        // Pack per-draw glass lighting metadata into buffers keyed by draw index.
         g_glassLightRanges.clear();
         g_glassLightIndices.clear();
         g_glassSpotLightRanges.clear();
         g_glassSpotLightIndices.clear();
 
         for (int viewportIndex = 0; viewportIndex < 4; viewportIndex++) {
-            std::vector<RenderItem>& renderItems = visibleGlassRenderItems[viewportIndex];
+            std::vector<uint32_t>& renderItemIndices = visibleGlassRenderItemIndices[viewportIndex];
             std::vector<DrawIndexedIndirectCommand>& drawCommands = set.glassDrawCommands[viewportIndex];
-            renderItems.clear();
+            renderItemIndices.clear();
             drawCommands.clear();
 
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(viewportIndex);
@@ -647,28 +643,33 @@ namespace Unloved::RenderDataManager {
             Unloved::Frustum& frustum = viewport->GetFrustum();
 
             // Cull glass for this viewport
-            for (const RenderItem& renderItem : g_renderItemsGlass) {
+            for (uint32_t renderItemIndex : g_renderItemIndicesGlass) {
+                const RenderItem& renderItem = g_sceneRenderItems[renderItemIndex];
                 if (frustum.IntersectsAABB(AABB(renderItem.aabbMin, renderItem.aabbMax))) {
-                    renderItems.push_back(renderItem);
+                    renderItemIndices.push_back(renderItemIndex);
                 }
             }
 
             // Glass needs to render back to front
-            std::sort(renderItems.begin(), renderItems.end(), [player](const RenderItem& a, const RenderItem& b) {
+            std::sort(renderItemIndices.begin(), renderItemIndices.end(), [player](uint32_t aIndex, uint32_t bIndex) {
+                const RenderItem& a = g_sceneRenderItems[aIndex];
+                const RenderItem& b = g_sceneRenderItems[bIndex];
                 float distA = glm::distance(player->GetCameraPosition(), glm::vec3(a.modelMatrix[3]));
                 float distB = glm::distance(player->GetCameraPosition(), glm::vec3(b.modelMatrix[3]));
                 return distA > distB;
             });
 
-            // Build the commands and matching instance data together
-            for (const RenderItem& renderItem : renderItems) {
+            // Build the commands and matching draw-indexed lighting metadata together
+            for (uint32_t renderItemIndex : renderItemIndices) {
+                const RenderItem& renderItem = g_sceneRenderItems[renderItemIndex];
                 DrawIndexedIndirectCommand command;
                 SetDrawCommandMeshRange(command, renderItem);
 
                 command.instanceCount = 1;
 
-                // baseInstance indexes the packed glass SSBO
-                command.baseInstance = static_cast<uint32_t>(g_glassInstanceData.size());
+                uint32_t drawIndex = static_cast<uint32_t>(g_drawRenderItemIndices.size());
+                g_drawRenderItemIndices.push_back(renderItemIndex);
+                command.baseInstance = drawIndex;
                 drawCommands.push_back(command);
 
                 GlassLightRange lightRange{};
@@ -705,9 +706,10 @@ namespace Unloved::RenderDataManager {
 
                 spotLightRange.count = static_cast<uint32_t>(g_glassSpotLightIndices.size()) - spotLightRange.offset;
 
-                g_glassInstanceData.push_back(renderItem);
-                g_glassLightRanges.push_back(lightRange);
-                g_glassSpotLightRanges.push_back(spotLightRange);
+                g_glassLightRanges.resize(drawIndex + 1);
+                g_glassSpotLightRanges.resize(drawIndex + 1);
+                g_glassLightRanges[drawIndex] = lightRange;
+                g_glassSpotLightRanges[drawIndex] = spotLightRange;
             }
         }
     }
@@ -715,7 +717,6 @@ namespace Unloved::RenderDataManager {
     void ClearDrawCommandsSet() {
         ProfilerCPUZone("Clear commands");
 
-        g_instanceData.clear();
         auto& set = g_drawCommandsSet;
 
         for (int i = 0; i < 4; i++) {
@@ -744,50 +745,52 @@ namespace Unloved::RenderDataManager {
     void SortDrawCommandRenderItems() {
         ProfilerCPUZone("Sort render items");
 
-        SortRenderItems(g_renderItems);
-        SortRenderItems(g_renderItemsBlended);
-        SortRenderItems(g_renderItemsAlphaDiscarded);
-        SortRenderItems(g_renderItemsHair);
-        SortRenderItems(g_renderItemsPlastic);
-        SortRenderItemsByMeshId(g_renderItemsProcedural);
+        SortRenderItemIndices(g_renderItemIndices);
+        SortRenderItemIndices(g_renderItemIndicesMirror);
+        SortRenderItemIndices(g_renderItemIndicesBlended);
+        SortRenderItemIndices(g_renderItemIndicesAlphaDiscarded);
+        SortRenderItemIndices(g_renderItemIndicesHair);
+        SortRenderItemIndices(g_renderItemIndicesPlastic);
+        SortRenderItemIndices(g_renderItemIndicesProcedural);
 
-        SortRenderItems(g_renderItemsPointLightShadows);
-        SortRenderItems(g_renderItemsStaticPointLightShadows);
-        SortRenderItems(g_renderItemsDynamicPointLightShadows);
-        SortRenderItems(g_renderItemsMoonLightShadows);
+        SortRenderItemIndices(g_renderItemIndicesPointLightShadows);
+        SortRenderItemIndices(g_renderItemIndicesStaticPointLightShadows);
+        SortRenderItemIndices(g_renderItemIndicesDynamicPointLightShadows);
+        SortRenderItemIndices(g_renderItemIndicesMoonLightShadows);
 
-        SortRenderItems(g_renderItemsEmissive);
+        SortRenderItemIndices(g_renderItemIndicesEmissive);
     }
 
     void CreateViewportDrawCommands() {
         ProfilerCPUZone("Viewport commands");
 
         auto& set = g_drawCommandsSet;
+        CreateHeightMapRenderItems();
 
         // Lil hack to include bullet decals in mirrors
-        int count = g_renderItems.size() + g_renderItemsAlphaDiscarded.size();
-        std::vector<RenderItem> potentialMirrorItems;
+        int count = g_renderItemIndices.size() + g_renderItemIndicesAlphaDiscarded.size();
+        std::vector<uint32_t> potentialMirrorItems;
         potentialMirrorItems.reserve(count);
-        potentialMirrorItems.insert(potentialMirrorItems.end(), g_renderItems.begin(), g_renderItems.end());
-        potentialMirrorItems.insert(potentialMirrorItems.end(), g_renderItemsAlphaDiscarded.begin(), g_renderItemsAlphaDiscarded.end());
+        potentialMirrorItems.insert(potentialMirrorItems.end(), g_renderItemIndices.begin(), g_renderItemIndices.end());
+        potentialMirrorItems.insert(potentialMirrorItems.end(), g_renderItemIndicesAlphaDiscarded.begin(), g_renderItemIndicesAlphaDiscarded.end());
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
             Unloved::Frustum& frustum = viewport->GetFrustum();
-            CreateDrawCommands(set.standard[i], g_renderItems, &frustum, i);
-            CreateDrawCommands(set.standard[i], g_renderItemsMirror, &frustum, i);
-            CreateDrawCommands(set.blended[i], g_renderItemsBlended, &frustum, i);
-            CreateDrawCommands(set.alphaDiscard[i], g_renderItemsAlphaDiscarded, &frustum, i);
-            CreateDrawCommands(set.hair[i], g_renderItemsHair, &frustum, i);
-            CreateDrawCommands(set.plastic[i], g_renderItemsPlastic, &frustum, i);
-            CreateDrawCommands(set.emissive[i], g_renderItemsEmissive, &frustum, i);
-            CreateDrawCommandProcedural(set.procedural[i], g_renderItemsProcedural, &frustum, i);
-            CreateHeightMapDrawCommands(set.heightMap[i], frustum, i);
+            CreateDrawCommandsFromIndices(set.standard[i], g_renderItemIndices, &frustum, i);
+            CreateDrawCommandsFromIndices(set.standard[i], g_renderItemIndicesMirror, &frustum, i);
+            CreateDrawCommandsFromIndices(set.blended[i], g_renderItemIndicesBlended, &frustum, i);
+            CreateDrawCommandsFromIndices(set.alphaDiscard[i], g_renderItemIndicesAlphaDiscarded, &frustum, i);
+            CreateDrawCommandsFromIndices(set.hair[i], g_renderItemIndicesHair, &frustum, i);
+            CreateDrawCommandsFromIndices(set.plastic[i], g_renderItemIndicesPlastic, &frustum, i);
+            CreateDrawCommandsFromIndices(set.emissive[i], g_renderItemIndicesEmissive, &frustum, i);
+            CreateDrawCommandProceduralFromIndices(set.procedural[i], g_renderItemIndicesProcedural, &frustum, i);
+            CreateHeightMapDrawCommands(set.heightMap[i], frustum);
 
             if (Mirror* mirror = Unloved::MirrorManager::GetMirrorByObjectId(viewport->GetMirrorId())) {
-                CreateDrawCommands(set.mirrorRenderItems[i], potentialMirrorItems, mirror->GetFrustum(i), i);
+                CreateDrawCommandsFromIndices(set.mirrorRenderItems[i], potentialMirrorItems, mirror->GetFrustum(i), i);
             }
         }
     }
@@ -807,14 +810,7 @@ namespace Unloved::RenderDataManager {
             g_flashLightShadowMapDrawInfo.active[shadowLayer] = true;
 
             // Build multi draw commands for regular geometry
-            CreateDrawCommands(
-                g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[shadowLayer],
-                g_renderItems,
-                &spotLightFrustum,
-                ownerViewportIndex,
-                true,
-                std::max(ownerViewportIndex, 0),
-                light.GetOwnerObjectId());
+            CreateDrawCommandsFromIndices(g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[shadowLayer], g_renderItemIndices, &spotLightFrustum, ownerViewportIndex, true, light.GetOwnerObjectId());
 
             // Frustum cull the heightmap chunks
             std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
@@ -924,7 +920,7 @@ namespace Unloved::RenderDataManager {
         }
     }
 
-    void CreatePointLightShadowMapDrawCommands(PointLightShadowMapDrawCommands& drawCommands, const std::vector<ShadowMapInfo>& shadowMaps, std::vector<RenderItem>& renderItems, bool includeSkinned, bool includeProcedural) {
+    void CreatePointLightShadowMapDrawCommands(PointLightShadowMapDrawCommands& drawCommands, const std::vector<ShadowMapInfo>& shadowMaps, const std::vector<uint32_t>& renderItemIndices, bool includeSkinned, bool includeProcedural) {
         for (const ShadowMapInfo& shadowMapInfo : shadowMaps) {
             Light* light = Unloved::World::GetLightByObjectId(shadowMapInfo.lightId);
             if (!light) continue;
@@ -936,21 +932,21 @@ namespace Unloved::RenderDataManager {
                 Unloved::Frustum* frustum = light->GetFrustumByFaceIndex(faceIndex);
                 if (!frustum) continue;
 
-                CreateShadowCubeMapMultiDrawIndirectCommands(drawCommands.assetGeometry[shadowMapIndex][faceIndex], renderItems, faceIndex, light, BlendingMode::DEFAULT);
-                CreateShadowCubeMapMultiDrawIndirectCommands(drawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex], renderItems, faceIndex, light, BlendingMode::ALPHA_DISCARD);
-                CreateShadowCubeMapMultiDrawIndirectCommands(drawCommands.assetGeometryHair[shadowMapIndex][faceIndex], renderItems, faceIndex, light, BlendingMode::HAIR);
+                CreateShadowCubeMapMultiDrawIndirectCommands(drawCommands.assetGeometry[shadowMapIndex][faceIndex], renderItemIndices, faceIndex, light, BlendingMode::DEFAULT);
+                CreateShadowCubeMapMultiDrawIndirectCommands(drawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex], renderItemIndices, faceIndex, light, BlendingMode::ALPHA_DISCARD);
+                CreateShadowCubeMapMultiDrawIndirectCommands(drawCommands.assetGeometryHair[shadowMapIndex][faceIndex], renderItemIndices, faceIndex, light, BlendingMode::HAIR);
 
                 if (includeSkinned) {
-                    CreateDrawCommandsSkinned(drawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex], g_skinnedRenderItemsDefault, -1, frustum);
-                    CreateDrawCommandsSkinned(drawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex], g_skinnedRenderItemsAlphaDiscard, -1, frustum);
-                    CreateDrawCommandsSkinned(drawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex], g_skinnedRenderItemsHair, -1, frustum);
-                    CreateDrawCommandsNonDeformingSkinned(drawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex], g_skinnedNonDeformingSkinnedMeshRenderItems, -1, frustum);
-                    CreateDrawCommandsNonDeformingSkinned(drawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex], g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard, -1, frustum);
-                    CreateDrawCommandsNonDeformingSkinned(drawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex], g_skinnedNonDeformingSkinnedMeshRenderItemsHair, -1, frustum);
+                    CreateDrawCommandsSkinnedFromIndices(drawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex], g_skinnedRenderItemIndicesDefault, -1, frustum);
+                    CreateDrawCommandsSkinnedFromIndices(drawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex], g_skinnedRenderItemIndicesAlphaDiscard, -1, frustum);
+                    CreateDrawCommandsSkinnedFromIndices(drawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex], g_skinnedRenderItemIndicesHair, -1, frustum);
+                    CreateDrawCommandsNonDeformingSkinnedFromIndices(drawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex], g_skinnedNonDeformingRenderItemIndices, -1, frustum);
+                    CreateDrawCommandsNonDeformingSkinnedFromIndices(drawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex], g_skinnedNonDeformingRenderItemIndicesAlphaDiscard, -1, frustum);
+                    CreateDrawCommandsNonDeformingSkinnedFromIndices(drawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex], g_skinnedNonDeformingRenderItemIndicesHair, -1, frustum);
                 }
 
                 if (includeProcedural) {
-                    CreateDrawCommandProcedural(drawCommands.procedural[shadowMapIndex][faceIndex], g_renderItemsProcedural, frustum, -1);
+                    CreateDrawCommandProceduralFromIndices(drawCommands.procedural[shadowMapIndex][faceIndex], g_renderItemIndicesProcedural, frustum, -1);
                 }
             }
         }
@@ -964,70 +960,56 @@ namespace Unloved::RenderDataManager {
         ClearPointLightShadowMapDrawCommands(set.compositeHiResShadowMapDrawCommands);
         ClearPointLightShadowMapDrawCommands(set.compositeLowResShadowMapDrawCommands);
 
-        CreatePointLightShadowMapDrawCommands(set.staticHiResShadowMapDrawCommands, ShadowMapManager::GetStaticDirtyHiResShadowMaps(), g_renderItemsStaticPointLightShadows, false, true);
-        CreatePointLightShadowMapDrawCommands(set.staticLowResShadowMapDrawCommands, ShadowMapManager::GetStaticDirtyLowResShadowMaps(), g_renderItemsStaticPointLightShadows, false, true);
+        CreatePointLightShadowMapDrawCommands(set.staticHiResShadowMapDrawCommands, ShadowMapManager::GetStaticDirtyHiResShadowMaps(), g_renderItemIndicesStaticPointLightShadows, false, true);
+        CreatePointLightShadowMapDrawCommands(set.staticLowResShadowMapDrawCommands, ShadowMapManager::GetStaticDirtyLowResShadowMaps(), g_renderItemIndicesStaticPointLightShadows, false, true);
 
         // Both modes feed the same composite pass. Only its caster set changes.
         const bool staticCacheEnabled = ShadowMapManager::StaticCacheEnabled();
-        std::vector<RenderItem>& compositeRenderItems = staticCacheEnabled ? g_renderItemsDynamicPointLightShadows : g_renderItemsPointLightShadows;
+        const std::vector<uint32_t>& compositeRenderItemIndices = staticCacheEnabled ? g_renderItemIndicesDynamicPointLightShadows : g_renderItemIndicesPointLightShadows;
         const bool includeProcedural = !staticCacheEnabled;
-        CreatePointLightShadowMapDrawCommands(set.compositeHiResShadowMapDrawCommands, ShadowMapManager::GetCompositeDirtyHiResShadowMaps(), compositeRenderItems, true, includeProcedural);
-        CreatePointLightShadowMapDrawCommands(set.compositeLowResShadowMapDrawCommands, ShadowMapManager::GetCompositeDirtyLowResShadowMaps(), compositeRenderItems, true, includeProcedural);
+        CreatePointLightShadowMapDrawCommands(set.compositeHiResShadowMapDrawCommands, ShadowMapManager::GetCompositeDirtyHiResShadowMaps(), compositeRenderItemIndices, true, includeProcedural);
+        CreatePointLightShadowMapDrawCommands(set.compositeLowResShadowMapDrawCommands, ShadowMapManager::GetCompositeDirtyLowResShadowMaps(), compositeRenderItemIndices, true, includeProcedural);
     }
 
-    void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex) {
-		// Store the instance offset for this list of commands
-		int instanceStart = g_instanceData.size();
+    void CreateDrawCommandProceduralFromIndices(std::vector<DrawIndexedIndirectCommand>& drawCommands, const std::vector<uint32_t>& renderItemIndices, Unloved::Frustum* frustum, int viewportIndex) {
+        uint32_t drawIndexOffset = static_cast<uint32_t>(g_drawRenderItemIndices.size());
+        g_drawRenderItemIndices.reserve(g_drawRenderItemIndices.size() + renderItemIndices.size());
 
-		// Preallocate an estimate
-		g_instanceData.reserve(g_instanceData.size() + renderItems.size());
+        for (uint32_t renderItemIndex : renderItemIndices) {
+            const RenderItem& renderItem = g_sceneRenderItems[renderItemIndex];
 
-		// Append new render items to the global instance data
-		for (const RenderItem& renderItem : renderItems) {
-			// Skip culling if no frustum is bound, otherwise test intersection
-			if (!frustum || frustum->IntersectsAABBFast(renderItem)) {
-				g_instanceData.push_back(renderItem);
-			}
-		}
+            if (!frustum || frustum->IntersectsAABBFast(renderItem)) {
+                g_drawRenderItemIndices.push_back(renderItemIndex);
+            }
+        }
 
-		// Create indirect draw commands using the stored offset
-		std::span<RenderItem> instanceView(g_instanceData.begin() + instanceStart, g_instanceData.end());
-		CreateProceduralMultiDrawIndirectCommands(drawCommands, instanceView, viewportIndex, instanceStart);
-    }
-
-    void CreateProceduralMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset) {
-        commands.reserve(commands.size() + renderItems.size());
+        drawCommands.reserve(drawCommands.size() + g_drawRenderItemIndices.size() - drawIndexOffset);
 
         DrawIndexedIndirectCommand* currentCommand = nullptr;
         uint32_t currentMeshId = 0;
 
-        for (const RenderItem& renderItem : renderItems) {
+        for (uint32_t i = drawIndexOffset; i < g_drawRenderItemIndices.size(); i++) {
+            const RenderItem& renderItem = g_sceneRenderItems[g_drawRenderItemIndices[i]];
+
             if (!currentCommand || renderItem.meshId != currentMeshId) {
                 currentMeshId = renderItem.meshId;
-
-                currentCommand = &commands.emplace_back();
+                currentCommand = &drawCommands.emplace_back();
                 SetDrawCommandMeshRange(*currentCommand, renderItem);
-                currentCommand->baseInstance = EncodeBaseInstance(viewportIndex, instanceOffset);
+                currentCommand->baseInstance = i;
                 currentCommand->instanceCount = 1;
             }
             else {
                 currentCommand->instanceCount++;
             }
-
-            instanceOffset++;
         }
     }
 
+    void CreateDrawCommandsFromIndices(std::vector<DrawIndexedIndirectCommand>& drawCommands, const std::vector<uint32_t>& renderItemIndices, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters, uint64_t excludedObjectId) {
+        uint32_t drawIndexOffset = static_cast<uint32_t>(g_drawRenderItemIndices.size());
+        g_drawRenderItemIndices.reserve(g_drawRenderItemIndices.size() + renderItemIndices.size());
 
-    void CreateDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters, int encodedViewportIndex, uint64_t excludedObjectId) {
-        // Store the instance offset for this list of commands
-        int instanceStart = g_instanceData.size();
-
-        // Preallocate an estimate
-        g_instanceData.reserve(g_instanceData.size() + renderItems.size());
-
-        // Append new render items to the global instance data
-        for (const RenderItem& renderItem : renderItems) {
+        for (uint32_t renderItemIndex : renderItemIndices) {
+            const RenderItem& renderItem = g_sceneRenderItems[renderItemIndex];
             bool shadowCasting = ((renderItem.shadowFlags & SHADOW_FLAG_POINT_LIGHT) != 0u);
 
             if (excludedObjectId != 0) {
@@ -1040,23 +1022,33 @@ namespace Unloved::RenderDataManager {
             if (renderItem.ignoredViewportIndex != -1 && renderItem.ignoredViewportIndex == viewportIndex) continue;
             if (renderItem.exclusiveViewportIndex != -1 && renderItem.exclusiveViewportIndex != viewportIndex) continue;
 
-            // If you supplied no frustum, then it passes no matter what
-            if (!frustum) {
-                g_instanceData.push_back(renderItem);
-            }
-            // Frustum cull it
-            else if (frustum->IntersectsAABBFast(renderItem)) {
-                g_instanceData.push_back(renderItem);
+            if (!frustum || frustum->IntersectsAABBFast(renderItem)) {
+                g_drawRenderItemIndices.push_back(renderItemIndex);
             }
         }
 
-        // Create indirect draw commands using the stored offset
-        std::span<RenderItem> instanceView(g_instanceData.begin() + instanceStart, g_instanceData.end());
-        const int commandViewportIndex = encodedViewportIndex >= 0 ? encodedViewportIndex : std::max(viewportIndex, 0);
-        CreateMultiDrawIndirectCommands(drawCommands, instanceView, commandViewportIndex, instanceStart);
+        drawCommands.reserve(drawCommands.size() + g_drawRenderItemIndices.size() - drawIndexOffset);
+
+        DrawIndexedIndirectCommand* currentCommand = nullptr;
+        uint32_t currentMeshId = 0;
+
+        for (uint32_t i = drawIndexOffset; i < g_drawRenderItemIndices.size(); i++) {
+            const RenderItem& renderItem = g_sceneRenderItems[g_drawRenderItemIndices[i]];
+
+            if (!currentCommand || renderItem.meshId != currentMeshId) {
+                currentMeshId = renderItem.meshId;
+                currentCommand = &drawCommands.emplace_back();
+                SetDrawCommandMeshRange(*currentCommand, renderItem);
+                currentCommand->baseInstance = i;
+                currentCommand->instanceCount = 1;
+            }
+            else {
+                currentCommand->instanceCount++;
+            }
+        }
     }
 
-    void CreateHeightMapDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, Unloved::Frustum& frustum, int viewportIndex) {
+    void CreateHeightMapRenderItems() {
         std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("HeightMapGeometry");
 
@@ -1073,16 +1065,13 @@ namespace Unloved::RenderDataManager {
             materialIndex = Hell::ResourceManager::GetMaterialIndexByName("CheckerBoard");
         }
 
-        drawCommands.reserve(chunks.size());
-        g_instanceData.reserve(g_instanceData.size() + chunks.size());
+        g_heightMapRenderItemIndices.reserve(chunks.size());
 
         for (HeightMapChunk& chunk : chunks) {
-            if (Editor::IsClosed() && !frustum.IntersectsAABBFast(AABB(chunk.aabbMin, chunk.aabbMax))) continue;
-
             Mesh* mesh = meshBuffer.GetMeshById(chunk.meshId);
-            if (!mesh) continue;
+            if (!IsValidMesh(mesh)) continue;
 
-            RenderItem& renderItem = g_instanceData.emplace_back();
+            RenderItem renderItem;
             renderItem.modelMatrix = modelMatrix;
             renderItem.prevModelMatrix = modelMatrix;
             renderItem.inverseModelMatrix = inverseModelMatrix;
@@ -1095,31 +1084,40 @@ namespace Unloved::RenderDataManager {
             renderItem.materialIndex = materialIndex;
             renderItem.meshId = chunk.meshId;
 
+            g_heightMapRenderItemIndices.push_back(AddSceneRenderItem(renderItem));
+        }
+    }
+
+    void CreateHeightMapDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, Unloved::Frustum& frustum) {
+        drawCommands.reserve(g_heightMapRenderItemIndices.size());
+        g_drawRenderItemIndices.reserve(g_drawRenderItemIndices.size() + g_heightMapRenderItemIndices.size());
+
+        for (uint32_t renderItemIndex : g_heightMapRenderItemIndices) {
+            const RenderItem& renderItem = g_sceneRenderItems[renderItemIndex];
+            if (Editor::IsClosed() && !frustum.IntersectsAABBFast(renderItem)) continue;
+
+            uint32_t drawIndex = static_cast<uint32_t>(g_drawRenderItemIndices.size());
+            g_drawRenderItemIndices.push_back(renderItemIndex);
+
             DrawIndexedIndirectCommand& command = drawCommands.emplace_back();
-            command.indexCount = mesh->indexCount;
+            command.indexCount = renderItem.indexCount;
             command.instanceCount = 1;
-            command.firstIndex = mesh->baseIndex;
-            command.baseVertex = mesh->baseVertex;
-            command.baseInstance = EncodeBaseInstance(viewportIndex, static_cast<int>(g_instanceData.size()) - 1);
+            command.firstIndex = renderItem.baseIndex;
+            command.baseVertex = renderItem.baseVertex;
+            command.baseInstance = drawIndex;
         }
     }
 
-    void CreateDrawCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum) {
-        // Clear any commands from last frame
+    void CreateDrawCommandsSkinnedFromIndices(std::vector<DrawIndexedIndirectCommand>& commands, const std::vector<uint32_t>& renderItemIndices, int viewportIndex, Unloved::Frustum* frustum) {
         commands.clear();
+        commands.reserve(renderItemIndices.size());
+        g_drawRenderItemIndices.reserve(g_drawRenderItemIndices.size() + renderItemIndices.size());
 
-        // Iterate the viewports and build the draw commands
-        int instanceStart = g_instanceData.size();
-
-        // Preallocate an estimate
-        g_instanceData.reserve(g_instanceData.size() + renderItems.size());
-
-        // Append new render items to the global instance data
-        for (const RenderItem& renderItem : renderItems) {
+        for (uint32_t renderItemIndex : renderItemIndices) {
+            const RenderItem& renderItem = g_sceneRenderItems[renderItemIndex];
             if (renderItem.ignoredViewportIndex != -1 && renderItem.ignoredViewportIndex == viewportIndex) continue;
             if (renderItem.exclusiveViewportIndex != -1 && renderItem.exclusiveViewportIndex != viewportIndex) continue;
 
-            // Cull the whole animated object for shadow maps
             if (frustum) {
                 uint64_t objectId = 0;
                 Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
@@ -1129,48 +1127,19 @@ namespace Unloved::RenderDataManager {
                 if (!frustum->IntersectsAABBFast(animatedGameObject->GetSkinnedAABB())) continue;
             }
 
-            g_instanceData.push_back(renderItem);
+            DrawIndexedIndirectCommand& command = commands.emplace_back();
+            SetDrawCommandMeshRange(command, renderItem);
+            command.baseInstance = static_cast<uint32_t>(g_drawRenderItemIndices.size());
+            command.instanceCount = 1;
+            g_drawRenderItemIndices.push_back(renderItemIndex);
         }
-
-        // Create indirect draw commands using the stored offset
-        std::span<RenderItem> instanceView(g_instanceData.begin() + instanceStart, g_instanceData.end());
-        CreateMultiDrawIndirectCommandsSkinned(commands, instanceView, viewportIndex, instanceStart);
     }
 
-    void CreateDrawCommandsNonDeformingSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::vector<RenderItem>& renderItems, int viewportIndex, Unloved::Frustum* frustum) {
-        // Clear any commands from last frame
-        commands.clear();
-
-        // Iterate the viewports and build the draw commands
-        int instanceStart = g_instanceData.size();
-
-        // Preallocate an estimate
-        g_instanceData.reserve(g_instanceData.size() + renderItems.size());
-
-        // Append new render items to the global instance data
-        for (const RenderItem& renderItem : renderItems) {
-            if (renderItem.ignoredViewportIndex != -1 && renderItem.ignoredViewportIndex == viewportIndex) continue;
-            if (renderItem.exclusiveViewportIndex != -1 && renderItem.exclusiveViewportIndex != viewportIndex) continue;
-
-            // Cull the whole animated object for shadow maps
-            if (frustum) {
-                uint64_t objectId = 0;
-                Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
-
-                AnimatedGameObject* animatedGameObject = World::GetAnimatedGameObjectByObjectId(objectId);
-                if (!animatedGameObject) continue;
-                if (!frustum->IntersectsAABBFast(animatedGameObject->GetSkinnedAABB())) continue;
-            }
-
-            g_instanceData.push_back(renderItem);
-        }
-
-        // Create indirect draw commands using the stored offset
-        std::span<RenderItem> instanceView(g_instanceData.begin() + instanceStart, g_instanceData.end());
-        CreateMultiDrawIndirectCommandsSkinnedNonDeforming(commands, instanceView, viewportIndex, instanceStart);
+    void CreateDrawCommandsNonDeformingSkinnedFromIndices(std::vector<DrawIndexedIndirectCommand>& commands, const std::vector<uint32_t>& renderItemIndices, int viewportIndex, Unloved::Frustum* frustum) {
+        CreateDrawCommandsSkinnedFromIndices(commands, renderItemIndices, viewportIndex, frustum);
     }
 
-    void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, uint32_t faceIndex, Light* light, BlendingMode blendingModeFilter) {
+    void CreateShadowCubeMapMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, const std::vector<uint32_t>& renderItemIndices, uint32_t faceIndex, Light* light, BlendingMode blendingModeFilter) {
         drawCommands.clear();
 
         if (!light) return;
@@ -1179,16 +1148,14 @@ namespace Unloved::RenderDataManager {
         Unloved::Frustum* frustum = light->GetFrustumByFaceIndex(faceIndex);
         if (!frustum) return;
 
-        // Store the instance offset for this player
-        int instanceStart = g_instanceData.size();
+        uint32_t drawIndexOffset = static_cast<uint32_t>(g_drawRenderItemIndices.size());
+        g_drawRenderItemIndices.reserve(g_drawRenderItemIndices.size() + renderItemIndices.size());
 
-        // Preallocate an estimate
-        g_instanceData.reserve(g_instanceData.size() + renderItems.size());
-
-        // Append new render items to the global instance data if it's within light frustum
-        // renderItems is already sorted by this point
+        // Append canonical scene indices if they are within the light frustum.
+        // renderItemIndices is already sorted by this point.
         // but if anything breaks, check here! (maybe you re-ordered things)
-        for (const RenderItem& renderItem : renderItems) {
+        for (uint32_t renderItemIndex : renderItemIndices) {
+            const RenderItem& renderItem = g_sceneRenderItems[renderItemIndex];
             if ((renderItem.shadowFlags & SHADOW_FLAG_POINT_LIGHT) == 0u) continue;
 
             if ((BlendingMode)renderItem.blendingMode != blendingModeFilter) {
@@ -1196,61 +1163,28 @@ namespace Unloved::RenderDataManager {
             }
 
             if (frustum->IntersectsAABBFast(renderItem)) {
-                g_instanceData.push_back(renderItem);
+                g_drawRenderItemIndices.push_back(renderItemIndex);
             }
         }
 
-        // Create indirect draw commands using the stored offset
-        std::span<RenderItem> instanceView(g_instanceData.begin() + instanceStart, g_instanceData.end());
-        CreateMultiDrawIndirectCommands(drawCommands, instanceView, -1, instanceStart);
-    }
-
-    void CreateMultiDrawIndirectCommands(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset) {
-        commands.reserve(commands.size() + renderItems.size());
+        drawCommands.reserve(g_drawRenderItemIndices.size() - drawIndexOffset);
 
         DrawIndexedIndirectCommand* currentCommand = nullptr;
         uint32_t currentMeshId = 0;
 
-        for (const RenderItem& renderItem : renderItems) {
+        for (uint32_t i = drawIndexOffset; i < g_drawRenderItemIndices.size(); i++) {
+            const RenderItem& renderItem = g_sceneRenderItems[g_drawRenderItemIndices[i]];
+
             if (!currentCommand || renderItem.meshId != currentMeshId) {
                 currentMeshId = renderItem.meshId;
-
-                currentCommand = &commands.emplace_back();
+                currentCommand = &drawCommands.emplace_back();
                 SetDrawCommandMeshRange(*currentCommand, renderItem);
-                currentCommand->baseInstance = EncodeBaseInstance(viewportIndex, instanceOffset);
+                currentCommand->baseInstance = i;
                 currentCommand->instanceCount = 1;
             }
             else {
                 currentCommand->instanceCount++;
             }
-
-            instanceOffset++;
-        }
-    }
-
-    void CreateMultiDrawIndirectCommandsSkinned(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset) {
-        commands.reserve(renderItems.size());
-
-        for (const RenderItem& renderItem : renderItems) {
-            DrawIndexedIndirectCommand command;
-            SetDrawCommandMeshRange(command, renderItem);
-            command.baseInstance = EncodeBaseInstance(viewportIndex, instanceOffset);
-            command.instanceCount = 1;
-            commands.push_back(command);
-            instanceOffset++;
-        }
-    }
-
-    void CreateMultiDrawIndirectCommandsSkinnedNonDeforming(std::vector<DrawIndexedIndirectCommand>& commands, std::span<RenderItem> renderItems, int viewportIndex, int instanceOffset) {
-        commands.reserve(renderItems.size());
-
-        for (const RenderItem& renderItem : renderItems) {
-            DrawIndexedIndirectCommand command;
-            SetDrawCommandMeshRange(command, renderItem);
-            command.baseInstance = EncodeBaseInstance(viewportIndex, instanceOffset);
-            command.instanceCount = 1;
-            commands.push_back(command);
-            instanceOffset++;
         }
     }
 
@@ -1279,63 +1213,44 @@ namespace Unloved::RenderDataManager {
 
         auto& set = g_drawCommandsSet;
 
-        // Sort render items by mesh index
-        SortRenderItems(g_skinnedRenderItemsDefault);
-        SortRenderItems(g_skinnedRenderItemsAlphaDiscard);
-        SortRenderItems(g_skinnedRenderItemsBlended);
-        SortRenderItems(g_skinnedRenderItemsHair);
+        // Sort render item indices by mesh index
+        SortRenderItemIndices(g_skinnedRenderItemIndicesDefault);
+        SortRenderItemIndices(g_skinnedRenderItemIndicesAlphaDiscard);
+        SortRenderItemIndices(g_skinnedRenderItemIndicesBlended);
+        SortRenderItemIndices(g_skinnedRenderItemIndicesHair);
 
-        SortRenderItems(g_skinnedNonDeformingSkinnedMeshRenderItems);
-        SortRenderItems(g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard);
-        SortRenderItems(g_skinnedNonDeformingSkinnedMeshRenderItemsBlended);
-        SortRenderItems(g_skinnedNonDeformingSkinnedMeshRenderItemsHair);
+        SortRenderItemIndices(g_skinnedNonDeformingRenderItemIndices);
+        SortRenderItemIndices(g_skinnedNonDeformingRenderItemIndicesAlphaDiscard);
+        SortRenderItemIndices(g_skinnedNonDeformingRenderItemIndicesBlended);
+        SortRenderItemIndices(g_skinnedNonDeformingRenderItemIndicesHair);
 
         // Create the per viewport draw commands
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            CreateDrawCommandsSkinned(set.skinnedStandard[i], g_skinnedRenderItemsDefault, i);
-            CreateDrawCommandsSkinned(set.skinnedAlphaDiscard[i], g_skinnedRenderItemsAlphaDiscard, i);
-            CreateDrawCommandsSkinned(set.skinnedBlended[i], g_skinnedRenderItemsBlended, i);
-            CreateDrawCommandsSkinned(set.skinnedHair[i], g_skinnedRenderItemsHair, i);
+            CreateDrawCommandsSkinnedFromIndices(set.skinnedStandard[i], g_skinnedRenderItemIndicesDefault, i);
+            CreateDrawCommandsSkinnedFromIndices(set.skinnedAlphaDiscard[i], g_skinnedRenderItemIndicesAlphaDiscard, i);
+            CreateDrawCommandsSkinnedFromIndices(set.skinnedBlended[i], g_skinnedRenderItemIndicesBlended, i);
+            CreateDrawCommandsSkinnedFromIndices(set.skinnedHair[i], g_skinnedRenderItemIndicesHair, i);
         }
 
-        // Combine all into a single vector for the compute skinning pass
-        g_combinedSkinnedRenderItems.clear();
-        g_combinedSkinnedRenderItems.insert(g_combinedSkinnedRenderItems.end(), g_skinnedRenderItemsDefault.begin(), g_skinnedRenderItemsDefault.end());
-        g_combinedSkinnedRenderItems.insert(g_combinedSkinnedRenderItems.end(), g_skinnedRenderItemsAlphaDiscard.begin(), g_skinnedRenderItemsAlphaDiscard.end());
-        g_combinedSkinnedRenderItems.insert(g_combinedSkinnedRenderItems.end(), g_skinnedRenderItemsBlended.begin(), g_skinnedRenderItemsBlended.end());
-        g_combinedSkinnedRenderItems.insert(g_combinedSkinnedRenderItems.end(), g_skinnedRenderItemsHair.begin(), g_skinnedRenderItemsHair.end());
-
-        // Gather all non deforming render items
-        //for (AnimatedGameObject& animatedGameObject : LegacyWorld::GetAnimatedGameObjects()) {
-		//	if (animatedGameObject.RenderingEnabled()) {
-		//		g_skinnedNonDeformingSkinnedMeshRenderItems.insert(g_skinnedNonDeformingSkinnedMeshRenderItems.end(), animatedGameObject.GetNonDeformingRenderItems().begin(), animatedGameObject.GetNonDeformingRenderItems().end());
-        //        g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent.insert(g_nonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent.end(), animatedGameObject.GetNonDeformingRenderItemsDepthPeeledTransparent().begin(), animatedGameObject.GetNonDeformingRenderItemsDepthPeeledTransparent().end());
-        //    }
-        //}
-
-        // Sort by mesh index
+        // Combine all deforming skinned indices for passes that need every skinned item.
+        g_combinedSkinnedRenderItemIndices.clear();
+        g_combinedSkinnedRenderItemIndices.insert(g_combinedSkinnedRenderItemIndices.end(), g_skinnedRenderItemIndicesDefault.begin(), g_skinnedRenderItemIndicesDefault.end());
+        g_combinedSkinnedRenderItemIndices.insert(g_combinedSkinnedRenderItemIndices.end(), g_skinnedRenderItemIndicesAlphaDiscard.begin(), g_skinnedRenderItemIndicesAlphaDiscard.end());
+        g_combinedSkinnedRenderItemIndices.insert(g_combinedSkinnedRenderItemIndices.end(), g_skinnedRenderItemIndicesBlended.begin(), g_skinnedRenderItemIndicesBlended.end());
+        g_combinedSkinnedRenderItemIndices.insert(g_combinedSkinnedRenderItemIndices.end(), g_skinnedRenderItemIndicesHair.begin(), g_skinnedRenderItemIndicesHair.end());
 
         for (int i = 0; i < 4; i++) {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (!viewport->IsVisible()) continue;
 
-            CreateDrawCommandsNonDeformingSkinned(set.skinnedNonDeformingAlphaDiscard[i], g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard, i);
-            CreateDrawCommandsNonDeformingSkinned(set.skinnedNonDeformingBlended[i], g_skinnedNonDeformingSkinnedMeshRenderItemsBlended, i);
-            CreateDrawCommandsNonDeformingSkinned(set.skinnedNonDeformingStandard[i], g_skinnedNonDeformingSkinnedMeshRenderItems, i);
-            CreateDrawCommandsNonDeformingSkinned(set.skinnedNonDeformingHair[i], g_skinnedNonDeformingSkinnedMeshRenderItemsHair, i);
+            CreateDrawCommandsNonDeformingSkinnedFromIndices(set.skinnedNonDeformingAlphaDiscard[i], g_skinnedNonDeformingRenderItemIndicesAlphaDiscard, i);
+            CreateDrawCommandsNonDeformingSkinnedFromIndices(set.skinnedNonDeformingBlended[i], g_skinnedNonDeformingRenderItemIndicesBlended, i);
+            CreateDrawCommandsNonDeformingSkinnedFromIndices(set.skinnedNonDeformingStandard[i], g_skinnedNonDeformingRenderItemIndices, i);
+            CreateDrawCommandsNonDeformingSkinnedFromIndices(set.skinnedNonDeformingHair[i], g_skinnedNonDeformingRenderItemIndicesHair, i);
         }
-    }
-
-    int EncodeBaseInstance(int playerIndex, int instanceOffset) {
-        return (playerIndex << VIEWPORT_INDEX_SHIFT) | instanceOffset;
-    }
-
-    void DecodeBaseInstance(int baseInstance, int& playerIndex, int& instanceOffset) {
-        playerIndex = baseInstance >> VIEWPORT_INDEX_SHIFT;
-        instanceOffset = baseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
     }
 
     const RendererData& GetRendererData() {
@@ -1346,98 +1261,57 @@ namespace Unloved::RenderDataManager {
         return g_viewportData;
     }
 
-    const std::vector<RenderItem>& GetRenderItems()             { return g_renderItems; }
-    const std::vector<RenderItem>& GetRenderItemsAlphaDiscard() { return g_renderItemsAlphaDiscarded; }
-    const std::vector<RenderItem>& GetRenderItemsBlended()      { return g_renderItemsBlended; }
-    const std::vector<RenderItem>& GetRenderItemsGlass()        { return g_renderItemsGlass; }
-    const std::vector<RenderItem>& GetRenderItemsHair()         { return g_renderItemsHair; }
-    const std::vector<RenderItem>& GetRenderItemsMirror()       { return g_renderItemsMirror; }
-    const std::vector<RenderItem>& GetRenderItemsOutline()      { return g_renderItemsOutline; }
-    const std::vector<RenderItem>& GetRenderItemsPlastic()      { return g_renderItemsPlastic; }
-    const std::vector<RenderItem>& GetRenderItemsProcedural()   { return g_renderItemsProcedural; }
-    const std::vector<RenderItem>& GetRenderItemsToiletWater()  { return g_renderItemsToiletWater; }
-    const std::vector<RenderItem>& GetRenderItemsPointLightShadows() { return g_renderItemsPointLightShadows; }
-
-    const std::vector<RenderItem>& GetSkinnedRenderItemsAlphaDiscard() { return g_skinnedRenderItemsAlphaDiscard; }
-    const std::vector<RenderItem>& GetSkinnedRenderItemsBlended()      { return g_skinnedRenderItemsBlended; }
-    const std::vector<RenderItem>& GetSkinnedRenderItemsDefault()      { return g_skinnedRenderItemsDefault; }
-    const std::vector<RenderItem>& GetSkinnedRenderItemsHair()         { return g_skinnedRenderItemsHair; }
-
-    const std::vector<RenderItem>& GetCombinedSkinnedRenderItems() {
-        return g_combinedSkinnedRenderItems;
+    const std::vector<uint32_t>& GetRenderItemIndicesOutline() {
+        return g_renderItemIndicesOutline;
     }
 
-    uint32_t GetRequiredSkinnedVertexCount() {
-        return g_baseSkinnedVertex;
+    const std::vector<uint32_t>& GetRenderItemIndicesOutlineProcedural() {
+        return g_renderItemIndicesOutlineProcedural;
     }
 
-
-    const std::vector<RenderItem>& GetInstanceData() {
-        return g_instanceData;
+    const std::vector<uint32_t>& GetRenderItemIndicesOutlineSkinned() {
+        return g_renderItemIndicesOutlineSkinned;
     }
 
-    const std::vector<RenderItem>& GetGlassInstanceData() {
-        return g_glassInstanceData;
+    const std::vector<uint32_t>& GetRenderItemIndicesPlastic() {
+        return g_renderItemIndicesPlastic;
     }
 
-    const std::vector<GlassLightRange>& GetGlassLightRanges() {
-        return g_glassLightRanges;
+    const std::vector<uint32_t>& GetRenderItemIndicesProcedural() {
+        return g_renderItemIndicesProcedural;
     }
 
-    const std::vector<uint32_t>& GetGlassLightIndices() {
-        return g_glassLightIndices;
+    const std::vector<uint32_t>& GetCombinedSkinnedRenderItemIndices() {
+        return g_combinedSkinnedRenderItemIndices;
     }
 
-    const std::vector<GlassLightRange>& GetGlassSpotLightRanges() {
-        return g_glassSpotLightRanges;
+    std::size_t GetRenderItemCount(BlendingMode blendingMode) {
+        switch (blendingMode) {
+        case BlendingMode::DEFAULT:       return g_renderItemIndices.size();
+        case BlendingMode::ALPHA_DISCARD: return g_renderItemIndicesAlphaDiscarded.size();
+        case BlendingMode::BLENDED:       return g_renderItemIndicesBlended.size();
+        case BlendingMode::GLASS:         return g_renderItemIndicesGlass.size();
+        case BlendingMode::HAIR:          return g_renderItemIndicesHair.size();
+        case BlendingMode::MIRROR:        return g_renderItemIndicesMirror.size();
+        case BlendingMode::TOILET_WATER:  return g_renderItemIndicesToiletWater.size();
+        case BlendingMode::PLASTIC:       return g_renderItemIndicesPlastic.size();
+        default:                          return 0;
+        }
     }
 
-    const std::vector<uint32_t>& GetGlassSpotLightIndices() {
-        return g_glassSpotLightIndices;
-    }
-
-    const std::vector<SpriteSheetRenderItem>& GetSpriteSheetInstanceData() {
-        return g_spriteSheetInstanceData;
-    }
-
-    const DrawCommandsSet& GetDrawInfoSet() {
-        return g_drawCommandsSet;
-    }
-
-    const FlashLightShadowMapDrawInfo& GetFlashLightShadowMapDrawInfo() {
-        return g_flashLightShadowMapDrawInfo;
-    }
-
-    const std::vector<GPULight>& GetGPULights() {
-        return g_gpuLights;
-    }
-
-    const std::vector<GPUSpotLight>& GetGPUSpotLights() {
-        return g_gpuSpotLights;
-    }
-
-    const std::vector<glm::mat4>& GetSkinningTransforms() {
-        return g_skinningTransforms;
-    }
-
-    const std::vector<glm::mat4>& GetPreviousSkinningTransforms() {
-        return g_previousSkinningTransforms;
-    }
-
-    const std::vector<DecalPaintingInfo>& GetDecalPaintingInfo() {
-        return g_decalPaintingInfo;
-    }
-
-    const std::vector<BloodDecalInstanceData>& GetBloodScreenSpaceDecalInstanceData() {
-        return g_bloodScreenSpaceDecalInstances;
+    std::size_t GetSkinnedRenderItemCount(BlendingMode blendingMode) {
+        switch (blendingMode) {
+        case BlendingMode::DEFAULT:       return g_skinnedRenderItemIndicesDefault.size();
+        case BlendingMode::ALPHA_DISCARD: return g_skinnedRenderItemIndicesAlphaDiscard.size();
+        case BlendingMode::BLENDED:       return g_skinnedRenderItemIndicesBlended.size();
+        case BlendingMode::HAIR:          return g_skinnedRenderItemIndicesHair.size();
+        default:                          return 0;
+        }
     }
 
     // Submissions
     void CreateGPULights() {
         g_gpuLights.clear();
-
-        // todo: remove me when u can
-        int lightIndex = 0;
 
         for (Light& light : World::GetLights()) {
             GPULight& gpuLight = g_gpuLights.emplace_back();
@@ -1454,9 +1328,6 @@ namespace Unloved::RenderDataManager {
             gpuLight.lowResShadowMapIndex = ShadowMapManager::GetLowResShadowMapIndex(light.GetObjectId());
             gpuLight.worldBoundsMin = glm::vec4(light.GetWorldBoundsMin(), 0.0f);
             gpuLight.worldBoundsMax = glm::vec4(light.GetWorldBoundsMax(), 0.0f);
-
-            // todo: remove me when u can
-            lightIndex++;
 
             IESProfile* iesProfile = nullptr;
             switch (light.GetIESProfileType()) {
@@ -1558,49 +1429,42 @@ namespace Unloved::RenderDataManager {
         }
     }
 
+    // RENDER ITEM SUBMISSIONS
+
+    uint32_t AddSceneRenderItem(const RenderItem& renderItem) {
+        uint32_t renderItemIndex = static_cast<uint32_t>(g_sceneRenderItems.size());
+        g_sceneRenderItems.push_back(renderItem);
+        return renderItemIndex;
+    }
+
+    void AddRenderItemToCategory(std::vector<uint32_t>& renderItemIndices, uint32_t renderItemIndex) {
+        renderItemIndices.push_back(renderItemIndex);
+    }
+
 	void SubmitRenderItemProcedural(const RenderItem& renderItem) {
 		if (!ValidateRenderItemMeshRange(renderItem, "RenderDataManager::SubmitRenderItemProcedural()")) return;
 
-		g_renderItemsProcedural.push_back(renderItem);
+		uint32_t renderItemIndex = AddSceneRenderItem(renderItem);
+        AddRenderItemToCategory(g_renderItemIndicesProcedural, renderItemIndex);
 
-        if (Hell::BackEnd::GetAPI() == API::VULKAN && (renderItem.vulkanFlags & VULKAN_FLAG_EXCLUDE_FROM_TLAS) == 0u) {
-            Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
-            Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
-            uint64_t vulkanMeshBufferId = meshBuffer.GetVulkanId();
-            VulkanMeshBuffer* vulkanMeshBuffer = vulkanMeshBufferId != 0 && VulkanResourceManager::MeshBufferExists(vulkanMeshBufferId) ? VulkanResourceManager::GetMeshBuffer(vulkanMeshBufferId) : nullptr;
-            uint64_t vertexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetVertexBufferAddress() : 0;
-            uint64_t indexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetIndexBufferAddress() : 0;
-            VulkanBuffer* vertexBuffer = vulkanMeshBuffer ? vulkanMeshBuffer->GetVertexBuffer() : nullptr;
-            VulkanBuffer* indexBuffer = vulkanMeshBuffer ? vulkanMeshBuffer->GetIndexBuffer() : nullptr;
+        uint64_t objectId = 0;
+        Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+        if (EditorSession::Selection::ShouldOutlineObject(objectId)) AddRenderItemToCategory(g_renderItemIndicesOutlineProcedural, renderItemIndex);
 
-            if (mesh && vertexBufferDeviceAddress != 0 && indexBufferDeviceAddress != 0 && mesh->vertexCount != 0 && mesh->indexCount >= 3) {
-                if (g_proceduralRayQueryBLASId == 0 || !VulkanResourceManager::AccelerationStructureExists(g_proceduralRayQueryBLASId)) {
-                    g_proceduralRayQueryBLASId = VulkanResourceManager::CreateAccelerationStructure();
-                }
-
-                RayQueryMultiMeshBLAS& multiMeshBLAS = g_rayQueryMultiMeshBLASes.empty() ? g_rayQueryMultiMeshBLASes.emplace_back() : g_rayQueryMultiMeshBLASes[0];
-                multiMeshBLAS.vulkanBlasId = g_proceduralRayQueryBLASId;
-                multiMeshBLAS.vertexBufferDeviceAddress = vertexBufferDeviceAddress;
-                multiMeshBLAS.indexBufferDeviceAddress = indexBufferDeviceAddress;
-                multiMeshBLAS.vertexBufferByteSize = vertexBuffer ? vertexBuffer->GetSize() : 0;
-                multiMeshBLAS.indexBufferByteSize = indexBuffer ? indexBuffer->GetSize() : 0;
-                multiMeshBLAS.sourceGeometryVersion = meshBuffer.GetVersion();
-                multiMeshBLAS.modelMatrix = glm::mat4(1.0f);
-
-                RayQueryMeshInstance& meshInstance = multiMeshBLAS.meshInstances.emplace_back();
-                meshInstance.mesh.baseVertex = renderItem.baseVertex;
-                meshInstance.mesh.baseIndex = renderItem.baseIndex;
-                meshInstance.mesh.vertexCount = mesh->vertexCount;
-                meshInstance.mesh.indexCount = mesh->indexCount;
-                meshInstance.material.blendingMode = renderItem.blendingMode;
-                meshInstance.material.materialIndex = renderItem.materialIndex;
-                meshInstance.material.shadowBit = renderItem.shadowFlags;
-            }
+        if (Hell::BackEnd::GetAPI() == API::VULKAN) {
+            AddProceduralRayQueryRenderItem(renderItemIndex);
         }
-	}
+    }
 
     void SubmitRenderItemsMirror(const std::vector<RenderItem>& renderItems) {
-        g_renderItemsMirror.insert(g_renderItemsMirror.begin(), renderItems.begin(), renderItems.end());
+        std::vector<uint32_t> renderItemIndices;
+        renderItemIndices.reserve(renderItems.size());
+
+        for (const RenderItem& renderItem : renderItems) {
+            renderItemIndices.push_back(AddSceneRenderItem(renderItem));
+        }
+
+        g_renderItemIndicesMirror.insert(g_renderItemIndicesMirror.begin(), renderItemIndices.begin(), renderItemIndices.end());
     }
 
     void SubmitDecalPaintingInfo(DecalPaintingInfo decalPaintingInfo) {
@@ -1608,7 +1472,14 @@ namespace Unloved::RenderDataManager {
     }
 
     void SubmitSkinnedRenderItems(const std::vector<RenderItem>& renderItems) {
-        g_skinnedRenderItemsDefault.insert(g_skinnedRenderItemsDefault.begin(), renderItems.begin(), renderItems.end());
+        std::vector<uint32_t> renderItemIndices;
+        renderItemIndices.reserve(renderItems.size());
+
+        for (const RenderItem& renderItem : renderItems) {
+            renderItemIndices.push_back(AddSceneRenderItem(renderItem));
+        }
+
+        g_skinnedRenderItemIndicesDefault.insert(g_skinnedRenderItemIndicesDefault.begin(), renderItemIndices.begin(), renderItemIndices.end());
     }
 
     void SubmitAnimatedMeshNodes(const AnimatedMeshNodes& animatedMeshNodes) {
@@ -1622,15 +1493,23 @@ namespace Unloved::RenderDataManager {
         }
 
         const std::vector<glm::mat4>& currentSkinningTransforms = animatedGameObject->GetBoneSkinningMatrices();
-        const bool hasPreviousSkinningTransforms = animatedGameObject->HasRenderPoseHistory() &&
-            animatedGameObject->GetPreviousRenderBoneSkinningMatrices().size() == currentSkinningTransforms.size();
-        const std::vector<glm::mat4>& previousSkinningTransforms = hasPreviousSkinningTransforms
-            ? animatedGameObject->GetPreviousRenderBoneSkinningMatrices()
-            : currentSkinningTransforms;
         const glm::mat4 currentModelMatrix = animatedGameObject->GetModelMatrix();
-        const glm::mat4 previousModelMatrix = hasPreviousSkinningTransforms
-            ? animatedGameObject->GetPreviousRenderModelMatrix()
-            : currentModelMatrix;
+
+        // Default previous pose to current pose
+        const std::vector<glm::mat4>* previousSkinningTransformsPtr = &currentSkinningTransforms;
+        glm::mat4 previousModelMatrix = currentModelMatrix;
+
+        // Use render history when the bone counts match
+        if (animatedGameObject->HasRenderPoseHistory()) {
+            const std::vector<glm::mat4>& renderHistory = animatedGameObject->GetPreviousRenderBoneSkinningMatrices();
+
+            if (renderHistory.size() == currentSkinningTransforms.size()) {
+                previousSkinningTransformsPtr = &renderHistory;
+                previousModelMatrix = animatedGameObject->GetPreviousRenderModelMatrix();
+            }
+        }
+
+        const std::vector<glm::mat4>& previousSkinningTransforms = *previousSkinningTransformsPtr;
 
         // Cache the base indices before they're mutated
         uint32_t baseSkinningTransformIndex = g_skinningTransforms.size();
@@ -1639,9 +1518,7 @@ namespace Unloved::RenderDataManager {
         g_skinningTransforms.insert(g_skinningTransforms.end(), currentSkinningTransforms.begin(), currentSkinningTransforms.end());
         g_previousSkinningTransforms.insert(g_previousSkinningTransforms.end(), previousSkinningTransforms.begin(), previousSkinningTransforms.end());
 
-        // Ray query group (Vulkan ONLY)
-        TransientRayQueryBLASInstance& group = g_transientRayQueryBLASInstances.emplace_back();
-        group.modelMatrix = currentModelMatrix;
+        uint32_t transientRayQueryBLASIndex = UINT32_MAX;
 
         for (const AnimatedMeshNode& node : animatedMeshNodes.GetNodes()) {
             RenderItem renderItem = node.renderItem;
@@ -1657,18 +1534,6 @@ namespace Unloved::RenderDataManager {
                 renderItem.inverseModelMatrix = glm::inverse(currentModelMatrix);
                 renderItem.prevModelMatrix = previousModelMatrix;
 
-                // Vulkan raytracing instance
-                if (Hell::BackEnd::GetAPI() == API::VULKAN && !Hell::Bit::Contains(renderItem.vulkanFlags, VULKAN_FLAG_EXCLUDE_FROM_TLAS)) {
-                    RayQueryMeshInstance& meshInstance = group.meshInstances.emplace_back();
-                    meshInstance.mesh.baseVertex = g_baseSkinnedVertex;
-                    meshInstance.mesh.baseIndex = node.baseIndex;
-                    meshInstance.mesh.vertexCount = node.vertexCount;
-                    meshInstance.mesh.indexCount = node.indexCount;
-                    meshInstance.material.blendingMode = static_cast<uint32_t>(node.blendingMode);
-                    meshInstance.material.materialIndex = node.materialIndex;
-                    meshInstance.material.shadowBit = renderItem.shadowFlags;
-                }
-
                 SkinningJob& skinningJob = g_skinningJobs.emplace_back();
                 skinningJob.sourceBaseVertex = node.baseVertex;
                 skinningJob.sourceBaseIndex = node.baseIndex;
@@ -1683,12 +1548,15 @@ namespace Unloved::RenderDataManager {
                 renderItem.baseVertex = g_baseSkinnedVertex;
 
                 g_baseSkinnedVertex += renderItem.vertexCount;
+                uint32_t renderItemIndex = AddSceneRenderItem(renderItem);
+                AddRenderItemToTransientRayQueryBLAS(renderItemIndex, transientRayQueryBLASIndex);
+                if (EditorSession::Selection::ShouldOutlineObject(animatedGameObject->GetOwnerObjectId())) AddRenderItemToCategory(g_renderItemIndicesOutlineSkinned, renderItemIndex);
 
                 switch (node.blendingMode) {
-                case BlendingMode::DEFAULT:       g_skinnedRenderItemsDefault.push_back(renderItem);      break;
-                case BlendingMode::ALPHA_DISCARD: g_skinnedRenderItemsAlphaDiscard.push_back(renderItem); break;
-                case BlendingMode::BLENDED:       g_skinnedRenderItemsBlended.push_back(renderItem);      break;
-                case BlendingMode::HAIR:          g_skinnedRenderItemsHair.push_back(renderItem);         break;
+                case BlendingMode::DEFAULT:       AddRenderItemToCategory(g_skinnedRenderItemIndicesDefault,      renderItemIndex); break;
+                case BlendingMode::ALPHA_DISCARD: AddRenderItemToCategory(g_skinnedRenderItemIndicesAlphaDiscard, renderItemIndex); break;
+                case BlendingMode::BLENDED:       AddRenderItemToCategory(g_skinnedRenderItemIndicesBlended,      renderItemIndex); break;
+                case BlendingMode::HAIR:          AddRenderItemToCategory(g_skinnedRenderItemIndicesHair,         renderItemIndex); break;
                 default: break;
                 }
             }
@@ -1709,44 +1577,17 @@ namespace Unloved::RenderDataManager {
                     renderItem.prevModelMatrix = renderItem.modelMatrix;
                 }
 
-                // Vulkan raytracing instance
-                if (Hell::BackEnd::GetAPI() == API::VULKAN && !Hell::Bit::Contains(renderItem.vulkanFlags, VULKAN_FLAG_EXCLUDE_FROM_TLAS)) {
-                    Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
-                    uint64_t vulkanMeshBufferId = meshBuffer.GetVulkanId();
-                    VulkanMeshBuffer* vulkanMeshBuffer = vulkanMeshBufferId != 0 && VulkanResourceManager::MeshBufferExists(vulkanMeshBufferId) ? VulkanResourceManager::GetMeshBuffer(vulkanMeshBufferId) : nullptr;
-                    uint64_t vertexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetVertexBufferAddress() : 0;
-                    uint64_t indexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetIndexBufferAddress() : 0;
-
-                    if (mesh && mesh->vulkanBlasId != 0 && vertexBufferDeviceAddress != 0 && indexBufferDeviceAddress != 0 && mesh->vertexCount != 0 && mesh->indexCount >= 3) {
-                        RayQueryBLASInstance& blasInstance = g_rayQueryBLASInstances.emplace_back();
-                        blasInstance.vulkanBlasId = mesh->vulkanBlasId;
-                        blasInstance.vertexBufferDeviceAddress = vertexBufferDeviceAddress;
-                        blasInstance.indexBufferDeviceAddress = indexBufferDeviceAddress;
-                        blasInstance.modelMatrix = renderItem.modelMatrix;
-
-                        RayQueryMeshInstance& meshInstance = blasInstance.meshInstance;
-                        meshInstance.mesh.baseVertex = renderItem.baseVertex;
-                        meshInstance.mesh.baseIndex = renderItem.baseIndex;
-                        meshInstance.mesh.vertexCount = mesh->vertexCount;
-                        meshInstance.mesh.indexCount = mesh->indexCount;
-                        meshInstance.material.blendingMode = renderItem.blendingMode;
-                        meshInstance.material.materialIndex = renderItem.materialIndex;
-                        meshInstance.material.shadowBit = renderItem.shadowFlags;
-                    }
-                }
+                uint32_t renderItemIndex = AddSceneRenderItem(renderItem);
+                AddPersistentRayQueryRenderItem(renderItemIndex);
 
                 switch (node.blendingMode) {
-                case BlendingMode::ALPHA_DISCARD: g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard.push_back(renderItem); break;
-                case BlendingMode::BLENDED:       g_skinnedNonDeformingSkinnedMeshRenderItemsBlended.push_back(renderItem);      break;
-                case BlendingMode::DEFAULT:       g_skinnedNonDeformingSkinnedMeshRenderItems.push_back(renderItem);             break;
-                case BlendingMode::HAIR:          g_skinnedNonDeformingSkinnedMeshRenderItemsHair.push_back(renderItem);         break;
+                case BlendingMode::ALPHA_DISCARD: AddRenderItemToCategory(g_skinnedNonDeformingRenderItemIndicesAlphaDiscard, renderItemIndex); break;
+                case BlendingMode::BLENDED:       AddRenderItemToCategory(g_skinnedNonDeformingRenderItemIndicesBlended,      renderItemIndex); break;
+                case BlendingMode::DEFAULT:       AddRenderItemToCategory(g_skinnedNonDeformingRenderItemIndices,             renderItemIndex); break;
+                case BlendingMode::HAIR:          AddRenderItemToCategory(g_skinnedNonDeformingRenderItemIndicesHair,         renderItemIndex); break;
                 default: break;
                 }
             }
-        }
-
-        if (group.meshInstances.empty()) {
-            g_transientRayQueryBLASInstances.pop_back();
         }
 
         animatedGameObject->CommitRenderPoseHistory();
@@ -1754,11 +1595,7 @@ namespace Unloved::RenderDataManager {
 
     void SubmitMeshNodes(const MeshNodes& meshNodes) {
         for (const MeshNode& node : meshNodes.GetNodes()) {
-            RenderItem renderItem = node.renderItem;
-            if (node.excludeFromVulkanTLAS) {
-                renderItem.vulkanFlags |= VULKAN_FLAG_EXCLUDE_FROM_TLAS;
-            }
-            SubmitRenderItem(renderItem);
+            SubmitRenderItem(node.renderItem);
         }
     }
 
@@ -1768,15 +1605,17 @@ namespace Unloved::RenderDataManager {
         if (blendingMode == BlendingMode::DO_NOT_RENDER) return;
         if (!ValidateRenderItemMeshRange(renderItem, "RenderDataManager::SubmitRenderItem()")) return;
 
+        uint32_t renderItemIndex = AddSceneRenderItem(renderItem);
+
         switch (blendingMode) {
-        case BlendingMode::DEFAULT:       g_renderItems.push_back(renderItem); break;
-        case BlendingMode::ALPHA_DISCARD: g_renderItemsAlphaDiscarded.push_back(renderItem); break;
-        case BlendingMode::BLENDED:       g_renderItemsBlended.push_back(renderItem); break;
-        case BlendingMode::GLASS:         g_renderItemsGlass.push_back(renderItem); break;
-        case BlendingMode::HAIR:          g_renderItemsHair.push_back(renderItem); break;
-        case BlendingMode::MIRROR:        g_renderItemsMirror.push_back(renderItem); break;
-        case BlendingMode::TOILET_WATER:  g_renderItemsToiletWater.push_back(renderItem); break;
-        case BlendingMode::PLASTIC:       g_renderItemsPlastic.push_back(renderItem); break;
+        case BlendingMode::DEFAULT:       AddRenderItemToCategory(g_renderItemIndices,               renderItemIndex); break;
+        case BlendingMode::ALPHA_DISCARD: AddRenderItemToCategory(g_renderItemIndicesAlphaDiscarded, renderItemIndex); break;
+        case BlendingMode::BLENDED:       AddRenderItemToCategory(g_renderItemIndicesBlended,        renderItemIndex); break;
+        case BlendingMode::GLASS:         AddRenderItemToCategory(g_renderItemIndicesGlass,          renderItemIndex); break;
+        case BlendingMode::HAIR:          AddRenderItemToCategory(g_renderItemIndicesHair,           renderItemIndex); break;
+        case BlendingMode::MIRROR:        AddRenderItemToCategory(g_renderItemIndicesMirror,         renderItemIndex); break;
+        case BlendingMode::TOILET_WATER:  AddRenderItemToCategory(g_renderItemIndicesToiletWater,    renderItemIndex); break;
+        case BlendingMode::PLASTIC:       AddRenderItemToCategory(g_renderItemIndicesPlastic,        renderItemIndex); break;
         default: break;
         }
 
@@ -1789,52 +1628,29 @@ namespace Unloved::RenderDataManager {
             bool hasEmissiveColor = renderItem.emissiveR != 0.0f || renderItem.emissiveG != 0.0f || renderItem.emissiveB != 0.0f;
 
             if (hasEmissiveMap || hasEmissiveColor) {
-                g_renderItemsEmissive.push_back(renderItem);
+                AddRenderItemToCategory(g_renderItemIndicesEmissive, renderItemIndex);
             }
         }
 
         // Outline
-        if (objectId != 0 && objectId == Editor::GetSelectedObjectId()) g_renderItemsOutline.push_back(renderItem);
+        if (EditorSession::Selection::ShouldOutlineObject(objectId)) AddRenderItemToCategory(g_renderItemIndicesOutline, renderItemIndex);
 
         // Shadow Casting
         if ((renderItem.shadowFlags & SHADOW_FLAG_POINT_LIGHT) != 0u) {
-            g_renderItemsPointLightShadows.push_back(renderItem);
+            AddRenderItemToCategory(g_renderItemIndicesPointLightShadows, renderItemIndex);
 
             if (Hell::Bit::Contains(renderItem.miscFlags, MISC_FLAG_DYNAMIC_OBJECT)) {
-                g_renderItemsDynamicPointLightShadows.push_back(renderItem);
+                AddRenderItemToCategory(g_renderItemIndicesDynamicPointLightShadows, renderItemIndex);
             }
             else {
-                g_renderItemsStaticPointLightShadows.push_back(renderItem);
+                AddRenderItemToCategory(g_renderItemIndicesStaticPointLightShadows, renderItemIndex);
             }
         }
-        if ((renderItem.shadowFlags & SHADOW_FLAG_CSM)  != 0u) g_renderItemsMoonLightShadows.push_back(renderItem);
-
-        // Vulkan raytracing instance
-        if (Hell::BackEnd::GetAPI() == API::VULKAN && (renderItem.vulkanFlags & VULKAN_FLAG_EXCLUDE_FROM_TLAS) == 0u) {
-            Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
-            Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId);
-            uint64_t vulkanMeshBufferId = meshBuffer.GetVulkanId();
-            VulkanMeshBuffer* vulkanMeshBuffer = vulkanMeshBufferId != 0 && VulkanResourceManager::MeshBufferExists(vulkanMeshBufferId) ? VulkanResourceManager::GetMeshBuffer(vulkanMeshBufferId) : nullptr;
-            uint64_t vertexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetVertexBufferAddress() : 0;
-            uint64_t indexBufferDeviceAddress = vulkanMeshBuffer ? vulkanMeshBuffer->GetIndexBufferAddress() : 0;
-
-            if (mesh && mesh->vulkanBlasId != 0 && vertexBufferDeviceAddress != 0 && indexBufferDeviceAddress != 0 && mesh->vertexCount != 0 && mesh->indexCount >= 3) {
-                RayQueryBLASInstance& blasInstance = g_rayQueryBLASInstances.emplace_back();
-                blasInstance.vulkanBlasId = mesh->vulkanBlasId;
-                blasInstance.vertexBufferDeviceAddress = vertexBufferDeviceAddress;
-                blasInstance.indexBufferDeviceAddress = indexBufferDeviceAddress;
-                blasInstance.modelMatrix = renderItem.modelMatrix;
-
-                RayQueryMeshInstance& meshInstance = blasInstance.meshInstance;
-                meshInstance.mesh.baseVertex = renderItem.baseVertex;
-                meshInstance.mesh.baseIndex = renderItem.baseIndex;
-                meshInstance.mesh.vertexCount = mesh->vertexCount;
-                meshInstance.mesh.indexCount = mesh->indexCount;
-                meshInstance.material.blendingMode = renderItem.blendingMode;
-                meshInstance.material.materialIndex = renderItem.materialIndex;
-                meshInstance.material.shadowBit = renderItem.shadowFlags;
-            }
+        if ((renderItem.shadowFlags & SHADOW_FLAG_CSM) != 0u) {
+            AddRenderItemToCategory(g_renderItemIndicesMoonLightShadows, renderItemIndex);
         }
+
+        AddPersistentRayQueryRenderItem(renderItemIndex);
     }
 
     void SubmitRenderItems(const std::vector<RenderItem>& renderItems) {
@@ -1846,4 +1662,64 @@ namespace Unloved::RenderDataManager {
     void SubmitSpriteSheetRenderItem(const SpriteSheetRenderItem& renderItem) {
         g_spriteSheetRenderItems.push_back(renderItem);
     }
+
+    // VULKAN RAYTRACING
+
+    void AddRenderItemToTransientRayQueryBLAS(uint32_t renderItemIndex, uint32_t& groupIndex) {
+        if (Hell::BackEnd::GetAPI() != API::VULKAN) return;
+
+        const RenderItem& renderItem = g_sceneRenderItems[renderItemIndex];
+        if ((renderItem.vulkanFlags & VULKAN_FLAG_EXCLUDE_FROM_TLAS) != 0u) return;
+
+        if (groupIndex == UINT32_MAX) {
+            groupIndex = static_cast<uint32_t>(g_transientRayQueryRenderItemGroups.size());
+            g_transientRayQueryRenderItemGroups.emplace_back();
+        }
+
+        g_transientRayQueryRenderItemGroups[groupIndex].push_back(renderItemIndex);
+    }
+
+    void AddPersistentRayQueryRenderItem(uint32_t renderItemIndex) {
+        if (Hell::BackEnd::GetAPI() != API::VULKAN) return;
+
+        const RenderItem& renderItem = g_sceneRenderItems[renderItemIndex];
+        if ((renderItem.vulkanFlags & VULKAN_FLAG_EXCLUDE_FROM_TLAS) != 0u) return;
+
+        g_persistentRayQueryRenderItemIndices.push_back(renderItemIndex);
+    }
+
+    void AddProceduralRayQueryRenderItem(uint32_t renderItemIndex) {
+        const RenderItem& renderItem = g_sceneRenderItems[renderItemIndex];
+        if ((renderItem.vulkanFlags & VULKAN_FLAG_EXCLUDE_FROM_TLAS) != 0u) return;
+
+        g_proceduralRayQueryRenderItemIndices.push_back(renderItemIndex);
+    }
+
+    // MISC HELPERS
+
+    bool IsValidMesh(const Mesh* mesh) {
+        return mesh && mesh->vertexCount > 0 && mesh->indexCount >= 3;
+    }
+
+    // GETTERS
+
+    const DrawCommandsSet& GetDrawInfoSet()                                           { return g_drawCommandsSet; }
+    const FlashLightShadowMapDrawInfo& GetFlashLightShadowMapDrawInfo()               { return g_flashLightShadowMapDrawInfo; }
+
+    const std::vector<RenderItem>& GetSceneRenderItems()                              { return g_sceneRenderItems; }
+    const std::vector<uint32_t>& GetDrawRenderItemIndices()                           { return g_drawRenderItemIndices; }
+    const std::vector<GlassLightRange>& GetGlassLightRanges()                         { return g_glassLightRanges; }
+    const std::vector<uint32_t>& GetGlassLightIndices()                               { return g_glassLightIndices; }
+    const std::vector<GlassLightRange>& GetGlassSpotLightRanges()                     { return g_glassSpotLightRanges; }
+    const std::vector<uint32_t>& GetGlassSpotLightIndices()                           { return g_glassSpotLightIndices; }
+    const std::vector<SpriteSheetRenderItem>& GetSpriteSheetInstanceData()            { return g_spriteSheetInstanceData; }
+    const std::vector<GPULight>& GetGPULights()                                       { return g_gpuLights; }
+    const std::vector<GPUSpotLight>& GetGPUSpotLights()                               { return g_gpuSpotLights; }
+    const std::vector<glm::mat4>& GetSkinningTransforms()                             { return g_skinningTransforms; }
+    const std::vector<glm::mat4>& GetPreviousSkinningTransforms()                     { return g_previousSkinningTransforms; }
+    const std::vector<DecalPaintingInfo>& GetDecalPaintingInfo()                      { return g_decalPaintingInfo; }
+    const std::vector<BloodDecalInstanceData>& GetBloodScreenSpaceDecalInstanceData() { return g_bloodScreenSpaceDecalInstances; }
+
+    uint32_t GetRequiredSkinnedVertexCount()                                          { return g_baseSkinnedVertex; }
+
 }

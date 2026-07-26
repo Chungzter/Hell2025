@@ -37,7 +37,7 @@ namespace Hell::AssetLoader {
         loadedProfile.m_maxIntensity = ies.max_candela;
         loadedProfile.RecalculateDerivedValues();
 
-        loadedProfile.PrintDebugInfo();
+        // loadedProfile.PrintDebugInfo();
 
         return loadedProfile;
     }

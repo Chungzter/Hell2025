@@ -5,6 +5,7 @@
 #include "../../common/ocean.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -25,14 +26,12 @@ void main() {
 
     if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) return;
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
     mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
 
     // Unproject near clipping plane
-    vec2 clipXY = viewportUV * 2.0 - 1.0;
-    clipXY.y = -clipXY.y;
+    vec2 clipXY = ViewportNDCFromPixel(px, outputImageSize, viewportRect);
     vec4 clipSpaceNear = vec4(clipXY, 1.0, 1.0);
     vec4 worldNear = inverseProjectionView * clipSpaceNear;
     vec3 worldPosition = worldNear.xyz / worldNear.w;

@@ -8,12 +8,14 @@
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Maps/Map.h"
 #include "Unloved/Maps/MapData.h"
+#include "Unloved/Render/Renderer.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Map/MapManager.h"
 
 namespace {
     float g_runTime = 0.0f;
     bool g_playersAwaitingRespawn = false;
+    uint64_t g_generation = 0;
 }
 
 namespace Unloved::World {
@@ -72,10 +74,17 @@ namespace Unloved::World {
     }
 
     void ResetWorld() {
+        Renderer::WaitIdle();
         LegacyWorld::ResetWorld();
+        g_generation++;
     }
 
     void ClearAllObjects() {
         LegacyWorld::ClearAllObjects();
+        g_generation++;
+    }
+
+    uint64_t GetGeneration() {
+        return g_generation;
     }
 }

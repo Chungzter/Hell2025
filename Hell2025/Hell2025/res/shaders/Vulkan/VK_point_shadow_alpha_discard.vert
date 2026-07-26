@@ -17,6 +17,10 @@ layout(buffer_reference, scalar) readonly buffer PointShadowFaceDataBuffer {
     PointShadowFaceData faceData[];
 };
 
+layout(buffer_reference, scalar) readonly buffer PointShadowDrawFaceIndexBuffer {
+    uint faceDataIndices[];
+};
+
 layout(location = 0) in vec3 a_position;
 layout(location = 2) in vec2 a_uv;
 
@@ -26,13 +30,13 @@ layout(location = 2) out vec2 v_uv;
 layout(location = 3) flat out int v_baseColorTextureIndex;
 
 void main() {
-    RenderItemBuffer renderItems = pc.data.frame.renderItemBuffer;
+    RenderItemBuffer sceneRenderItems = pc.data.frame.sceneRenderItemBuffer;
+    DrawRenderItemIndexBuffer drawRenderItemIndices = pc.data.frame.drawRenderItemIndexBuffer;
     MaterialBuffer materials = pc.data.frame.materialBuffer;
-    uint baseInstance = uint(gl_BaseInstanceARB);
-    uint faceDataIndex = baseInstance >> VIEWPORT_INDEX_SHIFT;
-    uint instanceOffset = baseInstance & uint((1 << VIEWPORT_INDEX_SHIFT) - 1);
-    uint globalInstanceIndex = instanceOffset + (uint(gl_InstanceIndex) - baseInstance);
-    RenderItem renderItem = renderItems.renderItems[globalInstanceIndex];
+    PointShadowDrawFaceIndexBuffer drawFaceDataIndices = PointShadowDrawFaceIndexBuffer(pc.data.drawFaceDataIndicesDeviceAddress);
+    uint sceneRenderItemIndex = drawRenderItemIndices.renderItemIndices[gl_InstanceIndex];
+    uint faceDataIndex = drawFaceDataIndices.faceDataIndices[gl_DrawIDARB];
+    RenderItem renderItem = sceneRenderItems.renderItems[sceneRenderItemIndex];
     Material material = materials.materials[renderItem.materialIndex];
     PointShadowFaceDataBuffer faceDataBuffer = PointShadowFaceDataBuffer(pc.data.faceDataDeviceAddress);
     PointShadowFaceData faceData = faceDataBuffer.faceData[faceDataIndex];

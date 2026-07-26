@@ -12,6 +12,7 @@ layout(early_fragment_tests) in;
 #include "../common/lighting.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
+#include "../common/viewport.glsl"
 #include "../common/Vulkan/VK_push_constants.glsl"
 
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
@@ -106,7 +107,7 @@ void ComputeCCNormalAndTangents(vec3 vertexNormal, vec3 vertexTangent, vec3 flow
 }
 
 void main() {
-    RenderItemBuffer renderItemBuffer = pc.data.frame.renderItemBuffer;
+    RenderItemBuffer renderItemBuffer = pc.data.frame.sceneRenderItemBuffer;
     MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
     RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
     ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
@@ -211,10 +212,9 @@ void main() {
     vec3 indirectDiffuse = vec3(0.0);
 
     if (rendererDataBuffer.rendererData.enableIrradianceProbeSampling) {
-        vec2 resolution = vec2(rendererDataBuffer.rendererData.gBufferWidth, rendererDataBuffer.rendererData.gBufferHeight);
-        vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / resolution;
         ViewportData vd = viewportDataBuffer.viewportData[v_viewportIndex];
         ivec2 outputImageSize = ivec2(rendererDataBuffer.rendererData.gBufferWidth, rendererDataBuffer.rendererData.gBufferHeight);
+        vec2 screenUV = ScreenUVFromFragCoord(gl_FragCoord.xy, outputImageSize);
         ivec4 viewportRect = ivec4(vd.xOffset, vd.yOffset, vd.width, vd.height);
         vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral_VK(screenUV, finalNormal, fragDistance, outputImageSize, viewportRect);
         vec3 diffuseAlbedo = hairBaseColor.rgb * (1.0 - metallic);

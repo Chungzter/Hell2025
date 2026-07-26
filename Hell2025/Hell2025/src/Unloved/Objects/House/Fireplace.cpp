@@ -22,6 +22,10 @@ Fireplace::Fireplace(uint64_t id, const FireplaceCreateInfo& createInfo, const S
     //m_transform.rotation.y = HELL_PI;
 
     UpdateWorldMatrix();
+    ConfigureMeshNodes();
+}
+
+void Fireplace::ConfigureMeshNodes() {
 
     //m_createInfo.type = FireplaceType::WOOD_STOVE;
 
@@ -38,7 +42,7 @@ Fireplace::Fireplace(uint64_t id, const FireplaceCreateInfo& createInfo, const S
         //walls.rigidDynamic.filterData.collidesWith = (CollisionGroup)(GENERIC_BOUNCEABLE | BULLET_CASING | RAGDOLL_PLAYER | RAGDOLL_ENEMY);
         //walls.addtoNavMesh = true;
 
-        m_meshNodes.Init(id, "Fireplace", meshNodeCreateInfoSet);
+        m_meshNodes.Init(m_id, "Fireplace", meshNodeCreateInfoSet);
 
         m_meshNodes.SetMeshMaterials("NumGrid");
         m_meshNodes.SetMeshMaterials("Ceiling2");
@@ -101,7 +105,7 @@ Fireplace::Fireplace(uint64_t id, const FireplaceCreateInfo& createInfo, const S
         glass.materialName = "FireplaceB_GlassStove";
         glass.decalType = DecalType::GLASS;
 
-		m_meshNodes.Init(id, "FireplaceBrick", meshNodeCreateInfoSet);
+		m_meshNodes.Init(m_id, "FireplaceBrick", meshNodeCreateInfoSet);
 
 		m_meshNodes.SetMaterialByMeshName("FireplaceBrick_Floor", "FireplaceB_Floor");
 		m_meshNodes.SetMaterialByMeshName("FireplaceBrick_Stove", "FireplaceB_Stove");
@@ -204,6 +208,15 @@ void Fireplace::SetRotation(const glm::vec3& rotation) {
     m_createInfo.rotation = rotation;
     m_transform.rotation = rotation;
     UpdateWorldMatrix();
+    m_navMeshTransformDirty = true;
+    HouseBuilder::MarkDirty();
+}
+
+void Fireplace::SetType(FireplaceType type) {
+    if (m_createInfo.type == type) return;
+
+    m_createInfo.type = type;
+    ConfigureMeshNodes();
     m_navMeshTransformDirty = true;
     HouseBuilder::MarkDirty();
 }

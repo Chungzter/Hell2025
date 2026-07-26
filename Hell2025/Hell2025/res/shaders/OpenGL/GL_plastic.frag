@@ -1,9 +1,11 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : enable
-readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 
 #include "../common/OpenGL/GL_binding_indices.glsl"
+
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/types.glsl"

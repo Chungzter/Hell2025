@@ -202,11 +202,27 @@ namespace Hell::BackEnd::GLFW {
     }
 
     int GetCurrentWindowWidth() {
+        if (g_window) glfwGetWindowSize(g_window, &g_currentWindowWidth, &g_currentWindowHeight);
         return g_currentWindowWidth;
     }
 
     int GetCurrentWindowHeight() {
+        if (g_window) glfwGetWindowSize(g_window, &g_currentWindowWidth, &g_currentWindowHeight);
         return g_currentWindowHeight;
+    }
+
+    int GetDrawableWidth() {
+        int width = g_currentWindowWidth;
+        int height = g_currentWindowHeight;
+        if (g_window) glfwGetFramebufferSize(g_window, &width, &height);
+        return width;
+    }
+
+    int GetDrawableHeight() {
+        int width = g_currentWindowWidth;
+        int height = g_currentWindowHeight;
+        if (g_window) glfwGetFramebufferSize(g_window, &width, &height);
+        return height;
     }
 
     bool WindowIsOpen() {

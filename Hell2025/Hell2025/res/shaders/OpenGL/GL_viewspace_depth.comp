@@ -2,6 +2,7 @@
 #include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
+#include "../common/viewport.glsl"
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -16,14 +17,12 @@ ivec2 px = ivec2(gl_GlobalInvocationID.xy);
     ivec2 outputImageSize = imageSize(ViewZImage);
     if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) return;
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
     mat4 inverseProjection = viewportDataArr[viewportIndex].inverseProjectionReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
-    vec2 ndcXY = viewportUV * 2.0 - 1.0;
-    ndcXY.y = -ndcXY.y;
+    vec2 ndcXY = ViewportNDCFromPixel(px, outputImageSize, viewportRect);
     vec4 ndcPos = vec4(ndcXY, depth, 1.0);
     vec4 viewPos = inverseProjection * ndcPos;
     float viewZ = viewPos.z / viewPos.w;

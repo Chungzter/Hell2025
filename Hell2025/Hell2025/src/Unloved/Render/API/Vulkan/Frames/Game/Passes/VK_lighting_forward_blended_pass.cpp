@@ -33,13 +33,8 @@ namespace VulkanRenderer {
         VulkanDescriptorSetResource* rayQueryDescriptorSetResource = VulkanResourceManager::GetDescriptorSetResource("RayQueryDescriptorSet");
         VulkanDescriptorSet* rayQueryDescriptorSet = rayQueryDescriptorSetResource ? &rayQueryDescriptorSetResource->GetSet(GetCurrentFrameIndex()) : nullptr;
         VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
-        VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
-        VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
-        VulkanBuffer* rendererDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rendererData);
-        VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
-        VulkanBuffer* gpuLightsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.lights);
-        VulkanBuffer* rayQueryBLASInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryBLASInstanceData);
-        VulkanBuffer* rayQueryMeshInstanceDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryMeshInstanceData);
+        VulkanBuffer* rayQueryBLASDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQueryBLASData);
+        VulkanBuffer* rayQuerySceneRenderItemIndexBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rayQuerySceneRenderItemIndices);
         VulkanBuffer* skinnedVertexBuffer = frameData.buffers.skinnedVertices != 0 ? VulkanResourceManager::GetBuffer(frameData.buffers.skinnedVertices) : nullptr;
 
         if (!lightingImage) return;
@@ -51,13 +46,8 @@ namespace VulkanRenderer {
         if (!staticDescriptorSet) return;
         if (!rayQueryDescriptorSet) return;
         if (!meshBuffer) return;
-        if (!renderItemBuffer) return;
-        if (!viewportDataBuffer) return;
-        if (!rendererDataBuffer) return;
-        if (!materialsBuffer) return;
-        if (!gpuLightsBuffer) return;
-        if (!rayQueryBLASInstanceDataBuffer) return;
-        if (!rayQueryMeshInstanceDataBuffer) return;
+        if (!rayQueryBLASDataBuffer) return;
+        if (!rayQuerySceneRenderItemIndexBuffer) return;
         if (!skinnedVertexBuffer) return;
         if (!meshBuffer->GetVertexBuffer()) return;
         if (!meshBuffer->GetIndexBuffer()) return;
@@ -78,8 +68,8 @@ namespace VulkanRenderer {
 
         PushConstantsDeferredLighting pushConstants{};
         pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
-        pushConstants.rayQueryBLASInstanceDataDeviceAddress = rayQueryBLASInstanceDataBuffer->GetDeviceAddress();
-        pushConstants.rayQueryMeshInstanceDataDeviceAddress = rayQueryMeshInstanceDataBuffer->GetDeviceAddress();
+        pushConstants.rayQueryBLASDataDeviceAddress = rayQueryBLASDataBuffer->GetDeviceAddress();
+        pushConstants.rayQuerySceneRenderItemIndicesDeviceAddress = rayQuerySceneRenderItemIndexBuffer->GetDeviceAddress();
         vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
         BindVertexBuffer(commandBuffer, meshBuffer->GetVertexBuffer());
@@ -91,6 +81,8 @@ namespace VulkanRenderer {
             if (!viewport->IsVisible()) continue;
 
             SetGameViewportAndScissor(commandBuffer, *viewport, extent);
+            pushConstants.viewportIndex = i;
+            vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
             MultiDrawIndexedCommands(commandBuffer, blendedCommands[i]);
             MultiDrawIndexedCommands(commandBuffer, skinnedNonDeformingBlendedCommands[i]);
@@ -105,6 +97,8 @@ namespace VulkanRenderer {
             if (!viewport->IsVisible()) continue;
 
             SetGameViewportAndScissor(commandBuffer, *viewport, extent);
+            pushConstants.viewportIndex = i;
+            vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
             MultiDrawIndexedCommands(commandBuffer, skinnedBlendedCommands[i]);
         }

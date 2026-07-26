@@ -17,17 +17,21 @@ layout(buffer_reference, scalar) readonly buffer PointShadowFaceDataBuffer {
     PointShadowFaceData faceData[];
 };
 
+layout(buffer_reference, scalar) readonly buffer PointShadowDrawFaceIndexBuffer {
+    uint faceDataIndices[];
+};
+
 layout(location = 0) in vec3 a_position;
 layout(location = 0) out vec3 v_worldPosition;
 layout(location = 1) flat out vec4 v_lightPositionRadius;
 
 void main() {
-    RenderItemBuffer renderItems = pc.data.frame.renderItemBuffer;
-    uint baseInstance = uint(gl_BaseInstanceARB);
-    uint faceDataIndex = baseInstance >> VIEWPORT_INDEX_SHIFT;
-    uint instanceOffset = baseInstance & uint((1 << VIEWPORT_INDEX_SHIFT) - 1);
-    uint globalInstanceIndex = instanceOffset + (uint(gl_InstanceIndex) - baseInstance);
-    RenderItem renderItem = renderItems.renderItems[globalInstanceIndex];
+    RenderItemBuffer sceneRenderItems = pc.data.frame.sceneRenderItemBuffer;
+    DrawRenderItemIndexBuffer drawRenderItemIndices = pc.data.frame.drawRenderItemIndexBuffer;
+    PointShadowDrawFaceIndexBuffer drawFaceDataIndices = PointShadowDrawFaceIndexBuffer(pc.data.drawFaceDataIndicesDeviceAddress);
+    uint sceneRenderItemIndex = drawRenderItemIndices.renderItemIndices[gl_InstanceIndex];
+    uint faceDataIndex = drawFaceDataIndices.faceDataIndices[gl_DrawIDARB];
+    RenderItem renderItem = sceneRenderItems.renderItems[sceneRenderItemIndex];
     PointShadowFaceDataBuffer faceDataBuffer = PointShadowFaceDataBuffer(pc.data.faceDataDeviceAddress);
     PointShadowFaceData faceData = faceDataBuffer.faceData[faceDataIndex];
     vec4 worldPosition = renderItem.modelMatrix * vec4(a_position, 1.0);

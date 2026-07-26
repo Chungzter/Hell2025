@@ -7,7 +7,7 @@ namespace Bible {
         std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 
         // Deadlock stuff
-        if (createInfo.type != DoorType::GLASS2) {
+        if (createInfo.type != DoorType::STAINED_GLASS2) {
             MeshNodeCreateInfo& deadLock = meshNodeCreateInfoSet.emplace_back();
             deadLock.meshName = "Door_Deadlock";
             deadLock.materialName = "DoorMetals";
@@ -51,7 +51,7 @@ namespace Bible {
             };
             hinges.openable.isOpenable = true;
             hinges.openable.openAxis = Unloved::OpenAxis::ROTATE_Y_NEG;
-            hinges.openable.initialOpenState = Unloved::OpenState::CLOSED;
+            hinges.openable.initialOpenState = createInfo.openAtStart ? Unloved::OpenState::OPEN : Unloved::OpenState::CLOSED;
             hinges.openable.minOpenValue = 0.0f;
             hinges.openable.maxOpenValue = createInfo.maxOpenValue;
             hinges.openable.openSpeed = 5.208f;
@@ -105,7 +105,7 @@ namespace Bible {
             };
             hinges.openable.isOpenable = true;
             hinges.openable.openAxis = Unloved::OpenAxis::ROTATE_Y_NEG;
-            hinges.openable.initialOpenState = Unloved::OpenState::CLOSED;
+            hinges.openable.initialOpenState = createInfo.openAtStart ? Unloved::OpenState::OPEN : Unloved::OpenState::CLOSED;
             hinges.openable.minOpenValue = 0.0f;
             hinges.openable.maxOpenValue = createInfo.maxOpenValue;
             hinges.openable.openSpeed = 5.208f;
@@ -135,7 +135,7 @@ namespace Bible {
             }
         }
 
-        if (createInfo.type == DoorType::GLASS) {
+        if (createInfo.type == DoorType::STAINED_GLASS) {
 
             // Collision mesh node
             MeshNodeCreateInfo& door = meshNodeCreateInfoSet.emplace_back();
@@ -173,7 +173,7 @@ namespace Bible {
             };
             hinges.openable.isOpenable = true;
             hinges.openable.openAxis = Unloved::OpenAxis::ROTATE_Y_NEG;
-            hinges.openable.initialOpenState = Unloved::OpenState::CLOSED;
+            hinges.openable.initialOpenState = createInfo.openAtStart ? Unloved::OpenState::OPEN : Unloved::OpenState::CLOSED;
             hinges.openable.minOpenValue = 0.0f;
             hinges.openable.maxOpenValue = createInfo.maxOpenValue;
             hinges.openable.openSpeed = 5.208f;
@@ -256,7 +256,7 @@ namespace Bible {
             meshNodes->SetMaterialByMeshName("DoorGlassArtFrame", "DoorGlassFrame");
         }
 
-        if (createInfo.type == DoorType::GLASS2) {
+        if (createInfo.type == DoorType::STAINED_GLASS2) {
 
             // Collision mesh node
             MeshNodeCreateInfo& door = meshNodeCreateInfoSet.emplace_back();
@@ -281,7 +281,7 @@ namespace Bible {
             };
             hinges.openable.isOpenable = true;
             hinges.openable.openAxis = Unloved::OpenAxis::ROTATE_Y_NEG;
-            hinges.openable.initialOpenState = Unloved::OpenState::CLOSED;
+            hinges.openable.initialOpenState = createInfo.openAtStart ? Unloved::OpenState::OPEN : Unloved::OpenState::CLOSED;
             hinges.openable.minOpenValue = 0.0f;
             hinges.openable.maxOpenValue = createInfo.maxOpenValue;
             hinges.openable.openSpeed = 5.208f;

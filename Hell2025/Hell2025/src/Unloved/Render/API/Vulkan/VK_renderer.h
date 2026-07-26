@@ -28,5 +28,6 @@ namespace VulkanRenderer {
     const std::string& GetTotalCPUTime();
     float GetTotalGPUTimeFloat();
 
-    void RenderUIPass(VkCommandBuffer commandBuffer);
+    void RenderGameUIPass(VkCommandBuffer commandBuffer);
+    void RenderEditorUIPass(VkCommandBuffer commandBuffer, VkImage image, VkImageView imageView, VkExtent2D extent);
 }

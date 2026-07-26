@@ -25,15 +25,14 @@ layout(location = 4) flat out uint v_globalInstanceIndex;
 layout(location = 5) flat out uint v_viewportIndex;
 
 void main() {
-    RenderItemBuffer renderItems = pc.data.frame.renderItemBuffer;
+    RenderItemBuffer sceneRenderItems = pc.data.frame.sceneRenderItemBuffer;
+    DrawRenderItemIndexBuffer drawRenderItemIndices = pc.data.frame.drawRenderItemIndexBuffer;
     ViewportDataBuffer viewportData = pc.data.frame.viewportDataBuffer;
 
-    uint baseInstance = uint(gl_BaseInstanceARB);
-    uint viewportIndex = baseInstance >> VIEWPORT_INDEX_SHIFT;
-    uint instanceOffset = baseInstance & uint((1 << VIEWPORT_INDEX_SHIFT) - 1);
-    uint globalInstanceIndex = instanceOffset + (uint(gl_InstanceIndex) - baseInstance);
+    uint sceneRenderItemIndex = drawRenderItemIndices.renderItemIndices[uint(gl_InstanceIndex)];
+    uint viewportIndex = pc.data.viewportIndex;
 
-    RenderItem renderItem = renderItems.renderItems[globalInstanceIndex];
+    RenderItem renderItem = sceneRenderItems.renderItems[sceneRenderItemIndex];
     mat4 modelMatrix = renderItem.modelMatrix;
     mat4 normalMatrix = transpose(renderItem.inverseModelMatrix);
     mat4 projectionView = viewportData.viewportData[viewportIndex].jitteredProjectionViewReverseZ;
@@ -42,7 +41,7 @@ void main() {
     v_tangent = normalize((modelMatrix * vec4(a_tangent, 0.0)).xyz);
     v_texCoord = a_uv;
     v_worldPos = modelMatrix * vec4(a_position, 1.0);
-    v_globalInstanceIndex = globalInstanceIndex;
+    v_globalInstanceIndex = sceneRenderItemIndex;
     v_viewportIndex = viewportIndex;
 
     gl_Position = projectionView * v_worldPos;

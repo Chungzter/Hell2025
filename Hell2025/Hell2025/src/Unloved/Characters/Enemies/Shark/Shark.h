@@ -92,6 +92,7 @@ namespace Unloved {
         void CalculateForwardVectorFromArrowKeys(float deltaTime);
         void CalculateTargetFromPlayer();
         void MoveShark(float deltaTime);
+        void SetSpinePosition(const glm::vec3& position);
 
         void UpdateHuntingLogic(float deltaTime);
 

@@ -21,23 +21,16 @@ namespace VulkanRenderer {
         ProfilerVulkanZoneFunction();
 
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
-        const VulkanFrameData& frameData = GetCurrentFrameData();
-
         AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("Lighting");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("SpriteSheet");
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("SpriteSheet");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
         VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
-        VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
-        VulkanBuffer* spriteSheetRenderItemsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.spriteSheetInstanceData);
-
         if (!lightingImage) return;
         if (!pipeline) return;
         if (!renderState) return;
         if (!staticDescriptorSet) return;
         if (!meshBuffer) return;
-        if (!viewportDataBuffer) return;
-        if (!spriteSheetRenderItemsBuffer) return;
         if (!meshBuffer->GetVertexBuffer()) return;
         if (!meshBuffer->GetIndexBuffer()) return;
 
@@ -63,6 +56,8 @@ namespace VulkanRenderer {
             if (!viewport || !viewport->IsVisible()) continue;
 
             SetGameViewportAndScissor(commandBuffer, *viewport, extent);
+            pushConstants.viewportIndex = i;
+            vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
             MultiDrawIndexedCommands(commandBuffer, spriteSheetCommands[i]);
         }
 

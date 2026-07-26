@@ -102,13 +102,12 @@ namespace VulkanRenderer {
             return drawCommandBuffer.EnsureSize(requiredSize > doubledSize ? requiredSize : doubledSize);
         }
 
-        void AppendPointShadowDrawCommands(std::vector<DrawIndexedIndirectCommand>& destination, uint32_t faceDataIndex, std::initializer_list<const std::vector<DrawIndexedIndirectCommand>*> sources) {
-            constexpr uint32_t INSTANCE_INDEX_MASK = (1u << VIEWPORT_INDEX_SHIFT) - 1;
+        void AppendPointShadowDrawCommands(std::vector<DrawIndexedIndirectCommand>& destinationCommands, std::vector<uint32_t>& destinationFaceDataIndices, uint32_t faceDataIndex, std::initializer_list<const std::vector<DrawIndexedIndirectCommand>*> sources) {
             for (const std::vector<DrawIndexedIndirectCommand>* source : sources) {
                 if (!source || source->empty()) continue;
                 for (const DrawIndexedIndirectCommand& command : *source) {
-                    DrawIndexedIndirectCommand& encodedCommand = destination.emplace_back(command);
-                    encodedCommand.baseInstance = (faceDataIndex << VIEWPORT_INDEX_SHIFT) | (command.baseInstance & INSTANCE_INDEX_MASK);
+                    destinationCommands.push_back(command);
+                    destinationFaceDataIndices.push_back(faceDataIndex);
                 }
             }
         }
@@ -124,6 +123,21 @@ namespace VulkanRenderer {
             const VkDeviceSize uploadSize = sizeof(PointShadowFaceData) * faceData.size();
             if (faceDataOffset > faceDataBuffer.GetSize() || uploadSize > faceDataBuffer.GetSize() - faceDataOffset) return false;
             faceDataBuffer.UpdateData(faceData.data(), uploadSize, faceDataOffset);
+            deviceAddress = faceDataBuffer.GetDeviceAddress() + faceDataOffset;
+            faceDataOffset += uploadSize;
+            return deviceAddress != 0;
+        }
+
+        bool UploadPointShadowDrawFaceDataIndices(VulkanBuffer& faceDataBuffer, VkDeviceSize& faceDataOffset, const std::vector<uint32_t>& faceDataIndices, uint64_t& deviceAddress) {
+            deviceAddress = 0;
+            if (faceDataIndices.empty()) return true;
+
+            constexpr VkDeviceSize ALIGNMENT = alignof(uint32_t);
+            faceDataOffset = (faceDataOffset + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
+            const VkDeviceSize uploadSize = sizeof(uint32_t) * faceDataIndices.size();
+            if (faceDataOffset > faceDataBuffer.GetSize() || uploadSize > faceDataBuffer.GetSize() - faceDataOffset) return false;
+
+            faceDataBuffer.UpdateData(faceDataIndices.data(), uploadSize, faceDataOffset);
             deviceAddress = faceDataBuffer.GetDeviceAddress() + faceDataOffset;
             faceDataOffset += uploadSize;
             return deviceAddress != 0;
@@ -149,6 +163,11 @@ namespace VulkanRenderer {
             std::vector<DrawIndexedIndirectCommand> opaqueSkinnedCommands;
             std::vector<DrawIndexedIndirectCommand> alphaTestedAssetCommands;
             std::vector<DrawIndexedIndirectCommand> alphaTestedSkinnedCommands;
+            std::vector<uint32_t> proceduralFaceDataIndices;
+            std::vector<uint32_t> opaqueAssetFaceDataIndices;
+            std::vector<uint32_t> opaqueSkinnedFaceDataIndices;
+            std::vector<uint32_t> alphaTestedAssetFaceDataIndices;
+            std::vector<uint32_t> alphaTestedSkinnedFaceDataIndices;
             faceData.reserve(shadowMapInfos.size() * 6);
             clearRects.reserve(shadowMapInfos.size());
 
@@ -158,6 +177,11 @@ namespace VulkanRenderer {
             opaqueSkinnedCommands.reserve(drawCommandCount / 5);
             alphaTestedAssetCommands.reserve(drawCommandCount / 5);
             alphaTestedSkinnedCommands.reserve(drawCommandCount / 5);
+            proceduralFaceDataIndices.reserve(drawCommandCount / 5);
+            opaqueAssetFaceDataIndices.reserve(drawCommandCount / 5);
+            opaqueSkinnedFaceDataIndices.reserve(drawCommandCount / 5);
+            alphaTestedAssetFaceDataIndices.reserve(drawCommandCount / 5);
+            alphaTestedSkinnedFaceDataIndices.reserve(drawCommandCount / 5);
 
             for (const ShadowMapInfo& shadowMapInfo : shadowMapInfos) {
                 if (shadowMapInfo.shadowMapIndex < 0 || shadowMapInfo.shadowMapIndex >= MAX_SHADOW_MAP_ARRAY_LEVELS || shadowMapInfo.shadowMapIndex >= static_cast<int32_t>(shadowMaps->GetCubeMapCount())) continue;
@@ -180,11 +204,11 @@ namespace VulkanRenderer {
                     currentFaceData.lightPositionRadius = glm::vec4(light->GetPosition(), light->GetRadius());
                     currentFaceData.arrayLayer = shadowMapIndex * 6 + faceIndex;
 
-                    AppendPointShadowDrawCommands(proceduralCommands, faceDataIndex, { &drawCommands.procedural[shadowMapIndex][faceIndex] });
-                    AppendPointShadowDrawCommands(opaqueAssetCommands, faceDataIndex, { &drawCommands.assetGeometry[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex] });
-                    AppendPointShadowDrawCommands(opaqueSkinnedCommands, faceDataIndex, { &drawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex] });
-                    AppendPointShadowDrawCommands(alphaTestedAssetCommands, faceDataIndex, { &drawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometryHair[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex] });
-                    AppendPointShadowDrawCommands(alphaTestedSkinnedCommands, faceDataIndex, { &drawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex] });
+                    AppendPointShadowDrawCommands(proceduralCommands, proceduralFaceDataIndices, faceDataIndex, { &drawCommands.procedural[shadowMapIndex][faceIndex] });
+                    AppendPointShadowDrawCommands(opaqueAssetCommands, opaqueAssetFaceDataIndices, faceDataIndex, { &drawCommands.assetGeometry[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex] });
+                    AppendPointShadowDrawCommands(opaqueSkinnedCommands, opaqueSkinnedFaceDataIndices, faceDataIndex, { &drawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex] });
+                    AppendPointShadowDrawCommands(alphaTestedAssetCommands, alphaTestedAssetFaceDataIndices, faceDataIndex, { &drawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometryHair[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex] });
+                    AppendPointShadowDrawCommands(alphaTestedSkinnedCommands, alphaTestedSkinnedFaceDataIndices, faceDataIndex, { &drawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex], &drawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex] });
                 }
             }
 
@@ -192,6 +216,17 @@ namespace VulkanRenderer {
 
             uint64_t faceDataDeviceAddress = 0;
             if (!UploadPointShadowFaceData(faceDataBuffer, faceDataOffset, faceData, faceDataDeviceAddress)) return;
+
+            uint64_t proceduralFaceDataIndicesDeviceAddress = 0;
+            uint64_t opaqueAssetFaceDataIndicesDeviceAddress = 0;
+            uint64_t opaqueSkinnedFaceDataIndicesDeviceAddress = 0;
+            uint64_t alphaTestedAssetFaceDataIndicesDeviceAddress = 0;
+            uint64_t alphaTestedSkinnedFaceDataIndicesDeviceAddress = 0;
+            if (!UploadPointShadowDrawFaceDataIndices(faceDataBuffer, faceDataOffset, proceduralFaceDataIndices, proceduralFaceDataIndicesDeviceAddress)) return;
+            if (!UploadPointShadowDrawFaceDataIndices(faceDataBuffer, faceDataOffset, opaqueAssetFaceDataIndices, opaqueAssetFaceDataIndicesDeviceAddress)) return;
+            if (!UploadPointShadowDrawFaceDataIndices(faceDataBuffer, faceDataOffset, opaqueSkinnedFaceDataIndices, opaqueSkinnedFaceDataIndicesDeviceAddress)) return;
+            if (!UploadPointShadowDrawFaceDataIndices(faceDataBuffer, faceDataOffset, alphaTestedAssetFaceDataIndices, alphaTestedAssetFaceDataIndicesDeviceAddress)) return;
+            if (!UploadPointShadowDrawFaceDataIndices(faceDataBuffer, faceDataOffset, alphaTestedSkinnedFaceDataIndices, alphaTestedSkinnedFaceDataIndicesDeviceAddress)) return;
 
             const VulkanDrawCommandBatch proceduralBatch = WriteDrawCommands(drawCommandBuffer, proceduralCommands);
             const VulkanDrawCommandBatch opaqueAssetBatch = WriteDrawCommands(drawCommandBuffer, opaqueAssetCommands);
@@ -227,19 +262,24 @@ namespace VulkanRenderer {
 
             if (proceduralBatch.count > 0 || opaqueAssetBatch.count > 0 || opaqueSkinnedBatch.count > 0) {
                 vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, opaquePipeline->GetHandle());
-                vkCmdPushConstants(commandBuffer, opaquePipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
                 if (proceduralBatch.count > 0) {
+                    pushConstants.drawFaceDataIndicesDeviceAddress = proceduralFaceDataIndicesDeviceAddress;
+                    vkCmdPushConstants(commandBuffer, opaquePipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
                     BindVertexBuffer(commandBuffer, proceduralGeometry->GetVertexBuffer());
                     BindIndexBuffer(commandBuffer, proceduralGeometry->GetIndexBuffer());
                     MultiDrawIndexedCommands(commandBuffer, drawCommandBuffer, proceduralBatch.offset, proceduralBatch.count);
                 }
                 if (opaqueAssetBatch.count > 0) {
+                    pushConstants.drawFaceDataIndicesDeviceAddress = opaqueAssetFaceDataIndicesDeviceAddress;
+                    vkCmdPushConstants(commandBuffer, opaquePipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
                     BindVertexBuffer(commandBuffer, assetGeometry->GetVertexBuffer());
                     BindIndexBuffer(commandBuffer, assetGeometry->GetIndexBuffer());
                     MultiDrawIndexedCommands(commandBuffer, drawCommandBuffer, opaqueAssetBatch.offset, opaqueAssetBatch.count);
                 }
                 if (opaqueSkinnedBatch.count > 0) {
+                    pushConstants.drawFaceDataIndicesDeviceAddress = opaqueSkinnedFaceDataIndicesDeviceAddress;
+                    vkCmdPushConstants(commandBuffer, opaquePipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
                     BindVertexBuffer(commandBuffer, skinnedVertexBuffer);
                     BindIndexBuffer(commandBuffer, assetGeometry->GetIndexBuffer());
                     MultiDrawIndexedCommands(commandBuffer, drawCommandBuffer, opaqueSkinnedBatch.offset, opaqueSkinnedBatch.count);
@@ -249,14 +289,17 @@ namespace VulkanRenderer {
             if (alphaTestedAssetBatch.count > 0 || alphaTestedSkinnedBatch.count > 0) {
                 vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, alphaTestedPipeline->GetHandle());
                 vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, alphaTestedPipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
-                vkCmdPushConstants(commandBuffer, alphaTestedPipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
                 if (alphaTestedAssetBatch.count > 0) {
+                    pushConstants.drawFaceDataIndicesDeviceAddress = alphaTestedAssetFaceDataIndicesDeviceAddress;
+                    vkCmdPushConstants(commandBuffer, alphaTestedPipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
                     BindVertexBuffer(commandBuffer, assetGeometry->GetVertexBuffer());
                     BindIndexBuffer(commandBuffer, assetGeometry->GetIndexBuffer());
                     MultiDrawIndexedCommands(commandBuffer, drawCommandBuffer, alphaTestedAssetBatch.offset, alphaTestedAssetBatch.count);
                 }
                 if (alphaTestedSkinnedBatch.count > 0) {
+                    pushConstants.drawFaceDataIndicesDeviceAddress = alphaTestedSkinnedFaceDataIndicesDeviceAddress;
+                    vkCmdPushConstants(commandBuffer, alphaTestedPipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
                     BindVertexBuffer(commandBuffer, skinnedVertexBuffer);
                     BindIndexBuffer(commandBuffer, assetGeometry->GetIndexBuffer());
                     MultiDrawIndexedCommands(commandBuffer, drawCommandBuffer, alphaTestedSkinnedBatch.offset, alphaTestedSkinnedBatch.count);
@@ -314,7 +357,11 @@ namespace VulkanRenderer {
         if (!EnsurePointShadowDrawCommandCapacity(*drawCommandBuffer, drawCommands, staticHiResInfos, staticLowResInfos, compositeHiResInfos, compositeLowResInfos)) return;
 
         const size_t maxFaceDataCount = (staticHiResInfos.size() + staticLowResInfos.size() + compositeHiResInfos.size() + compositeLowResInfos.size()) * 6;
-        const VkDeviceSize requiredFaceDataSize = sizeof(PointShadowFaceData) * maxFaceDataCount + 64;
+        size_t maxDrawFaceDataIndexCount = GetPointShadowDrawCommandCount(drawCommands.staticHiResShadowMapDrawCommands, staticHiResInfos);
+        maxDrawFaceDataIndexCount += GetPointShadowDrawCommandCount(drawCommands.staticLowResShadowMapDrawCommands, staticLowResInfos);
+        maxDrawFaceDataIndexCount += GetPointShadowDrawCommandCount(drawCommands.compositeHiResShadowMapDrawCommands, compositeHiResInfos);
+        maxDrawFaceDataIndexCount += GetPointShadowDrawCommandCount(drawCommands.compositeLowResShadowMapDrawCommands, compositeLowResInfos);
+        const VkDeviceSize requiredFaceDataSize = sizeof(PointShadowFaceData) * maxFaceDataCount + sizeof(uint32_t) * maxDrawFaceDataIndexCount + 128;
         if (!faceDataBuffer->EnsureSize(requiredFaceDataSize)) return;
         VkDeviceSize faceDataOffset = 0;
 

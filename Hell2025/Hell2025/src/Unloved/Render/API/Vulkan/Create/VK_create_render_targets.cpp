@@ -87,7 +87,9 @@ namespace VulkanRenderer {
         ResetIndirectSpecularAMDHistory();
     }
 
-    void CreatePresentRenderTarget(VkExtent2D extent) {
+    void CreatePresentRenderTarget() {
+        const Resolutions& resolutions = Config::GetResolutions();
+        const VkExtent2D extent = { static_cast<uint32_t>(resolutions.ui.x), static_cast<uint32_t>(resolutions.ui.y) };
         VkFormat format = VulkanSwapchainManager::GetSwapchainImageFormat();
         bool needsCreate = !VulkanResourceManager::AllocatedImageExists("Present");
 

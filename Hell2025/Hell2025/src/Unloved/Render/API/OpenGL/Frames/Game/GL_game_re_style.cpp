@@ -81,7 +81,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
@@ -154,10 +155,11 @@ namespace OpenGL::Renderer {
         // Upscale with nearest filtering
         OpenGL::BlitFrameBuffer(&finalImageFbo, &presentFbo, "Color", "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-        UIPass();
+        GameUIPass();
 
         PresentFinalImage(presentFbo);
 
+        EditorUIPass();
         ImGuiPass();
     }
 
@@ -322,7 +324,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
@@ -391,13 +393,13 @@ namespace OpenGL::Renderer {
 		state.depthFunc = GL_GREATER;
 
 		// Opaque
-		OpenGLShader& opaqueShader = OpenGL::ResourceManager::GetShader("LightingForward");
 		OpenGL::BindShader("LightingForward");
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         BindShadowMapsRE();
         OpenGL::BindTextureUnit(5, indirectDiffuseFbo.GetColorAttachmentHandleByName("Color"));
@@ -405,13 +407,13 @@ namespace OpenGL::Renderer {
 
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
 		glBindVertexArray(meshBuffer.GetVAO());
-		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.blended, state);
+		MultiDrawPerViewportRE(fbo, drawInfoSet.blended, state);
 
 		//glBindVertexArray(OpenGL::BackEnd::GetWeightedVertexDataVAO());
-		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.skinnedNonDeformingBlended, state);
+		MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingBlended, state);
 
 		glBindVertexArray(OpenGL::BackEnd::GetSkinnedVertexDataVAO());
-		MultiDrawPerViewport(fbo, opaqueShader, drawInfoSet.skinnedBlended, state);
+		MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedBlended, state);
 	}
 
     void SkyboxPassRE() {
@@ -469,7 +471,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;

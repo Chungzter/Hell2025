@@ -95,7 +95,8 @@ namespace OpenGL::Renderer {
 
             OpenGL::BindShader("HairDepthPeel");
             OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-            OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+            OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+            OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
             OpenGL::BindImageTexture(0, hairFrameBuffer->GetColorAttachmentHandleByName("ViewspaceDepthPrevious"), GL_READ_ONLY, GL_R32F);
             OpenGL::BindTextureUnit(1, gBuffer->GetDepthAttachmentHandle());
 
@@ -110,12 +111,8 @@ namespace OpenGL::Renderer {
                 if (!viewport->IsVisible()) continue;
 
                 OpenGL::Renderer::SetViewport(hairFrameBuffer, viewport);
-                if (Hell::BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(depthPeelShader, drawInfoSet.hair[i], false, false);
-                }
-                else {
-                    MultiDrawIndirect(drawInfoSet.hair[i]);
-                }
+                OpenGL::SetUniformInt("u_viewportIndex", i);
+                MultiDrawIndirect(drawInfoSet.hair[i]);
             }
 
             // Skinned hair
@@ -127,12 +124,8 @@ namespace OpenGL::Renderer {
                 if (!viewport->IsVisible()) continue;
 
                 OpenGL::Renderer::SetViewport(hairFrameBuffer, viewport);
-                if (Hell::BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(depthPeelShader, drawInfoSet.skinnedHair[i], false, false);
-                }
-                else {
-                    MultiDrawIndirect(drawInfoSet.skinnedHair[i]);
-                }
+                OpenGL::SetUniformInt("u_viewportIndex", i);
+                MultiDrawIndirect(drawInfoSet.skinnedHair[i]);
             }
 
             // Color pass
@@ -161,7 +154,8 @@ namespace OpenGL::Renderer {
             OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
             OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
             OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-            OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+            OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+            OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
             OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
             OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
             OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
@@ -180,12 +174,8 @@ namespace OpenGL::Renderer {
                 if (!viewport->IsVisible()) continue;
 
                 OpenGL::Renderer::SetViewport(hairFrameBuffer, viewport);
-                if (Hell::BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(hairLightingShader, drawInfoSet.hair[i], true, false);
-                }
-                else {
-                    MultiDrawIndirect(drawInfoSet.hair[i]);
-                }
+                OpenGL::SetUniformInt("u_viewportIndex", i);
+                MultiDrawIndirect(drawInfoSet.hair[i]);
             }
 
             // Skinned hair color
@@ -197,12 +187,8 @@ namespace OpenGL::Renderer {
                 if (!viewport->IsVisible()) continue;
 
                 OpenGL::Renderer::SetViewport(hairFrameBuffer, viewport);
-                if (Hell::BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(hairLightingShader, drawInfoSet.skinnedHair[i], true, false);
-                }
-                else {
-                    MultiDrawIndirect(drawInfoSet.skinnedHair[i]);
-                }
+                OpenGL::SetUniformInt("u_viewportIndex", i);
+                MultiDrawIndirect(drawInfoSet.skinnedHair[i]);
             }
         }
 

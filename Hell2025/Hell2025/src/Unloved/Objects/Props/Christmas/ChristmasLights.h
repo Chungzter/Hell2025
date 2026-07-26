@@ -17,6 +17,9 @@ struct ChristmasLightSet {
     ~ChristmasLightSet() = default;
 
     void UpdateSequencePoints(const std::vector<SequencePoint>& sequencePoints);
+    void SetPosition(const glm::vec3& position);
+    void SetSpacing(float spacing);
+    void SetWireRadius(float wireRadius);
     void Update(float deltaTime);
     void RecreateLightRenderItems();
     void CleanUp();

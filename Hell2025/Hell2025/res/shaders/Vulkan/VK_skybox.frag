@@ -33,14 +33,11 @@ void main() {
     ivec2 px = ivec2(gl_FragCoord.xy);
     ivec2 resolution = ivec2(rendererDataBuffer.rendererData.gBufferWidth, rendererDataBuffer.rendererData.gBufferHeight);
 
-    uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, resolution, rendererDataBuffer.rendererData.splitscreenMode);
-    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
-
-    mat4 inverseProjectionView = viewportData.inverseProjectionViewReverseZ;
-    vec3 viewPos = viewportData.viewPos.xyz;
-    vec2 viewportOrigin = vec2(viewportData.xOffset, resolution.y - viewportData.yOffset - viewportData.height);
-    vec2 viewportSize = vec2(viewportData.width, viewportData.height);
-    vec3 rayDir = GetWorldRay_VK(gl_FragCoord.xy, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
+    uint viewportIndex = ViewportIndexFromPixel(px, resolution, rendererDataBuffer.rendererData.viewportLayout, vec2(rendererDataBuffer.rendererData.viewportSplitX, rendererDataBuffer.rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+    vec3 viewPosition = viewportDataBuffer.viewportData[viewportIndex].viewPos.xyz;
+    mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    vec3 rayDir = WorldRayFromPixel(px, resolution, viewportRect, viewPosition, inverseProjectionView);
 
     mat3 skyboxRotation = GetSkyboxRotationMatrix();
     vec3 skyboxSampleDir = normalize(skyboxRotation * rayDir);

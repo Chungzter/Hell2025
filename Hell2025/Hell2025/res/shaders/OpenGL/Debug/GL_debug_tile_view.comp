@@ -35,8 +35,6 @@ void main() {
         return;
     }
 
-	uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-
 	const int tileSize = TILE_SIZE;
 	vec2 viewportSize = vec2(u_viewportWidth, u_viewportHeight);
 	vec2 uv = (vec2(px) + vec2(0.5)) / viewportSize;

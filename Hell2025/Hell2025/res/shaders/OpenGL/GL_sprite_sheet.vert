@@ -20,10 +20,11 @@ out vec2 TexCoordNext;
 flat out int TextureIndex;
 flat out float MixFactor;
 
+uniform int u_viewportIndex;
+
 void main() {
-    int viewportIndex = gl_BaseInstance >> VIEWPORT_INDEX_SHIFT;
-    int instanceOffset = gl_BaseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
-    int globalInstanceIndex = instanceOffset + gl_InstanceID;
+    int viewportIndex = u_viewportIndex;
+    int globalInstanceIndex = gl_BaseInstance + gl_InstanceID;
 
     SpriteSheetRenderItem renderItem = spriteSheetRenderItems[globalInstanceIndex];
 

@@ -177,6 +177,7 @@ namespace Unloved::Editor {
 
     int GetActiveViewportIndex();
     int GetHoveredViewportIndex();
+    // Temporary compatibility API. New editor code should query EditorSession directly.
     bool IsOpen();
     bool IsClosed();
     bool IsViewportOrthographic(uint32_t viewportIndex);

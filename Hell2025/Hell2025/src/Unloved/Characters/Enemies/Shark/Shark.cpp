@@ -52,7 +52,7 @@ namespace Unloved {
     void Shark::Init() {
         const glm::vec3& initialPosition = m_createInfo.position;
 
-        m_yHeight = Ocean::GetOceanOriginY();
+        m_yHeight = initialPosition.y;
 
         g_animatedGameObjectObjectId = LegacyWorld::CreateAnimatedGameObject();
 
@@ -62,6 +62,7 @@ namespace Unloved {
         filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
 
         Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
+        animatedGameObject->SetOwnerObjectId(m_objectId);
         animatedGameObject->SetSkinnedModel("Shark");
         animatedGameObject->SetName("GreatestGreatWhiteShark");
         animatedGameObject->SetAllMeshMaterials("Shark");
@@ -164,7 +165,7 @@ namespace Unloved {
         float radius = 10;
         int segments = 9;
         m_path = GetCirclePoints(center, segments, radius);
-        SetPosition(initialPosition);
+        SetSpinePosition(initialPosition);
 
 
         m_alive = true;
@@ -320,17 +321,19 @@ namespace Unloved {
         }
 
         if (IsAlive()) {
-            float magicNumber = 1.05f;
-            float lerpSpeed = 1.0f;
-            float targetHeight = Ocean::GetOceanOriginY() - magicNumber;
+            if (World::HasOcean()) {
+                float magicNumber = 1.05f;
+                float lerpSpeed = 1.0f;
+                float targetHeight = Ocean::GetOceanOriginY() - magicNumber;
 
-            if (m_movementState == SharkMovementState::HUNT_PLAYER) {
-                if (Unloved::Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId)) {
-                    targetHeight = std::min(targetHeight, player->GetCameraPosition().y) - (magicNumber * 0.0f);
+                if (m_movementState == SharkMovementState::HUNT_PLAYER) {
+                    if (Unloved::Player* player = Unloved::Session::GetPlayerById(m_huntedPlayerId)) {
+                        targetHeight = std::min(targetHeight, player->GetCameraPosition().y) - (magicNumber * 0.0f);
+                    }
                 }
-            }
 
-            m_yHeight = Hell::Math::InterpTo(m_yHeight, targetHeight, deltaTime, lerpSpeed);
+                m_yHeight = Hell::Math::InterpTo(m_yHeight, targetHeight, deltaTime, lerpSpeed);
+            }
 
             if (m_movementState == SharkMovementState::ARROW_KEYS) {
                 if (Input::KeyDown(HELL_KEY_UP)) {
@@ -393,7 +396,7 @@ namespace Unloved {
                 float spawnHeight = 28.85f;
                 glm::vec3 spawnPos = glm::vec3(-50.0f, spawnHeight, 40.5f);
                 animatedGameObject->SetPosition(spawnPos);
-                SetPosition(spawnPos);
+                SetSpinePosition(spawnPos);
             }
         }
     }
@@ -496,11 +499,11 @@ namespace Unloved {
 
     void Shark::SetPositionToBeginningOfPath() {
         if (m_path.empty()) {
-            SetPosition(glm::vec3(0, 30.0f, 0));
+            SetSpinePosition(glm::vec3(0, 30.0f, 0));
         }
         else {
             glm::vec3 position = m_path[0];
-            SetPosition(position);
+            SetSpinePosition(position);
             m_nextPathPointIndex = 1;
         }
     }
@@ -533,6 +536,10 @@ namespace Unloved {
     }
 
     void Shark::SetPosition(const glm::vec3& position) {
+        SetPatrolCenter(position);
+    }
+
+    void Shark::SetSpinePosition(const glm::vec3& position) {
         m_spinePositions[0] = position;
         for (int i = 1; i < SHARK_SPINE_SEGMENT_COUNT; i++) {
             m_spinePositions[i].x = m_spinePositions[0].x;
@@ -546,12 +553,13 @@ namespace Unloved {
     void Shark::SetPatrolCenter(const glm::vec3& position) {
         const glm::vec3 offset = position - m_createInfo.position;
         m_createInfo.position = position;
+        m_yHeight = position.y;
 
         for (glm::vec3& pathPoint : m_path) {
             pathPoint += offset;
         }
 
-        SetPosition(position);
+        SetSpinePosition(position);
     }
 
     void Shark::CalculateTargetFromPlayer() {

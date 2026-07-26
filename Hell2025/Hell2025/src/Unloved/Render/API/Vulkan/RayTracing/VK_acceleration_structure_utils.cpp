@@ -35,6 +35,24 @@ namespace VulkanRenderer {
         return transform;
     }
 
+    RayQueryMeshInstance CreateRayQueryMeshInstance(const RenderItem& renderItem) {
+        RayQueryMeshInstance meshInstance{};
+        meshInstance.mesh.baseVertex = renderItem.baseVertex;
+        meshInstance.mesh.baseIndex = renderItem.baseIndex;
+        meshInstance.mesh.vertexCount = renderItem.vertexCount;
+        meshInstance.mesh.indexCount = renderItem.indexCount;
+        meshInstance.material.blendingMode = renderItem.blendingMode;
+        meshInstance.material.materialIndex = renderItem.materialIndex;
+        return meshInstance;
+    }
+
+    VkGeometryFlagsKHR GetRayQueryGeometryFlags(const RenderItem& renderItem) {
+        RayQueryMaterial material{};
+        material.blendingMode = renderItem.blendingMode;
+        material.materialIndex = renderItem.materialIndex;
+        return GetRayQueryGeometryFlags(material);
+    }
+
     VkGeometryFlagsKHR GetRayQueryGeometryFlags(const RayQueryMaterial& material) {
         BlendingMode blendingMode = static_cast<BlendingMode>(material.blendingMode);
         bool requiresCandidateProcessing = material.materialIndex < 0 || blendingMode == BlendingMode::ALPHA_DISCARD || blendingMode == BlendingMode::HAIR_UNDER_LAYER || blendingMode == BlendingMode::HAIR || blendingMode == BlendingMode::MIRROR;

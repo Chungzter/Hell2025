@@ -12,10 +12,10 @@ namespace Bible {
         std::string materialName = UNDEFINED_STRING;
 
         switch (Hell::Random::Int(0, 3)) {
-            case 0: materialName = "PresentSmallRed"; break;
-            case 1: materialName = "PresentSmallGreen"; break;
+            case 0: materialName = "PresentSmallRed";    break;
+            case 1: materialName = "PresentSmallGreen";  break;
             case 2: materialName = "PresentSmallYellow"; break;
-            case 3: materialName = "PresentSmallBlue"; break;
+            case 3: materialName = "PresentSmallBlue";   break;
         }
 
         PhysicsFilterData filterData;
@@ -38,39 +38,35 @@ namespace Bible {
         //meshNodes->PrintMeshNames();
     }
 
-    void ConfigureMeshNodesChristmasPresentLarge(uint64_t id, MeshNodes* meshNodes) {
-        Logging::Error() << "You still need to export your large Christmas present model";
-        
-        return;
-        std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
+  void ConfigureMeshNodesChristmasPresentLarge(uint64_t id, MeshNodes* meshNodes) {
+      std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 
-        std::string materialName = UNDEFINED_STRING;
+      std::string materialName = UNDEFINED_STRING;
 
-        switch (Hell::Random::Int(0, 3)) {
-            case 0: materialName = "PresentLargeRed"; break;
-            case 1: materialName = "PresentLargeGreen"; break;
-            case 2: materialName = "PresentLargeYellow"; break;
-            case 3: materialName = "PresentLargeBlue"; break;
-        }
+      switch (Hell::Random::Int(0, 3)) {
+        case 0: materialName = "PresentBigRed";    break;
+        case 1: materialName = "PresentBigGreen";  break;
+        case 2: materialName = "PresentBigYellow"; break;
+        case 3: materialName = "PresentBigBlue";   break;
+      }
 
-        PhysicsFilterData filterData;
-        filterData.raycastGroup = RaycastGroup::RAYCAST_DISABLED;
-        filterData.collisionGroup = CollisionGroup::ITEM_PICK_UP;
-        filterData.collidesWith = CollisionGroup::ENVIROMENT_OBSTACLE;
-        filterData.collidesWith = (CollisionGroup)(ENVIROMENT_OBSTACLE | ITEM_PICK_UP);
+      PhysicsFilterData filterData;
+      filterData.raycastGroup = RaycastGroup::RAYCAST_DISABLED;
+      filterData.collisionGroup = CollisionGroup::ITEM_PICK_UP;
+      filterData.collidesWith = CollisionGroup::ENVIROMENT_OBSTACLE;
+      filterData.collidesWith = (CollisionGroup)(ENVIROMENT_OBSTACLE | ITEM_PICK_UP);
 
-        MeshNodeCreateInfo& present = meshNodeCreateInfoSet.emplace_back();
-        present.meshName = "PresentLarge";
-        present.materialName = materialName;
-        present.rigidDynamic.createObject = true;
-        present.rigidDynamic.kinematic = false;
-        present.rigidDynamic.offsetTransform = Transform();
-        present.rigidDynamic.filterData = filterData;
-        present.rigidDynamic.mass = 1.0;
-        present.rigidDynamic.shapeType = PhysicsShapeType::BOX;
+      MeshNodeCreateInfo& present = meshNodeCreateInfoSet.emplace_back();
+      present.meshName = "PresentBig";
+      present.materialName = materialName;
+      present.rigidDynamic.createObject = true;
+      present.rigidDynamic.kinematic = false;
+      present.rigidDynamic.offsetTransform = Transform();
+      present.rigidDynamic.filterData = filterData;
+      present.rigidDynamic.mass = 1.0;
+      present.rigidDynamic.shapeType = PhysicsShapeType::BOX;
 
-        meshNodes->Init(id, "ChristmasPresentLarge", meshNodeCreateInfoSet);
-        //meshNodes->PrintMeshNames();
+      meshNodes->Init(id, "ChristmasPresentBig", meshNodeCreateInfoSet);
     }
 
     void ConfigureMeshNodesChristmasTree(uint64_t id, MeshNodes* meshNodes) {

@@ -305,8 +305,8 @@ namespace Unloved::Editor {
                     std::vector<std::string> types;
                     types.push_back(Hell::Enum::ToString(DoorType::STANDARD_A));
                     types.push_back(Hell::Enum::ToString(DoorType::STANDARD_B));
-                    types.push_back(Hell::Enum::ToString(DoorType::GLASS));
-                    types.push_back(Hell::Enum::ToString(DoorType::GLASS2));
+                    types.push_back(Hell::Enum::ToString(DoorType::STAINED_GLASS));
+                    types.push_back(Hell::Enum::ToString(DoorType::STAINED_GLASS2));
 
                     std::vector<std::string> materialTypes;
                     materialTypes.push_back(Hell::Enum::ToString(DoorMaterialType::RESIDENT_EVIL));

@@ -11,9 +11,6 @@ namespace Hell::BackEnd {
 
     void CleanUp(); 
 
-    void ToggleBindlessTextures();
-    bool RenderDocFound();
-
     // API
     void SetAPI(API api);
     const API GetAPI();
@@ -34,6 +31,8 @@ namespace Hell::BackEnd {
     int GetWindowedHeight();
     int GetCurrentWindowWidth();
     int GetCurrentWindowHeight();
+    int GetDrawableWidth();
+    int GetDrawableHeight();
     int GetFullScreenWidth();
     int GetFullScreenHeight();
     const WindowedMode& GetWindowedMode();

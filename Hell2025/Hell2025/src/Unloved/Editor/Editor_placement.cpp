@@ -10,6 +10,12 @@
 namespace Input = Hell::Input;
 
 namespace Unloved::Editor {
+    using EditorSession::GetPlacementToolInfo;
+    using EditorSession::PlacementInsertMode;
+    using EditorSession::PlacementRayMode;
+    using EditorSession::PlacementTool;
+    using EditorSession::PlacementToolInfo;
+
 
     namespace {
         PlacementTool g_currentPlacementTool = PlacementTool::NONE;

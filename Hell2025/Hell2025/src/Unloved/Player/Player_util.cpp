@@ -15,7 +15,7 @@ glm::ivec2 Player::GetViewportCenter() {
     int height = resolutions.ui.y * viewport->GetSize().y;
     int xLeft = resolutions.ui.x * viewport->GetPosition().x;
     int xRight = xLeft + width;
-    int yTop = resolutions.ui.y * (1.0f - viewport->GetPosition().y - viewport->GetSize().y);
+    int yTop = resolutions.ui.y * viewport->GetPosition().y;
     int yBottom = yTop + height;
     int centerX = xLeft + (width / 2);
     int centerY = yTop + (height / 2);

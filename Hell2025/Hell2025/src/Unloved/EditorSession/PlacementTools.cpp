@@ -3,7 +3,7 @@
 #include "Hell/Common/Enum.h"
 #include "Hell/Logging.h"
 
-namespace Unloved::Editor {
+namespace Unloved::EditorSession {
 
     namespace {
         std::map<PlacementTool, PlacementToolInfo> g_placementTools;
@@ -347,7 +347,7 @@ namespace Unloved::Editor {
     const PlacementToolInfo* GetPlacementToolInfo(PlacementTool tool) {
         auto it = g_placementTools.find(tool);
         if (it == g_placementTools.end()) {
-            Logging::Error() << "Editor::GetPlacementToolInfo() failed '" << Hell::Enum::ToString(tool) << "' not implemented\n";
+            Logging::Error() << "EditorSession::GetPlacementToolInfo() failed '" << Hell::Enum::ToString(tool) << "' not implemented\n";
             return nullptr;
         }
         return &it->second;

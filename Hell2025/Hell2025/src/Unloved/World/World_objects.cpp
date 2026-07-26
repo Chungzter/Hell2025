@@ -612,13 +612,10 @@ namespace Unloved::World {
         bool updated = false;
 
         switch (GetObjectIdType(objectId)) {
+        case ObjectType::ANIMATED_GAME_OBJECT: updated = SetPosition_T(GetAnimatedGameObjects(), objectId, position); break;
+        case ObjectType::CHRISTMAS_LIGHTS: updated = SetPosition_T(GetChristmasLightSets(), objectId, position); break;
         case ObjectType::DDGI_VOLUME:    updated = SetPosition_T(GetDDGIVolumes(), objectId, position); break;
-        case ObjectType::DOBERMANN:
-            if (Dobermann* dobermann = GetDobermannByObjectId(objectId)) {
-                dobermann->SetSpawnPosition(position);
-                updated = true;
-            }
-            break;
+        case ObjectType::DOBERMANN:      updated = SetPosition_T(GetDobermanns(), objectId, position); break;
         case ObjectType::DOOR:           updated = SetPosition_T(GetDoors(), objectId, position); break;
         case ObjectType::FIREPLACE:      updated = SetPosition_T(GetFireplaces(), objectId, position); break;
         case ObjectType::GAME_OBJECT:    updated = SetPosition_T(GetGameObjects(), objectId, position); break;
@@ -631,14 +628,7 @@ namespace Unloved::World {
         case ObjectType::PIANO:          updated = SetPosition_T(GetPianos(), objectId, position); break;
         case ObjectType::PICK_UP:        updated = SetPosition_T(GetPickUps(), objectId, position); break;
         case ObjectType::PICTURE_FRAME:  updated = SetPosition_T(GetPictureFrames(), objectId, position); break;
-
-        case ObjectType::SHARK:
-            if (Shark* shark = GetSharkByObjectId(objectId)) {
-                shark->SetPatrolCenter(position);
-                updated = true;
-            }
-            break;
-
+        case ObjectType::SHARK:          updated = SetPosition_T(GetSharks(), objectId, position); break;
         case ObjectType::STAIRCASE:      updated = SetPosition_T(GetStaircases(), objectId, position); break;
         case ObjectType::WALL:           updated = SetPosition_T(GetWalls(), objectId, position); break;
         case ObjectType::WINDOW:         updated = SetPosition_T(GetWindows(), objectId, position); break;
@@ -675,6 +665,7 @@ namespace Unloved::World {
         case ObjectType::LADDER:         return SetRotation_T(GetLadders(), objectId, rotation);
         case ObjectType::LIGHT:          return SetRotation_T(GetLights(), objectId, rotation);
         case ObjectType::MERMAID:        return SetRotation_T(GetMermaids(), objectId, rotation);
+        case ObjectType::PIANO:          return SetRotation_T(GetPianos(), objectId, rotation);
         case ObjectType::PICK_UP:        return SetRotation_T(GetPickUps(), objectId, rotation);
         case ObjectType::PICTURE_FRAME:  return SetRotation_T(GetPictureFrames(), objectId, rotation);
         case ObjectType::STAIRCASE:      return SetRotation_T(GetStaircases(), objectId, rotation);
@@ -722,9 +713,7 @@ namespace Unloved::World {
         case ObjectType::BULLET_CASING:          position = GetCreateInfoPosition_T(GetBulletCasings(), objectId); break;
         case ObjectType::CHRISTMAS_LIGHTS:       position = GetPosition_T(GetChristmasLightSets(), objectId); break;
         case ObjectType::TREE:                   position = GetPosition_T(GetChristmasTrees(), objectId); break;
-        case ObjectType::DDGI_VOLUME:
-            if (DDGIVolume* ddgiVolume = GetDDGIVolumes().get(objectId)) position = &ddgiVolume->GetOrigin();
-            break;
+        case ObjectType::DDGI_VOLUME:            position = GetPosition_T(GetDDGIVolumes(), objectId); break;
         case ObjectType::DOBERMANN:              position = GetCreateInfoPosition_T(GetDobermanns(), objectId); break;
         case ObjectType::DOOR:                   position = GetPosition_T(GetDoors(), objectId); break;
         case ObjectType::FIREPLACE:              position = GetPosition_T(GetFireplaces(), objectId); break;
@@ -745,6 +734,9 @@ namespace Unloved::World {
         case ObjectType::STAIRCASE:              position = GetPosition_T(GetStaircases(), objectId); break;
         case ObjectType::WALL:                   position = GetWorldSpaceCenter_T(GetWalls(), objectId); break;
         case ObjectType::WINDOW:                 position = GetPosition_T(GetWindows(), objectId); break;
+        case ObjectType::FENCE:
+        case ObjectType::POWER_POLE_SET:
+            return invalid;
         default:
             break;
         }
@@ -809,6 +801,13 @@ namespace Unloved::World {
         case ObjectType::SPAWN_POINT_DEATHMATCH: rotation = GetSpawnPointRotation_T(GetSpawnPointsDeathMatch(), objectId); break;
         case ObjectType::STAIRCASE:              rotation = GetRotation_T(GetStaircases(), objectId); break;
         case ObjectType::WINDOW:                 rotation = GetRotation_T(GetWindows(), objectId); break;
+        case ObjectType::ANIMATED_GAME_OBJECT:
+        case ObjectType::FENCE:
+        case ObjectType::POWER_POLE_SET:
+        case ObjectType::SHARK:
+        case ObjectType::WALL:
+        case ObjectType::WORLD_PLANE:
+            return invalid;
         default:
             break;
         }
@@ -835,6 +834,24 @@ namespace Unloved::World {
         if (!object) return nullptr;
 
         return &object->GetCreateInfo().editorName;
+    }
+
+    template<typename Container>
+    bool SetEditorName_T(Container& objects, uint64_t objectId, const std::string& editorName) {
+        const std::string* currentEditorName = GetEditorName_T(objects, objectId);
+        if (!currentEditorName) return false;
+
+        *const_cast<std::string*>(currentEditorName) = editorName;
+        return true;
+    }
+
+    template<typename Container>
+    bool SetCreateInfoEditorName_T(Container& objects, uint64_t objectId, const std::string& editorName) {
+        const std::string* currentEditorName = GetCreateInfoEditorName_T(objects, objectId);
+        if (!currentEditorName) return false;
+
+        *const_cast<std::string*>(currentEditorName) = editorName;
+        return true;
     }
 
     const std::string& GetEditorNameById(uint64_t objectId) {
@@ -881,6 +898,44 @@ namespace Unloved::World {
 
         Logging::Error() << "World::GetEditorNameById() failed: unsupported object type '" << Hell::Enum::ToString(GetObjectIdType(objectId)) << "'\n";
         return invalid;
+    }
+
+    bool SetEditorNameById(uint64_t objectId, const std::string& editorName) {
+        if (objectId == 0) return false;
+
+        switch (GetObjectIdType(objectId)) {
+        case ObjectType::ANIMATED_GAME_OBJECT:   return SetEditorName_T(GetAnimatedGameObjects(), objectId, editorName);
+        case ObjectType::BULLET_CASING:          return SetEditorName_T(GetBulletCasings(), objectId, editorName);
+        case ObjectType::CHRISTMAS_LIGHTS:       return SetCreateInfoEditorName_T(GetChristmasLightSets(), objectId, editorName);
+        case ObjectType::TREE:                   return SetEditorName_T(GetChristmasTrees(), objectId, editorName);
+        case ObjectType::DECAL:                  return SetEditorName_T(GetDecals(), objectId, editorName);
+        case ObjectType::DDGI_VOLUME:            return SetEditorName_T(GetDDGIVolumes(), objectId, editorName);
+        case ObjectType::DOBERMANN:              return SetEditorName_T(GetDobermanns(), objectId, editorName);
+        case ObjectType::DOOR:                   return SetEditorName_T(GetDoors(), objectId, editorName);
+        case ObjectType::FENCE:                  return SetCreateInfoEditorName_T(GetFences(), objectId, editorName);
+        case ObjectType::FIREPLACE:              return SetCreateInfoEditorName_T(GetFireplaces(), objectId, editorName);
+        case ObjectType::GAME_OBJECT:            return SetCreateInfoEditorName_T(GetGameObjects(), objectId, editorName);
+        case ObjectType::GENERIC_OBJECT:         return SetEditorName_T(GetGenericObjects(), objectId, editorName);
+        case ObjectType::WORLD_PLANE:            return SetEditorName_T(GetWorldPlanes(), objectId, editorName);
+        case ObjectType::KANGAROO:               return SetEditorName_T(GetKangaroos(), objectId, editorName);
+        case ObjectType::LADDER:                 return SetCreateInfoEditorName_T(GetLadders(), objectId, editorName);
+        case ObjectType::LIGHT:                  return SetCreateInfoEditorName_T(GetLights(), objectId, editorName);
+        case ObjectType::MERMAID:                return SetCreateInfoEditorName_T(GetMermaids(), objectId, editorName);
+        case ObjectType::PIANO:                  return SetEditorName_T(GetPianos(), objectId, editorName);
+        case ObjectType::PICK_UP:                return SetCreateInfoEditorName_T(GetPickUps(), objectId, editorName);
+        case ObjectType::PICTURE_FRAME:          return SetCreateInfoEditorName_T(GetPictureFrames(), objectId, editorName);
+        case ObjectType::POWER_POLE_SET:         return SetCreateInfoEditorName_T(GetPowerPoleSets(), objectId, editorName);
+        case ObjectType::SHARK:                  return SetEditorName_T(GetSharks(), objectId, editorName);
+        case ObjectType::SPAWN_POINT_CAMPAIGN:   return SetCreateInfoEditorName_T(GetSpawnPointsCampaign(), objectId, editorName);
+        case ObjectType::SPAWN_POINT_DEATHMATCH: return SetCreateInfoEditorName_T(GetSpawnPointsDeathMatch(), objectId, editorName);
+        case ObjectType::STAIRCASE:              return SetCreateInfoEditorName_T(GetStaircases(), objectId, editorName);
+        case ObjectType::TRIM_SET:               return SetEditorName_T(GetTrimSets(), objectId, editorName);
+        case ObjectType::WALL:                   return SetEditorName_T(GetWalls(), objectId, editorName);
+        case ObjectType::WINDOW:                 return SetCreateInfoEditorName_T(GetWindows(), objectId, editorName);
+        default:
+            Logging::Error() << "World::SetEditorNameById() failed: unsupported object type '" << Hell::Enum::ToString(GetObjectIdType(objectId)) << "'\n";
+            return false;
+        }
     }
 
     // Remove Object

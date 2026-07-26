@@ -2,18 +2,20 @@
 #include "../common/OpenGL/GL_binding_indices.glsl"
 
 #include "../common/lighting.glsl"
+#include "../common/normal_encoding.glsl"
 #include "../common/post_processing.glsl"
 #include "../common/reconstruction.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
+#include "../common/viewport.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
 layout(rgba16f, binding = 0) uniform image2D LightingImage;
 
-layout (binding = 1) uniform sampler2D BaseColorTexture;
-layout (binding = 2) uniform sampler2D NormalTexture;
-layout (binding = 3) uniform sampler2D RMATexture;
+layout (binding = 1) uniform sampler2D BaseColorMetallicTexture;
+layout (binding = 2) uniform sampler2D NormalXYRoughnessMiscTexture;
+layout (binding = 3) uniform sampler2D VelocityXYOcclusionSubSurfaceTexture;
 layout (binding = 4) uniform sampler2D u_depthTexture;
 layout (binding = 5) uniform sampler2D DownsizedLightingTexture;
 layout (binding = 6) uniform sampler2D ViewSpaceDepthTexture;
@@ -37,10 +39,6 @@ float Hash12(vec2 p) {
     return fract((p3.x + p3.y) * p3.z);
 }
 
-bool IsSky(vec3 n) {
-    return (n.x == 0.0 && n.y == 0.0 && n.z == 0.0);
-}
-
 float EdgeFade(vec2 uv) {
     float edge = min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
     return clamp(edge / max(u_edgeFade, 0.0001), 0.0, 1.0);
@@ -54,7 +52,7 @@ float FetchViewZ_GlobalUV(vec2 globalUV, ivec2 viewZSize) {
 
 // Refine an intersection between [tA, tB] where dz(tA) <= 0 and dz(tB) > 0.
 // Returns true if we get a refined hit that passes the thickness gate.
-bool BinaryRefineHit(vec3 P_view, vec3 R_view, mat4 projectionMatrix, ViewportData v, ivec2 viewZSize, float thickness, inout float tA, inout float tB, out vec2 outViewportUV, out float outT)
+bool BinaryRefineHit(vec3 P_view, vec3 R_view, mat4 projectionMatrix, ivec4 viewportRect, ivec2 viewZSize, float thickness, inout float tA, inout float tB, out vec2 outViewportUV, out float outT)
 {
     float a = tA;
     float b = tB;
@@ -72,14 +70,13 @@ bool BinaryRefineHit(vec3 P_view, vec3 R_view, mat4 projectionMatrix, ViewportDa
             continue;
         }
 
-        float invW = 1.0 / midClip.w;
-        vec2 midViewportUV = midClip.xy * invW * 0.5 + 0.5;
+        vec2 midViewportUV = ViewportUVFromClipPosition(midClip);
         if (any(lessThan(midViewportUV, vec2(0.0))) || any(greaterThan(midViewportUV, vec2(1.0)))) {
             b = m;
             continue;
         }
 
-        vec2 midGlobalUV = ViewportUVToGlobalUV(midViewportUV, v);
+        vec2 midGlobalUV = ScreenUVFromViewportUV(midViewportUV, viewZSize, viewportRect);
 
         float midSceneP_view = FetchViewZ_GlobalUV(midGlobalUV, viewZSize);
         float midDz = midSceneP_view - midP_view.z;
@@ -97,11 +94,10 @@ bool BinaryRefineHit(vec3 P_view, vec3 R_view, mat4 projectionMatrix, ViewportDa
     vec4 refineClip = projectionMatrix * vec4(refineP_view, 1.0);
     if (refineClip.w <= 0.000001) return false;
 
-    float invW = 1.0 / refineClip.w;
-    vec2 refineViewportUV = refineClip.xy * invW * 0.5 + 0.5;
+    vec2 refineViewportUV = ViewportUVFromClipPosition(refineClip);
     if (any(lessThan(refineViewportUV, vec2(0.0))) || any(greaterThan(refineViewportUV, vec2(1.0)))) return false;
 
-    vec2 refineGlobalUV = ViewportUVToGlobalUV(refineViewportUV, v);
+    vec2 refineGlobalUV = ScreenUVFromViewportUV(refineViewportUV, viewZSize, viewportRect);
 
     float refineSceneP_view = FetchViewZ_GlobalUV(refineGlobalUV, viewZSize);
 
@@ -124,27 +120,22 @@ void main() {
         return;
     }
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-
-    ViewportData viewportData = viewportDataArr[viewportIndex];
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData);
-    mat4 inverseProjectionView = viewportData.inverseJitteredProjectionViewReverseZ;
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+    vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
+    mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
-    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionView);
+    if (depth <= 0.0) return;
+    vec3 worldPos = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
 
-    vec3 normalRaw = texelFetch(NormalTexture, px, 0).xyz;
-    if (IsSky(normalRaw)) {
-        return;
-    }
-
-    vec3 N_world = normalize(normalRaw);
-
-    vec4 rma = texelFetch(RMATexture, px, 0);
-    float roughness = rma.r;
-    float metallic  = rma.g;
-    float ao  = rma.b;
+    vec4 baseColorMetallic = texelFetch(BaseColorMetallicTexture, px, 0);
+    vec4 normalXYRoughnessMisc = texelFetch(NormalXYRoughnessMiscTexture, px, 0);
+    vec4 velocityXYOcclusionSubSurface = texelFetch(VelocityXYOcclusionSubSurfaceTexture, px, 0);
+    vec3 N_world = DecodeOct(normalXYRoughnessMisc.rg);
+    float roughness = normalXYRoughnessMisc.b;
+    float metallic = baseColorMetallic.a;
+    float ao = velocityXYOcclusionSubSurface.b;
     float gloss = 1 - roughness;
 
     // Early out if the point is too dark to notice SSR anyways
@@ -155,21 +146,20 @@ void main() {
     // Early out for areas with basically no SSR
     if (gloss < 0.15) return;
 
-    mat4 viewMatrix = viewportData.view;
+    mat4 viewMatrix = viewportDataArr[viewportIndex].view;
     // Convert the jittered projection-view back to a projection matrix so
     // view-space ray samples land on the same pixel grid as the depth buffer.
-    mat4 projectionMatrix = viewportData.jitteredProjectionViewReverseZ * viewportData.inverseView;
-    mat4 inverseView = viewportData.inverseView;
+    mat4 inverseView = viewportDataArr[viewportIndex].inverseView;
+    mat4 projectionMatrix = viewportDataArr[viewportIndex].jitteredProjectionViewReverseZ * inverseView;
 
     vec3 viewPosWorld = inverseView[3].xyz;
 
     ivec2 viewZSize = textureSize(ViewSpaceDepthTexture, 0);
-    float viewspaceDepth = texelFetch(ViewSpaceDepthTexture, px, 0).r;
 
     vec3 V_world = normalize(viewPosWorld - worldPos);
     vec3 R_world = normalize(reflect(-V_world, N_world));
 
-    vec3 baseColor = texelFetch(BaseColorTexture, px, 0).rgb;
+    vec3 baseColor = baseColorMetallic.rgb;
     vec3 gammaBaseColor = pow(baseColor, vec3(2.2));
     vec3 F0 = mix(vec3(0.04), gammaBaseColor, metallic);
 
@@ -209,14 +199,13 @@ void main() {
         vec4 clip = projectionMatrix * vec4(sampleP_view, 1.0);
         if (clip.w <= 0.000001) break;
 
-        float invW = 1.0 / clip.w;
-        vec2 sampleViewportUV = clip.xy * invW * 0.5 + 0.5;
+        vec2 sampleViewportUV = ViewportUVFromClipPosition(clip);
 
         if (any(lessThan(sampleViewportUV, vec2(0.0))) || any(greaterThan(sampleViewportUV, vec2(1.0)))) {
             break;
         }
 
-        vec2 sampleGlobalUV = ViewportUVToGlobalUV(sampleViewportUV, viewportData);
+        vec2 sampleGlobalUV = ScreenUVFromViewportUV(sampleViewportUV, viewZSize, viewportRect);
         float sceneP_view = FetchViewZ_GlobalUV(sampleGlobalUV, viewZSize);
 
         float thickness = u_thickness + rayT * 0.002;
@@ -230,10 +219,10 @@ void main() {
                 vec2 refineViewportUV;
                 float refineT;
 
-                if (BinaryRefineHit(P_view, R_view, projectionMatrix, viewportData, viewZSize, thickness, tA, tB, refineViewportUV, refineT)) {
+                if (BinaryRefineHit(P_view, R_view, projectionMatrix, viewportRect, viewZSize, thickness, tA, tB, refineViewportUV, refineT)) {
                     hit = 1.0;
                     hitViewportUV = refineViewportUV;
-                    hitGlobalUV = ViewportUVToGlobalUV(refineViewportUV, viewportData);
+                    hitGlobalUV = ScreenUVFromViewportUV(refineViewportUV, viewZSize, viewportRect);
                     hitRayT = refineT;
                 }
 

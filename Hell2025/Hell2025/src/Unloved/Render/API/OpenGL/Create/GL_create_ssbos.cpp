@@ -37,12 +37,12 @@ namespace OpenGL::Renderer{
         OpenGL::ResourceManager::CreateSSBO("Samplers").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("ViewportData").Create(sizeof(ViewportData) * 4, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("RendererData").Create(sizeof(RendererData), GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("GlassInstanceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("GlassLightRanges").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("GlassLightIndices").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("GlassSpotLightRanges").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("GlassSpotLightIndices").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
-        OpenGL::ResourceManager::CreateSSBO("InstanceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("SceneRenderItems").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("DrawRenderItemIndices").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("SpriteSheetInstanceData").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("Lights").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("SpotLights").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
@@ -54,6 +54,7 @@ namespace OpenGL::Renderer{
         OpenGL::ResourceManager::CreateSSBO("PointShadowStaticLowResDrawCommands").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("PointShadowHiResDrawCommands").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
         OpenGL::ResourceManager::CreateSSBO("PointShadowLowResDrawCommands").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
+        OpenGL::ResourceManager::CreateSSBO("PointShadowDrawFaceIndices").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);
 
         // Skinning
         OpenGL::ResourceManager::CreateSSBO("SkinningDispatchGroups").Create(dummySize, GL_DYNAMIC_STORAGE_BIT);

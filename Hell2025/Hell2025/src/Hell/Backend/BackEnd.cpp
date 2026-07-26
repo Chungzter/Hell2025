@@ -32,15 +32,6 @@ namespace InputMulti = Hell::InputMulti;
 namespace Synth = Hell::Synth;
 namespace Time = Hell::Time;
 
-#define NOMINMAX
-#ifdef _WIN32
-#include <windows.h>
-#include <tlhelp32.h>
-#ifdef ERROR
-#undef ERROR
-#endif
-#endif
-
 // Prevent accidentally selecting integrated GPU
 extern "C" {
     __declspec(dllexport) unsigned __int32 AmdPowerXpressRequestHighPerformance = 0x1;
@@ -52,9 +43,6 @@ namespace Hell::BackEnd {
     std::string g_title;
     int g_presentTargetWidth = 0;
     int g_presentTargetHeight = 0;
-    bool g_renderDocFound = false;
-
-    void CheckForRenderDoc();
 
     bool Init(API api, WindowedMode windowMode, const std::string& title, uint32_t maxCompressedTextureResolution) {
         Logging::EnableLevel(Logging::Level::INIT);
@@ -69,8 +57,6 @@ namespace Hell::BackEnd {
 
         g_api = api;
         g_title = title;
-        CheckForRenderDoc();        // <--- COMMENT OUT THIS
-        //g_renderDocFound = true;  // <--- ADD THIS
 
         Config::Init();
         if (!GLFW::Init(api, windowMode)) {
@@ -218,6 +204,14 @@ namespace Hell::BackEnd {
         return GLFW::GetCurrentWindowHeight();
     }
 
+    int GetDrawableWidth() {
+        return GLFW::GetDrawableWidth();
+    }
+
+    int GetDrawableHeight() {
+        return GLFW::GetDrawableHeight();
+    }
+
     int GetFullScreenWidth() {
         return GLFW::GetFullScreenWidth();
     }
@@ -232,43 +226,6 @@ namespace Hell::BackEnd {
 
     int GetPresentTargetHeight() {
         return g_presentTargetHeight;
-    }
-
-    void CheckForRenderDoc() {
-        #ifdef _WIN32
-        HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-        if (snapshot == INVALID_HANDLE_VALUE) {
-            g_renderDocFound = false;
-        }
-
-        MODULEENTRY32 moduleEntry;
-        moduleEntry.dwSize = sizeof(MODULEENTRY32);
-        bool found = false;
-        if (Module32First(snapshot, &moduleEntry)) {
-            do {
-                std::wstring wmodule(moduleEntry.szModule);
-                std::string moduleName(wmodule.begin(), wmodule.end());
-
-                if (moduleName.find("renderdoc.dll") != std::string::npos) {
-                    found = true;
-                    break;
-                }
-            } while (Module32Next(snapshot, &moduleEntry));
-        }
-        CloseHandle(snapshot);
-
-        g_renderDocFound = found;
-        #else
-        g_renderDocActive = false;
-        #endif
-    }
-
-    void ToggleBindlessTextures() {
-        g_renderDocFound = !g_renderDocFound;
-    }
-
-    bool RenderDocFound() {
-        return g_renderDocFound;
     }
 
 }

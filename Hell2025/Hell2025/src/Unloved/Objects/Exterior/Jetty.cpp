@@ -8,6 +8,8 @@
 #include "Unloved/Render/RendererUtil.h"
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
 
+#include <glm/common.hpp>
+
 namespace Unloved {
 
     #define BOARD_SPACING 0.27f
@@ -24,7 +26,7 @@ namespace Unloved {
 
     void Jetty::CleanUp() {
         m_renderItems.clear();
-        Hell::Physics::MarkRigidDynamicForRemoval(m_rigidStaticId);
+        Hell::Physics::MarkRigidStaticForRemoval(m_rigidStaticId);
     }
 
     void Jetty::Update() {
@@ -67,8 +69,13 @@ namespace Unloved {
         RecreateAll();
     }
 
+    void Jetty::SetScale(const glm::vec3& scale) {
+        m_createInfo.scale = scale;
+        RecreateAll();
+    }
+
     void Jetty::SetBoardCount(uint32_t boardCount) {
-        m_createInfo.boardCount = boardCount;
+        m_createInfo.boardCount = boardCount == 0 ? 1 : boardCount;
         RecreateAll();
     }
 
@@ -157,7 +164,7 @@ namespace Unloved {
         transform.position = m_worldSpaceCenter;
         transform.rotation = m_createInfo.rotation;
 
-        glm::vec3 boxExtents = glm::vec3(BOARD_SPACING * GetBoardCount(), 0.05f, 2.59f);
+        glm::vec3 boxExtents = glm::vec3(BOARD_SPACING * GetBoardCount(), 0.05f, 2.59f) * glm::abs(m_createInfo.scale);
 
         PhysicsFilterData filterData;
         filterData.raycastGroup = RAYCAST_ENABLED;

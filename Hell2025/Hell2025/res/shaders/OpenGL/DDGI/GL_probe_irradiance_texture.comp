@@ -4,6 +4,7 @@
 #include "../../common/ddgi.glsl"
 #include "../../common/reconstruction.glsl"
 #include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
@@ -158,15 +159,14 @@ void main() {
 
     if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) return;
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
-
-    ViewportData viewport = viewportDataArr[viewportIndex];
-    mat4 inverseProjectionViewReverseZ = viewport.inverseJitteredProjectionViewReverseZ;
-    vec3 viewPos = viewport.viewPos.xyz;
-
-    ivec2 inputCoords = ivec2(screenUV * vec2(textureSize(u_normalTexture, 0)));
+    vec2 screenUV = ScreenUVFromPixel(px, outputImageSize);
+    ivec2 gBufferSize = textureSize(u_normalTexture, 0);
+    ivec2 inputCoords = clamp(ivec2(screenUV * vec2(gBufferSize)), ivec2(0), gBufferSize - ivec2(1));
+    uint viewportIndex = ViewportIndexFromPixel(inputCoords, gBufferSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+    mat4 inverseProjectionViewReverseZ = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
+    vec3 viewPos = viewportDataArr[viewportIndex].viewPos.xyz;
+    vec2 viewportUV = ViewportUVFromPixel(inputCoords, gBufferSize, viewportRect);
 
     vec3 normal = DecodeOct(texelFetch(u_normalTexture, inputCoords, 0).rg);
 
@@ -181,7 +181,7 @@ void main() {
 
     // Position from depth
     float depth = texelFetch(u_depthTexture, inputCoords, 0).r;
-    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionViewReverseZ);
+    vec3 worldPos = WorldPosFromDepth(viewportUV, depth, inverseProjectionViewReverseZ);
 
     if (any(lessThan(worldPos, volume.worldBoundsMin)) || any(greaterThan(worldPos, volume.worldBoundsMax))) {
         return;

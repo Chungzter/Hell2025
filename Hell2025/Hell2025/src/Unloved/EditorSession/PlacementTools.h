@@ -3,7 +3,7 @@
 #include <map>
 #include <string>
 
-namespace Unloved::Editor {
+namespace Unloved::EditorSession {
 
     enum class PlacementTool {
         NONE,

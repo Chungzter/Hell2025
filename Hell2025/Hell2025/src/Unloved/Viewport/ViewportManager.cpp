@@ -1,20 +1,18 @@
 #pragma once
 #include "ViewportManager.h"
 
-#include "Hell/Backend/BackEnd.h"
-
-#include "Unloved/Common/Constants.h"
-#include "Unloved/Render/Renderer.h"
-
 #include "Unloved/Config/Config.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorLayout.h"
+#include "Unloved/EditorSession/EditorSession.h"
+#include "Unloved/EditorSession/EditorViewports.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
-#include "Unloved/UI/Imgui/ImguiBackEnd.h"
 
 #include <iostream> // TODO clean up logging
 
 namespace Unloved::ViewportManager {
+    constexpr float ORTHOGRAPHIC_CLIP_DISTANCE = 500.0f;
     std::vector<Viewport> g_viewports;
 
     void Init() {
@@ -29,57 +27,32 @@ namespace Unloved::ViewportManager {
     }
 
     void Update() {
-        const Resolutions& resolutions = Config::GetResolutions();
-
         // Set state / recreate matrices based on editor/splitscreen mode
         // Clean this up when you have a moment.
-        if (Editor::IsOpen()) {
-            float splitX = Editor::GetVerticalDividerXPos();
-            float splitY = Editor::GetHorizontalDividerYPos();
-                      
-            float editorPanelRightEdgeNormalized = EDITOR_LEFT_PANEL_WIDTH / Hell::BackEnd::GetCurrentWindowWidth();
-            float fileMenuBottomNormalized = (float)ImGuiBackEnd::GetFileMenuHeight() / (float)Hell::BackEnd::GetCurrentWindowHeight();
-
-            float beginX = editorPanelRightEdgeNormalized;
-            float beginY = fileMenuBottomNormalized;
-
-            // 4 way split
-            if (Editor::GetEditorViewportSplitMode() == EditorViewportSplitMode::FOUR_WAY_SPLIT) {
-                g_viewports[0].SetPosition(glm::vec2(beginX, 1.0f - splitY));  // Top-left
-                g_viewports[1].SetPosition(glm::vec2(splitX, 1.0f - splitY));  // Top-right
-                g_viewports[2].SetPosition(glm::vec2(beginX + 0.0f, 0.0f));             // Bottom-left
-                g_viewports[3].SetPosition(glm::vec2(splitX, 0.0f));                    // Bottom-right
-                g_viewports[0].SetSize(glm::vec2(splitX - beginX, splitY - beginY));
-                g_viewports[1].SetSize(glm::vec2(1.0f - splitX, splitY - beginY));
-                g_viewports[2].SetSize(glm::vec2(splitX - beginX, 1.0f - splitY));
-                g_viewports[3].SetSize(glm::vec2(1.0f - splitX, 1.0f - splitY));
-                g_viewports[0].Show();
-                g_viewports[1].Show();
-                g_viewports[2].Show();
-                g_viewports[3].Show();
-            }
-            else if (Editor::GetEditorViewportSplitMode() == EditorViewportSplitMode::SINGLE) {
-                g_viewports[0].SetPosition(glm::vec2(beginX, 0.0f));  // Top-left
-                g_viewports[1].SetPosition(glm::vec2(beginX, 0.0f));  // Top-right
-                g_viewports[2].SetPosition(glm::vec2(beginX, 0.0f));  // Bottom-left
-                g_viewports[3].SetPosition(glm::vec2(beginX, 0.0f));  // Bottom-right
-                g_viewports[0].SetSize(glm::vec2(1.0f - beginX, 1.0f - beginY));
-                g_viewports[1].SetSize(glm::vec2(1.0f - beginX, 1.0f - beginY));
-                g_viewports[2].SetSize(glm::vec2(1.0f - beginX, 1.0f - beginY));
-                g_viewports[3].SetSize(glm::vec2(1.0f - beginX, 1.0f - beginY));
-                g_viewports[0].Show();
-                g_viewports[1].Hide();
-                g_viewports[2].Hide();
-                g_viewports[3].Hide();
-            }
+        if (EditorSession::IsActive()) {
             for (int i = 0; i < 4; i++) {
-                float orthoNear = 0.1f;
-                float orthoFar = 1000.0f;
+                const EditorSession::EditorViewportRegion* region = EditorSession::Layout::GetViewportRegionByIndex(i);
+                if (region && region->visible) {
+                    g_viewports[i].SetPosition(region->normalizedPosition);
+                    g_viewports[i].SetSize(region->normalizedSize);
+                    g_viewports[i].Show();
+                }
+                else {
+                    g_viewports[i].Hide();
+                }
 
-                g_viewports[i].SetViewportMode(Editor::GetViewportModeByIndex(i));
-                Editor::IsViewportOrthographic(i)
-                    ? g_viewports[i].SetOrthographic(g_viewports[i].GetOrthoSize(), orthoNear, orthoFar)
-                    : g_viewports[i].SetPerspective(1.0f, Config::GetNearPlane(), Config::GetFarPlane());
+                const EditorSession::EditorViewportMode mode = EditorSession::Viewports::GetMode(i);
+                g_viewports[i].SetViewportMode(ShadingMode::SHADED);
+                if (EditorSession::UsesOrthographicProjection(mode)) {
+                    const EditorSession::EditorCamera* camera = EditorSession::Viewports::GetCameraByIndex(i);
+                    const float clipCenter = camera ? camera->GetDistance() : 0.0f;
+
+                    // Center the ortho depth range on the pivot instead of the old camera position
+                    g_viewports[i].SetOrthographic(EditorSession::Viewports::GetOrthographicSize(i), clipCenter - ORTHOGRAPHIC_CLIP_DISTANCE, clipCenter + ORTHOGRAPHIC_CLIP_DISTANCE);
+                }
+                else {
+                    g_viewports[i].SetPerspective(EditorSession::Viewports::GetPerspectiveFov(i), Config::GetNearPlane(), Config::GetFarPlane());
+                }
             }
         }
         // When not in the editor

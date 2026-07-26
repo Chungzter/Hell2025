@@ -4,6 +4,7 @@
 #include "../common/reconstruction.glsl"
 #include "../common/util.glsl"
 #include "../common/normal_encoding.glsl"
+#include "../common/viewport.glsl"
 
 layout(location = 0) out vec4 BaseColorMetallicOut;
 layout(location = 1) out vec4 NormalXYRoughnessMiscOut;
@@ -28,10 +29,10 @@ void main() {
         discard;
     }
 
-    ViewportData viewport = viewportData[u_viewportIndex];
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(gBufferSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewport);
-    vec3 worldPosition = WorldPosFromDepth_GL(viewportUV, depth, viewport.inverseJitteredProjectionViewReverseZ);
+    ivec4 viewportRect = ivec4(viewportData[u_viewportIndex].xOffset, viewportData[u_viewportIndex].yOffset, viewportData[u_viewportIndex].width, viewportData[u_viewportIndex].height);
+    mat4 inverseProjectionView = viewportData[u_viewportIndex].inverseJitteredProjectionViewReverseZ;
+    vec2 viewportUV = ViewportUVFromPixel(px, gBufferSize, viewportRect);
+    vec3 worldPosition = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
 
     vec3 positionDx = dFdx(worldPosition);
     vec3 positionDy = dFdy(worldPosition);

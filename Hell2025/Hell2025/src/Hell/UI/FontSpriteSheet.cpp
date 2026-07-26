@@ -1,11 +1,12 @@
 #include "FontSpriteSheet.h"
+#include <cmath>
 #include <fstream>
-#include <sstream>
 #include <vector>
 #include <iostream>
 #include <filesystem>
 #include <algorithm>
 #include <regex>
+#include <stdexcept>
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #include "stb_image.h"
@@ -22,11 +23,10 @@ namespace FontSpriteSheetPacker {
     };
 
     ImageData LoadImageData(const std::string& filepath);
-    std::string EscapeString(const std::string& str);
-    std::string UnescapeString(const std::string& str);
-    int FindInt(const std::string& jsonChunk, const std::string& key);
-    std::string FindString(const std::string& json, const std::string& key);
-    std::vector<std::string> FindArray(const std::string& json, const std::string& key);
+    std::unordered_map<std::string, std::string> ParseAttributes(const std::string& line);
+    int FindRequiredInt(const std::unordered_map<std::string, std::string>& attributes, const std::string& key);
+    std::string FindRequiredString(const std::unordered_map<std::string, std::string>& attributes, const std::string& key);
+    std::vector<uint32_t> DecodeUTF8(const std::string& text);
     std::vector<std::string> GetSortedFilePaths(const std::string& directory);
 
     void ExampleUsage() {
@@ -36,7 +36,7 @@ namespace FontSpriteSheetPacker {
         std::string outputPath = "res/fonts/";
 
         Export(name, characters, 0, 0, textureSourcePath, outputPath);
-        FontSpriteSheet fontSpriteSheet = Import("res/fonts/StandardFont.json");
+        FontSpriteSheet fontSpriteSheet = Import("res/fonts/StandardFont.fnt");
     }
 
     void Export(const std::string& name, const std::string& characters, int charSpacing, int lineSpacing, const std::string& textureSourcePath, const std::string& outputPath) {
@@ -47,7 +47,7 @@ namespace FontSpriteSheetPacker {
         // Configure filepaths
         std::filesystem::path outputDir = outputPath;
         std::filesystem::path outputImagePath = outputDir / (name + ".png");
-        std::filesystem::path outputJSONPath = outputDir / (name + ".json"); 
+        std::filesystem::path outputFontPath = outputDir / (name + ".fnt");
 
         // Load the image data
         std::vector<std::string> filePaths = GetSortedFilePaths(textureSourcePath);
@@ -62,6 +62,18 @@ namespace FontSpriteSheetPacker {
             if (!imageData.m_data) {
                 std::cout << "Failed to load font sprite sheet image data\n";
             }
+        }
+
+        std::vector<uint32_t> codepoints = DecodeUTF8(characters);
+        if (imageDataList.empty()) {
+            throw std::runtime_error("No glyph images found for font: " + name);
+        }
+        if (codepoints.size() != imageDataList.size()) {
+            throw std::runtime_error(
+                "Font glyph count mismatch for " + name + ": " +
+                std::to_string(codepoints.size()) + " characters but " +
+                std::to_string(imageDataList.size()) + " images"
+            );
         }
 
         // Calculate total area and max character height
@@ -81,13 +93,15 @@ namespace FontSpriteSheetPacker {
         int charCount = imageDataList.size();
 
         std::vector<FontSpriteSheet::CharData> charDataList(charCount);
+        charDataList[0].id = codepoints[0];
         charDataList[0].width = imageDataList[0].m_width;
         charDataList[0].height = imageDataList[0].m_height;
-        charDataList[0].offsetX = padX;
-        charDataList[0].offsetY = padY;
+        charDataList[0].atlasX = padX;
+        charDataList[0].atlasY = padY;
+        charDataList[0].xAdvance = charDataList[0].width + (charDataList[0].id == ' ' ? 0 : charSpacing);
 
         // Calculate the remaining character's data
-        int cursorX = charDataList[0].offsetX + charDataList[0].width + padX;
+        int cursorX = charDataList[0].atlasX + charDataList[0].width + padX;
         int cursorY = padY;
 
         for (int i = 1; i < charCount; i++) {
@@ -98,16 +112,20 @@ namespace FontSpriteSheetPacker {
                 cursorY += maxCharHeight + padY;
             }
 
+            charDataList[i].id = codepoints[i];
             charDataList[i].width = imageDataList[i].m_width;
             charDataList[i].height = imageDataList[i].m_height;
-            charDataList[i].offsetX = cursorX;
-            charDataList[i].offsetY = cursorY;
+            charDataList[i].atlasX = cursorX;
+            charDataList[i].atlasY = cursorY;
+            charDataList[i].xAdvance = charDataList[i].width + (charDataList[i].id == ' ' ? 0 : charSpacing);
             cursorX += charWidth + padX;
         }
 
         // Calculate texture height
         int textureHeight = cursorY + maxCharHeight;
-        textureWidth = textureHeight;
+        int textureSize = std::max(textureWidth, textureHeight);
+        textureWidth = textureSize;
+        textureHeight = textureSize;
 
         // Create an empty transparent image
         std::vector<unsigned char> finalImage(textureWidth * textureHeight * 4, 0);
@@ -119,7 +137,7 @@ namespace FontSpriteSheetPacker {
             for (int y = 0; y < imageDataList[i].m_height; y++) {
                 for (int x = 0; x < imageDataList[i].m_width; x++) {
                     int srcIndex = (y * imageDataList[i].m_width + x) * 4;
-                    int destIndex = ((charDataList[i].offsetY + y) * textureWidth + (charDataList[i].offsetX + x)) * 4;
+                    int destIndex = ((charDataList[i].atlasY + y) * textureWidth + (charDataList[i].atlasX + x)) * 4;
                     finalImage[destIndex + 0] = srcPixels[srcIndex + 0]; // R
                     finalImage[destIndex + 1] = srcPixels[srcIndex + 1]; // G
                     finalImage[destIndex + 2] = srcPixels[srcIndex + 2]; // B
@@ -141,43 +159,39 @@ namespace FontSpriteSheetPacker {
             std::cout << "Failed to save image: " << outputImagePath << "\n";
         }
 
-        // Write the JSON
-        std::ofstream jsonFile(outputJSONPath);
-        if (jsonFile.is_open()) {
-            jsonFile << "{\n";
-            jsonFile << "  \"name\": \"" << EscapeString(name) << "\",\n";
-            jsonFile << "  \"textureWidth\": " << textureWidth << ",\n";
-            jsonFile << "  \"textureHeight\": " << textureHeight << ",\n";
-            jsonFile << "  \"charHeight\": " << maxCharHeight << ",\n";
-            jsonFile << "  \"lineSpacing\": " << lineSpacing << ",\n";
-            jsonFile << "  \"charSpacing\": " << charSpacing << ",\n";
-            jsonFile << "  \"characters\": \"" << EscapeString(characters) << "\",\n";
-            jsonFile << "  \"charDataList\": [\n";
+        // Write the BMFont text descriptor
+        std::ofstream fontFile(outputFontPath);
+        if (fontFile.is_open()) {
+            const int lineHeight = maxCharHeight + lineSpacing;
+            const bool unicode = std::any_of(codepoints.begin(), codepoints.end(), [](uint32_t codepoint) { return codepoint > 255; });
 
-            for (size_t i = 0; i < charDataList.size(); i++) {
-                int width = charDataList[i].width;
-                int height = charDataList[i].height;
-                int offsetX = charDataList[i].offsetX;
-                int offsetY = charDataList[i].offsetY;
+            fontFile << "info face=\"" << name << "\" size=" << maxCharHeight
+                     << " bold=0 italic=0 charset=\"\" unicode=" << unicode
+                     << " stretchH=100 smooth=1 aa=1 padding=" << padY << "," << padX << "," << padY << "," << padX
+                     << " spacing=" << padX << "," << padY << "\n";
+            fontFile << "common lineHeight=" << lineHeight << " base=" << maxCharHeight
+                     << " scaleW=" << textureWidth << " scaleH=" << textureHeight
+                     << " pages=1 packed=0\n";
+            fontFile << "page id=0 file=\"" << outputImagePath.filename().string() << "\"\n";
+            fontFile << "chars count=" << charDataList.size() << "\n";
 
-                jsonFile << "    { \"width\": " << width
-                    << ", \"height\": " << height
-                    << ", \"offsetX\": " << offsetX
-                    << ", \"offsetY\": " << offsetY << " }";
-
-                if (i < charDataList.size() - 1) {
-                    jsonFile << ",";
-                }
-
-                jsonFile << "\n";
+            for (const FontSpriteSheet::CharData& charData : charDataList) {
+                fontFile << "char id=" << charData.id
+                         << " x=" << charData.atlasX
+                         << " y=" << charData.atlasY
+                         << " width=" << charData.width
+                         << " height=" << charData.height
+                         << " xoffset=" << charData.xOffset
+                         << " yoffset=" << charData.yOffset
+                         << " xadvance=" << charData.xAdvance
+                         << " page=0 chnl=15\n";
             }
 
-            jsonFile << "  ]\n";
-            jsonFile << "}\n";
-            jsonFile.close();
+            fontFile << "kernings count=0\n";
+            fontFile.close();
         }
         else {
-            std::cout << "Failed to save JSON: " << outputJSONPath << "\n";
+            std::cout << "Failed to save font descriptor: " << outputFontPath << "\n";
         }
 
         // Free the image data
@@ -190,153 +204,161 @@ namespace FontSpriteSheetPacker {
 
     FontSpriteSheet Import(const std::string& filepath) {
         FontSpriteSheet fontSpriteSheet;
-
-        // Read the JSON file
         std::ifstream file(filepath);
         if (!file.is_open()) throw std::runtime_error("Failed to open file: " + filepath);
-        std::stringstream buffer;
-        buffer << file.rdbuf();
-        std::string json = buffer.str();
 
-        // Parse the JSON
-        fontSpriteSheet.m_name = FindString(json, "name");
-        fontSpriteSheet.m_characters = FindString(json, "characters");
-        fontSpriteSheet.m_textureWidth = FindInt(json, "textureWidth");
-        fontSpriteSheet.m_textureHeight = FindInt(json, "textureHeight");
-        fontSpriteSheet.m_lineSpacing = FindInt(json, "lineSpacing");
-        fontSpriteSheet.m_charHeight = FindInt(json, "charHeight");
-        fontSpriteSheet.m_charSpacing = FindInt(json, "charSpacing");
+        fontSpriteSheet.m_name = std::filesystem::path(filepath).stem().string();
 
-        std::vector<std::string> charDataList = FindArray(json, "charDataList");
+        bool foundCommon = false;
+        bool foundPage = false;
+        std::string line;
 
-        for (const auto& charData : charDataList) {
-            FontSpriteSheet::CharData data;
-            data.width = FindInt(charData, "width");
-            data.height = FindInt(charData, "height");
-            data.offsetX = FindInt(charData, "offsetX");
-            data.offsetY = FindInt(charData, "offsetY");
-            fontSpriteSheet.m_charDataList.push_back(data);
+        while (std::getline(file, line)) {
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+
+            if (line.rfind("common ", 0) == 0) {
+                const auto attributes = ParseAttributes(line);
+                fontSpriteSheet.m_lineHeight = FindRequiredInt(attributes, "lineHeight");
+                fontSpriteSheet.m_base = FindRequiredInt(attributes, "base");
+                fontSpriteSheet.m_textureWidth = FindRequiredInt(attributes, "scaleW");
+                fontSpriteSheet.m_textureHeight = FindRequiredInt(attributes, "scaleH");
+                fontSpriteSheet.m_charHeight = fontSpriteSheet.m_base;
+                fontSpriteSheet.m_lineSpacing = fontSpriteSheet.m_lineHeight - fontSpriteSheet.m_base;
+
+                if (FindRequiredInt(attributes, "pages") != 1) {
+                    throw std::runtime_error("Only single-page BMFont files are supported: " + filepath);
+                }
+                foundCommon = true;
+            }
+            else if (line.rfind("page ", 0) == 0) {
+                const auto attributes = ParseAttributes(line);
+                if (FindRequiredInt(attributes, "id") != 0) continue;
+
+                std::filesystem::path texturePath = FindRequiredString(attributes, "file");
+                fontSpriteSheet.m_textureName = texturePath.stem().string();
+                foundPage = true;
+            }
+            else if (line.rfind("char ", 0) == 0) {
+                const auto attributes = ParseAttributes(line);
+                if (FindRequiredInt(attributes, "page") != 0) {
+                    throw std::runtime_error("Only BMFont page 0 is supported: " + filepath);
+                }
+
+                FontSpriteSheet::CharData charData;
+                charData.id = static_cast<uint32_t>(FindRequiredInt(attributes, "id"));
+                charData.atlasX = FindRequiredInt(attributes, "x");
+                charData.atlasY = FindRequiredInt(attributes, "y");
+                charData.width = FindRequiredInt(attributes, "width");
+                charData.height = FindRequiredInt(attributes, "height");
+                charData.xOffset = FindRequiredInt(attributes, "xoffset");
+                charData.yOffset = FindRequiredInt(attributes, "yoffset");
+                charData.xAdvance = FindRequiredInt(attributes, "xadvance");
+                fontSpriteSheet.m_charData[charData.id] = charData;
+            }
         }
 
+        if (!foundCommon) throw std::runtime_error("BMFont common record not found: " + filepath);
+        if (!foundPage) throw std::runtime_error("BMFont page 0 record not found: " + filepath);
+        if (fontSpriteSheet.m_charData.empty()) throw std::runtime_error("No BMFont glyph records found: " + filepath);
         return fontSpriteSheet;
     }
 
-    std::string FindString(const std::string& json, const std::string& key) {
-        size_t keyPos = json.find("\"" + key + "\":");
+    std::unordered_map<std::string, std::string> ParseAttributes(const std::string& line) {
+        std::unordered_map<std::string, std::string> attributes;
+        size_t position = line.find(' ');
 
-        if (keyPos == std::string::npos) {
-            throw std::runtime_error("Key not found: " + key);
-        }
+        while (position != std::string::npos && position < line.size()) {
+            position = line.find_first_not_of(' ', position);
+            if (position == std::string::npos) break;
 
-        size_t start = json.find_first_of("\"", keyPos + key.length() + 2) + 1;
+            size_t equals = line.find('=', position);
+            if (equals == std::string::npos) break;
 
-        if (start == std::string::npos) {
-            throw std::runtime_error("Invalid JSON format: missing value for key: " + key);
-        }
+            std::string key = line.substr(position, equals - position);
+            position = equals + 1;
 
-        size_t end = start;
-
-        while (end < json.size()) {
-            end = json.find("\"", end);
-
-            if (end == std::string::npos) {
-                throw std::runtime_error("Invalid JSON format: unterminated string for key: " + key);
-            }
-
-            if (end > 0 && json[end - 1] == '\\') {
-                size_t backslashCount = 0;
-
-                for (size_t i = end - 1; i >= start && json[i] == '\\'; --i) {
-                    ++backslashCount;
+            std::string value;
+            if (position < line.size() && line[position] == '\"') {
+                size_t valueStart = ++position;
+                size_t valueEnd = line.find('\"', valueStart);
+                if (valueEnd == std::string::npos) {
+                    throw std::runtime_error("Unterminated BMFont attribute: " + key);
                 }
-
-                if (backslashCount % 2 == 1) {
-                    end++;
-                    continue;
-                }
-            }
-
-            break;
-        }
-
-        return UnescapeString(json.substr(start, end - start));
-    }
-
-    std::vector<std::string> FindArray(const std::string& json, const std::string& key) {
-        size_t start = json.find("\"" + key + "\": [") + key.length() + 4;
-        size_t end = json.find("]", start);
-
-        std::string arrayContent = json.substr(start, end - start);
-        std::vector<std::string> items;
-
-        size_t pos = 0;
-
-        while ((pos = arrayContent.find("{", pos)) != std::string::npos) {
-            size_t close = arrayContent.find("}", pos);
-            items.push_back(arrayContent.substr(pos, close - pos + 1));
-            pos = close + 1;
-        }
-
-        return items;
-    }
-
-    int FindInt(const std::string& jsonChunk, const std::string& key) {
-        size_t start = jsonChunk.find("\"" + key + "\":") + key.length() + 3;
-        size_t end = jsonChunk.find_first_of(",", start);
-
-        if (end == std::string::npos) {
-            end = jsonChunk.find_first_of("}", start);
-        }
-
-        return std::stoi(jsonChunk.substr(start, end - start));
-    }
-
-    std::string EscapeString(const std::string& str) {
-        std::string escaped;
-
-        for (char c : str) {
-            switch (c) {
-            case '\"': escaped += "\\\""; break; // Escape double quote
-            case '\\': escaped += "\\\\"; break; // Escape backslash
-            //case '/': escaped += "\\/"; break;  // Escape forward slash (optional)
-            case '\b': escaped += "\\b"; break; // Escape backspace
-            case '\f': escaped += "\\f"; break; // Escape form feed
-            case '\n': escaped += "\\n"; break; // Escape newline
-            case '\r': escaped += "\\r"; break; // Escape carriage return
-            case '\t': escaped += "\\t"; break; // Escape tab
-            default: escaped += c; break;       // Append other characters as-is
-            }
-        }
-
-        return escaped;
-    }
-
-    std::string UnescapeString(const std::string& str) {
-        std::string unescaped;
-        size_t i = 0;
-
-        while (i < str.size()) {
-            if (str[i] == '\\' && i + 1 < str.size()) {
-                switch (str[i + 1]) {
-                case '\"': unescaped += '\"'; break; // Unescape double quote
-                case '\\': unescaped += '\\'; break; // Unescape backslash
-                //case '/': unescaped += '/'; break;  // Unescape forward slash
-                case 'b': unescaped += '\b'; break; // Unescape backspace
-                case 'f': unescaped += '\f'; break; // Unescape form feed
-                case 'n': unescaped += '\n'; break; // Unescape newline
-                case 'r': unescaped += '\r'; break; // Unescape carriage return
-                case 't': unescaped += '\t'; break; // Unescape tab
-                default: unescaped += str[i + 1]; break; // Handle unknown sequences as-is
-                }
-                i += 2; // Skip the backslash and the escaped character
+                value = line.substr(valueStart, valueEnd - valueStart);
+                position = valueEnd + 1;
             }
             else {
-                unescaped += str[i];
-                i++;
+                size_t valueEnd = line.find(' ', position);
+                value = line.substr(position, valueEnd - position);
+                position = valueEnd;
             }
+
+            attributes[key] = value;
         }
 
-        return unescaped;
+        return attributes;
+    }
+
+    int FindRequiredInt(const std::unordered_map<std::string, std::string>& attributes, const std::string& key) {
+        auto it = attributes.find(key);
+        if (it == attributes.end()) throw std::runtime_error("BMFont attribute not found: " + key);
+        return std::stoi(it->second);
+    }
+
+    std::string FindRequiredString(const std::unordered_map<std::string, std::string>& attributes, const std::string& key) {
+        auto it = attributes.find(key);
+        if (it == attributes.end()) throw std::runtime_error("BMFont attribute not found: " + key);
+        return it->second;
+    }
+
+    std::vector<uint32_t> DecodeUTF8(const std::string& text) {
+        std::vector<uint32_t> codepoints;
+
+        for (size_t i = 0; i < text.size();) {
+            uint8_t first = static_cast<uint8_t>(text[i++]);
+            if ((first & 0x80u) == 0) {
+                codepoints.push_back(first);
+                continue;
+            }
+
+            uint32_t codepoint = 0;
+            size_t continuationCount = 0;
+            if ((first & 0xe0u) == 0xc0u) {
+                codepoint = first & 0x1fu;
+                continuationCount = 1;
+            }
+            else if ((first & 0xf0u) == 0xe0u) {
+                codepoint = first & 0x0fu;
+                continuationCount = 2;
+            }
+            else if ((first & 0xf8u) == 0xf0u) {
+                codepoint = first & 0x07u;
+                continuationCount = 3;
+            }
+            else {
+                codepoints.push_back(0xfffdu);
+                continue;
+            }
+
+            if (i + continuationCount > text.size()) {
+                codepoints.push_back(0xfffdu);
+                break;
+            }
+
+            bool valid = true;
+            for (size_t j = 0; j < continuationCount; j++) {
+                uint8_t continuation = static_cast<uint8_t>(text[i++]);
+                if ((continuation & 0xc0u) != 0x80u) {
+                    valid = false;
+                    break;
+                }
+                codepoint = (codepoint << 6) | (continuation & 0x3fu);
+            }
+
+            codepoints.push_back(valid ? codepoint : 0xfffdu);
+        }
+
+        return codepoints;
     }
 
     std::vector<std::string> GetSortedFilePaths(const std::string& directory) {
@@ -353,8 +375,10 @@ namespace FontSpriteSheetPacker {
         std::sort(filePaths.begin(), filePaths.end(), [](const std::string& a, const std::string& b) {
             std::regex numberRegex("(\\d+)"); // Regex to extract numbers
             std::smatch matchA, matchB;
-            bool foundA = std::regex_search(a, matchA, numberRegex);
-            bool foundB = std::regex_search(b, matchB, numberRegex);
+            std::string stemA = std::filesystem::path(a).stem().string();
+            std::string stemB = std::filesystem::path(b).stem().string();
+            bool foundA = std::regex_search(stemA, matchA, numberRegex);
+            bool foundB = std::regex_search(stemB, matchB, numberRegex);
             if (foundA && foundB) {
                 int numA = std::stoi(matchA.str());
                 int numB = std::stoi(matchB.str());
@@ -369,8 +393,9 @@ namespace FontSpriteSheetPacker {
     ImageData LoadImageData(const std::string& filepath) {
         stbi_set_flip_vertically_on_load(false);
 
-        ImageData imageData;
-        imageData.m_data = stbi_load(filepath.data(), &imageData.m_width, &imageData.m_height, &imageData.m_channelCount, 0);
+        ImageData imageData{};
+        imageData.m_data = stbi_load(filepath.data(), &imageData.m_width, &imageData.m_height, &imageData.m_channelCount, 4);
+        if (imageData.m_data) imageData.m_channelCount = 4;
 
         return imageData;
     }

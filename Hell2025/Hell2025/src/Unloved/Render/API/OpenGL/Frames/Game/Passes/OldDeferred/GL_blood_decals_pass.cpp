@@ -19,7 +19,7 @@ namespace OpenGL::Renderer {
     void NewBloodsDecalsPass();
 
     void BloodDecalsPass() {
-        //DecalTestPass();
+        DecalTestPass();
         //NewBloodsDecalsPass();
         //
         //// DO NOT RENDER OLD BLOOD

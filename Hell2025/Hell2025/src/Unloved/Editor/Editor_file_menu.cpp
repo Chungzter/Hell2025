@@ -7,6 +7,8 @@
 #include "Unloved/UI/Imgui/Types/Types.h"
 
 namespace Unloved::Editor {
+    using EditorSession::PlacementTool;
+
 
     EditorUI::FileMenu g_fileMenu;
 

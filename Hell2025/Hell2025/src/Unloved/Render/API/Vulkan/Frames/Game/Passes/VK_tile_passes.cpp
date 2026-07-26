@@ -62,14 +62,12 @@ namespace VulkanRenderer {
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("TileLightCulling");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
         VulkanBuffer* tileLightsBuffer = VulkanResourceManager::GetBuffer(GetCurrentFrameData().buffers.tileLights);
-        VulkanBuffer* tileWorldBoundsBuffer = VulkanResourceManager::GetBuffer(GetCurrentFrameData().buffers.tileWorldBounds);
 
         if (!depthImage) return;
         if (!lightingImage) return;
         if (!pipeline) return;
         if (!staticDescriptorSet) return;
         if (!tileLightsBuffer) return;
-        if (!tileWorldBoundsBuffer) return;
 
         VkExtent2D extent = depthImage->GetExtent2D();
         depthImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);

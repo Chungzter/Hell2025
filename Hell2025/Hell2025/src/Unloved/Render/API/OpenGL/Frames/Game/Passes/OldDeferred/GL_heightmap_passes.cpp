@@ -252,7 +252,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
         OpenGL::SetUniformFloat("u_textureScaling", 1);
 
         OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
@@ -278,12 +279,8 @@ namespace OpenGL::Renderer {
             if (!viewport->IsVisible()) continue;
 
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
-            if (Hell::BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.heightMap[i], true, false);
-            }
-            else {
-                MultiDrawIndirect(drawInfoSet.heightMap[i]);
-            }
+            OpenGL::SetUniformInt("u_viewportIndex", i);
+            MultiDrawIndirect(drawInfoSet.heightMap[i]);
         }
         glBindVertexArray(0);
     }

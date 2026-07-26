@@ -12,6 +12,7 @@ out flat uint v_textureIndex;
 
 uniform float u_renderTargetWidth;
 uniform float u_renderTargetHeight;
+uniform int u_flipY;
 
 struct RenderItemUI {
     uint baseVertex;
@@ -43,11 +44,18 @@ void main() {
     v_uv = a_uv;
 
     vec4 position = vec4(a_position, 0.0, 1.0);
+    if (u_flipY != 0) position.y = -position.y;
 
     float ndcLeft   = (renderItem.clipMinX / u_renderTargetWidth)  * 2.0 - 1.0;
     float ndcRight  = (renderItem.clipMaxX / u_renderTargetWidth)  * 2.0 - 1.0;
     float ndcTop    = 1.0 - (renderItem.clipMinY / u_renderTargetHeight) * 2.0;
     float ndcBottom = 1.0 - (renderItem.clipMaxY / u_renderTargetHeight) * 2.0;
+
+    if (u_flipY != 0) {
+        float flippedTop = -ndcBottom;
+        ndcBottom = -ndcTop;
+        ndcTop = flippedTop;
+    }
 
     vec2 ndc = position.xy / position.w;
 

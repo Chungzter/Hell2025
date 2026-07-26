@@ -9,6 +9,12 @@
 #include <cstdint>
 #include <string>
 
+enum class UICanvas : uint8_t {
+    INTERNAL, // Fixed-resolution canvas composed before presentation
+    NATIVE,   // Drawable-resolution canvas composed after presentation
+    COUNT
+};
+
 struct RenderItemUI {
     uint32_t baseVertex = 0;
     uint32_t baseIndex = 0;

@@ -107,7 +107,8 @@ namespace OpenGL::Renderer {
     void SkyBoxPass();
     void SpriteSheetPass();
     void ScreenspaceReflectionsPass();
-    void UIPass();
+    void GameUIPass();
+    void EditorUIPass();
     void VatBloodPass();
     void ChristmasLightsPass();
     void ExamineItemPass();
@@ -181,8 +182,6 @@ namespace OpenGL::Renderer {
     GLuint GetTextureHandleByName(const std::string& name);
 
     std::vector<float>& GetShadowCascadeLevels();
-    void MultiDrawPerViewport(OpenGLFrameBuffer* fbo, OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
-    void MultiDrawPerViewport(OpenGLFrameBuffer& fbo, OpenGLShader& shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
     void MultiDrawPerViewportRE(OpenGLFrameBuffer& fbo, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
 
     // Misc
@@ -193,7 +192,6 @@ namespace OpenGL::Renderer {
 
     // Drawing
     void MultiDrawIndirect(const std::vector<DrawIndexedIndirectCommand>& commands);
-    void SplitMultiDrawIndirect(OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand>& commands, bool bindMaterial, bool bindWoundMaterial);
 
     // Util
     void SetViewport(OpenGLFrameBuffer* framebuffer, Unloved::Viewport* viewport);

@@ -31,6 +31,13 @@ enum struct RendererMode {
     RENDERER_MODE_COUNT
 };
 
+enum class ViewportLayout {
+    SINGLE = 0,
+    COLUMNS = 1,
+    ROWS = 2,
+    GRID = 3
+};
+
 enum class IndirectSpecularRaysPerQuad {
     ONE,
     TWO,

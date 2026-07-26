@@ -33,12 +33,12 @@ namespace OpenGL::Renderer {
         UpdateSSBOValue("RendererData", Unloved::RenderDataManager::GetRendererData());
 
         UpdateSSBOVector("BloodDecalInstances", Unloved::RenderDataManager::GetBloodScreenSpaceDecalInstanceData());
-        UpdateSSBOVector("GlassInstanceData", Unloved::RenderDataManager::GetGlassInstanceData());
         UpdateSSBOVector("GlassLightRanges", Unloved::RenderDataManager::GetGlassLightRanges());
         UpdateSSBOVector("GlassLightIndices", Unloved::RenderDataManager::GetGlassLightIndices());
         UpdateSSBOVector("GlassSpotLightRanges", Unloved::RenderDataManager::GetGlassSpotLightRanges());
         UpdateSSBOVector("GlassSpotLightIndices", Unloved::RenderDataManager::GetGlassSpotLightIndices());
-        UpdateSSBOVector("InstanceData", Unloved::RenderDataManager::GetInstanceData());
+        UpdateSSBOVector("SceneRenderItems", Unloved::RenderDataManager::GetSceneRenderItems());
+        UpdateSSBOVector("DrawRenderItemIndices", Unloved::RenderDataManager::GetDrawRenderItemIndices());
         UpdateSSBOVector("Lights", Unloved::RenderDataManager::GetGPULights());
         UpdateSSBOVector("SpotLights", Unloved::RenderDataManager::GetGPUSpotLights());
         UpdateSSBOVector("Materials", Hell::ResourceManager::GetMaterials());
@@ -54,7 +54,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
     }

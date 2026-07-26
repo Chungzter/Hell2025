@@ -18,17 +18,17 @@ namespace VulkanRenderer {
         }
     }
 
-    void RecordGameFrame(SwapchainFrame& frame) {
+    bool RecordGameFrame(SwapchainFrame& frame) {
         ProfilerCPUZoneFunction();
 
         if (Unloved::Renderer::DDGIEnabled()) {
             SubmitDDGIGridDebugDraw();
         }
 
-        UpdateBuffers();
-        UpdateBuffersUI();
+        if (!UpdateBuffers()) return false;
+        if (!UpdateBuffersUI()) return false;
 
-        if (!UpdateFrameAddressTable()) return;
+        if (!UpdateFrameAddressTable()) return false;
 
         ComputeSkinningPass(frame.commandBuffer);
         PointLightShadowPass(frame.commandBuffer);
@@ -82,16 +82,22 @@ namespace VulkanRenderer {
         BlitImage(frame.commandBuffer, "Lighting", "FinalImage", VK_FILTER_LINEAR);
         BlitImage(frame.commandBuffer, "FinalImage", "Present", VK_FILTER_NEAREST);
 
-        RenderUIPass(frame.commandBuffer);
-        PresentPass(frame.commandBuffer, frame.swapchainImageView);
+        RenderGameUIPass(frame.commandBuffer);
+        PresentPass(frame.commandBuffer, frame.swapchainImageView, frame.extent);
+        RenderEditorUIPass(frame.commandBuffer, frame.swapchainImage, frame.swapchainImageView, frame.extent);
         HiZPass(frame.commandBuffer);
+
+        return true;
     }
 
     void RenderGame() {
         SwapchainFrame frame;
         if (!BeginSwapchainFrame(frame)) return;
 
-        RecordGameFrame(frame);
+        if (!RecordGameFrame(frame)) {
+            EndSwapchainFrame(frame);
+            return;
+        }
 
         EndSwapchainFrame(frame);
     }

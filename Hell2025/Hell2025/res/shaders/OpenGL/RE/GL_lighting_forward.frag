@@ -1,28 +1,12 @@
 #version 460
 #include "../../common/OpenGL/GL_binding_indices.glsl"
 
-#ifndef ENABLE_BINDLESS
-    #define ENABLE_BINDLESS 1
-#endif
-
-#if ENABLE_BINDLESS == 1
-    #extension GL_ARB_bindless_texture : enable
+#extension GL_ARB_bindless_texture : enable
 readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-#endif
 
 layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray flashlightShadowMapArray;
 layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
 layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowMapArray;
-
-#if ENABLE_BINDLESS != 1
-    layout (binding = 0) uniform sampler2D baseColorTexture;
-    layout (binding = 1) uniform sampler2D normalTexture;
-    layout (binding = 2) uniform sampler2D rmaTexture;
-    layout (binding = 3) uniform sampler2D emissiveTexture;
-    layout (binding = 4) uniform sampler2D woundBaseColorTexture;
-    layout (binding = 5) uniform sampler2D woundNormalTexture;
-    layout (binding = 6) uniform sampler2D woundRmaTexture;
-#endif
 
 layout (binding = 5) uniform sampler2D u_indirectDiffuseTexture;
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
@@ -34,12 +18,13 @@ layout (binding = 13) uniform sampler2D hairRootMap;
 #include "../../common/lighting.glsl"
 #include "../../common/normal_encoding.glsl"
 #include "../../common/post_processing.glsl"
+#include "../../common/viewport.glsl"
 #include "../../common/ddgi_upsample.glsl"
 
 readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportData[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) buffer renderItemsBuffer { RenderItem renderItems[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer       { Light lights[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_LIGHTS) buffer tileLightsBuffer   { TileLights tileLights[];   };
 readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS) buffer tileSpotLightsBuffer { TileSpotLights tileSpotLights[]; };
@@ -68,18 +53,11 @@ void main() {
     // grab the item once to avoid multiple buffer lookups
     RenderItem item = renderItems[v_globalInstanceIndex];
 
-#if ENABLE_BINDLESS == 1
     Material material = materials[item.materialIndex];
     vec4 baseColor = texture(sampler2D(textureSamplers[material.basecolor]), TexCoord);
     vec3 normalMap = texture(sampler2D(textureSamplers[material.normal]), TexCoord).rgb;
     vec4 rma = texture(sampler2D(textureSamplers[material.rma]), TexCoord).rgba;
     vec3 emissiveMapColor = texture(sampler2D(textureSamplers[material.emissive]), TexCoord).rgb;
-#else
-    vec4 baseColor = texture(baseColorTexture, TexCoord);
-    vec3 normalMap = texture(normalTexture, TexCoord).rgb;
-    vec4 rma = texture(rmaTexture, TexCoord).rgba;
-    vec3 emissiveMapColor = texture(emissiveTexture, TexCoord).rgb;
-#endif
 
     vec3 viewPos = viewportData[v_viewportIndex].inverseView[3].xyz;
 
@@ -147,13 +125,11 @@ void main() {
 
         vec3 directLight = GetDirectLighting(lightPosition, lightColor, lightRadius, lightStrength, normal.xyz, WorldPos.xyz, gammaBaseColor.rgb, roughness, metallic, viewPos) * shadow;
 
-        #if ENABLE_BINDLESS == 1
         if (light.iesTextureIndex != 0) {
             sampler2D iesSampler = sampler2D(textureSamplers[(light.iesTextureIndex)]);
             float candelas = ApplyIESProfile(WorldPos.xyz, light, iesSampler);
             directLight *= candelas;
         }
-        #endif
 
         directLighting += directLight;
     }
@@ -172,9 +148,8 @@ void main() {
 
     // Indirect diffuse
     if (rendererData.enableIrradianceProbeSampling) {
-        vec2 resolution = vec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
-        vec2 screenUV = (vec2(gl_FragCoord.xy) + 0.5) / resolution;
         ivec2 outputImageSize = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
+        vec2 screenUV = ScreenUVFromFragCoord(gl_FragCoord.xy, outputImageSize);
         ivec4 viewportRect = ivec4(vd.xOffset, vd.yOffset, vd.width, vd.height);
         vec3 probeIrradiance = SampleDDGIIndirectDiffuseBilateral(u_indirectDiffuseTexture, u_indirectDiffuseSurfaceTexture, screenUV, normal, distance(WorldPos.xyz, viewPos), outputImageSize, viewportRect);
         vec3 diffuseAlbedo = gammaBaseColor.rgb * (1.0 - metallic);

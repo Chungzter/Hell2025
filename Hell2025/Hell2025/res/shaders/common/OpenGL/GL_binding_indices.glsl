@@ -7,8 +7,9 @@
 #define SSBO_IDX_MATERIALS                        1
 #define SSBO_IDX_RENDERER_DATA                    2
 #define SSBO_IDX_VIEWPORT_DATA                    3
-#define SSBO_IDX_INSTANCE_DATA                    4
 #define SSBO_IDX_LIGHTS                           5
+#define SSBO_IDX_SCENE_RENDER_ITEMS              13
+#define SSBO_IDX_DRAW_RENDER_ITEM_INDICES        14
 #define SSBO_IDX_SPOT_LIGHTS                     15
 
 // TILE WORLD BOUNDS
@@ -31,7 +32,6 @@
 
 // GLASS
 
-#define SSBO_IDX_GLASS_INSTANCE_DATA                6
 #define SSBO_IDX_GLASS_LIGHT_RANGES                 7
 #define SSBO_IDX_GLASS_LIGHT_INDICES                8
 #define SSBO_IDX_GLASS_SPOT_LIGHT_RANGES            9
@@ -122,6 +122,7 @@
 
 #define SSBO_IDX_CSM_LIGHT_SPACE_MATRICES              0
 #define SSBO_IDX_POINT_SHADOW_FACE_DATA                6
+#define SSBO_IDX_POINT_SHADOW_DRAW_FACE_INDICES        7
 
 // SPRITES
 

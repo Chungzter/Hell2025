@@ -21,6 +21,7 @@ layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
 layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamplers[];
 layout(set = 1, binding = 0) uniform accelerationStructureEXT u_RayQueryAccelerationStructure;
 
+#include "../common/Vulkan/VK_ray_query_scene.glsl"
 #include "VK_point_shadows.glsl"
 
 #include "VK_ddgi_upsample.glsl"
@@ -30,55 +31,6 @@ layout(early_fragment_tests) in;
 layout(location = 0) out vec4 out_color;
 
 #define LIGHT_COUNT 9             // TODO "tile based deferred" me the fuck outta here
-#define ALPHA_TEST_THRESHOLD 0.25 // TODO: Make me instance specific, which means adding it to the RenderItem struct
-
-// Must match the ray query vertex buffer layout
-struct PackedVertex {
-    float vx, vy, vz;
-    float nx, ny, nz;
-    float u, v;
-    float tx, ty, tz;
-};
-
-// TLAS instanceCustomIndex points here
-struct RayQueryBLASInstanceData {
-    uint meshInstanceDataOffset;
-    uint meshInstanceDataCount;
-    uint padding0;
-    uint padding1;
-};
-
-struct RayQueryMesh {
-    uint baseVertex;
-    uint baseIndex;
-    uint vertexCount;
-    uint indexCount;
-};
-
-struct RayQueryMaterial {
-    uint blendingMode;
-    int materialIndex;
-    uint shadowBit;
-    uint padding0;
-};
-
-// One entry per mesh inside the hit BLAS
-struct RayQueryMeshInstanceData {
-    uint64_t vertexBufferDeviceAddress;
-    uint64_t indexBufferDeviceAddress;
-    RayQueryMesh mesh;
-    RayQueryMaterial material;
-};
-
-struct RayHit {
-    bool found;
-    vec3 hitPos;
-    vec3 hitNormal;
-    vec3 rayDir;
-    float rayT;
-    int materialIndex;
-    vec2 uv;
-};
 
 struct Surface {
     vec3 worldPos;
@@ -86,22 +38,6 @@ struct Surface {
     vec3 linearBaseColor;
     float roughness;
     float metallic;
-};
-
-layout(buffer_reference, scalar) readonly buffer VertexBuffer {
-    PackedVertex vertices[];
-};
-
-layout(buffer_reference, scalar) readonly buffer IndexBuffer {
-    uint indices[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RayQueryBLASInstanceDataBuffer {
-    RayQueryBLASInstanceData blasInstanceData[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RayQueryMeshInstanceDataBuffer {
-    RayQueryMeshInstanceData meshInstanceData[];
 };
 
 layout(push_constant, scalar) uniform PushConstants {
@@ -164,81 +100,15 @@ vec3 EvaluatePointLight(vec3 lightPos, vec3 lightColor, float lightRadius, float
     return brdf * ndotl * attenuation * clamp(lightColor, 0.0, 1.0);
 }
 
-bool PassesAlphaTest(RayQueryMeshInstanceData meshInstanceData, uint primitiveIndex, vec2 barycentrics) {
-    // Reject broken material data
-    if (meshInstanceData.material.materialIndex < 0) {
+bool AnyHit(RayQueryContext rayQueryContext, vec3 rayOrigin, vec3 rayDir, float maxDistance) {
+    if (maxDistance <= 0.001) {
         return false;
     }
 
-    uint localIndexOffset = primitiveIndex * 3u;
-    if (localIndexOffset + 2u >= meshInstanceData.mesh.indexCount) {
-        return false;
-    }
-
-    // Fetch the candidate triangle
-    IndexBuffer indexBuffer = IndexBuffer(meshInstanceData.indexBufferDeviceAddress);
-    uint i0 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 0u] + meshInstanceData.mesh.baseVertex;
-    uint i1 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 1u] + meshInstanceData.mesh.baseVertex;
-    uint i2 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 2u] + meshInstanceData.mesh.baseVertex;
-    uint vertexEnd = meshInstanceData.mesh.baseVertex + meshInstanceData.mesh.vertexCount;
-    if (i0 >= vertexEnd || i1 >= vertexEnd || i2 >= vertexEnd) {
-        return false;
-    }
-
-    VertexBuffer vertexBuffer = VertexBuffer(meshInstanceData.vertexBufferDeviceAddress);
-    PackedVertex v0 = vertexBuffer.vertices[i0];
-    PackedVertex v1 = vertexBuffer.vertices[i1];
-    PackedVertex v2 = vertexBuffer.vertices[i2];
-
-    // Interpolate the candidate UV
-    vec3 weights = vec3(1.0 - barycentrics.x - barycentrics.y, barycentrics.x, barycentrics.y);
-    vec2 uv = vec2(v0.u, v0.v) * weights.x + vec2(v1.u, v1.v) * weights.y + vec2(v2.u, v2.v) * weights.z;
-
-    MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
-    Material material = materialBuffer.materials[meshInstanceData.material.materialIndex];
-    if (material.basecolor < 0) {
-        return false;
-    }
-
-    // Sample only the alpha channel
-    uint textureIndex = uint(material.basecolor);
-    float alpha = textureLod(sampler2D(textures[nonuniformEXT(textureIndex)], textureSamplers[nonuniformEXT(textureIndex)]), uv, 0.0).a;
-    return alpha >= ALPHA_TEST_THRESHOLD;
-}
-
-Surface SurfaceFromRayHit(RayHit rayhit) {
-    // Copy the hit geometry
-    Surface surface;
-    surface.worldPos = rayhit.hitPos;
-    surface.normal = rayhit.hitNormal;
-    surface.linearBaseColor = vec3(0.0);
-    surface.roughness = 1.0;
-    surface.metallic = 0.0;
-
-    // Sample the linear base color
-    MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
-    Material material = materialBuffer.materials[rayhit.materialIndex];
-
-    uint textureIndex = uint(material.basecolor);
-    vec3 baseColor = textureLod(sampler2D(textures[nonuniformEXT(textureIndex)], textureSamplers[nonuniformEXT(textureIndex)]), rayhit.uv, 0.0).rgb;
-    surface.linearBaseColor = pow(baseColor, vec3(2.2));
-
-    // Sample roughness and metallic when available
-    if (material.rma >= 0) {
-        uint rmaTextureIndex = uint(material.rma);
-        vec4 rma = textureLod(sampler2D(textures[nonuniformEXT(rmaTextureIndex)], textureSamplers[nonuniformEXT(rmaTextureIndex)]), rayhit.uv, 0.0);
-        surface.roughness = rma.r;
-        surface.metallic = rma.g;
-    }
-
-    return surface;
-}
-
-bool AnyHit(vec3 rayOrigin, vec3 rayDir, float maxDistance) {
     // Return true when anything blocks this shadow ray
     rayQueryEXT rayQuery;
     // Shadow flags, blending modes, and alpha masks must be checked for every triangle.
-    rayQueryInitializeEXT(rayQuery, u_RayQueryAccelerationStructure, gl_RayFlagsNoOpaqueEXT, 0xff, rayOrigin, 0.001, rayDir, maxDistance);
+    rayQueryInitializeEXT(rayQuery, u_RayQueryAccelerationStructure, gl_RayFlagsNoOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT, 0xff, rayOrigin, 0.001, rayDir, maxDistance);
 
     // Walk candidates until a blocker is accepted or the BVH ends
     while (rayQueryProceedEXT(rayQuery)) {
@@ -247,40 +117,35 @@ bool AnyHit(vec3 rayOrigin, vec3 rayDir, float maxDistance) {
             continue;
         }
 
-        RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pc.data.rayQueryBLASInstanceDataDeviceAddress);
-        RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pc.data.rayQueryMeshInstanceDataDeviceAddress);
-
         // instanceCustomIndex points to the BLAS instance table
         uint instanceIndex = rayQueryGetIntersectionInstanceCustomIndexEXT(rayQuery, false);
-        RayQueryBLASInstanceData blasInstanceData = rayQueryBLASInstanceDataBuffer.blasInstanceData[instanceIndex];
+        RayQueryBLASData blasData = rayQueryContext.blasDataBuffer.blasData[instanceIndex];
 
         uint geometryIndex = rayQueryGetIntersectionGeometryIndexEXT(rayQuery, false);
-        if (geometryIndex >= blasInstanceData.meshInstanceDataCount) {
+        uint sceneRenderItemIndex;
+        RenderItem renderItem;
+        if (!ResolveRayQueryRenderItem(rayQueryContext, blasData, geometryIndex, sceneRenderItemIndex, renderItem)) {
             rayQueryConfirmIntersectionEXT(rayQuery);
             return true;
         }
 
-        RayQueryMeshInstanceData meshInstanceData = rayQueryMeshInstanceDataBuffer.meshInstanceData[blasInstanceData.meshInstanceDataOffset + geometryIndex];
-
         // Skip meshes that do not cast point-light shadows
-        if ((meshInstanceData.material.shadowBit & SHADOW_FLAG_POINT_LIGHT) == 0u) {
+        if ((renderItem.shadowFlags & SHADOW_FLAG_POINT_LIGHT) == 0u) {
             continue;
         }
 
         // Skip blended materials (aka eyebrows)
-        if (meshInstanceData.material.blendingMode == BLENDING_MODE_BLENDED) {
+        if (renderItem.blendingMode == BLENDING_MODE_BLENDED) {
             continue;
         }
 
         // Skip alpha-tested materials where the sampled hit pixel is transparent
-        if (meshInstanceData.material.blendingMode == BLENDING_MODE_ALPHA_DISCARD ||
-            meshInstanceData.material.blendingMode == BLENDING_MODE_HAIR ||
-            meshInstanceData.material.blendingMode == BLENDING_MODE_HAIR_UNDER_LAYER) {
+        if (RayQueryBlendingModeUsesAlphaMask(renderItem.blendingMode)) {
 
             uint primitiveIndex = rayQueryGetIntersectionPrimitiveIndexEXT(rayQuery, false);
             vec2 barycentrics = rayQueryGetIntersectionBarycentricsEXT(rayQuery, false);
 
-            if (!PassesAlphaTest(meshInstanceData, primitiveIndex, barycentrics)) {
+            if (!RayQueryCandidatePassesAlphaTest(rayQueryContext, blasData, renderItem, primitiveIndex, barycentrics)) {
                 continue;
             }
         }
@@ -295,154 +160,7 @@ bool AnyHit(vec3 rayOrigin, vec3 rayDir, float maxDistance) {
     return intersectionType != gl_RayQueryCommittedIntersectionNoneEXT;
 }
 
-RayHit ClosestHit(vec3 rayOrigin, vec3 rayDir, float maxDistance) {
-    // Start with no hit
-    RayHit result;
-    result.found = false;
-    result.hitPos = vec3(0.0);
-    result.hitNormal = vec3(0.0, 1.0, 0.0);
-    result.rayDir = rayDir;
-    result.rayT = 0.0;
-    result.materialIndex = -1;
-    result.uv = vec2(0.0);
-
-    // Find the closest surface this reflection ray can see
-    rayQueryEXT rayQuery;
-    rayQueryInitializeEXT(rayQuery, u_RayQueryAccelerationStructure, 0u, 0xff, rayOrigin, 0.01, rayDir, maxDistance);
-
-    // Reject candidates that reflections should pass through
-    while (rayQueryProceedEXT(rayQuery)) {
-        uint candidateType = rayQueryGetIntersectionTypeEXT(rayQuery, false);
-        if (candidateType != gl_RayQueryCandidateIntersectionTriangleEXT) {
-            continue;
-        }
-
-        RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pc.data.rayQueryBLASInstanceDataDeviceAddress);
-        RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pc.data.rayQueryMeshInstanceDataDeviceAddress);
-
-        uint instanceIndex = rayQueryGetIntersectionInstanceCustomIndexEXT(rayQuery, false);
-        RayQueryBLASInstanceData blasInstanceData = rayQueryBLASInstanceDataBuffer.blasInstanceData[instanceIndex];
-
-        uint geometryIndex = rayQueryGetIntersectionGeometryIndexEXT(rayQuery, false);
-        if (geometryIndex >= blasInstanceData.meshInstanceDataCount) {
-            continue;
-        }
-
-        RayQueryMeshInstanceData meshInstanceData = rayQueryMeshInstanceDataBuffer.meshInstanceData[blasInstanceData.meshInstanceDataOffset + geometryIndex];
-        if (meshInstanceData.material.blendingMode == BLENDING_MODE_MIRROR) {
-            // Mirrors should not reflect themselves forever
-            continue;
-        }
-
-        if (meshInstanceData.material.materialIndex < 0) {
-            continue;
-        }
-
-        MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
-        Material material = materialBuffer.materials[meshInstanceData.material.materialIndex];
-        if (material.basecolor < 0) {
-            continue;
-        }
-
-        uint primitiveIndex = rayQueryGetIntersectionPrimitiveIndexEXT(rayQuery, false);
-        vec2 barycentrics = rayQueryGetIntersectionBarycentricsEXT(rayQuery, false);
-
-        if (meshInstanceData.material.blendingMode == BLENDING_MODE_ALPHA_DISCARD ||
-            meshInstanceData.material.blendingMode == BLENDING_MODE_HAIR ||
-            meshInstanceData.material.blendingMode == BLENDING_MODE_HAIR_UNDER_LAYER) {
-
-            if (!PassesAlphaTest(meshInstanceData, primitiveIndex, barycentrics)) {
-                // Transparent pixels are invisible to reflections
-                continue;
-            }
-        }
-
-        rayQueryConfirmIntersectionEXT(rayQuery);
-    }
-
-    // Return no hit if nothing survived the candidate filters
-    uint intersectionType = rayQueryGetIntersectionTypeEXT(rayQuery, true);
-    if (intersectionType == gl_RayQueryCommittedIntersectionNoneEXT) {
-        return result;
-    }
-
-    // Resolve the committed mesh and triangle
-    RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pc.data.rayQueryBLASInstanceDataDeviceAddress);
-    RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pc.data.rayQueryMeshInstanceDataDeviceAddress);
-
-    uint instanceIndex = rayQueryGetIntersectionInstanceCustomIndexEXT(rayQuery, true);
-    RayQueryBLASInstanceData blasInstanceData = rayQueryBLASInstanceDataBuffer.blasInstanceData[instanceIndex];
-
-    uint geometryIndex = rayQueryGetIntersectionGeometryIndexEXT(rayQuery, true);
-    if (geometryIndex >= blasInstanceData.meshInstanceDataCount) {
-        return result;
-    }
-
-    RayQueryMeshInstanceData meshInstanceData = rayQueryMeshInstanceDataBuffer.meshInstanceData[blasInstanceData.meshInstanceDataOffset + geometryIndex];
-    uint primitiveIndex = rayQueryGetIntersectionPrimitiveIndexEXT(rayQuery, true);
-    vec2 barycentrics = rayQueryGetIntersectionBarycentricsEXT(rayQuery, true);
-    mat4x3 objectToWorld = rayQueryGetIntersectionObjectToWorldEXT(rayQuery, true);
-    float rayT = rayQueryGetIntersectionTEXT(rayQuery, true);
-
-    if (meshInstanceData.material.materialIndex < 0) {
-        return result;
-    }
-
-    uint localIndexOffset = primitiveIndex * 3u;
-    if (localIndexOffset + 2u >= meshInstanceData.mesh.indexCount) {
-        return result;
-    }
-
-    // Fetch the three hit vertices
-    IndexBuffer indexBuffer = IndexBuffer(meshInstanceData.indexBufferDeviceAddress);
-    uint i0 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 0u] + meshInstanceData.mesh.baseVertex;
-    uint i1 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 1u] + meshInstanceData.mesh.baseVertex;
-    uint i2 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 2u] + meshInstanceData.mesh.baseVertex;
-    uint vertexEnd = meshInstanceData.mesh.baseVertex + meshInstanceData.mesh.vertexCount;
-    if (i0 >= vertexEnd || i1 >= vertexEnd || i2 >= vertexEnd) {
-        return result;
-    }
-
-    VertexBuffer vertexBuffer = VertexBuffer(meshInstanceData.vertexBufferDeviceAddress);
-    PackedVertex v0 = vertexBuffer.vertices[i0];
-    PackedVertex v1 = vertexBuffer.vertices[i1];
-    PackedVertex v2 = vertexBuffer.vertices[i2];
-    vec3 weights = vec3(1.0 - barycentrics.x - barycentrics.y, barycentrics.x, barycentrics.y);
-
-    // Fill the final hit data
-    result.found = true;
-    result.hitPos = rayOrigin + rayDir * rayT;
-    result.rayT = rayT;
-    result.materialIndex = meshInstanceData.material.materialIndex;
-    result.uv = vec2(v0.u, v0.v) * weights.x + vec2(v1.u, v1.v) * weights.y + vec2(v2.u, v2.v) * weights.z;
-
-    // Interpolate and transform the vertex normal and tangent
-    vec3 objectNormal = normalize(vec3(v0.nx, v0.ny, v0.nz) * weights.x + vec3(v1.nx, v1.ny, v1.nz) * weights.y + vec3(v2.nx, v2.ny, v2.nz) * weights.z);
-    vec3 objectTangent = normalize(vec3(v0.tx, v0.ty, v0.tz) * weights.x + vec3(v1.tx, v1.ty, v1.tz) * weights.y + vec3(v2.tx, v2.ty, v2.tz) * weights.z);
-    result.hitNormal = normalize(objectToWorld * vec4(objectNormal, 0.0));
-    vec3 worldTangent = normalize(objectToWorld * vec4(objectTangent, 0.0));
-    worldTangent = normalize(worldTangent - dot(worldTangent, result.hitNormal) * result.hitNormal);
-    vec3 worldBitangent = cross(result.hitNormal, worldTangent);
-
-    // Apply the material normal map
-    MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
-    Material material = materialBuffer.materials[result.materialIndex];
-    if (material.normal >= 0) {
-        uint normalTextureIndex = uint(material.normal);
-        vec3 normalMap = textureLod(sampler2D(textures[nonuniformEXT(normalTextureIndex)], textureSamplers[nonuniformEXT(normalTextureIndex)]), result.uv, 0.0).rgb;
-        normalMap = normalMap * 2.0 - 1.0;
-        result.hitNormal = normalize(mat3(worldTangent, worldBitangent, result.hitNormal) * normalMap);
-    }
-
-    // Make the normal face against the ray
-    if (dot(result.hitNormal, rayDir) > 0.0) {
-        result.hitNormal = -result.hitNormal;
-    }
-
-    return result;
-}
-
-float GetShadowVisibility(vec3 rayOrigin, vec3 target) {
+float GetShadowVisibility(RayQueryContext rayQueryContext, vec3 rayOrigin, vec3 target) {
 
     // Build a ray that stops before the light
     vec3 rayVector = target - rayOrigin;
@@ -467,7 +185,7 @@ float GetShadowVisibility(vec3 rayOrigin, vec3 target) {
     float visibility = 0.0;
     for (int i = 0; i < shadowSampleCount; i++) {
         vec3 jitteredRayDir = GetJitterRay(rayDir, shadowLightSize, float(i));
-        visibility += AnyHit(rayOrigin, jitteredRayDir, rayTMax) ? 0.0 : 1.0;
+        visibility += AnyHit(rayQueryContext, rayOrigin, jitteredRayDir, rayTMax) ? 0.0 : 1.0;
     }
 
     return visibility / float(shadowSampleCount);
@@ -477,16 +195,18 @@ void main() {
     ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
     RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
     TileLightsBuffer tileLights = pc.data.frame.tileLightBuffer;
+    RayQueryContext rayQueryContext = CreateRayQueryContext(pc.data.rayQueryBLASDataDeviceAddress, pc.data.rayQuerySceneRenderItemIndicesDeviceAddress, uint64_t(pc.data.frame.sceneRenderItemBuffer), uint64_t(pc.data.frame.materialBuffer));
 
     RendererData rendererData = rendererDataBuffer.rendererData;
 
     // Get viewport data
     ivec2 px = ivec2(gl_FragCoord.xy);
     ivec2 outputImageSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_BASE_COLOR_METALLIC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, outputImageSize, rendererDataBuffer.rendererData.splitscreenMode);
-    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
-    vec3 viewPos = viewportData.viewPos.xyz;
+    vec2 screenUV = ScreenUVFromPixel(px, outputImageSize);
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererDataBuffer.rendererData.viewportLayout, vec2(rendererDataBuffer.rendererData.viewportSplitX, rendererDataBuffer.rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+    mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    vec3 viewPos = viewportDataBuffer.viewportData[viewportIndex].viewPos.xyz;
 
     // Fetch GBuffer
     vec4 baseColorMetallic = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_BASE_COLOR_METALLIC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0);
@@ -494,8 +214,8 @@ void main() {
     float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
 
     // Reconstruct position from depth
-    vec2 viewportUV = ViewportUVFromPixel_VK(px, outputImageSize, viewportData);
-    vec3 worldPos = WorldPosFromDepth_VK(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
+    vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
+    vec3 worldPos = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
     float fragDistance = distance(worldPos, viewPos);
 
     // Reconstruct materials
@@ -552,7 +272,7 @@ void main() {
         }
 
         float visibility = rendererData.directPointShadowMode == POINT_SHADOW_MODE_RAY_QUERY
-            ? GetShadowVisibility(worldPos + normal * 0.001, lightPosition)
+            ? GetShadowVisibility(rayQueryContext, worldPos + normal * 0.001, lightPosition)
             : GetPointShadowMapVisibilitySkin(light, worldPos, normal, viewPos);
         visibility *= candelas;
 
@@ -563,8 +283,6 @@ void main() {
         vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, viewPos) * visibility;
         directLighting += directLight;
     }
-
-    ivec4 viewportRect = ivec4(viewportData.xOffset, viewportData.yOffset, viewportData.width, viewportData.height);
 
     // Indirect specular
     vec3 indirectSpecular = vec3(0, 0, 0);
@@ -614,10 +332,11 @@ void main() {
         if (testNoV > 0.0) {
             vec3 testRayDir = normalize(reflect(-testViewDirToCamera, surface.normal));
             vec3 testRayOrigin = surface.worldPos + surface.normal * 0.01;
-            RayHit reflectedHit = ClosestHit(testRayOrigin, testRayDir, 80.0);
+            RayQueryHit reflectedHit = TraceClosestReflectionHit(u_RayQueryAccelerationStructure, rayQueryContext, testRayOrigin, testRayDir, 0.01, 80.0);
 
             if (reflectedHit.found) {
-                vec2 normalOct = EncodeOct(reflectedHit.hitNormal); // write/read this
+                RayQueryMaterialSample reflectedMaterial = EvaluateRayHitMaterial(rayQueryContext, reflectedHit, 0.0, 0.0);
+                vec2 normalOct = EncodeOct(reflectedMaterial.normal); // write/read this
                 vec3 reconstructedNormal = DecodeOct(normalOct);
                 debugColor = clamp(reconstructedNormal, 0, 1);
             }
@@ -636,7 +355,7 @@ void main() {
         if (testNoV > 0.0) {
             vec3 testRayDir = normalize(reflect(-testViewDirToCamera, surface.normal));
             vec3 testRayOrigin = surface.worldPos + surface.normal * 0.01;
-            RayHit reflectedHit = ClosestHit(testRayOrigin, testRayDir, 80.0);
+            RayQueryHit reflectedHit = TraceClosestReflectionHit(u_RayQueryAccelerationStructure, rayQueryContext, testRayOrigin, testRayDir, 0.01, 80.0);
 
             if (reflectedHit.found) {
                 vec2 rayDirOct = EncodeOct(testRayDir) * 2.0 - 1.0; // write/read this
@@ -660,7 +379,7 @@ void main() {
         if (testNoV > 0.0) {
             vec3 testRayDir = normalize(reflect(-testViewDirToCamera, surface.normal));
             vec3 testRayOrigin = surface.worldPos + surface.normal * 0.01;
-            RayHit reflectedHit = ClosestHit(testRayOrigin, testRayDir, 80.0);
+            RayQueryHit reflectedHit = TraceClosestReflectionHit(u_RayQueryAccelerationStructure, rayQueryContext, testRayOrigin, testRayDir, 0.01, 80.0);
 
             if (reflectedHit.found) {
                 vec2 uv = reflectedHit.uv; // write/read this

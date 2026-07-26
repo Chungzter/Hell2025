@@ -84,52 +84,32 @@ vec3 ComputeScreenBarycentrics(vec2 p, vec2 s0, vec2 s1, vec2 s2, vec3 invW) {
     return vec3(u * invW.x, v * invW.y, w * invW.z) / interpW;
 }
 
-uint ComputeViewportIndexFromSplitscreenModeVK(ivec2 px, ivec2 size, int mode) {
-    if (px.x < 0 || px.y < 0 || px.x >= size.x || px.y >= size.y) {
-        return 0u;
-    }
-
-    if (mode == 0) {
-        return 0u;
-    }
-
-    uint x = uint(px.x >= (size.x / 2));
-    uint y = uint(px.y <  (size.y / 2));
-
-    if (mode == 1) {
-        return y;
-    }
-
-    if (mode == 2) {
-        return x + (y << 1);
-    }
-
-    return 0u;
-}
-
 void main() {
     VertexBuffer vertexBuffer = VertexBuffer(pc.data.vertexBufferDeviceAddress);
     IndexBuffer indexBuffer = IndexBuffer(pc.data.indexBufferDeviceAddress);
     ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
-    RenderItemBuffer renderItemBuffer = pc.data.frame.renderItemBuffer;
+    RenderItemBuffer sceneRenderItemBuffer = pc.data.frame.sceneRenderItemBuffer;
     RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
     MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
 
     ivec2 outputImageSize = textureSize(usampler2D(uintTextures[VULKAN_UINT_TEXTURE_IDX_GBUFFER_VISIBILITY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
     ivec2 px = ivec2(gl_FragCoord.xy);
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenModeVK(px, outputImageSize, rendererDataBuffer.rendererData.splitscreenMode);
-    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
-
-    vec2 viewportSize = vec2(viewportData.width, viewportData.height);
-    vec2 viewportUV = ViewportUVFromPixel_VK(px, outputImageSize, viewportData);
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererDataBuffer.rendererData.viewportLayout, vec2(rendererDataBuffer.rendererData.viewportSplitX, rendererDataBuffer.rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+    vec2 viewportSize = vec2(viewportRect.zw);
+    mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    mat4 projectionView = viewportDataBuffer.viewportData[viewportIndex].projectionViewReverseZ;
+    mat4 prevProjectionView = viewportDataBuffer.viewportData[viewportIndex].prevProjectionViewReverseZ;
+    vec3 viewPosition = viewportDataBuffer.viewportData[viewportIndex].viewPos.xyz;
+    vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
 
     uvec4 visibilityData = uvec4(texelFetch(usampler2D(uintTextures[VULKAN_UINT_TEXTURE_IDX_GBUFFER_VISIBILITY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).xy, 0u, 0u);
 
-    uint globalInstanceIndex = visibilityData.x;
+    uint sceneRenderItemIndex = visibilityData.x;
     uint primitiveID = visibilityData.y;
 
-    RenderItem renderItem = renderItemBuffer.renderItems[globalInstanceIndex];
+    RenderItem renderItem = sceneRenderItemBuffer.renderItems[sceneRenderItemIndex];
     Material material = materialBuffer.materials[renderItem.materialIndex];
     uint triangleIndexOffset = renderItem.baseIndex + (primitiveID * 3);
 
@@ -153,7 +133,7 @@ void main() {
 
     // Position from depth reconstruction
     float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
-    vec3 worldPos = WorldPosFromDepth_VK(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
+    vec3 worldPos = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
 
     // Transform vertices to world space
     mat4 modelMatrix = renderItem.modelMatrix;
@@ -162,18 +142,18 @@ void main() {
     vec3 ws2 = (modelMatrix * vec4(v2.vx, v2.vy, v2.vz, 1.0)).xyz;
 
     // Calculate world space edges
-    vec3 viewDir = normalize(worldPos - viewportData.viewPos.xyz);
+    vec3 viewDir = normalize(worldPos - viewPosition);
     vec3 e1 = ws1 - ws0;
     vec3 e2 = ws2 - ws0;
     vec3 geoNormal = normalize(cross(e1, e2));
     bool isFrontFacing = dot(geoNormal, viewDir) <= 0.0;
 
     // Project vertices to NDC for stable screen space barycentrics
-    vec4 clip0 = viewportData.projectionViewReverseZ * vec4(ws0, 1.0);
-    vec4 clip1 = viewportData.projectionViewReverseZ * vec4(ws1, 1.0);
-    vec4 clip2 = viewportData.projectionViewReverseZ * vec4(ws2, 1.0);
+    vec4 clip0 = projectionView * vec4(ws0, 1.0);
+    vec4 clip1 = projectionView * vec4(ws1, 1.0);
+    vec4 clip2 = projectionView * vec4(ws2, 1.0);
 
-    vec2 viewportNDC = ViewportNDCFromPixel_VK(px, outputImageSize, viewportData);
+    vec2 viewportNDC = ViewportNDCFromPixel(px, outputImageSize, viewportRect);
 
     vec2 s0 = clip0.xy / clip0.w;
     vec2 s1 = clip1.xy / clip1.w;
@@ -267,13 +247,13 @@ void main() {
         // Both endpoints represent the same point on the deforming triangle.
         // Skinning produces model-local positions; the corresponding current or
         // previous model matrix promotes each endpoint to world space.
-        currPos = viewportData.projectionViewReverseZ * renderItem.modelMatrix * vec4(currentLocalPos, 1.0);
-        prevPos = viewportData.prevProjectionViewReverseZ * renderItem.prevModelMatrix * vec4(previousLocalPos, 1.0);
+        currPos = projectionView * renderItem.modelMatrix * vec4(currentLocalPos, 1.0);
+        prevPos = prevProjectionView * renderItem.prevModelMatrix * vec4(previousLocalPos, 1.0);
     }
     else {
         vec4 localPos = renderItem.inverseModelMatrix * vec4(worldPos, 1.0);
-        currPos = viewportData.projectionViewReverseZ * vec4(worldPos, 1.0);
-        prevPos = viewportData.prevProjectionViewReverseZ * renderItem.prevModelMatrix * localPos;
+        currPos = projectionView * vec4(worldPos, 1.0);
+        prevPos = prevProjectionView * renderItem.prevModelMatrix * localPos;
     }
 
     vec2 currNDC = currPos.xy / currPos.w;

@@ -68,8 +68,8 @@ void Wall::UpdateSegmentsTrimsAndVertexData() {
 
     // Create weather boards
     if (m_createInfo.wallType == WallType::WEATHER_BOARDS) {
-        RecreateWeatherBoardMesh();
         CreateCSGVertexData();
+        RecreateWeatherBoardMesh();
     }
     // Create CSG geometry and trims
     else {
@@ -147,6 +147,12 @@ void Wall::SetMaterial(const std::string& materialName) {
         UpdateSegmentsTrimsAndVertexData();
         HouseBuilder::MarkDirty();
     }
+}
+
+void Wall::SetWallType(WallType wallType) {
+    m_createInfo.wallType = wallType;
+    UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
 }
 
 Material* Wall::GetMaterial() {
@@ -287,7 +293,8 @@ void Wall::SubmitRenderItems() {
     if (m_createInfo.wallType == WallType::WEATHER_BOARDS) {
 
 
-        for (uint32_t meshId : m_weatherBoardSegmentMeshIds) {
+        for (size_t i = 0; i < m_weatherBoardSegmentMeshIds.size(); i++) {
+            const uint32_t meshId = m_weatherBoardSegmentMeshIds[i];
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
             if (!mesh) continue;
 
@@ -308,6 +315,7 @@ void Wall::SubmitRenderItems() {
             renderItem.baseVertex = mesh->baseVertex;
             renderItem.baseIndex = mesh->baseIndex;
             renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
+            if (i < m_wallSegments.size()) Hell::Bit::PackUint64(m_wallSegments[i].GetObjectId(), renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
 
             RenderDataManager::SubmitRenderItemProcedural(renderItem);
         }
@@ -335,6 +343,7 @@ void Wall::SubmitRenderItems() {
         renderItem.baseVertex = mesh->baseVertex;
         renderItem.baseIndex = mesh->baseIndex;
         renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
+        Hell::Bit::PackUint64(wallSegment.GetObjectId(), renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
 
 		RenderDataManager::SubmitRenderItemProcedural(renderItem);
     }
@@ -374,9 +383,6 @@ void Wall::DrawSegmentLines(glm::vec4 color) {
         DebugDraw::DrawLine(midPoint, projectedMidPoint, color);
     }
 }
-
-#define WEATHERBOARD_STOP_MESH_HEGIHT 2.6f
-
 
 void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, int boardY, float boardWidth, std::vector<Vertex>& verticesOut, std::vector<uint32_t>& indicesOut) {
     Model* weatherBoardModel = Hell::ResourceManager::GetModelByName("WeatherBoard");
@@ -461,10 +467,10 @@ void Wall::RecreateWeatherBoardMesh() {
         return;
     }
 
-    float individialBoardHeight = 0.13f;
-    float desiredTotalWallHeight = 5.6f;
-    int weatherBoardCount = (int)(desiredTotalWallHeight / individialBoardHeight);
-    float actualFinalWallHeight = weatherBoardCount * individialBoardHeight;
+    float individualBoardHeight = 0.13f;
+    float desiredTotalWallHeight = m_createInfo.height;
+    int weatherBoardCount = (int)(desiredTotalWallHeight / individualBoardHeight);
+    float actualFinalWallHeight = weatherBoardCount * individualBoardHeight;
 
 
     for (WallSegment& wallSegemet : m_wallSegments) {
@@ -494,22 +500,21 @@ void Wall::RecreateWeatherBoardMesh() {
         renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
 
         RendererUtil::UpdateRenderItemAABB(renderItem);
-        Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+        Hell::Bit::PackUint64(wallSegemet.GetObjectId(), renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }
 
     // Create new mesh segments
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-
     for (WallSegment& wallSegemet : m_wallSegments) {
+        std::vector<Vertex> vertices;
+        std::vector<uint32_t> indices;
 
         for (int i = 0; i < weatherBoardCount; i++) {
 
             glm::vec3 start = wallSegemet.GetStart();
             glm::vec3 end = wallSegemet.GetEnd();
 
-            start.y += individialBoardHeight * i;
-            end.y += individialBoardHeight * i;
+            start.y += individualBoardHeight * i;
+            end.y += individualBoardHeight * i;
 
             glm::vec3 rayOrigin = start;
             glm::vec3 rayDir = glm::normalize(end - start);

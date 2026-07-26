@@ -2,6 +2,7 @@
 #include "../../common/constants.glsl"
 #include "../../common/ddgi.glsl"
 #include "../../common/normal_encoding.glsl"
+#include "../../common/reconstruction.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
 #include "../../common/viewport.glsl"
@@ -22,7 +23,7 @@ void main() {
 
     if (pixelCoords.x >= gBufferSize.x || pixelCoords.y >= gBufferSize.y) return;
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, gBufferSize, rendererData.splitscreenMode);
+    uint viewportIndex = ViewportIndexFromPixel(pixelCoords, gBufferSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
 
     // Read DDGIVolume
     vec3 probeOffset = volume.origin;
@@ -35,18 +36,16 @@ void main() {
     if (dot(fragNormal, fragNormal) < 0.0001) return;
 
     // Viewport UV
-    ViewportData viewport = viewportData[viewportIndex];
-    vec2 viewportUV = ViewportUVFromPixel_GL(pixelCoords, gBufferSize, viewport);
+    ivec4 viewportRect = ivec4(viewportData[viewportIndex].xOffset, viewportData[viewportIndex].yOffset, viewportData[viewportIndex].width, viewportData[viewportIndex].height);
+    mat4 inverseProjectionView = viewportData[viewportIndex].inverseJitteredProjectionViewReverseZ;
+    vec3 viewPosition = viewportData[viewportIndex].viewPos.xyz;
+    vec2 viewportUV = ViewportUVFromPixel(pixelCoords, gBufferSize, viewportRect);
 
     // Position from depth
     float depth = texelFetch(u_depthTexture, pixelCoords, 0).r;
-    vec2 clipXY = viewportUV * 2.0 - 1.0;
-    clipXY.y = -clipXY.y;
-    vec4 clip = vec4(clipXY, depth, 1.0);
-    vec4 worldH = viewport.inverseJitteredProjectionViewReverseZ * clip;
-    vec3 fragPosition = worldH.xyz / worldH.w;
+    vec3 fragPosition = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
 
-    vec3 surfaceBias = DDGIGetSurfaceBias(fragPosition, fragNormal, viewport.viewPos.xyz);
+    vec3 surfaceBias = DDGIGetSurfaceBias(fragPosition, fragNormal, viewPosition);
     vec3 biasedWorldPosition = fragPosition + surfaceBias;
 
     ivec3 base = DDGIGetBaseProbeGridCoords(biasedWorldPosition, volume);

@@ -1,22 +1,5 @@
 #include "types.glsl"
 
-vec3 GetWorldRay_GL(vec2 fragCoordWindow, mat4 inverseProjectionView, vec3 viewPos, vec2 viewportOrigin, vec2 viewportSize) {
-    vec2 fragCoord = fragCoordWindow - viewportOrigin;
-    vec2 ndc = (fragCoord / viewportSize) * 2.0 - 1.0;
-    ndc.y = -ndc.y;
-    vec4 worldH = inverseProjectionView * vec4(ndc, 1.0, 1.0);
-    vec3 worldPos = worldH.xyz / worldH.w;
-    return normalize(worldPos - viewPos);
-}
-
-vec3 GetWorldRay_VK(vec2 fragCoordWindow, mat4 inverseProjectionView, vec3 viewPos, vec2 viewportOrigin, vec2 viewportSize) {
-    vec2 fragCoord = fragCoordWindow - viewportOrigin;
-    vec2 ndc = (fragCoord / viewportSize) * 2.0 - 1.0;
-    vec4 worldH = inverseProjectionView * vec4(ndc, 1.0, 1.0);
-    vec3 worldPos = worldH.xyz / worldH.w;
-    return normalize(worldPos - viewPos);
-}
-
 mat4 ToMat4(vec3 position, vec3 rotation, vec3 scale) {
     // Translation matrix
     mat4 translationMatrix = mat4(1.0);
@@ -69,18 +52,6 @@ float Rand(vec2 seed) {
     return fract(sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-vec2 WorldToScreen(vec3 worldPos, mat4 projView, vec2 viewportPosition, vec2 viewportSize) {
-    vec4 clipSpace = projView * vec4(worldPos, 1.0);
-    vec3 ndc = clipSpace.xyz / clipSpace.w; // Perspective divide
-
-    // Convert from NDC (-1 to 1) to normalized screen UVs (0 to 1)
-    vec2 screenUV = ndc.xy * 0.5 + 0.5;
-    screenUV.y = 1.0 - screenUV.y;
-
-    // Ensure precise viewport size scaling
-    return screenUV * viewportSize + viewportPosition;
-}
-
 float LinearizeDepth(float nonLinearDepth, float near, float far) {
     float z = nonLinearDepth * 2.0 - 1.0;  // Convert [0,1] range to [-1,1] (NDC space)
     return (2.0 * near * far) / (far + near - z * (far - near)); // Convert to linear depth
@@ -129,68 +100,6 @@ vec3 GetMoonLightColor() {
     //return moonColor;
 }
 
-// SplitscreenMode: 0 fullscreen, 1 two-player, 2 four-player
-uint ComputeViewportIndexFromSplitscreenMode(ivec2 pixelCoords, ivec2 outputSize, int splitscreenMode) {
-    int halfW = outputSize.x >> 1;
-    int halfH = outputSize.y >> 1;
-
-    if (splitscreenMode == 0) {
-        return 0u;
-    }
-
-    uint iy = uint(pixelCoords.y >= halfH);
-    uint ix = uint(pixelCoords.x >= halfW);
-
-    if (splitscreenMode == 1) {
-        return iy;
-    }
-
-    // 4-player: 0 TL, 1 TR, 2 BL, 3 BR
-    return ix + (iy << 1);
-
-    //int halfW = outputSize.x >> 1;
-    //int halfH = outputSize.y >> 1;
-    //
-    //uint ix = uint(pixelCoords.x >= halfW);
-    //uint iy = uint(pixelCoords.y <  halfH);
-    //
-    //uint idx2 = iy;
-    //uint idx4 = ix + (iy << 1);
-    //
-    //uint is2 = uint(splitscreenMode == 1);
-    //uint is4 = uint(splitscreenMode == 2);
-    //
-    //return is2 * idx2 + is4 * idx4; // fullscreen returns 0
-}
-
-//vec2 GlobalPixelToViewportUV(ivec2 pixelCoords, vec2 viewportOffset, vec2 viewportSize) {
-//    ivec2 localPx = pixelCoords - ivec2(viewportOffset.x, viewportOffset.y);
-//    return (vec2(localPx) + 0.5) / vec2(float(viewportSize.x), float(viewportSize.y));
-//}
-
-vec2 GlobalPixelToViewportUV(ivec2 px, ViewportData v) {
-    ivec2 localPx = px - ivec2(v.xOffset, v.yOffset);
-    return (vec2(localPx) + 0.5) / vec2(float(v.width), float(v.height));
-}
-
-vec2 ScreenUVToViewportUV(vec2 screenUV, ViewportData v) {
-    return (screenUV - vec2(v.posX, v.posY)) / vec2(v.sizeX, v.sizeY);
-}
-
-vec2 ViewportUVToGlobalUV(vec2 viewportUV, ViewportData v) {
-    return vec2(v.posX, v.posY) + viewportUV * vec2(v.sizeX, v.sizeY);
-}
-
-vec3 RayDirectionFromViewportUV(vec2 viewportUV, mat4 inverseProjection, mat4 inverseView) {
-    vec2 clipXY = viewportUV * 2.0 - 1.0;
-    clipXY.y = -clipXY.y;
-    vec4 clipFar = vec4(clipXY, 1.0, 1.0); // ZERO_TO_ONE
-    vec4 viewFarH = inverseProjection * clipFar;
-    vec3 viewFar = viewFarH.xyz / max(viewFarH.w, 0.000001);
-    vec3 dir_view = viewFarH.xyz / max(viewFarH.w, 1e-6);
-    return normalize(dir_view.x * inverseView[0].xyz + dir_view.y * inverseView[1].xyz + dir_view.z * inverseView[2].xyz);
-}
-
 bool RaySphereHit(vec3 rayOrigin, vec3 rayDir, vec3 sphereCenter, float sphereRadius) {
     vec3 originToCenter = sphereCenter - rayOrigin;
     float radiusSquared = sphereRadius * sphereRadius;
@@ -228,11 +137,3 @@ bool PointInSphere(vec3 p, vec3 center, float radius) {
     float distSq = dot(diff, diff);
     return distSq <= (radius * radius);
 }
-
-//vec3 ReconstructWorldPos(vec2 uv, float depth, mat4 invProjectionView) {
-//    vec2 clipXY = uv * 2.0 - 1.0;
-//    clipXY.y = -clipXY.y;
-//    vec4 clip = vec4(clipXY, depth, 1.0);
-//    vec4 worldH = invProjectionView * clip;
-//    return worldH.xyz / worldH.w;
-//}

@@ -10,17 +10,16 @@ namespace VulkanRenderer {
 
         frame.presentImage->Sync(frame.commandBuffer, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 
-        LoadingScreenPass(frame.commandBuffer, frame.presentImage->GetImageView(), frame.extent);
+        LoadingScreenPass(frame.commandBuffer, frame.presentImage->GetImageView(), frame.presentImage->GetExtent2D());
 
-        UpdateBuffersUI();
-        if (!UpdateFrameAddressTable()) {
+        if (!UpdateBuffersUI() || !UpdateFrameAddressTable()) {
             EndSwapchainFrame(frame);
             return;
         }
 
-        RenderUIPass(frame.commandBuffer);
+        RenderGameUIPass(frame.commandBuffer);
 
-        PresentPass(frame.commandBuffer, frame.swapchainImageView);
+        PresentPass(frame.commandBuffer, frame.swapchainImageView, frame.extent);
         EndSwapchainFrame(frame);
     }
 }

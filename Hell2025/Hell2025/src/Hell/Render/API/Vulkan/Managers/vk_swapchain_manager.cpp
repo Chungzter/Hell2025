@@ -8,6 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <iostream>
+#include <limits>
 
 namespace VulkanSwapchainManager {
     VkSwapchainKHR g_swapchain = VK_NULL_HANDLE;
@@ -53,9 +54,13 @@ namespace VulkanSwapchainManager {
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
 
         // Resolve Extent
-        VkExtent2D extent = { (uint32_t)Hell::BackEnd::GetCurrentWindowWidth(), (uint32_t)Hell::BackEnd::GetCurrentWindowHeight() };
-        extent.width = std::clamp(extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-        extent.height = std::clamp(extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+        VkExtent2D extent = capabilities.currentExtent;
+        if (extent.width == std::numeric_limits<uint32_t>::max()) {
+            extent.width = static_cast<uint32_t>(std::max(1, Hell::BackEnd::GetDrawableWidth()));
+            extent.height = static_cast<uint32_t>(std::max(1, Hell::BackEnd::GetDrawableHeight()));
+            extent.width = std::clamp(extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+            extent.height = std::clamp(extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+        }
         g_swapchainExtent = extent;
 
         // Choose Format

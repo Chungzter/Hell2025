@@ -45,6 +45,7 @@ namespace OpenGL::Renderer {
             if (!viewport || !viewport->IsVisible()) continue;
 
             OpenGL::Renderer::SetViewport(&gBuffer, viewport);
+            OpenGL::SetUniformInt("u_viewportIndex", i);
             OpenGL::Renderer::MultiDrawIndirect(drawCommandsSet.spriteSheets[i]);
         }
     }

@@ -64,7 +64,7 @@ namespace VulkanRenderer {
             frameData.accelerationStructures.skinnedVertexBufferAddress = 0;
         }
 
-        void AddTransientRayQueryBLASInstances(VulkanFrameData& frameData, VulkanMeshBuffer& assetMeshBuffer, VulkanBuffer& skinnedVertexBuffer, const std::vector<TransientRayQueryBLASInstance>& instances, RayQueryScene& scene) {
+        void AddTransientRayQueryBLASInstances(VulkanFrameData& frameData, VulkanMeshBuffer& assetMeshBuffer, VulkanBuffer& skinnedVertexBuffer, const std::vector<std::vector<uint32_t>>& renderItemGroups, const std::vector<RenderItem>& sceneRenderItems, RayQueryScene& scene) {
             g_vertexBufferAddress = skinnedVertexBuffer.GetDeviceAddress();
             g_indexBufferAddress = assetMeshBuffer.GetIndexBufferAddress();
 
@@ -83,16 +83,23 @@ namespace VulkanRenderer {
             VkDeviceSize assetIndexBufferSize = assetIndexBuffer->GetSize();
             size_t activeSlotCount = 0;
 
-            g_builds.reserve(instances.size());
+            g_builds.reserve(renderItemGroups.size());
 
-            for (const TransientRayQueryBLASInstance& instance : instances) {
-                if (instance.meshInstances.empty()) continue;
+            for (const std::vector<uint32_t>& sceneRenderItemIndices : renderItemGroups) {
+                if (sceneRenderItemIndices.empty()) continue;
 
                 std::vector<RayQueryMeshInstance> meshInstances;
-                meshInstances.reserve(instance.meshInstances.size());
-                for (const RayQueryMeshInstance& meshInstance : instance.meshInstances) {
+                std::vector<uint32_t> validSceneRenderItemIndices;
+                meshInstances.reserve(sceneRenderItemIndices.size());
+                validSceneRenderItemIndices.reserve(sceneRenderItemIndices.size());
+                for (uint32_t sceneRenderItemIndex : sceneRenderItemIndices) {
+                    if (sceneRenderItemIndex >= sceneRenderItems.size()) continue;
+
+                    const RenderItem& renderItem = sceneRenderItems[sceneRenderItemIndex];
+                    RayQueryMeshInstance meshInstance = CreateRayQueryMeshInstance(renderItem);
                     if (MeshFitsBuffers(meshInstance.mesh, skinnedVertexBufferSize, assetIndexBufferSize)) {
                         meshInstances.push_back(meshInstance);
+                        validSceneRenderItemIndices.push_back(sceneRenderItemIndex);
                     }
                 }
                 if (meshInstances.empty()) continue;
@@ -140,7 +147,8 @@ namespace VulkanRenderer {
                 build.scratchSize = scratchSize;
                 build.scratchOffset = AllocateScratch(build.scratchSize);
 
-                scene.AddBLASInstance(blas->GetDeviceAddress(), TransformMatrixKHR(instance.modelMatrix), g_vertexBufferAddress, g_indexBufferAddress, meshInstances);
+                const RenderItem& firstRenderItem = sceneRenderItems[validSceneRenderItemIndices.front()];
+                scene.AddBLASInstance(blas->GetDeviceAddress(), TransformMatrixKHR(firstRenderItem.modelMatrix), g_vertexBufferAddress, g_indexBufferAddress, validSceneRenderItemIndices);
             }
 
             DestroySlots(frameData.accelerationStructures.skinnedBLAS, activeSlotCount);
@@ -280,13 +288,6 @@ namespace VulkanRenderer {
         }
 
         void StoreSlotMetadata(VulkanFrameData::AccelerationStructures::SkinnedBLASSlot& slot, const std::vector<RayQueryMeshInstance>& meshInstances, const VkAccelerationStructureBuildSizesInfoKHR& sizeInfo) {
-            if (!meshInstances.empty()) {
-                slot.baseVertex = meshInstances[0].mesh.baseVertex;
-                slot.baseIndex = meshInstances[0].mesh.baseIndex;
-                slot.vertexCount = meshInstances[0].mesh.vertexCount;
-                slot.indexCount = meshInstances[0].mesh.indexCount;
-            }
-
             slot.geometryCount = static_cast<uint32_t>(meshInstances.size());
             slot.geometryHash = HashMeshInstances(meshInstances);
             slot.accelerationStructureSize = sizeInfo.accelerationStructureSize;

@@ -48,7 +48,6 @@ namespace VulkanRenderer {
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetHandle());
 
         PushConstantsSkinning pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.outputVerticesDeviceAddress = outputVertexBuffer->GetDeviceAddress();
         pushConstants.previousSkinnedPositionsDeviceAddress = previousSkinnedPositionBuffer->GetDeviceAddress();
         pushConstants.inputVerticesDeviceAddress = meshBuffer->GetVertexBufferAddress();

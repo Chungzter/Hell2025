@@ -23,22 +23,21 @@ layout(push_constant, scalar) uniform PushConstants {
     PushConstantsVisibility data;
 } pc;
 
-layout(location = 0) flat out uint v_globalInstanceIndex;
+layout(location = 0) flat out uint v_sceneRenderItemIndex;
 layout(location = 1) out vec2 v_uv;
 layout(location = 2) flat out int v_baseColorTextureIndex;
 
 void main() {
-    RenderItemBuffer renderItems = pc.data.frame.renderItemBuffer;
+    RenderItemBuffer sceneRenderItems = pc.data.frame.sceneRenderItemBuffer;
+    DrawRenderItemIndexBuffer drawRenderItemIndices = pc.data.frame.drawRenderItemIndexBuffer;
     MaterialBuffer materials = pc.data.frame.materialBuffer;
     ViewportDataBuffer viewportData = pc.data.frame.viewportDataBuffer;
     VertexBuffer skinnedVertices = VertexBuffer(pc.data.skinnedVerticesDeviceAddress);
 
-    uint baseInstance = uint(gl_BaseInstanceARB);
-    uint viewportIndex = baseInstance >> VIEWPORT_INDEX_SHIFT;
-    uint instanceOffset = baseInstance & uint((1 << VIEWPORT_INDEX_SHIFT) - 1);
-    uint globalInstanceIndex = instanceOffset + (uint(gl_InstanceIndex) - baseInstance);
+    uint sceneRenderItemIndex = drawRenderItemIndices.renderItemIndices[uint(gl_InstanceIndex)];
+    uint viewportIndex = pc.data.viewportIndex;
 
-    RenderItem renderItem = renderItems.renderItems[globalInstanceIndex];
+    RenderItem renderItem = sceneRenderItems.renderItems[sceneRenderItemIndex];
     Material material = materials.materials[renderItem.materialIndex];
     Vertex vertex = skinnedVertices.data[uint(gl_VertexIndex)];
     mat4 projectionView = viewportData.viewportData[viewportIndex].projectionViewReverseZ;
@@ -51,7 +50,7 @@ void main() {
         worldPos.xyz += awayFromCamera * depthBiasMeters;
     }
 
-    v_globalInstanceIndex = globalInstanceIndex;
+    v_sceneRenderItemIndex = sceneRenderItemIndex;
     v_uv = vertex.uv;
     v_baseColorTextureIndex = material.basecolor;
     gl_Position = projectionView * worldPos;

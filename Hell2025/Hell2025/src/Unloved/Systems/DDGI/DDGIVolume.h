@@ -32,6 +32,7 @@ struct DDGIVolume {
     void SetRotation(const glm::vec3& rotation);
     void SetExtents(const glm::vec3& extents);
     void SetProbeSpacing(float spacing);
+    void SetPointCloudSpacing(float spacing);
     void DebugDraw();
     void RebuildDDGIGeometry();
     void UpdateDDGISceneBvh();
@@ -50,6 +51,7 @@ struct DDGIVolume {
     const std::vector<CloudPoint>& GetPointCloundPoints() const                { return m_pointCloud.GetPoints(); }
     const std::vector<CloudPointTextureInfo>& GetPointCloudTextureInfo() const { return m_pointCloud.GetTextureInfo(); }
     const std::string& GetEditorName() const                                   { return m_createInfo.editorName; }
+    const glm::vec3& GetPosition() const                                       { return GetOrigin(); }
     const glm::vec3& GetOrigin() const                                         { return m_createInfo.origin; }
     const glm::vec3& GetRotation() const                                       { return m_createInfo.rotation; }
     const glm::vec3& GetExtents() const                                        { return m_createInfo.extents; }

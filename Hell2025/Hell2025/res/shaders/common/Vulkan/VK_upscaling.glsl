@@ -1,3 +1,5 @@
+#include "../viewport.glsl"
+
 vec3 SampleSurfaceGuidedBilateralUpscale_VK(texture2D lightingTexture, sampler lightingSampler, texture2D surfaceTexture, sampler surfaceSampler, vec2 screenUV, vec3 surfaceNormal, float surfaceViewDistance, ivec2 fullSize, ivec4 viewportRect, float normalPower, float minDepthSigma, float depthSigmaScale) {
     ivec2 lowSize = textureSize(sampler2D(lightingTexture, lightingSampler), 0);
     if (lowSize.x <= 0 || lowSize.y <= 0) {
@@ -5,7 +7,7 @@ vec3 SampleSurfaceGuidedBilateralUpscale_VK(texture2D lightingTexture, sampler l
     }
 
     vec2 lowScale = vec2(lowSize) / vec2(fullSize);
-    ivec2 viewportMin = ivec2(viewportRect.x, fullSize.y - viewportRect.y - viewportRect.w);
+    ivec2 viewportMin = VulkanViewportRectFromScreenRect(viewportRect, fullSize).xy;
     ivec2 viewportMax = viewportMin + viewportRect.zw;
     ivec2 lowViewportMin = ivec2(floor(vec2(viewportMin) * lowScale));
     ivec2 lowViewportMax = ivec2(ceil(vec2(viewportMax) * lowScale)) - ivec2(1);

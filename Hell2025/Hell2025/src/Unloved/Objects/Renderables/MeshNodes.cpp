@@ -293,6 +293,10 @@ void MeshNodes::CleanUp() {
         DirtyTracker::AddDirtyBounds(dirtyBounds);
     }
 
+    for (MeshNode& meshNode : m_meshNodes) {
+        if (meshNode.ownsOpenableId) OpenableManager::RemoveOpenable(meshNode.openableId);
+    }
+
     // First remove physics shapes
     for (MeshNode& meshNode : m_meshNodes) {
         if (meshNode.rigidDynamicId != 0) {
@@ -597,6 +601,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         Hell::Bit::SetState(meshNode.renderItem.miscFlags, MISC_FLAG_DYNAMIC_OBJECT, !MeshNodeIsStatic((int32_t)i));
         Hell::Bit::SetState(meshNode.renderItem.shadowFlags, SHADOW_FLAG_POINT_LIGHT, meshNode.castShadows);
         Hell::Bit::SetState(meshNode.renderItem.shadowFlags, SHADOW_FLAG_CSM, meshNode.castCSMShadows);
+        Hell::Bit::SetState(meshNode.renderItem.vulkanFlags, VULKAN_FLAG_EXCLUDE_FROM_TLAS, meshNode.excludeFromVulkanTLAS);
 
         if (m_firstFrame) {
             meshNode.renderItem.prevModelMatrix = meshNode.worldMatrix;
@@ -643,6 +648,7 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
 void MeshNodes::SleepAllPhysics() {
     for (MeshNode& meshNode : m_meshNodes) {
         if (meshNode.rigidDynamicId != 0) {
+            if (Hell::Physics::RigidDynamicIsKinematic(meshNode.rigidDynamicId)) continue;
             if (RigidDynamic* rigidDynamic = Hell::Physics::GetRigidDynamicById(meshNode.rigidDynamicId)) {
                 if (PxRigidDynamic* pxRigidDynamic = rigidDynamic->GetPxRigidDynamic()) {
                     pxRigidDynamic->clearForce(PxForceMode::eFORCE);

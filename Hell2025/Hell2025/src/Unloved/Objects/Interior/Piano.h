@@ -46,6 +46,7 @@ struct Piano {
     void Init(uint64_t id, PianoCreateInfo createInfo);
     void Init(uint64_t id, PianoCreateInfo createInfo, SpawnOffset spawnOffset);
     void SetPosition(glm::vec3 position);
+    void SetRotation(glm::vec3 rotation);
     void SetSustain(bool value);
     void Update(float deltaTime);
     void CleanUp();

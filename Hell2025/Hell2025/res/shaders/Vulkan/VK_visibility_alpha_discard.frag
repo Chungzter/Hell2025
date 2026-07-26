@@ -7,7 +7,7 @@ layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
 layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
 layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamplers[];
 
-layout(location = 0) flat in uint v_globalInstanceIndex;
+layout(location = 0) flat in uint v_sceneRenderItemIndex;
 layout(location = 1) in vec2 v_uv;
 layout(location = 2) flat in int v_baseColorTextureIndex;
 layout(location = 0) out uvec2 out_visibility;
@@ -19,5 +19,5 @@ void main() {
         if (alpha < 0.25) discard;
     }
 
-    out_visibility = uvec2(v_globalInstanceIndex, uint(gl_PrimitiveID));
+    out_visibility = uvec2(v_sceneRenderItemIndex, uint(gl_PrimitiveID));
 }

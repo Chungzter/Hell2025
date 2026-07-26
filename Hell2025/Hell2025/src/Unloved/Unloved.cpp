@@ -8,7 +8,6 @@
 #include "Hell/Profiling/CPUProfiler.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/UI/UIBackEnd.h"
-#include "Hell/Time.h"
 
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Config/Config.h"
@@ -16,6 +15,7 @@
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor.h"
 #include "Unloved/Editor/Gizmo.h"
+#include "Unloved/EditorSession/EditorSession.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 #include "Unloved/Systems/GameAudio/GameAudio.h"
@@ -53,6 +53,7 @@ namespace Unloved {
         Gizmo::Init();
         Unloved::ViewportManager::Init();
         Editor::Init();
+        EditorSession::Init();
         Hell::Physics::Init();
         ImGuiBackEnd::Init();
         Systems::Init();
@@ -163,11 +164,9 @@ namespace Unloved {
 
         Renderer::PreGameLogicComputePasses();
 
+        EditorSession::Update();
         Unloved::ViewportManager::Update();
-
-        if (Editor::IsOpen()) {
-            Editor::Update(Hell::Time::DeltaTime());
-        }
+        EditorSession::UpdateViewportInput();
 
         HouseBuilder::RebuildIfDirty();
 
@@ -204,6 +203,7 @@ namespace Unloved {
         World::SubmitRenderItems();
 
         Debug::Update();
+        EditorSession::Render();
         UIBackEnd::Update();
         RenderDataManager::Update();
         ImGuiBackEnd::Update();

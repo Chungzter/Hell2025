@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Unloved/Editor/PlacementTools.h"
+#include "Unloved/EditorSession/PlacementTools.h"
 
 namespace Unloved::Editor {
-    void BeginPlacement(PlacementTool tool);
+    void BeginPlacement(EditorSession::PlacementTool tool);
     void UpdatePlacement();
     void CancelPlacement();
     void FinishPlacement();

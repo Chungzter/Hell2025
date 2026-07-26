@@ -32,6 +32,7 @@ namespace nlohmann {
             {"Rotation", createInfo.rotation},
             {"Extents", createInfo.extents},
             {"ProbeSpacing", createInfo.probeSpacing},
+            {"PointCloudSpacing", createInfo.pointCloudSpacing},
             {"EditorName", createInfo.editorName},
             {"SaveToFile", createInfo.saveToFile},
         };
@@ -57,7 +58,8 @@ namespace nlohmann {
             {"MaterialTypeFrameBack", Hell::Enum::ToString(createInfo.materialTypeFrameBack) },
             {"MaxOpenValue", createInfo.maxOpenValue},
             {"HasDeadLock", createInfo.hasDeadLock},
-            {"DeadLockedAtStart", createInfo.deadLockedAtInit}
+            {"DeadLockedAtStart", createInfo.deadLockedAtInit},
+            {"OpenAtStart", createInfo.openAtStart}
         };
     }
 
@@ -143,6 +145,7 @@ namespace nlohmann {
             {"IESExposure", createInfo.iesExposure},
             {"Strength", createInfo.strength},
             {"Type", Hell::Enum::ToString(createInfo.type)},
+            {"EditorName", createInfo.editorName}
         };
     }
 
@@ -158,7 +161,8 @@ namespace nlohmann {
         j = nlohmann::json{
             {"Position", createInfo.position},
             {"Rotation", createInfo.rotation},
-            {"SoundFontName", createInfo.soundFontName}
+            {"SoundFontName", createInfo.soundFontName},
+            {"EditorName", createInfo.editorName}
         };
     }
 
@@ -181,6 +185,7 @@ namespace nlohmann {
             {"Rotation", createInfo.rotation},
             {"Scale", createInfo.scale},
             {"Type", Hell::Enum::ToString(createInfo.type)},
+            {"EditorName", createInfo.editorName}
         };
     }
 
@@ -209,6 +214,7 @@ namespace nlohmann {
         j = nlohmann::json{
             {"Position", createInfo.position},
             {"Rotation", createInfo.rotation},
+            {"Scale", createInfo.scale},
             {"StepCount", createInfo.stepCount},
             {"EditorName", createInfo.editorName}
         };
@@ -245,7 +251,8 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const WindowCreateInfo& createInfo) {
         j = nlohmann::json{
             {"Position", createInfo.position},
-            {"Rotation", createInfo.rotation}
+            {"Rotation", createInfo.rotation},
+            {"EditorName", createInfo.editorName}
         };
     }
 
@@ -297,6 +304,7 @@ namespace nlohmann {
         createInfo.rotation = j.value("Rotation", glm::vec3(0.0f));
         createInfo.extents = j.value("Extents", glm::vec3(0.0f));
         createInfo.probeSpacing = j.value("ProbeSpacing", 0.75f);
+        createInfo.pointCloudSpacing = j.value("PointCloudSpacing", 0.4f);
         createInfo.editorName = j.value("EditorName", UNDEFINED_STRING);
         createInfo.saveToFile = j.value("SaveToFile", true);
     }
@@ -318,6 +326,7 @@ namespace nlohmann {
         info.materialTypeFrameBack = Hell::Enum::FromString(j.value("MaterialTypeFrameBack", UNDEFINED_STRING), DoorMaterialType::UNDEFINED);
         info.hasDeadLock = j.value("HasDeadLock", false);
         info.deadLockedAtInit = j.value("DeadLockedAtStart", false);
+        info.openAtStart = j.value("OpenAtStart", false);
         info.maxOpenValue = j.value("MaxOpenValue", 2.1f);
     }
 
@@ -344,7 +353,7 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, JettyCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
-        info.scale = j.value("Scale ", glm::vec3(1.0f));
+        info.scale = j.value("Scale", glm::vec3(1.0f));
         info.boardCount = j.value("BoardCount", 10);
         info.poleSpacing = j.value("PoleSpacing", 1.0f);
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
@@ -389,6 +398,7 @@ namespace nlohmann {
         info.type = Hell::Enum::FromString(j.value("Type", "HANGING_LIGHT"), LightType::UNDEFINED);
         info.iesProfileType = Hell::Enum::FromString(j.value("IESProfileType", "NONE"), IESProfileType::NONE);
         info.iesExposure = j.value("IESExposure", 1.0f);
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
     void from_json(const nlohmann::json& j, MermaidCreateInfo& info) {
@@ -401,6 +411,7 @@ namespace nlohmann {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
         info.soundFontName = j.value("SoundFontName", std::string("YamahaGrandLiteV2"));
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
     void from_json(const nlohmann::json& j, PickUpCreateInfo& info) {
@@ -417,8 +428,9 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, PictureFrameCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
-        info.scale = j.value("Scale", glm::vec3(0.0f));
+        info.scale = j.value("Scale", glm::vec3(1.0f));
         info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), PictureFrameType::UNDEFINED);
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
     void from_json(const nlohmann::json& j, PowerPoleSetCreateInfo& info) {
@@ -444,6 +456,7 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, StaircaseCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
+        info.scale = j.value("Scale", glm::vec3(1.0f));
         info.stepCount = j.value("StepCount", 1);
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
@@ -475,6 +488,7 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, WindowCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
     void from_json(const nlohmann::json& j, SpawnPointCreateInfo& spawnPoint) {

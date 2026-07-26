@@ -99,8 +99,18 @@ namespace OpenGL::Renderer {
         outlineFBO->Bind();
         outlineFBO->ClearAttachmentI("Mask", 0);
         outlineFBO->ClearAttachmentI("Result", 0);
-        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
-        glDisable(GL_DEPTH_TEST);
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = false;
+        state.depthMask = false;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
+
+        const std::vector<RenderItem>& sceneRenderItems = Unloved::RenderDataManager::GetSceneRenderItems();
+        const std::vector<uint32_t>& outlineRenderItemIndices = Unloved::RenderDataManager::GetRenderItemIndicesOutline();
+        const std::vector<uint32_t>& outlineRenderItemIndicesProcedural = Unloved::RenderDataManager::GetRenderItemIndicesOutlineProcedural();
+        const std::vector<uint32_t>& outlineRenderItemIndicesSkinned = Unloved::RenderDataManager::GetRenderItemIndicesOutlineSkinned();
 
         // For each viewport
         for (int i = 0; i < 4; i++) {
@@ -111,21 +121,38 @@ namespace OpenGL::Renderer {
 
             // Render the mask (by drawing all the mesh into it)
             glDrawBuffer(outlineFBO->GetColorAttachmentSlotByName("Mask"));
-            glDisable(GL_BLEND);
             OpenGL::BindShader("OutlineMask");
             OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
             OpenGL::SetUniformInt("u_viewportIndex", i);
-            for (const RenderItem& renderItem : Unloved::RenderDataManager::GetRenderItemsOutline()) {
+
+            glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+            for (uint32_t renderItemIndex : outlineRenderItemIndices) {
+                const RenderItem& renderItem = sceneRenderItems[renderItemIndex];
                 OpenGL::SetUniformMat4("u_modelMatrix", renderItem.modelMatrix);
                 Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
+                if (!mesh) continue;
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertex);
+            }
+
+            glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("Procedural").GetVAO());
+            for (uint32_t renderItemIndex : outlineRenderItemIndicesProcedural) {
+                const RenderItem& renderItem = sceneRenderItems[renderItemIndex];
+                OpenGL::SetUniformMat4("u_modelMatrix", renderItem.modelMatrix);
+                Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("Procedural").GetMeshById(renderItem.meshId);
+                if (!mesh) continue;
+                glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid*)(mesh->baseIndex * sizeof(GLuint)), mesh->baseVertex);
+            }
+
+            glBindVertexArray(OpenGL::BackEnd::GetSkinnedVertexDataVAO());
+            for (uint32_t renderItemIndex : outlineRenderItemIndicesSkinned) {
+                const RenderItem& renderItem = sceneRenderItems[renderItemIndex];
+                OpenGL::SetUniformMat4("u_modelMatrix", renderItem.modelMatrix);
+                glDrawElementsBaseVertex(GL_TRIANGLES, renderItem.indexCount, GL_UNSIGNED_INT, (GLvoid*)(renderItem.baseIndex * sizeof(GLuint)), renderItem.baseVertex);
             }
 
             // Render the outline (by drawing an instanced quad offset many times)
             OpenGL::BindShader("Outline");
-            OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
             OpenGL::SetUniformVec2Array("u_offsets", offsets);
-            OpenGL::SetUniformInt("u_viewportIndex", i);
             int instanceCount = offsets.size();
             Model* primitives = Hell::ResourceManager::GetModelByName("Primitives");
             if (!primitives || primitives->GetMeshIndices().empty()) return;
@@ -135,6 +162,7 @@ namespace OpenGL::Renderer {
             Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
             if (!mesh) return;
 
+            glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
             glDrawBuffer(outlineFBO->GetColorAttachmentSlotByName("Result"));
             glBindTextureUnit(1, outlineFBO->GetColorAttachmentHandleByName("Mask"));
             glDrawElementsInstancedBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), instanceCount, mesh->baseVertex);

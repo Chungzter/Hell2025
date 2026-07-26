@@ -14,6 +14,8 @@ namespace VulkanRenderer {
     VkDeviceSize AccelerationStructureScratchAlignment();
     VkTransformMatrixKHR TransformMatrixKHR(const glm::mat4& matrix);
 
+    RayQueryMeshInstance CreateRayQueryMeshInstance(const RenderItem& renderItem);
+    VkGeometryFlagsKHR GetRayQueryGeometryFlags(const RenderItem& renderItem);
     VkGeometryFlagsKHR GetRayQueryGeometryFlags(const RayQueryMaterial& material);
     VkAccelerationStructureGeometryKHR CreateTriangleGeometry(uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const RayQueryMesh& mesh, VkGeometryFlagsKHR geometryFlags, uint64_t transformAddress = 0);
     VkAccelerationStructureBuildSizesInfoKHR QueryBottomLevelBuildSize(uint64_t vertexBufferAddress, uint64_t indexBufferAddress, const std::vector<RayQueryMeshInstance>& meshInstances, VkBuildAccelerationStructureFlagsKHR flags);

@@ -68,7 +68,6 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
         OpenGL::BindSSBO(SSBO_IDX_TILE_WORLD_BOUNDS_OUTPUT, "TileWorldBounds");
@@ -149,10 +148,11 @@ namespace OpenGL::Renderer {
         // Upscale with nearest filtering
         OpenGL::BlitFrameBuffer(&finalImageFbo, &presentFbo, "Color", "Color", GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-        UIPass();
+        GameUIPass();
 
         PresentFinalImage(presentFbo);
 
+        EditorUIPass();
         ImGuiPass();
         BlitDebugTextures();
 

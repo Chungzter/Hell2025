@@ -4,6 +4,7 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
 #include "../common/normal_encoding.glsl"
+#include "../common/reconstruction.glsl"
 #include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/Vulkan/VK_push_constants.glsl"
 #include "../common/viewport.glsl"
@@ -63,23 +64,8 @@ uvec2 RoundUp8(uvec2 value) {
 }
 
 ivec2 FullResolutionPixelFromLowResolutionPixel(ivec2 lowPixel, ivec2 lowSize, ivec2 fullSize) {
-    vec2 uv = (vec2(lowPixel) + 0.5) / vec2(lowSize);
+    vec2 uv = ScreenUVFromPixel(lowPixel, lowSize);
     return clamp(ivec2(uv * vec2(fullSize)), ivec2(0), fullSize - ivec2(1));
-}
-
-vec2 ViewportOriginPixels(ViewportData viewport, ivec2 fullSize) {
-    return vec2(viewport.xOffset, fullSize.y - viewport.yOffset - viewport.height);
-}
-
-vec2 GlobalUVToViewportUV(vec2 globalUV, ViewportData viewport, ivec2 fullSize) {
-    return (globalUV * vec2(fullSize) - ViewportOriginPixels(viewport, fullSize)) / vec2(viewport.width, viewport.height);
-}
-
-float GetLinearDepth(vec2 globalUV, float reverseDepth, ViewportData viewport, ivec2 fullSize) {
-    vec2 viewportUV = GlobalUVToViewportUV(globalUV, viewport, fullSize);
-    vec4 viewPosition = viewport.inverseProjectionReverseZ * vec4(viewportUV * 2.0 - 1.0, reverseDepth, 1.0);
-    if (abs(viewPosition.w) < 1.0e-6) return 0.0;
-    return abs(viewPosition.z / viewPosition.w);
 }
 
 float LoadRoughness(ivec2 pixelCoord, ivec2 screenSize) {
@@ -97,21 +83,22 @@ NeighborhoodSample LoadNeighborhood(ivec2 pixelCoord, ivec2 screenSize, Renderer
     if (!IsPixelInBounds(pixelCoord, screenSize)) return sampleValue;
 
     ivec2 fullSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
-    vec2 globalUV = (vec2(pixelCoord) + 0.5) / vec2(screenSize);
     ivec2 fullPixel = FullResolutionPixelFromLowResolutionPixel(pixelCoord, screenSize, fullSize);
-    sampleValue.viewportIndex = ViewportIndexFromSplitScreenMode_VK(fullPixel, fullSize, rendererData.splitscreenMode);
-    ViewportData viewport = pc.data.frame.viewportDataBuffer.viewportData[sampleValue.viewportIndex];
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
+    sampleValue.viewportIndex = ViewportIndexFromPixel(fullPixel, fullSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[sampleValue.viewportIndex].xOffset, viewportDataBuffer.viewportData[sampleValue.viewportIndex].yOffset, viewportDataBuffer.viewportData[sampleValue.viewportIndex].width, viewportDataBuffer.viewportData[sampleValue.viewportIndex].height);
+    mat4 inverseProjection = viewportDataBuffer.viewportData[sampleValue.viewportIndex].inverseProjectionReverseZ;
 
     sampleValue.radiance = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_INPUT], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixelCoord, 0).rgb;
     sampleValue.variance = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_VARIANCE], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixelCoord,0).r;
 
-    vec2 encodedNormal = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixelCoord, 0).rg;
+    vec2 encodedNormal = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), fullPixel, 0).rg;
     sampleValue.normal = DecodeOct(encodedNormal);
 
-    float reverseDepth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixelCoord, 0).r;
+    float reverseDepth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), fullPixel, 0).r;
     
     if (reverseDepth > 0.0) {
-        sampleValue.depth = GetLinearDepth(globalUV, reverseDepth, viewport, fullSize);
+        sampleValue.depth = LinearViewDepthFromNDC(ViewportNDCFromPixel(fullPixel, fullSize, viewportRect), reverseDepth, inverseProjection);
     }
 
     return sampleValue;

@@ -19,7 +19,6 @@ struct PushConstantsMaterialResolve {
 };
 
 struct PushConstantsSkinning {
-    uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t outputVerticesDeviceAddress = 0;
     uint64_t previousSkinnedPositionsDeviceAddress = 0;
     uint64_t inputVerticesDeviceAddress = 0;
@@ -51,17 +50,18 @@ static_assert(sizeof(PointShadowFaceData) == 84);
 struct PushConstantsPointShadow {
     uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t faceDataDeviceAddress = 0;
+    uint64_t drawFaceDataIndicesDeviceAddress = 0;
 };
 
-static_assert(sizeof(PushConstantsPointShadow) == 16);
+static_assert(sizeof(PushConstantsPointShadow) == 24);
 
 // Indirect specular
 
 struct PushConstantsIndirectSpecularAMDInput {
     uint64_t frameAddressTableDeviceAddress = 0;
 
-    uint64_t rayQueryBLASInstanceDataDeviceAddress = 0;
-    uint64_t rayQueryMeshInstanceDataDeviceAddress = 0;
+    uint64_t rayQueryBLASDataDeviceAddress = 0;
+    uint64_t rayQuerySceneRenderItemIndicesDeviceAddress = 0;
     int32_t blueNoiseTextureIndex = -1;
     uint32_t frameIndex = 0;
     uint32_t samplesPerQuad = 1;
@@ -88,23 +88,27 @@ struct PushConstantsIndirectSpecularAMDPrefilter {
 struct PushConstantsDeferredLighting {
     uint64_t frameAddressTableDeviceAddress = 0;
 
-    uint64_t rayQueryBLASInstanceDataDeviceAddress = 0;
-    uint64_t rayQueryMeshInstanceDataDeviceAddress = 0;
+    uint64_t rayQueryBLASDataDeviceAddress = 0;
+    uint64_t rayQuerySceneRenderItemIndicesDeviceAddress = 0;
     int32_t brdfLutTextureIndex = -1;
-    uint32_t padding0 = 0;
+    uint32_t viewportIndex = 0;
 };
 
 struct PushConstantsHair {
     uint64_t frameAddressTableDeviceAddress = 0;
+    uint32_t viewportIndex = 0;
+    uint32_t padding0 = 0;
 };
 
-static_assert(sizeof(PushConstantsHair) == 8);
+static_assert(sizeof(PushConstantsHair) == 16);
 
 struct PushConstantsEmissive {
     uint64_t frameAddressTableDeviceAddress = 0;
+    uint32_t viewportIndex = 0;
+    uint32_t padding0 = 0;
 };
 
-static_assert(sizeof(PushConstantsEmissive) == 8);
+static_assert(sizeof(PushConstantsEmissive) == 16);
 
 struct PushConstantsEmissiveBloomFilter {
     glm::ivec2 sourceOffset = glm::ivec2(0);
@@ -147,6 +151,8 @@ struct PushConstantsSkybox {
 
 struct PushConstantsSpriteSheet {
     uint64_t frameAddressTableDeviceAddress = 0;
+    uint32_t viewportIndex = 0;
+    uint32_t padding0 = 0;
 };
 
 struct PushConstantsPostProcessing {
@@ -164,7 +170,6 @@ struct PushConstantsUI {
 // Debug
 
 struct PushConstantsDebug2D {
-    uint64_t frameAddressTableDeviceAddress = 0;
     float renderTargetWidth = 1.0f;
     float renderTargetHeight = 1.0f;
 };
@@ -186,7 +191,6 @@ struct PushConstantsDebugTileView {
 // DDGI
 
 struct PushConstantsDDGIPointCloudBaseColor {
-    uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t pointCloudDeviceAddress = 0;
     uint64_t pointCloudTextureInfoDeviceAddress = 0;
     uint32_t pointCount = 0;
@@ -214,7 +218,6 @@ struct PushConstantsDDGIPointCloudLighting {
 };
 
 struct PushConstantsDDGIProbeBorder {
-    uint64_t frameAddressTableDeviceAddress = 0;
     glm::vec3 volumeOrigin = glm::vec3(0.0f);
     float probeSpacing = 0.0f;
     glm::ivec3 probeCounts = glm::ivec3(0);
@@ -239,7 +242,6 @@ struct PushConstantsDDGIProbeDebug {
 };
 
 struct PushConstantsDDGIProbeDistance {
-    uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t probeStatesDeviceAddress = 0;
     uint64_t probeDistanceCounterDeviceAddress = 0;
     uint64_t probeDistanceIndicesDeviceAddress = 0;
@@ -254,13 +256,11 @@ struct PushConstantsDDGIProbeDistance {
 };
 
 struct PushConstantsDDGIProbeDistanceDispatchArgs {
-    uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t probeDistanceCounterDeviceAddress = 0;
     uint64_t probeDistanceDispatchArgsDeviceAddress = 0;
 };
 
 struct PushConstantsDDGIProbeDistanceList {
-    uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t probeStatesDeviceAddress = 0;
     uint64_t probeDistanceCounterDeviceAddress = 0;
     uint64_t probeDistanceIndicesDeviceAddress = 0;
@@ -269,7 +269,6 @@ struct PushConstantsDDGIProbeDistanceList {
 };
 
 struct PushConstantsDDGIProbeIrradiance {
-    uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t pointCloudDeviceAddress = 0;
     uint64_t probeStatesDeviceAddress = 0;
     uint64_t probeIrradianceCounterDeviceAddress = 0;
@@ -288,7 +287,6 @@ struct PushConstantsDDGIProbeIrradiance {
 };
 
 struct PushConstantsDDGIProbeIrradianceDirtyPointCheck {
-    uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t probeStatesDeviceAddress = 0;
     uint64_t probePointIndicesDeviceAddress = 0;
     uint64_t probePointOffsetsDeviceAddress = 0;
@@ -299,13 +297,11 @@ struct PushConstantsDDGIProbeIrradianceDirtyPointCheck {
 };
 
 struct PushConstantsDDGIProbeIrradianceDispatchArgs {
-    uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t probeIrradianceCounterDeviceAddress = 0;
     uint64_t probeIrradianceDispatchArgsDeviceAddress = 0;
 };
 
 struct PushConstantsDDGIProbeIrradianceList {
-    uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t probeStatesDeviceAddress = 0;
     uint64_t probeIrradianceCounterDeviceAddress = 0;
     uint64_t probeIrradianceIndicesDeviceAddress = 0;
@@ -330,7 +326,6 @@ struct PushConstantsDDGIProbeIrradianceTexture {
 };
 
 struct PushConstantsDDGIProbePointIndices {
-    uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t pointCloudDeviceAddress = 0;
     uint64_t pointCloudGridOffsetsDeviceAddress = 0;
     uint64_t pointCloudGridCountsDeviceAddress = 0;
@@ -362,7 +357,6 @@ struct PushConstantsDDGIProbeRelevance {
 };
 
 struct PushConstantsDDGIProbeStateUpdate {
-    uint64_t frameAddressTableDeviceAddress = 0;
     uint64_t probeStatesDeviceAddress = 0;
     uint64_t dirtyDoorAABBsDeviceAddress = 0;
     glm::vec3 volumeOrigin = glm::vec3(0.0f);

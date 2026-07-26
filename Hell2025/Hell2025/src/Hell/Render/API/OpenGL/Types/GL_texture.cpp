@@ -2,7 +2,6 @@
 #include "Hell/Logging.h"
 
 #include "Hell/Render/API/OpenGL/GL_util.h"
-#include "Hell/Backend/BackEnd.h"
 
 #include <algorithm>
 #include <iostream>
@@ -172,8 +171,6 @@ void OpenGLTexture::SetMagFilter(TextureFilter filter) {
 }
 
 void OpenGLTexture::MakeBindlessTextureResident() {
-    if (Hell::BackEnd::RenderDocFound()) return;
-
     if (m_handle == 0 || glIsTexture(m_handle) != GL_TRUE) {
         Logging::Error() << "OpenGLTexture::MakeBindlessTextureResident() failed: handle '" << m_handle << "' is not a valid texture\n";
         m_bindlessID = 0;
@@ -193,8 +190,6 @@ void OpenGLTexture::MakeBindlessTextureResident() {
 }
 
 void OpenGLTexture::MakeBindlessTextureNonResident() {
-    if (Hell::BackEnd::RenderDocFound()) return;
-
     if (m_bindlessID != 0) {
         glMakeTextureHandleNonResidentARB(m_bindlessID);
         m_bindlessID = 0;

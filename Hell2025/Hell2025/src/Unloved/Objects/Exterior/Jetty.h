@@ -25,6 +25,7 @@ namespace Unloved {
 
         void SetPosition(const glm::vec3& position);
         void SetRotation(const glm::vec3& rotation);
+        void SetScale(const glm::vec3& scale);
         void SetBoardCount(uint32_t boardCount);
 
         const std::vector<RenderItem>& const GetRenderItems() { return m_renderItems; }
@@ -32,6 +33,7 @@ namespace Unloved {
         const JettyCreateInfo& GetCreateInfo() const          { return m_createInfo; }
         const glm::vec3& GetPosition() const                  { return m_createInfo.position; }
         const glm::vec3& GetRotation() const                  { return m_createInfo.rotation; }
+        const glm::vec3& GetScale() const                     { return m_createInfo.scale; }
         uint32_t GetBoardCount() const                        { return m_createInfo.boardCount; }
 
         const glm::vec3& GetWorldSpaceCenter() const          { return m_worldSpaceCenter; }

@@ -38,6 +38,11 @@ void Fence::AddControlPoint(const glm::vec2& controlPoint2D) {
     Init();
 }
 
+void Fence::UpdateControlPoints(const std::vector<glm::vec2>& controlPoints2D) {
+    m_createInfo.controlPoints2D = controlPoints2D;
+    Init();
+}
+
 void Fence::Init() {
     CleanUp();
 
@@ -77,6 +82,7 @@ void Fence::Init() {
     std::vector<glm::vec3> controlPoints3D;
     for (glm::vec2& point : m_createInfo.controlPoints2D) {
         glm::vec3 worldPosition = Hell::Physics::GetHeightMapPositionAtXZ(point.x, point.y);
+        if (worldPosition == glm::vec3(0.0f)) worldPosition = glm::vec3(point.x, 0.0f, point.y);
         controlPoints3D.push_back(worldPosition);
     }
 

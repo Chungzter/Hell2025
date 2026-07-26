@@ -6,6 +6,7 @@
 #include "../../common/flags.glsl"
 #include "../../common/reconstruction.glsl"
 #include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
 
 layout (location = 0) out vec4 DecalMaskOut;
 
@@ -37,17 +38,15 @@ void main() {
     uint miscFlags = DecodeMiscFlags(gBufferNormalXYRoughnessMisc.a);
     if ((miscFlags & MISC_FLAG_DYNAMIC_OBJECT) != 0u) discard;
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
-
-    ViewportData viewportData = viewportDataArr[viewportIndex];
-    mat4 inverseProjectionView = viewportData.inverseJitteredProjectionViewReverseZ;
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+    vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
+    mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
     if (depth <= 0.0) discard;
 
-    vec3 worldPos = WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionView);
+    vec3 worldPos = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
 
     vec3 positionDx = dFdx(worldPos);
     vec3 positionDy = dFdy(worldPos);

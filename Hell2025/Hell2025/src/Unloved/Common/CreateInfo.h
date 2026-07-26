@@ -86,7 +86,7 @@ struct DDGIVolumeCreateInfo {
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "DDGI Volume";
     float probeSpacing = 0.75f;
-    float pointCloudSpacing = 0.4f; // ATTENTION: This is missing from the JSON save file process and editor UI
+    float pointCloudSpacing = 0.4f;
     bool saveToFile = true;
 };
 
@@ -124,6 +124,7 @@ struct DoorCreateInfo {
     glm::vec3 rotation = glm::vec3(0.0f);
     bool hasDeadLock = false;
     bool deadLockedAtInit = false;
+    bool openAtStart = false;
     float maxOpenValue = 2.1f;
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Door";
@@ -329,6 +330,7 @@ struct SpriteSheetObjectCreateInfo {
 struct StaircaseCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
+    glm::vec3 scale = glm::vec3(1.0f);
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Staircase";
     uint32_t stepCount = 1;

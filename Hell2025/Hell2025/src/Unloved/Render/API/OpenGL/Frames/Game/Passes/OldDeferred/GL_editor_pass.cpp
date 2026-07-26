@@ -1,5 +1,5 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
-#include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorSession.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Render/Renderer.h"
@@ -19,7 +19,7 @@ namespace OpenGL::Renderer {
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("SolidColor");
 
         if (!shader) return;
-        if (!Editor::IsOpen()) return;
+        if (EditorSession::IsInactive()) return;
 
         OpenGLRasterizerState state;
         state.depthMask = true;
@@ -44,16 +44,14 @@ namespace OpenGL::Renderer {
                 OpenGL::SetUniformMat4("view", viewportData[i].view);
                 OpenGL::SetUniformBool("useUniformColor", true);
 
-                if (Editor::GetSelectedObjectType() != ObjectType::NO_TYPE) {
-                    for (GizmoRenderItem& renderItem : Gizmo::GetRenderItemsByViewportIndex(i)) {
-                        MeshBufferOLD* mesh = Gizmo::GetMeshBufferByIndex(renderItem.meshIndex);
-                        if (mesh) {
-                            OpenGLMeshBufferOLD glMesh = mesh->GetGLMeshBuffer();
-                            OpenGL::SetUniformMat4("model", renderItem.modelMatrix);
-                            OpenGL::SetUniformVec4("uniformColor", renderItem.color);
-                            glBindVertexArray(glMesh.GetVAO());
-                            glDrawElements(GL_TRIANGLES, glMesh.GetIndexCount(), GL_UNSIGNED_INT, 0);
-                        }
+                for (GizmoRenderItem& renderItem : Gizmo::GetRenderItemsByViewportIndex(i)) {
+                    MeshBufferOLD* mesh = Gizmo::GetMeshBufferByIndex(renderItem.meshIndex);
+                    if (mesh) {
+                        OpenGLMeshBufferOLD glMesh = mesh->GetGLMeshBuffer();
+                        OpenGL::SetUniformMat4("model", renderItem.modelMatrix);
+                        OpenGL::SetUniformVec4("uniformColor", renderItem.color);
+                        glBindVertexArray(glMesh.GetVAO());
+                        glDrawElements(GL_TRIANGLES, glMesh.GetIndexCount(), GL_UNSIGNED_INT, 0);
                     }
                 }
             }

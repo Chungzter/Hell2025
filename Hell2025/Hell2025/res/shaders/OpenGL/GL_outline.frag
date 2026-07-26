@@ -1,43 +1,11 @@
 #version 460 core
-#include "../common/OpenGL/GL_binding_indices.glsl"
-#include "../common/types.glsl"
 
 layout (location = 0) out vec4 FragOut;
-layout(r8, binding = 0) uniform image2D outlineMask;
 layout(binding = 1) uniform sampler2D outlineMaskTexture;
 
-uniform int u_offsetCount;
-uniform int u_viewportIndex;
 uniform vec2 u_offsets[256];
 
-readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer {
-	ViewportData viewportData[];
-};
-
 flat in int offsetIndex;
-
-void main2() {
-    ivec2 centerCoords = ivec2(gl_FragCoord.xy);
-    vec2 offsetCoords = centerCoords + u_offsets[offsetIndex];
-
-    int xOffset = viewportData[u_viewportIndex].xOffset;
-    int yOffset = viewportData[u_viewportIndex].yOffset;
-    int viewportWidth = viewportData[u_viewportIndex].width;
-    int viewportHeight = viewportData[u_viewportIndex].height;
-    
-    offsetCoords.x = clamp(offsetCoords.x, xOffset, xOffset + viewportWidth - 1);
-    offsetCoords.y = clamp(offsetCoords.y, yOffset, yOffset + viewportHeight - 1);
-    
-    float centerMask = imageLoad(outlineMask, centerCoords).r;
-    float offsetMask = imageLoad(outlineMask, ivec2(offsetCoords)).r;
-    
-    if (centerMask == offsetMask) {
-        discard;
-    }
-    else {
-        FragOut = vec4(offsetMask, 0.0, 0.0, 0.0);
-    }
-}
 
 void main() {
     // Get the size of the texture to convert pixel coords to UVs

@@ -329,7 +329,6 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbePointIndices pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.pointCloudDeviceAddress = pointCloudBuffer->GetDeviceAddress();
         pushConstants.pointCloudGridOffsetsDeviceAddress = gridOffsetsBuffer->GetDeviceAddress();
         pushConstants.pointCloudGridCountsDeviceAddress = gridCountsBuffer->GetDeviceAddress();
@@ -369,7 +368,6 @@ namespace {
         if (pointCount == 0) return false;
 
         PushConstantsDDGIPointCloudBaseColor pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.pointCloudDeviceAddress = pointCloudBuffer->GetDeviceAddress();
         pushConstants.pointCloudTextureInfoDeviceAddress = pointCloudTextureInfoBuffer->GetDeviceAddress();
         pushConstants.pointCount = pointCount;
@@ -452,7 +450,6 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbeStateUpdate pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.dirtyDoorAABBsDeviceAddress = dirtyDoorAABBsBuffer->GetDeviceAddress();
         pushConstants.volumeOrigin = volume.origin;
@@ -531,7 +528,6 @@ namespace {
         if (!ClearDDGICounter(commandBuffer, distanceCounterBuffer)) return false;
 
         PushConstantsDDGIProbeDistanceList pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.probeDistanceCounterDeviceAddress = distanceCounterBuffer->GetDeviceAddress();
         pushConstants.probeDistanceIndicesDeviceAddress = distanceIndicesBuffer->GetDeviceAddress();
@@ -561,7 +557,6 @@ namespace {
         RecordBufferBarrier(commandBuffer, distanceDispatchArgsBuffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
         PushConstantsDDGIProbeDistanceDispatchArgs pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeDistanceCounterDeviceAddress = distanceCounterBuffer->GetDeviceAddress();
         pushConstants.probeDistanceDispatchArgsDeviceAddress = distanceDispatchArgsBuffer->GetDeviceAddress();
         if (pushConstants.probeDistanceCounterDeviceAddress == 0 || pushConstants.probeDistanceDispatchArgsDeviceAddress == 0) return false;
@@ -590,7 +585,6 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbeDistance pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.probeDistanceCounterDeviceAddress = distanceCounterBuffer->GetDeviceAddress();
         pushConstants.probeDistanceIndicesDeviceAddress = distanceIndicesBuffer->GetDeviceAddress();
@@ -629,7 +623,6 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbeBorder pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.volumeOrigin = volume.origin;
         pushConstants.probeSpacing = volume.probeSpacing;
         pushConstants.probeCounts = volume.probeCounts;
@@ -663,7 +656,6 @@ namespace {
         if (!probePointIndicesBuffer || !probePointOffsetsBuffer || !probePointCountsBuffer) return false;
 
         PushConstantsDDGIProbeIrradianceDirtyPointCheck pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.probePointIndicesDeviceAddress = probePointIndicesBuffer->GetDeviceAddress();
         pushConstants.probePointOffsetsDeviceAddress = probePointOffsetsBuffer->GetDeviceAddress();
@@ -699,7 +691,6 @@ namespace {
         if (!ClearDDGICounter(commandBuffer, irradianceCounterBuffer)) return false;
 
         PushConstantsDDGIProbeIrradianceList pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.probeIrradianceCounterDeviceAddress = irradianceCounterBuffer->GetDeviceAddress();
         pushConstants.probeIrradianceIndicesDeviceAddress = irradianceIndicesBuffer->GetDeviceAddress();
@@ -731,7 +722,6 @@ namespace {
         RecordBufferBarrier(commandBuffer, irradianceDispatchArgsBuffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
         PushConstantsDDGIProbeIrradianceDispatchArgs pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.probeIrradianceCounterDeviceAddress = irradianceCounterBuffer->GetDeviceAddress();
         pushConstants.probeIrradianceDispatchArgsDeviceAddress = irradianceDispatchArgsBuffer->GetDeviceAddress();
         if (pushConstants.probeIrradianceCounterDeviceAddress == 0 || pushConstants.probeIrradianceDispatchArgsDeviceAddress == 0) return false;
@@ -764,7 +754,6 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbeIrradiance pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.pointCloudDeviceAddress = pointCloudBuffer->GetDeviceAddress();
         pushConstants.probeStatesDeviceAddress = probeStatesBuffer->GetDeviceAddress();
         pushConstants.probeIrradianceCounterDeviceAddress = irradianceCounterBuffer->GetDeviceAddress();
@@ -809,7 +798,6 @@ namespace {
 
         const DDGIVolumeGPU volume = ddgiVolume.GetGPUData();
         PushConstantsDDGIProbeBorder pushConstants{};
-        pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
         pushConstants.volumeOrigin = volume.origin;
         pushConstants.probeSpacing = volume.probeSpacing;
         pushConstants.probeCounts = volume.probeCounts;

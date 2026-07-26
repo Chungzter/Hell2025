@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Unloved/Editor/Editor_rays.h"
-#include "Unloved/Editor/PlacementTools.h"
+#include "Unloved/EditorSession/PlacementTools.h"
 
 namespace Unloved::Editor {
-    void PlaceDirectObject(PlacementTool tool, const EditorRayResult& rayResult, const PlacementToolInfo& toolInfo);
+    void PlaceDirectObject(EditorSession::PlacementTool tool, const EditorRayResult& rayResult, const EditorSession::PlacementToolInfo& toolInfo);
 }

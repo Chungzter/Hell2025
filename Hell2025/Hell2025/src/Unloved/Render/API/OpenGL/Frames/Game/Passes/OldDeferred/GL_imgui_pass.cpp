@@ -12,6 +12,7 @@
 #include "Hell/Audio.h"
 
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorSession.h"
 
 #include <fstream>
 #include <string>
@@ -42,7 +43,7 @@ namespace OpenGL::Renderer {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui::NewFrame();
 
-        if (Unloved::Editor::IsOpen()) {
+        if (Unloved::Editor::IsOpen() && Unloved::EditorSession::IsInactive()) {
             Unloved::Editor::CreateFileMenuImGuiElements();
 
             if (Unloved::Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) {

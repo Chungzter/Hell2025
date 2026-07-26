@@ -4,6 +4,7 @@
 #include "../common/reconstruction.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
+#include "../common/viewport.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
@@ -59,27 +60,28 @@ void main() {
     // in both barriers, but they must not fetch from the depth texture.
     if (inBounds) {
         ivec2 outputImageSize = textureSize(u_depthTexture, 0);
-        uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-        vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-        vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
+        uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+        ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+        if (ViewportContainsPixel(px, outputImageSize, viewportRect)) {
+            mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
+            vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
+            float depth = texelFetch(u_depthTexture, px, 0).r;
 
-        ViewportData viewportData = viewportDataArr[viewportIndex];
-        float depth = texelFetch(u_depthTexture, px, 0).r;
+            // Background pixels are irrelevant to the tile's world-space bounds.
+            if (depth > 0.000001) {
+                vec3 worldSpacePosition = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
 
-        // Background pixels are irrelevant to the tile's world-space bounds.
-        if (depth > 0.000001) {
-            vec3 worldSpacePosition = WorldPosFromDepth_GL(viewportUV, depth, viewportData.inverseJitteredProjectionViewReverseZ);
-
-            uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
-            uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);
-            uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);
-            atomicMin(minWorldSpaceXInt, worldSpaceXInt);
-            atomicMin(minWorldSpaceYInt, worldSpaceYInt);
-            atomicMin(minWorldSpaceZInt, worldSpaceZInt);
-            atomicMax(maxWorldSpaceXInt, worldSpaceXInt);
-            atomicMax(maxWorldSpaceYInt, worldSpaceYInt);
-            atomicMax(maxWorldSpaceZInt, worldSpaceZInt);
-            atomicAdd(validDepthSampleCount, 1);
+                uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
+                uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);
+                uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);
+                atomicMin(minWorldSpaceXInt, worldSpaceXInt);
+                atomicMin(minWorldSpaceYInt, worldSpaceYInt);
+                atomicMin(minWorldSpaceZInt, worldSpaceZInt);
+                atomicMax(maxWorldSpaceXInt, worldSpaceXInt);
+                atomicMax(maxWorldSpaceYInt, worldSpaceYInt);
+                atomicMax(maxWorldSpaceZInt, worldSpaceZInt);
+                atomicAdd(validDepthSampleCount, 1);
+            }
         }
     }
     barrier();

@@ -1,10 +1,6 @@
 #version 460 core
 #include "../common/OpenGL/GL_binding_indices.glsl"
 
-#ifndef ENABLE_BINDLESS
-    #define ENABLE_BINDLESS 1
-#endif
-
 #include "../common/util.glsl"
 #include "../common/types.glsl"
 #include "../common/constants.glsl"
@@ -18,9 +14,8 @@ readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewpo
 	ViewportData viewportData[];
 };
 
-layout(std430, binding = SSBO_IDX_INSTANCE_DATA) readonly buffer renderItemsBuffer {
-    RenderItem renderItems[];
-};
+readonly restrict layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) buffer sceneRenderItemsBuffer { RenderItem sceneRenderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_DRAW_RENDER_ITEM_INDICES) buffer drawRenderItemIndicesBuffer { uint drawRenderItemIndices[]; };
 
 out vec2 TexCoord;
 out vec4 WorldPos;
@@ -29,13 +24,8 @@ out vec3 Tangent;
 out vec3 ViewPos;
 out vec3 EmissiveColor;
 
-#if ENABLE_BINDLESS
 out flat int MaterialIndex;
 out flat int WoundMaterialIndex;
-#else
-uniform int u_viewportIndex;
-uniform int u_globalInstanceIndex;
-#endif
 
 out flat int WoundMaskTextureIndex;
 out flat uint MiscFlags;
@@ -47,24 +37,16 @@ out vec4 v_prevPos;
 uniform bool u_useMirrorMatrix;
 uniform mat4 u_mirrorViewMatrix;
 uniform vec4 u_mirrorClipPlane;
+uniform int u_viewportIndex;
 
 void main() {
-
-#if ENABLE_BINDLESS
-    int viewportIndex = gl_BaseInstance >> VIEWPORT_INDEX_SHIFT;
-    int instanceOffset = gl_BaseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
-    int globalInstanceIndex = instanceOffset + gl_InstanceID;
-#else
-    int globalInstanceIndex = u_globalInstanceIndex;
     int viewportIndex = u_viewportIndex;
-#endif
+    int globalInstanceIndex = int(drawRenderItemIndices[gl_BaseInstance + gl_InstanceID]);
 
-    RenderItem renderItem = renderItems[globalInstanceIndex];
+    RenderItem renderItem = sceneRenderItems[globalInstanceIndex];
 
-#if ENABLE_BINDLESS
     MaterialIndex = renderItem.materialIndex;
     WoundMaterialIndex = renderItem.woundMaterialIndex;
-#endif
 
     mat4 modelMatrix = renderItem.modelMatrix;
     mat4 prevModelMatrix = renderItem.prevModelMatrix;
@@ -83,7 +65,7 @@ void main() {
 
 	TexCoord = vUV;
     ViewPos = viewportData[viewportIndex].inverseView[3].xyz;
-    EmissiveColor = vec3(renderItems[globalInstanceIndex].emissiveR, renderItems[globalInstanceIndex].emissiveG, renderItems[globalInstanceIndex].emissiveB);
+    EmissiveColor = vec3(renderItem.emissiveR, renderItem.emissiveG, renderItem.emissiveB);
 
     WorldPos = modelMatrix * vec4(vPosition, 1.0);
     vec4 prevWorldPos = prevModelMatrix * vec4(vPosition, 1.0);

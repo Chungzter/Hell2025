@@ -7,6 +7,7 @@
 // Port of FidelityFX SDK 1.1.4 Reflection DNSR Reproject
 
 #include "../common/normal_encoding.glsl"
+#include "../common/reconstruction.glsl"
 #include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/Vulkan/VK_push_constants.glsl"
 #include "../common/viewport.glsl"
@@ -186,42 +187,33 @@ void InitializeShared(ivec2 dispatchThreadID, ivec2 groupThreadID) {
     }
 }
 
-vec2 ViewportOriginPixels(ViewportData viewport, ivec2 fullSize) {
-    return vec2(viewport.xOffset, fullSize.y - viewport.yOffset - viewport.height);
+float LinearViewDepthFromScreenUV(vec2 screenUV, float depth, ivec4 viewportRect, ivec2 fullSize, mat4 inverseProjection) {
+    vec2 viewportUV = ViewportUVFromScreenUV(screenUV, fullSize, viewportRect);
+    vec2 viewportNDC = ViewportNDCFromViewportUV(viewportUV);
+    return LinearViewDepthFromNDC(viewportNDC, depth, inverseProjection);
 }
 
-vec2 ViewportUVToGlobalUV(vec2 viewportUV, ViewportData viewport, ivec2 fullSize) {
-    return (ViewportOriginPixels(viewport, fullSize) + viewportUV * vec2(viewport.width, viewport.height)) / vec2(fullSize);
+vec2 GetSurfaceReprojection(ivec2 dispatchThreadID, vec2 screenUV, ivec4 viewportRect, ivec2 fullSize) {
+    vec2 viewportUV = ViewportUVFromScreenUV(screenUV, fullSize, viewportRect);
+    vec2 viewportMotion = LoadMotionVector(dispatchThreadID);
+    viewportMotion.y = -viewportMotion.y;
+    return ScreenUVFromViewportUV(viewportUV + viewportMotion, fullSize, viewportRect);
 }
 
-vec2 GlobalUVToViewportUV(vec2 globalUV, ViewportData viewport, ivec2 fullSize) {
-    return (globalUV * vec2(fullSize) - ViewportOriginPixels(viewport, fullSize)) / vec2(viewport.width, viewport.height);
-}
-
-float GetLinearDepth(vec2 globalUV, float depth, ViewportData viewport, ivec2 fullSize) {
-    vec2 viewportUV = GlobalUVToViewportUV(globalUV, viewport, fullSize);
-    vec4 viewPosition = viewport.inverseProjectionReverseZ * vec4(viewportUV * 2.0 - 1.0, depth, 1.0);
-    return abs(viewPosition.z / viewPosition.w);
-}
-
-vec2 GetSurfaceReprojection(ivec2 dispatchThreadID, vec2 uv, ViewportData viewport, ivec2 fullSize) {
-    vec2 viewportUV = GlobalUVToViewportUV(uv, viewport, fullSize);
-    return ViewportUVToGlobalUV(viewportUV + LoadMotionVector(dispatchThreadID), viewport, fullSize);
-}
-
-vec2 GetHitReprojection(ivec2 dispatchThreadID, vec2 uv, float reflectedRayLength, ViewportData viewport, ivec2 fullSize) {
+vec2 GetHitReprojection(ivec2 dispatchThreadID, vec2 screenUV, float reflectedRayLength, ivec4 viewportRect, ivec2 fullSize, mat4 inverseProjection, mat4 inverseView, mat4 previousProjectionView) {
     float z = LoadDepth(dispatchThreadID);
-    vec2 viewportUV = GlobalUVToViewportUV(uv, viewport, fullSize);
-    vec4 viewPositionH = viewport.inverseProjectionReverseZ * vec4(viewportUV * 2.0 - 1.0, z, 1.0);
+    vec2 viewportUV = ViewportUVFromScreenUV(screenUV, fullSize, viewportRect);
+    vec2 viewportNDC = ViewportNDCFromViewportUV(viewportUV);
+    vec4 viewPositionH = inverseProjection * vec4(viewportNDC, z, 1.0);
     vec3 viewSpaceRay = viewPositionH.xyz / viewPositionH.w;
     float surfaceDepth = length(viewSpaceRay);
     float rayLength = surfaceDepth + reflectedRayLength;
     viewSpaceRay /= surfaceDepth;
     viewSpaceRay *= rayLength;
-    vec3 worldHitPosition = (viewport.inverseView * vec4(viewSpaceRay, 1.0)).xyz;
-    vec4 previousClip = viewport.prevProjectionViewReverseZ * vec4(worldHitPosition, 1.0);
-    vec2 previousViewportUV = previousClip.xy / previousClip.w * 0.5 + 0.5;
-    return ViewportUVToGlobalUV(previousViewportUV, viewport, fullSize);
+    vec3 worldHitPosition = (inverseView * vec4(viewSpaceRay, 1.0)).xyz;
+    vec4 previousClip = previousProjectionView * vec4(worldHitPosition, 1.0);
+    vec2 previousViewportUV = ViewportUVFromClipPosition(previousClip);
+    return ScreenUVFromViewportUV(previousViewportUV, fullSize, viewportRect);
 }
 
 float GetDisocclusionFactor(vec3 normal, vec3 historyNormal, float linearDepth, float historyLinearDepth) {
@@ -232,16 +224,15 @@ float Dot2(vec3 value) {
     return dot(value, value);
 }
 
-void PickReprojection(ivec2 dispatchThreadID, ivec2 groupThreadID, ivec2 screenSize, ViewportData viewport, ivec2 fullSize, float roughness, float rayLength, out float disocclusionFactor, out vec2 reprojectionUV, out vec3 reprojection) {
+void PickReprojection(ivec2 dispatchThreadID, ivec2 groupThreadID, ivec2 screenSize, ivec4 viewportRect, mat4 inverseProjection, mat4 inverseView, mat4 previousProjectionView, float roughness, float rayLength, out float disocclusionFactor, out vec2 reprojectionUV, out vec3 reprojection) {
     Moments localNeighborhood = EstimateLocalNeighborhood(groupThreadID);
 
-    vec2 uv = (vec2(dispatchThreadID) + 0.5) / vec2(screenSize);
+    vec2 uv = ScreenUVFromPixel(dispatchThreadID, screenSize);
     vec3 normal = LoadWorldNormal(dispatchThreadID);
     vec3 historyNormal;
     float historyLinearDepth;
-
-    vec2 surfaceReprojectionUV = GetSurfaceReprojection(dispatchThreadID, uv, viewport, fullSize);
-    vec2 hitReprojectionUV = GetHitReprojection(dispatchThreadID, uv, rayLength, viewport, fullSize);
+    vec2 surfaceReprojectionUV = GetSurfaceReprojection(dispatchThreadID, uv, viewportRect, screenSize);
+    vec2 hitReprojectionUV = GetHitReprojection(dispatchThreadID, uv, rayLength, viewportRect, screenSize, inverseProjection, inverseView, previousProjectionView);
     vec3 surfaceNormal = SampleWorldNormalHistory(surfaceReprojectionUV);
     vec3 hitNormal = SampleWorldNormalHistory(hitReprojectionUV);
     vec3 surfaceHistory = SampleRadianceHistory(surfaceReprojectionUV);
@@ -256,7 +247,7 @@ void PickReprojection(ivec2 dispatchThreadID, ivec2 groupThreadID, ivec2 screenS
         && abs(hitRoughness - roughness) < abs(surfaceRoughness - roughness) + 1.0e-3) {
         historyNormal = hitNormal;
         float historyDepth = SampleDepthHistory(hitReprojectionUV);
-        historyLinearDepth = GetLinearDepth(hitReprojectionUV, historyDepth, viewport, fullSize);
+        historyLinearDepth = LinearViewDepthFromScreenUV(hitReprojectionUV, historyDepth, viewportRect, screenSize, inverseProjection);
         reprojectionUV = hitReprojectionUV;
         reprojection = hitHistory;
     } 
@@ -265,7 +256,7 @@ void PickReprojection(ivec2 dispatchThreadID, ivec2 groupThreadID, ivec2 screenS
             < REPROJECT_SURFACE_DISCARD_VARIANCE_WEIGHT * length(localNeighborhood.variance)) {
             historyNormal = surfaceNormal;
             float historyDepth = SampleDepthHistory(surfaceReprojectionUV);
-            historyLinearDepth = GetLinearDepth(surfaceReprojectionUV, historyDepth, viewport, fullSize);
+            historyLinearDepth = LinearViewDepthFromScreenUV(surfaceReprojectionUV, historyDepth, viewportRect, screenSize, inverseProjection);
             reprojectionUV = surfaceReprojectionUV;
             reprojection = surfaceHistory;
         } 
@@ -276,7 +267,7 @@ void PickReprojection(ivec2 dispatchThreadID, ivec2 groupThreadID, ivec2 screenS
     }
 
     float depth = LoadDepth(dispatchThreadID);
-    float linearDepth = GetLinearDepth(uv, depth, viewport, fullSize);
+    float linearDepth = LinearViewDepthFromScreenUV(uv, depth, viewportRect, screenSize, inverseProjection);
     disocclusionFactor = GetDisocclusionFactor(normal, historyNormal, linearDepth, historyLinearDepth);
 
     if (disocclusionFactor > DISOCCLUSION_THRESHOLD) return;
@@ -288,7 +279,7 @@ void PickReprojection(ivec2 dispatchThreadID, ivec2 groupThreadID, ivec2 screenS
                 vec2 candidateUV = reprojectionUV + vec2(x, y) * texelSize;
                 vec3 candidateNormal = SampleWorldNormalHistory(candidateUV);
                 float candidateDepth = SampleDepthHistory(candidateUV);
-                float candidateLinearDepth = GetLinearDepth(candidateUV, candidateDepth, viewport, fullSize);
+                float candidateLinearDepth = LinearViewDepthFromScreenUV(candidateUV, candidateDepth, viewportRect, screenSize, inverseProjection);
                 float weight = GetDisocclusionFactor(normal, candidateNormal, linearDepth, candidateLinearDepth);
                 if (weight > disocclusionFactor) {
                     disocclusionFactor = weight;
@@ -311,10 +302,10 @@ void PickReprojection(ivec2 dispatchThreadID, ivec2 groupThreadID, ivec2 screenS
         vec3 normal10 = LoadWorldNormalHistory(texel + ivec2(1, 0));
         vec3 normal01 = LoadWorldNormalHistory(texel + ivec2(0, 1));
         vec3 normal11 = LoadWorldNormalHistory(texel + ivec2(1, 1));
-        float depth00 = GetLinearDepth(reprojectionUV, LoadDepthHistory(texel + ivec2(0, 0)), viewport, fullSize);
-        float depth10 = GetLinearDepth(reprojectionUV, LoadDepthHistory(texel + ivec2(1, 0)), viewport, fullSize);
-        float depth01 = GetLinearDepth(reprojectionUV, LoadDepthHistory(texel + ivec2(0, 1)), viewport, fullSize);
-        float depth11 = GetLinearDepth(reprojectionUV, LoadDepthHistory(texel + ivec2(1, 1)), viewport, fullSize);
+        float depth00 = LinearViewDepthFromScreenUV(reprojectionUV, LoadDepthHistory(texel + ivec2(0, 0)), viewportRect, screenSize, inverseProjection);
+        float depth10 = LinearViewDepthFromScreenUV(reprojectionUV, LoadDepthHistory(texel + ivec2(1, 0)), viewportRect, screenSize, inverseProjection);
+        float depth01 = LinearViewDepthFromScreenUV(reprojectionUV, LoadDepthHistory(texel + ivec2(0, 1)), viewportRect, screenSize, inverseProjection);
+        float depth11 = LinearViewDepthFromScreenUV(reprojectionUV, LoadDepthHistory(texel + ivec2(1, 1)), viewportRect, screenSize, inverseProjection);
         vec4 weights;
         weights.x = GetDisocclusionFactor(normal, normal00, linearDepth, depth00) > DISOCCLUSION_THRESHOLD * 0.5 ? 1.0 : 0.0;
         weights.y = GetDisocclusionFactor(normal, normal10, linearDepth, depth10) > DISOCCLUSION_THRESHOLD * 0.5 ? 1.0 : 0.0;
@@ -357,15 +348,18 @@ void Reproject(ivec2 dispatchThreadID, ivec2 groupThreadID, ivec2 screenSize) {
 
     if (roughness < VK_INDIRECT_SPECULAR_AMD_ROUGHNESS_THRESHOLD) {
         RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
-        
-        uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(dispatchThreadID, screenSize, rendererData.splitscreenMode);
-        ViewportData viewport = pc.data.frame.viewportDataBuffer.viewportData[viewportIndex];
+        uint viewportIndex = ViewportIndexFromPixel(dispatchThreadID, screenSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+        ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
+        ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+        mat4 inverseProjection = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionReverseZ;
+        mat4 inverseView = viewportDataBuffer.viewportData[viewportIndex].inverseView;
+        mat4 previousProjectionView = viewportDataBuffer.viewportData[viewportIndex].prevProjectionViewReverseZ;
         
         float disocclusionFactor;
         vec2 reprojectionUV;
         vec3 reprojection;
 
-        PickReprojection(dispatchThreadID, groupThreadID, screenSize, viewport, screenSize, roughness, rayLength, disocclusionFactor, reprojectionUV, reprojection);
+        PickReprojection(dispatchThreadID, groupThreadID, screenSize, viewportRect, inverseProjection, inverseView, previousProjectionView, roughness, rayLength, disocclusionFactor, reprojectionUV, reprojection);
 
         if (reprojectionUV.x > 0.0 && reprojectionUV.y > 0.0 && reprojectionUV.x < 1.0 && reprojectionUV.y < 1.0) {
             float previousVariance = SampleVarianceHistory(reprojectionUV);

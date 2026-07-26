@@ -43,7 +43,7 @@ namespace OpenGL::RasterizerStateManager {
         newState.colorMask ? glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE) : glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
         glCullFace(newState.cullfaceMode);
 
-        if (newState.blendEnable)      glBlendFunc(newState.blendFuncSrcfactor, newState.blendFuncDstfactor);
+        glBlendFunc(newState.blendFuncSrcfactor, newState.blendFuncDstfactor);
         if (newState.depthTestEnabled) glDepthFunc(newState.depthFunc);
         if (newState.pointSize > 1.0f) glPointSize(newState.pointSize);
 
@@ -73,17 +73,13 @@ namespace OpenGL::RasterizerStateManager {
             return;
         }
 
-        bool blendWasDisabled = !g_globalState.blendEnable;
         if (g_globalState.blendEnable != newState.blendEnable) {
             newState.blendEnable ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
         }
 
-        if (newState.blendEnable) {
-            if (blendWasDisabled ||
-                g_globalState.blendFuncSrcfactor != newState.blendFuncSrcfactor ||
-                g_globalState.blendFuncDstfactor != newState.blendFuncDstfactor) {
-                glBlendFunc(newState.blendFuncSrcfactor, newState.blendFuncDstfactor);
-            }
+        if (g_globalState.blendFuncSrcfactor != newState.blendFuncSrcfactor ||
+            g_globalState.blendFuncDstfactor != newState.blendFuncDstfactor) {
+            glBlendFunc(newState.blendFuncSrcfactor, newState.blendFuncDstfactor);
         }
 
         if (g_globalState.cullfaceEnable != newState.cullfaceEnable) {
@@ -192,16 +188,14 @@ namespace OpenGL::RasterizerStateManager {
             Logging::Error() << "State Leak: GL_COLOR_WRITEMASK out of sync\n";
         }
 
-        if (g_globalState.blendEnable) {
-            glGetIntegerv(GL_BLEND_SRC_RGB, &glInt);
-            if (g_globalState.blendFuncSrcfactor != glInt) {
-                Logging::Error() << "State Leak: GL_BLEND_SRC_RGB out of sync\n";
-            }
+        glGetIntegerv(GL_BLEND_SRC_RGB, &glInt);
+        if (g_globalState.blendFuncSrcfactor != glInt) {
+            Logging::Error() << "State Leak: GL_BLEND_SRC_RGB out of sync\n";
+        }
 
-            glGetIntegerv(GL_BLEND_DST_RGB, &glInt);
-            if (g_globalState.blendFuncDstfactor != glInt) {
-                Logging::Error() << "State Leak: GL_BLEND_DST_RGB out of sync\n";
-            }
+        glGetIntegerv(GL_BLEND_DST_RGB, &glInt);
+        if (g_globalState.blendFuncDstfactor != glInt) {
+            Logging::Error() << "State Leak: GL_BLEND_DST_RGB out of sync\n";
         }
 
         if (g_globalState.depthTestEnabled) {

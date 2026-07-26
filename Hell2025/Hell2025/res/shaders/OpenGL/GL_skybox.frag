@@ -1,6 +1,7 @@
 #version 460
 #include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/types.glsl"
+#include "../common/viewport.glsl"
 
 layout (location = 0) out vec4 FinalLightingOut;
 
@@ -9,29 +10,24 @@ layout (binding = 0) uniform samplerCube cubeMap;
 in vec3 TexCoords;
 in flat int ViewportIndex;
 
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer {
+    RendererData rendererData;
+};
+
 readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer {
     ViewportData viewportData[];
 };
-
-vec3 GetWorldRay_GL(vec2 fragCoordWindow, int viewportIndex) {
-    vec2 viewportOrigin = vec2(viewportData[viewportIndex].xOffset, viewportData[viewportIndex].yOffset);
-    vec2 viewportSize = vec2(viewportData[viewportIndex].width, viewportData[viewportIndex].height);
-    vec2 fragCoord = fragCoordWindow - viewportOrigin;
-    vec2 ndc = (fragCoord / viewportSize) * 2.0 - 1.0;
-    ndc.y = -ndc.y;
-    mat4 inverseProjectionView = viewportData[viewportIndex].inverseJitteredProjectionViewReverseZ;
-
-    vec4 worldH = inverseProjectionView * vec4(ndc, 1.0, 1.0);
-    vec3 worldPos = worldH.xyz / worldH.w;
-    vec3 viewPos = viewportData[viewportIndex].viewPos.xyz;
-    return normalize(worldPos - viewPos);
-}
 
 void main() {
     vec3 skyColor = texture(cubeMap, TexCoords).rgb;
     vec3 skyLinear = pow(skyColor, vec3(2.6));
 
-    vec3 rayDir = GetWorldRay_GL(gl_FragCoord.xy, ViewportIndex);
+    ivec2 pixelCoords = ivec2(gl_FragCoord.xy);
+    ivec2 resolution = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
+    ivec4 viewportRect = ivec4(viewportData[ViewportIndex].xOffset, viewportData[ViewportIndex].yOffset, viewportData[ViewportIndex].width, viewportData[ViewportIndex].height);
+    vec3 viewPosition = viewportData[ViewportIndex].viewPos.xyz;
+    mat4 inverseProjectionView = viewportData[ViewportIndex].inverseJitteredProjectionViewReverseZ;
+    vec3 rayDir = WorldRayFromPixel(pixelCoords, resolution, viewportRect, viewPosition, inverseProjectionView);
 
     vec3 horizonColor = vec3(0.6, 0.2, 0.6);
     vec3 downColor = vec3(0.4);

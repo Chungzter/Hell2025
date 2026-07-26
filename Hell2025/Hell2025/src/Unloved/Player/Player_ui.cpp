@@ -269,21 +269,21 @@ void Player::UpdateUI(float deltaTime) {
 
             // Render items
             if (false) {
-                text += "RenderItems ALPHA_DISCARD: " + std::to_string(RenderDataManager::GetRenderItemsAlphaDiscard().size()) + "\n";
-                text += "RenderItems BLENDED: " + std::to_string(RenderDataManager::GetRenderItemsBlended().size()) + "\n";
-                text += "RenderItems DEFAULT: " + std::to_string(RenderDataManager::GetRenderItems().size()) + "\n";
-                text += "RenderItems GLASS: " + std::to_string(RenderDataManager::GetRenderItemsGlass().size()) + "\n";
-                text += "RenderItems HAIR: " + std::to_string(RenderDataManager::GetRenderItemsHair().size()) + "\n";
-                text += "RenderItems MIRROR: " + std::to_string(RenderDataManager::GetRenderItemsMirror().size()) + "\n";
-                text += "RenderItems TOILET_WATER: " + std::to_string(RenderDataManager::GetRenderItemsToiletWater().size()) + "\n";
-                text += "RenderItems PLASTIC: " + std::to_string(RenderDataManager::GetRenderItemsPlastic().size()) + "\n";
+                text += "RenderItems ALPHA_DISCARD: " + std::to_string(RenderDataManager::GetRenderItemCount(BlendingMode::ALPHA_DISCARD)) + "\n";
+                text += "RenderItems BLENDED: " + std::to_string(RenderDataManager::GetRenderItemCount(BlendingMode::BLENDED)) + "\n";
+                text += "RenderItems DEFAULT: " + std::to_string(RenderDataManager::GetRenderItemCount(BlendingMode::DEFAULT)) + "\n";
+                text += "RenderItems GLASS: " + std::to_string(RenderDataManager::GetRenderItemCount(BlendingMode::GLASS)) + "\n";
+                text += "RenderItems HAIR: " + std::to_string(RenderDataManager::GetRenderItemCount(BlendingMode::HAIR)) + "\n";
+                text += "RenderItems MIRROR: " + std::to_string(RenderDataManager::GetRenderItemCount(BlendingMode::MIRROR)) + "\n";
+                text += "RenderItems TOILET_WATER: " + std::to_string(RenderDataManager::GetRenderItemCount(BlendingMode::TOILET_WATER)) + "\n";
+                text += "RenderItems PLASTIC: " + std::to_string(RenderDataManager::GetRenderItemCount(BlendingMode::PLASTIC)) + "\n";
                 text += "\n";
-                text += "RenderItems Skinned ALPHA_DISCARD: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsAlphaDiscard().size()) + "\n";
-                text += "RenderItems Skinned BLENDED: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsBlended().size()) + "\n";
-                text += "RenderItems Skinned DEFAULT: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsDefault().size()) + "\n";
-                text += "RenderItems Skinned HAIR: " + std::to_string(RenderDataManager::GetSkinnedRenderItemsHair().size()) + "\n";
+                text += "RenderItems Skinned ALPHA_DISCARD: " + std::to_string(RenderDataManager::GetSkinnedRenderItemCount(BlendingMode::ALPHA_DISCARD)) + "\n";
+                text += "RenderItems Skinned BLENDED: " + std::to_string(RenderDataManager::GetSkinnedRenderItemCount(BlendingMode::BLENDED)) + "\n";
+                text += "RenderItems Skinned DEFAULT: " + std::to_string(RenderDataManager::GetSkinnedRenderItemCount(BlendingMode::DEFAULT)) + "\n";
+                text += "RenderItems Skinned HAIR: " + std::to_string(RenderDataManager::GetSkinnedRenderItemCount(BlendingMode::HAIR)) + "\n";
                 text += "\n";
-                text += "RenderItems PRODEDURAL: " + std::to_string(RenderDataManager::GetRenderItemsProcedural().size()) + "\n";
+                text += "RenderItems PRODEDURAL: " + std::to_string(RenderDataManager::GetRenderItemIndicesProcedural().size()) + "\n";
             }
 
             // Movement

@@ -10,7 +10,7 @@
 #include "../common/viewport.glsl"
 #include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/Vulkan/VK_push_constants.glsl"
-#include "../common/Vulkan/VK_ray_query.glsl"
+#include "../common/Vulkan/VK_ray_query_triangle.glsl"
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
@@ -77,13 +77,11 @@ void main() {
     RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
 
     RendererData rendererData = rendererDataBuffer.rendererData;
-    uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, outputSize, rendererData.splitscreenMode);
-    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
-
-    vec3 rayOrigin = viewportData.viewPos.xyz;
-    vec2 viewportOrigin = vec2(viewportData.xOffset, outputSize.y - viewportData.yOffset - viewportData.height);
-    vec2 viewportSize = vec2(viewportData.width, viewportData.height);
-    vec3 rayDir = GetWorldRay_VK(vec2(px) + 0.5, viewportData.inverseProjectionViewReverseZ, rayOrigin, viewportOrigin, viewportSize);
+    uint viewportIndex = ViewportIndexFromPixel(px, outputSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+    vec3 rayOrigin = viewportDataBuffer.viewportData[viewportIndex].viewPos.xyz;
+    mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    vec3 rayDir = WorldRayFromPixel(px, outputSize, viewportRect, rayOrigin, inverseProjectionView);
 
     RayQueryTriangleHit hit;
     if (RayQueryTraceClosestTriangle(u_DDGIRayQueryAccelerationStructure, 0u, 0xff, rayOrigin, 0.01, rayDir, pc.data.maxRayDistance, hit)) {

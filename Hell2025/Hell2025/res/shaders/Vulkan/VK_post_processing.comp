@@ -56,8 +56,7 @@ vec3 ApplyVignette(vec3 inputColor, vec3 vignetteColor, float intensityScalar, v
 }
 
 // pass in pre-computed data to avoid redundant imageLoad and math
-vec3 RE(vec3 lighting, vec2 uv_screenspace, ivec2 pixelCoords, uint viewportIndex, vec3 colorTint, float contrast) {
-    vec2 outputImageSize = vec2(1920, 1080);
+vec3 RE(vec3 lighting, vec2 uv_screenspace, ivec2 pixelCoords, uint viewportIndex, vec3 colorTint, float contrast, ivec2 outputImageSize) {
     vec3 finalColor = lighting;
 
 
@@ -117,7 +116,6 @@ vec3 RE(vec3 lighting, vec2 uv_screenspace, ivec2 pixelCoords, uint viewportInde
 }
 
 vec3 OG(vec3 lighting, vec2 uv_screenspace, ivec2 pixelCoords, uint viewportIndex, vec3 colorTint, float contrast) {
-    vec2 outputImageSize = vec2(1920, 1080);
     vec3 finalColor = lighting;
     vec3 colorTintCursed = colorTint.rgb * vec3(1, 0.925, 0.925);
 
@@ -153,16 +151,15 @@ void main() {
 
     vec2 uv = (vec2(pixelCoords) + 0.5) / outputSize;
     vec3 rawLighting = color.rgb;
-    uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(pixelCoords, outputSize, rendererDataBuffer.rendererData.splitscreenMode);
+    uint viewportIndex = ViewportIndexFromPixel(pixelCoords, outputSize, rendererDataBuffer.rendererData.viewportLayout, vec2(rendererDataBuffer.rendererData.viewportSplitX, rendererDataBuffer.rendererData.viewportSplitY));
 
-    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
-
-    float contrast = viewportData.colorContrast;
-    vec3 colorTint = viewportData.colorTint.rgb;
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+    float contrast = viewportDataBuffer.viewportData[viewportIndex].colorContrast;
+    vec3 colorTint = viewportDataBuffer.viewportData[viewportIndex].colorTint.rgb;
 
     // compute the two looks
     vec3 ogLook = OG(rawLighting, uv, pixelCoords, viewportIndex, colorTint, contrast);
-    vec3 reLook = RE(rawLighting, uv, pixelCoords, viewportIndex, colorTint, contrast);
+    vec3 reLook = RE(rawLighting, uv, pixelCoords, viewportIndex, colorTint, contrast, outputSize);
 
     // blend and apply brightness hack
     vec3 finalColor = mix(ogLook, reLook, 0.25);
@@ -172,8 +169,8 @@ void main() {
      //finalColor = ogLook;
 
      // vignette setup
-     vec2 viewportUV = ViewportUVFromPixel_VK(pixelCoords, outputSize, viewportData);
-     finalColor = ApplyVignette(finalColor, viewportData.vignetteColor.rgb, viewportData.intensityScalar * 0.5, viewportUV);
+     vec2 viewportUV = ViewportUVFromPixel(pixelCoords, outputSize, viewportRect);
+     finalColor = ApplyVignette(finalColor, viewportDataBuffer.viewportData[viewportIndex].vignetteColor.rgb, viewportDataBuffer.viewportData[viewportIndex].intensityScalar * 0.5, viewportUV);
 
 
 

@@ -2,6 +2,7 @@
 #include "../common/OpenGL/GL_binding_indices.glsl"
 #include "../common/types.glsl"
 #include "../common/util.glsl"
+#include "../common/viewport.glsl"
 
 #define USE_POLY_FALLOFF
 #define USE_NOISE
@@ -115,18 +116,14 @@ void main() {
     ivec2 pixelCoords = ivec2(gl_FragCoord.xy);
     ivec2 resolution = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(pixelCoords, resolution, rendererData.splitscreenMode);
+    uint viewportIndex = ViewportIndexFromPixel(pixelCoords, resolution, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportData[viewportIndex].xOffset, viewportData[viewportIndex].yOffset, viewportData[viewportIndex].width, viewportData[viewportIndex].height);
     mat4 projectionView = viewportData[viewportIndex].jitteredProjectionViewReverseZ;
     mat4 inverseProjectionView = viewportData[viewportIndex].inverseJitteredProjectionViewReverseZ;
     vec3 viewPos = viewportData[viewportIndex].viewPos.xyz;
 
-    vec2 screenUV = (vec2(pixelCoords) + 0.5) / vec2(resolution);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportData[viewportIndex]);
-
     vec3 rayOrigin = viewPos;
-    vec2 viewportOrigin = vec2(viewportData[viewportIndex].xOffset, viewportData[viewportIndex].yOffset);
-    vec2 viewportSize = vec2(viewportData[viewportIndex].width, viewportData[viewportIndex].height);
-    vec3 rayDir = GetWorldRay_GL(vec2(pixelCoords) + 0.5, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
+    vec3 rayDir = WorldRayFromPixel(pixelCoords, resolution, viewportRect, viewPos, inverseProjectionView);
 
     vec3 proxyCenter = u_model[3].xyz;
     float proxyRadius = length(u_model[0].xyz);

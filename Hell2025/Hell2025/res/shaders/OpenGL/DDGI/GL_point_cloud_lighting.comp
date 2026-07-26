@@ -1,9 +1,7 @@
 #version 450
 
-//#if ENABLE_BINDLESS == 1
 #extension GL_ARB_bindless_texture : enable
 #extension GL_EXT_nonuniform_qualifier : enable
-//#endif
 
 #include "../../common/raytracing.glsl"
 #include "../../common/lighting.glsl"

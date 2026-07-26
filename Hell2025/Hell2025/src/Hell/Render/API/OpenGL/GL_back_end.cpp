@@ -115,6 +115,10 @@ namespace OpenGL::BackEnd {
             glEnableVertexAttribArray(3);
             glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, (GLsizei)sizeof(Vertex), (void*)offsetof(Vertex, tangent));
 
+            // The element array buffer binding is part of the VAO state.
+            OpenGLMeshBuffer& assetMeshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, assetMeshBuffer.GetEBO());
+
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
         }

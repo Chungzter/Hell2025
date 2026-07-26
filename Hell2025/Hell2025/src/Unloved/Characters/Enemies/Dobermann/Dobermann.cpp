@@ -54,6 +54,7 @@ namespace Unloved {
         g_animatedGameObjectObjectId = LegacyWorld::CreateAnimatedGameObject();
 
         Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
+        animatedGameObject->SetOwnerObjectId(m_objectId);
         animatedGameObject->SetSkinnedModel("Dobermann");
         animatedGameObject->SetName("Dobermann " + std::to_string(m_objectId));
         animatedGameObject->SetMeshMaterialByMeshName("Body", "DobermannMouthBlood");
@@ -98,13 +99,10 @@ namespace Unloved {
     }
 
     void Dobermann::SetPosition(const glm::vec3& position) {
+        m_createInfo.position = position;
+
         Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
         animatedGameObject->SetPosition(position);
-    }
-
-    void Dobermann::SetSpawnPosition(const glm::vec3& position) {
-        m_createInfo.position = position;
-        SetPosition(position);
 
         if (Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_RagdollId)) {
             ragdoll->SetSpawnPosition(position);
@@ -225,7 +223,7 @@ namespace Unloved {
                 Hell::Physics::MoveCharacterController(m_characterControllerId, displacement);
 
                 if (CharacterController* characterController = GetCharacterController()) {
-                    SetPosition(characterController->GetFootPosition());
+                    animatedGameObject->SetPosition(characterController->GetFootPosition());
                 }
 
                 // Did you reach the target

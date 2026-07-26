@@ -76,7 +76,7 @@ struct RendererData {
     float hairBufferWidth;
     float hairBufferHeight;
     float time;
-    int splitscreenMode;
+    int viewportLayout;
 
     int rendererOverrideState;
     float normalizedMouseX;
@@ -94,8 +94,8 @@ struct RendererData {
     uint directPointShadowMode;
 
     vec2 taaJitterPx; // WARNING SKETCHY
-    uint padding0;
-    uint padding1;
+    float viewportSplitX;
+    float viewportSplitY;
 
     vec4 flashlightColor;
 

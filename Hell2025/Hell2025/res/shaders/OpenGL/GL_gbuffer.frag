@@ -1,26 +1,9 @@
 #version 460 core
 #include "../common/OpenGL/GL_binding_indices.glsl"
-#ifndef ENABLE_BINDLESS
-    #define ENABLE_BINDLESS 1
-#endif
-
-#if ENABLE_BINDLESS == 1
-    #extension GL_ARB_bindless_texture : enable
-    readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer {
-	    uvec2 textureSamplers[];
-    };
-    in flat int MaterialIndex;
-    in flat int WoundMaterialIndex;
-
-#else
-    layout (binding = 0) uniform sampler2D baseColorTexture;
-    layout (binding = 1) uniform sampler2D normalTexture;
-    layout (binding = 2) uniform sampler2D rmaTexture;
-    layout (binding = 3) uniform sampler2D emissiveTexture;
-    layout (binding = 4) uniform sampler2D woundBaseColorTexture;
-    layout (binding = 5) uniform sampler2D woundNormalTexture;
-    layout (binding = 6) uniform sampler2D woundRmaTexture;
-#endif
+#extension GL_ARB_bindless_texture : enable
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+in flat int MaterialIndex;
+in flat int WoundMaterialIndex;
 
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
 
@@ -54,27 +37,16 @@ uniform bool u_flipNormalMapY;
 void main() {
     vec3 emissiveColor = EmissiveColor;
 
-#if ENABLE_BINDLESS == 1
     Material material = materials[MaterialIndex];
     vec4 baseColor = texture(sampler2D(textureSamplers[material.basecolor]), TexCoord);
     vec3 normalMap = texture(sampler2D(textureSamplers[material.normal]), TexCoord).rgb;
     vec4 rmat = texture(sampler2D(textureSamplers[material.rma]), TexCoord).rgba;
     vec3 emissiveMapColor = texture(sampler2D(textureSamplers[material.emissive]), TexCoord).rgb;
-#else
-    vec4 baseColor = texture(baseColorTexture, TexCoord);
-    vec3 normalMap = texture(normalTexture, TexCoord).rgb;
-    vec4 rmat = texture(rmaTexture, TexCoord).rgba;
-    vec3 emissiveMapColor = texture(emissiveTexture, TexCoord).rgb;
-#endif
 
     // Emissive
-#if ENABLE_BINDLESS == 1
     if (material.emissive != -1) {
         emissiveColor *= emissiveMapColor;
     }
-#else
-    emissiveColor *= emissiveMapColor;
-#endif
     EmissiveOut = vec4(emissiveColor, 0);
 
     if (u_alphaDiscard) {
@@ -91,22 +63,12 @@ void main() {
 
     // If this mesh has a wound mask, then sample it
     float woundMask = 0;
-    #if ENABLE_BINDLESS == 1
-        bool hasWoundMaterial = WoundMaterialIndex != -1;
-    #else
-        bool hasWoundMaterial = true;
-    #endif
+    bool hasWoundMaterial = WoundMaterialIndex != -1;
     if (WoundMaskTextureIndex != -1 && hasWoundMaterial) {
-        #if ENABLE_BINDLESS == 1
-            Material woundMaterial = materials[WoundMaterialIndex];
-            woundBaseColor = texture(sampler2D(textureSamplers[woundMaterial.basecolor]), TexCoord);
-            woundNormalMap = texture(sampler2D(textureSamplers[woundMaterial.normal]), TexCoord).rgb;
-            woundRma = texture(sampler2D(textureSamplers[woundMaterial.rma]), TexCoord).rgb;
-        #else
-            woundBaseColor = texture(woundBaseColorTexture, TexCoord);
-            woundNormalMap = texture(woundNormalTexture, TexCoord).rgb;
-            woundRma = texture(woundRmaTexture, TexCoord).rgb;
-        #endif
+        Material woundMaterial = materials[WoundMaterialIndex];
+        woundBaseColor = texture(sampler2D(textureSamplers[woundMaterial.basecolor]), TexCoord);
+        woundNormalMap = texture(sampler2D(textureSamplers[woundMaterial.normal]), TexCoord).rgb;
+        woundRma = texture(sampler2D(textureSamplers[woundMaterial.rma]), TexCoord).rgb;
         woundMask  = texture(woundMaskTextureArray, vec3(TexCoord, WoundMaskTextureIndex)).r;
 
         // Hack to make the center of wounds black

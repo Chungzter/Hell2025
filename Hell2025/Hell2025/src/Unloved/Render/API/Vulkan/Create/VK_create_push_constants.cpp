@@ -10,8 +10,9 @@ namespace {
         return buffer ? buffer->GetDeviceAddress() : 0;
     }
 
-    bool ValidateDeviceAddress(uint64_t deviceAddress, const char* tableEntryName) {
-        if (deviceAddress != 0) return true;
+    bool PopulateTableEntry(uint64_t& tableEntry, uint64_t bufferId, const char* tableEntryName) {
+        tableEntry = GetDeviceAddressOrZero(bufferId);
+        if (tableEntry != 0) return true;
 
         Logging::Error() << "FrameAddressTable entry '" << tableEntryName << "' has no valid device address\n";
         return false;
@@ -23,29 +24,23 @@ namespace VulkanRenderer {
         const VulkanFrameData& frameData = GetCurrentFrameData();
 
         FrameAddressTable table{};
-        table.renderItemBuffer = GetDeviceAddressOrZero(frameData.buffers.instanceData);
-        table.viewportDataBuffer = GetDeviceAddressOrZero(frameData.buffers.viewportData);
-        table.rendererDataBuffer = GetDeviceAddressOrZero(frameData.buffers.rendererData);
-        table.materialBuffer = GetDeviceAddressOrZero(frameData.buffers.materials);
-        table.lightBuffer = GetDeviceAddressOrZero(frameData.buffers.lights);
-        table.spriteSheetRenderItemBuffer = GetDeviceAddressOrZero(frameData.buffers.spriteSheetInstanceData);
-        table.uiRenderItemBuffer = GetDeviceAddressOrZero(frameData.buffers.uiRenderItems);
-        table.tileLightBuffer = GetDeviceAddressOrZero(frameData.buffers.tileLights);
-        table.tileWorldBoundsBuffer = GetDeviceAddressOrZero(frameData.buffers.tileWorldBounds);
-
         bool valid = true;
-        valid &= ValidateDeviceAddress(table.renderItemBuffer, "renderItemBuffer");
-        valid &= ValidateDeviceAddress(table.viewportDataBuffer, "viewportDataBuffer");
-        valid &= ValidateDeviceAddress(table.rendererDataBuffer, "rendererDataBuffer");
-        valid &= ValidateDeviceAddress(table.materialBuffer, "materialBuffer");
-        valid &= ValidateDeviceAddress(table.lightBuffer, "lightBuffer");
-        valid &= ValidateDeviceAddress(table.spriteSheetRenderItemBuffer, "spriteSheetRenderItemBuffer");
-        valid &= ValidateDeviceAddress(table.uiRenderItemBuffer, "uiRenderItemBuffer");
-        valid &= ValidateDeviceAddress(table.tileLightBuffer, "tileLightBuffer");
-        valid &= ValidateDeviceAddress(table.tileWorldBoundsBuffer, "tileWorldBoundsBuffer");
+        valid &= PopulateTableEntry(table.sceneRenderItemBuffer, frameData.buffers.sceneRenderItems, "sceneRenderItemBuffer");
+        valid &= PopulateTableEntry(table.drawRenderItemIndexBuffer, frameData.buffers.drawRenderItemIndices, "drawRenderItemIndexBuffer");
+        valid &= PopulateTableEntry(table.viewportDataBuffer, frameData.buffers.viewportData, "viewportDataBuffer");
+        valid &= PopulateTableEntry(table.rendererDataBuffer, frameData.buffers.rendererData, "rendererDataBuffer");
+        valid &= PopulateTableEntry(table.materialBuffer, frameData.buffers.materials, "materialBuffer");
+        valid &= PopulateTableEntry(table.lightBuffer, frameData.buffers.lights, "lightBuffer");
+        valid &= PopulateTableEntry(table.spriteSheetRenderItemBuffer, frameData.buffers.spriteSheetInstanceData, "spriteSheetRenderItemBuffer");
+        valid &= PopulateTableEntry(table.uiRenderItemBuffer, frameData.buffers.uiRenderItems, "uiRenderItemBuffer");
+        valid &= PopulateTableEntry(table.tileLightBuffer, frameData.buffers.tileLights, "tileLightBuffer");
+        valid &= PopulateTableEntry(table.tileWorldBoundsBuffer, frameData.buffers.tileWorldBounds, "tileWorldBoundsBuffer");
 
         VulkanBuffer* tableBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.frameAddressTable);
-        valid &= ValidateDeviceAddress(tableBuffer ? tableBuffer->GetDeviceAddress() : 0, "FrameAddressTable");
+        if (!tableBuffer || tableBuffer->GetDeviceAddress() == 0) {
+            Logging::Error() << "FrameAddressTable buffer has no valid device address\n";
+            valid = false;
+        }
         if (!valid) return false;
 
         if (!UpdateBuffer(tableBuffer, &table, sizeof(table))) {

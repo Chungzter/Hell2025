@@ -8,6 +8,7 @@
 #include "../common/ddgi.glsl"
 #include "../common/normal_encoding.glsl"
 #include "../common/reconstruction.glsl"
+#include "../common/util.glsl"
 #include "../common/viewport.glsl"
 #include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/Vulkan/VK_push_constants.glsl"
@@ -135,16 +136,12 @@ void main() {
 
     RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
     ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
-    uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, outputImageSize, rendererData.splitscreenMode);
-    ViewportData viewport = viewportDataBuffer.viewportData[viewportIndex];
-    vec2 viewportScale = vec2(outputImageSize) / vec2(gBufferSize);
-    viewport.xOffset = int(round(float(viewport.xOffset) * viewportScale.x));
-    viewport.yOffset = int(round(float(viewport.yOffset) * viewportScale.y));
-    viewport.width = int(round(float(viewport.width) * viewportScale.x));
-    viewport.height = int(round(float(viewport.height) * viewportScale.y));
-
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+    vec2 screenUV = ScreenUVFromPixel(px, outputImageSize);
     ivec2 inputCoords = clamp(ivec2(screenUV * vec2(gBufferSize)), ivec2(0), gBufferSize - ivec2(1));
+    uint viewportIndex = ViewportIndexFromPixel(inputCoords, gBufferSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+    mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    vec3 viewPos = viewportDataBuffer.viewportData[viewportIndex].viewPos.xyz;
 
     vec3 normal = DecodeOct(texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), inputCoords, 0).rg);
     float normalLengthSq = dot(normal, normal);
@@ -157,15 +154,14 @@ void main() {
     normal *= inversesqrt(normalLengthSq);
 
     float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), inputCoords, 0).r;
-    vec2 viewportUV = ViewportUVFromPixel_VK(px, outputImageSize, viewport);
-    vec3 worldPos = WorldPosFromDepth_VK(viewportUV, depth, viewport.inverseProjectionViewReverseZ);
+    vec2 viewportUV = ViewportUVFromPixel(inputCoords, gBufferSize, viewportRect);
+    vec3 worldPos = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
 
     DDGIVolume volume = GetVolume();
     if (any(lessThan(worldPos, volume.worldBoundsMin)) || any(greaterThan(worldPos, volume.worldBoundsMax))) {
         return;
     }
 
-    vec3 viewPos = viewport.viewPos.xyz;
     vec3 finalIrradiance = SampleIrradianceAtlas(worldPos, normal, viewPos) * IRRADIANCE_DAMPENING;
 
     imageStore(storageImagesRGBA16F[outputImageIndex], px, vec4(finalIrradiance, 1.0));

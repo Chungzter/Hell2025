@@ -4,6 +4,7 @@
 #include "Hell/Render/API/Vulkan/Types/vk_descriptor_set.h"
 #include "Hell/Render/API/Vulkan/Types/vk_mesh_buffer.h"
 #include "Hell/Render/VertexAttributes.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Unloved/Render/API/Vulkan/RayTracing/VK_acceleration_structure_utils.h"
 #include "Unloved/Render/API/Vulkan/RayTracing/VK_raytracing_scene.h"
@@ -14,12 +15,11 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <unordered_map>
 #include <vector>
 
 namespace VulkanRenderer {
     namespace {
-        struct QueuedMultiMeshBLASBuild {
+        struct QueuedProceduralBLASBuild {
             uint64_t blasId = 0;
             uint64_t vertexBufferDeviceAddress = 0;
             uint64_t indexBufferDeviceAddress = 0;
@@ -30,22 +30,22 @@ namespace VulkanRenderer {
         };
 
         RayQueryScene g_lightingRayQueryScene;
-        std::vector<QueuedMultiMeshBLASBuild> g_multiMeshBLASBuilds;
-        std::unordered_map<uint64_t, uint64_t> g_multiMeshBLASGeometryHashes;
-        VkDeviceSize g_multiMeshBLASScratchSize = 0;
+        std::vector<QueuedProceduralBLASBuild> g_proceduralBLASBuilds;
+        uint64_t g_proceduralRayQueryBLASId = 0;
+        uint64_t g_proceduralBLASGeometryHash = 0;
+        VkDeviceSize g_proceduralBLASScratchSize = 0;
 
-        void AddPersistentBLASInstances(RayQueryScene& scene, const std::vector<RayQueryBLASInstance>& instances);
-        void BeginMultiMeshBLASBuilds();
-        void AddMultiMeshBLASes(RayQueryScene& scene, const std::vector<RayQueryMultiMeshBLAS>& blases);
-        bool RecordMultiMeshBLASBuilds(VkCommandBuffer commandBuffer, uint64_t scratchBaseAddress);
-        VkDeviceSize GetMultiMeshBLASScratchSize();
-        VkDeviceSize AllocateMultiMeshBLASScratch(VkDeviceSize scratchSize);
-        bool MeshFitsBuffers(const RayQueryMesh& mesh, VkDeviceSize vertexBufferSize, VkDeviceSize indexBufferSize);
+        void AddPersistentBLASInstances(RayQueryScene& scene, const std::vector<uint32_t>& sceneRenderItemIndices, const std::vector<RenderItem>& sceneRenderItems, Hell::MeshBuffer& assetMeshData, VulkanMeshBuffer& assetMeshBuffer);
+        void BeginProceduralBLASBuilds();
+        void AddProceduralBLAS(RayQueryScene& scene, const std::vector<uint32_t>& sceneRenderItemIndices, const std::vector<RenderItem>& sceneRenderItems);
+        bool RecordProceduralBLASBuilds(VkCommandBuffer commandBuffer, uint64_t scratchBaseAddress);
+        VkDeviceSize GetProceduralBLASScratchSize();
+        VkDeviceSize AllocateProceduralBLASScratch(VkDeviceSize scratchSize);
+        bool MeshFitsBuffers(const RenderItem& renderItem, VkDeviceSize vertexBufferSize, VkDeviceSize indexBufferSize);
         bool HasUsableBLAS(uint64_t blasId);
-        uint64_t HashRayQueryMultiMeshBLAS(const RayQueryMultiMeshBLAS& blas, const std::vector<RayQueryMeshInstance>& meshInstances);
+        uint64_t HashProceduralBLAS(uint64_t vertexBufferDeviceAddress, uint64_t indexBufferDeviceAddress, uint64_t vertexBufferByteSize, uint64_t indexBufferByteSize, uint64_t sourceGeometryVersion, const std::vector<RayQueryMeshInstance>& meshInstances);
         void HashMix(uint64_t& hash, uint64_t value);
-        size_t CountMultiMeshBLASMeshInstances(const std::vector<RayQueryMultiMeshBLAS>& blases);
-        size_t CountTransientMeshInstances(const std::vector<TransientRayQueryBLASInstance>& instances);
+        size_t CountTransientMeshInstances(const std::vector<std::vector<uint32_t>>& renderItemGroups);
     }
 
     void UpdateRayTracing(VkCommandBuffer commandBuffer) {
@@ -61,24 +61,26 @@ namespace VulkanRenderer {
         if (!rayTracingDescriptorSet) return;
         if (!assetMeshBuffer) return;
 
-        const std::vector<RayQueryBLASInstance>& persistentInstances = Unloved::RenderDataManager::GetRayQueryBLASInstances();
-        const std::vector<RayQueryMultiMeshBLAS>& multiMeshBLASes = Unloved::RenderDataManager::GetRayQueryMultiMeshBLASes();
-        const std::vector<TransientRayQueryBLASInstance>& transientInstances = Unloved::RenderDataManager::GetTransientRayQueryBLASInstances();
+        Hell::MeshBuffer& assetMeshData = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+        const std::vector<uint32_t>& persistentRenderItemIndices = Unloved::RenderDataManager::GetPersistentRayQueryRenderItemIndices();
+        const std::vector<uint32_t>& proceduralRenderItemIndices = Unloved::RenderDataManager::GetProceduralRayQueryRenderItemIndices();
+        const std::vector<std::vector<uint32_t>>& transientRenderItemGroups = Unloved::RenderDataManager::GetTransientRayQueryRenderItemGroups();
+        const std::vector<RenderItem>& sceneRenderItems = Unloved::RenderDataManager::GetSceneRenderItems();
 
         g_lightingRayQueryScene.Clear();
         g_lightingRayQueryScene.Reserve(
-            persistentInstances.size() + multiMeshBLASes.size() + transientInstances.size(),
-            persistentInstances.size() + CountMultiMeshBLASMeshInstances(multiMeshBLASes) + CountTransientMeshInstances(transientInstances)
+            persistentRenderItemIndices.size() + (proceduralRenderItemIndices.empty() ? 0 : 1) + transientRenderItemGroups.size(),
+            persistentRenderItemIndices.size() + proceduralRenderItemIndices.size() + CountTransientMeshInstances(transientRenderItemGroups)
         );
 
         TransientBLASBuilder::BeginFrame();
-        BeginMultiMeshBLASBuilds();
+        BeginProceduralBLASBuilds();
 
-        AddPersistentBLASInstances(g_lightingRayQueryScene, persistentInstances);
-        AddMultiMeshBLASes(g_lightingRayQueryScene, multiMeshBLASes);
+        AddPersistentBLASInstances(g_lightingRayQueryScene, persistentRenderItemIndices, sceneRenderItems, assetMeshData, *assetMeshBuffer);
+        AddProceduralBLAS(g_lightingRayQueryScene, proceduralRenderItemIndices, sceneRenderItems);
 
         if (skinnedVertexBuffer) {
-            TransientBLASBuilder::AddTransientRayQueryBLASInstances(frameData, *assetMeshBuffer, *skinnedVertexBuffer, transientInstances, g_lightingRayQueryScene);
+            TransientBLASBuilder::AddTransientRayQueryBLASInstances(frameData, *assetMeshBuffer, *skinnedVertexBuffer, transientRenderItemGroups, sceneRenderItems, g_lightingRayQueryScene);
         }
         else {
             TransientBLASBuilder::ReleaseFrameSlots(frameData);
@@ -93,7 +95,7 @@ namespace VulkanRenderer {
         }
 
         VkDeviceSize scratchAlignment = AccelerationStructureScratchAlignment();
-        VkDeviceSize blasScratchSize = AlignUp(TransientBLASBuilder::GetScratchSize(), scratchAlignment) + GetMultiMeshBLASScratchSize();
+        VkDeviceSize blasScratchSize = AlignUp(TransientBLASBuilder::GetScratchSize(), scratchAlignment) + GetProceduralBLASScratchSize();
         VkDeviceSize requiredScratchSize = std::max(blasScratchSize, g_lightingRayQueryScene.GetTLASScratchSize(frameData)) + scratchAlignment;
 
         // One scratch buffer backs BLAS and TLAS builds
@@ -105,9 +107,9 @@ namespace VulkanRenderer {
         uint64_t scratchBaseAddress = AlignUp(scratchBuffer->GetDeviceAddress(), scratchAlignment);
 
         bool recordedBLASBuilds = TransientBLASBuilder::RecordBuilds(commandBuffer, frameData, scratchBaseAddress);
-        uint64_t multiMeshScratchBaseAddress = scratchBaseAddress + AlignUp(TransientBLASBuilder::GetScratchSize(), scratchAlignment);
-        bool recordedMultiMeshBLASBuilds = RecordMultiMeshBLASBuilds(commandBuffer, multiMeshScratchBaseAddress);
-        if (recordedBLASBuilds || recordedMultiMeshBLASBuilds) {
+        uint64_t proceduralScratchBaseAddress = scratchBaseAddress + AlignUp(TransientBLASBuilder::GetScratchSize(), scratchAlignment);
+        bool recordedProceduralBLASBuilds = RecordProceduralBLASBuilds(commandBuffer, proceduralScratchBaseAddress);
+        if (recordedBLASBuilds || recordedProceduralBLASBuilds) {
             RecordAccelerationStructureBuildBarrier(commandBuffer, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR | VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR);
         }
 
@@ -121,74 +123,97 @@ namespace VulkanRenderer {
     }
 
     namespace {
-        void AddPersistentBLASInstances(RayQueryScene& scene, const std::vector<RayQueryBLASInstance>& instances) {
-            // Persistent BLAS is already built by mesh buffer code
-            for (const RayQueryBLASInstance& instance : instances) {
-                if (instance.vulkanBlasId == 0 || instance.vertexBufferDeviceAddress == 0 || instance.indexBufferDeviceAddress == 0) continue;
+        void AddPersistentBLASInstances(RayQueryScene& scene, const std::vector<uint32_t>& sceneRenderItemIndices, const std::vector<RenderItem>& sceneRenderItems, Hell::MeshBuffer& assetMeshData, VulkanMeshBuffer& assetMeshBuffer) {
+            uint64_t vertexBufferDeviceAddress = assetMeshBuffer.GetVertexBufferAddress();
+            uint64_t indexBufferDeviceAddress = assetMeshBuffer.GetIndexBufferAddress();
+            if (vertexBufferDeviceAddress == 0 || indexBufferDeviceAddress == 0) return;
 
-                VulkanAccelerationStructure* blas = VulkanResourceManager::GetAccelerationStructure(instance.vulkanBlasId);
+            // Persistent BLAS is already built by mesh buffer code
+            for (uint32_t sceneRenderItemIndex : sceneRenderItemIndices) {
+                if (sceneRenderItemIndex >= sceneRenderItems.size()) continue;
+
+                const RenderItem& renderItem = sceneRenderItems[sceneRenderItemIndex];
+                Mesh* mesh = assetMeshData.GetMeshById(renderItem.meshId);
+                if (!mesh || mesh->vertexCount == 0 || mesh->indexCount < 3 || mesh->vulkanBlasId == 0) continue;
+
+                VulkanAccelerationStructure* blas = VulkanResourceManager::GetAccelerationStructure(mesh->vulkanBlasId);
                 if (!blas || blas->GetHandle() == VK_NULL_HANDLE || blas->GetDeviceAddress() == 0 || !blas->m_built) continue;
 
-                scene.AddBLASInstance(blas->GetDeviceAddress(), TransformMatrixKHR(instance.modelMatrix), instance.vertexBufferDeviceAddress, instance.indexBufferDeviceAddress, instance.meshInstance);
+                VkGeometryInstanceFlagsKHR opacityFlags = GetRayQueryGeometryFlags(renderItem) == 0 ? VK_GEOMETRY_INSTANCE_FORCE_NO_OPAQUE_BIT_KHR : VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR;
+                scene.AddBLASInstance(blas->GetDeviceAddress(), TransformMatrixKHR(renderItem.modelMatrix), vertexBufferDeviceAddress, indexBufferDeviceAddress, sceneRenderItemIndex, opacityFlags);
             }
         }
 
-        void BeginMultiMeshBLASBuilds() {
-            g_multiMeshBLASBuilds.clear();
-            g_multiMeshBLASScratchSize = 0;
+        void BeginProceduralBLASBuilds() {
+            g_proceduralBLASBuilds.clear();
+            g_proceduralBLASScratchSize = 0;
         }
 
-        void AddMultiMeshBLASes(RayQueryScene& scene, const std::vector<RayQueryMultiMeshBLAS>& blases) {
-            for (const RayQueryMultiMeshBLAS& blas : blases) {
-                if (blas.vulkanBlasId == 0 || blas.vertexBufferDeviceAddress == 0 || blas.indexBufferDeviceAddress == 0 || blas.meshInstances.empty()) continue;
+        void AddProceduralBLAS(RayQueryScene& scene, const std::vector<uint32_t>& sceneRenderItemIndices, const std::vector<RenderItem>& sceneRenderItems) {
+            if (sceneRenderItemIndices.empty()) return;
 
-                std::vector<RayQueryMeshInstance> meshInstances;
-                meshInstances.reserve(blas.meshInstances.size());
-                for (const RayQueryMeshInstance& meshInstance : blas.meshInstances) {
-                    if (MeshFitsBuffers(meshInstance.mesh, blas.vertexBufferByteSize, blas.indexBufferByteSize)) {
-                        meshInstances.push_back(meshInstance);
-                    }
-                }
-                if (meshInstances.empty()) continue;
+            Hell::MeshBuffer& meshData = Hell::ResourceManager::GetMeshBuffer("Procedural");
+            VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer("Procedural");
+            if (!meshBuffer) return;
 
-                uint64_t geometryHash = HashRayQueryMultiMeshBLAS(blas, meshInstances);
-                auto hashIt = g_multiMeshBLASGeometryHashes.find(blas.vulkanBlasId);
-                bool needsBuild = !HasUsableBLAS(blas.vulkanBlasId) || hashIt == g_multiMeshBLASGeometryHashes.end() || hashIt->second != geometryHash;
+            VulkanBuffer* vertexBuffer = meshBuffer->GetVertexBuffer();
+            VulkanBuffer* indexBuffer = meshBuffer->GetIndexBuffer();
+            if (!vertexBuffer || !indexBuffer) return;
 
-                if (needsBuild) {
-                    VkAccelerationStructureBuildSizesInfoKHR sizeInfo = QueryBottomLevelBuildSize(
-                        blas.vertexBufferDeviceAddress,
-                        blas.indexBufferDeviceAddress,
-                        meshInstances,
-                        VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR
-                    );
+            uint64_t vertexBufferDeviceAddress = meshBuffer->GetVertexBufferAddress();
+            uint64_t indexBufferDeviceAddress = meshBuffer->GetIndexBufferAddress();
+            uint64_t vertexBufferByteSize = vertexBuffer->GetSize();
+            uint64_t indexBufferByteSize = indexBuffer->GetSize();
+            if (vertexBufferDeviceAddress == 0 || indexBufferDeviceAddress == 0) return;
 
-                    if (sizeInfo.accelerationStructureSize == 0 || !PrepareAccelerationStructure(blas.vulkanBlasId, VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, sizeInfo)) {
-                        continue;
-                    }
-
-                    QueuedMultiMeshBLASBuild& build = g_multiMeshBLASBuilds.emplace_back();
-                    build.blasId = blas.vulkanBlasId;
-                    build.vertexBufferDeviceAddress = blas.vertexBufferDeviceAddress;
-                    build.indexBufferDeviceAddress = blas.indexBufferDeviceAddress;
-                    build.meshInstances = meshInstances;
-                    build.scratchSize = sizeInfo.buildScratchSize;
-                    build.scratchOffset = AllocateMultiMeshBLASScratch(build.scratchSize);
-                    build.geometryHash = geometryHash;
-                }
-
-                VulkanAccelerationStructure* accelerationStructure = VulkanResourceManager::GetAccelerationStructure(blas.vulkanBlasId);
-                if (!accelerationStructure || accelerationStructure->GetHandle() == VK_NULL_HANDLE || accelerationStructure->GetDeviceAddress() == 0) continue;
-
-                scene.AddBLASInstance(accelerationStructure->GetDeviceAddress(), TransformMatrixKHR(blas.modelMatrix), blas.vertexBufferDeviceAddress, blas.indexBufferDeviceAddress, meshInstances);
+            if (g_proceduralRayQueryBLASId == 0 || !VulkanResourceManager::AccelerationStructureExists(g_proceduralRayQueryBLASId)) {
+                g_proceduralRayQueryBLASId = VulkanResourceManager::CreateAccelerationStructure();
+                g_proceduralBLASGeometryHash = 0;
             }
+
+            std::vector<RayQueryMeshInstance> meshInstances;
+            std::vector<uint32_t> validSceneRenderItemIndices;
+            meshInstances.reserve(sceneRenderItemIndices.size());
+            validSceneRenderItemIndices.reserve(sceneRenderItemIndices.size());
+            for (uint32_t sceneRenderItemIndex : sceneRenderItemIndices) {
+                if (sceneRenderItemIndex >= sceneRenderItems.size()) continue;
+
+                const RenderItem& renderItem = sceneRenderItems[sceneRenderItemIndex];
+                if (MeshFitsBuffers(renderItem, vertexBufferByteSize, indexBufferByteSize)) {
+                    meshInstances.push_back(CreateRayQueryMeshInstance(renderItem));
+                    validSceneRenderItemIndices.push_back(sceneRenderItemIndex);
+                }
+            }
+            if (meshInstances.empty()) return;
+
+            uint64_t geometryHash = HashProceduralBLAS(vertexBufferDeviceAddress, indexBufferDeviceAddress, vertexBufferByteSize, indexBufferByteSize, meshData.GetVersion(), meshInstances);
+            bool needsBuild = !HasUsableBLAS(g_proceduralRayQueryBLASId) || g_proceduralBLASGeometryHash != geometryHash;
+
+            if (needsBuild) {
+                VkAccelerationStructureBuildSizesInfoKHR sizeInfo = QueryBottomLevelBuildSize(vertexBufferDeviceAddress, indexBufferDeviceAddress, meshInstances, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+                if (sizeInfo.accelerationStructureSize == 0 || !PrepareAccelerationStructure(g_proceduralRayQueryBLASId, VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, sizeInfo)) return;
+
+                QueuedProceduralBLASBuild& build = g_proceduralBLASBuilds.emplace_back();
+                build.blasId = g_proceduralRayQueryBLASId;
+                build.vertexBufferDeviceAddress = vertexBufferDeviceAddress;
+                build.indexBufferDeviceAddress = indexBufferDeviceAddress;
+                build.meshInstances = meshInstances;
+                build.scratchSize = sizeInfo.buildScratchSize;
+                build.scratchOffset = AllocateProceduralBLASScratch(build.scratchSize);
+                build.geometryHash = geometryHash;
+            }
+
+            VulkanAccelerationStructure* accelerationStructure = VulkanResourceManager::GetAccelerationStructure(g_proceduralRayQueryBLASId);
+            if (!accelerationStructure || accelerationStructure->GetHandle() == VK_NULL_HANDLE || accelerationStructure->GetDeviceAddress() == 0) return;
+
+            scene.AddBLASInstance(accelerationStructure->GetDeviceAddress(), TransformMatrixKHR(glm::mat4(1.0f)), vertexBufferDeviceAddress, indexBufferDeviceAddress, validSceneRenderItemIndices);
         }
 
-        bool RecordMultiMeshBLASBuilds(VkCommandBuffer commandBuffer, uint64_t scratchBaseAddress) {
-            if (g_multiMeshBLASBuilds.empty()) return false;
+        bool RecordProceduralBLASBuilds(VkCommandBuffer commandBuffer, uint64_t scratchBaseAddress) {
+            if (g_proceduralBLASBuilds.empty()) return false;
 
             size_t geometryCount = 0;
-            for (const QueuedMultiMeshBLASBuild& build : g_multiMeshBLASBuilds) {
+            for (const QueuedProceduralBLASBuild& build : g_proceduralBLASBuilds) {
                 geometryCount += build.meshInstances.size();
             }
 
@@ -200,13 +225,13 @@ namespace VulkanRenderer {
             std::vector<uint64_t> geometryHashes;
 
             geometries.reserve(geometryCount);
-            buildInfos.reserve(g_multiMeshBLASBuilds.size());
+            buildInfos.reserve(g_proceduralBLASBuilds.size());
             rangeInfos.reserve(geometryCount);
-            rangeInfoPtrs.reserve(g_multiMeshBLASBuilds.size());
-            blasIds.reserve(g_multiMeshBLASBuilds.size());
-            geometryHashes.reserve(g_multiMeshBLASBuilds.size());
+            rangeInfoPtrs.reserve(g_proceduralBLASBuilds.size());
+            blasIds.reserve(g_proceduralBLASBuilds.size());
+            geometryHashes.reserve(g_proceduralBLASBuilds.size());
 
-            for (const QueuedMultiMeshBLASBuild& build : g_multiMeshBLASBuilds) {
+            for (const QueuedProceduralBLASBuild& build : g_proceduralBLASBuilds) {
                 VulkanAccelerationStructure* accelerationStructure = VulkanResourceManager::GetAccelerationStructure(build.blasId);
                 if (!accelerationStructure || accelerationStructure->GetHandle() == VK_NULL_HANDLE || build.meshInstances.empty()) continue;
 
@@ -247,28 +272,28 @@ namespace VulkanRenderer {
                 if (accelerationStructure) {
                     accelerationStructure->m_built = true;
                 }
-                g_multiMeshBLASGeometryHashes[blasIds[i]] = geometryHashes[i];
+                g_proceduralBLASGeometryHash = geometryHashes[i];
             }
 
             return true;
         }
 
-        VkDeviceSize GetMultiMeshBLASScratchSize() {
-            return g_multiMeshBLASScratchSize;
+        VkDeviceSize GetProceduralBLASScratchSize() {
+            return g_proceduralBLASScratchSize;
         }
 
-        VkDeviceSize AllocateMultiMeshBLASScratch(VkDeviceSize scratchSize) {
-            VkDeviceSize scratchOffset = AlignUp(g_multiMeshBLASScratchSize, AccelerationStructureScratchAlignment());
-            g_multiMeshBLASScratchSize = scratchOffset + scratchSize;
+        VkDeviceSize AllocateProceduralBLASScratch(VkDeviceSize scratchSize) {
+            VkDeviceSize scratchOffset = AlignUp(g_proceduralBLASScratchSize, AccelerationStructureScratchAlignment());
+            g_proceduralBLASScratchSize = scratchOffset + scratchSize;
             return scratchOffset;
         }
 
-        bool MeshFitsBuffers(const RayQueryMesh& mesh, VkDeviceSize vertexBufferSize, VkDeviceSize indexBufferSize) {
-            if (mesh.vertexCount == 0 || mesh.indexCount < 3) return false;
+        bool MeshFitsBuffers(const RenderItem& renderItem, VkDeviceSize vertexBufferSize, VkDeviceSize indexBufferSize) {
+            if (renderItem.vertexCount == 0 || renderItem.indexCount < 3) return false;
             if (vertexBufferSize == 0 || indexBufferSize == 0) return false;
 
-            uint64_t vertexEnd = static_cast<uint64_t>(mesh.baseVertex) + static_cast<uint64_t>(mesh.vertexCount);
-            uint64_t indexEnd = static_cast<uint64_t>(mesh.baseIndex) + static_cast<uint64_t>(mesh.indexCount);
+            uint64_t vertexEnd = static_cast<uint64_t>(renderItem.baseVertex) + static_cast<uint64_t>(renderItem.vertexCount);
+            uint64_t indexEnd = static_cast<uint64_t>(renderItem.baseIndex) + static_cast<uint64_t>(renderItem.indexCount);
             uint64_t vertexCapacity = vertexBufferSize / sizeof(Vertex);
             uint64_t indexCapacity = indexBufferSize / sizeof(uint32_t);
             return vertexEnd <= vertexCapacity && indexEnd <= indexCapacity;
@@ -279,13 +304,13 @@ namespace VulkanRenderer {
             return blas && blas->GetHandle() != VK_NULL_HANDLE && blas->GetDeviceAddress() != 0 && blas->m_built;
         }
 
-        uint64_t HashRayQueryMultiMeshBLAS(const RayQueryMultiMeshBLAS& blas, const std::vector<RayQueryMeshInstance>& meshInstances) {
+        uint64_t HashProceduralBLAS(uint64_t vertexBufferDeviceAddress, uint64_t indexBufferDeviceAddress, uint64_t vertexBufferByteSize, uint64_t indexBufferByteSize, uint64_t sourceGeometryVersion, const std::vector<RayQueryMeshInstance>& meshInstances) {
             uint64_t hash = 1469598103934665603ull;
-            HashMix(hash, blas.vertexBufferDeviceAddress);
-            HashMix(hash, blas.indexBufferDeviceAddress);
-            HashMix(hash, blas.vertexBufferByteSize);
-            HashMix(hash, blas.indexBufferByteSize);
-            HashMix(hash, blas.sourceGeometryVersion);
+            HashMix(hash, vertexBufferDeviceAddress);
+            HashMix(hash, indexBufferDeviceAddress);
+            HashMix(hash, vertexBufferByteSize);
+            HashMix(hash, indexBufferByteSize);
+            HashMix(hash, sourceGeometryVersion);
             HashMix(hash, meshInstances.size());
 
             for (const RayQueryMeshInstance& meshInstance : meshInstances) {
@@ -304,18 +329,10 @@ namespace VulkanRenderer {
             hash *= 1099511628211ull;
         }
 
-        size_t CountMultiMeshBLASMeshInstances(const std::vector<RayQueryMultiMeshBLAS>& blases) {
+        size_t CountTransientMeshInstances(const std::vector<std::vector<uint32_t>>& renderItemGroups) {
             size_t count = 0;
-            for (const RayQueryMultiMeshBLAS& blas : blases) {
-                count += blas.meshInstances.size();
-            }
-            return count;
-        }
-
-        size_t CountTransientMeshInstances(const std::vector<TransientRayQueryBLASInstance>& instances) {
-            size_t count = 0;
-            for (const TransientRayQueryBLASInstance& instance : instances) {
-                count += instance.meshInstances.size();
+            for (const std::vector<uint32_t>& renderItemGroup : renderItemGroups) {
+                count += renderItemGroup.size();
             }
             return count;
         }

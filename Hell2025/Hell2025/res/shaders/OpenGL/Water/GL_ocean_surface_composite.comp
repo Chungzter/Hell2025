@@ -2,6 +2,7 @@
 #include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/constants.glsl"
 #include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -39,19 +40,17 @@ void main() {
     uint oceanMask = imageLoad(u_oceanMaskImage, px).r;
     if (oceanMask != 1u) return;
     
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
     vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
 
     
     vec3 waterColor = texelFetch(WaterColorTexture, px, 0).rgb;
 
     // Get world ray
-    ViewportData viewportData = viewportDataArr[viewportIndex];
-    mat4 inverseProjectionView = viewportData.inverseJitteredProjectionViewReverseZ;
-    vec3 viewPos = viewportData.viewPos.xyz;
-    vec2 viewportOrigin = vec2(viewportData.xOffset, viewportData.yOffset);
-    vec2 viewportSize = vec2(viewportData.width, viewportData.height);
-    vec3 rayDir = GetWorldRay_GL(px, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+    mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
+    vec3 viewPos = viewportDataArr[viewportIndex].viewPos.xyz;
+    vec3 rayDir = WorldRayFromPixel(px, outputImageSize, viewportRect, viewPos, inverseProjectionView);
 
     // Cast ray at water plane
     vec3 rayOrigin = viewPos;

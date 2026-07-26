@@ -1,27 +1,15 @@
 #version 460 core
-#ifndef ENABLE_BINDLESS
-    #define ENABLE_BINDLESS 1
-#endif
-
 #include "../common/OpenGL/GL_binding_indices.glsl"
 
-#if ENABLE_BINDLESS
-    #extension GL_ARB_bindless_texture : enable        
+#extension GL_ARB_bindless_texture : enable
 readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer {
-	    uvec2 textureSamplers[];
-    };    
-    in flat int MaterialIndex;
-#endif
+	uvec2 textureSamplers[];
+};
+in flat int MaterialIndex;
 
 layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
 layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowMapArray;
 layout (binding = TEX_IDX_SHADOW_MAP_FLASHLIGHT) uniform sampler2DArray flashlightShadowMapArray;
-
-#if ENABLE_BINDLESS != 1
-    layout (binding = 4) uniform sampler2D baseColorTexture;
-    layout (binding = 5) uniform sampler2D normalTexture;
-    layout (binding = 6) uniform sampler2D rmaTexture;
-#endif
 
 #include "../common/lighting.glsl"
 #include "../common/post_processing.glsl"
@@ -51,16 +39,10 @@ uniform float u_alphaBoost = 1.0;
 uniform vec3 u_moonlightDir;
 
 void main() {
-#if ENABLE_BINDLESS
     Material material = materials[MaterialIndex];
     vec4 baseColor = texture(sampler2D(textureSamplers[material.basecolor]), TexCoord);
     vec3 normalMap = texture(sampler2D(textureSamplers[material.normal]), TexCoord).rgb;   
     vec3 rma = texture(sampler2D(textureSamplers[material.rma]), TexCoord).rgb;  
-#else
-    vec4 baseColor = texture2D(baseColorTexture, TexCoord);
-    vec3 normalMap = texture2D(normalTexture, TexCoord).rgb;
-    vec3 rma = texture2D(rmaTexture, TexCoord).rgb;
-#endif
 
 	baseColor.rgb = pow(baseColor.rgb, vec3(2.2));
     float finalAlpha = baseColor.a;// * u_alphaBoost;
@@ -103,13 +85,11 @@ void main() {
       vec3 directLight = GetDirectLighting(lightPosition, lightColor, light.radius, light.strength, normal, WorldPos.xyz, baseColor.rgb, roughness, metallic, ViewPos) * shadow;
       //vec3 directLight = GetDirectLightingHair(lightPosition, lightColor, light.radius, light.strength, normal, Tangent, WorldPos.xyz, baseColor.rgb, roughness, metallic, ViewPos) * shadow;
       
-#if ENABLE_BINDLESS
       if (light.iesTextureIndex != 0) {
           sampler2D iesSampler = sampler2D(textureSamplers[(light.iesTextureIndex)]);
           float candelas = ApplyIESProfile(WorldPos.xyz, light, iesSampler);
           directLight *= candelas;
       }
-#endif
 
       directLighting += directLight;
   }
@@ -119,14 +99,12 @@ void main() {
     float sssStrength = 5.0;
     float fragDistance = distance(WorldPos.xyz, ViewPos); // is this right?
 
-#if ENABLE_BINDLESS
     uint spotLightCount = tileSpotLights[tileIndex].lightCount;
     for (uint i = 0u; i < spotLightCount; i++) {
         SpotLight spotLight = spotLights[tileSpotLights[tileIndex].lightIndices[i]];
         sampler2D iesTexture = sampler2D(textureSamplers[max(rendererData.flashlightIESTextureIndex, 0)]);
         directLighting += GetSpotLightContribution(spotLight, rendererData, uint(ViewportIndex), ViewPos, normal.xyz, WorldPos.xyz, baseColor.rgb, roughness, metallic, fragDistance, -1000.0, iesTexture, flashlightShadowMapArray);
     }
-#endif
    
     vec3 moonColor = GetMoonLightColor();
     float moonLightStrength = 0.05;

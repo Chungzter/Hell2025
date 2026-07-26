@@ -233,7 +233,6 @@ namespace VulkanRenderer {
             VulkanPipeline* linePipeline = VulkanResourceManager::GetPipeline("DebugVertex2DLine");
             VulkanPipeline* pointPipeline = VulkanResourceManager::GetPipeline("DebugVertex2DPoint");
             PushConstantsDebug2D pushConstants{};
-            pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
             pushConstants.renderTargetWidth = static_cast<float>(extent.width);
             pushConstants.renderTargetHeight = static_cast<float>(extent.height);
 
@@ -287,10 +286,6 @@ namespace VulkanRenderer {
         AllocatedImage* indirectDiffuseImage = VulkanResourceManager::GetAllocatedImage("IndirectDiffuse");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("DebugView");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
-        const VulkanFrameData& frameData = GetCurrentFrameData();
-        VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
-        VulkanBuffer* rendererDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rendererData);
-
         if (!pipeline) return;
         if (!staticDescriptorSet) return;
         if (!lightingImage) return;
@@ -301,9 +296,6 @@ namespace VulkanRenderer {
         if (!depthImage) return;
         if (!emissiveImage) return;
         if (!indirectDiffuseImage) return;
-        if (!viewportDataBuffer) return;
-        if (!rendererDataBuffer) return;
-
         VkExtent2D extent = lightingImage->GetExtent2D();
         baseColorImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
         normalImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
@@ -356,14 +348,10 @@ namespace VulkanRenderer {
 
         ProfilerVulkanZoneFunction();
 
-        const VulkanFrameData& frameData = GetCurrentFrameData();
-
         AllocatedImage* lightingImage = VulkanResourceManager::GetAllocatedImage("Lighting");
-        VulkanBuffer* tileLightsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.tileWorldBounds);
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("DebugTileView");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
 
-        if (!tileLightsBuffer) return;
         if (!lightingImage) return;
         if (!pipeline) return;
         if (!staticDescriptorSet) return;

@@ -58,6 +58,7 @@ void PowerPoleSet::Init() {
     std::vector<glm::vec3> controlPoints3D;
     for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) {
         glm::vec3 worldPosition = Hell::Physics::GetHeightMapPositionAtXZ(sequencePoint.position.x, sequencePoint.position.z);
+        if (worldPosition == glm::vec3(0.0f)) worldPosition = sequencePoint.position;
         sequencePoint.position.y = worldPosition.y;
         controlPoints3D.push_back(worldPosition);
     }

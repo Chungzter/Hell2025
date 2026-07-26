@@ -14,15 +14,6 @@ struct SpaceCoords {
     float height;
     float localMouseX;
     float localMouseY;
-    float leftPixel;       // Base space (y-down)
-    float rightPixel;      // Base space (y-down)
-    float topPixel;        // Base space (y-down)
-    float bottomPixel;     // Base space (y-down)
-    float gpuLeftPixel;    // OpenGL space (y-up)
-    float gpuRightPixel;   // OpenGL space (y-up)
-    float gpuTopPixel;     // OpenGL space (y-up)
-    float gpuBottomPixel;  // OpenGL space (y-up)
-    glm::vec2 localMouseUV;
 };
 
 struct Viewport {
@@ -55,7 +46,6 @@ public:
     ShadingMode GetViewportMode() const;
     SpaceCoords GetWindowSpaceCoords() const;
     SpaceCoords GetGBufferSpaceCoords() const;
-    SpaceCoords GetUISpaceCoords() const;
 
     uint64_t GetMirrorId()      { return m_mirrorId; }
     Unloved::Frustum& GetFrustum()       { return m_frustum; }
@@ -68,7 +58,7 @@ public:
     float GetFarPlane()         { return m_farPlane; }
 
 private:
-    glm::vec2 m_position;           // Top-left corner in normalized screen space (0-1)
+    glm::vec2 m_position;           // Top-left corner in normalized displayed-screen space (0-1)
     glm::vec2 m_size;               // Width and height in normalized screen space (0-1)
     bool m_isOrthographic = false;  // True for orthographic, false for perspective
     float m_orthoSize;
@@ -93,7 +83,6 @@ private:
     ShadingMode m_viewportMode;
     SpaceCoords m_windowSpaceCoords;
     SpaceCoords m_gBufferSpaceCoords;
-    SpaceCoords m_uiSpaceCoords;
     uint64_t m_mirrorId = 0;
 
     void UpdateProjectionMatrices();

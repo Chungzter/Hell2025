@@ -29,7 +29,8 @@ namespace VulkanRenderer {
 
         for (VulkanFrameData& frameData : g_frameData) {
             frameData.buffers.frameAddressTable = VulkanResourceManager::CreateBuffer(sizeof(FrameAddressTable), usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.instanceData = VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.sceneRenderItems = VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.drawRenderItemIndices = VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.viewportData = VulkanResourceManager::CreateBuffer(sizeof(ViewportData) * MAX_VIEWPORT_COUNT, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.rendererData = VulkanResourceManager::CreateBuffer(sizeof(RendererData), usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.lights = VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
@@ -44,8 +45,8 @@ namespace VulkanRenderer {
             frameData.buffers.skinnedVertices = VulkanResourceManager::CreateBuffer(dummySize, usageSkinnedVertices, VMA_MEMORY_USAGE_GPU_ONLY);
             frameData.buffers.previousSkinnedPositions = VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_GPU_ONLY);
             frameData.buffers.rayQueryInstances = VulkanResourceManager::CreateBuffer(1, usageRayQueryInstances, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.rayQueryBLASInstanceData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
-            frameData.buffers.rayQueryMeshInstanceData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.rayQueryBLASData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.rayQuerySceneRenderItemIndices = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.rayQueryScratch = VulkanResourceManager::CreateBuffer(1, usageRayQueryScratch, VMA_MEMORY_USAGE_AUTO);
             frameData.buffers.ddgiRayQueryScratch = VulkanResourceManager::CreateBuffer(1, usageRayQueryScratch, VMA_MEMORY_USAGE_AUTO);
             frameData.buffers.uiRenderItems = VulkanResourceManager::CreateBuffer(dummySize * VULKAN_MAX_UI_RENDER_ITEMS, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);

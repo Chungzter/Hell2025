@@ -1,45 +1,31 @@
 #version 460
 #include "../../common/OpenGL/GL_binding_indices.glsl"
 
-#ifndef ENABLE_BINDLESS
-    #define ENABLE_BINDLESS 1
-#endif
-
 #include "../../common/util.glsl"
 #include "../../common/types.glsl"
 #include "../../common/constants.glsl"
 
-#if ENABLE_BINDLESS
 out flat int OpacityTextureIndex;
-#else
-uniform int u_globalInstanceIndex;
+
 uniform int u_viewportIndex;
-#endif
 
 layout(location = 0) in vec3 a_position;
 layout(location = 2) in vec2 a_uv;
 
 readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportData[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) buffer sceneRenderItemsBuffer { RenderItem sceneRenderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_DRAW_RENDER_ITEM_INDICES) buffer drawRenderItemIndicesBuffer { uint drawRenderItemIndices[]; };
 
 out vec2 v_uv;
 
 void main()
 {
-#if ENABLE_BINDLESS
-    int viewportIndex = gl_BaseInstance >> VIEWPORT_INDEX_SHIFT;
-    int instanceOffset = gl_BaseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
-    int globalInstanceIndex = instanceOffset + gl_InstanceID;
-#else
-    int globalInstanceIndex = u_globalInstanceIndex;
     int viewportIndex = u_viewportIndex;
-#endif
-    RenderItem renderItem = renderItems[globalInstanceIndex];
-#if ENABLE_BINDLESS
+    int globalInstanceIndex = int(drawRenderItemIndices[gl_BaseInstance + gl_InstanceID]);
+    RenderItem renderItem = sceneRenderItems[globalInstanceIndex];
     Material material = materials[renderItem.materialIndex];
     OpacityTextureIndex = material.basecolor;
-#endif
 
     v_uv = a_uv;
 

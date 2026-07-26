@@ -257,49 +257,6 @@ namespace OpenGL::Renderer {
         }
     }
 
-    void SplitMultiDrawIndirect(OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand>& commands, bool bindMaterial, bool bindWoundMaterial) {
-        if (!shader) {
-            Logging::Fatal() << "SplitMultiDrawIndirect(..) was called with nullptr shader\n";
-            return;
-        }
-
-        const std::vector<RenderItem>& instanceData = Unloved::RenderDataManager::GetInstanceData();
-
-        for (const DrawIndexedIndirectCommand& command : commands) {
-            int viewportIndex = command.baseInstance >> VIEWPORT_INDEX_SHIFT;
-            int instanceOffset = command.baseInstance & ((1 << VIEWPORT_INDEX_SHIFT) - 1);
-
-            for (GLuint i = 0; i < command.instanceCount; ++i) {
-                const RenderItem& renderItem = instanceData[instanceOffset + i];
-
-                OpenGL::SetUniformInt("u_viewportIndex", viewportIndex);
-                OpenGL::SetUniformInt("u_globalInstanceIndex", instanceOffset + i);
-
-                if (bindMaterial) {
-                    Material* material = Hell::ResourceManager::GetMaterialByIndex(renderItem.materialIndex);
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
-                    glActiveTexture(GL_TEXTURE1);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
-                    glActiveTexture(GL_TEXTURE2);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
-                    glActiveTexture(GL_TEXTURE3);
-                }
-                if (bindWoundMaterial) {
-                    Material* material = Hell::ResourceManager::GetMaterialByIndex(renderItem.woundMaterialIndex);
-                    glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_basecolor)->GetGLTexture().GetHandle());
-                    glActiveTexture(GL_TEXTURE5);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_normal)->GetGLTexture().GetHandle());
-                    glActiveTexture(GL_TEXTURE6);
-                    glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(material->m_rma)->GetGLTexture().GetHandle());
-                }
-
-                glDrawElementsBaseVertex(GL_TRIANGLES, command.indexCount, GL_UNSIGNED_INT, (GLvoid*)(command.firstIndex * sizeof(GLuint)), command.baseVertex);
-            }
-        }
-    }
-
     void DrawFullscreenTriangle() {
         BindEmptyVAO();
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -311,7 +268,7 @@ namespace OpenGL::Renderer {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDrawBuffer(GL_BACK);
-        glViewport(0, 0, Hell::BackEnd::GetCurrentWindowWidth(), Hell::BackEnd::GetCurrentWindowHeight());
+        glViewport(0, 0, Hell::BackEnd::GetDrawableWidth(), Hell::BackEnd::GetDrawableHeight());
         glDisable(GL_SCISSOR_TEST);
 
         OpenGLRasterizerState state;
@@ -336,23 +293,6 @@ namespace OpenGL::Renderer {
         glBindVertexArray(g_emptyVao);
     }
 
-	void MultiDrawPerViewport(OpenGLFrameBuffer* fbo, OpenGLShader* shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
-		OpenGL::RasterizerStateManager::SetRasterizerState(rasterizerState);
-
-		for (int i = 0; i < 4; i++) {
-			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
-			if (viewport->IsVisible()) {
-				OpenGL::Renderer::SetViewport(fbo, viewport);
-				if (Hell::BackEnd::RenderDocFound()) {
-					SplitMultiDrawIndirect(shader, drawCommands[i], true, false);
-				}
-				else {
-					MultiDrawIndirect(drawCommands[i]);
-				}
-			}
-		}
-	}
-
     void MultiDrawPerViewportRE(OpenGLFrameBuffer& fbo, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
         OpenGL::RasterizerStateManager::SetRasterizerState(rasterizerState);
 
@@ -360,27 +300,11 @@ namespace OpenGL::Renderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGL::Renderer::SetViewport(&fbo, viewport);
+                OpenGL::SetUniformInt("u_viewportIndex", i);
                 MultiDrawIndirect(drawCommands[i]);
             }
         }
     }
-
-	void MultiDrawPerViewport(OpenGLFrameBuffer& fbo, OpenGLShader& shader, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
-		OpenGL::RasterizerStateManager::SetRasterizerState(rasterizerState);
-
-		for (int i = 0; i < 4; i++) {
-			Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
-			if (viewport->IsVisible()) {
-				OpenGL::Renderer::SetViewport(&fbo, viewport);
-				if (Hell::BackEnd::RenderDocFound()) {
-					SplitMultiDrawIndirect(&shader, drawCommands[i], true, false);
-				}
-				else {
-					MultiDrawIndirect(drawCommands[i]);
-				}
-			}
-		}
-	}
 
     GLuint GetTextureHandleByName(const std::string& name) {
         if (auto it = g_cachedTextureHandles.find(name); it != g_cachedTextureHandles.end()) {

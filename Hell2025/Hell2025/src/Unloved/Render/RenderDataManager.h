@@ -6,7 +6,9 @@
 #include "Unloved/Render/DrawCommandSets.h"
 #include "Unloved/Render/RendererTypes.h"
 #include "Unloved/Systems/Bullets/Bullet.h"
+#include "Hell/UI/UITypes.h"
 
+#include <cstddef>
 #include <vector>
 
 struct DecalPaintingInfo {
@@ -23,11 +25,9 @@ namespace Unloved::RenderDataManager {
     void UpdateDrawCommandsUI();
 
     const std::vector<DrawIndexedIndirectCommand>& GetDrawCommandsUI();
+    const std::vector<DrawIndexedIndirectCommand>& GetDrawCommandsUI(UICanvas canvas);
 
     inline std::vector<glm::mat4> skinningTransforms;
-
-    int EncodeBaseInstance(int playerIndex, int instanceOffset);
-    void DecodeBaseInstance(int baseInstance, int& playerIndex, int& instanceOffset);
 
     // Submissions
     void SubmitAnimatedMeshNodes(const AnimatedMeshNodes& animatedMeshNodes);
@@ -44,9 +44,9 @@ namespace Unloved::RenderDataManager {
 
     const std::vector<SkinningJob>& GetSkinningJobs();
     const std::vector<SkinningDispatchGroup>& GetSkinningDispatchGroups();
-    const std::vector<TransientRayQueryBLASInstance>& GetTransientRayQueryBLASInstances();
-    const std::vector<RayQueryMultiMeshBLAS>& GetRayQueryMultiMeshBLASes();
-    const std::vector<RayQueryBLASInstance>& GetRayQueryBLASInstances();
+    const std::vector<std::vector<uint32_t>>& GetTransientRayQueryRenderItemGroups();
+    const std::vector<uint32_t>& GetProceduralRayQueryRenderItemIndices();
+    const std::vector<uint32_t>& GetPersistentRayQueryRenderItemIndices();
 
     const RendererData& GetRendererData();
     const std::vector<glm::mat4>& GetSkinningTransforms();
@@ -54,39 +54,27 @@ namespace Unloved::RenderDataManager {
     const std::vector<GPULight>& GetGPULights();
     const std::vector<GPUSpotLight>& GetGPUSpotLights();
     const std::vector<DecalPaintingInfo>& GetDecalPaintingInfo();
-    const std::vector<RenderItem>& GetInstanceData();
-    const std::vector<RenderItem>& GetGlassInstanceData();
+    const std::vector<RenderItem>& GetSceneRenderItems();
+    const std::vector<uint32_t>& GetDrawRenderItemIndices();
     const std::vector<GlassLightRange>& GetGlassLightRanges();
     const std::vector<uint32_t>& GetGlassLightIndices();
     const std::vector<GlassLightRange>& GetGlassSpotLightRanges();
     const std::vector<uint32_t>& GetGlassSpotLightIndices();
     const std::vector<SpriteSheetRenderItem>& GetSpriteSheetInstanceData();
-    const std::vector<RenderItem>& GetCombinedSkinnedRenderItems();
+    const std::vector<uint32_t>& GetCombinedSkinnedRenderItemIndices();
+    const std::vector<uint32_t>& GetRenderItemIndicesOutline();
+    const std::vector<uint32_t>& GetRenderItemIndicesOutlineProcedural();
+    const std::vector<uint32_t>& GetRenderItemIndicesOutlineSkinned();
+    const std::vector<uint32_t>& GetRenderItemIndicesPlastic();
+    const std::vector<uint32_t>& GetRenderItemIndicesProcedural();
+    std::size_t GetRenderItemCount(BlendingMode blendingMode);
+    std::size_t GetSkinnedRenderItemCount(BlendingMode blendingMode);
     uint32_t GetRequiredSkinnedVertexCount();
-
-    const std::vector<RenderItem>& GetRenderItems();
-    const std::vector<RenderItem>& GetRenderItemsAlphaDiscard();
-    const std::vector<RenderItem>& GetRenderItemsBlended();
-    const std::vector<RenderItem>& GetRenderItemsGlass();
-    const std::vector<RenderItem>& GetRenderItemsHair();
-    const std::vector<RenderItem>& GetRenderItemsMirror();
-    const std::vector<RenderItem>& GetRenderItemsOutline();
-    const std::vector<RenderItem>& GetRenderItemsPlastic();
-    const std::vector<RenderItem>& GetRenderItemsProcedural();
-    const std::vector<RenderItem>& GetRenderItemsToiletWater();
-    const std::vector<RenderItem>& GetRenderItemsPointLightShadows();
-
-    const std::vector<RenderItem>& GetSkinnedRenderItemsAlphaDiscard();
-    const std::vector<RenderItem>& GetSkinnedRenderItemsBlended();
-    const std::vector<RenderItem>& GetSkinnedRenderItemsDefault();
-    const std::vector<RenderItem>& GetSkinnedRenderItemsHair();
 
     const std::vector<BloodDecalInstanceData>& GetBloodScreenSpaceDecalInstanceData();
     const std::vector<ViewportData>& GetViewportData();
     const DrawCommandsSet& GetDrawInfoSet();
     const FlashLightShadowMapDrawInfo& GetFlashLightShadowMapDrawInfo();
 
-    const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItems();
-    const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItemsAlphaDiscard();
     const std::vector<RenderItem>& GetNonDeformingSkinnedMeshRenderItemsDepthPeeledTransparent();
 }

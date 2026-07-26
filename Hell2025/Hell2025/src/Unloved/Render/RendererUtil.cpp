@@ -79,9 +79,7 @@ RenderItem CreateAssetGeometryRenderItem(const std::string& modelName, const std
     const glm::vec3 col0 = glm::vec3(worldMatrix[0]);
     const glm::vec3 col1 = glm::vec3(worldMatrix[1]);
     const glm::vec3 col2 = glm::vec3(worldMatrix[2]);
-    const glm::vec3 worldExtents = glm::abs(col0) * localExtents.x +
-        glm::abs(col1) * localExtents.y +
-        glm::abs(col2) * localExtents.z;
+    const glm::vec3 worldExtents = glm::abs(col0) * localExtents.x + glm::abs(col1) * localExtents.y + glm::abs(col2) * localExtents.z;
 
     renderItem.aabbMin = glm::vec4(worldCenter - worldExtents, 0.0f);
     renderItem.aabbMax = glm::vec4(worldCenter + worldExtents, 0.0f);

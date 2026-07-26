@@ -44,7 +44,7 @@ namespace VulkanRenderer {
             vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
         }
 
-        PushConstantsVisibility CreateVisibilityPushConstants(VulkanBuffer* renderItemBuffer, VulkanBuffer* viewportDataBuffer, VulkanBuffer* materialsBuffer, VulkanBuffer* skinnedVertexBuffer) {
+        PushConstantsVisibility CreateVisibilityPushConstants(VulkanBuffer* skinnedVertexBuffer) {
             PushConstantsVisibility pushConstants{};
             pushConstants.frameAddressTableDeviceAddress = GetFrameAddressTableDeviceAddress();
             pushConstants.skinnedVerticesDeviceAddress = skinnedVertexBuffer->GetDeviceAddress();
@@ -57,7 +57,8 @@ namespace VulkanRenderer {
             return pushConstants;
         }
 
-        void DrawStaticAndNonDeformingHair(VkCommandBuffer commandBuffer, VulkanMeshBuffer* meshBuffer, const std::array<VulkanDrawCommandBatch, 4>& hairCommands, const std::array<VulkanDrawCommandBatch, 4>& skinnedNonDeformingHairCommands, VkExtent2D extent) {
+        template <typename T>
+        void DrawStaticAndNonDeformingHair(VkCommandBuffer commandBuffer, VulkanPipeline* pipeline, T& pushConstants, VkShaderStageFlags pushConstantStages, VulkanMeshBuffer* meshBuffer, const std::array<VulkanDrawCommandBatch, 4>& hairCommands, const std::array<VulkanDrawCommandBatch, 4>& skinnedNonDeformingHairCommands, VkExtent2D extent) {
             BindVertexBuffer(commandBuffer, meshBuffer->GetVertexBuffer());
             BindIndexBuffer(commandBuffer, meshBuffer->GetIndexBuffer());
 
@@ -66,12 +67,15 @@ namespace VulkanRenderer {
                 if (!viewport->IsVisible()) continue;
 
                 SetGameViewportAndScissor(commandBuffer, *viewport, extent);
+                pushConstants.viewportIndex = i;
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), pushConstantStages, 0, sizeof(pushConstants), &pushConstants);
                 MultiDrawIndexedCommands(commandBuffer, hairCommands[i]);
                 MultiDrawIndexedCommands(commandBuffer, skinnedNonDeformingHairCommands[i]);
             }
         }
 
-        void DrawSkinnedHair(VkCommandBuffer commandBuffer, VulkanMeshBuffer* meshBuffer, VulkanBuffer* skinnedVertexBuffer, const std::array<VulkanDrawCommandBatch, 4>& skinnedHairCommands, VkExtent2D extent) {
+        template <typename T>
+        void DrawSkinnedHair(VkCommandBuffer commandBuffer, VulkanPipeline* pipeline, T& pushConstants, VkShaderStageFlags pushConstantStages, VulkanMeshBuffer* meshBuffer, VulkanBuffer* skinnedVertexBuffer, const std::array<VulkanDrawCommandBatch, 4>& skinnedHairCommands, VkExtent2D extent) {
             BindVertexBuffer(commandBuffer, skinnedVertexBuffer);
             BindIndexBuffer(commandBuffer, meshBuffer->GetIndexBuffer());
 
@@ -80,6 +84,8 @@ namespace VulkanRenderer {
                 if (!viewport->IsVisible()) continue;
 
                 SetGameViewportAndScissor(commandBuffer, *viewport, extent);
+                pushConstants.viewportIndex = i;
+                vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), pushConstantStages, 0, sizeof(pushConstants), &pushConstants);
                 MultiDrawIndexedCommands(commandBuffer, skinnedHairCommands[i]);
             }
         }
@@ -126,9 +132,6 @@ namespace VulkanRenderer {
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("HairDepthPrePass");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
         VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
-        VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
-        VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
-        VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
         VulkanBuffer* skinnedVertexBuffer = frameData.buffers.skinnedVertices != 0 ? VulkanResourceManager::GetBuffer(frameData.buffers.skinnedVertices) : nullptr;
 
         if (!hairDepthImage) return;
@@ -136,9 +139,6 @@ namespace VulkanRenderer {
         if (!pipeline) return;
         if (!staticDescriptorSet) return;
         if (!meshBuffer) return;
-        if (!renderItemBuffer) return;
-        if (!viewportDataBuffer) return;
-        if (!materialsBuffer) return;
         if (!skinnedVertexBuffer) return;
         if (!meshBuffer->GetVertexBuffer()) return;
         if (!meshBuffer->GetIndexBuffer()) return;
@@ -150,14 +150,14 @@ namespace VulkanRenderer {
         VkExtent2D extent = hairDepthImage->GetExtent2D();
         if (!BeginRenderState(commandBuffer, *renderState, extent)) return;
 
-        PushConstantsVisibility pushConstants = CreateVisibilityPushConstants(renderItemBuffer, viewportDataBuffer, materialsBuffer, skinnedVertexBuffer);
+        PushConstantsVisibility pushConstants = CreateVisibilityPushConstants(skinnedVertexBuffer);
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
         vkCmdPushConstants(commandBuffer, pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
 
-        DrawStaticAndNonDeformingHair(commandBuffer, meshBuffer, hairCommands, skinnedNonDeformingHairCommands, extent);
-        DrawSkinnedHair(commandBuffer, meshBuffer, skinnedVertexBuffer, skinnedHairCommands, extent);
+        DrawStaticAndNonDeformingHair(commandBuffer, pipeline, pushConstants, VK_SHADER_STAGE_VERTEX_BIT, meshBuffer, hairCommands, skinnedNonDeformingHairCommands, extent);
+        DrawSkinnedHair(commandBuffer, pipeline, pushConstants, VK_SHADER_STAGE_VERTEX_BIT, meshBuffer, skinnedVertexBuffer, skinnedHairCommands, extent);
 
         EndRenderState(commandBuffer);
     }
@@ -174,11 +174,6 @@ namespace VulkanRenderer {
         VulkanPipeline* surfacePipeline = VulkanResourceManager::GetPipeline("HairSurfaceLighting");
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
         VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
-        VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
-        VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
-        VulkanBuffer* rendererDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rendererData);
-        VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
-        VulkanBuffer* gpuLightsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.lights);
         VulkanBuffer* skinnedVertexBuffer = frameData.buffers.skinnedVertices != 0 ? VulkanResourceManager::GetBuffer(frameData.buffers.skinnedVertices) : nullptr;
 
         if (!hairLightingImage) return;
@@ -187,11 +182,6 @@ namespace VulkanRenderer {
         if (!surfacePipeline) return;
         if (!staticDescriptorSet) return;
         if (!meshBuffer) return;
-        if (!renderItemBuffer) return;
-        if (!viewportDataBuffer) return;
-        if (!rendererDataBuffer) return;
-        if (!materialsBuffer) return;
-        if (!gpuLightsBuffer) return;
         if (!skinnedVertexBuffer) return;
         if (!meshBuffer->GetVertexBuffer()) return;
         if (!meshBuffer->GetIndexBuffer()) return;
@@ -209,13 +199,13 @@ namespace VulkanRenderer {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, hairPipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
         vkCmdPushConstants(commandBuffer, hairPipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
-        DrawSkinnedHair(commandBuffer, meshBuffer, skinnedVertexBuffer, skinnedHairCommands, extent);
+        DrawSkinnedHair(commandBuffer, hairPipeline, pushConstants, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, meshBuffer, skinnedVertexBuffer, skinnedHairCommands, extent);
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, surfacePipeline->GetHandle());
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, surfacePipeline->GetLayout(), 0, 1, staticDescriptorSet->GetHandlePtr(), 0, nullptr);
         vkCmdPushConstants(commandBuffer, surfacePipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
-        DrawStaticAndNonDeformingHair(commandBuffer, meshBuffer, hairCommands, skinnedNonDeformingHairCommands, extent);
+        DrawStaticAndNonDeformingHair(commandBuffer, surfacePipeline, pushConstants, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, meshBuffer, hairCommands, skinnedNonDeformingHairCommands, extent);
 
         EndRenderState(commandBuffer);
     }

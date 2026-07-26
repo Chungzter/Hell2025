@@ -19,7 +19,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("Visibility");
 
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -61,7 +62,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("VisibilityHeightMap");
 
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -102,7 +104,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -145,7 +148,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("Visibility");
 
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -182,7 +186,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;

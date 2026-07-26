@@ -43,10 +43,19 @@ void PickUp::Update(float deltaTime) {
 
 void PickUp::Respawn() {
     m_meshNodes.SetBlendingModes(BlendingMode::DEFAULT);
-
     m_despawned = false;
-    m_meshNodes.ForceDirty();
+    m_respawnCounter = 0.0f;
+    m_modelMatrix = m_initialTransform.to_mat4();
+    m_meshNodes.ResetFirstFrame();
+    m_meshNodes.Update(m_modelMatrix);
 
+    for (const MeshNode& meshNode : m_meshNodes.GetNodes()) {
+        if (meshNode.rigidDynamicId != 0) Hell::Physics::SetRigidDynamicGlobalPose(meshNode.rigidDynamicId, meshNode.worldMatrix);
+    }
+
+    m_meshNodes.SleepAllPhysics();
+    if (!m_createInfo.disablePhysicsAtSpawn) m_meshNodes.WakeAllPhysics();
+    m_meshNodes.ForceDirty();
     MarkDirtyInTracker();
 }
 

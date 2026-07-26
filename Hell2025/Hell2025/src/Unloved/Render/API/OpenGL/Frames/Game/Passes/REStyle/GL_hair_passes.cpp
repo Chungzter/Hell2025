@@ -84,20 +84,20 @@ namespace OpenGL::Renderer {
         state.depthFunc = GL_GREATER;
 
         // Masked
-        OpenGLShader& shader = OpenGL::ResourceManager::GetShader("DepthPrePassAlphaDiscardRE");
         OpenGL::BindShader("DepthPrePassAlphaDiscardRE");
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
 
         OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry");
         glBindVertexArray(meshBuffer.GetVAO());
-        MultiDrawPerViewport(&fbo, &shader, drawInfoSet.hair, state);
-        MultiDrawPerViewport(&fbo, &shader, drawInfoSet.skinnedNonDeformingHair, state);
+        MultiDrawPerViewportRE(fbo, drawInfoSet.hair, state);
+        MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedNonDeformingHair, state);
 
         glBindVertexArray(OpenGL::BackEnd::GetSkinnedVertexDataVAO());
-        MultiDrawPerViewport(&fbo, &shader, drawInfoSet.skinnedHair, state);
+        MultiDrawPerViewportRE(fbo, drawInfoSet.skinnedHair, state);
 
         glBindVertexArray(0);
     }
@@ -117,7 +117,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
@@ -144,7 +145,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");

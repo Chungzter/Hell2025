@@ -41,6 +41,7 @@ namespace Unloved {
             filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
 
             Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
+            animatedGameObject->SetOwnerObjectId(m_objectId);
             animatedGameObject->SetSkinnedModel("Kangaroo");
             animatedGameObject->SetRotationY(HELL_PI);
             animatedGameObject->SetAnimationModeToBindPose();

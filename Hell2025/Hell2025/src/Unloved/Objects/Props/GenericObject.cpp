@@ -54,6 +54,27 @@ void GenericObject::SetRotation(const glm::vec3& rotation) {
     m_createInfo.rotation = rotation;
     m_transform.rotation = rotation;
     m_navMeshTransformDirty = true;
-};
+}
+
+void GenericObject::SetScale(const glm::vec3& scale) {
+    m_createInfo.scale = scale;
+    m_transform.scale = scale;
+    m_navMeshTransformDirty = true;
+}
+
+void GenericObject::SetType(GenericObjectType type) {
+    if (m_createInfo.type == type) return;
+
+    m_createInfo.type = type;
+    m_meshNodes.CleanUp();
+    m_shadowCasterMeshNodes.CleanUp();
+    Bible::ConfigureMeshNodes(m_objectId, m_createInfo.type, &m_meshNodes, &m_shadowCasterMeshNodes);
+    m_navMeshTransformDirty = true;
+}
+
+void GenericObject::ResetPhysics() {
+    m_meshNodes.ResetFirstFrame();
+    m_meshNodes.Update(m_transform.to_mat4());
+}
 
 }

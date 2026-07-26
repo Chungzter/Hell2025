@@ -67,11 +67,10 @@ vec3 GetRMA(ivec2 px) {
 }
 
 vec3 GetCameraNdotL(ivec2 px, ivec2 outputImageSize, RendererData rendererData, ViewportDataBuffer viewportDataBuffer) {
-    uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, outputImageSize, rendererData.splitscreenMode);
-    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
-
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    mat4 inverseView = viewportDataBuffer.viewportData[viewportIndex].inverseView;
     vec3 normal = DecodeOct(GetNormalXYRoughnessMisc(px).rg);
-    vec3 lightDir = normalize(viewportData.inverseView[2].xyz);
+    vec3 lightDir = normalize(inverseView[2].xyz);
     float ndotl = max(dot(normal, lightDir), 0.0);
 
     return GetBaseColor(px) * ndotl;
@@ -84,8 +83,7 @@ vec3 GetVelocity(ivec2 px) {
     return vec3(velocity * 20.0 + 0.5, 0.5);
 }
 
-vec3 GetIndirectDiffuse(ivec2 px, ivec2 outputImageSize) {
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+vec3 GetIndirectDiffuse(ivec2 px) {
     vec3 indirectDiffuseTexture = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_DIFFUSE], samplers[VULKAN_SAMPLER_IDX_LINEAR]), px / 2, 0).rgb;
     vec3 result = Tonemap_ACES(indirectDiffuseTexture);
     result = pow(result, vec3(1.0 / 2.2));
@@ -159,7 +157,7 @@ vec3 GetIndirectSpecularAMDSampleCount(ivec2 px, ivec2 outputImageSize) {
 }
 
 vec3 GetHiZ(ivec2 px, ivec2 outputImageSize) {
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+    vec2 screenUV = ScreenUVFromPixel(px, outputImageSize);
     vec2 tiledUV = screenUV * 2.0;
     ivec2 tile = clamp(ivec2(floor(tiledUV)), ivec2(0), ivec2(1));
     vec2 localUV = fract(tiledUV);
@@ -197,11 +195,12 @@ vec3 GetEmissive(ivec2 px) {
 }
 
 vec3 GetWorldPosition(ivec2 px, ivec2 outputImageSize, RendererData rendererData, ViewportDataBuffer viewportDataBuffer) {
-    uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, outputImageSize, rendererData.splitscreenMode);
-    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
-    vec2 viewportUV = ViewportUVFromPixel_VK(px, outputImageSize, viewportData);
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+    mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
     float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
-    return WorldPosFromDepth_VK(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
+    return WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
 }
 
 void main() {
@@ -215,7 +214,6 @@ void main() {
     ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
     RendererDataBuffer rendererDataBuffer = pc.data.frame.rendererDataBuffer;
     RendererData rendererData = rendererDataBuffer.rendererData;
-
     vec3 finalColor = vec3(0.0);
 
     if (rendererData.rendererOverrideState == OVERRIDE_BASE_COLOR)                 finalColor = GetBaseColor(px);
@@ -230,7 +228,7 @@ void main() {
     if (rendererData.rendererOverrideState == OVERRIDE_DEPTH)                      finalColor = GetDepth(px);
     if (rendererData.rendererOverrideState == OVERRIDE_WORLD_POSITION)             finalColor = GetWorldPosition(px, outputImageSize, rendererData, viewportDataBuffer);
     if (rendererData.rendererOverrideState == OVERRIDE_EMISSIVE)                   finalColor = GetEmissive(px);
-    if (rendererData.rendererOverrideState == OVERRIDE_INDIRECT_DIFFUSE)           finalColor = GetIndirectDiffuse(px, outputImageSize);
+    if (rendererData.rendererOverrideState == OVERRIDE_INDIRECT_DIFFUSE)           finalColor = GetIndirectDiffuse(px);
     if (rendererData.rendererOverrideState == OVERRIDE_HIZ) finalColor = GetHiZ(px, outputImageSize);
     if (rendererData.rendererOverrideState == OVERRIDE_INDIRECT_SPECULAR_AMD_SAMPLE_COUNT) finalColor = GetIndirectSpecularAMDSampleCount(px, outputImageSize);
     if (rendererData.rendererOverrideState == OVERRIDE_INDIRECT_SPECULAR_AMD_INPUT) finalColor = GetIndirectSpecularAMDInput(px, outputImageSize);

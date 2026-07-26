@@ -13,6 +13,7 @@
 
 #include "Unloved/Config/Config.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorViewports.h"
 
 #ifndef GLM_ENABLE_EXPERIMENTAL
     #define GLM_ENABLE_EXPERIMENTAL
@@ -20,10 +21,12 @@
 #include <glm/gtx/intersect.hpp>
 
 namespace Audio = Hell::Audio;
-namespace Input = Hell::Input;
-
 namespace Gizmo {
     using namespace Unloved;
+
+    glm::mat4 GetActiveEditorViewportViewMatrix(int32_t viewportIndex) {
+        return EditorSession::Viewports::GetViewMatrix(viewportIndex);
+    }
 
     enum MeshIndex {
         RING = 0,
@@ -46,6 +49,14 @@ namespace Gizmo {
         float accumulatedAngle = 0.0f;
         float direction = 1.0f;
     } g_rotDrag;
+
+    struct TranslationDragState {
+        bool active = false;
+        glm::vec3 axis = glm::vec3(1.0f, 0.0f, 0.0f);
+        glm::vec3 planeNormal = glm::vec3(0.0f, 0.0f, 1.0f);
+        glm::vec3 startPosition = glm::vec3(0.0f);
+        float startAxisCoordinate = 0.0f;
+    } g_translateDrag;
 
     inline glm::vec3 ProjectOntoPlane(glm::vec3 v, glm::vec3 n) { return v - n * glm::dot(v, n); }
 
@@ -70,6 +81,10 @@ namespace Gizmo {
     inline float UnwrapAngleNear(float angle, float reference) {
         const float fullTurn = HELL_PI * 2.0f;
         return angle + std::round((reference - angle) / fullTurn) * fullTurn;
+    }
+
+    inline bool ControlIsDown() {
+        return Hell::Input::KeyDown(HELL_KEY_LEFT_CONTROL_GLFW) || Hell::Input::KeyDown(HELL_KEY_RIGHT_CONTROL);
     }
 
     glm::vec3 EulerAnglesNear(const glm::quat& rotation, const glm::vec3& reference) {
@@ -103,9 +118,10 @@ namespace Gizmo {
     GizmoFlag g_actionFlag = GizmoFlag::NONE;
     GizmoAction g_action = GizmoAction::IDLE;
     GizmoMode g_mode = GizmoMode::TRANSLATE;
+    int32_t g_interactionViewportIndex = -1;
     bool g_offsetNeedsUpdate = false;
     bool g_gizmoHasHover = false;
-    glm::vec3 g_translateOffset = glm::vec3(0.0f, 0.0f, 0.0f);
+    bool g_visible = true;
     glm::ivec2 g_scaleOffset = glm::ivec2(0, 0);
 
     glm::vec3 g_localUpAxis = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -114,7 +130,7 @@ namespace Gizmo {
 
     glm::vec3 g_sourceObjectOffset = glm::vec3(0.0f);
     
-    void UpdateInput();
+    void UpdateInput(bool allowInput);
     void UpdateLocalAxes();
 
     void Init() {
@@ -173,12 +189,22 @@ namespace Gizmo {
         }
     }
 
-    void Update() {
+    void Update(bool allowInput) {
         if (!Editor::IsOpen()) return;
         UpdateLocalAxes();
         UpdateRenderItems();
-        UpdateInput();
+        UpdateInput(allowInput);
         UpdateRenderItems();
+    }
+
+    void CancelInteraction() {
+        g_hoverFlag = GizmoFlag::NONE;
+        g_actionFlag = GizmoFlag::NONE;
+        g_action = GizmoAction::IDLE;
+        g_interactionViewportIndex = -1;
+        g_gizmoHasHover = false;
+        g_translateDrag = TranslationDragState{};
+        g_rotDrag = RotationDragState{};
     }
 
     void UpdateLocalAxes() {
@@ -195,15 +221,72 @@ namespace Gizmo {
         }
     }
 
-    void UpdateInput() {
-        int viewportIndex = Editor::GetHoveredViewportIndex();
+    bool BeginTranslationDrag(GizmoFlag flag, int32_t viewportIndex, const glm::vec3& rayOrigin, const glm::vec3& rayDirection) {
+        const EditorSession::EditorCamera* camera = EditorSession::Viewports::GetCameraByIndex(viewportIndex);
+        if (!camera) return false;
+
+        glm::vec3 axis(0.0f);
+        if (flag == GizmoFlag::TRANSLATE_X) axis = g_localRightAxis;
+        if (flag == GizmoFlag::TRANSLATE_Y) axis = g_localUpAxis;
+        if (flag == GizmoFlag::TRANSLATE_Z) axis = g_localForwardAxis;
+        if (glm::dot(axis, axis) < 0.5f) return false;
+        axis = glm::normalize(axis);
+
+        glm::vec3 planeNormal = camera->GetForward() - axis * glm::dot(camera->GetForward(), axis);
+        if (glm::dot(planeNormal, planeNormal) < 1e-6f) planeNormal = camera->GetUp() - axis * glm::dot(camera->GetUp(), axis);
+        if (glm::dot(planeNormal, planeNormal) < 1e-6f) planeNormal = camera->GetRight() - axis * glm::dot(camera->GetRight(), axis);
+        if (glm::dot(planeNormal, planeNormal) < 1e-6f) return false;
+        planeNormal = glm::normalize(planeNormal);
+        if (std::abs(glm::dot(rayDirection, planeNormal)) < 1e-6f) return false;
+
+        float distanceToHit = 0.0f;
+        if (!glm::intersectRayPlane(rayOrigin, rayDirection, g_gizmoPosition, planeNormal, distanceToHit)) return false;
+
+        const glm::vec3 hitPosition = rayOrigin + rayDirection * distanceToHit;
+        g_translateDrag.active = true;
+        g_translateDrag.axis = axis;
+        g_translateDrag.planeNormal = planeNormal;
+        g_translateDrag.startPosition = g_gizmoPosition;
+        g_translateDrag.startAxisCoordinate = glm::dot(hitPosition - g_gizmoPosition, axis);
+        g_interactionViewportIndex = viewportIndex;
+        g_action = GizmoAction::DRAGGING;
+        g_actionFlag = flag;
+        return true;
+    }
+
+    void UpdateTranslationDrag(const glm::vec3& rayOrigin, const glm::vec3& rayDirection) {
+        if (!g_translateDrag.active || g_action != GizmoAction::DRAGGING) return;
+
+        float distanceToHit = 0.0f;
+        if (!glm::intersectRayPlane(rayOrigin, rayDirection, g_translateDrag.startPosition, g_translateDrag.planeNormal, distanceToHit)) return;
+
+        const glm::vec3 hitPosition = rayOrigin + rayDirection * distanceToHit;
+        float translation = glm::dot(hitPosition - g_translateDrag.startPosition, g_translateDrag.axis) - g_translateDrag.startAxisCoordinate;
+        if (ControlIsDown()) translation = std::round(translation * 10.0f) / 10.0f;
+        g_gizmoPosition = g_translateDrag.startPosition + g_translateDrag.axis * translation;
+    }
+
+    void UpdateInput(bool allowInput) {
+        const int32_t hoveredViewportIndex = EditorSession::Viewports::GetHoveredViewportIndex();
+        const int32_t viewportIndex = g_action == GizmoAction::DRAGGING ? g_interactionViewportIndex : hoveredViewportIndex;
+        if (viewportIndex < 0) {
+            g_gizmoHasHover = false;
+            g_hoverFlag = GizmoFlag::NONE;
+            return;
+        }
+        if (!allowInput && g_action == GizmoAction::IDLE) {
+            g_gizmoHasHover = false;
+            g_hoverFlag = GizmoFlag::NONE;
+            return;
+        }
+
         const Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(viewportIndex);
         if (!viewport) return;
 
-        const glm::vec3 rayOrigin = Editor::GetMouseRayOriginByViewportIndex(viewportIndex);
-        const glm::vec3 rayDir = Editor::GetMouseRayDirectionByViewportIndex(viewportIndex);
+        const glm::vec3 rayOrigin = EditorSession::Viewports::GetMouseRayOrigin(viewportIndex);
+        const glm::vec3 rayDir = EditorSession::Viewports::GetMouseRayDirection(viewportIndex);
 
-        glm::mat4 viewMatrix = Editor::GetViewportViewMatrix(viewportIndex);
+        glm::mat4 viewMatrix = GetActiveEditorViewportViewMatrix(viewportIndex);
 
         glm::mat4 projectionMatrix = viewport->GetProjectionMatrix();
         //glm::mat4 viewMatrix = camera->GetViewMatrix();
@@ -215,86 +298,65 @@ namespace Gizmo {
         glm::vec3 viewPos = inverseViewMatrix[3];
 
         // Toggle mode
-        if (Input::KeyPressed(HELL_KEY_T) && g_mode != GizmoMode::TRANSLATE) {
+        if (Hell::Input::KeyPressed(HELL_KEY_T) && g_mode != GizmoMode::TRANSLATE) {
             Audio::PlayAudio("UI_Select.wav", 1.0f);
             g_mode = GizmoMode::TRANSLATE;
         }
-        if (Input::KeyPressed(HELL_KEY_R) && g_mode != GizmoMode::ROTATE) {
+        if (Hell::Input::KeyPressed(HELL_KEY_R) && g_mode != GizmoMode::ROTATE) {
             Audio::PlayAudio("UI_Select.wav", 1.0f);
             g_mode = GizmoMode::ROTATE;
         }
-        if (Input::KeyPressed(HELL_KEY_S) && g_mode != GizmoMode::SCALE) {
+        if (Hell::Input::KeyPressed(HELL_KEY_S) && g_mode != GizmoMode::SCALE) {
             Audio::PlayAudio("UI_Select.wav", 1.0f);
             g_mode = GizmoMode::SCALE;
         }
 
         // Get mouse ray direction
-        int mouseX = Input::GetMouseX();
-        int mouseY = Input::GetMouseY();
+        int mouseX = Hell::Input::GetMouseX();
+        int mouseY = Hell::Input::GetMouseY();
         int windowWidth = Hell::BackEnd::GetCurrentWindowWidth();
         int windowHeight = Hell::BackEnd::GetCurrentWindowHeight();
 
         // Raycast against all render item triangles to find hover
-        float closestDistance = 9999;
-        g_gizmoHasHover = false;
-        g_hoverFlag = GizmoFlag::NONE;
-        for (GizmoRenderItem& renderItem : g_renderItems[viewportIndex]) {
-            if (renderItem.flag == GizmoFlag::NONE) continue;
+        if (g_action == GizmoAction::IDLE) {
+            float closestDistance = 9999;
+            g_gizmoHasHover = false;
+            g_hoverFlag = GizmoFlag::NONE;
+            for (GizmoRenderItem& renderItem : g_renderItems[viewportIndex]) {
+                if (renderItem.flag == GizmoFlag::NONE) continue;
 
-            MeshBufferOLD* mesh = Gizmo::GetMeshBufferByIndex(renderItem.meshIndex);
-            if (mesh) {
-                std::vector<Vertex>& vertices = mesh->GetVertices();
-                std::vector<uint32_t>& indices = mesh->GetIndices();
+                MeshBufferOLD* mesh = Gizmo::GetMeshBufferByIndex(renderItem.meshIndex);
+                if (mesh) {
+                    std::vector<Vertex>& vertices = mesh->GetVertices();
+                    std::vector<uint32_t>& indices = mesh->GetIndices();
 
-                for (int i = 0; i < indices.size(); i += 3) {
-                    Vertex& v0 = vertices[mesh->GetIndices()[i + 0]];
-                    Vertex& v1 = vertices[mesh->GetIndices()[i + 1]];
-                    Vertex& v2 = vertices[mesh->GetIndices()[i + 2]];
-                    glm::vec3 pos0 = renderItem.modelMatrix * glm::vec4(v0.position, 1.0f);
-                    glm::vec3 pos1 = renderItem.modelMatrix * glm::vec4(v1.position, 1.0f);
-                    glm::vec3 pos2 = renderItem.modelMatrix * glm::vec4(v2.position, 1.0f);
+                    for (int i = 0; i < indices.size(); i += 3) {
+                        Vertex& v0 = vertices[mesh->GetIndices()[i + 0]];
+                        Vertex& v1 = vertices[mesh->GetIndices()[i + 1]];
+                        Vertex& v2 = vertices[mesh->GetIndices()[i + 2]];
+                        glm::vec3 pos0 = renderItem.modelMatrix * glm::vec4(v0.position, 1.0f);
+                        glm::vec3 pos1 = renderItem.modelMatrix * glm::vec4(v1.position, 1.0f);
+                        glm::vec3 pos2 = renderItem.modelMatrix * glm::vec4(v2.position, 1.0f);
 
-                    float t = 0;
-
-                    if (Hell::Ray::IntersectTriangle(rayOrigin, rayDir, pos0, pos1, pos2, t)) {
-                        if (t < closestDistance) {
-                            closestDistance = t;
-                            g_hoverFlag = renderItem.flag;
-                            g_gizmoHasHover = true;
+                        float t = 0;
+                        if (Hell::Ray::IntersectTriangle(rayOrigin, rayDir, pos0, pos1, pos2, t)) {
+                            if (t < closestDistance) {
+                                closestDistance = t;
+                                g_hoverFlag = renderItem.flag;
+                                g_gizmoHasHover = true;
+                            }
                         }
                     }
                 }
             }
         }
+        else {
+            g_gizmoHasHover = true;
+            g_hoverFlag = g_actionFlag;
+        }
 
         // Translating
-        if (g_actionFlag == GizmoFlag::TRANSLATE_X || g_actionFlag == GizmoFlag::TRANSLATE_Y || g_actionFlag == GizmoFlag::TRANSLATE_Z) {
-            if (g_action == GizmoAction::DRAGGING) {
-                glm::vec3 planeNormal = -rayDir;
-                glm::vec3 planeOrigin = glm::vec3(g_gizmoPosition);
-                float distanceToHit = 0;
-                bool hitFound = glm::intersectRayPlane(rayOrigin, rayDir, planeOrigin, planeNormal, distanceToHit);
-
-                if (hitFound) {
-                    glm::vec3 hitPosition = rayOrigin + (rayDir * distanceToHit);
-                    if (g_offsetNeedsUpdate) {
-                        g_offsetNeedsUpdate = false;
-                        g_translateOffset = hitPosition - g_gizmoPosition;
-                    }
-
-                    switch (g_actionFlag) {
-                        case GizmoFlag::TRANSLATE_X: g_gizmoPosition.x = hitPosition.x - g_translateOffset.x; break;
-                        case GizmoFlag::TRANSLATE_Y: g_gizmoPosition.y = hitPosition.y - g_translateOffset.y; break;
-                        case GizmoFlag::TRANSLATE_Z: g_gizmoPosition.z = hitPosition.z - g_translateOffset.z; break;
-                    }
-
-                    // Snap to grid
-                    if (Input::KeyDown(HELL_KEY_LEFT_SHIFT_GLFW)) {
-                        g_gizmoPosition = glm::round(g_gizmoPosition * 20.0f) / 20.0f;
-                    }
-                }
-            }
-        }
+        if (g_actionFlag == GizmoFlag::TRANSLATE_X || g_actionFlag == GizmoFlag::TRANSLATE_Y || g_actionFlag == GizmoFlag::TRANSLATE_Z) UpdateTranslationDrag(rayOrigin, rayDir);
 
         if (g_actionFlag == GizmoFlag::SCALE_X ||
             g_actionFlag == GizmoFlag::SCALE_Y ||
@@ -325,7 +387,7 @@ namespace Gizmo {
 
         // Begin rotate
         if ((g_hoverFlag == GizmoFlag::ROTATE_X || g_hoverFlag == GizmoFlag::ROTATE_Y || g_hoverFlag == GizmoFlag::ROTATE_Z) &&
-            Input::LeftMousePressed() && g_action == GizmoAction::IDLE) {
+            Hell::Input::LeftMousePressed() && g_action == GizmoAction::IDLE) {
 
             RotationDragState drag;
             drag.axisFlag = g_hoverFlag;
@@ -350,6 +412,7 @@ namespace Gizmo {
                     drag.direction = glm::dot(camForward, drag.axisWorld) < 0.0f ? -1.0f : 1.0f;
                     drag.active = true;
                     g_rotDrag = drag;
+                    g_interactionViewportIndex = viewportIndex;
                     g_action = GizmoAction::DRAGGING;
                     g_actionFlag = g_hoverFlag;
                 }
@@ -374,9 +437,8 @@ namespace Gizmo {
                     g_rotDrag.previousAngle = angleNow;
                     float delta = g_rotDrag.accumulatedAngle;
 
-                    // Snapping
-                    if (Input::KeyDown(HELL_KEY_LEFT_SHIFT_GLFW)) {
-                        const float snap = glm::radians(5.0f);
+                    if (ControlIsDown()) {
+                        const float snap = glm::radians(22.5f);
                         delta = std::round(delta / snap) * snap;
                     }
 
@@ -390,17 +452,26 @@ namespace Gizmo {
 
         // Gizmo selection
         bool rotateHovered = g_hoverFlag == GizmoFlag::ROTATE_X || g_hoverFlag == GizmoFlag::ROTATE_Y || g_hoverFlag == GizmoFlag::ROTATE_Z;
-        if (Input::LeftMousePressed() && g_hoverFlag != GizmoFlag::NONE && !rotateHovered) {
-            g_action = GizmoAction::DRAGGING;
-            g_actionFlag = g_hoverFlag;
-            g_offsetNeedsUpdate = true;
+        bool translateHovered = g_hoverFlag == GizmoFlag::TRANSLATE_X || g_hoverFlag == GizmoFlag::TRANSLATE_Y || g_hoverFlag == GizmoFlag::TRANSLATE_Z;
+        if (Hell::Input::LeftMousePressed() && g_hoverFlag != GizmoFlag::NONE && !rotateHovered) {
+            if (translateHovered) {
+                BeginTranslationDrag(g_hoverFlag, viewportIndex, rayOrigin, rayDir);
+            }
+            else {
+                g_interactionViewportIndex = viewportIndex;
+                g_action = GizmoAction::DRAGGING;
+                g_actionFlag = g_hoverFlag;
+                g_offsetNeedsUpdate = true;
+            }
         }
 
         // User ended drag
-        if (!Input::LeftMouseDown()) {
+        if (!Hell::Input::LeftMouseDown()) {
             if (g_action != GizmoAction::IDLE) {
                 g_action = GizmoAction::IDLE;
                 g_actionFlag = GizmoFlag::NONE;
+                g_interactionViewportIndex = -1;
+                g_translateDrag = TranslationDragState{};
                 g_rotDrag = RotationDragState{};
             }
         }
@@ -412,6 +483,11 @@ namespace Gizmo {
 
         if (!Editor::IsOpen()) return;
 
+        if (!g_visible) {
+            for (int i = 0; i < 4; i++) g_renderItems[i].clear();
+            return;
+        }
+
         for (int i = 0; i < 4; i++) {
             g_renderItems[i].clear();
 
@@ -420,7 +496,7 @@ namespace Gizmo {
 
             glm::mat4 projectionMatrix = viewport->GetProjectionMatrix();
 
-            glm::mat4 viewMatrix = Editor::GetViewportViewMatrix(i);
+            glm::mat4 viewMatrix = GetActiveEditorViewportViewMatrix(i);
             glm::mat4 projectionView = projectionMatrix * viewMatrix;
             glm::mat4 inverseViewMatrix = glm::inverse(viewMatrix);
             glm::vec3 camRight = glm::vec3(inverseViewMatrix[0]);
@@ -648,6 +724,11 @@ namespace Gizmo {
         g_sourceObjectOffset = offset;
     }
 
+    void SetVisible(bool visible) {
+        g_visible = visible;
+        if (!g_visible) CancelInteraction();
+    }
+
     const std::string GizmoFlagToString(const GizmoFlag& flag) {
         switch (flag) {
         case GizmoFlag::NONE: return "NONE";
@@ -688,7 +769,7 @@ namespace Gizmo {
             return gizmoHeightInWorld;
         }
         else {
-            glm::mat4 viewMatrix = Editor::GetViewportViewMatrix(viewportIndex);
+            glm::mat4 viewMatrix = GetActiveEditorViewportViewMatrix(viewportIndex);
             glm::mat4 inverseViewMatrix = glm::inverse(viewMatrix);
             glm::vec3 camPos = glm::vec3(inverseViewMatrix[3]);
             float distance = glm::length(g_gizmoPosition - camPos);

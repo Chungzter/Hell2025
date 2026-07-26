@@ -27,6 +27,7 @@ struct AnimatedGameObject {
     void EvaluateAnimation(float deltaTime);
     void FinalizeAnimation();
     void SetName(std::string name);
+    void SetOwnerObjectId(uint64_t objectId)                                           { m_ownerObjectId = objectId; }
     void SetSkinnedModel(const std::string& skinnedModelName, const std::string& presetName = UNDEFINED_STRING);
     void SetScale(float scale);
     void SetPosition(glm::vec3 position);
@@ -102,6 +103,7 @@ struct AnimatedGameObject {
 
     bool RenderingEnabled()                                                           { return m_animatedMeshNodes.RenderingEnabled(); }
     const uint64_t& GetObjectId() const                                               { return m_objectId; }
+    uint64_t GetOwnerObjectId() const                                                 { return m_ownerObjectId ? m_ownerObjectId : m_objectId; }
     const uint64_t& GetRagdollId() const                                              { return m_ragdollId; }
     const uint32_t GetBaseTransfromIndex() const                                      { return baseTransformIndex; }
     const uint32_t& GetIgnoredViewportIndex() const                                   { return m_animatedMeshNodes.GetIgnoredViewportIndex(); };
@@ -138,6 +140,7 @@ private:
     AnimatedMeshNodes m_animatedMeshNodes;
 
     uint64_t m_objectId = 0;
+    uint64_t m_ownerObjectId = 0;
     uint64_t m_ragdollId = 0;
     uint32_t baseTransformIndex = -1;
     bool m_useModelMatrixOverride = false;

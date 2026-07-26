@@ -56,6 +56,28 @@ void ChristmasLightSet::UpdateSequencePoints(const std::vector<SequencePoint>& s
     RecreateLightRenderItems();
 }
 
+void ChristmasLightSet::SetPosition(const glm::vec3& position) {
+    const glm::vec3 translation = position - m_position;
+    m_createInfo.position = position;
+    m_createInfo.sprialTopCenter += translation;
+
+    for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) {
+        sequencePoint.position += translation;
+    }
+
+    UpdateSequencePoints(m_createInfo.sequencePoints);
+}
+
+void ChristmasLightSet::SetSpacing(float spacing) {
+    m_createInfo.spacing = spacing;
+    UpdateSequencePoints(m_createInfo.sequencePoints);
+}
+
+void ChristmasLightSet::SetWireRadius(float wireRadius) {
+    m_createInfo.wireRadius = wireRadius;
+    UpdateSequencePoints(m_createInfo.sequencePoints);
+}
+
 void ChristmasLightSet::RecreateLightRenderItems() {
     // TODO but something like this...
     static Model* model = Hell::ResourceManager::GetModelByName("ChristmasLight");

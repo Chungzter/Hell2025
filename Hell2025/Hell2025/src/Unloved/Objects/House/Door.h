@@ -32,6 +32,9 @@ struct Door {
     void SetFrameBackMaterial(DoorMaterialType type);
     void SetDeadLockState(bool value);
     void SetDeadLockedAtInitState(bool value);
+    void SetOpenAtStartState(bool value);
+    void SetMaxOpenValue(float value);
+    void Reset();
     void DebugDraw();
     bool CameraFacingDoorWorldForward(const glm::vec3& cameraPositon, const glm::vec3& cameraForward);
 
@@ -57,6 +60,7 @@ struct Door {
     const DoorMaterialType& GetMaterialTypeFrameBack() const            { return m_createInfo.materialTypeFrameBack; }
     const bool GetDeadLockState() const                                 { return m_createInfo.hasDeadLock; }
     const bool GetDeadLockedAtInitState() const                         { return m_createInfo.deadLockedAtInit; }
+    const bool GetOpenAtStartState() const                              { return m_createInfo.openAtStart; }
     const AABB& GetPhsyicsAABB() const                                  { return m_physicsAABB; }
     const ClippingVolume& GetClippingVolume() const                     { return m_clippingVolume; }
 

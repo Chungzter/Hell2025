@@ -1,57 +1,7 @@
 #ifndef VULKAN_PUSH_CONSTANTS_GLSL
 #define VULKAN_PUSH_CONSTANTS_GLSL
 
-#include "../types.glsl"
-#include "VK_types.glsl"
-
-layout(buffer_reference, scalar) readonly buffer RenderItemBuffer {
-    RenderItem renderItems[];
-};
-
-layout(buffer_reference, scalar) readonly buffer ViewportDataBuffer {
-    ViewportData viewportData[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RendererDataBuffer {
-    RendererData rendererData;
-};
-
-layout(buffer_reference, scalar) readonly buffer MaterialBuffer {
-    Material materials[];
-};
-
-layout(buffer_reference, scalar) readonly buffer LightBuffer {
-    Light lights[];
-};
-
-layout(buffer_reference, scalar) readonly buffer SpriteSheetRenderItemBuffer {
-    SpriteSheetRenderItem spriteSheetRenderItems[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RenderItemUIBuffer {
-    RenderItemUI uiRenderItems[];
-};
-
-layout(buffer_reference, scalar) buffer TileLightsBuffer {
-    TileLights tileLights[];
-};
-
-layout(buffer_reference, scalar) buffer TileWorldBoundsBuffer {
-    TileWorldBounds tileWorldBounds[];
-};
-
-layout(buffer_reference, scalar, buffer_reference_align = 8)
-readonly buffer FrameAddressTable {
-    RenderItemBuffer renderItemBuffer;
-    ViewportDataBuffer viewportDataBuffer;
-    RendererDataBuffer rendererDataBuffer;
-    MaterialBuffer materialBuffer;
-    LightBuffer lightBuffer;
-    SpriteSheetRenderItemBuffer spriteSheetRenderItemBuffer;
-    RenderItemUIBuffer uiRenderItemBuffer;
-    TileLightsBuffer tileLightBuffer;
-    TileWorldBoundsBuffer tileWorldBoundsBuffer;
-};
+#include "VK_frame_address_table.glsl"
 
 struct PushConstantsUI {
     FrameAddressTable frame;
@@ -75,10 +25,10 @@ struct PointShadowFaceData {
 struct PushConstantsPointShadow {
     FrameAddressTable frame;
     uint64_t faceDataDeviceAddress;
+    uint64_t drawFaceDataIndicesDeviceAddress;
 };
 
 struct PushConstantsSkinning {
-    FrameAddressTable frame;
     uint64_t outputVerticesDeviceAddress;
     uint64_t previousSkinnedPositionsDeviceAddress;
     uint64_t inputVerticesDeviceAddress;
@@ -103,7 +53,6 @@ struct PushConstantsDebug3D {
 };
 
 struct PushConstantsDebug2D {
-    FrameAddressTable frame;
     float renderTargetWidth;
     float renderTargetHeight;
 };
@@ -127,17 +76,17 @@ struct PushConstantsMaterialResolve {
 struct PushConstantsDeferredLighting {
     FrameAddressTable frame;
 
-    uint64_t rayQueryBLASInstanceDataDeviceAddress;
-    uint64_t rayQueryMeshInstanceDataDeviceAddress;
+    uint64_t rayQueryBLASDataDeviceAddress;
+    uint64_t rayQuerySceneRenderItemIndicesDeviceAddress;
     int brdfLutTextureIndex;
-    uint padding0;
+    uint viewportIndex;
 };
 
 struct PushConstantsIndirectSpecularAMDInput {
     FrameAddressTable frame;
 
-    uint64_t rayQueryBLASInstanceDataDeviceAddress;
-    uint64_t rayQueryMeshInstanceDataDeviceAddress;
+    uint64_t rayQueryBLASDataDeviceAddress;
+    uint64_t rayQuerySceneRenderItemIndicesDeviceAddress;
     int blueNoiseTextureIndex;
     uint frameIndex;
     uint samplesPerQuad;
@@ -159,6 +108,8 @@ struct PushConstantsIndirectSpecularAMDPrefilter {
 
 struct PushConstantsSpriteSheet {
     FrameAddressTable frame;
+    uint viewportIndex;
+    uint padding0;
 };
 
 struct PushConstantsPostProcessing {
@@ -167,10 +118,14 @@ struct PushConstantsPostProcessing {
 
 struct PushConstantsHair {
     FrameAddressTable frame;
+    uint viewportIndex;
+    uint padding0;
 };
 
 struct PushConstantsEmissive {
     FrameAddressTable frame;
+    uint viewportIndex;
+    uint padding0;
 };
 
 struct PushConstantsEmissiveBloomFilter {
@@ -219,7 +174,6 @@ struct PushConstantsDDGIRaytraceScene {
 };
 
 struct PushConstantsDDGIPointCloudBaseColor {
-    FrameAddressTable frame;
     uint64_t pointCloudDeviceAddress;
     uint64_t pointCloudTextureInfoDeviceAddress;
     uint pointCount;
@@ -260,7 +214,6 @@ struct PushConstantsDDGIProbeDebug {
 };
 
 struct PushConstantsDDGIProbePointIndices {
-    FrameAddressTable frame;
     uint64_t pointCloudDeviceAddress;
     uint64_t pointCloudGridOffsetsDeviceAddress;
     uint64_t pointCloudGridCountsDeviceAddress;
@@ -279,7 +232,6 @@ struct PushConstantsDDGIProbePointIndices {
 };
 
 struct PushConstantsDDGIProbeStateUpdate {
-    FrameAddressTable frame;
     uint64_t probeStatesDeviceAddress;
     uint64_t dirtyDoorAABBsDeviceAddress;
     vec3 volumeOrigin;
@@ -306,7 +258,6 @@ struct PushConstantsDDGIProbeRelevance {
 };
 
 struct PushConstantsDDGIProbeDistanceList {
-    FrameAddressTable frame;
     uint64_t probeStatesDeviceAddress;
     uint64_t probeDistanceCounterDeviceAddress;
     uint64_t probeDistanceIndicesDeviceAddress;
@@ -315,13 +266,11 @@ struct PushConstantsDDGIProbeDistanceList {
 };
 
 struct PushConstantsDDGIProbeDistanceDispatchArgs {
-    FrameAddressTable frame;
     uint64_t probeDistanceCounterDeviceAddress;
     uint64_t probeDistanceDispatchArgsDeviceAddress;
 };
 
 struct PushConstantsDDGIProbeIrradianceDirtyPointCheck {
-    FrameAddressTable frame;
     uint64_t probeStatesDeviceAddress;
     uint64_t probePointIndicesDeviceAddress;
     uint64_t probePointOffsetsDeviceAddress;
@@ -332,7 +281,6 @@ struct PushConstantsDDGIProbeIrradianceDirtyPointCheck {
 };
 
 struct PushConstantsDDGIProbeIrradianceList {
-    FrameAddressTable frame;
     uint64_t probeStatesDeviceAddress;
     uint64_t probeIrradianceCounterDeviceAddress;
     uint64_t probeIrradianceIndicesDeviceAddress;
@@ -341,13 +289,11 @@ struct PushConstantsDDGIProbeIrradianceList {
 };
 
 struct PushConstantsDDGIProbeIrradianceDispatchArgs {
-    FrameAddressTable frame;
     uint64_t probeIrradianceCounterDeviceAddress;
     uint64_t probeIrradianceDispatchArgsDeviceAddress;
 };
 
 struct PushConstantsDDGIProbeDistance {
-    FrameAddressTable frame;
     uint64_t probeStatesDeviceAddress;
     uint64_t probeDistanceCounterDeviceAddress;
     uint64_t probeDistanceIndicesDeviceAddress;
@@ -362,7 +308,6 @@ struct PushConstantsDDGIProbeDistance {
 };
 
 struct PushConstantsDDGIProbeIrradiance {
-    FrameAddressTable frame;
     uint64_t pointCloudDeviceAddress;
     uint64_t probeStatesDeviceAddress;
     uint64_t probeIrradianceCounterDeviceAddress;
@@ -397,7 +342,6 @@ struct PushConstantsDDGIProbeIrradianceTexture {
 };
 
 struct PushConstantsDDGIProbeBorder {
-    FrameAddressTable frame;
     vec3 volumeOrigin;
     float probeSpacing;
     ivec3 probeCounts;

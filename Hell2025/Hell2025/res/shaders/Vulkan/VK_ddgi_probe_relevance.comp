@@ -7,6 +7,7 @@
 #include "../common/ddgi.glsl"
 #include "../common/normal_encoding.glsl"
 #include "../common/reconstruction.glsl"
+#include "../common/util.glsl"
 #include "../common/viewport.glsl"
 #include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/Vulkan/VK_push_constants.glsl"
@@ -21,6 +22,7 @@ layout(push_constant, scalar) uniform PushConstants {
 } pc;
 
 layout(buffer_reference, scalar) buffer ProbeStatesBuffer { ProbeState probeStates[]; };
+
 DDGIVolume GetVolume() {
     DDGIVolume volume;
     volume.origin = pc.data.volumeOrigin;
@@ -39,17 +41,19 @@ void main() {
 
     RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
     ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
-    uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(pixelCoords, gBufferSize, rendererData.splitscreenMode);
-    ViewportData viewport = viewportDataBuffer.viewportData[viewportIndex];
+    uint viewportIndex = ViewportIndexFromPixel(pixelCoords, gBufferSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+    mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    vec3 viewPosition = viewportDataBuffer.viewportData[viewportIndex].viewPos.xyz;
 
     vec4 normalXYRoughnessMisc = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixelCoords, 0);
     vec3 fragNormal = DecodeOct(normalXYRoughnessMisc.rg);
     if (dot(fragNormal, fragNormal) < 0.0001) return;
 
     float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixelCoords, 0).r;
-    vec2 viewportUV = ViewportUVFromPixel_VK(pixelCoords, gBufferSize, viewport);
-    vec3 fragPosition = WorldPosFromDepth_VK(viewportUV, depth, viewport.inverseProjectionViewReverseZ);
-    vec3 surfaceBias = DDGIGetSurfaceBias(fragPosition, fragNormal, viewport.viewPos.xyz);
+    vec2 viewportUV = ViewportUVFromPixel(pixelCoords, gBufferSize, viewportRect);
+    vec3 fragPosition = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
+    vec3 surfaceBias = DDGIGetSurfaceBias(fragPosition, fragNormal, viewPosition);
     vec3 biasedWorldPosition = fragPosition + surfaceBias;
 
     DDGIVolume volume = GetVolume();

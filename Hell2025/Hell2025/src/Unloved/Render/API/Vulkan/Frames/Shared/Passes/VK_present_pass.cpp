@@ -7,7 +7,7 @@
 
 namespace VulkanRenderer {
 
-    void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView) {
+    void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView, VkExtent2D extent) {
         ProfilerVulkanZoneFunction();
 
         AllocatedImage* presentImage = VulkanResourceManager::GetAllocatedImage("Present");
@@ -16,7 +16,6 @@ namespace VulkanRenderer {
         if (!presentImage) return;
         if (!pipeline || !staticDescriptorSet) return;
 
-        VkExtent2D extent = presentImage->GetExtent2D();
         presentImage->Sync(commandBuffer, VK_ACCESS_2_SHADER_READ_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
 
         VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };

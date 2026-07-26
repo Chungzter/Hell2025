@@ -8,6 +8,7 @@
 
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorSession.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
 #include "Unloved/UI/Imgui/ImguiBackEnd.h"
@@ -18,8 +19,12 @@ namespace Unloved {
 void UpdateLazyKeypresses() {
     // Bail early if ImGui is using the keyboard
     if (ImGuiBackEnd::HasKeyboardFocus()) return;
+    if (EditorSession::WantsKeyboardCapture()) return;
 
-    if (Hell::Input::KeyPressed(HELL_KEY_GRAVE_ACCENT)) Debug::ToggleMenuVisiblity();
+    if (Hell::Input::KeyPressed(HELL_KEY_GRAVE_ACCENT)) {
+        if (Editor::IsOpen()) EditorSession::Close();
+        else Debug::ToggleMenuVisiblity();
+    }
 
     // Function keys
     if (Hell::Input::KeyPressed(HELL_KEY_F1)) World::NewRun();
@@ -35,7 +40,7 @@ void UpdateLazyKeypresses() {
     if (Hell::Input::KeyPressed(HELL_KEY_K)) Unloved::Session::RespawnPlayers();
 
     // Renderer
-    if (Renderer::GameIsRendering()) {
+    if (Renderer::GameIsRendering() && !EditorSession::IsActive()) {
         if (Hell::Input::KeyPressed(HELL_KEY_H))             Renderer::HotloadShaders();
         if (Hell::Input::KeyPressed(HELL_KEY_I))             Renderer::ToggleRagdollRendering();
         if (Hell::Input::KeyPressed(HELL_KEY_M))             Renderer::ToggleScreenSpaceReflections();
@@ -57,7 +62,7 @@ void UpdateLazyKeypresses() {
     }
 
     // Backspace resets state, unless menu is open, then it is BACK
-    if (!Debug::IsMenuVisible()) {
+    if (!Debug::IsMenuVisible() && !EditorSession::IsActive()) {
         if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    World::CleanUpCasings();
         if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    World::CleanUpDecals();
         if (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE))    BloodSystemOLD::CleanUp();

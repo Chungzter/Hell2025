@@ -5,12 +5,12 @@
 
 layout(location = 0) out uvec2 FragmentOutput;
 
-layout(location = 0) flat in int v_globalInstanceIndex;
+layout(location = 0) flat in int v_sceneRenderItemIndex;
 layout(location = 1) in vec2 v_uv;
 
 readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsBuffer { Material materials[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_INSTANCE_DATA) buffer renderItemsBuffer  { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) buffer sceneRenderItemsBuffer { RenderItem sceneRenderItems[]; };
 
 const float bayerMatrix[16] = float[16](
     0.0,    0.5,    0.125,  0.625,
@@ -23,7 +23,7 @@ uniform uint u_frameCount;
 
 void main() {
 
-    RenderItem renderItem = renderItems[v_globalInstanceIndex];
+    RenderItem renderItem = sceneRenderItems[v_sceneRenderItemIndex];
     Material material = materials[renderItem.materialIndex];
     float alpha = texture(sampler2D(textureSamplers[material.basecolor]), v_uv).a;
     //float alpha = texture(sampler2D(textureSamplers[material.opacity]), v_uv).r;
@@ -57,6 +57,6 @@ void main() {
         }
     }
 
-    FragmentOutput.x = uint(v_globalInstanceIndex);
+    FragmentOutput.x = uint(v_sceneRenderItemIndex);
     FragmentOutput.y = uint(gl_PrimitiveID);
 }

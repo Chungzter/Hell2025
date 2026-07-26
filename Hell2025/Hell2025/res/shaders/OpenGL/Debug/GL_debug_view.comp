@@ -8,6 +8,7 @@
 #include "../../common/reconstruction.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
 
@@ -93,12 +94,8 @@ vec3 GetRMA(ivec2 px) {
 
 vec3 GetCameraNdotL(ivec2 px) {
     ivec2 outputImageSize = imageSize(u_outputImage);
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
-
-    ViewportData viewportData = viewportDataArr[viewportIndex];
-    mat4 inverseView = viewportData.inverseView;
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    mat4 inverseView = viewportDataArr[viewportIndex].inverseView;
 
     vec3 normal = GetNormal(px);
     vec3 lightDir = normalize(inverseView[2].xyz);
@@ -110,7 +107,7 @@ vec3 GetCameraNdotL(ivec2 px) {
 
 vec3 GetIndirectDiffuse(ivec2 px) {
     ivec2 outputImageSize = imageSize(u_outputImage);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+    vec2 screenUV = ScreenUVFromPixel(px, outputImageSize);
     vec3 indirectDiffuseTexture =  texture(IndirectDiffuseTexture, screenUV).rgb;
     vec3 result = Tonemap_ACES(indirectDiffuseTexture);
     result = pow(result, vec3(1.0 / 2.2));
@@ -171,15 +168,13 @@ vec3 GetDepth(ivec2 px) {
 
 vec3 GetWorldPosition(ivec2 px) {
     ivec2 outputImageSize = imageSize(u_outputImage);
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, outputImageSize, rendererData.splitscreenMode);
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
-    vec2 viewportUV = ScreenUVToViewportUV(screenUV, viewportDataArr[viewportIndex]);
-
-    ViewportData viewportData = viewportDataArr[viewportIndex];
-    mat4 inverseProjectionViewReverseZ = viewportData.inverseJitteredProjectionViewReverseZ;
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+    vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
+    mat4 inverseProjectionViewReverseZ = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
 
     float depth = texelFetch(u_depthTexture, px, 0).r;
-    return WorldPosFromDepth_GL(viewportUV, depth, inverseProjectionViewReverseZ);
+    return WorldPosFromDepth(viewportUV, depth, inverseProjectionViewReverseZ);
 }
 
 vec3 GetEmissive(ivec2 px) {

@@ -15,6 +15,7 @@ struct Fence {
     ~Fence() = default;
 
     void AddControlPoint(const glm::vec2& controlPoint2D);
+    void UpdateControlPoints(const std::vector<glm::vec2>& controlPoints2D);
     void Init();
     void Update();
     void CleanUp();

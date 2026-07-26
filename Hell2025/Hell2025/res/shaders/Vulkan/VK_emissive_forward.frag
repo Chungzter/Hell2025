@@ -23,7 +23,7 @@ layout(location = 0) in vec2 v_uv;
 layout(location = 1) flat in uint v_globalInstanceIndex;
 
 void main() {
-    RenderItem renderItem = pc.data.frame.renderItemBuffer.renderItems[v_globalInstanceIndex];
+    RenderItem renderItem = pc.data.frame.sceneRenderItemBuffer.renderItems[v_globalInstanceIndex];
     Material material = pc.data.frame.materialBuffer.materials[renderItem.materialIndex];
     vec3 emissiveColor = vec3(renderItem.emissiveR, renderItem.emissiveG, renderItem.emissiveB);
 

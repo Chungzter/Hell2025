@@ -11,7 +11,7 @@
 #include "../common/lighting.glsl"
 #include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/Vulkan/VK_push_constants.glsl"
-#include "../common/Vulkan/VK_ray_query.glsl"
+#include "../common/Vulkan/VK_ray_query_triangle.glsl"
 
 layout(local_size_x = 128) in;
 

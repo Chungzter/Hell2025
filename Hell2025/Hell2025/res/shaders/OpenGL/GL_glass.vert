@@ -27,13 +27,13 @@ readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewpo
 	ViewportData viewportData[];
 };
 
-readonly restrict layout(std430, binding = SSBO_IDX_GLASS_INSTANCE_DATA) buffer glassRenderItemsBuffer {
-    RenderItem glassRenderItems[];
-};
+readonly restrict layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) buffer sceneRenderItemsBuffer { RenderItem sceneRenderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_DRAW_RENDER_ITEM_INDICES) buffer drawRenderItemIndicesBuffer { uint drawRenderItemIndices[]; };
 
 void main() {
     int globalInstanceIndex = gl_BaseInstance + gl_InstanceID;
-    RenderItem renderItem = glassRenderItems[globalInstanceIndex];
+    uint sceneRenderItemIndex = drawRenderItemIndices[globalInstanceIndex];
+    RenderItem renderItem = sceneRenderItems[sceneRenderItemIndex];
 
 	mat4 projectionView = viewportData[u_viewportIndex].jitteredProjectionViewReverseZ;
 	mat4 inverseView = viewportData[u_viewportIndex].inverseView;

@@ -31,7 +31,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
-        OpenGL::BindSSBO(SSBO_IDX_GLASS_INSTANCE_DATA, "GlassInstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
         OpenGL::BindSSBO(SSBO_IDX_GLASS_LIGHT_RANGES, "GlassLightRanges");
         OpenGL::BindSSBO(SSBO_IDX_GLASS_LIGHT_INDICES, "GlassLightIndices");
         OpenGL::BindSSBO(SSBO_IDX_GLASS_SPOT_LIGHT_RANGES, "GlassSpotLightRanges");

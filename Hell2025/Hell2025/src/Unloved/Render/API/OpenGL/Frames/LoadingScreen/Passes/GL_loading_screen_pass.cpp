@@ -15,7 +15,7 @@ namespace OpenGL::Renderer {
         OpenGLFrameBuffer& presentFbo = OpenGL::ResourceManager::GetFrameBuffer("Present");
         presentFbo.ClearAttachment("Color", 0.0f, 0.0f, 0.0f, 0.0f);
 
-        UIPass();
+        GameUIPass();
 
         PresentFinalImage(presentFbo);
     }

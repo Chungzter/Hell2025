@@ -1,5 +1,5 @@
-#ifndef VULKAN_RAY_QUERY_GLSL
-#define VULKAN_RAY_QUERY_GLSL
+#ifndef VULKAN_RAY_QUERY_TRIANGLE_GLSL
+#define VULKAN_RAY_QUERY_TRIANGLE_GLSL
 
 struct RayQueryTriangleHit {
     bool hitFound;

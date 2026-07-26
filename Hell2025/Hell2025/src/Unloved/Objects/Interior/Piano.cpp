@@ -204,6 +204,17 @@ void Piano::SetPosition(glm::vec3 position) {
     NavMeshManager::MarkStaticDirty();
 }
 
+void Piano::SetRotation(glm::vec3 rotation) {
+    m_createInfo.rotation = rotation;
+    m_transform.rotation = rotation;
+
+    // Update collision mesh rotation
+    Hell::Physics::SetRigidStaticWorldTransform(m_rigidStaticId, m_transform.to_mat4());
+
+    CalculatePianoKeyWorldspaceCenters();
+    NavMeshManager::MarkStaticDirty();
+}
+
 void Piano::CleanUp() {
     Hell::Physics::MarkRigidStaticForRemoval(m_rigidStaticId);
 	m_meshNodes.CleanUp();

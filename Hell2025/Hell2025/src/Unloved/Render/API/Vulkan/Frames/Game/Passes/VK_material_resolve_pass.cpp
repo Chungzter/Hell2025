@@ -18,11 +18,6 @@ namespace VulkanRenderer {
         AllocatedImage* normalImage = VulkanResourceManager::GetAllocatedImage("NormalXYRoughnessMisc");
         AllocatedImage* velocityImage = VulkanResourceManager::GetAllocatedImage("VelocityXYOcclusionSubSurface");
         AllocatedImage* amdMaterialRoughnessImage = VulkanResourceManager::GetAllocatedImage("IndirectSpecularAMDMaterialRoughness");
-        VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
-        VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
-        VulkanBuffer* rendererDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.rendererData);
-        VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
-        VulkanBuffer* gpuLightsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.lights);
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
         VulkanMeshBuffer* assetGeometry = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
         VulkanMeshBuffer* proceduralGeometry = VulkanResourceManager::GetMeshBuffer("Procedural");
@@ -35,10 +30,6 @@ namespace VulkanRenderer {
         if (!normalImage) return;
         if (!velocityImage) return;
         if (!amdMaterialRoughnessImage) return;
-        if (!renderItemBuffer) return;
-        if (!viewportDataBuffer) return;
-        if (!rendererDataBuffer) return;
-        if (!materialsBuffer) return;
         if (!staticDescriptorSet) return;
         if (!assetGeometry) return;
         if (!proceduralGeometry) return;

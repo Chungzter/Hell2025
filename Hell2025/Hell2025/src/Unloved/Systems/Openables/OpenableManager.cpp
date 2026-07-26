@@ -20,6 +20,10 @@ namespace Unloved::OpenableManager {
         return openableId;
     }
 
+    void RemoveOpenable(uint32_t openableId) {
+        g_openables.erase(openableId);
+    }
+
     void Update(float deltaTime) {
         for (auto& pair : g_openables) {
             Openable& openable = pair.second;

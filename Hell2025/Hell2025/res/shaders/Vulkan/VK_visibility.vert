@@ -15,21 +15,20 @@ layout(push_constant, scalar) uniform PushConstants {
 layout(location = 0) in vec3 a_position;
 layout(location = 2) in vec2 a_uv;
 
-layout(location = 0) flat out uint v_globalInstanceIndex;
+layout(location = 0) flat out uint v_sceneRenderItemIndex;
 layout(location = 1) out vec2 v_uv;
 layout(location = 2) flat out int v_baseColorTextureIndex;
 
 void main() {
-    RenderItemBuffer renderItems = pc.data.frame.renderItemBuffer;
+    RenderItemBuffer sceneRenderItems = pc.data.frame.sceneRenderItemBuffer;
+    DrawRenderItemIndexBuffer drawRenderItemIndices = pc.data.frame.drawRenderItemIndexBuffer;
     MaterialBuffer materials = pc.data.frame.materialBuffer;
     ViewportDataBuffer viewportData = pc.data.frame.viewportDataBuffer;
 
-    uint baseInstance = uint(gl_BaseInstanceARB);
-    uint viewportIndex = baseInstance >> VIEWPORT_INDEX_SHIFT;
-    uint instanceOffset = baseInstance & uint((1 << VIEWPORT_INDEX_SHIFT) - 1);
-    uint globalInstanceIndex = instanceOffset + (uint(gl_InstanceIndex) - baseInstance);
+    uint sceneRenderItemIndex = drawRenderItemIndices.renderItemIndices[uint(gl_InstanceIndex)];
+    uint viewportIndex = pc.data.viewportIndex;
 
-    RenderItem renderItem = renderItems.renderItems[globalInstanceIndex];
+    RenderItem renderItem = sceneRenderItems.renderItems[sceneRenderItemIndex];
     Material material = materials.materials[renderItem.materialIndex];
     mat4 projectionView = viewportData.viewportData[viewportIndex].projectionViewReverseZ;
     vec4 worldPos = renderItem.modelMatrix * vec4(a_position, 1.0);
@@ -41,7 +40,7 @@ void main() {
         worldPos.xyz += awayFromCamera * depthBiasMeters;
     }
 
-    v_globalInstanceIndex = globalInstanceIndex;
+    v_sceneRenderItemIndex = sceneRenderItemIndex;
     v_uv = a_uv;
     v_baseColorTextureIndex = material.basecolor;
     gl_Position = projectionView * worldPos;

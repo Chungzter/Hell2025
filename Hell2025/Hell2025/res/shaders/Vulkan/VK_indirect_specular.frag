@@ -24,6 +24,7 @@ layout(set = 0, binding = DESC_IDX_TEXTURE_ARRAYS_RG16F) uniform texture2DArray 
 layout(set = 0, binding = DESC_IDX_TEXTURE_ARRAYS_RGBA16F) uniform texture2DArray textureArraysRGBA16F[];
 layout(set = 1, binding = 0) uniform accelerationStructureEXT u_RayQueryAccelerationStructure;
 
+#include "../common/Vulkan/VK_ray_query_scene.glsl"
 #include "VK_point_shadows.glsl"
 
 #include "VK_indirect_specular_amd_apply.glsl"
@@ -50,76 +51,12 @@ const uint AMD_BLUE_NOISE_SAMPLE_COUNT = 32u;
 const float DDGI_REFLECTION_ENCODING_GAMMA = 5.0;
 const float DDGI_REFLECTION_TWO_PI = 6.2831853071795864;
 
-// Must match the ray query vertex buffer layout
-struct PackedVertex {
-    float vx, vy, vz;
-    float nx, ny, nz;
-    float u, v;
-    float tx, ty, tz;
-};
-
-// TLAS instanceCustomIndex points here
-struct RayQueryBLASInstanceData {
-    uint meshInstanceDataOffset;
-    uint meshInstanceDataCount;
-    uint padding0;
-    uint padding1;
-};
-
-struct RayQueryMesh {
-    uint baseVertex;
-    uint baseIndex;
-    uint vertexCount;
-    uint indexCount;
-};
-
-struct RayQueryMaterial {
-    uint blendingMode;
-    int materialIndex;
-    uint shadowBit;
-    uint padding0;
-};
-
-// One entry per mesh inside the hit BLAS
-struct RayQueryMeshInstanceData {
-    uint64_t vertexBufferDeviceAddress;
-    uint64_t indexBufferDeviceAddress;
-    RayQueryMesh mesh;
-    RayQueryMaterial material;
-};
-
-struct RayHit {
-    bool found;
-    vec3 hitPos;
-    vec3 hitNormal;
-    vec3 rayDir;
-    float rayT;
-    int materialIndex;
-    vec2 uv;
-};
-
 struct Surface {
     vec3 worldPos;
     vec3 normal;
     vec3 linearBaseColor;
     float roughness;
     float metallic;
-};
-
-layout(buffer_reference, scalar) readonly buffer VertexBuffer {
-    PackedVertex vertices[];
-};
-
-layout(buffer_reference, scalar) readonly buffer IndexBuffer {
-    uint indices[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RayQueryBLASInstanceDataBuffer {
-    RayQueryBLASInstanceData blasInstanceData[];
-};
-
-layout(buffer_reference, scalar) readonly buffer RayQueryMeshInstanceDataBuffer {
-    RayQueryMeshInstanceData meshInstanceData[];
 };
 
 layout(buffer_reference, scalar) readonly buffer ProbeStatesBuffer {
@@ -171,34 +108,15 @@ vec3 EvaluatePointLight(vec3 lightPos, vec3 lightColor, float lightRadius, float
     return brdf * ndotl * attenuation * clamp(lightColor, 0.0, 1.0);
 }
 
-Surface SurfaceFromRayHit(RayHit rayhit) {
-    // Copy the hit geometry
+Surface SurfaceFromRayHit(RayQueryContext context, RayQueryHit rayhit, float materialLod, float normalLod) {
+    RayQueryMaterialSample materialSample = EvaluateRayHitMaterial(context, rayhit, materialLod, normalLod);
+
     Surface surface;
     surface.worldPos = rayhit.hitPos;
-    surface.normal = rayhit.hitNormal;
-    surface.linearBaseColor = vec3(0.0);
-    surface.roughness = 1.0;
-    surface.metallic = 0.0;
-
-    // Sample the linear base color
-    MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
-    Material material = materialBuffer.materials[rayhit.materialIndex];
-
-    if (material.basecolor >= 0) {
-        uint textureIndex = uint(material.basecolor);
-        vec3 baseColor = textureLod(sampler2D(textures[nonuniformEXT(textureIndex)], textureSamplers[nonuniformEXT(textureIndex)]), rayhit.uv, 0.0).rgb;
-        surface.linearBaseColor = pow(baseColor, vec3(2.2));
-    }
-
-    // Sample roughness and metallic when available
-    if (material.rma >= 0) {
-        uint rmaTextureIndex = uint(material.rma);
-        vec4 rma = textureLod(sampler2D(textures[nonuniformEXT(rmaTextureIndex)], textureSamplers[nonuniformEXT(rmaTextureIndex)]), rayhit.uv, 0.0);
-        surface.roughness = rma.r;
-        surface.metallic = rma.g;
-    }
-
-    surface.roughness = clamp(surface.roughness, 0.0, 1.0);
+    surface.normal = materialSample.normal;
+    surface.linearBaseColor = materialSample.linearBaseColor;
+    surface.roughness = materialSample.roughness;
+    surface.metallic = materialSample.metallic;
 
     return surface;
 }
@@ -233,146 +151,6 @@ vec3 DecodeAMDDeferredHitNormal(vec2 encoded) {
     normal.xy += mix(vec2(fold), vec2(-fold), greaterThanEqual(normal.xy, vec2(0.0)));
 
     return normalize(normal);
-}
-
-RayHit ClosestHit(vec3 rayOrigin, vec3 rayDir, float minDistance, float maxDistance) {
-    RayHit result;
-    result.found = false;
-    result.hitPos = vec3(0.0);
-    result.hitNormal = vec3(0.0, 1.0, 0.0);
-    result.rayDir = rayDir;
-    result.rayT = 0.0;
-    result.materialIndex = -1;
-    result.uv = vec2(0.0);
-
-    rayQueryEXT rayQuery;
-    rayQueryInitializeEXT(rayQuery, u_RayQueryAccelerationStructure, gl_RayFlagsNoneEXT, 0xff, rayOrigin,minDistance,rayDir,maxDistance);
-
-    while (rayQueryProceedEXT(rayQuery)) {
-        uint candidateType = rayQueryGetIntersectionTypeEXT(rayQuery, false);
-        if (candidateType != gl_RayQueryCandidateIntersectionTriangleEXT) {
-            continue;
-        }
-
-        RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pc.data.rayQueryBLASInstanceDataDeviceAddress);
-        RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pc.data.rayQueryMeshInstanceDataDeviceAddress);
-
-        uint instanceIndex = rayQueryGetIntersectionInstanceCustomIndexEXT(rayQuery, false);
-        RayQueryBLASInstanceData blasInstanceData = rayQueryBLASInstanceDataBuffer.blasInstanceData[instanceIndex];
-
-        uint geometryIndex = rayQueryGetIntersectionGeometryIndexEXT(rayQuery, false);
-        if (geometryIndex >= blasInstanceData.meshInstanceDataCount) {
-            continue;
-        }
-
-        RayQueryMeshInstanceData meshInstanceData = rayQueryMeshInstanceDataBuffer.meshInstanceData[blasInstanceData.meshInstanceDataOffset + geometryIndex];
-
-        if (meshInstanceData.material.blendingMode == BLENDING_MODE_MIRROR ||
-            meshInstanceData.material.materialIndex < 0) {
-            continue;
-        }
-
-        rayQueryConfirmIntersectionEXT(rayQuery);
-    }
-
-    uint intersectionType = rayQueryGetIntersectionTypeEXT(rayQuery, true);
-
-    if (intersectionType == gl_RayQueryCommittedIntersectionNoneEXT) {
-        return result;
-    }
-
-    RayQueryBLASInstanceDataBuffer rayQueryBLASInstanceDataBuffer = RayQueryBLASInstanceDataBuffer(pc.data.rayQueryBLASInstanceDataDeviceAddress);
-    RayQueryMeshInstanceDataBuffer rayQueryMeshInstanceDataBuffer = RayQueryMeshInstanceDataBuffer(pc.data.rayQueryMeshInstanceDataDeviceAddress);
-
-    uint instanceIndex = rayQueryGetIntersectionInstanceCustomIndexEXT(rayQuery, true);
-    RayQueryBLASInstanceData blasInstanceData = rayQueryBLASInstanceDataBuffer.blasInstanceData[instanceIndex];
-
-    uint geometryIndex = rayQueryGetIntersectionGeometryIndexEXT(rayQuery, true);
-
-    if (geometryIndex >= blasInstanceData.meshInstanceDataCount) {
-        return result;
-    }
-
-    RayQueryMeshInstanceData meshInstanceData = rayQueryMeshInstanceDataBuffer.meshInstanceData[ blasInstanceData.meshInstanceDataOffset + geometryIndex];
-
-    uint primitiveIndex = rayQueryGetIntersectionPrimitiveIndexEXT(rayQuery, true);
-    vec2 barycentrics = rayQueryGetIntersectionBarycentricsEXT(rayQuery, true);
-    mat4x3 objectToWorld = rayQueryGetIntersectionObjectToWorldEXT(rayQuery, true);
-    float rayT = rayQueryGetIntersectionTEXT(rayQuery, true);
-
-    if (meshInstanceData.material.materialIndex < 0) {
-        return result;
-    }
-
-    uint localIndexOffset = primitiveIndex * 3u;
-    if (localIndexOffset + 2u >= meshInstanceData.mesh.indexCount) {
-        return result;
-    }
-
-    IndexBuffer indexBuffer = IndexBuffer(meshInstanceData.indexBufferDeviceAddress);
-    uint i0 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 0u] + meshInstanceData.mesh.baseVertex;
-    uint i1 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 1u] + meshInstanceData.mesh.baseVertex;
-    uint i2 = indexBuffer.indices[meshInstanceData.mesh.baseIndex + localIndexOffset + 2u] + meshInstanceData.mesh.baseVertex;
-    uint vertexEnd = meshInstanceData.mesh.baseVertex + meshInstanceData.mesh.vertexCount;
-
-    if (i0 >= vertexEnd || i1 >= vertexEnd || i2 >= vertexEnd) {
-        return result;
-    }
-
-    VertexBuffer vertexBuffer = VertexBuffer(meshInstanceData.vertexBufferDeviceAddress);
-    PackedVertex v0 = vertexBuffer.vertices[i0];
-    PackedVertex v1 = vertexBuffer.vertices[i1];
-    PackedVertex v2 = vertexBuffer.vertices[i2];
-
-    vec3 weights = vec3(
-        1.0 - barycentrics.x - barycentrics.y,
-        barycentrics.x,
-        barycentrics.y);
-
-    result.found = true;
-    result.hitPos = rayOrigin + rayDir * rayT;
-    result.rayT = rayT;
-    result.materialIndex = meshInstanceData.material.materialIndex;
-
-    result.uv =
-        vec2(v0.u, v0.v) * weights.x +
-        vec2(v1.u, v1.v) * weights.y +
-        vec2(v2.u, v2.v) * weights.z;
-
-    vec3 objectNormal =
-        vec3(v0.nx, v0.ny, v0.nz) * weights.x +
-        vec3(v1.nx, v1.ny, v1.nz) * weights.y +
-        vec3(v2.nx, v2.ny, v2.nz) * weights.z;
-
-    vec3 objectTangent =
-        vec3(v0.tx, v0.ty, v0.tz) * weights.x +
-        vec3(v1.tx, v1.ty, v1.tz) * weights.y +
-        vec3(v2.tx, v2.ty, v2.tz) * weights.z;
-
-    result.hitNormal = normalize(objectToWorld * vec4(objectNormal, 0.0));
-
-    vec3 unnormalizedWorldTangent = objectToWorld * vec4(objectTangent, 0.0);
-    bool hasWorldTangent = any(greaterThan(abs(unnormalizedWorldTangent), vec3(0.0)));
-
-    vec3 worldTangent = hasWorldTangent
-        ? normalize(unnormalizedWorldTangent)
-        : vec3(0.0);
-
-    vec3 worldBitangent = hasWorldTangent
-        ? normalize(cross(result.hitNormal, worldTangent))
-        : vec3(0.0);
-
-    MaterialBuffer materialBuffer = pc.data.frame.materialBuffer;
-    Material material = materialBuffer.materials[result.materialIndex];
-
-    if (material.normal >= 0 && hasWorldTangent) {uint normalTextureIndex = uint(material.normal);
-        vec3 normalMap = textureLod(sampler2D(textures[nonuniformEXT(normalTextureIndex)], textureSamplers[nonuniformEXT(normalTextureIndex)]), result.uv, 2.0).rgb;
-        normalMap = normalMap * 2.0 - 1.0;
-
-        result.hitNormal = normalize(mat3(worldTangent, worldBitangent, result.hitNormal) * normalMap);
-    }
-
-    return result;
 }
 
 void BuildAMDOrthonormalBasis(vec3 normal, out vec3 tangent, out vec3 bitangent) {
@@ -545,14 +323,15 @@ vec3 GetIndirectSpecularSample(Surface surface, vec3 viewDirToCamera, vec3 camer
 
     float rayMaxDistance = AMD_REFLECTION_MAX_DISTANCE * exp(-surface.roughness * AMD_REFLECTION_RAY_LENGTH_EXP_FACTOR);
 
-    RayHit reflectedHit = ClosestHit(reflectionOrigin, reflectionRayDir, AMD_REFLECTION_RAY_T_MIN, rayMaxDistance);
+    RayQueryContext rayQueryContext = CreateRayQueryContext(pc.data.rayQueryBLASDataDeviceAddress, pc.data.rayQuerySceneRenderItemIndicesDeviceAddress, uint64_t(pc.data.frame.sceneRenderItemBuffer), uint64_t(pc.data.frame.materialBuffer));
+    RayQueryHit reflectedHit = TraceClosestReflectionHit(u_RayQueryAccelerationStructure, rayQueryContext, reflectionOrigin, reflectionRayDir, AMD_REFLECTION_RAY_T_MIN, rayMaxDistance);
 
     if (reflectedHit.found) {
         // AMD traces from the biased origin, but reconstructs the position used
         // for deferred hit shading from the unbiased primary surface.
         reflectedHit.hitPos = surface.worldPos + reflectionRayDir * reflectedHit.rayT;
         reflectedHitDistance = reflectedHit.rayT;
-        Surface reflectedSurface = SurfaceFromRayHit(reflectedHit);
+        Surface reflectedSurface = SurfaceFromRayHit(rayQueryContext, reflectedHit, 0.0, 2.0);
 
         if (useDDGIReflections) {
             vec3 probeIrradiance = SampleDDGIReflectionIrradiance(reflectedSurface.worldPos, reflectedSurface.normal, surface.worldPos) * IRRADIANCE_DAMPENING;
@@ -670,10 +449,12 @@ void main() {
         return;
     }
 
-    uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, fullSize, rendererDataBuffer.rendererData.splitscreenMode);
-
-    ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
-    vec3 viewPos = viewportData.viewPos.xyz;
+    uint viewportIndex = ViewportIndexFromPixel(px, fullSize, rendererDataBuffer.rendererData.viewportLayout, vec2(rendererDataBuffer.rendererData.viewportSplitX, rendererDataBuffer.rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+    mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    mat4 viewMatrix = viewportDataBuffer.viewportData[viewportIndex].view;
+    mat4 inverseViewMatrix = viewportDataBuffer.viewportData[viewportIndex].inverseView;
+    vec3 viewPos = viewportDataBuffer.viewportData[viewportIndex].viewPos.xyz;
 
     // Match AMD's classifier input and reject background before reconstruction or ray traversal
     float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
@@ -704,10 +485,8 @@ void main() {
 
     bool isDeltaSample = amdRoughness < 0.001;
 
-    vec2 screenUV = (vec2(px) + 0.5) / vec2(fullSize);
-    vec2 viewportOrigin = vec2(viewportData.xOffset, fullSize.y - viewportData.yOffset - viewportData.height);
-    vec2 viewportUV = (screenUV * vec2(fullSize) - viewportOrigin) / vec2(viewportData.width, viewportData.height);
-    vec3 worldPos = WorldPosFromDepth_VK(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
+    vec2 viewportUV = ViewportUVFromPixel(px, fullSize, viewportRect);
+    vec3 worldPos = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
     float fragDistance = distance(worldPos, viewPos);
 
     if (!IsFinite(worldPos) || !IsFinite(fragDistance) || fragDistance <= 0.0) {
@@ -753,7 +532,7 @@ void main() {
 
  //   pc.data.enableDDGIReflections != 0u;//pc.data.enableDDGIReflections != 0u || isMirrorSurface;
 
-    vec3 incidentRadiance = GetIndirectSpecularSample(surface, viewDirToCamera, viewPos, viewportData.view, viewportData.inverseView, reflectionOrigin, randomSample, roughnessDampening, useDDGIReflections, reflectedHitDistance);
+    vec3 incidentRadiance = GetIndirectSpecularSample(surface, viewDirToCamera, viewPos, viewMatrix, inverseViewMatrix, reflectionOrigin, randomSample, roughnessDampening, useDDGIReflections, reflectedHitDistance);
     vec4 amdRadianceAndDistance = vec4(incidentRadiance, reflectedHitDistance);
 
     if (any(isnan(amdRadianceAndDistance))) {

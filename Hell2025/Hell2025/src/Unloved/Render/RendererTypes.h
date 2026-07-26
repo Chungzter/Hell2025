@@ -8,7 +8,6 @@
 #include <glm/vec4.hpp>
 
 #include <cstdint>
-#include <vector>
 
 struct ViewportData {
     glm::mat4 projectionReverseZ;
@@ -81,7 +80,7 @@ struct RendererData {
     float hairBufferWidth;
     float hairBufferHeight;
     float time;
-    int splitscreenMode;
+    int viewportLayout;
 
     int rendererOverrideState;
     float normalizedMouseX;
@@ -99,8 +98,8 @@ struct RendererData {
     uint32_t directPointShadowMode = 0;
 
     glm::vec2 taaJitterPx = glm::vec2(0.0f);
-    uint32_t padding0 = 0;
-    uint32_t padding1 = 0;
+    float viewportSplitX;
+    float viewportSplitY;
 
     glm::vec4 flashlightColor = glm::vec4(0.780f, 0.778f, 0.797f, 1.0f);
 
@@ -314,36 +313,10 @@ struct RayQueryMesh {
 struct RayQueryMaterial {
     uint32_t blendingMode;
     int32_t materialIndex;
-    uint32_t shadowBit = 0;
-    uint32_t padding0 = 0;
 };
 
 struct RayQueryMeshInstance {
     RayQueryMesh mesh;
     RayQueryMaterial material;
-};
-
-struct TransientRayQueryBLASInstance {
-    std::vector<RayQueryMeshInstance> meshInstances;
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-};
-
-struct RayQueryMultiMeshBLAS {
-    std::vector<RayQueryMeshInstance> meshInstances;
-    uint64_t vulkanBlasId = 0;
-    uint64_t vertexBufferDeviceAddress = 0;
-    uint64_t indexBufferDeviceAddress = 0;
-    uint64_t vertexBufferByteSize = 0;
-    uint64_t indexBufferByteSize = 0;
-    uint64_t sourceGeometryVersion = 0;
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-};
-
-struct RayQueryBLASInstance {
-    RayQueryMeshInstance meshInstance;
-    uint64_t vulkanBlasId = 0;
-    uint64_t vertexBufferDeviceAddress = 0;
-    uint64_t indexBufferDeviceAddress = 0;
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
 };
 

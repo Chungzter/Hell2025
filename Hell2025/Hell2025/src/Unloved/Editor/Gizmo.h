@@ -40,10 +40,12 @@ namespace Gizmo {
     using namespace Unloved;
 
     void Init();
-    void Update();
+    void Update(bool allowInput = true);
+    void CancelInteraction();
     void SetPosition(const glm::vec3& position);
     void SetRotation(const glm::vec3& rotation);
     void SetSourceObjectOffeset(const glm::vec3& offset);
+    void SetVisible(bool visible);
     void UpdateRenderItems();
 
     std::vector<GizmoRenderItem>& GetRenderItemsByViewportIndex(int index);

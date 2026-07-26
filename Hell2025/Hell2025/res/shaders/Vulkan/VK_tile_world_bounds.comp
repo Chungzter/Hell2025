@@ -7,6 +7,7 @@
 #include "../common/constants.glsl"
 #include "../common/types.glsl"
 #include "../common/reconstruction.glsl"
+#include "../common/util.glsl"
 #include "../common/viewport.glsl"
 #include "../common/Vulkan/VK_binding_indices.glsl"
 #include "../common/Vulkan/VK_push_constants.glsl"
@@ -67,23 +68,26 @@ void main() {
     TileWorldBoundsBuffer tileWorldBounds = pc.data.frame.tileWorldBoundsBuffer;
 
     if (inBounds) {
-        uint viewportIndex = ViewportIndexFromSplitScreenMode_VK(px, resolution, rendererData.splitscreenMode);
-        ViewportData viewportData = viewportDataBuffer.viewportData[viewportIndex];
-        vec2 viewportUV = ViewportUVFromPixel_VK(px, resolution, viewportData);
-        float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
+        uint viewportIndex = ViewportIndexFromPixel(px, resolution, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+        ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+        if (ViewportContainsPixel(px, resolution, viewportRect)) {
+            mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+            vec2 viewportUV = ViewportUVFromPixel(px, resolution, viewportRect);
+            float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
 
-        if (depth > 0.000001) {
-            vec3 worldSpacePosition = WorldPosFromDepth_VK(viewportUV, depth, viewportData.inverseProjectionViewReverseZ);
-            uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
-            uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);
-            uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);
-            atomicMin(minWorldSpaceXInt, worldSpaceXInt);
-            atomicMin(minWorldSpaceYInt, worldSpaceYInt);
-            atomicMin(minWorldSpaceZInt, worldSpaceZInt);
-            atomicMax(maxWorldSpaceXInt, worldSpaceXInt);
-            atomicMax(maxWorldSpaceYInt, worldSpaceYInt);
-            atomicMax(maxWorldSpaceZInt, worldSpaceZInt);
-            atomicAdd(validDepthSampleCount, 1);
+            if (depth > 0.000001) {
+                vec3 worldSpacePosition = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
+                uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
+                uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);
+                uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);
+                atomicMin(minWorldSpaceXInt, worldSpaceXInt);
+                atomicMin(minWorldSpaceYInt, worldSpaceYInt);
+                atomicMin(minWorldSpaceZInt, worldSpaceZInt);
+                atomicMax(maxWorldSpaceXInt, worldSpaceXInt);
+                atomicMax(maxWorldSpaceYInt, worldSpaceYInt);
+                atomicMax(maxWorldSpaceZInt, worldSpaceZInt);
+                atomicAdd(validDepthSampleCount, 1);
+            }
         }
     }
     barrier();

@@ -99,7 +99,8 @@ namespace VulkanDeviceManager {
 
             // Scalar block layout is required by the compact 44-byte Vertex
             // used through PhysicalStorageBuffer buffer references.
-            if (!checkFeatures.features.drawIndirectFirstInstance ||
+            if (!checkFeatures.features.shaderInt64 ||
+                !checkFeatures.features.drawIndirectFirstInstance ||
                 !checkFeatures.features.multiDrawIndirect ||
                 !checkFeatures.features.geometryShader ||
                 !checkFeatures.features.imageCubeArray ||
@@ -107,6 +108,8 @@ namespace VulkanDeviceManager {
                 !checkFeatures.features.shaderStorageImageArrayDynamicIndexing ||
                 !supportedFeatures11.shaderDrawParameters ||
                 !supportedFeatures12.descriptorBindingStorageImageUpdateAfterBind ||
+                !supportedFeatures12.shaderStorageImageArrayNonUniformIndexing ||
+                !supportedFeatures12.bufferDeviceAddress ||
                 !supportedFeatures12.scalarBlockLayout ||
                 !supportedFeatures12.shaderOutputLayer ||
                 !unifiedFeatures.unifiedImageLayouts ||
@@ -155,6 +158,7 @@ namespace VulkanDeviceManager {
 
             VkPhysicalDeviceVulkan12Features features12{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
             features12.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+            features12.shaderStorageImageArrayNonUniformIndexing = VK_TRUE;
             features12.runtimeDescriptorArray = VK_TRUE;
             features12.descriptorBindingVariableDescriptorCount = VK_TRUE;
             features12.descriptorBindingPartiallyBound = VK_TRUE;

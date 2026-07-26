@@ -49,8 +49,9 @@ namespace OpenGL::Renderer {
         const std::vector<DecalPaintingInfo>& decalPaintingInfoSet = Unloved::RenderDataManager::GetDecalPaintingInfo();
         if (decalPaintingInfoSet.empty()) return;
 
-        const std::vector<RenderItem>& skinnedRenderItems = Unloved::RenderDataManager::GetCombinedSkinnedRenderItems();
-        if (skinnedRenderItems.empty()) return;
+        const std::vector<RenderItem>& sceneRenderItems = Unloved::RenderDataManager::GetSceneRenderItems();
+        const std::vector<uint32_t>& skinnedRenderItemIndices = Unloved::RenderDataManager::GetCombinedSkinnedRenderItemIndices();
+        if (skinnedRenderItemIndices.empty()) return;
 
         decalPaintingFBO->Bind();
         decalPaintingFBO->SetViewport();
@@ -70,7 +71,8 @@ namespace OpenGL::Renderer {
         for (const DecalPaintingInfo& decalPaintingInfo : decalPaintingInfoSet) {
             const glm::mat4 projectionView = CreateDecalProjectionViewReverseZ(decalPaintingInfo);
 
-            for (const RenderItem& renderItem : skinnedRenderItems) {
+            for (uint32_t renderItemIndex : skinnedRenderItemIndices) {
+                const RenderItem& renderItem = sceneRenderItems[renderItemIndex];
 
                 // Bail if this no wound mask texture index
                 if (renderItem.woundMaskTextureIndex == -1) continue;

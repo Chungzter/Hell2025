@@ -44,7 +44,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
         OpenGL::SetUniformMat4("u_model", glm::mat4(1));
         OpenGL::SetUniformBool("u_flipNormalMapY", ShouldFlipNormalMapY());
         OpenGL::SetUniformBool("u_alphaDiscard", false);
@@ -64,13 +65,8 @@ namespace OpenGL::Renderer {
             if (!viewport->IsVisible()) continue;
 
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
-
-            if (Hell::BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.procedural[i], true, false);
-            }
-            else {
-                MultiDrawIndirect(drawInfoSet.procedural[i]);
-            }
+            OpenGL::SetUniformInt("u_viewportIndex", i);
+            MultiDrawIndirect(drawInfoSet.procedural[i]);
         }
     }
 
@@ -91,7 +87,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
 
         //glBindVertexArray(OpenGL::BackEnd::GetWeightedVertexDataVAO());
         //glBindBuffer(GL_ARRAY_BUFFER, OpenGL::BackEnd::GetWeightedVertexDataVBO());
@@ -113,13 +110,8 @@ namespace OpenGL::Renderer {
             if (!viewport->IsVisible()) continue;
 
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
-
-            if (Hell::BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedNonDeformingStandard[i], true, false);
-            }
-            else {
-                MultiDrawIndirect(drawInfoSet.skinnedNonDeformingStandard[i]);
-            }
+            OpenGL::SetUniformInt("u_viewportIndex", i);
+            MultiDrawIndirect(drawInfoSet.skinnedNonDeformingStandard[i]);
         }
 
         // Alpha Discard
@@ -131,22 +123,12 @@ namespace OpenGL::Renderer {
             if (!viewport->IsVisible()) continue;
 
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
-
-            if (Hell::BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedNonDeformingAlphaDiscard[i], true, false);
-            }
-            else {
-                MultiDrawIndirect(drawInfoSet.skinnedNonDeformingAlphaDiscard[i]);
-            }
+            OpenGL::SetUniformInt("u_viewportIndex", i);
+            MultiDrawIndirect(drawInfoSet.skinnedNonDeformingAlphaDiscard[i]);
 
             // Hair
             glDisable(GL_CULL_FACE);
-            if (Hell::BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedNonDeformingHair[i], true, false);
-            }
-            else {
-                MultiDrawIndirect(drawInfoSet.skinnedNonDeformingHair[i]);
-            }
+            MultiDrawIndirect(drawInfoSet.skinnedNonDeformingHair[i]);
         }
 
         // Blended
@@ -160,13 +142,8 @@ namespace OpenGL::Renderer {
             if (!viewport->IsVisible()) continue;
 
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
-
-            if (Hell::BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedNonDeformingBlended[i], true, false);
-            }
-            else {
-                MultiDrawIndirect(drawInfoSet.skinnedNonDeformingBlended[i]);
-            }
+            OpenGL::SetUniformInt("u_viewportIndex", i);
+            MultiDrawIndirect(drawInfoSet.skinnedNonDeformingBlended[i]);
         }
     }
 
@@ -200,7 +177,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
         OpenGL::SetUniformBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
         OpenGLFrameBuffer* decalMasksFBO = OpenGL::ResourceManager::GetFrameBufferPtr("DecalMasks");
@@ -218,12 +196,8 @@ namespace OpenGL::Renderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGL::Renderer::SetViewport(gBuffer, viewport);
-                if (Hell::BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(shader, drawInfoSet.standard[i], true, false);
-                }
-                else {
-                    MultiDrawIndirect(drawInfoSet.standard[i]);
-                }
+                OpenGL::SetUniformInt("u_viewportIndex", i);
+                MultiDrawIndirect(drawInfoSet.standard[i]);
             }
         }
 
@@ -236,21 +210,12 @@ namespace OpenGL::Renderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGL::Renderer::SetViewport(gBuffer, viewport);
-                if (Hell::BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(shader, drawInfoSet.alphaDiscard[i], true, false);
-                }
-                else {
-                    MultiDrawIndirect(drawInfoSet.alphaDiscard[i]);
-                }
+                OpenGL::SetUniformInt("u_viewportIndex", i);
+                MultiDrawIndirect(drawInfoSet.alphaDiscard[i]);
 
                 // Hair
                 glDisable(GL_CULL_FACE);
-                if (Hell::BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(shader, drawInfoSet.hair[i], true, false);
-                }
-                else {
-                    MultiDrawIndirect(drawInfoSet.hair[i]);
-                }
+                MultiDrawIndirect(drawInfoSet.hair[i]);
             }
         }
 
@@ -265,12 +230,8 @@ namespace OpenGL::Renderer {
             Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
             if (viewport->IsVisible()) {
                 OpenGL::Renderer::SetViewport(gBuffer, viewport);
-                if (Hell::BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(shader, drawInfoSet.blended[i], true, false);
-                }
-                else {
-                    MultiDrawIndirect(drawInfoSet.blended[i]);
-                }
+                OpenGL::SetUniformInt("u_viewportIndex", i);
+                MultiDrawIndirect(drawInfoSet.blended[i]);
             }
         }
 
@@ -296,13 +257,8 @@ namespace OpenGL::Renderer {
             if (!viewport->IsVisible()) continue;
 
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
-
-            if (Hell::BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedStandard[i], true, true);
-            }
-            else {
-                MultiDrawIndirect(drawInfoSet.skinnedStandard[i]);
-            }
+            OpenGL::SetUniformInt("u_viewportIndex", i);
+            MultiDrawIndirect(drawInfoSet.skinnedStandard[i]);
         }
 
         // Skinned mesh (alpha discard)
@@ -314,22 +270,12 @@ namespace OpenGL::Renderer {
             if (!viewport->IsVisible()) continue;
 
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
-
-            if (Hell::BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedAlphaDiscard[i], true, false);
-            }
-            else {
-                MultiDrawIndirect(drawInfoSet.skinnedAlphaDiscard[i]);
-            }
+            OpenGL::SetUniformInt("u_viewportIndex", i);
+            MultiDrawIndirect(drawInfoSet.skinnedAlphaDiscard[i]);
 
             // Hair
             glDisable(GL_CULL_FACE);
-            if (Hell::BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedHair[i], true, false);
-            }
-            else {
-                MultiDrawIndirect(drawInfoSet.skinnedHair[i]);
-            }
+            MultiDrawIndirect(drawInfoSet.skinnedHair[i]);
         }
 
         // Skinned mesh (alpha blended)
@@ -343,13 +289,8 @@ namespace OpenGL::Renderer {
             if (!viewport->IsVisible()) continue;
 
             OpenGL::Renderer::SetViewport(gBuffer, viewport);
-
-            if (Hell::BackEnd::RenderDocFound()) {
-                SplitMultiDrawIndirect(shader, drawInfoSet.skinnedBlended[i], true, true);
-            }
-            else {
-                MultiDrawIndirect(drawInfoSet.skinnedBlended[i]);
-            }
+            OpenGL::SetUniformInt("u_viewportIndex", i);
+            MultiDrawIndirect(drawInfoSet.skinnedBlended[i]);
         }
 
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
@@ -512,7 +453,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_INSTANCE_DATA, "InstanceData");
+        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
+        OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
         OpenGL::SetUniformBool("u_flipNormalMapY", ShouldFlipNormalMapY());
 
         // Regular geometry
@@ -529,14 +471,10 @@ namespace OpenGL::Renderer {
                 OpenGL::SetUniformBool("u_useMirrorMatrix", true);
                 OpenGL::SetUniformMat4("u_mirrorViewMatrix", mirror->GetViewMatrix(i));
                 OpenGL::SetUniformVec4("u_mirrorClipPlane", mirror->GetClipPlane(i));
+                OpenGL::SetUniformInt("u_viewportIndex", i);
 
                 OpenGL::Renderer::SetViewport(gBuffer, viewport);
-                if (Hell::BackEnd::RenderDocFound()) {
-                    SplitMultiDrawIndirect(geometryShader, drawInfoSet.mirrorRenderItems[i], true, false);
-                }
-                else {
-                    MultiDrawIndirect(drawInfoSet.mirrorRenderItems[i]);
-                }
+                MultiDrawIndirect(drawInfoSet.mirrorRenderItems[i]);
             }
         }
         OpenGL::SetUniformBool("u_useMirrorMatrix", false);
@@ -562,8 +500,10 @@ namespace OpenGL::Renderer {
             OpenGL::SetUniformMat4("u_mirrorViewMatrix", mirror->GetViewMatrix(i));
             OpenGL::SetUniformVec4("u_mirrorClipPlane", mirror->GetClipPlane(i));
 
-            const std::vector<RenderItem>& renderItems = Unloved::RenderDataManager::GetRenderItemsProcedural();
-            for (const RenderItem& renderItem : renderItems) {
+            const std::vector<RenderItem>& sceneRenderItems = Unloved::RenderDataManager::GetSceneRenderItems();
+            const std::vector<uint32_t>& renderItemIndices = Unloved::RenderDataManager::GetRenderItemIndicesProcedural();
+            for (uint32_t renderItemIndex : renderItemIndices) {
+                const RenderItem& renderItem = sceneRenderItems[renderItemIndex];
 
                 Mesh* mesh = meshBufferProcedural.GetMeshById(renderItem.meshId);
                 if (!mesh) continue;

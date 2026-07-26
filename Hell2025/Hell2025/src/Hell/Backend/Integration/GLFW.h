@@ -18,6 +18,8 @@ namespace Hell::BackEnd::GLFW {
     int GetWindowedHeight();
     int GetCurrentWindowWidth();
     int GetCurrentWindowHeight();
+    int GetDrawableWidth();
+    int GetDrawableHeight();
     int GetFullScreenWidth();
     int GetFullScreenHeight();
     void* GetWindowPointer();

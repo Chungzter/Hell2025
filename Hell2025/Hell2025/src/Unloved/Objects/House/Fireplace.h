@@ -27,6 +27,7 @@ struct Fireplace {
     void SetPositionY(float y);
     void SetPositionZ(float z);
     void SetRotation(const glm::vec3& rotation);
+    void SetType(FireplaceType type);
 
     uint64_t GetObjectId()                                      { return m_id; }
     AABB GetWallsAABB()                                         { return m_wallsAabb; }
@@ -44,6 +45,7 @@ struct Fireplace {
 
 private:
     void ConfigureFire();
+    void ConfigureMeshNodes();
     void UpdateBlockingVolume();
     void UpdateWorldMatrix();
     uint64_t m_id = 0;

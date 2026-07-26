@@ -23,18 +23,12 @@ namespace VulkanRenderer {
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const VulkanFrameData& frameData = GetCurrentFrameData();
 
-        VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
-        VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
-        VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
         VulkanMeshBuffer* assetGeometry = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
         VulkanMeshBuffer* proceduralGeometry = VulkanResourceManager::GetMeshBuffer("Procedural");
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("Visibility");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("Visibility");
         VulkanBuffer* skinnedVertexBuffer = frameData.buffers.skinnedVertices != 0 ? VulkanResourceManager::GetBuffer(frameData.buffers.skinnedVertices) : nullptr;
 
-        if (!renderItemBuffer) return;
-        if (!viewportDataBuffer) return;
-        if (!materialsBuffer) return;
         if (!assetGeometry) return;
         if (!proceduralGeometry) return;
         if (!renderState) return;
@@ -93,18 +87,12 @@ namespace VulkanRenderer {
         const DrawCommandsSet& drawInfoSet = RenderDataManager::GetDrawInfoSet();
         const VulkanFrameData& frameData = GetCurrentFrameData();
 
-        VulkanBuffer* renderItemBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.instanceData);
-        VulkanBuffer* viewportDataBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.viewportData);
-        VulkanBuffer* materialsBuffer = VulkanResourceManager::GetBuffer(frameData.buffers.materials);
         VulkanDescriptorSet* staticDescriptorSet = VulkanResourceManager::GetDescriptorSet("StaticDescriptorSet");
         VulkanMeshBuffer* meshBuffer = VulkanResourceManager::GetMeshBuffer("AssetGeometry");
         VulkanRenderState* renderState = VulkanResourceManager::GetRenderState("VisibilityAlphaDiscard");
         VulkanPipeline* pipeline = VulkanResourceManager::GetPipeline("VisibilityAlphaDiscard");
         VulkanBuffer* skinnedVertexBuffer = frameData.buffers.skinnedVertices != 0 ? VulkanResourceManager::GetBuffer(frameData.buffers.skinnedVertices) : nullptr;
 
-        if (!renderItemBuffer) return;
-        if (!viewportDataBuffer) return;
-        if (!materialsBuffer) return;
         if (!staticDescriptorSet) return;
         if (!meshBuffer) return;
         if (!renderState) return;

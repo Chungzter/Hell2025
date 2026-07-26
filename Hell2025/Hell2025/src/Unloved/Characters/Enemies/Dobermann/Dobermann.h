@@ -24,7 +24,6 @@ namespace Unloved {
 
         void ResetToInitialState();
         void SetPosition(const glm::vec3& position);
-        void SetSpawnPosition(const glm::vec3& position);
         void SetRotation(const glm::vec3& rotation);
 
 	    void TakeDamage(uint32_t damage);

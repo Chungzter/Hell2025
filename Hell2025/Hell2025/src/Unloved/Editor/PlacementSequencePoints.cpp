@@ -10,6 +10,9 @@
 #include "Unloved/World/World.h"
 
 namespace Unloved::Editor {
+    using EditorSession::PlacementTool;
+    using EditorSession::PlacementToolInfo;
+
 
     uint64_t CreatePointSequenceObject(PlacementTool tool, const std::vector<SequencePoint>& sequencePoints, const PlacementToolInfo& toolInfo) {
         uint64_t objectId = 0;

@@ -6,12 +6,10 @@
 #include <sstream>
 #include <unordered_set>
 #include <algorithm>
-#include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 
 struct ShaderParseContext {
     std::unordered_set<std::string> includedPaths;
-    bool versionInserted = false;
     bool rootVersionSeen = false;
 };
 
@@ -257,7 +255,6 @@ static void ParseFile(const std::string& filepath, std::string& outputString, st
         }
 
         // Protect the output from accidental #version in includes.
-        // (This is the "version thing": previously versionInserted was per-file, and accidental include versions could duplicate logic.)
         std::string trimmed = LTrimCopy(line);
         if (StartsWith(trimmed, "#version")) {
             if (filepath != rootFilepath) {
@@ -272,13 +269,6 @@ static void ParseFile(const std::string& filepath, std::string& outputString, st
 
         outputString += line + "\n";
         lineToFile.emplace_back(filename + " (line " + std::to_string(fileLineNumber) + ")");
-
-        // Insert the define after the first #version directive
-        if (Hell::BackEnd::RenderDocFound() && !context.versionInserted && StartsWith(trimmed, "#version")) {
-            outputString += "#define ENABLE_BINDLESS 0\n";
-            lineToFile.emplace_back(filename + " (line " + std::to_string(fileLineNumber) + ")");
-            context.versionInserted = true;
-        }
 
         fileLineNumber++;
     }

@@ -2,6 +2,7 @@
 #include "../../common/OpenGL/GL_binding_indices.glsl"
 #include "../../common/types.glsl"
 #include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
 
 layout (location = 0) out vec4 FinalLightingOut;
 
@@ -21,15 +22,13 @@ void main() {
     ivec2 px = ivec2(gl_FragCoord.xy);
     ivec2 resolution = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
 
-    uint viewportIndex = ComputeViewportIndexFromSplitscreenMode(px, resolution, rendererData.splitscreenMode);
-    ViewportData viewportData = viewportDataArr[viewportIndex];
+    uint viewportIndex = ViewportIndexFromPixel(px, resolution, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
 
     // Get world ray
-    mat4 inverseProjectionView = viewportData.inverseJitteredProjectionViewReverseZ;
-    vec3 viewPos = viewportData.viewPos.xyz;
-    vec2 viewportOrigin = vec2(viewportData.xOffset, viewportData.yOffset);
-    vec2 viewportSize = vec2(viewportData.width, viewportData.height);
-    vec3 rayDir = GetWorldRay_GL(gl_FragCoord.xy, inverseProjectionView, viewPos, viewportOrigin, viewportSize);
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+    vec3 viewPosition = viewportDataArr[viewportIndex].viewPos.xyz;
+    mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
+    vec3 rayDir = WorldRayFromPixel(px, resolution, viewportRect, viewPosition, inverseProjectionView);
 
     // Sample skybox cubemap
     mat3 skyboxRotation = GetSkyboxRotationMatrix();

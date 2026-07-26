@@ -73,6 +73,7 @@ namespace Unloved::World {
 
     void ResetWorld();
     void ClearAllObjects();
+    uint64_t GetGeneration();
 
     bool HasLoadedMap();
     bool HasOcean();
@@ -96,6 +97,7 @@ namespace Unloved::World {
     bool RemoveObjectById(uint64_t objectId);
     bool SetPositionById(uint64_t objectId, const glm::vec3& position);
     bool SetRotationById(uint64_t objectId, const glm::vec3& rotation);
+    bool SetEditorNameById(uint64_t objectId, const std::string& editorName);
 
     const glm::vec3& GetPositionById(uint64_t objectId);
     const glm::vec3& GetRotationById(uint64_t objectId);
