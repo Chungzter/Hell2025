@@ -89,6 +89,8 @@ void SubmitRenderItems() {
     for (PointPairObject& object : Unloved::World::GetPointPairObjects())     object.SubmitRenderItems();
     for (Wall& object : Unloved::World::GetWalls())                            RenderDataManager::SubmitRenderItems(object.GetWeatherBoardstopRenderItems());
 
+    for (Door& object : Unloved::World::GetDoors())                            RenderDataManager::SubmitRenderItems(object.GetAdditionalStaticRenderItems());
+
     if (Unloved::EditorSession::IsActive()) {
         for (HouseLocation& object : Unloved::World::GetHouseLocations())              RenderDataManager::SubmitRenderItems(object.GetRenderItems());
         for (SpawnPoint& object : Unloved::World::GetSpawnPointsCampaign())   RenderDataManager::SubmitRenderItems(object.GetRenderItems());

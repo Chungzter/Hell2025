@@ -7,6 +7,8 @@
 #include "Legacy/Timer.hpp"
 
 #include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorMapTools.h"
+#include "Unloved/EditorSession/EditorSession.h"
 #include "Unloved/Render/RendererConstants.h"
 #include "Unloved/Render/RendererTypes.h"
 #include "Unloved/Systems/Particles/ParticleManager.h"
@@ -323,6 +325,11 @@ namespace OpenGL::Renderer {
         OpenGLFrameBuffer& indirectDiffuseFbo = OpenGL::ResourceManager::GetFrameBuffer("IndirectDiffuse");
 
         OpenGL::BindShader("LightingDeferred");
+
+        if (Unloved::EditorSession::IsActive() && Unloved::EditorSession::MapTools::GetRenderMode() != Unloved::EditorSession::EditorRenderMode::PBR) {
+            OpenGL::BindShader("LightingDeferredEditorRenderMode");
+            OpenGL::SetUniformInt("u_editorRenderMode", static_cast<uint32_t>(Unloved::EditorSession::MapTools::GetRenderMode()));
+        }
 
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");

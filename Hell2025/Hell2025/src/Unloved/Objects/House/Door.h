@@ -11,7 +11,7 @@ namespace Unloved {
 
 struct Door {
     Door() = default;
-    Door(uint64_t id, DoorCreateInfo& createInfo, SpawnOffset& spawnOffset);    
+    Door(uint64_t id, DoorCreateInfo& createInfo, SpawnOffset& spawnOffset);
     Door(const Door&) = delete;
     Door& operator=(const Door&) = delete;
     Door(Door&&) noexcept = default;
@@ -31,6 +31,7 @@ struct Door {
     void SetFrameFrontMaterial(DoorMaterialType type);
     void SetFrameBackMaterial(DoorMaterialType type);
     void SetDeadLockState(bool value);
+    void SetSillState(bool value);
     void SetDeadLockedAtInitState(bool value);
     void SetOpenAtStartState(bool value);
     void SetMaxOpenValue(float value);
@@ -45,36 +46,40 @@ struct Door {
     void DebugDraw();
     bool CameraFacingDoorWorldForward(const glm::vec3& cameraPositon, const glm::vec3& cameraForward);
 
-	MeshNodes& GetMeshNodes()                                           { return m_meshNodes; }
+	MeshNodes& GetMeshNodes()                                             { return m_meshNodes; }
 
-    const bool IsDirty() const                                          { return m_meshNodes.IsDirty(); }
-    const uint64_t GetObjectId() const                                  { return m_objectId; }
-    const glm::vec3& GetPosition() const                                { return m_position; }
-    const glm::vec3& GetRotation() const                                { return m_rotation; }
-    const glm::vec3& GetInteractPosition() const                        { return m_interactPosition; }
-    const glm::mat4& GetDoorModelMatrix () const                        { return m_doorModelMatrix; }
-    const glm::mat4& GetDoorFrameModelMatrix () const                   { return m_frameModelMatrix; }
-    const Model* GetDoorModel() const                                   { return m_doorModel; }
-    const Model* GetDoorFrameModel() const                              { return m_frameModel; }
-    const OpeningState& GetOpeningState() const                         { return m_openingState; }
-    const DoorCreateInfo& GetCreateInfo() const                         { return m_createInfo; }
-    const std::vector<RenderItem>& GetRenderItems() const               { return m_renderItems; } // This includes main MeshNods render items plus any deadlocks renderitems ???
-    const std::string& GetEditorName() const                            { return m_createInfo.editorName; }
-    const DoorType& GetType() const                                     { return m_createInfo.type; }
-    const DoorMaterialType& GetMaterialTypeFront() const                { return m_createInfo.materialTypeFront; }
-    const DoorMaterialType& GetMaterialTypeBack() const                 { return m_createInfo.materialTypeBack; }
-    const DoorMaterialType& GetMaterialTypeFrameFront() const           { return m_createInfo.materialTypeFrameFront; }
-    const DoorMaterialType& GetMaterialTypeFrameBack() const            { return m_createInfo.materialTypeFrameBack; }
-    const bool GetDeadLockState() const                                 { return m_createInfo.hasDeadLock; }
-    const bool GetDeadLockedAtInitState() const                         { return m_createInfo.deadLockedAtInit; }
-    const bool GetOpenAtStartState() const                              { return m_createInfo.openAtStart; }
-    const AABB& GetPhsyicsAABB() const                                  { return m_physicsAABB; }
-    const ClippingVolume& GetClippingVolume() const                     { return m_clippingVolume; }
+    const bool IsDirty() const                                            { return m_meshNodes.IsDirty(); }
+    const uint64_t GetObjectId() const                                    { return m_objectId; }
+    const glm::vec3& GetPosition() const                                  { return m_position; }
+    const glm::vec3& GetRotation() const                                  { return m_rotation; }
+    const glm::vec3& GetInteractPosition() const                          { return m_interactPosition; }
+    const glm::mat4& GetDoorModelMatrix () const                          { return m_doorModelMatrix; }
+    const glm::mat4& GetDoorFrameModelMatrix () const                     { return m_frameModelMatrix; }
+    const Model* GetDoorModel() const                                     { return m_doorModel; }
+    const Model* GetDoorFrameModel() const                                { return m_frameModel; }
+    const OpeningState& GetOpeningState() const                           { return m_openingState; }
+    const DoorCreateInfo& GetCreateInfo() const                           { return m_createInfo; }
+    const std::vector<RenderItem>& GetRenderItems() const                 { return m_renderItems; } // This includes main MeshNods render items plus any deadlocks render items ???
+    const std::vector<RenderItem>& GetAdditionalStaticRenderItems() const { return m_additonalStaticRenderItems; }
+    const std::string& GetEditorName() const                              { return m_createInfo.editorName; }
+    const DoorType& GetType() const                                       { return m_createInfo.type; }
+    const DoorMaterialType& GetMaterialTypeFront() const                  { return m_createInfo.materialTypeFront; }
+    const DoorMaterialType& GetMaterialTypeBack() const                   { return m_createInfo.materialTypeBack; }
+    const DoorMaterialType& GetMaterialTypeFrameFront() const             { return m_createInfo.materialTypeFrameFront; }
+    const DoorMaterialType& GetMaterialTypeFrameBack() const              { return m_createInfo.materialTypeFrameBack; }
+    const bool GetDeadLockState() const                                   { return m_createInfo.hasDeadLock; }
+    const bool GetSillState() const                                       { return m_createInfo.hasSill; }
+    const bool GetDeadLockedAtInitState() const                           { return m_createInfo.deadLockedAtInit; }
+    const bool GetOpenAtStartState() const                                { return m_createInfo.openAtStart; }
+    const AABB& GetPhsyicsAABB() const                                    { return m_physicsAABB; }
+    const ClippingVolume& GetClippingVolume() const                       { return m_clippingVolume; }
 
     MeshBufferOLD m_raytracingDoorMesh;
     MeshBufferOLD m_raytracingFrameMesh;
 
 private:
+    void RecreateStaticAddionalRenderItems();
+
     void UpdateWorldForward();
     void CreateRaytracingVertices();
     void UpdateClippingVolume();
@@ -89,6 +94,7 @@ private:
     std::vector<DeadLock> m_deadLocks;
 
     std::vector<RenderItem> m_renderItems; // This contains main MeshNods render items plus any deadlocks renderitems
+    std::vector<RenderItem> m_additonalStaticRenderItems;
 
     //bool m_movedThisFrame = true;
     bool m_deadLocked = false;

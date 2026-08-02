@@ -727,6 +727,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\OpenGL\GL_blood_decals_new.vert" />
     <None Include="res\shaders\OpenGL\GL_decal_test.frag" />
     <None Include="res\shaders\OpenGL\GL_decal_test.vert" />
+    <None Include="res\shaders\OpenGL\RE\GL_lighting_deferred_editor_render_mode.frag" />
     <None Include="res\shaders\Vulkan\VK_compute_skinning.comp" />
     <None Include="res\shaders\Vulkan\VK_compute_red_test.comp" />
     <None Include="res\shaders\Vulkan\VK_ddgi_raytrace_scene.comp" />

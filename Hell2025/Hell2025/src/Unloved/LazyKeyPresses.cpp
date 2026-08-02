@@ -27,10 +27,9 @@ void UpdateLazyKeypresses() {
     }
 
     // Function keys
-    if (Hell::Input::KeyPressed(HELL_KEY_F1)) Session::StartNewGame(GameMode::CAMPAIGN, "Shit");
-    if (Hell::Input::KeyPressed(HELL_KEY_F4)) Editor::OpenHouseEditor();
-    if (Hell::Input::KeyPressed(HELL_KEY_F6)) Editor::OpenMapHeightEditor();
-    if (Hell::Input::KeyPressed(HELL_KEY_F5)) Editor::OpenMapObjectEditor();
+    if (Hell::Input::KeyPressed(HELL_KEY_F2)) Session::StartNewGame(GameMode::CAMPAIGN, "Shit");
+    if (Hell::Input::KeyPressed(HELL_KEY_F4)) EditorSession::Open(EditorSession::EditorSessionMode::HOUSE);
+    if (Hell::Input::KeyPressed(HELL_KEY_F5)) EditorSession::Open(EditorSession::EditorSessionMode::MAP);;
 
     // Core
     if (Hell::Input::KeyPressed(HELL_KEY_ESCAPE)) Hell::BackEnd::ForceCloseWindow();

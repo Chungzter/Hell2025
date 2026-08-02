@@ -1,20 +1,23 @@
 #include "Door.h"
+
 #include "Hell/Audio.h"
-#include "Unloved/Bible/Bible.h"
-#include "Unloved/Debug/DebugDraw.h"
+#include "Hell/Logging.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Physics/Physics.h"
-#include "Unloved/Objects/House/WorldPlane.h"
-#include "Unloved/Render/RenderDataManager.h"
-#include "Unloved/Systems/Openables/OpenableManager.h"
+
 #include "Legacy/World/LegacyWorld.h"
 
+#include "Unloved/Bible/Bible.h"
+#include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Objects/House/WorldPlane.h"
+#include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Render/RendererUtil.h"
 #include "Unloved/Session/Session.h"
+#include "Unloved/Systems/Openables/OpenableManager.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
 #include "Unloved/Systems/NavMesh/NavMesh.h"
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/World/World.h"
-
-#include "Hell/Logging.h"
 
 namespace Unloved {
 
@@ -59,6 +62,7 @@ Door::Door(uint64_t id, DoorCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     UpdateFloor();
     UpdateWorldForward();
     CreateRaytracingVertices();
+    RecreateStaticAddionalRenderItems();
 }
 
 void Door::UpdateFloor() {
@@ -242,6 +246,10 @@ void Door::UpdateClippingVolume() {
     transform.rotation = m_rotation;
     transform.scale = glm::vec3(0.2f, DOOR_HEIGHT + padding, DOOR_WIDTH + padding);
 
+    // Hacking commences now:
+    transform.position.y -= 0.02f;
+    transform.scale.y += 0.02f;
+
     m_clippingVolume.Update(transform);
 }
 
@@ -288,11 +296,13 @@ void Door::SetPosition(const glm::vec3& position) {
     m_position = position;
     UpdateClippingVolume();
     UpdateFloor();
+    RecreateStaticAddionalRenderItems();
     HouseBuilder::MarkDirty();
 }
 
 void Door::SetRotation(const glm::vec3& rotation) {
     SetRotationY(rotation.y);
+    RecreateStaticAddionalRenderItems();
 }
 
 void Door::SetRotationY(float value) {
@@ -301,6 +311,7 @@ void Door::SetRotationY(float value) {
     UpdateClippingVolume();
     UpdateWorldForward();
     UpdateFloor();
+    RecreateStaticAddionalRenderItems();
     HouseBuilder::MarkDirty();
 }
 
@@ -337,6 +348,10 @@ void Door::SetFrameBackMaterial(DoorMaterialType type) {
 void Door::SetDeadLockState(bool value) {
     m_createInfo.hasDeadLock = value;
     Reset();
+}
+
+void Door::SetSillState(bool value) {
+    m_createInfo.hasSill = value;
 }
 
 void Door::SetDeadLockedAtInitState(bool value) {
@@ -390,6 +405,8 @@ void Door::SetFloorPlaneMetallicFactor(float value) {
 }
 
 void Door::Reset() {
+    m_additonalStaticRenderItems.clear();
+
     Bible::ConfigureDoorMeshNodes(m_objectId, m_createInfo, &m_meshNodes);
 
     m_deadLocked = m_createInfo.deadLockedAtInit;
@@ -402,5 +419,26 @@ void Door::Reset() {
 
     // Push the reset pose into the newly created physics
     Update(0.0f);
+
+    // Check logic flow, maybe there's a better spot for this
+    RecreateStaticAddionalRenderItems();
 }
+
+void Door::RecreateStaticAddionalRenderItems() {
+    m_additonalStaticRenderItems.clear();
+
+    // Attention! this is a duplicate of some shit in Door::Update()
+    // double check lifetime shit, and then clean this up
+    //
+
+    // Sill
+    if (m_createInfo.hasSill) {
+        Transform transform;
+        transform.position = m_position + glm::vec3(0.0, 0.02f, 0.0f);
+        transform.rotation = m_rotation + glm::vec3(0.0f, HELL_PI, 0.0f);
+
+        m_additonalStaticRenderItems.push_back(RendererUtil::CreateAssetGeometryRenderItem("DoorSill", "DoorSill", transform.ToMat4(), Hell::ResourceManager::GetMaterialIndexByName("Brass"), m_objectId));
+    }
+}
+
 }

@@ -10,7 +10,7 @@ namespace Unloved::EditorSession {
         glm::vec4 controlBackground = glm::vec4(0.101961f, 0.090196f, 0.121569f, 1.0f); // #1a171f
         glm::vec4 panelBackground = glm::vec4(0.058824f, 0.050980f, 0.070588f, 1.0f);   // #0f0d12
         glm::vec4 hover = glm::vec4(0.141176f, 0.125490f, 0.168627f, 1.0f);             // #24202b
-        glm::vec4 selected = glm::vec4(0.231373f, 0.196078f, 0.286275f, 1.0f);
+        glm::vec4 selected = glm::vec4 (0.231373f, 0.196078f, 0.286275f, 1.0f);
         glm::vec4 border = glm::vec4(0.42f, 0.40f, 0.46f, 1.0f);
         glm::vec4 separator = glm::vec4(0.24f, 0.23f, 0.27f, 1.0f);
         glm::vec4 overlay = glm::vec4(0.0f, 0.0f, 0.0f, 0.55f);

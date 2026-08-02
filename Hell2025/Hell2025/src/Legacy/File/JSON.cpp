@@ -67,7 +67,8 @@ namespace nlohmann {
             {"FloorPlaneMetallicFactor", createInfo.floorPlaneMetallicFactor},
             {"HasDeadLock", createInfo.hasDeadLock},
             {"DeadLockedAtStart", createInfo.deadLockedAtInit},
-            {"OpenAtStart", createInfo.openAtStart}
+            {"OpenAtStart", createInfo.openAtStart},
+            {"HasSill", createInfo.hasSill}
         };
     }
 
@@ -383,6 +384,7 @@ namespace nlohmann {
         info.floorPlaneRotateTexture90 = j.value("FloorPlaneRotateTexture90", false);
         info.floorPlaneRoughnessFactor = j.value("FloorPlaneRoughnessFactor", 1.0f);
         info.floorPlaneMetallicFactor = j.value("FloorPlaneMetallicFactor", 1.0f);
+        info.hasSill = j.value("HasSill", false);
     }
 
     void from_json(const nlohmann::json& j, FenceCreateInfo& info) {

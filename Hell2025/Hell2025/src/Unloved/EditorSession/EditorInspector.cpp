@@ -356,6 +356,7 @@ namespace Unloved::EditorSession::Inspector {
             std::string frameFrontMaterial = Hell::Enum::ToString(door->GetMaterialTypeFrameFront());
             std::string frameBackMaterial = Hell::Enum::ToString(door->GetMaterialTypeFrameBack());
             bool hasDeadLock = door->GetDeadLockState();
+            bool hasSill = door->GetSillState();
             bool deadLockedAtStart = door->GetDeadLockedAtInitState();
             bool openAtStart = door->GetOpenAtStartState();
             float maxOpenValue = door->GetCreateInfo().maxOpenValue;
@@ -384,6 +385,7 @@ namespace Unloved::EditorSession::Inspector {
             properties.CheckBox("Deadlocked At Start", deadLockedAtStart, [&] { door->SetDeadLockedAtInitState(deadLockedAtStart); });
             properties.CheckBox("Open At Start", openAtStart, [&] { door->SetOpenAtStartState(openAtStart); });
             properties.Float(objectId, "Max Open", maxOpenValue, [&] { door->SetMaxOpenValue(maxOpenValue); });
+            properties.CheckBox("Has Sill", hasSill, [&] { door->SetSillState(hasSill); });
             properties.Render(rect);
         }
 

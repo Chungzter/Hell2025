@@ -138,6 +138,7 @@ struct DoorCreateInfo {
     float floorPlaneMetallicFactor = 1.0f;
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Door";
+    bool hasSill = false;
 };
 
 struct FenceCreateInfo {
