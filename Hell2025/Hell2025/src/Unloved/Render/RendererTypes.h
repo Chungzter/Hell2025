@@ -132,6 +132,73 @@ struct RendererData {
     uint32_t padding4 = 0;
     uint32_t padding5 = 0;
     uint32_t padding6 = 0;
+
+    glm::vec4 oceanSurfaceAlbedo = glm::vec4(0.0f);
+    glm::vec4 oceanSurfaceFogColor = glm::vec4(0.0f);
+    glm::vec4 oceanSurfaceRippleVelocity = glm::vec4(0.0f);
+    glm::vec4 oceanUnderwaterTint = glm::vec4(0.0f);
+    glm::vec4 oceanUnderwaterRayFogColor = glm::vec4(0.0f);
+
+    float oceanOriginY = 0.0f;
+    int32_t oceanDisplayMode = 0;
+    uint32_t oceanSurfaceSpecularAntiAliasing = 0;
+    uint32_t padding7 = 0;
+
+    float oceanSurfaceNormalScale = 0.0f;
+    float oceanSurfaceNormalConvergeStartDistance = 0.0f;
+    float oceanSurfaceNormalConvergeEndDistance = 0.0f;
+    float oceanSurfaceNormalConvergeMaxFactor = 0.0f;
+
+    float oceanSurfaceNormalConvergeExponent = 0.0f;
+    float oceanSurfaceNormalSoftening = 0.0f;
+    float oceanSurfaceRippleTiling = 0.0f;
+    float oceanSurfaceRippleStrength = 0.0f;
+
+    float oceanSurfaceRippleSecondLayerScale = 0.0f;
+    float oceanSurfaceRoughness = 0.0f;
+    float oceanSurfaceReflectance = 0.0f;
+    float oceanSurfaceReflectionGamma = 0.0f;
+
+    float oceanSurfaceDiffuseStrength = 0.0f;
+    float oceanSurfaceSssHeightRange = 0.0f;
+    float oceanSurfaceSssStrength = 0.0f;
+    float oceanSurfaceUnderwaterSssStrength = 0.0f;
+
+    float oceanSurfaceSssRadiusMinimum = 0.0f;
+    float oceanSurfaceSssRadiusMaximum = 0.0f;
+    float oceanSurfaceSssIntensity = 0.0f;
+    float oceanSurfaceSssFalloff = 0.0f;
+
+    float oceanSurfaceSssSaturation = 0.0f;
+    float oceanSurfaceFogStartDistance = 0.0f;
+    float oceanSurfaceFogEndDistance = 0.0f;
+    float oceanSurfaceFogExponent = 0.0f;
+
+    float oceanSurfaceFogStrength = 0.0f;
+    float oceanSurfaceCompositePlaneHeightOffset = 0.0f;
+    float oceanSurfaceCompositeDistortionSpeed = 0.0f;
+    float oceanSurfaceCompositeDistortionStrength = 0.0f;
+
+    float oceanSurfaceCompositeDistortionTiling = 0.0f;
+    float oceanSurfaceCompositeRefractionTintStrength = 0.0f;
+    float oceanUnderwaterRayFogStrength = 0.0f;
+    float oceanUnderwaterDarknessCurve = 0.0f;
+
+    float oceanUnderwaterDistortionSpeed = 0.0f;
+    float oceanUnderwaterDistortionStrength = 0.0f;
+    float oceanUnderwaterDepthTintStrength = 0.0f;
+    float oceanUnderwaterDepthTintOriginalWeight = 0.0f;
+
+    float oceanUnderwaterGeometryWaterColorSquaredStrength = 0.0f;
+    float oceanUnderwaterGeometryWaterColorStrength = 0.0f;
+    float oceanUnderwaterGeometryTintStrength = 0.0f;
+    float oceanUnderwaterOpenWaterTintStrength = 0.0f;
+
+    float oceanUnderwaterOpenWaterBrightness = 0.0f;
+    float emissiveStrength = 1.0f;
+    float christmasLightRadius = 0.25f;
+    float christmasLightStrength = 0.05f;
+    float irradianceDampening = 0.0325f;
 };
 
 struct RenderItem {
@@ -175,7 +242,12 @@ struct RenderItem {
     uint32_t customId = 0;
     uint32_t openableId = 0;
     int32_t woundMaterialIndex = -1;
-    int padding = 0;
+    uint32_t shadowMeshId = 0;
+
+    float roughnessFactor = 1.0f;
+    float metallicFactor = 1.0f;
+    int padding1;
+    int padding2;
 };
 
 struct GlassLightRange {

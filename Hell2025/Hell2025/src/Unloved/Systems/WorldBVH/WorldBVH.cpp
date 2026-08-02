@@ -6,13 +6,18 @@
 #include "Hell/Math/Math.h"
 #include "Hell/Render/VertexAttributes.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+
 #include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
 #include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/EditorSession/EditorSession.h"
+#include "Unloved/EditorSession/Interaction/EditorVisibility.h"
 #include "Unloved/Objects/Exterior/Fence.h"
 #include "Unloved/Objects/Exterior/PowerPoleSet.h"
 #include "Unloved/Objects/Exterior/Jetty.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/House/Fireplace.h"
+#include "Unloved/Objects/House/PlanarQuadObject.h"
+#include "Unloved/Objects/House/PointPairObject.h"
 #include "Unloved/Objects/House/Window.h"
 #include "Unloved/Objects/Interior/Piano.h"
 #include "Unloved/Objects/Interior/PictureFrame.h"
@@ -21,6 +26,8 @@
 #include "Unloved/Objects/Props/GenericObject.h"
 #include "Unloved/Objects/Props/PickUp.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
+#include "Unloved/Objects/Spawns/HouseLocation.h"
+#include "Unloved/Objects/Spawns/SpawnPoint.h"
 #include "Unloved/Objects/Traversal/Ladder.h"
 #include "Unloved/Objects/Traversal/Staircase.h"
 #include "Unloved/Render/RendererTypes.h"
@@ -54,8 +61,12 @@ namespace Unloved::WorldBVH {
 		//DebugDraw();
 	}
 
-    void CreateObjectInstanceDataFromRenderItem(const RenderItem& renderItem, std::vector<PrimitiveInstance>& container) {
-        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
+    void CreateObjectInstanceDataFromRenderItem(const RenderItem& renderItem, std::vector<PrimitiveInstance>& container, const char* meshBufferName = "AssetGeometry") {
+        uint64_t objectId = 0;
+        Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+        if (EditorSession::Visibility::ShouldHide(objectId)) return;
+
+        Mesh* mesh = Hell::ResourceManager::GetMeshBuffer(meshBufferName).GetMeshById(renderItem.meshId);
         if (!mesh) return;
 
         PrimitiveInstance& instance = container.emplace_back();
@@ -69,7 +80,7 @@ namespace Unloved::WorldBVH {
         instance.globalMeshIndex = renderItem.meshId;
         instance.customId = renderItem.customId;
         instance.localMeshNodeIndex = renderItem.localMeshNodeIndex;
-        Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, instance.objectId);
+        instance.objectId = objectId;
     }
 
 	void CreateObjectInstanceDataFromRenderItems(const std::vector<RenderItem>& renderItems, std::vector<PrimitiveInstance>& container) {
@@ -128,6 +139,7 @@ namespace Unloved::WorldBVH {
 
 	void CreatePrimtiveInstanceFromMeshNode(const MeshNode* meshNode, std::vector<PrimitiveInstance>& container) {
         if (!meshNode) return;
+        if (EditorSession::Visibility::ShouldHide(meshNode->parentObjectId)) return;
 
 		PrimitiveInstance& instance = container.emplace_back();
 		instance.worldTransform = meshNode->worldMatrix;
@@ -142,6 +154,10 @@ namespace Unloved::WorldBVH {
         instance.localMeshNodeIndex = meshNode->nodeIndex;
         instance.objectId = meshNode->parentObjectId;
 	}
+
+    void CreateObjectInstanceDataFromProceduralRenderItems(const std::vector<RenderItem>& renderItems, std::vector<PrimitiveInstance>& container) {
+        for (const RenderItem& renderItem : renderItems) CreateObjectInstanceDataFromRenderItem(renderItem, container, "Procedural");
+    }
 
 	void DebugDraw() {
 		for (PrimitiveInstance& primitiveInstance : g_dynamicSceneInstances) {
@@ -177,10 +193,9 @@ namespace Unloved::WorldBVH {
     }
 
     void GatherDynamicRenderItemInstances() {
-        for (PictureFrame& pictureFrame : Unloved::World::GetPictureFrames()) {
-            CreateObjectInstanceDataFromRenderItems(pictureFrame.GetRenderItems(), g_dynamicSceneInstances);
-        }
         for (PickUp& pickUp : Unloved::World::GetPickUps()) {
+            if (pickUp.IsDespawned()) continue;
+
             CreateObjectInstanceDataFromRenderItems(pickUp.GetRenderItems(), g_dynamicSceneInstances);
         }
     }
@@ -231,7 +246,15 @@ namespace Unloved::WorldBVH {
         for (Ladder& object : World::GetLadders())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
         for (Mermaid& object : World::GetMermaids())						CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
         for (PowerPoleSet& object : World::GetPowerPoleSets())			    CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (PlanarQuadObject& object : World::GetPlanarQuadObjects())    CreateObjectInstanceDataFromProceduralRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (PointPairObject& object : World::GetPointPairObjects())      CreateObjectInstanceDataFromProceduralRenderItems(object.GetRenderItems(), g_staticSceneInstances);
         for (Staircase& object : World::GetStaircases())					CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+
+        if (EditorSession::IsActive()) {
+            for (HouseLocation& object : World::GetHouseLocations())                    CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+            for (SpawnPoint& object : World::GetSpawnPointsCampaign())			CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+            for (SpawnPoint& object : World::GetSpawnPointsDeathMatch())		CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        }
 
         // Add any static mesh nodes to the primitive instances vector
         for (Door& object : World::GetDoors())                     CreateStaticPrimtiveInstances(object.GetMeshNodes());
@@ -239,6 +262,7 @@ namespace Unloved::WorldBVH {
         for (GenericObject& object : World::GetGenericObjects())   CreateStaticPrimtiveInstances(object.GetMeshNodes());
         for (Light& object : World::GetLights())				   CreateStaticPrimtiveInstances(object.GetMeshNodes());
         for (Piano& object : World::GetPianos())                   CreateStaticPrimtiveInstances(object.GetMeshNodes());
+        for (PictureFrame& object : World::GetPictureFrames())     CreateStaticPrimtiveInstances(object.GetMeshNodes());
         for (Window& object : World::GetWindows())                 CreateStaticPrimtiveInstances(object.GetMeshNodes());
 
         // Recreate the TLAS

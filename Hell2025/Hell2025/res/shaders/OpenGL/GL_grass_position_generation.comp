@@ -9,7 +9,7 @@
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 layout(binding = 0) uniform sampler2D HeightMapTexture;
-//layout(binding = 1) uniform sampler2D WorldPositionTexture;
+layout(binding = 1) uniform usampler2D TerrainControlTexture;
 layout(binding = 3) uniform sampler2D RoadMaskTexture;
 layout(binding = 4) uniform sampler2D u_depthTexture;
 
@@ -19,6 +19,7 @@ uniform float u_heightMapWorldSpaceSize;
 uniform float spacing2;
 uniform int u_viewportIndex;
 uniform float u_waterHeight;
+uniform float u_grassCoverageThreshold;
 
 struct Vertex {
     float position[3];
@@ -88,6 +89,97 @@ uint RandomUInt(vec2 seedVec, uint max) {
     return seed % (max + 1u);
 }
 
+ivec2 ClampTerrainCoord(ivec2 coord) {
+    return clamp(coord, ivec2(0), textureSize(TerrainControlTexture, 0) - 1);
+}
+
+float GetTerrainHeight(ivec2 coord) {
+    ivec2 maximumCoord = textureSize(HeightMapTexture, 0) - 1;
+    return texelFetch(HeightMapTexture, clamp(coord, ivec2(0), maximumCoord), 0).r * HEIGHTMAP_SCALE_Y;
+}
+
+vec3 GetSmoothTerrainNormal(vec2 controlPosition) {
+    ivec2 baseCoord = ivec2(floor(controlPosition));
+    vec2 fractional = fract(controlPosition);
+    vec2 inverseFractional = 1.0 - fractional;
+    vec4 weights = vec4(
+        inverseFractional.x * fractional.y,
+        fractional.x * fractional.y,
+        fractional.x * inverseFractional.y,
+        inverseFractional.x * inverseFractional.y);
+
+    float h[4];
+    h[3] = GetTerrainHeight(baseCoord);
+    h[2] = GetTerrainHeight(baseCoord + ivec2(1, 0));
+    h[0] = GetTerrainHeight(baseCoord + ivec2(0, 1));
+    h[1] = GetTerrainHeight(baseCoord + ivec2(1, 1));
+    float h4 = GetTerrainHeight(baseCoord + ivec2(1, 2));
+    float h5 = GetTerrainHeight(baseCoord + ivec2(2, 1));
+    float h6 = GetTerrainHeight(baseCoord + ivec2(2, 0));
+    float h7 = GetTerrainHeight(baseCoord + ivec2(0, 2));
+
+    vec3 indexNormal[4];
+    indexNormal[3] = normalize(vec3(h[3] - h[2], HEIGHTMAP_SCALE_XZ, h[3] - h[0]));
+    indexNormal[0] = normalize(vec3(h[0] - h[1], HEIGHTMAP_SCALE_XZ, h[0] - h7));
+    indexNormal[1] = normalize(vec3(h[1] - h5, HEIGHTMAP_SCALE_XZ, h[1] - h4));
+    indexNormal[2] = normalize(vec3(h[2] - h6, HEIGHTMAP_SCALE_XZ, h[2] - h[1]));
+
+    return normalize(
+        indexNormal[0] * weights[0] +
+        indexNormal[1] * weights[1] +
+        indexNormal[2] * weights[2] +
+        indexNormal[3] * weights[3]);
+}
+
+uint ResolveTerrainControl(uint control, float autoBlend) {
+    if ((control & 0x1u) != 0u) {
+        control =
+            ((0u & 0x1Fu) << 27u) |
+            ((2u & 0x1Fu) << 22u) |
+            ((uint(fma(autoBlend, 255.0, 0.5)) & 0xFFu) << 14u);
+    }
+    return control;
+}
+
+float GetGrassCoverage(vec2 controlPosition) {
+    ivec2 baseCoord = ivec2(floor(controlPosition));
+    vec2 fractional = fract(controlPosition);
+    vec2 inverseFractional = 1.0 - fractional;
+    vec4 spatialWeights = vec4(
+        inverseFractional.x * fractional.y,
+        fractional.x * fractional.y,
+        fractional.x * inverseFractional.y,
+        inverseFractional.x * inverseFractional.y);
+    ivec2 controlCoords[4] = ivec2[4](
+        baseCoord + ivec2(0, 1),
+        baseCoord + ivec2(1, 1),
+        baseCoord + ivec2(1, 0),
+        baseCoord);
+
+    vec3 terrainNormal = GetSmoothTerrainNormal(controlPosition);
+    float terrainSlope = 1.0 - clamp(terrainNormal.y, 0.0, 1.0);
+    float autoBlend = smoothstep(0.15, 0.45, terrainSlope);
+    float grassCoverage = 0.0;
+
+    for (int i = 0; i < 4; i++) {
+        uint control = texelFetch(TerrainControlTexture, ClampTerrainCoord(controlCoords[i]), 0).r;
+        control = ResolveTerrainControl(control, autoBlend);
+
+        uint baseMaterial = (control >> 27u) & 0x1Fu;
+        uint overlayMaterial = (control >> 22u) & 0x1Fu;
+        if (baseMaterial > 3u) baseMaterial = 0u;
+        if (overlayMaterial > 3u) overlayMaterial = 0u;
+        float overlayWeight = float((control >> 14u) & 0xFFu) / 255.0;
+        float baseWeight = 1.0 - overlayWeight;
+        float cornerGrassCoverage =
+            (baseMaterial == 0u ? baseWeight : 0.0) +
+            (overlayMaterial == 0u ? overlayWeight : 0.0);
+        grassCoverage += cornerGrassCoverage * spatialWeights[i];
+    }
+
+    return clamp(grassCoverage, 0.0, 1.0);
+}
+
 void main() {
     // tweakables
     float bendStrength = 0.1;
@@ -114,6 +206,14 @@ void main() {
 
     float posX = float(gl_GlobalInvocationID.x) * spacing + offset.x;
     float posZ = float(gl_GlobalInvocationID.y) * spacing + offset.z;
+
+    vec2 controlPosition = vec2(posX, posZ) / HEIGHTMAP_SCALE_XZ;
+    ivec2 terrainMaximum = textureSize(TerrainControlTexture, 0) - 1;
+    if (any(lessThan(controlPosition, vec2(0.0))) || any(greaterThan(controlPosition, vec2(terrainMaximum)))) return;
+
+    float grassCoverage = GetGrassCoverage(controlPosition);
+    if (grassCoverage < clamp(u_grassCoverageThreshold, 0.0, 1.0)) return;
+    if (Rand(vec2(posX, posZ)) >= grassCoverage) return;
 
     vec2 heightMapDimensions = textureSize(HeightMapTexture, 0) * HEIGHTMAP_SCALE_XZ;
     vec2 normalizedCoords = vec2(posX / heightMapDimensions.x, posZ / heightMapDimensions.y);

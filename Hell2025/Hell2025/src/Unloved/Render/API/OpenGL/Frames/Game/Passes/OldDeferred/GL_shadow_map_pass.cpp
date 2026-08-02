@@ -144,12 +144,21 @@ namespace OpenGL::Renderer {
 
             // Heightfield chunks
             std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
-            OpenGL::SetUniformBool("u_useDrawRenderItemIndices", false);
             if (!chunks.empty()) {
                 MeshBuffer& heightMapMeshBuffer = Hell::ResourceManager::GetMeshBuffer("HeightMapGeometry");
                 OpenGLMeshBuffer& glHeightMapMeshBuffer = OpenGL::ResourceManager::GetMeshBuffer("HeightMapGeometry");
-                glBindVertexArray(glHeightMapMeshBuffer.GetVAO());
+                OpenGLFrameBuffer& worldFbo = OpenGL::ResourceManager::GetFrameBuffer("World");
+                Hell::TextureArray* displacementBuffer = Hell::ResourceManager::GetTextureArrayPtr("TerrainDisplacement");
+
+                OpenGL::BindShader("ShadowHeightMap");
+                OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+                OpenGL::SetUniformMat4("u_projectionView", lightProjectionView);
                 OpenGL::SetUniformMat4("u_modelMatrix", heightMapModelMatrix);
+                OpenGL::SetUniformInt("u_viewportIndex", std::max(flashLightShadowMapDrawInfo.ownerViewportIndex[i], 0));
+                OpenGL::BindTextureUnit(5, worldFbo.GetColorAttachmentHandleByName("HeightMap"));
+                if (displacementBuffer) OpenGL::BindTextureUnit(6, displacementBuffer->GetHandle());
+                glBindVertexArray(glHeightMapMeshBuffer.GetVAO());
+                glPatchParameteri(GL_PATCH_VERTICES, 3);
 
                 for (uint32_t chunkIndex : flashLightShadowMapDrawInfo.heightMapChunkIndices[i]) {
                     HeightMapChunk& chunk = chunks[chunkIndex];
@@ -160,15 +169,16 @@ namespace OpenGL::Renderer {
                     int baseVertex = mesh->baseVertex;
                     int baseIndex = mesh->baseIndex;
                     void* indexOffset = (GLvoid*)(baseIndex * sizeof(GLuint));
-                    int instanceCount = 1;
-                    int viewportIndex = std::max(flashLightShadowMapDrawInfo.ownerViewportIndex[i], 0);
                     if (indexCount > 0) {
-                        glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indexOffset, instanceCount, baseVertex, viewportIndex);
+                        glDrawElementsBaseVertex(GL_PATCHES, indexCount, GL_UNSIGNED_INT, indexOffset, baseVertex);
                     }
                 }
             }
 
             // Procedural
+            OpenGL::BindShader("ShadowMap");
+            OpenGL::SetUniformMat4("u_projectionView", lightProjectionView);
+            OpenGL::SetUniformBool("u_useDrawRenderItemIndices", false);
             OpenGL::SetUniformMat4("u_modelMatrix", glm::mat4(1.0f));
 
             glBindVertexArray(glMeshBufferProcedural.GetVAO());

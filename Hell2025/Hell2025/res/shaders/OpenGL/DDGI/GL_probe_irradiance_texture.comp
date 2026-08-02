@@ -188,7 +188,7 @@ void main() {
     }
 
     vec3 finalIrradiance = SampleIrradianceAtlas(worldPos, normal, viewPos);
-    finalIrradiance *= IRRADIANCE_DAMPENING;
+    finalIrradiance *= rendererData.irradianceDampening;
 
     //finalIrradiance = clamp(normal, vec3(0), vec3(1));
     //finalIrradiance = clamp(worldPos, 0, 1);

@@ -1,16 +1,15 @@
 #include "MapManager.h"
 
-#include "Hell/Backend/BackEnd.h"
 #include "Hell/Logging.h"
 
 #include "Legacy/File/JSON.h"
-#include "Unloved/Render/Renderer.h"
 
 #include "Unloved/Maps/MapFile.h"
 #include "Unloved/World/World.h"
 
 #include <cstring>
 #include <fstream>
+#include <utility>
 
 namespace Unloved::MapManager {
     std::vector<MapData> g_mapData;
@@ -21,9 +20,14 @@ namespace Unloved::MapManager {
         LoadMapData("Shit");
     }
 
-    void NewMap(const std::string& name, int chunkWidth, int chunkDepth, float initialHeight) {
+    bool NewMap(const std::string& name, int chunkWidth, int chunkDepth, float initialHeight) {
+        for (MapData& mapData : g_mapData) {
+            if (mapData.GetFilename() == name) return false;
+        }
+
         MapData& mapData = g_mapData.emplace_back();
         mapData.CreateNew(name, chunkWidth, chunkDepth, initialHeight);
+        return true;
     }
 
     void SaveMap(const std::string& mapName) {
@@ -33,29 +37,26 @@ namespace Unloved::MapManager {
             return;
         }
 
-        // Get heightmap data
-        if (Hell::BackEnd::GetAPI() == API::OPENGL) {
-            Renderer::ReadBackHeightMapData(mapData);
-        }
-        if (Hell::BackEnd::GetAPI() == API::VULKAN) {
-            Logging::ToDo() << "Vulkan TODO: MapManager::SaveHeightMap()";
-            return;
-        }
-
         int32_t textureWidth = mapData->GetTextureWidth();
         int32_t textureHeight = mapData->GetTextureHeight();
         int32_t floatCount = textureWidth * textureHeight;
         int32_t dataSize = mapData->GetHeightMapData().size();
+        int32_t controlDataSize = mapData->GetTerrainControlData().size();
 
         // Validate height map data size
         if (dataSize != floatCount) {
             Logging::Error() << "File::SaveHeightMap() failed because map.m_heightMapData.size() is " << dataSize << " but width(" << textureWidth << ") * height(" << textureHeight << ") equals " << floatCount;
             return;
         }
+        if (controlDataSize != floatCount) {
+            Logging::Error() << "SaveMap() failed because terrain control data has " << controlDataSize << " values but needs " << floatCount;
+            return;
+        }
 
         // Construct the JSON string
         CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
         mapData->SetCreateInfoCollection(createInfoCollection);
+        mapData->GetAdditionalMapData().houseLocations = World::GetHouseLocationCreateInfos();
         
         std::string createInfoJson = JSON::CreateInfoCollectionToJSON(createInfoCollection);
         std::string additionalJson = JSON::AdditionalMapDataToJSON(mapData->GetAdditionalMapData());
@@ -70,7 +71,7 @@ namespace Unloved::MapManager {
 
         // Write the header
         MapHeader header{};
-        header.version = 1;
+        header.version = HELL_MAP_VERSION;
         header.chunkCountX = mapData->GetChunkCountX();
         header.chunkCountZ = mapData->GetChunkCountZ();
         header.createInfoJsonLength = createInfoJson.size();
@@ -80,6 +81,9 @@ namespace Unloved::MapManager {
 
         // Write the height map pixel data
         file.write(reinterpret_cast<const char*>(mapData->GetHeightMapData().data()), floatCount * sizeof(float));
+
+        // Write the terrain control data
+        file.write(reinterpret_cast<const char*>(mapData->GetTerrainControlData().data()), floatCount * sizeof(uint32_t));
 
         // Write JSON blobs immediately after
         file.write(createInfoJson.data(), static_cast<std::streamsize>(createInfoJson.size()));
@@ -97,41 +101,59 @@ namespace Unloved::MapManager {
     }
 
     void LoadMapData(const std::string& mapName) {
+        for (MapData& mapData : g_mapData) {
+            if (mapData.GetFilename() == mapName) return;
+        }
+
+        ReloadMapData(mapName);
+    }
+
+    bool ReloadMapData(const std::string& mapName) {
         const std::string path = "res/maps/" + mapName + ".map";
         std::ifstream file(path, std::ios::binary);
         if (!file) {
             Logging::Error() << "LoadMapData(): failed to open '" << path << "'";
-            return;
+            return false;
         }
 
         MapHeader header{};
         file.read(reinterpret_cast<char*>(&header), sizeof(header));
         if (!file) {
             Logging::Error() << "LoadMapData(): failed reading header";
-            return;
+            return false;
         }
 
         // Validate header signature
         if (std::memcmp(header.signature, HELL_MAP_SIGNATURE, sizeof(HELL_MAP_SIGNATURE)) != 0) {
             Logging::Error() << "LoadMapData(): bad file signature";
-            return;
+            return false;
+        }
+        if (header.version != HELL_MAP_VERSION) {
+            Logging::Error() << "LoadMapData(): unsupported map version " << header.version;
+            return false;
         }
 
         uint32_t textureWidth = header.chunkCountX * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
         uint32_t textureHeight = header.chunkCountZ * HEIGHT_MAP_CHUNK_PIXEL_SIZE;
         uint32_t floatCount = textureWidth * textureHeight;
         std::vector<float> heightMapData(floatCount);
+        std::vector<uint32_t> terrainControlData(floatCount, TerrainControl::DEFAULT_VALUE);
 
         // Read height map data
         file.read(reinterpret_cast<char*>(heightMapData.data()), static_cast<std::streamsize>(floatCount * sizeof(float)));
         if (!file) {
             Logging::Error() << "LoadMapData(): failed reading height data";
-            return;
+            return false;
         }
-
-        MapData& mapData = g_mapData.emplace_back();
+        file.read(reinterpret_cast<char*>(terrainControlData.data()), static_cast<std::streamsize>(floatCount * sizeof(uint32_t)));
+        if (!file) {
+            Logging::Error() << "LoadMapData(): failed reading terrain control data";
+            return false;
+        }
+        MapData mapData;
         mapData.SetFilename(mapName);
         mapData.SetHeightMapData(header.chunkCountX, header.chunkCountZ, heightMapData);
+        mapData.SetTerrainControlData(terrainControlData);
 
         std::string createInfoJson;
         std::string additionalJson;
@@ -143,7 +165,7 @@ namespace Unloved::MapManager {
             file.read(createInfoJson.data(), static_cast<std::streamsize>(header.createInfoJsonLength));
             if (!file) {
                 Logging::Error() << "LoadMapData(): failed reading create info json";
-                return;
+                return false;
             }
         }
 
@@ -151,7 +173,7 @@ namespace Unloved::MapManager {
             file.read(additionalJson.data(), static_cast<std::streamsize>(header.additionalJsonLength));
             if (!file) {
                 Logging::Error() << "LoadMapData(): failed reading additional json";
-                return;
+                return false;
             }
         }
 
@@ -172,7 +194,14 @@ namespace Unloved::MapManager {
             //<< additionalJson;
             << "";
 
-        return;
+        for (MapData& existingMapData : g_mapData) {
+            if (existingMapData.GetFilename() == mapName) {
+                existingMapData = std::move(mapData);
+                return true;
+            }
+        }
+        g_mapData.emplace_back(std::move(mapData));
+        return true;
     }
 
     void UpdateCreateInfoCollectionFromWorld(const std::string& mapName) {
@@ -184,6 +213,7 @@ namespace Unloved::MapManager {
 
         CreateInfoCollection createInfoCollection = World::GetCreateInfoCollection();
         mapData->SetCreateInfoCollection(createInfoCollection);
+        mapData->GetAdditionalMapData().houseLocations = World::GetHouseLocationCreateInfos();
     }
 
     MapData* GetTestMapData() {

@@ -14,13 +14,6 @@
 #include <cstdint>
 #include <string>
 
-struct HouseLocation {
-    HouseType type = HouseType::UNDEFINED;
-    std::string houseName = "RANDOM";
-    glm::vec3 position = glm::vec3(0.0f);
-    float rotation = 0.0f;
-};
-
 using Transform = Hell::Transform;
 using AnimatedTransform = Hell::QuatTransform;
 

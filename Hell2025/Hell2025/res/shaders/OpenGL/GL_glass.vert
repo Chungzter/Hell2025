@@ -22,6 +22,8 @@ out vec3 v_tint;
 
 out flat int v_materialIndex;
 out flat uint v_instanceIndex;
+out flat float v_roughnessFactor;
+out flat float v_metallicFactor;
 
 readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer {
 	ViewportData viewportData[];
@@ -48,6 +50,8 @@ void main() {
     v_uv = a_uv;
     v_materialIndex = renderItem.materialIndex;
     v_instanceIndex = uint(globalInstanceIndex);
+    v_roughnessFactor = renderItem.roughnessFactor;
+    v_metallicFactor = renderItem.metallicFactor;
 
     v_worldPos = modelMatrix * vec4(a_position, 1.0);
     v_viewPos = inverseView[3].xyz;

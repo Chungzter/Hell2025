@@ -38,6 +38,7 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("HeightMapPhysxTextureGeneration", { "GL_heightmap_physx_texture_generation.comp" });
         OpenGL::ResourceManager::LoadShader("HeightMapVertexGeneration", { "GL_heightmap_vertex_generation.comp" });
         OpenGL::ResourceManager::LoadShader("HeightMapPaint", { "GL_heightmap_paint.comp" });
+        OpenGL::ResourceManager::LoadShader("HeightMapBrushPreview", { "RE/GL_fullscreen_triangle.vert", "GL_heightmap_brush_preview.frag" });
         OpenGL::ResourceManager::LoadShader("LightCulling", { "GL_light_culling.comp" });
         OpenGL::ResourceManager::LoadShader("Lighting", { "GL_lighting.comp" });
         OpenGL::ResourceManager::LoadShader("GaussianBlur", { "GL_gaussian_blur.comp" }); // am I needed????
@@ -46,6 +47,7 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("OutlineMask", { "GL_outline_mask.vert", "GL_outline_mask.frag" });
         OpenGL::ResourceManager::LoadShader("PerlinNoise3D", { "GL_perlin_noise_3d.comp" });
         OpenGL::ResourceManager::LoadShader("ShadowMap", { "GL_shadow_map.vert", "GL_shadow_map.frag" });
+        OpenGL::ResourceManager::LoadShader("ShadowHeightMap", { "GL_shadow_height_map.vert", "GL_shadow_height_map.tesc", "GL_shadow_height_map.tese", "GL_shadow_map.frag" });
         OpenGL::ResourceManager::LoadShader("ShadowCubeMap", { "GL_shadow_cube_map.vert", "GL_shadow_cube_map.frag" });
         OpenGL::ResourceManager::LoadShader("ShadowCubeMapAlphaDiscard", { "GL_shadow_cube_map.vert", "GL_shadow_cube_map_alpha_discard.frag" });
         OpenGL::ResourceManager::LoadShader("SolidColor", { "GL_solid_color.vert", "GL_solid_color.frag" });
@@ -130,9 +132,9 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("Water", "OceanPositionReadback", { "GL_ocean_position_readback.comp" });
 
         // Post processing
-        OpenGL::ResourceManager::LoadShader("FXAA", { "RE/GL_fullscreen_triangle.vert", "GL_fxaa.frag" });
-        OpenGL::ResourceManager::LoadShader("TAA", { "GL_taa.comp" });
-        OpenGL::ResourceManager::LoadShader("TAAPost", { "GL_taa_post.comp" });
+        OpenGL::ResourceManager::LoadShader("PostProcessing", "FXAA", { "GL_fullscreen_triangle.vert", "GL_fxaa.frag" });
+        OpenGL::ResourceManager::LoadShader("PostProcessing", "TAA", { "GL_taa.comp" });
+        OpenGL::ResourceManager::LoadShader("PostProcessing", "TAAPost", { "GL_taa_post.comp" });
         OpenGL::ResourceManager::LoadShader("PostProcessing", "PostProcessing", { "GL_post_processing.comp" });
 
         // RE_STYLE ONLY
@@ -148,8 +150,10 @@ namespace OpenGL::Renderer {
 
         OpenGL::ResourceManager::LoadShader("RE", "Visibility", { "GL_visibility.vert", "GL_visibility.frag" });
         OpenGL::ResourceManager::LoadShader("RE", "VisibilityAlphaDiscard", { "GL_visibility.vert", "GL_visibility_alpha_discard.frag" });
-        OpenGL::ResourceManager::LoadShader("RE", "VisibilityHeightMap", { "GL_visibility_height_map.vert", "GL_visibility_height_map.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "VisibilityHeightMap", { "GL_visibility_height_map.vert", "GL_visibility_height_map.tesc", "GL_visibility_height_map.tese", "GL_visibility_height_map.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "TerrainDisplacementBuffer", { "GL_terrain_displacement_buffer.comp" });
         OpenGL::ResourceManager::LoadShader("RE", "MaterialResolve", { "GL_material_resolve.vert", "GL_material_resolve.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "MaterialResolveHeightMap", { "GL_material_resolve.vert", "GL_material_resolve_height_map.frag" });
 
         OpenGL::ResourceManager::LoadShader("RE", "EmissiveForward", { "GL_gbuffer_re.vert", "GL_emissive_forward.frag" });
 

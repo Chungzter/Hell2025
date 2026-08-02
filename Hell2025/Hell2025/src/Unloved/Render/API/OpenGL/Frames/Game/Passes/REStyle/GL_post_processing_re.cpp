@@ -40,8 +40,9 @@ namespace OpenGL::Renderer {
     }
 
     // 1. TAA
-    // 2. Tone mapping
-    // 3. FXAA
+    // 2. Emissive and bloom
+    // 3. Tone mapping
+    // 4. FXAA
 
     void TAAPass() {
         RendererSettings& rendererSettings = Unloved::Renderer::GetCurrentRendererSettings();
@@ -120,6 +121,7 @@ namespace OpenGL::Renderer {
             gBuffer.DrawBuffer("Lighting");
 
             OpenGL::BindShader("FXAA");
+            OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
             OpenGL::BindTextureUnit(0, scratchFbo.GetColorAttachmentHandleByName("RGBA16F"));
 
             OpenGLRasterizerState state;
@@ -146,6 +148,7 @@ namespace OpenGL::Renderer {
             state == RendererOverrideState::INDIRECT_DIFFUSE) {
 
             TAAPass();
+            EmissivePass();
             ToneMappingPassRE();
             FXAAPassRE();
         }

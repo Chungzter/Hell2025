@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Unloved/Common/CreateInfo.h"
+#include "Unloved/Common/PlanarQuad.h"
 #include "Unloved/Common/Types.h"
 #include "Hell/Render/VertexAttributes.h"
 
@@ -18,6 +19,8 @@ struct WorldPlane {
     ~WorldPlane() = default;
 
     void UpdateVertexDataFromCreateInfo();
+    bool SetPointPosition(uint32_t pointIndex, const glm::vec3& position);
+    bool SetRotation(const glm::vec3& rotation);
     void SetPosition(const glm::vec3& position);
     void UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter);
     void SetMaterial(const std::string& materialName);
@@ -25,6 +28,9 @@ struct WorldPlane {
     void SetTextureScale(float value);
     void SetTextureOffsetU(float value);
     void SetTextureOffsetV(float value);
+    void SetRotateTexture90(bool value);
+    void SetRoughnessFactor(float value);
+    void SetMetallicFactor(float value);
     void CleanUp();
     void SubmitRenderItem();
     void DrawEdges(glm::vec4 color);
@@ -34,11 +40,13 @@ struct WorldPlane {
 
 	bool IsHiddenInEditor() const                   { return m_hiddenInEditor; }
     const glm::vec3& GetWorldSpaceCenter() const    { return m_worldSpaceCenter; }
+    const glm::vec3& GetRotation() const            { return m_planarQuad.GetRotation(); }
     const std::string& GetEditorName() const        { return m_createInfo.editorName; }
     const uint64_t GetObjectId() const              { return m_objectId; }
     const uint64_t GetParentDoorId() const          { return m_createInfo.parentDoorId; }
     Material* GetMaterial();
     int32_t GetMaterialIndex() const                { return m_materialIndex; }
+    const PlanarQuad& GetPlanarQuad() const         { return m_planarQuad; }
     std::vector<Vertex>& GetVertices()              { return m_vertices; }
     std::vector<uint32_t>& GetIndices()             { return m_indices; }
     std::vector<glm::vec2>& GetNavMeshPoly()        { return m_navMeshPoly; }
@@ -51,11 +59,8 @@ private:
     uint64_t m_parentDoorId = 0;
     uint64_t m_physicsId = 0;
     int32_t m_materialIndex = -1;
-    glm::vec3 m_p0 = glm::vec3(0.0f);
-    glm::vec3 m_p1 = glm::vec3(0.0f);
-    glm::vec3 m_p2 = glm::vec3(0.0f);
-    glm::vec3 m_p3 = glm::vec3(0.0f);
     glm::vec3 m_worldSpaceCenter = glm::vec3(0.0f);
+    PlanarQuad m_planarQuad;
     std::vector<Vertex> m_vertices;
     std::vector<uint32_t> m_indices;
     std::vector<glm::vec2> m_navMeshPoly;
@@ -64,5 +69,6 @@ private:
     uint32_t m_meshId = 0;
 
     void CreatePhysicsObject();
+    void SyncCreateInfoFromPlanarQuad();
 };
 }

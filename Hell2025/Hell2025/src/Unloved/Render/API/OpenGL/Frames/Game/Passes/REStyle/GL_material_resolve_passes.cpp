@@ -19,7 +19,6 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("MaterialResolve");
         OpenGL::SetUniformBool("u_hasPreviousSkinnedPositions", false);
         OpenGL::SetUniformBool("u_woundMaskEnabled", false);
-        OpenGL::SetUniformBool("u_heightMapResolve", false);
 
         OpenGL::BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
@@ -56,38 +55,34 @@ namespace OpenGL::Renderer {
     void MaterialResolveHeightMapPass() {
         ProfilerOpenGLZoneFunction();
 
-        OpenGLFrameBuffer* roadFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("Road");
-        if (!roadFramebuffer) return;
-
         OpenGLFrameBuffer& gbufferFbo = OpenGL::ResourceManager::GetFrameBuffer("GBuffer");
         gbufferFbo.Bind();
         gbufferFbo.SetViewport();
         gbufferFbo.DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "VelocityXYOcclusionSubSurface" });
 
-        OpenGL::BindShader("MaterialResolve");
-        OpenGL::SetUniformBool("u_hasPreviousSkinnedPositions", false);
-        OpenGL::SetUniformBool("u_woundMaskEnabled", false);
-        OpenGL::SetUniformBool("u_heightMapResolve", true);
+        OpenGL::BindShader("MaterialResolveHeightMap");
 
         OpenGL::BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
-        OpenGL::BindTextureUnit(3, roadFramebuffer->GetColorAttachmentHandleByName("RoadMask"));
+        OpenGL::BindTextureUnit(4, OpenGL::ResourceManager::GetFrameBuffer("World").GetColorAttachmentHandleByName("TerrainControl"));
+        OpenGL::BindTextureUnit(5, OpenGL::ResourceManager::GetFrameBuffer("World").GetColorAttachmentHandleByName("HeightMap"));
 
-        OpenGLMeshBuffer& meshBuffer = OpenGL::ResourceManager::GetMeshBuffer("HeightMapGeometry");
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
-        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_VERTICES, meshBuffer.GetVBO());
-        OpenGL::BindSSBO(SSBO_IDX_MATERIAL_RESOLVE_INDICES, meshBuffer.GetEBO());
 
+        int32_t fallbackMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Ground_MudVeg");
+        if (fallbackMaterialIndex == -1) fallbackMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("CheckerBoard");
+        if (fallbackMaterialIndex == -1) fallbackMaterialIndex = 0;
+        int32_t grassMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Grass");
         int32_t dirtRoadMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("DirtRoad");
-        int32_t groundMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Ground_MudVeg");
-        if (groundMaterialIndex == -1) {
-            groundMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("CheckerBoard");
-        }
-        OpenGL::SetUniformInt("u_dirtRoadMaterialIndex", dirtRoadMaterialIndex == -1 ? groundMaterialIndex : dirtRoadMaterialIndex);
+        int32_t rockFaceMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("RockFace");
+        int32_t sandMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Sand");
+        OpenGL::SetUniformInt("u_terrainMaterial0", grassMaterialIndex == -1 ? fallbackMaterialIndex : grassMaterialIndex);
+        OpenGL::SetUniformInt("u_terrainMaterial1", dirtRoadMaterialIndex == -1 ? fallbackMaterialIndex : dirtRoadMaterialIndex);
+        OpenGL::SetUniformInt("u_terrainMaterial2", rockFaceMaterialIndex == -1 ? fallbackMaterialIndex : rockFaceMaterialIndex);
+        OpenGL::SetUniformInt("u_terrainMaterial3", sandMaterialIndex == -1 ? fallbackMaterialIndex : sandMaterialIndex);
 
         float textureScaling = 1.0f;
         if (Unloved::Editor::IsOpen() && Unloved::Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) {
@@ -128,7 +123,6 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("MaterialResolve");
         OpenGL::SetUniformBool("u_hasPreviousSkinnedPositions", true);
         OpenGL::SetUniformBool("u_woundMaskEnabled", woundMaskArray != nullptr);
-        OpenGL::SetUniformBool("u_heightMapResolve", false);
 
         OpenGL::BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());
@@ -180,7 +174,6 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("MaterialResolve");
         OpenGL::SetUniformBool("u_hasPreviousSkinnedPositions", false);
         OpenGL::SetUniformBool("u_woundMaskEnabled", false);
-        OpenGL::SetUniformBool("u_heightMapResolve", false);
 
         OpenGL::BindImageTexture(0, gbufferFbo.GetColorAttachmentHandleByName("Visibility"), GL_READ_ONLY, GL_RG32UI);
         OpenGL::BindTextureUnit(1, gbufferFbo.GetDepthAttachmentHandle());

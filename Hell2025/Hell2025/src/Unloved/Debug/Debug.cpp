@@ -18,7 +18,7 @@
 #include "Unloved/Session/Session.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Unloved/Editor/Editor.h"
-#include "Unloved/EditorSession/EditorLayout.h"
+#include "Unloved/EditorSession/UI/EditorLayout.h"
 #include "Unloved/Objects/Effects/Decal.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Viewport/ViewportManager.h"

@@ -53,7 +53,7 @@ void Wire::Init(const WireCreateInfo& createInfo) {
 
         const int segmentCount = std::max(1, (int)std::ceil(span / spacing));
         const int numSagPoints = segmentCount + 1;
-        std::vector<glm::vec3> sagPoints = Hell::Curve::GenerateSagPoints(begin.position, end.position, numSagPoints, end.value);
+        std::vector<glm::vec3> sagPoints = Hell::Curve::GenerateSagPoints(begin.position, end.position, numSagPoints, end.customFloat);
 
         if (sagPoints.size() < 2) {
             sagPoints.clear();

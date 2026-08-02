@@ -3,6 +3,7 @@
 #include "Hell/Input.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
+#include "Unloved/EditorSession/EditorSession.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Session/Session.h"
@@ -120,7 +121,7 @@ namespace OpenGL::Renderer {
         glm::vec3 pos = player->GetInteractHitPosition();
         glm::vec3 normal = player->GetInteractHitNormal();
 
-        if (Hell::Input::KeyPressed(HELL_KEY_T)) {
+        if (Hell::Input::KeyPressed(HELL_KEY_T) && Unloved::EditorSession::IsInactive()) {
             Hell::Audio::PlayAudio("Spray.wav", 1.0f);
             TestDecal& decal = decals.emplace_back();
             decal.position = pos;
@@ -194,10 +195,10 @@ namespace OpenGL::Renderer {
         glColorMaski(1, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         glColorMaski(2, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
-        for (TestDecal& decal : decals) {
-            Hell::DebugDraw::DrawPoint(decal.position, RED);
-            Hell::DebugDraw::DrawLine(decal.position, decal.position + (decal.normal * 0.1f), RED);
-        }
+        //for (TestDecal& decal : decals) {
+        //    Hell::DebugDraw::DrawPoint(decal.position, RED);
+        //    Hell::DebugDraw::DrawLine(decal.position, decal.position + (decal.normal * 0.1f), RED);
+        //}
     }
 
 

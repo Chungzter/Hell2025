@@ -52,8 +52,8 @@ void main() {
 
     vec3 viewPos = viewportDataBuffer.viewportData[v_viewportIndex].inverseView[3].xyz;
 
-    float roughness = rma.r;
-    float metallic = rma.g;
+    float roughness = clamp(rma.r * item.roughnessFactor, 0.0, 1.0);
+    float metallic = clamp(rma.g * item.metallicFactor, 0.0, 1.0);
     float ao = rma.b;
 
     vec3 gammaBaseColor = pow(baseColor.rgb, vec3(2.2));

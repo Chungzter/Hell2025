@@ -20,6 +20,7 @@
 #include "Unloved/Systems/Bullets/BulletSystem.h"
 #include "Unloved/Systems/GameAudio/GameAudio.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
+#include "Unloved/Systems/House/HouseGeometryBuilder.h"
 #include "Unloved/Systems/House/HouseManager.h"
 #include "Unloved/Systems/Map/MapManager.h"
 #include "Unloved/Systems/Pathfinding/AStarMap.h"
@@ -130,10 +131,12 @@ namespace Unloved {
 
             GameAudio::PlayGlockEquipAudio();
             Renderer::InitMain();
+            HouseBuilder::Init();
+            HouseGeometryBuilder::Init();
             HouseManager::Init();
             MapManager::Init();
             Session::Create();
-            World::Init();
+            Session::StartNewGame(GameMode::CAMPAIGN, "Shit");
 
             Hell::ResourceManager::FreeTextureCPUMemory();
 

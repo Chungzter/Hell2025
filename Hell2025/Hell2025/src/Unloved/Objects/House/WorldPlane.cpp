@@ -1,4 +1,5 @@
 #include "WorldPlane.h"
+#include "Hell/Common/Bit.h"
 #include "Hell/Geometry/Geometry.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -27,26 +28,31 @@ WorldPlane::WorldPlane(uint64_t id, const WorldPlaneCreateInfo& createInfo, cons
 }
 
 void WorldPlane::UpdateVertexDataFromCreateInfo() {
-    m_p0 = m_createInfo.p0;
-    m_p1 = m_createInfo.p1;
-    m_p2 = m_createInfo.p2;
-    m_p3 = m_createInfo.p3;
+    const std::array<glm::vec3, 4> createInfoPoints = { m_createInfo.p0, m_createInfo.p1, m_createInfo.p2, m_createInfo.p3 };
+    bool pointsChanged = !m_planarQuad.IsValid();
+    if (!pointsChanged) {
+        const std::array<glm::vec3, 4>& points = m_planarQuad.GetPoints();
+        for (uint32_t i = 0; i < points.size(); i++) {
+            if (createInfoPoints[i].x != points[i].x || createInfoPoints[i].y != points[i].y || createInfoPoints[i].z != points[i].z) pointsChanged = true;
+        }
+    }
+    if (pointsChanged) m_planarQuad.SetPoints(createInfoPoints);
+    if (!m_planarQuad.IsValid()) return;
+
+    SyncCreateInfoFromPlanarQuad();
+    const std::array<glm::vec3, 4>& points = m_planarQuad.GetPoints();
 
     // Vertices
     m_vertices.resize(4);
-    m_vertices[0].position = m_p0;
-    m_vertices[1].position = m_p1;
-    m_vertices[2].position = m_p2;
-    m_vertices[3].position = m_p3;
+    for (size_t i = 0; i < points.size(); i++) m_vertices[i].position = points[i];
 
     // Indices
     m_indices = { 0, 1, 2, 2, 3, 0 };
 
     // Update UVs
     for (Vertex& vertex : m_vertices) {
-        glm::vec3 origin = glm::vec3(0, 0, 0);
-        origin = glm::vec3(0);
-        vertex.uv = Hell::Geometry::CalculateUV(vertex.position, glm::vec3(0.0f, 1.0f, 0.0f));
+        vertex.uv = Hell::Geometry::CalculateUV(vertex.position, points[0], m_planarQuad.GetRight(), m_planarQuad.GetForward());
+        if (m_createInfo.rotateTexture90) vertex.uv = glm::vec2(vertex.uv.y, -vertex.uv.x);
         vertex.uv *= m_createInfo.textureScale;
         vertex.uv.x += m_createInfo.textureOffsetU;
         vertex.uv.y += m_createInfo.textureOffsetV;
@@ -64,15 +70,12 @@ void WorldPlane::UpdateVertexDataFromCreateInfo() {
     CreatePhysicsObject();
 
     // Calculate worldspace center
-    m_worldSpaceCenter = (m_p0 + m_p1 + m_p2 + m_p3) / 4.0f;
+    m_worldSpaceCenter = m_planarQuad.GetCenter();
 
     // Nav mesh poly
     m_navMeshPoly.clear();
     m_navMeshPoly.reserve(4);
-    m_navMeshPoly.emplace_back(m_p0.x, m_p0.z);
-    m_navMeshPoly.emplace_back(m_p1.x, m_p1.z);
-    m_navMeshPoly.emplace_back(m_p2.x, m_p2.z);
-    m_navMeshPoly.emplace_back(m_p3.x, m_p3.z);
+    for (const glm::vec3& point : points) m_navMeshPoly.emplace_back(point.x, point.z);
 
     HouseBuilder::MarkDirty();
 }
@@ -83,10 +86,7 @@ void WorldPlane::CleanUp() {
     m_indices.clear();
     m_objectId = 0;
     m_physicsId = 0;
-    m_p0 = glm::vec3(0.0f);
-    m_p1 = glm::vec3(0.0f);
-    m_p2 = glm::vec3(0.0f);
-    m_p3 = glm::vec3(0.0f);
+    m_planarQuad = {};
     m_materialIndex = -1;
 
     Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
@@ -97,12 +97,26 @@ void WorldPlane::SetPosition(const glm::vec3& position) {
     UpdateWorldSpaceCenter(position);
 }
 
+bool WorldPlane::SetPointPosition(uint32_t pointIndex, const glm::vec3& position) {
+    if (!m_planarQuad.SetPointPosition(pointIndex, position)) return false;
+
+    SyncCreateInfoFromPlanarQuad();
+    UpdateVertexDataFromCreateInfo();
+    return true;
+}
+
+bool WorldPlane::SetRotation(const glm::vec3& rotation) {
+    if (!m_planarQuad.SetRotation(rotation)) return false;
+
+    SyncCreateInfoFromPlanarQuad();
+    UpdateVertexDataFromCreateInfo();
+    return true;
+}
+
 void WorldPlane::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {
-    glm::vec3 offset = worldSpaceCenter - m_worldSpaceCenter;
-    m_createInfo.p0 += offset;
-    m_createInfo.p1 += offset;
-    m_createInfo.p2 += offset;
-    m_createInfo.p3 += offset;
+    const glm::vec3 offset = worldSpaceCenter - m_worldSpaceCenter;
+    m_planarQuad.Translate(offset);
+    SyncCreateInfoFromPlanarQuad();
     UpdateVertexDataFromCreateInfo();
 }
 
@@ -134,6 +148,21 @@ void WorldPlane::SetTextureOffsetV(float value) {
     UpdateVertexDataFromCreateInfo();
 }
 
+void WorldPlane::SetRotateTexture90(bool value) {
+    m_createInfo.rotateTexture90 = value;
+    UpdateVertexDataFromCreateInfo();
+}
+
+void WorldPlane::SetRoughnessFactor(float value) {
+    m_createInfo.roughnessFactor = glm::clamp(value, 0.0f, 10.0f);
+    HouseBuilder::MarkDirty();
+}
+
+void WorldPlane::SetMetallicFactor(float value) {
+    m_createInfo.metallicFactor = glm::clamp(value, 0.0f, 10.0f);
+    HouseBuilder::MarkDirty();
+}
+
 void WorldPlane::CreatePhysicsObject() {
     Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
 
@@ -143,6 +172,7 @@ void WorldPlane::CreatePhysicsObject() {
     filterData.collidesWith = (CollisionGroup)(GENERIC_BOUNCEABLE | BULLET_CASING | RAGDOLL_PLAYER | RAGDOLL_ENEMY | CHARACTER_CONTROLLER | ITEM_PICK_UP);
 
     m_physicsId = Hell::Physics::CreateRigidStaticTriangleMeshFromVertexData(Hell::Transform(), m_vertices, m_indices, filterData);
+    if (m_physicsId == 0) return;
 
     // Set PhysX user data
     PhysicsUserData userData;
@@ -164,6 +194,8 @@ void WorldPlane::SubmitRenderItem() {
 
 	RenderItem renderItem;
     renderItem.materialIndex = m_materialIndex;
+    renderItem.roughnessFactor = m_createInfo.roughnessFactor;
+    renderItem.metallicFactor = m_createInfo.metallicFactor;
 	renderItem.modelMatrix = glm::mat4(1.0f);
 	renderItem.inverseModelMatrix = glm::mat4(1.0f);
 	renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
@@ -174,22 +206,18 @@ void WorldPlane::SubmitRenderItem() {
     renderItem.baseVertex = mesh->baseVertex;
     renderItem.baseIndex = mesh->baseIndex;
     renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
+    Hell::Bit::PackUint64(m_objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
 
 	RenderDataManager::SubmitRenderItemProcedural(renderItem);
 }
 
 void WorldPlane::DrawVertices(glm::vec4 color) {
-    DebugDraw::DrawPoint(m_p0, color);
-    DebugDraw::DrawPoint(m_p1, color);
-    DebugDraw::DrawPoint(m_p2, color);
-    DebugDraw::DrawPoint(m_p3, color);
+    for (const glm::vec3& point : m_planarQuad.GetPoints()) DebugDraw::DrawPoint(point, color);
 }
 
 void WorldPlane::DrawEdges(glm::vec4 color) {
-    DebugDraw::DrawLine(m_p0, m_p1, color);
-    DebugDraw::DrawLine(m_p1, m_p2, color);
-    DebugDraw::DrawLine(m_p2, m_p3, color);
-    DebugDraw::DrawLine(m_p3, m_p0, color);
+    const std::array<glm::vec3, 4>& points = m_planarQuad.GetPoints();
+    for (size_t i = 0; i < points.size(); i++) DebugDraw::DrawLine(points[i], points[(i + 1) % points.size()], color);
 }
 
 void WorldPlane::HideInEditor() {
@@ -198,5 +226,13 @@ void WorldPlane::HideInEditor() {
 
 void WorldPlane::UnhideInEditor() {
 	m_hiddenInEditor = false;
+}
+
+void WorldPlane::SyncCreateInfoFromPlanarQuad() {
+    const std::array<glm::vec3, 4>& points = m_planarQuad.GetPoints();
+    m_createInfo.p0 = points[0];
+    m_createInfo.p1 = points[1];
+    m_createInfo.p2 = points[2];
+    m_createInfo.p3 = points[3];
 }
 }

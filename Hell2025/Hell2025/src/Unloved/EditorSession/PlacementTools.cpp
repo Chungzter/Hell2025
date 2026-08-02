@@ -64,6 +64,11 @@ namespace Unloved::EditorSession {
         fireplaceWoodStove.insertMode = PlacementInsertMode::DIRECT;
         fireplaceWoodStove.defaultEditorName = "Wood Stove";
 
+        PlacementToolInfo& genericAnimatedRatKing = g_placementTools[PlacementTool::GENERIC_ANIMATED_RAT_KING];
+        genericAnimatedRatKing.rayMode = PlacementRayMode::WORLD;
+        genericAnimatedRatKing.insertMode = PlacementInsertMode::DIRECT;
+        genericAnimatedRatKing.defaultEditorName = "Animated Rat King";
+
         PlacementToolInfo& genericBathroomBasin = g_placementTools[PlacementTool::GENERIC_BATHROOM_BASIN];
         genericBathroomBasin.rayMode = PlacementRayMode::WORLD;
         genericBathroomBasin.insertMode = PlacementInsertMode::DIRECT;
@@ -108,6 +113,11 @@ namespace Unloved::EditorSession {
         genericCouch.rayMode = PlacementRayMode::WORLD;
         genericCouch.insertMode = PlacementInsertMode::DIRECT;
         genericCouch.defaultEditorName = "Couch";
+
+        PlacementToolInfo& genericDeerHead = g_placementTools[PlacementTool::GENERIC_DEER_HEAD];
+        genericDeerHead.rayMode = PlacementRayMode::WALL;
+        genericDeerHead.insertMode = PlacementInsertMode::DIRECT;
+        genericDeerHead.defaultEditorName = "Deer Head";
 
         PlacementToolInfo& genericDrawersLarge = g_placementTools[PlacementTool::GENERIC_DRAWERS_LARGE];
         genericDrawersLarge.rayMode = PlacementRayMode::WORLD;
@@ -159,10 +169,10 @@ namespace Unloved::EditorSession {
         genericToilet.insertMode = PlacementInsertMode::DIRECT;
         genericToilet.defaultEditorName = "Toilet";
 
-        PlacementToolInfo& houseLocationTestHouse = g_placementTools[PlacementTool::HOUSE_LOCATION_TEST_HOUSE];
-        houseLocationTestHouse.rayMode = PlacementRayMode::PHYSICS;
-        houseLocationTestHouse.insertMode = PlacementInsertMode::DIRECT;
-        houseLocationTestHouse.defaultEditorName = "House";
+        PlacementToolInfo& houseLocation = g_placementTools[PlacementTool::HOUSE_LOCATION];
+        houseLocation.rayMode = PlacementRayMode::PHYSICS;
+        houseLocation.insertMode = PlacementInsertMode::DIRECT;
+        houseLocation.defaultEditorName = "House Location";
 
         PlacementToolInfo& kangaroo = g_placementTools[PlacementTool::KANGAROO];
         kangaroo.rayMode = PlacementRayMode::WORLD;
@@ -173,6 +183,31 @@ namespace Unloved::EditorSession {
         jetty.rayMode = PlacementRayMode::WORLD;
         jetty.insertMode = PlacementInsertMode::DIRECT;
         jetty.defaultEditorName = "Tasmanian Fisherman's Jetty";
+
+        PlacementToolInfo& gutter = g_placementTools[PlacementTool::GUTTER];
+        gutter.rayMode = PlacementRayMode::WORLD;
+        gutter.insertMode = PlacementInsertMode::DIRECT;
+        gutter.defaultEditorName = "Gutter";
+
+        PlacementToolInfo& ridgeCapping = g_placementTools[PlacementTool::RIDGE_CAPPING];
+        ridgeCapping.rayMode = PlacementRayMode::WORLD;
+        ridgeCapping.insertMode = PlacementInsertMode::DIRECT;
+        ridgeCapping.defaultEditorName = "Ridge Capping";
+
+        PlacementToolInfo& downPipe = g_placementTools[PlacementTool::DOWN_PIPE];
+        downPipe.rayMode = PlacementRayMode::WORLD;
+        downPipe.insertMode = PlacementInsertMode::DIRECT;
+        downPipe.defaultEditorName = "Down Pipe";
+
+        PlacementToolInfo& roofingIron = g_placementTools[PlacementTool::ROOFING_IRON];
+        roofingIron.rayMode = PlacementRayMode::WORLD;
+        roofingIron.insertMode = PlacementInsertMode::DIRECT;
+        roofingIron.defaultEditorName = "Roofing Iron";
+
+        PlacementToolInfo& deckingBoards = g_placementTools[PlacementTool::DECKING_BOARDS];
+        deckingBoards.rayMode = PlacementRayMode::WORLD;
+        deckingBoards.insertMode = PlacementInsertMode::DIRECT;
+        deckingBoards.defaultEditorName = "Decking Boards";
 
         PlacementToolInfo& ladder = g_placementTools[PlacementTool::LADDER];
         ladder.rayMode = PlacementRayMode::WORLD;
@@ -197,7 +232,7 @@ namespace Unloved::EditorSession {
         PlacementToolInfo& mermaid = g_placementTools[PlacementTool::MERMAID];
         mermaid.rayMode = PlacementRayMode::WORLD;
         mermaid.insertMode = PlacementInsertMode::DIRECT;
-        mermaid.defaultEditorName = "Mermaid";
+        mermaid.defaultEditorName = "Mermaid Shop Owner";
 
         PlacementToolInfo& piano = g_placementTools[PlacementTool::PIANO];
         piano.rayMode = PlacementRayMode::WORLD;
@@ -317,11 +352,15 @@ namespace Unloved::EditorSession {
         PlacementToolInfo& wallInterior = g_placementTools[PlacementTool::WALL_INTERIOR];
         wallInterior.rayMode = PlacementRayMode::GROUND_PLANE;
         wallInterior.insertMode = PlacementInsertMode::POINT_SEQUENCE;
+        wallInterior.sequencePointDefaultValue = 2.4f;
+        wallInterior.sequencePointValueStep = -0.1f;
         wallInterior.defaultEditorName = "Wall";
 
         PlacementToolInfo& wallWeatherBoards = g_placementTools[PlacementTool::WALL_WEATHER_BOARDS];
         wallWeatherBoards.rayMode = PlacementRayMode::GROUND_PLANE;
         wallWeatherBoards.insertMode = PlacementInsertMode::POINT_SEQUENCE;
+        wallWeatherBoards.sequencePointDefaultValue = 2.4f;
+        wallWeatherBoards.sequencePointValueStep = -0.1f;
         wallWeatherBoards.defaultEditorName = "Weather Boards";
 
         PlacementToolInfo& window = g_placementTools[PlacementTool::WINDOW];

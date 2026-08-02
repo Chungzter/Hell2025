@@ -6,11 +6,12 @@
 #include "Unloved/Config/Config.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Editor/Editor.h"
-#include "Unloved/Editor/Gizmo.h"
+#include "Unloved/Maps/Map.h"
 #include "Unloved/Maps/MapData.h"
 #include "Unloved/Systems/HeightMap/HeightMap.h"
-#include "Unloved/UI/Imgui/ImguiBackEnd.h"
+#include "Unloved/Systems/Map/MapManager.h"
 #include "Unloved/Viewport/ViewportManager.h"
+#include "Unloved/World/World.h"
 #include "World/LegacyWorld.h"
 
 #include "Unloved/Systems/Pathfinding/AStarMap.h"
@@ -21,26 +22,54 @@
 #include "Hell/Physics/Physics.h"
 
 #include "Hell/ResourceManagement/ResourceManager.h"
-#include "Hell/Input.h"
-namespace Input = Hell::Input;
 
+#include <algorithm>
+#include <array>
+#include <limits>
 
 namespace OpenGL::Renderer {
     using namespace Unloved;
+
+    namespace {
+        bool g_terrainDisplacementDirty = true;
+        std::array<glm::vec2, TERRAIN_DISPLACEMENT_LAYER_COUNT> g_previousDisplacementTargets {
+            glm::vec2(std::numeric_limits<float>::max()),
+            glm::vec2(std::numeric_limits<float>::max()),
+            glm::vec2(std::numeric_limits<float>::max()),
+            glm::vec2(std::numeric_limits<float>::max())
+        };
+        float g_previousDisplacementTextureScaling = -1.0f;
+
+        void SetTerrainMaterialUniforms() {
+            int32_t fallbackMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Ground_MudVeg");
+            if (fallbackMaterialIndex == -1) fallbackMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("CheckerBoard");
+            if (fallbackMaterialIndex == -1) fallbackMaterialIndex = 0;
+            int32_t grassMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Grass");
+            int32_t dirtRoadMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("DirtRoad");
+            int32_t rockFaceMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("RockFace");
+            int32_t sandMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Sand");
+            OpenGL::SetUniformInt("u_terrainMaterial0", grassMaterialIndex == -1 ? fallbackMaterialIndex : grassMaterialIndex);
+            OpenGL::SetUniformInt("u_terrainMaterial1", dirtRoadMaterialIndex == -1 ? fallbackMaterialIndex : dirtRoadMaterialIndex);
+            OpenGL::SetUniformInt("u_terrainMaterial2", rockFaceMaterialIndex == -1 ? fallbackMaterialIndex : rockFaceMaterialIndex);
+            OpenGL::SetUniformInt("u_terrainMaterial3", sandMaterialIndex == -1 ? fallbackMaterialIndex : sandMaterialIndex);
+        }
+    }
 
     void UploadWorldHeightData();
     void GenerateHeightMapVertexData();
     void GeneratePhysXTextures();
     void DrawHeightMap();
 
-    void RecalculateAllHeightMapData(bool uploadWorldHeightData) {
+    void RecalculateAllHeightMapData(bool uploadWorldHeightData, bool updatePhysics) {
         if (uploadWorldHeightData) {
             UploadWorldHeightData();
         }
         GenerateHeightMapVertexData();
-        GeneratePhysXTextures();
-        AStarMap::Init();
-        AStarMap::UpdateDebugMeshesFromHeightField();
+        if (updatePhysics) {
+            GeneratePhysXTextures();
+            AStarMap::Init();
+            AStarMap::UpdateDebugMeshesFromHeightField();
+        }
     }
 
     void HeightMapPass() {
@@ -76,9 +105,15 @@ namespace OpenGL::Renderer {
         if (!roadFramebuffer) return;
 
         const std::vector<float>& worldHeightData = HeightMap::GetWorldHeightData();
+        const std::vector<uint32_t>& worldTerrainControlData = HeightMap::GetWorldTerrainControlData();
         const uint32_t textureWidth = HeightMap::GetWorldTextureWidth();
         const uint32_t textureHeight = HeightMap::GetWorldTextureHeight();
         if (worldHeightData.empty() || textureWidth == 0 || textureHeight == 0) return;
+        if (worldTerrainControlData.size() != worldHeightData.size()) return;
+
+        static std::vector<float> gpuHeightData;
+        gpuHeightData.resize(worldHeightData.size());
+        for (size_t i = 0; i < worldHeightData.size(); i++) gpuHeightData[i] = worldHeightData[i] / HEIGHTMAP_SCALE_Y;
 
         // Resize the runtime textures to the assembled world
         if (worldFramebuffer->GetWidth() != textureWidth || worldFramebuffer->GetHeight() != textureHeight) {
@@ -89,38 +124,116 @@ namespace OpenGL::Renderer {
         }
 
         GLuint heightMapHandle = worldFramebuffer->GetColorAttachmentHandleByName("HeightMap");
-        glTextureSubImage2D(heightMapHandle, 0, 0, 0, textureWidth, textureHeight, GL_RED, GL_FLOAT, worldHeightData.data());
+        GLuint terrainControlHandle = worldFramebuffer->GetColorAttachmentHandleByName("TerrainControl");
+        glTextureSubImage2D(heightMapHandle, 0, 0, 0, textureWidth, textureHeight, GL_RED, GL_FLOAT, gpuHeightData.data());
+        glTextureSubImage2D(terrainControlHandle, 0, 0, 0, textureWidth, textureHeight, GL_RED_INTEGER, GL_UNSIGNED_INT, worldTerrainControlData.data());
         glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        g_terrainDisplacementDirty = true;
     }
 
-    void PaintHeightMap() {
-        if (!Editor::IsOpen()) return;
-        if (Editor::GetEditorMode() != EditorMode::MAP_HEIGHT_EDITOR) return;
-        if (ImGuiBackEnd::OwnsMouse()) return;
-
+    void UploadTerrainControlData(const MapData* mapData, int32_t minimumX, int32_t minimumZ, int32_t maximumX, int32_t maximumZ) {
+        if (!mapData) return;
         OpenGLFrameBuffer* worldFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("World");
-        OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
-        OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("HeightMapPaint");
+        if (!worldFramebuffer) return;
 
-        // Bail if no mouse hit with height map
-        if (!Editor::HeightMapMouseHitFound()) return;
+        const int32_t sourceWidth = mapData->GetTextureWidth();
+        const int32_t sourceHeight = mapData->GetTextureHeight();
+        if (sourceWidth <= 0 || sourceHeight <= 0) return;
+        minimumX = std::clamp(minimumX, 0, sourceWidth - 1);
+        minimumZ = std::clamp(minimumZ, 0, sourceHeight - 1);
+        maximumX = std::clamp(maximumX, 0, sourceWidth - 1);
+        maximumZ = std::clamp(maximumZ, 0, sourceHeight - 1);
+        if (minimumX > maximumX || minimumZ > maximumZ) return;
 
-        if (Input::LeftMouseDown() || Input::RightMouseDown()) {
-            OpenGL::BindShader("HeightMapPaint");
-            OpenGL::SetUniformVec3("u_mouseHitWorldPos", Editor::GetHeightMapMouseHitPosition());
-            OpenGL::SetUniformFloat("u_brushSize", Editor::GetMapHeightBrushSize());
-            OpenGL::SetUniformFloat("u_brushStrength", Editor::GetMapHeightBrushStrength() * (Input::RightMouseDown() ? -1.0f : 1.0f));
-            OpenGL::SetUniformFloat("u_noiseStrength", Editor::GetMapHeightNoiseStrength());
-            OpenGL::SetUniformFloat("u_noiseScale", Editor::GetMapHeightNoiseScale());
-            OpenGL::SetUniformFloat("u_minPaintHeight", Editor::GetMapHeightMinPaintHeight());
-            OpenGL::SetUniformFloat("u_maxPaintHeight", Editor::GetMapHeightMaxPaintHeight());
+        const std::vector<uint32_t>& sourceData = mapData->GetTerrainControlData();
+        if (sourceData.size() != static_cast<size_t>(sourceWidth) * sourceHeight) return;
 
-            glMemoryBarrier(GL_ALL_BARRIER_BITS);
-            glBindImageTexture(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_R16F);
-            OpenGL::DispatchCompute(worldFramebuffer->GetWidth() / 32, worldFramebuffer->GetHeight() / 32, 1);
+        const GLuint textureHandle = worldFramebuffer->GetColorAttachmentHandleByName("TerrainControl");
+        if (!textureHandle) return;
 
-            GenerateHeightMapVertexData();
+        GLint previousRowLength = 0;
+        GLint previousAlignment = 0;
+        glGetIntegerv(GL_UNPACK_ROW_LENGTH, &previousRowLength);
+        glGetIntegerv(GL_UNPACK_ALIGNMENT, &previousAlignment);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, sourceWidth);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        const int32_t uploadWidth = maximumX - minimumX + 1;
+        const int32_t uploadHeight = maximumZ - minimumZ + 1;
+        const uint32_t* uploadData = sourceData.data() + static_cast<size_t>(minimumZ) * sourceWidth + minimumX;
+        for (const Map& map : World::GetMaps()) {
+            if (MapManager::GetMapDataByIndex(map.m_mapIndex) != mapData) continue;
+            const int32_t destinationX = map.spawnOffsetChunkX * HEIGHT_MAP_CHUNK_PIXEL_SIZE + minimumX;
+            const int32_t destinationZ = map.spawnOffsetChunkZ * HEIGHT_MAP_CHUNK_PIXEL_SIZE + minimumZ;
+            if (destinationX < 0 || destinationZ < 0 || destinationX + uploadWidth > worldFramebuffer->GetWidth() || destinationZ + uploadHeight > worldFramebuffer->GetHeight()) continue;
+            glTextureSubImage2D(textureHandle, 0, destinationX, destinationZ, uploadWidth, uploadHeight, GL_RED_INTEGER, GL_UNSIGNED_INT, uploadData);
+
+            const int32_t mapEndX = map.spawnOffsetChunkX * HEIGHT_MAP_CHUNK_PIXEL_SIZE + sourceWidth;
+            const int32_t mapEndZ = map.spawnOffsetChunkZ * HEIGHT_MAP_CHUNK_PIXEL_SIZE + sourceHeight;
+            if (maximumX == sourceWidth - 1 && mapEndX == worldFramebuffer->GetWidth() - 1) {
+                const uint32_t* edgeData = sourceData.data() + static_cast<size_t>(minimumZ) * sourceWidth + maximumX;
+                glTextureSubImage2D(textureHandle, 0, mapEndX, destinationZ, 1, uploadHeight, GL_RED_INTEGER, GL_UNSIGNED_INT, edgeData);
+            }
+            if (maximumZ == sourceHeight - 1 && mapEndZ == worldFramebuffer->GetHeight() - 1) {
+                const uint32_t* edgeData = sourceData.data() + static_cast<size_t>(maximumZ) * sourceWidth + minimumX;
+                glTextureSubImage2D(textureHandle, 0, destinationX, mapEndZ, uploadWidth, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, edgeData);
+            }
+            if (maximumX == sourceWidth - 1 && maximumZ == sourceHeight - 1 && mapEndX == worldFramebuffer->GetWidth() - 1 && mapEndZ == worldFramebuffer->GetHeight() - 1) {
+                const uint32_t* cornerData = sourceData.data() + static_cast<size_t>(maximumZ) * sourceWidth + maximumX;
+                glTextureSubImage2D(textureHandle, 0, mapEndX, mapEndZ, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, cornerData);
+            }
         }
+
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, previousRowLength);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, previousAlignment);
+        glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        g_terrainDisplacementDirty = true;
+    }
+
+    void UpdateTerrainDisplacementBuffer() {
+#if TERRAIN_DISPLACEMENT_ENABLED
+        OpenGLFrameBuffer* worldFramebuffer = OpenGL::ResourceManager::GetFrameBufferPtr("World");
+        OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("TerrainDisplacementBuffer");
+        Hell::TextureArray* displacementBuffer = Hell::ResourceManager::GetTextureArrayPtr("TerrainDisplacement");
+        if (!worldFramebuffer || !shader || !displacementBuffer) return;
+        if (worldFramebuffer->GetWidth() <= 1 || worldFramebuffer->GetHeight() <= 1) return;
+
+        const std::vector<ViewportData>& viewportData = Unloved::RenderDataManager::GetViewportData();
+        if (viewportData.size() < TERRAIN_DISPLACEMENT_LAYER_COUNT) return;
+
+        const float maximumDensity = float(1 << (TERRAIN_DISPLACEMENT_TESSELLATION_LEVEL - 1));
+        std::array<glm::vec2, TERRAIN_DISPLACEMENT_LAYER_COUNT> snappedTargets;
+        for (int i = 0; i < TERRAIN_DISPLACEMENT_LAYER_COUNT; i++) {
+            glm::vec2 controlPosition = glm::vec2(viewportData[i].viewPos.x, viewportData[i].viewPos.z) / HEIGHTMAP_SCALE_XZ;
+            snappedTargets[i] = glm::round(controlPosition * maximumDensity) / maximumDensity;
+            g_terrainDisplacementDirty |= snappedTargets[i] != g_previousDisplacementTargets[i];
+        }
+
+        float textureScaling = 1.0f;
+        if (Editor::IsOpen() && Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) textureScaling = 0.1f;
+        g_terrainDisplacementDirty |= textureScaling != g_previousDisplacementTextureScaling;
+        if (!g_terrainDisplacementDirty) return;
+
+        OpenGL::BindShader("TerrainDisplacementBuffer");
+        OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
+        OpenGL::BindSSBO(SSBO_IDX_MATERIALS, "Materials");
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+        SetTerrainMaterialUniforms();
+        OpenGL::SetUniformFloat("u_textureScaling", textureScaling);
+
+        glBindImageTexture(0, displacementBuffer->GetHandle(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+        OpenGL::BindTextureUnit(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"));
+        OpenGL::BindTextureUnit(1, worldFramebuffer->GetColorAttachmentHandleByName("TerrainControl"));
+
+        const uint32_t groupCountX = (displacementBuffer->GetWidth() + 7) / 8;
+        const uint32_t groupCountY = (displacementBuffer->GetHeight() + 7) / 8;
+        OpenGL::DispatchCompute(groupCountX, groupCountY, TERRAIN_DISPLACEMENT_LAYER_COUNT);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+        g_previousDisplacementTargets = snappedTargets;
+        g_previousDisplacementTextureScaling = textureScaling;
+        g_terrainDisplacementDirty = false;
+#endif
     }
 
     void GenerateHeightMapVertexData() {
@@ -136,7 +249,7 @@ namespace OpenGL::Renderer {
         OpenGLMeshBuffer& glHeightMapMeshBuffer = OpenGL::ResourceManager::GetMeshBuffer("HeightMapGeometry");
 
         OpenGL::BindShader("HeightMapVertexGeneration");
-        glBindImageTexture(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16F);
+        glBindImageTexture(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_HEIGHTMAP_VERTEX_OUTPUT, glHeightMapMeshBuffer.GetVBO());
 
@@ -223,8 +336,9 @@ namespace OpenGL::Renderer {
                 aabbMin = glm::min(aabbMin, position);
                 aabbMax = glm::max(aabbMax, position);
             }
-            chunk.aabbMin = aabbMin;
-            chunk.aabbMax = aabbMax;
+            const glm::vec3 displacementMargin(TERRAIN_DISPLACEMENT_MAX_OFFSET);
+            chunk.aabbMin = aabbMin - displacementMargin;
+            chunk.aabbMax = aabbMax + displacementMargin;
 
             Hell::vecXZ worldSpaceOffest = Hell::vecXZ(chunk.coord.x * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE, chunk.coord.z * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE);
             Hell::Physics::CreateHeightField(worldSpaceOffest, chunkReadBackDataSet[i].vertices, HEIGHTMAP_SCALE_Y, HEIGHTMAP_SCALE_XZ, HEIGHTMAP_SCALE_XZ);
@@ -258,19 +372,24 @@ namespace OpenGL::Renderer {
 
         OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
 
-        Material* dirtRoadMaterial = Hell::ResourceManager::GetMaterialByName("DirtRoad");
+        int32_t fallbackMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Ground_MudVeg");
+        if (fallbackMaterialIndex == -1) fallbackMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("CheckerBoard");
+        if (fallbackMaterialIndex == -1) fallbackMaterialIndex = 0;
+        int32_t grassMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Grass");
+        int32_t dirtRoadMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("DirtRoad");
+        int32_t rockFaceMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("RockFace");
+        int32_t sandMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("Sand");
+        OpenGL::SetUniformInt("u_terrainMaterial0", grassMaterialIndex == -1 ? fallbackMaterialIndex : grassMaterialIndex);
+        OpenGL::SetUniformInt("u_terrainMaterial1", dirtRoadMaterialIndex == -1 ? fallbackMaterialIndex : dirtRoadMaterialIndex);
+        OpenGL::SetUniformInt("u_terrainMaterial2", rockFaceMaterialIndex == -1 ? fallbackMaterialIndex : rockFaceMaterialIndex);
+        OpenGL::SetUniformInt("u_terrainMaterial3", sandMaterialIndex == -1 ? fallbackMaterialIndex : sandMaterialIndex);
 
         if (Editor::IsOpen() && Editor::GetEditorMode() == EditorMode::MAP_HEIGHT_EDITOR) {
             OpenGL::SetUniformFloat("u_textureScaling", 0.1);
         }
 
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_basecolor)->GetGLTexture().GetHandle());
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_normal)->GetGLTexture().GetHandle());
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, Hell::ResourceManager::GetTextureByBindlessIndex(dirtRoadMaterial->m_rma)->GetGLTexture().GetHandle());
         glBindTextureUnit(6, roadFramebuffer->GetColorAttachmentHandleByName("RoadMask"));
+        glBindTextureUnit(7, OpenGL::ResourceManager::GetFrameBuffer("World").GetColorAttachmentHandleByName("TerrainControl"));
 
         glBindVertexArray(glHeightMapMeshBuffer.GetVAO());
 
@@ -309,6 +428,7 @@ namespace OpenGL::Renderer {
         // Readback
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         glGetTextureSubImage(textureHandle, 0, 0, 0, 0, width, height, 1, GL_RED, GL_FLOAT, dataSize, mapData->GetHeightMapData().data());
+        for (float& heightValue : mapData->GetHeightMapData()) heightValue *= HEIGHTMAP_SCALE_Y;
 
         Logging::Debug() << "ReadBackHeightMapData() width: " << width;
         Logging::Debug() << "ReadBackHeightMapData() height: " << height;

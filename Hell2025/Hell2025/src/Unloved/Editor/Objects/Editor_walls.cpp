@@ -100,14 +100,13 @@ namespace Unloved::Editor {
 
         UnselectAnyObject();
         WallCreateInfo createInfo;
-        createInfo.points.push_back(pointA);
-        createInfo.points.push_back(pointB);
+        createInfo.sequencePoints.push_back({ pointA, WORLD_UP, 2.4f });
+        createInfo.sequencePoints.push_back({ pointB, WORLD_UP, 2.4f });
         createInfo.materialName = "WallPaper";
         createInfo.materialName = "Ceiling2";
         createInfo.textureOffsetU = 0.0f;
         createInfo.textureOffsetV = -1.4f;
         createInfo.textureScale = 1 / 2.4f;
-        createInfo.height = 2.4f;
         createInfo.ceilingTrimType = TrimType::TIMBER;
         createInfo.floorTrimType = TrimType::TIMBER;
         createInfo.useReversePointOrder = false;

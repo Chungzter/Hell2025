@@ -1198,6 +1198,20 @@ namespace Hell::Physics {
        PxScene* pxScene = Hell::Physics::GetPxScene();
        PxMaterial* material = Hell::Physics::GetDefaultMaterial();
 
+       if (!pxPhysics || !pxScene || !material) {
+           Logging::Error() << "CreateRigidStaticTriangleMeshFromVertexData() failed: PhysX is not ready\n";
+           return 0;
+       }
+       if (vertices.size() < 3 || indices.size() < 3 || indices.size() % 3 != 0) {
+           Logging::Error() << "CreateRigidStaticTriangleMeshFromVertexData() failed: invalid vertex or index count\n";
+           return 0;
+       }
+       for (uint32_t index : indices) {
+           if (index < vertices.size()) continue;
+           Logging::Error() << "CreateRigidStaticTriangleMeshFromVertexData() failed: index out of range\n";
+           return 0;
+       }
+
        PxFilterData pxFilterData;
        pxFilterData.word0 = (PxU32)filterData.raycastGroup;
        pxFilterData.word1 = (PxU32)filterData.collisionGroup;
@@ -1232,19 +1246,29 @@ namespace Hell::Physics {
        params.midphaseDesc.mBVH33Desc.meshCookingHint = PxMeshCookingHint::eSIM_PERFORMANCE;
        params.midphaseDesc.mBVH33Desc.meshSizePerformanceTradeOff = 0.0f;
 
-       // Validate the mesh cooking parameters
-       PX_ASSERT(PxValidateTriangleMesh(params, meshDesc));
-
        // Create the triangle mesh
        PxTriangleMesh* pxTriangleMesh = PxCreateTriangleMesh(params, meshDesc, pxPhysics->getPhysicsInsertionCallback());
+       if (!pxTriangleMesh) {
+           Logging::Error() << "CreateRigidStaticTriangleMeshFromVertexData() failed: triangle mesh creation failed\n";
+           return 0;
+       }
 
        // Create PxShape
-       PxMeshGeometryFlags flags(~PxMeshGeometryFlag::eDOUBLE_SIDED);
        PxMeshScale meshScale = PxVec3(1.0f, 1.0f, 1.0f);
-       PxTriangleMeshGeometry geometry(pxTriangleMesh, meshScale, flags);
+       PxTriangleMeshGeometry geometry(pxTriangleMesh, meshScale);
+       if (!geometry.isValid()) {
+           pxTriangleMesh->release();
+           Logging::Error() << "CreateRigidStaticTriangleMeshFromVertexData() failed: invalid triangle mesh geometry\n";
+           return 0;
+       }
 
-       PxShapeFlags shapeFlags(PxShapeFlag::eSCENE_QUERY_SHAPE); // NOT eSIMULATION_SHAPE. PhysX does not allow for triangle mesh
+       PxShapeFlags shapeFlags(PxShapeFlag::eSCENE_QUERY_SHAPE | PxShapeFlag::eSIMULATION_SHAPE);
        PxShape* pxShape = pxPhysics->createShape(geometry, *material, shapeFlags);
+       pxTriangleMesh->release();
+       if (!pxShape) {
+           Logging::Error() << "CreateRigidStaticTriangleMeshFromVertexData() failed: shape creation failed\n";
+           return 0;
+       }
        pxShape->setQueryFilterData(pxFilterData);       // ray casts
        pxShape->setSimulationFilterData(pxFilterData);  // collisions
 
@@ -1252,8 +1276,18 @@ namespace Hell::Physics {
        PxQuat quat = Hell::Physics::GlmQuatToPxQuat(glm::quat(transform.rotation));
        PxTransform pxTransform = PxTransform(PxVec3(transform.position.x, transform.position.y, transform.position.z), quat);
        PxRigidStatic* pxRigidStatic = pxPhysics->createRigidStatic(pxTransform);
+       if (!pxRigidStatic) {
+           pxShape->release();
+           Logging::Error() << "CreateRigidStaticTriangleMeshFromVertexData() failed: rigid static creation failed\n";
+           return 0;
+       }
+       if (!pxRigidStatic->attachShape(*pxShape)) {
+           pxRigidStatic->release();
+           pxShape->release();
+           Logging::Error() << "CreateRigidStaticTriangleMeshFromVertexData() failed: shape attachment failed\n";
+           return 0;
+       }
        pxScene->addActor(*pxRigidStatic);
-       pxRigidStatic->attachShape(*pxShape);
 
        // Create Rigid Static
        uint64_t physicsID = CreatePhysicsId(PhysicsObjectType::RIGID_STATIC);

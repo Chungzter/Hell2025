@@ -33,13 +33,15 @@ namespace Bible {
         meshNodes->DisableCSMShadows();
     }
 
-    void ConfigureMeshNodesPlantTree(uint64_t id, MeshNodes* meshNodes, MeshNodes* shadowCasterMeshNodes) {
+    void ConfigureMeshNodesPlantTree(uint64_t id, MeshNodes* meshNodes) {
         if (!meshNodes) return;
 
         std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 
         MeshNodeCreateInfo& tree = meshNodeCreateInfoSet.emplace_back();
         tree.meshName = "Tree";
+        tree.shadowModelName = "TreeLarge_0_ShadowCaster";
+        tree.shadowMeshName = "ShadowCaster";
         tree.materialName = "Tree";
         tree.rigidDynamic.createObject = true;
         tree.rigidDynamic.kinematic = true;
@@ -52,16 +54,8 @@ namespace Bible {
         meshNodes->Init(id, "TreeLarge_0", meshNodeCreateInfoSet);
 
         meshNodes->SetMaterialByMeshName("Tree", "TreeLarge_0");
-        meshNodes->DisablePointLightShadows();
-        meshNodes->DisableCSMShadows();
-
-        if (shadowCasterMeshNodes) {
-            std::vector<MeshNodeCreateInfo> empty;
-
-            shadowCasterMeshNodes->Init(id, "TreeLarge_0_ShadowCaster", empty);
-            shadowCasterMeshNodes->EnableCSMShadows();
-            shadowCasterMeshNodes->EnablePointLightShadows();
-        }
+        meshNodes->EnableCSMShadows();
+        meshNodes->EnablePointLightShadows();
     }
 
     void ConfigureMeshNodesMermaidRock(uint64_t id, MeshNodes* meshNodes) {

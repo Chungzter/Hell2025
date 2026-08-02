@@ -53,6 +53,10 @@ enum class ObjectType : uint16_t {
     MERMAID,
     WIRE,
     SPOT_LIGHT,
+    HOUSE_LOCATION,
+    GENERIC_ANIMATED_OBJECT,
+    PLANAR_QUAD_OBJECT,
+    POINT_PAIR_OBJECT,
 
     UNDEFINED
 };

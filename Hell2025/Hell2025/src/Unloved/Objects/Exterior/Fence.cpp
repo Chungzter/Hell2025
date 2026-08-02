@@ -7,15 +7,16 @@
 #include "Hell/Physics/Physics.h"
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Render/RendererUtil.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 
 #include <cmath>
 
 namespace {
-    glm::vec2 ApplySpawnOffset(const glm::vec2& point, const SpawnOffset& spawnOffset) {
+    glm::vec3 ApplySpawnOffset(const glm::vec3& point, const SpawnOffset& spawnOffset) {
         const float c = std::cos(spawnOffset.yRotation);
         const float s = std::sin(spawnOffset.yRotation);
-        const glm::vec2 rotated(point.x * c + point.y * s, -point.x * s + point.y * c);
-        return rotated + glm::vec2(spawnOffset.translation.x, spawnOffset.translation.z);
+        const glm::vec2 rotated(point.x * c + point.z * s, -point.x * s + point.z * c);
+        return glm::vec3(rotated.x + spawnOffset.translation.x, point.y, rotated.y + spawnOffset.translation.z);
     }
 }
 
@@ -24,27 +25,44 @@ namespace Unloved {
 Fence::Fence(uint64_t id, FenceCreateInfo& createInfo, SpawnOffset& spawnOffset) {
     m_objectId = id;
     m_createInfo = createInfo;
-    for (glm::vec2& point : m_createInfo.controlPoints2D) {
-        point = ApplySpawnOffset(point, spawnOffset);
+    for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) {
+        sequencePoint.position = ApplySpawnOffset(sequencePoint.position, spawnOffset);
+        if (m_createInfo.snapSequencePointsToTerrain) {
+            glm::vec3 terrainPosition = Hell::Physics::GetHeightMapPositionAtXZ(sequencePoint.position.x, sequencePoint.position.z);
+            if (terrainPosition != glm::vec3(0.0f)) sequencePoint.position.y = terrainPosition.y;
+        }
     }
+    m_createInfo.snapSequencePointsToTerrain = false;
     m_spawnOffset = SpawnOffset();
 
     Init();
 }
 
 void Fence::AddControlPoint(const glm::vec2& controlPoint2D) {
-    m_createInfo.controlPoints2D.push_back(controlPoint2D);
+    SequencePoint sequencePoint;
+    sequencePoint.position = Hell::Physics::GetHeightMapPositionAtXZ(controlPoint2D.x, controlPoint2D.y);
+    if (sequencePoint.position == glm::vec3(0.0f)) sequencePoint.position = glm::vec3(controlPoint2D.x, 0.0f, controlPoint2D.y);
+    m_createInfo.sequencePoints.push_back(sequencePoint);
 
     Init();
 }
 
-void Fence::UpdateControlPoints(const std::vector<glm::vec2>& controlPoints2D) {
-    m_createInfo.controlPoints2D = controlPoints2D;
+void Fence::SetPosition(const glm::vec3& position) {
+    if (m_createInfo.sequencePoints.empty()) return;
+
+    const glm::vec3 offset = position - m_createInfo.sequencePoints.front().position;
+    for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) sequencePoint.position += offset;
+    Init();
+}
+
+void Fence::UpdateSequencePoints(const std::vector<SequencePoint>& sequencePoints) {
+    m_createInfo.sequencePoints = sequencePoints;
     Init();
 }
 
 void Fence::Init() {
     CleanUp();
+    m_position = m_createInfo.sequencePoints.empty() ? glm::vec3(0.0f) : m_createInfo.sequencePoints.front().position;
 
     std::vector<MeshNodeCreateInfo> emptyMeshNodeCreateInfoSet;
 
@@ -68,23 +86,8 @@ void Fence::Init() {
     //m_meshNodesWire.UpdateHierarchy();
     m_meshNodesWire.Update(glm::mat4(1.0f));
 
-    //std::vector<glm::vec2> controlPoints2D;
-    //controlPoints2D.push_back(glm::vec2(27.7062, 6.50534));
-    //controlPoints2D.push_back(glm::vec2(30.2548, 4.96767));
-    //controlPoints2D.push_back(glm::vec2(33.451, 4.56134));
-    //controlPoints2D.push_back(glm::vec2(36.6244, 5.21321));
-    //controlPoints2D.push_back(glm::vec2(38.1925, 3.54931));
-    //controlPoints2D.push_back(glm::vec2(39.5836, 2.05737));
-    //controlPoints2D.push_back(glm::vec2(42.9357, 1.34804));
-    //controlPoints2D.push_back(glm::vec2(46.7641, 1.83892));
-    //controlPoints2D.push_back(glm::vec2(49.0083, 2.23763));
-
     std::vector<glm::vec3> controlPoints3D;
-    for (glm::vec2& point : m_createInfo.controlPoints2D) {
-        glm::vec3 worldPosition = Hell::Physics::GetHeightMapPositionAtXZ(point.x, point.y);
-        if (worldPosition == glm::vec3(0.0f)) worldPosition = glm::vec3(point.x, 0.0f, point.y);
-        controlPoints3D.push_back(worldPosition);
-    }
+    for (const SequencePoint& sequencePoint : m_createInfo.sequencePoints) controlPoints3D.push_back(sequencePoint.position);
 
     float spacing = 1.0f;
     m_finalPositions = Hell::Curve::SampleBezierPath(controlPoints3D, spacing);
@@ -197,6 +200,7 @@ void Fence::CleanUp() {
     m_wirePositionsD.clear();
     m_wirePositionsE.clear();
     m_renderItems.clear();
+    WorldBVH::MarkStaticSceneBvhDirty();
 }
 
 RenderItem Fence::CreateWireRenderItem(RenderItem& localSpaceRenderItem, glm::vec3& position, glm::vec3 nextPosition) {

@@ -10,6 +10,7 @@
 
 namespace Hell::Geometry {
     glm::vec2 CalculateUV(const glm::vec3& vertexPosition, const glm::vec3& vertexNormal);
+    glm::vec2 CalculateUV(const glm::vec3& vertexPosition, const glm::vec3& origin, const glm::vec3& uAxis, const glm::vec3& vAxis);
     void SetNormalsAndTangentsFromVertices(Vertex& vert0, Vertex& vert1, Vertex& vert2);
     glm::vec3 ComputeFaceNormal(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2);
     glm::vec3 Barycentric2D(const glm::vec2& point, const glm::vec2& v0, const glm::vec2& v1, const glm::vec2& v2);

@@ -11,7 +11,7 @@
 namespace Unloved {
 
 struct WallSegment {
-    void Init(glm::vec3 start, glm::vec3 end, float height, uint64_t parentObjectId, const SpawnOffset& spawnOffset);
+    void Init(glm::vec3 start, glm::vec3 end, float startHeight, float endHeight, uint64_t parentObjectId, const SpawnOffset& spawnOffset);
     void SetMeshId(uint32_t meshId);
     void CleanUp();
     void CreateVertexData(const std::vector<const ClippingVolume*>& clippingVolumes, float texOffsetX, float texOffsetY, float texScale);
@@ -23,7 +23,8 @@ struct WallSegment {
     const uint64_t GetObjectId()                const { return m_objectId; }
     uint32_t GetMeshId()                        const { return m_meshId; }
     const uint64_t GetParentObjectId()          const { return m_parentObjectId; }
-    const float GetHeight()                     const { return m_height; }
+    const float GetStartHeight()                const { return m_startHeight; }
+    const float GetEndHeight()                  const { return m_endHeight; }
     const AABB& GetAABB()                       const { return m_aabb; }
     const std::vector<glm::vec3>& GetCorners()  const { return m_corners; }
     const std::vector<Vertex>& GetVertices()    const { return m_vertices; }
@@ -33,7 +34,8 @@ private:
     glm::vec3 m_start;
     glm::vec3 m_end;
     glm::vec3 m_normal;
-    float m_height = 2.4f;
+    float m_startHeight = 2.4f;
+    float m_endHeight = 2.4f;
     AABB m_aabb;
     uint64_t m_objectId = 0;
     uint64_t m_physicsId = 0;

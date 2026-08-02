@@ -43,7 +43,7 @@ void Light::CleanUp() {
 
 void Light::RaycastWorldBounds() {
     glm::vec3 rayOrigin = GetPosition();
-    float rayLength = GetRadius() * 2.0f;
+    float rayLength = GetRadius();
     int numRays =  500;
 
     std::vector<glm::vec3> rayDirs = Hell::Ray::GenerateSphereDirections(numRays);
@@ -52,20 +52,10 @@ void Light::RaycastWorldBounds() {
     glm::vec3 maxFound = rayOrigin;
 
     for (const glm::vec3& rayDir : rayDirs) {
-        glm::vec3 p1 = rayOrigin;
-        glm::vec3 p2 = p1 + (rayDir * rayLength);
-
         BvhRayResult rayResult = Unloved::WorldBVH::ClosestHouseLightOcclusionHit(rayOrigin, rayDir, rayLength);
-
-        if (rayResult.hitFound) {
-            //DebugDraw::DrawLine(p1, rayResult.hitPosition, GREEN);
-
-            minFound = glm::min(minFound, rayResult.hitPosition);
-            maxFound = glm::max(maxFound, rayResult.hitPosition);
-        }
-        else {
-            //DebugDraw::DrawLine(p1, p2, RED);
-        }
+        const glm::vec3 boundsPoint = rayResult.hitFound ? rayResult.hitPosition : rayOrigin + rayDir * rayLength;
+        minFound = glm::min(minFound, boundsPoint);
+        maxFound = glm::max(maxFound, boundsPoint);
     }
 
     // Clamp to actual light radius

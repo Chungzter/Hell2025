@@ -36,6 +36,8 @@ in vec3 v_tint;
 
 in flat int v_materialIndex;
 in flat uint v_instanceIndex;
+in flat float v_roughnessFactor;
+in flat float v_metallicFactor;
 
 uniform int u_viewportIndex;
 uniform bool u_flipNormalMapY;
@@ -76,8 +78,8 @@ void main() {
     vec3 normal = normalize(tbn * normalMap);
 
     vec3 linearBaseColor = pow(baseColor.rgb, vec3(2.2));
-    float roughness = rma.r;
-    float metallic = rma.g;
+    float roughness = clamp(rma.r * v_roughnessFactor, 0.0, 1.0);
+    float metallic = clamp(rma.g * v_metallicFactor, 0.0, 1.0);
 
     vec3 directLighting = vec3(0);
     vec3 viewDirection = normalize(v_viewPos - v_worldPos.xyz);

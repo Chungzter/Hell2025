@@ -44,7 +44,6 @@ namespace Unloved::Editor {
 
     ObjectType g_hoveredObjectType = ObjectType::NO_TYPE;
     ObjectType g_selectedObjectType = ObjectType::NO_TYPE; 
-    //GenericObjectType g_placementGenericObjectType = GenericObjectType::UNDEFINED;
 
     uint64_t g_hoveredObjectId = 0;
     uint64_t g_selectedObjectId = 0;
@@ -273,11 +272,6 @@ namespace Unloved::Editor {
                 for (const SpawnPointCreateInfo& spawnPoint : mapData->GetCreateInfoCollection().spawnPointsDeathMatch) {
                     DebugDraw::DrawPoint(spawnPoint.position, YELLOW);
                 }
-            }
-
-            // Draw cubes around spawn points
-            for (SpawnPoint& spawnPoint : World::GetSpawnPointsCampaign()) {
-                spawnPoint.DrawDebugCube();
             }
         }
 

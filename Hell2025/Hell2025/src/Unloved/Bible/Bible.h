@@ -9,11 +9,15 @@
 #include <string>
 #include <vector>
 
+namespace Unloved {
+    struct AnimatedGameObject;
+}
+
 namespace Bible {
     using namespace Unloved;
 
     void Init();
-    void ConfigureMeshNodes(uint64_t id, GenericObjectType type, MeshNodes* meshNodes, MeshNodes* shadowCasterMeshNodes = nullptr);
+    void ConfigureMeshNodes(uint64_t id, GenericObjectType type, MeshNodes* meshNodes);
 
     AmmoInfo& CreateAmmoInfo(const std::string& name);
     ItemInfo& CreateInventoryItemInfo(const std::string& name);
@@ -42,6 +46,7 @@ namespace Bible {
     void ConfigureTestModel4(uint64_t id, MeshNodes* meshNodes);
 
     void ConfigureAnimatedMeshNodes(uint64_t id, AnimatedMeshNodes* meshNodes, const std::string& presetName);
+    void ConfigureGenericAnimatedObject(GenericAnimatedObjectType type, AnimatedGameObject* animatedGameObject);
 
     // Generic Objects
     void ConfigureMeshNodesChristmasPresentSmall(uint64_t id, MeshNodes* meshNodes);
@@ -50,11 +55,12 @@ namespace Bible {
     void ConfigureMeshNodesChairRE(uint64_t id, MeshNodes* meshNodes);
     void ConfigureMeshNodesChairSpindleBack(uint64_t id, MeshNodes* meshNodes);
     void ConfigureMeshNodesCouch(uint64_t, MeshNodes* meshNodes);
+    void ConfigureMeshNodesDeerHead(uint64_t id, MeshNodes* meshNodes);
     void ConfigureMeshNodesDrawersSmall(uint64_t id, MeshNodes* meshNodes);
     void ConfigureMeshNodesDrawersLarge(uint64_t id, MeshNodes* meshNodes);
     void ConfigureMeshNodesMermaidRock(uint64_t id, MeshNodes* meshNodes);
     void ConfigureMeshNodesPlantBlackBerries(uint64_t id, MeshNodes* meshNodes);
-    void ConfigureMeshNodesPlantTree(uint64_t id, MeshNodes* meshNodes, MeshNodes* shadowCasterMeshNodes);
+    void ConfigureMeshNodesPlantTree(uint64_t id, MeshNodes* meshNodes);
     void ConfigureMeshNodesToilet(uint64_t id, MeshNodes* meshNodes);
     void ConfigureMeshNodesBathroomBasin(uint64_t id, MeshNodes* meshNodes);
     void ConfigureMeshNodesBathroomCabinet(uint64_t id, MeshNodes* meshNodes);

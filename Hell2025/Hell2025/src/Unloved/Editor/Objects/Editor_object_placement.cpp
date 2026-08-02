@@ -161,7 +161,9 @@ namespace Unloved::Editor {
                 if (g_placementObjectId == 0) {
 
                     FenceCreateInfo createInfo;
-                    createInfo.controlPoints2D = { controlPoint2D };
+                    SequencePoint sequencePoint;
+                    sequencePoint.position = worldPosition;
+                    createInfo.sequencePoints = { sequencePoint };
 
                     g_placementObjectId = Unloved::World::AddFence(createInfo, SpawnOffset());
                     Audio::PlayAudio(AUDIO_SELECT, 1.0f);
@@ -195,7 +197,7 @@ namespace Unloved::Editor {
                     SequencePoint sequencePoint;
                     sequencePoint.position = hitPosition;
                     sequencePoint.normal = hitNormal;
-                    sequencePoint.value = currentSag;
+                    sequencePoint.customFloat = currentSag;
 
                     ChristmasLightsCreateInfo createInfo;
                     createInfo.position = hitPosition;
@@ -213,7 +215,7 @@ namespace Unloved::Editor {
                         SequencePoint& sequencePoint = sequencePoints.emplace_back();
                         sequencePoint.position = hitPosition;
                         sequencePoint.normal = hitNormal;
-                        sequencePoint.value = currentSag;
+                        sequencePoint.customFloat = currentSag;
 
                         christmasLights->UpdateSequencePoints(sequencePoints);
                         lastPoint = hitPosition;

@@ -22,7 +22,9 @@ namespace Unloved {
     struct Fence;
     struct Fireplace;
     struct GameObject;
+    struct GenericAnimatedObject;
     struct GenericObject;
+    struct HouseLocation;
     struct Jetty;
     struct Kangaroo;
     struct Ladder;
@@ -38,6 +40,8 @@ namespace Unloved {
     struct PickUp;
     struct PictureFrame;
     struct PowerPoleSet;
+    struct PlanarQuadObject;
+    struct PointPairObject;
     struct Road;
     struct Shark;
     struct SpawnPoint;
@@ -55,8 +59,7 @@ namespace Unloved {
 }
 
 namespace Unloved::World {
-    void Init();
-    void NewRun();
+    void NewRun(const std::string& mapName);
     void BeginFrame();
     void UpdateBvhs();
     void Update();
@@ -83,24 +86,25 @@ namespace Unloved::World {
     const glm::vec3& GetMoonlightDirection();
 
     CreateInfoCollection GetCreateInfoCollection();
+    std::vector<HouseLocationCreateInfo> GetHouseLocationCreateInfos();
     void AddCreateInfoCollection(const CreateInfoCollection& createInfoCollection, SpawnOffset spawnOffset);
 
     void LoadMap(const std::string& mapName);
     void LoadMaps(const std::vector<MapCreateInfo>& mapCreateInfoSet);
     void LoadMap(const MapData& mapData, SpawnOffset spawnOffset);
     void LoadMapObjects(const MapData& mapData, SpawnOffset spawnOffset);
-    void LoadMapHouses(const MapData& mapData, SpawnOffset spawnOffset);
     void LoadSingleHouse(const std::string& houseName);
     void LoadHouse(const std::string& houseName, SpawnOffset spawnOffset);
     void LoadHouse(const HouseData& houseData, SpawnOffset spawnOffset);
 
+    uint64_t DuplicateObjectById(uint64_t objectId);
     bool RemoveObjectById(uint64_t objectId);
     bool SetPositionById(uint64_t objectId, const glm::vec3& position);
     bool SetRotationById(uint64_t objectId, const glm::vec3& rotation);
     bool SetEditorNameById(uint64_t objectId, const std::string& editorName);
 
     const glm::vec3& GetPositionById(uint64_t objectId);
-    const glm::vec3& GetRotationById(uint64_t objectId);
+    glm::vec3 GetRotationById(uint64_t objectId);
     const std::string& GetEditorNameById(uint64_t objectId);
 
     MeshNode* GetMeshNodeByObjectIdAndLocalNodeIndex(uint64_t objectId, int32_t meshNodeLocalIndex);
@@ -116,7 +120,9 @@ namespace Unloved::World {
     uint64_t AddFence(FenceCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddFireplace(FireplaceCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddGameObject(GameObjectCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddGenericAnimatedObject(GenericAnimatedObjectCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddGenericObject(GenericObjectCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddHouseLocation(HouseLocationCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddWorldPlane(WorldPlaneCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddKangaroo(KangarooCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddLadder(LadderCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
@@ -128,6 +134,8 @@ namespace Unloved::World {
     uint64_t AddPickUp(PickUpCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddPictureFrame(PictureFrameCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddPowerPoleSet(PowerPoleSetCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddPlanarQuadObject(PlanarQuadObjectCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddPointPairObject(PointPairCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddShark(SharkCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddSpawnPointCampaign(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddSpawnPointDeathMatch(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
@@ -150,7 +158,9 @@ namespace Unloved::World {
     GameObject* GetGameObjectByObjectId(uint64_t objectId);
     GameObject* GetGameObjectByIndex(int32_t index);
     GameObject* GetGameObjectByName(const std::string& name);
+    GenericAnimatedObject* GetGenericAnimatedObjectById(uint64_t objectId);
     GenericObject* GetGenericObjectById(uint64_t objectId);
+    HouseLocation* GetHouseLocationByObjectId(uint64_t objectId);
     WorldPlane* GetWorldPlaneByObjectId(uint64_t objectId);
     Kangaroo* GetKangarooByObjectId(uint64_t objectId);
     Jetty* GetJettyById(uint64_t objectId);
@@ -167,6 +177,8 @@ namespace Unloved::World {
     PickUp* GetPickUpByObjectId(uint64_t objectId);
     PictureFrame* GetPictureFrameByObjectId(uint64_t objectId);
     PowerPoleSet* GetPowerPoleSetByObjectId(uint64_t objectId);
+    PlanarQuadObject* GetPlanarQuadObjectByObjectId(uint64_t objectId);
+    PointPairObject* GetPointPairObjectByObjectId(uint64_t objectId);
     Shark* GetSharkByObjectId(uint64_t objectId);
     SpawnPoint* GetSpawnPointCampaignByObjectId(uint64_t objectId);
     SpawnPoint* GetSpawnPointDeathMatchByObjectId(uint64_t objectId);
@@ -188,7 +200,9 @@ namespace Unloved::World {
     Hell::SlotMap<Fence>& GetFences();
     Hell::SlotMap<Fireplace>& GetFireplaces();
     Hell::SlotMap<GameObject>& GetGameObjects();
+    Hell::SlotMap<GenericAnimatedObject>& GetGenericAnimatedObjects();
     Hell::SlotMap<GenericObject>& GetGenericObjects();
+    Hell::SlotMap<HouseLocation>& GetHouseLocations();
     Hell::SlotMap<WorldPlane>& GetWorldPlanes();
     Hell::SlotMap<Kangaroo>& GetKangaroos();
     Hell::SlotMap<Jetty>& GetJetties();
@@ -201,6 +215,8 @@ namespace Unloved::World {
     Hell::SlotMap<PickUp>& GetPickUps();
     Hell::SlotMap<PictureFrame>& GetPictureFrames();
     Hell::SlotMap<PowerPoleSet>& GetPowerPoleSets();
+    Hell::SlotMap<PlanarQuadObject>& GetPlanarQuadObjects();
+    Hell::SlotMap<PointPairObject>& GetPointPairObjects();
     Hell::SlotMap<Road>& GetRoads();
     Hell::SlotMap<Shark>& GetSharks();
     Hell::SlotMap<SpawnPoint>& GetSpawnPointsCampaign();

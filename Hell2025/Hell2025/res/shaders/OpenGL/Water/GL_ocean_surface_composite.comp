@@ -16,18 +16,6 @@ layout(std430, binding = SSBO_IDX_RENDERER_DATA) readonly restrict buffer render
 layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) readonly restrict buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
 uniform float u_time;
-uniform float u_oceanYOrigin;
-
-struct OceanSurfaceCompositeSettings {
-    vec3 underwaterTint;
-    float planeHeightOffset;
-    float distortionSpeed;
-    float distortionStrength;
-    float distortionTiling;
-    float refractionTintStrength;
-};
-
-uniform OceanSurfaceCompositeSettings u_composite;
 
 void main() {
 	ivec2 px = ivec2(gl_GlobalInvocationID.xy);   
@@ -54,19 +42,19 @@ void main() {
 
     // Cast ray at water plane
     vec3 rayOrigin = viewPos;
-    float planeHeight = u_oceanYOrigin + u_composite.planeHeightOffset;
+    float planeHeight = rendererData.oceanOriginY + rendererData.oceanSurfaceCompositePlaneHeightOffset;
     float t = (planeHeight - rayOrigin.y) / rayDir.y; // distance to ray hit
 
     vec3 waterWorldPos = rayOrigin + rayDir * t;
-    vec2 uv_waterSurface = vec2(waterWorldPos.x, waterWorldPos.z) * u_composite.distortionTiling;
-    float offsetX = mod(u_time * u_composite.distortionSpeed, 1.0);
+    vec2 uv_waterSurface = vec2(waterWorldPos.x, waterWorldPos.z) * rendererData.oceanSurfaceCompositeDistortionTiling;
+    float offsetX = mod(u_time * rendererData.oceanSurfaceCompositeDistortionSpeed, 1.0);
     vec2 uv_dudv = vec2(uv_waterSurface + vec2(offsetX, 0));
     vec2 distortion = texture(waterDUDVTexture, uv_dudv).rg * 2 - 1;
-    vec2 uv_refraction = screenUV + (distortion * u_composite.distortionStrength);
+    vec2 uv_refraction = screenUV + (distortion * rendererData.oceanSurfaceCompositeDistortionStrength);
     uv_refraction = clamp(uv_refraction, 0, 1);
  
     vec3 refractedColor = texture(DownSampledFinalLightingTexture, uv_refraction).rgb;
-    vec3 finalColor = (refractedColor * u_composite.underwaterTint * u_composite.refractionTintStrength) + waterColor;
+    vec3 finalColor = (refractedColor * rendererData.oceanUnderwaterTint.rgb * rendererData.oceanSurfaceCompositeRefractionTintStrength) + waterColor;
 
     imageStore(LightingImage, px, vec4(vec3(finalColor), 1.0));
 }

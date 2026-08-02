@@ -18,6 +18,7 @@ struct Ladder {
     void SetPosition(const glm::vec3& position);
     void SetRotation(const glm::vec3& rotation);
     void Update(float deltaTime);
+    void Reset();
     void RenderDebug();
     void CleanUp();
 

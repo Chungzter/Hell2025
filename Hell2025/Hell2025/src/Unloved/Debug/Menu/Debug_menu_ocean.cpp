@@ -1,5 +1,6 @@
 #include "Debug_menu.h"
 
+#include "Unloved/Debug/Debug.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 
 #include <cstdint>
@@ -20,6 +21,8 @@ namespace Debug::Menu::OceanMenu {
         BAND_1,
         SURFACE,
         RESET_DEFAULTS,
+        SAVE_TO_DISK,
+        LOAD_FROM_DISK,
     };
 
     enum struct SurfaceSetting : uint32_t {
@@ -174,8 +177,8 @@ namespace Debug::Menu::OceanMenu {
     void ApplyUnderwaterDistortionEdit(uint32_t id, const Value& value);
     void ApplyUnderwaterColorEdit(uint32_t id, const Value& value);
 
-    void RegisterMenu() {
-        g_oceanPage = RegisterRootPage("Ocean", "OCEAN", BuildOceanMenu, ApplyOceanEdit);
+    PageId RegisterMenu(PageId parentPage) {
+        g_oceanPage = RegisterPage("OCEAN", parentPage, BuildOceanMenu, ApplyOceanEdit);
         g_band0Page = RegisterPage("OCEAN BAND 0", g_oceanPage, BuildBand0Menu, ApplyBand0Edit);
         g_band1Page = RegisterPage("OCEAN BAND 1", g_oceanPage, BuildBand1Menu, ApplyBand1Edit);
         g_surfacePage = RegisterPage("OCEAN SURFACE", g_oceanPage, BuildSurfaceMenu, nullptr);
@@ -188,10 +191,8 @@ namespace Debug::Menu::OceanMenu {
         g_underwaterFogPage = RegisterPage("OCEAN UNDERWATER FOG", g_surfacePage, BuildUnderwaterFogMenu, ApplyUnderwaterFogEdit);
         g_underwaterDistortionPage = RegisterPage("OCEAN UNDERWATER DISTORTION", g_surfacePage, BuildUnderwaterDistortionMenu, ApplyUnderwaterDistortionEdit);
         g_underwaterColorPage = RegisterPage("OCEAN UNDERWATER COLOR", g_surfacePage, BuildUnderwaterColorMenu, ApplyUnderwaterColorEdit);
+        return g_oceanPage;
     }
-
-    // This is the only hookup the core needs
-    Registrar g_registrar(RegisterMenu);
 
     void BuildOceanMenu() {
         const Ocean::Settings settings = Ocean::GetSettings();
@@ -207,7 +208,11 @@ namespace Debug::Menu::OceanMenu {
         AddSubMenu(static_cast<uint32_t>(Setting::BAND_0), "Band 0", g_band0Page);
         AddSubMenu(static_cast<uint32_t>(Setting::BAND_1), "Band 1", g_band1Page);
         AddSubMenu(static_cast<uint32_t>(Setting::SURFACE), "Surface", g_surfacePage);
+
+        AddLineBreak();
         AddAction(static_cast<uint32_t>(Setting::RESET_DEFAULTS), "Reset ocean defaults");
+        AddAction(static_cast<uint32_t>(Setting::SAVE_TO_DISK), "Save to disk");
+        AddAction(static_cast<uint32_t>(Setting::LOAD_FROM_DISK), "Load from disk");
     }
 
     void BuildSurfaceMenu() {
@@ -356,6 +361,16 @@ namespace Debug::Menu::OceanMenu {
     void ApplyOceanEdit(uint32_t id, const Value& value) {
         if (id == static_cast<uint32_t>(Setting::RESET_DEFAULTS)) {
             Ocean::ResetSettings();
+            return;
+        }
+        if (id == static_cast<uint32_t>(Setting::SAVE_TO_DISK)) {
+            const bool saved = Ocean::SaveToDisk();
+            Debug::BlitQuickDebugMessage(saved ? "Saved " + Ocean::GetFilePath() : "Failed to save ocean config");
+            return;
+        }
+        if (id == static_cast<uint32_t>(Setting::LOAD_FROM_DISK)) {
+            const bool loaded = Ocean::LoadFromDisk();
+            Debug::BlitQuickDebugMessage(loaded ? "Loaded " + Ocean::GetFilePath() : "Failed to load ocean config");
             return;
         }
 

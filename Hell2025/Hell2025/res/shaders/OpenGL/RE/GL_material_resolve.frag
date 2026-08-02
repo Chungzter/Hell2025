@@ -21,12 +21,8 @@ layout (location = 2) out vec4 VelocityXYOcclusionSubSurfaceOut;
 layout(rg32ui, binding = 0) uniform readonly uimage2D u_VisibilityBuffer;
 layout(binding = 1) uniform sampler2D u_DepthTexture;
 layout(binding = 2) uniform sampler2DArray u_WoundMaskTexture;
-layout(binding = 3) uniform sampler2D u_RoadMaskTexture;
 uniform bool u_hasPreviousSkinnedPositions;
 uniform bool u_woundMaskEnabled;
-uniform bool u_heightMapResolve;
-uniform int u_dirtRoadMaterialIndex;
-uniform float u_textureScaling;
 
 struct PackedVertex {
     float vx, vy, vz;
@@ -144,14 +140,9 @@ void main() {
     vec3 baryX = ComputeScreenBarycentrics(p + vec2(pixelStep.x, 0.0), s0, s1, s2, invW);
     vec3 baryY = ComputeScreenBarycentrics(p + vec2(0.0, -pixelStep.y), s0, s1, s2, invW);
 
-    float textureScale = 1.0;
-    if (u_heightMapResolve) {
-        textureScale = 50.0 * u_textureScaling;
-    }
-
-    vec2 uv0 = vec2(v0.u, v0.v) * textureScale;
-    vec2 uv1 = vec2(v1.u, v1.v) * textureScale;
-    vec2 uv2 = vec2(v2.u, v2.v) * textureScale;
+    vec2 uv0 = vec2(v0.u, v0.v);
+    vec2 uv1 = vec2(v1.u, v1.v);
+    vec2 uv2 = vec2(v2.u, v2.v);
 
     vec2 uv  = uv0 * bary.x  + uv1 * bary.y  + uv2 * bary.z;
     vec2 uvX = uv0 * baryX.x + uv1 * baryX.y + uv2 * baryX.z;
@@ -187,26 +178,15 @@ void main() {
     vec3 b = cross(n, t);
     mat3 tbn = mat3(t, b, n);
 
-    vec4 baseColor = textureGrad(sampler2D(textureSamplers[material.basecolor]), uv, dPdx, dPdy);
-    vec3 normalMap = textureGrad(sampler2D(textureSamplers[material.normal]), uv, dPdx, dPdy).rgb;
-    vec4 rma = textureGrad(sampler2D(textureSamplers[material.rma]), uv, dPdx, dPdy).rgba;
+    vec4 baseColor;
+    vec3 normalMap;
+    vec4 rma;
 
-    if (u_heightMapResolve) {
-        Material dirtRoadMaterial = materials[u_dirtRoadMaterialIndex];
-        vec2 dirtRoadUV = uv * 2.0;
-        vec4 dirtRoadBaseColor = textureGrad(sampler2D(textureSamplers[dirtRoadMaterial.basecolor]), dirtRoadUV, dPdx * 2.0, dPdy * 2.0) + 0.1;
-        vec3 dirtRoadNormalMap = textureGrad(sampler2D(textureSamplers[dirtRoadMaterial.normal]), dirtRoadUV, dPdx * 2.0, dPdy * 2.0).rgb;
-        vec3 dirtRoadRma = textureGrad(sampler2D(textureSamplers[dirtRoadMaterial.rma]), dirtRoadUV, dPdx * 2.0, dPdy * 2.0).rgb;
+    baseColor = textureGrad(sampler2D(textureSamplers[material.basecolor]), uv, dPdx, dPdy);
+    normalMap = textureGrad(sampler2D(textureSamplers[material.normal]), uv, dPdx, dPdy).rgb;
+    rma = textureGrad(sampler2D(textureSamplers[material.rma]), uv, dPdx, dPdy).rgba;
 
-        vec2 roadMaskWorldSize = vec2(textureSize(u_RoadMaskTexture, 0)) * HEIGHTMAP_SCALE_XZ / 4.0;
-        vec2 roadMaskUV = worldPos.xz / roadMaskWorldSize;
-        float roadMask = texture(u_RoadMaskTexture, roadMaskUV).r;
-
-        baseColor.rgb = mix(baseColor.rgb, dirtRoadBaseColor.rgb, roadMask);
-        normalMap = mix(normalMap, dirtRoadNormalMap, roadMask);
-        rma.rgb = mix(rma.rgb, dirtRoadRma, roadMask);
-    }
-    else if (u_woundMaskEnabled && renderItem.woundMaskTextureIndex != -1 && renderItem.woundMaterialIndex != -1) {
+    if (u_woundMaskEnabled && renderItem.woundMaskTextureIndex != -1 && renderItem.woundMaterialIndex != -1) {
         Material woundMaterial = materials[renderItem.woundMaterialIndex];
         vec4 woundBaseColor = textureGrad(sampler2D(textureSamplers[woundMaterial.basecolor]), uv, dPdx, dPdy);
         vec3 woundNormalMap = textureGrad(sampler2D(textureSamplers[woundMaterial.normal]), uv, dPdx, dPdy).rgb;
@@ -224,8 +204,8 @@ void main() {
         rma.rgb = mix(rma.rgb, woundRma, woundMask);
     }
 
-    float roughness = rma.r;
-    float metallic  = rma.g;
+    float roughness = clamp(rma.r * renderItem.roughnessFactor, 0.0, 1.0);
+    float metallic  = clamp(rma.g * renderItem.metallicFactor, 0.0, 1.0);
     float ao = rma.b;
 
     normalMap = normalMap * 2.0 - 1.0;
@@ -271,7 +251,7 @@ void main() {
 
     NormalXYRoughnessMiscOut.rg = EncodeOct(normal);
     NormalXYRoughnessMiscOut.b = roughness;
-    NormalXYRoughnessMiscOut.a = u_heightMapResolve ? 0.0 : EncodeMiscFlags(renderItem.miscFlags);
+    NormalXYRoughnessMiscOut.a = EncodeMiscFlags(renderItem.miscFlags);
 
     VelocityXYOcclusionSubSurfaceOut.rg = velocityNDC;
     VelocityXYOcclusionSubSurfaceOut.b = ao;

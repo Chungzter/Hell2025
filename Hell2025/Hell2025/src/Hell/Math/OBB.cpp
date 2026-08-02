@@ -1,6 +1,8 @@
 #include "OBB.h"
 #include "Ray.h"
 
+#include <glm/common.hpp>
+#include <glm/matrix.hpp>
 #include <glm/vec4.hpp>
 
 OBB::OBB(const AABB& bounds, const glm::mat4& matrix) {
@@ -17,6 +19,12 @@ void OBB::SetTransform(const glm::mat4& matrix) {
 void OBB::SetLocalBounds(const AABB& bounds) {
     m_localBounds = bounds;
     RecomputeCorners();
+}
+
+glm::vec3 OBB::ClosestPoint(const glm::vec3& point) const {
+    const glm::vec3 localPoint = glm::vec3(glm::inverse(m_worldTransform) * glm::vec4(point, 1.0f));
+    const glm::vec3 closestLocalPoint = glm::clamp(localPoint, m_localBounds.GetBoundsMin(), m_localBounds.GetBoundsMax());
+    return glm::vec3(m_worldTransform * glm::vec4(closestLocalPoint, 1.0f));
 }
 
 OBBRayResult OBB::Raycast(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float maxDistance) const {

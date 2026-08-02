@@ -25,10 +25,13 @@ readonly restrict layout(std430, binding = SSBO_IDX_MATERIALS) buffer materialsB
 readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
 readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportData[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) buffer renderItemsBuffer { RenderItem renderItems[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer       { Light lights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer { Light lights[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_LIGHTS) buffer tileLightsBuffer   { TileLights tileLights[];   };
 readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS) buffer tileSpotLightsBuffer { TileSpotLights tileSpotLights[]; };
 readonly restrict layout(std430, binding = SSBO_IDX_SPOT_LIGHTS) buffer spotLightsBuffer { SpotLight spotLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_CHRISTMAS_LIGHTS) buffer tileChristmasLightsBuffer  { TileInstanceData tileChristmasLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_CHRISTMAS_LIGHTS) buffer ChristmasLightsBuffer      { ChristmasLight christmasLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_CHRISTMAS_INDEX_POOL) buffer ChristmasLightsIndexBuffer { uint globalChristmasLightIndices[]; };
 
 layout (location = 0) out vec4 LightingOut;
 layout (location = 1) out vec4 BaseColorOut;
@@ -61,8 +64,8 @@ void main() {
 
     vec3 viewPos = viewportData[v_viewportIndex].inverseView[3].xyz;
 
-    float roughness = rma.r;
-    float metallic = rma.g;
+    float roughness = clamp(rma.r * item.roughnessFactor, 0.0, 1.0);
+    float metallic = clamp(rma.g * item.metallicFactor, 0.0, 1.0);
     float ao = rma.b;
 
     vec3 gammaBaseColor = pow(baseColor.rgb, vec3(2.2));
@@ -134,8 +137,25 @@ void main() {
         directLighting += directLight;
     }
 
+    // Tiele index
     ivec2 tile = ivec2(gl_FragCoord.xy) / TILE_SIZE;
     uint tileIndex = uint(tile.y) * rendererData.tileCountX + uint(tile.x);
+
+    // Direct light (Christmas lights)
+    uint christmasLightCount = tileChristmasLights[tileIndex].count; // Num of Chrissy lights in this tile
+    uint christmasLightOffset = tileChristmasLights[tileIndex].offset;
+
+    for (uint i = 0; i < christmasLightCount; ++i) {
+        uint idx = globalChristmasLightIndices[christmasLightOffset + i];
+        vec3 lightPosition = christmasLights[idx].position.xyz;
+        vec3 lightColor = christmasLights[idx].color.rgb;
+        float lightRadius = rendererData.christmasLightRadius;
+        float lightStrength = rendererData.christmasLightStrength;
+
+        directLighting += GetDirectLighting(lightPosition, lightColor, lightRadius, lightStrength, normal.xyz, WorldPos.xyz, gammaBaseColor.rgb, roughness, metallic, viewPos);
+    }
+
+    // Direct lighting (point lights)
     float fragDistance = distance(WorldPos.xyz, viewPos);
     uint spotLightCount = tileSpotLights[tileIndex].lightCount;
     for (uint i = 0u; i < spotLightCount; i++) {

@@ -12,10 +12,11 @@
 
 namespace Unloved {
 
-void WallSegment::Init(glm::vec3 start, glm::vec3 end, float height, uint64_t parentObjectId, const SpawnOffset& spawnOffset) {
+void WallSegment::Init(glm::vec3 start, glm::vec3 end, float startHeight, float endHeight, uint64_t parentObjectId, const SpawnOffset& spawnOffset) {
     m_start = start;
     m_end = end;
-    m_height = height;
+    m_startHeight = startHeight;
+    m_endHeight = endHeight;
     m_spawnOffset = spawnOffset;
 
     // Normal
@@ -25,10 +26,10 @@ void WallSegment::Init(glm::vec3 start, glm::vec3 end, float height, uint64_t pa
 
     // Corners
     m_corners = {
-        m_start,                                    // Bottom-left
-        m_start + glm::vec3 (0.0f, m_height, 0.0f), // Top-left
-        m_end + glm::vec3 (0.0f, m_height, 0.0f),   // Top-right
-        m_end                                       // Bottom-right
+        m_start,
+        m_start + glm::vec3(0.0f, m_startHeight, 0.0f),
+        m_end + glm::vec3(0.0f, m_endHeight, 0.0f),
+        m_end
     };
 
     // AABB
@@ -94,6 +95,12 @@ void WallSegment::CreateVertexData(const std::vector<const ClippingVolume*>& cli
 
 void WallSegment::CreatePhysicsObject() {
     Hell::Physics::MarkRigidStaticForRemoval(m_physicsId);
+    m_physicsId = 0;
+    m_objectId = Unloved::GetNextObjectId(ObjectType::WALL_SEGMENT);
+
+    glm::vec3 horizontalDelta = m_end - m_start;
+    horizontalDelta.y = 0.0f;
+    if (glm::length(horizontalDelta) < 0.001f) return;
 
     PhysicsFilterData filterData;
     filterData.raycastGroup = RAYCAST_ENABLED;
@@ -101,7 +108,7 @@ void WallSegment::CreatePhysicsObject() {
     filterData.collidesWith = (CollisionGroup)(GENERIC_BOUNCEABLE | BULLET_CASING | RAGDOLL_PLAYER | RAGDOLL_ENEMY | CHARACTER_CONTROLLER | ITEM_PICK_UP);
 
     m_physicsId = Hell::Physics::CreateRigidStaticTriangleMeshFromVertexData(Transform(), m_vertices, m_indices, filterData);
-    m_objectId = Unloved::GetNextObjectId(ObjectType::WALL_SEGMENT);
+    if (m_physicsId == 0) return;
 
     // Set PhysX user data
     PhysicsUserData userData;

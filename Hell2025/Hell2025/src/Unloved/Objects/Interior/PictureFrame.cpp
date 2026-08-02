@@ -2,6 +2,8 @@
 #include "Hell/Logging.h"
 
 #include "Unloved/Render/Renderer.h"
+#include "Unloved/Systems/House/HouseBuilder.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 
 namespace Unloved {
 
@@ -16,6 +18,7 @@ PictureFrame::PictureFrame(uint64_t id, PictureFrameCreateInfo& createInfo, Spaw
 }
 
 void PictureFrame::CleanUp() {
+    WorldBVH::MarkStaticSceneBvhDirty();
     m_meshNodes.CleanUp();
 }
 
@@ -29,19 +32,16 @@ void PictureFrame::Update() {
 }
 
 void PictureFrame::SelectRandomPicture() {
-    const std::vector<const char*> bigLandscapeImages = {
-        //"Picture_RainbowMage_ALB",
-        "Picture_SHNakedLady",
-        "Picture_Raptors",
-        "Picture_SamNeil",
-        "Picture_Minotaur"
-    };
-
     std::string materialName = "CheckerBoard";
 
     if (m_createInfo.type == PictureFrameType::BIG_LANDSCAPE) {
-        int random = rand() % bigLandscapeImages.size();
-        materialName = bigLandscapeImages[random];
+        if (m_createInfo.useRandom) {
+            materialName = HouseBuilder::GetNextRandomLargePictureFrameMaterial();
+        }
+        else {
+            materialName = m_createInfo.materialName;
+            HouseBuilder::TakeLargePictureFrameMaterial(materialName);
+        }
     }
     else {
         // TODO
@@ -70,5 +70,31 @@ void PictureFrame::SetRotation(const glm::vec3& rotation) {
 
 void PictureFrame::SetScale(const glm::vec3& scale) {
     m_createInfo.scale = scale;
+}
+
+void PictureFrame::SetType(PictureFrameType type) {
+    if (m_createInfo.type == type) return;
+
+    m_createInfo.type = type;
+    m_meshNodes.CleanUp();
+    SelectRandomPicture();
+}
+
+void PictureFrame::SetUseRandom(bool useRandom) {
+    if (m_createInfo.useRandom == useRandom) return;
+
+    m_createInfo.useRandom = useRandom;
+    m_meshNodes.CleanUp();
+    SelectRandomPicture();
+}
+
+void PictureFrame::SetMaterialName(const std::string& materialName) {
+    if (m_createInfo.materialName == materialName) return;
+
+    m_createInfo.materialName = materialName;
+    if (m_createInfo.useRandom) return;
+
+    m_meshNodes.CleanUp();
+    SelectRandomPicture();
 }
 }

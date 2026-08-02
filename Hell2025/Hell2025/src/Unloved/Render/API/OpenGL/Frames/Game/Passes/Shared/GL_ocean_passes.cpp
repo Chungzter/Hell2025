@@ -36,41 +36,6 @@ namespace OpenGL::Renderer {
         }
     }
 
-    void SetOceanSurfaceUniforms() {
-        const Ocean::SurfaceSettings surface = Ocean::GetSettings().surface;
-
-        OpenGL::SetUniformVec3("u_surface.albedo", surface.albedo);
-        OpenGL::SetUniformVec3("u_surface.fogColor", surface.fogColor);
-        OpenGL::SetUniformFloat("u_surface.normalScale", surface.normalScale);
-        OpenGL::SetUniformFloat("u_surface.normalConvergeStartDistance", surface.normalConvergeStartDistance);
-        OpenGL::SetUniformFloat("u_surface.normalConvergeEndDistance", surface.normalConvergeEndDistance);
-        OpenGL::SetUniformFloat("u_surface.normalConvergeMaxFactor", surface.normalConvergeMaxFactor);
-        OpenGL::SetUniformFloat("u_surface.normalConvergeExponent", surface.normalConvergeExponent);
-        OpenGL::SetUniformFloat("u_surface.normalSoftening", surface.normalSoftening);
-        OpenGL::SetUniformFloat("u_surface.rippleTiling", surface.rippleTiling);
-        OpenGL::SetUniformFloat("u_surface.rippleStrength", surface.rippleStrength);
-        OpenGL::SetUniformFloat("u_surface.rippleSecondLayerScale", surface.rippleSecondLayerScale);
-        OpenGL::SetUniformVec2("u_surface.rippleVelocity0", surface.rippleVelocity0);
-        OpenGL::SetUniformVec2("u_surface.rippleVelocity1", surface.rippleVelocity1);
-        OpenGL::SetUniformBool("u_surface.specularAntiAliasing", surface.specularAntiAliasing);
-        OpenGL::SetUniformFloat("u_surface.roughness", surface.roughness);
-        OpenGL::SetUniformFloat("u_surface.reflectance", surface.reflectance);
-        OpenGL::SetUniformFloat("u_surface.reflectionGamma", surface.reflectionGamma);
-        OpenGL::SetUniformFloat("u_surface.diffuseStrength", surface.diffuseStrength);
-        OpenGL::SetUniformFloat("u_surface.sssHeightRange", surface.sssHeightRange);
-        OpenGL::SetUniformFloat("u_surface.sssStrength", surface.sssStrength);
-        OpenGL::SetUniformFloat("u_surface.underwaterSssStrength", surface.underwaterSssStrength);
-        OpenGL::SetUniformFloat("u_surface.sssRadiusMinimum", surface.sssRadiusMinimum);
-        OpenGL::SetUniformFloat("u_surface.sssRadiusMaximum", surface.sssRadiusMaximum);
-        OpenGL::SetUniformFloat("u_surface.sssIntensity", surface.sssIntensity);
-        OpenGL::SetUniformFloat("u_surface.sssFalloff", surface.sssFalloff);
-        OpenGL::SetUniformFloat("u_surface.sssSaturation", surface.sssSaturation);
-        OpenGL::SetUniformFloat("u_surface.fogStartDistance", surface.fogStartDistance);
-        OpenGL::SetUniformFloat("u_surface.fogEndDistance", surface.fogEndDistance);
-        OpenGL::SetUniformFloat("u_surface.fogExponent", surface.fogExponent);
-        OpenGL::SetUniformFloat("u_surface.fogStrength", surface.fogStrength);
-    }
-
     static void SetOceanMeshUniforms() {
         OpenGL::SetUniformInt("u_mesh.gridSize", OCEAN_MESH_CONFIG.gridSize);
         OpenGL::SetUniformInt("u_mesh.lodLevelCount", OCEAN_MESH_CONFIG.lodLevelCount);
@@ -78,37 +43,6 @@ namespace OpenGL::Renderer {
         OpenGL::SetUniformFloat("u_mesh.lodScale", OCEAN_MESH_CONFIG.lodScale);
         OpenGL::SetUniformInt("u_mesh.holeMargin", OCEAN_MESH_CONFIG.holeMargin);
         OpenGL::SetUniformFloat("u_mesh.lodDepthBias", OCEAN_MESH_CONFIG.lodDepthBias);
-    }
-
-    void SetOceanSurfaceCompositeUniforms() {
-        const Ocean::CompositeSettings composite = Ocean::GetSettings().composite;
-        const Ocean::SurfaceCompositeSettings& surface = composite.surface;
-
-        OpenGL::SetUniformVec3("u_composite.underwaterTint", composite.underwaterTint);
-        OpenGL::SetUniformFloat("u_composite.planeHeightOffset", surface.planeHeightOffset);
-        OpenGL::SetUniformFloat("u_composite.distortionSpeed", surface.distortionSpeed);
-        OpenGL::SetUniformFloat("u_composite.distortionStrength", surface.distortionStrength);
-        OpenGL::SetUniformFloat("u_composite.distortionTiling", surface.distortionTiling);
-        OpenGL::SetUniformFloat("u_composite.refractionTintStrength", surface.refractionTintStrength);
-    }
-
-    void SetOceanUnderwaterCompositeUniforms() {
-        const Ocean::CompositeSettings composite = Ocean::GetSettings().composite;
-        const Ocean::UnderwaterCompositeSettings& underwater = composite.underwater;
-
-        OpenGL::SetUniformVec3("u_composite.underwaterTint", composite.underwaterTint);
-        OpenGL::SetUniformVec3("u_composite.rayFogColor", underwater.rayFogColor);
-        OpenGL::SetUniformFloat("u_composite.rayFogStrength", underwater.rayFogStrength);
-        OpenGL::SetUniformFloat("u_composite.darknessCurve", underwater.darknessCurve);
-        OpenGL::SetUniformFloat("u_composite.distortionSpeed", underwater.distortionSpeed);
-        OpenGL::SetUniformFloat("u_composite.distortionStrength", underwater.distortionStrength);
-        OpenGL::SetUniformFloat("u_composite.depthTintStrength", underwater.depthTintStrength);
-        OpenGL::SetUniformFloat("u_composite.depthTintOriginalWeight", underwater.depthTintOriginalWeight);
-        OpenGL::SetUniformFloat("u_composite.geometryWaterColorSquaredStrength", underwater.geometryWaterColorSquaredStrength);
-        OpenGL::SetUniformFloat("u_composite.geometryWaterColorStrength", underwater.geometryWaterColorStrength);
-        OpenGL::SetUniformFloat("u_composite.geometryTintStrength", underwater.geometryTintStrength);
-        OpenGL::SetUniformFloat("u_composite.openWaterTintStrength", underwater.openWaterTintStrength);
-        OpenGL::SetUniformFloat("u_composite.openWaterBrightness", underwater.openWaterBrightness);
     }
 
     void OceanGeometryPass() {
@@ -130,10 +64,7 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
         SetOceanFFTBandUniforms();
-        SetOceanSurfaceUniforms();
         SetOceanMeshUniforms();
-        OpenGL::SetUniformInt("u_displayMode", static_cast<int>(Ocean::GetDisplayMode()));
-        OpenGL::SetUniformFloat("u_oceanOriginY", Ocean::GetOceanOriginY());
         OpenGL::SetUniformFloat("u_time", Ocean::GetAnimationTime());
 
         OpenGL::BindTextureUnit(0, fftBand0Fbo.GetColorAttachmentHandleByName("Displacement"));
@@ -192,9 +123,6 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         SetOceanFFTBandUniforms();
 
-        OpenGL::SetUniformInt("u_displayMode", static_cast<int>(Ocean::GetDisplayMode()));
-        OpenGL::SetUniformFloat("u_oceanOriginY", Ocean::GetOceanOriginY());
-
         OpenGL::BindImageTexture(0, waterFrameBuffer.GetColorAttachmentHandleByName("OceanFlags"), GL_WRITE_ONLY, GL_R8UI);
         OpenGL::BindImageTexture(1, waterFrameBuffer.GetColorAttachmentHandleByName("OceanMask"), GL_READ_ONLY, GL_R8UI);
         OpenGL::BindTextureUnit(2, fftFrameBuffer_band0.GetColorAttachmentHandleByName("Displacement"));
@@ -220,10 +148,8 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("OceanSurfaceComposite");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        SetOceanSurfaceCompositeUniforms();
 
         OpenGL::SetUniformFloat("u_time", Ocean::GetAnimationTime());
-        OpenGL::SetUniformFloat("u_oceanYOrigin", Ocean::GetOceanOriginY());
 
         OpenGL::BindImageTexture(0, gBuffer.GetColorAttachmentHandleByName("Lighting"), GL_READ_WRITE, GL_RGBA16F);
         OpenGL::BindImageTexture(1, waterFrameBuffer.GetColorAttachmentHandleByName("OceanMask"), GL_READ_ONLY, GL_R8UI);
@@ -271,7 +197,6 @@ namespace OpenGL::Renderer {
         OpenGL::BindShader("OceanUnderwaterComposite");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
-        SetOceanUnderwaterCompositeUniforms();
 
         OpenGL::SetUniformFloat("u_time", Ocean::GetAnimationTime());
 

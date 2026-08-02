@@ -10,7 +10,6 @@
 #include <glm/matrix.hpp>
 
 #include <algorithm>
-#include <array>
 #include <limits>
 
 namespace Unloved::RendererUtil {
@@ -68,9 +67,6 @@ RenderItem CreateAssetGeometryRenderItem(const std::string& modelName, const std
     renderItem.blendingMode = static_cast<uint32_t>(BlendingMode::DEFAULT);
 
     // World AABB
-    glm::vec3 minBounds(std::numeric_limits<float>::max());
-    glm::vec3 maxBounds(-std::numeric_limits<float>::max());
-
     const glm::vec3 localMin = mesh->aabbMin;
     const glm::vec3 localMax = mesh->aabbMax;
     const glm::vec3 localCenter = 0.5f * (localMin + localMax);
@@ -98,7 +94,38 @@ RenderItem CreateAssetGeometryRenderItem(const std::string& modelName, const std
     renderItem.customId = 0;
     renderItem.openableId = 0;
     renderItem.woundMaterialIndex = -1;
-    renderItem.padding = 0;
+    renderItem.shadowMeshId = 0;
+
+    return renderItem;
+}
+
+RenderItem CreateProceduralGeometryRenderItem(uint32_t meshId, int32_t materialIndex, const uint64_t objectId) {
+    RenderItem renderItem;
+
+    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("Procedural");
+    Mesh* mesh = meshBuffer.GetMeshById(meshId);
+
+    if (!mesh) {
+        Logging::Error() << "RendererUtil::CreateProceduralGeometryRenderItem() mesh id '" << meshId << "' not found\n";
+        return renderItem;
+    }
+
+    if (materialIndex < 0) {
+        Logging::Error() << "RendererUtil::CreateProceduralGeometryRenderItem() called with invalid material index\n";
+        return renderItem;
+    }
+
+    renderItem.meshId = meshId;
+    renderItem.vertexCount = mesh->vertexCount;
+    renderItem.indexCount = mesh->indexCount;
+    renderItem.baseVertex = mesh->baseVertex;
+    renderItem.baseIndex = mesh->baseIndex;
+    renderItem.materialIndex = materialIndex;
+    renderItem.localMeshNodeIndex = -1;
+    renderItem.aabbMin = glm::vec4(mesh->aabbMin, 0.0f);
+    renderItem.aabbMax = glm::vec4(mesh->aabbMax, 0.0f);
+
+    Hell::Bit::PackUint64(objectId, renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
 
     return renderItem;
 }
@@ -107,33 +134,13 @@ void UpdateRenderItemAABB(RenderItem& renderItem) {
     Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.meshId);
     if (!mesh) return;
 
-    glm::vec3 aabbMin = glm::vec3(std::numeric_limits<float>::max());
-    glm::vec3 aabbMax = glm::vec3(-std::numeric_limits<float>::max());
+    const glm::vec3 localCenter = 0.5f * (mesh->aabbMin + mesh->aabbMax);
+    const glm::vec3 localExtents = 0.5f * (mesh->aabbMax - mesh->aabbMin);
+    const glm::vec3 worldCenter = glm::vec3(renderItem.modelMatrix * glm::vec4(localCenter, 1.0f));
+    const glm::vec3 worldExtents = glm::abs(glm::vec3(renderItem.modelMatrix[0])) * localExtents.x + glm::abs(glm::vec3(renderItem.modelMatrix[1])) * localExtents.y + glm::abs(glm::vec3(renderItem.modelMatrix[2])) * localExtents.z;
 
-    static int warning = 0;
-    warning++;
-    if (warning < 20) {
-        Logging::Warning() << "You are calling Unloved::RendererUtil::UpdateRenderItemAABB(..) all over this fucking engine and it is terrible slow. Free FPS real estate if you rewrite this\n";
-    }
-
-    const std::array<glm::vec3, 8> corners = {
-        glm::vec3(renderItem.modelMatrix * glm::vec4(mesh->aabbMin.x, mesh->aabbMax.y, mesh->aabbMax.z, 1.0f)),
-        glm::vec3(renderItem.modelMatrix * glm::vec4(mesh->aabbMax.x, mesh->aabbMax.y, mesh->aabbMax.z, 1.0f)),
-        glm::vec3(renderItem.modelMatrix * glm::vec4(mesh->aabbMin.x, mesh->aabbMin.y, mesh->aabbMax.z, 1.0f)),
-        glm::vec3(renderItem.modelMatrix * glm::vec4(mesh->aabbMax.x, mesh->aabbMin.y, mesh->aabbMax.z, 1.0f)),
-        glm::vec3(renderItem.modelMatrix * glm::vec4(mesh->aabbMin.x, mesh->aabbMax.y, mesh->aabbMin.z, 1.0f)),
-        glm::vec3(renderItem.modelMatrix * glm::vec4(mesh->aabbMax.x, mesh->aabbMax.y, mesh->aabbMin.z, 1.0f)),
-        glm::vec3(renderItem.modelMatrix * glm::vec4(mesh->aabbMin.x, mesh->aabbMin.y, mesh->aabbMin.z, 1.0f)),
-        glm::vec3(renderItem.modelMatrix * glm::vec4(mesh->aabbMax.x, mesh->aabbMin.y, mesh->aabbMin.z, 1.0f))
-    };
-
-    for (const auto& corner : corners) {
-        aabbMin = glm::min(aabbMin, corner);
-        aabbMax = glm::max(aabbMax, corner);
-    }
-
-    renderItem.aabbMin = glm::vec4(aabbMin, 0.0f);
-    renderItem.aabbMax = glm::vec4(aabbMax, 0.0f);
+    renderItem.aabbMin = glm::vec4(worldCenter - worldExtents, 0.0f);
+    renderItem.aabbMax = glm::vec4(worldCenter + worldExtents, 0.0f);
 }
 
 AABB ComputeWorldAABB(glm::vec3& localAabbMin, glm::vec3& localAabbMax, glm::mat4& modelMatrix) {

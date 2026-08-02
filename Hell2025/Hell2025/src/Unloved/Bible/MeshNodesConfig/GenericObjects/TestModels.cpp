@@ -11,7 +11,7 @@ namespace Bible {
         meshNodes->SetBlendingModeByMeshName("Glass", BlendingMode::GLASS);
     }
 
-    void ConfigureTestModel2(uint64_t id, MeshNodes* meshNodes) {
+    void ConfigureMeshNodesDeerHead(uint64_t id, MeshNodes* meshNodes) {
         std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 
         meshNodes->Init(id, "DeerTest", meshNodeCreateInfoSet);
@@ -19,6 +19,10 @@ namespace Bible {
         meshNodes->SetMaterialByMeshName("DeerIris", "DeerIris");
         meshNodes->SetMaterialByMeshName("DeerSclera", "Scelra");
         meshNodes->SetBlendingModeByMeshName("DeerSclera", BlendingMode::GLASS);
+    }
+
+    void ConfigureTestModel2(uint64_t id, MeshNodes* meshNodes) {
+        ConfigureMeshNodesDeerHead(id, meshNodes);
     }
 
     void ConfigureTestModel3(uint64_t id, MeshNodes* meshNodes) {

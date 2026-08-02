@@ -27,14 +27,17 @@ layout (binding = 7) uniform sampler2D u_depthTexture;
 layout (binding = 8) uniform sampler2D u_indirectDiffuseTexture;
 layout (binding = 10) uniform sampler2D u_indirectDiffuseSurfaceTexture;
 
-readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
-readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS) buffer renderItemsBuffer { RenderItem renderItems[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer       { Light lights[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_LIGHTS) buffer tileLightsBuffer   { TileLights tileLights[];   };
-readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS) buffer tileSpotLightsBuffer { TileSpotLights tileSpotLights[]; };
-readonly restrict layout(std430, binding = SSBO_IDX_SPOT_LIGHTS) buffer spotLightsBuffer { SpotLight spotLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS)                       buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA)                  buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA)                  buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SCENE_RENDER_ITEMS)             buffer renderItemsBuffer { RenderItem renderItems[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS)                         buffer lightsBuffer { Light lights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_LIGHTS)           buffer tileLightsBuffer   { TileLights tileLights[];   };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS)      buffer tileSpotLightsBuffer { TileSpotLights tileSpotLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SPOT_LIGHTS)                    buffer spotLightsBuffer { SpotLight spotLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_TILE_CHRISTMAS_LIGHTS) buffer tileChristmasLightsBuffer  { TileInstanceData tileChristmasLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_CHRISTMAS_LIGHTS)      buffer ChristmasLightsBuffer { ChristmasLight christmasLights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTING_CHRISTMAS_INDEX_POOL)  buffer ChristmasLightsIndexBuffer { uint globalChristmasLightIndices[]; };
 
 // Moon lighting
 uniform float u_cascadeFarPlane = 256.0;
@@ -92,6 +95,7 @@ void main() {
 
     vec3 directLighting = vec3(0.0);
 
+    // Direct light (point lights)
     for (int i = 0; i < lightCount; i++) {
         int lightIndex = int(tileLights[tileIndex].lightIndices[i]);
 
@@ -119,7 +123,21 @@ void main() {
         directLighting += directLight;
     }
 
+    // Direct light (Christmas lights)
+    uint christmasLightCount = tileChristmasLights[tileIndex].count; // Num of Chrissy lights in this tile
+    uint christmasLightOffset = tileChristmasLights[tileIndex].offset;
 
+    for (uint i = 0; i < christmasLightCount; ++i) {
+        uint idx = globalChristmasLightIndices[christmasLightOffset + i];
+        vec3 lightPosition = christmasLights[idx].position.xyz;
+        vec3 lightColor = christmasLights[idx].color.rgb;
+        float lightRadius = rendererData.christmasLightRadius;
+        float lightStrength = rendererData.christmasLightStrength;
+
+        directLighting += GetDirectLighting(lightPosition, lightColor, lightRadius, lightStrength, normal.xyz, worldPos.xyz, linearBaseColor.rgb, roughness, metallic, viewPos);
+    }
+
+    // Flash lights
     uint spotLightCount = tileSpotLights[tileIndex].lightCount;
     for (uint i = 0u; i < spotLightCount; i++) {
         SpotLight spotLight = spotLights[tileSpotLights[tileIndex].lightIndices[i]];

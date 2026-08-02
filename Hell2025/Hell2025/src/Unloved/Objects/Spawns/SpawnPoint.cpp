@@ -1,35 +1,71 @@
 #include "SpawnPoint.h"
 
-#include "Hell/Math/AABB.h"
+#include "Hell/Logging.h"
 #include "Hell/Math/Transform.h"
-#include "Hell/Physics/Physics.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "Unloved/Common/Constants.h"
-#include "Unloved/Debug/DebugDraw.h"
-#include "Unloved/ObjectId.h"
+#include "Unloved/Render/RendererUtil.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
+
+#include <cmath>
+
+namespace {
+    glm::vec3 ApplySpawnOffset(const glm::vec3& position, const SpawnOffset& spawnOffset) {
+        const float c = std::cos(spawnOffset.yRotation);
+        const float s = std::sin(spawnOffset.yRotation);
+        const glm::vec3 rotated(position.x * c + position.z * s, position.y, -position.x * s + position.z * c);
+        return rotated + spawnOffset.translation;
+    }
+}
 
 namespace Unloved {
 
 SpawnPoint::SpawnPoint(uint64_t id, const SpawnPointCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_objectId = id;
     m_createInfo = createInfo;
-    m_createInfo.position += spawnOffset.translation;
-    m_createInfo.camEuler.y += spawnOffset.yRotation;
+    m_createInfo.position = ApplySpawnOffset(m_createInfo.position, spawnOffset);
+    m_createInfo.rotation.y += spawnOffset.yRotation;
+
+    UpdateRenderItems();
+    WorldBVH::MarkStaticSceneBvhDirty();
 }
 
 void SpawnPoint::CleanUp() {
-    // Nothing as of yet
+    m_renderItems.clear();
+    WorldBVH::MarkStaticSceneBvhDirty();
 }
 
-void SpawnPoint::DrawDebugCube() {
-    glm::vec3 aabbMin = glm::vec3(-0.5f);
-    glm::vec3 aabbMax = glm::vec3(0.5f);
+void SpawnPoint::SetPosition(const glm::vec3& position) {
+    m_createInfo.position = position;
 
-    Hell::Transform transform;
-    transform.position = GetPosition();
-
-    AABB aabb = AABB(aabbMin, aabbMax);
-
-    DebugDraw::DrawAABB(aabb, OUTLINE_COLOR, transform.to_mat4());
+    UpdateRenderItems();
+    WorldBVH::MarkStaticSceneBvhDirty();
 }
+
+void SpawnPoint::SetRotation(const glm::vec3& rotation) {
+    m_createInfo.rotation = glm::vec2(rotation.x, rotation.y);
+
+    UpdateRenderItems();
+    WorldBVH::MarkStaticSceneBvhDirty();
+}
+
+void SpawnPoint::UpdateRenderItems() {
+    m_renderItems.clear();
+
+    Transform transform;
+    transform.position = m_createInfo.position;
+    transform.rotation = GetCameraEuler();
+    transform.scale = glm::vec3(0.25f);
+
+    int32_t materialIndex = Hell::ResourceManager::GetMaterialIndexByName("CheckerBoard");
+    if (materialIndex == -1) {
+        __debugbreak();
+        Logging::Fatal() << "Spawn point failed to load some hardcoded material\n";
+    }
+
+    RenderItem renderItem = Unloved::RendererUtil::CreateAssetGeometryRenderItem("Cube", "Cube", transform.ToMat4(), materialIndex, m_objectId);
+    // renderItem.shadowFlags = 
+    m_renderItems.push_back(renderItem);
+}
+
 }

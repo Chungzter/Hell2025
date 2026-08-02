@@ -254,8 +254,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_text.cpp" />
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_ocean.cpp" />
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_profiling.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_play.cpp" />
     <ClCompile Include="src\Unloved\LazyKeyPresses.cpp" />
     <ClCompile Include="src\Unloved\Objects\Exterior\Jetty.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\PlanarObjectRebuild.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\PointAnimationInstance.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\VATInstance.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_blit_road.cpp" />
@@ -411,6 +413,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
       <ObjectFileName>$(IntDir)Unloved_Systems_FeatureTest.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="src\Unloved\Systems\House\HouseClipping.cpp" />
+    <ClCompile Include="src\Unloved\Systems\House\HouseGeometryBuilder.cpp" />
     <ClCompile Include="src\Unloved\Systems\P90Mag\P90MagManager.cpp" />
     <ClCompile Include="src\Unloved\Systems\Particles\ParticleManager.cpp" />
     <ClCompile Include="src\Unloved\Debug\DebugDraw.cpp" />
@@ -511,6 +514,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Objects\Exterior\Fence.cpp" />
     <ClCompile Include="src\Unloved\Objects\Exterior\PowerPoleSet.cpp" />
     <ClCompile Include="src\Unloved\Objects\Spawns\SpawnPoint.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Spawns\HouseLocation.cpp" />
     <ClCompile Include="src\Unloved\Objects\Exterior\Wire.cpp" />
     <ClCompile Include="src\Unloved\Objects\House\House.cpp" />
     <ClCompile Include="src\Unloved\Objects\House\HouseData.cpp" />
@@ -552,6 +556,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Objects\House\WeatherBoards.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\GenericStatic.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\GenericObject.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Props\GenericAnimatedObject.cpp" />
     <ClCompile Include="src\Unloved\Objects\Interior\Piano.cpp">
       <ObjectFileName>$(IntDir)Legacy_Piano.obj</ObjectFileName>
     </ClCompile>
@@ -576,6 +581,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\ResourceManagement\Types\TextureArray.cpp" />
     <ClCompile Include="src\Unloved\Objects\House\Door.cpp" />
     <ClCompile Include="src\Unloved\Objects\House\WorldPlane.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\PlanarQuadObject.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\PointPairObject.cpp" />
+    <ClCompile Include="src\Unloved\Common\PlanarQuad.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\PickUp.cpp" />
     <ClCompile Include="src\Unloved\Objects\Exterior\Tree.cpp" />
     <ClCompile Include="src\Unloved\Objects\House\Wall.cpp" />
@@ -613,20 +621,25 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Player\Player.cpp" />
     <ClCompile Include="src\Unloved\Debug\Debug.cpp" />
     <ClCompile Include="src\Unloved\Editor\Editor.cpp" />
-    <ClCompile Include="src\Unloved\EditorSession\EditorCamera.cpp" />
-    <ClCompile Include="src\Unloved\EditorSession\EditorCoordinates.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\EditorInspector.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Inspector\EditorInspectorAssets.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Inspector\EditorInspectorGeometry.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\UI\EditorDialogs.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\HeightMap\EditorHeightMap.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\EditorHierarchy.cpp" />
-    <ClCompile Include="src\Unloved\EditorSession\EditorInputElements.cpp" />
-    <ClCompile Include="src\Unloved\EditorSession\EditorObjectProperties.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\UI\EditorInputElements.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\EditorObjectOptions.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\EditorMapTools.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\EditorPlacement.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Interaction\EditorPointSequences.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\EditorSession.cpp" />
-    <ClCompile Include="src\Unloved\EditorSession\EditorLayout.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\UI\EditorLayout.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\EditorMenuBar.cpp" />
-    <ClCompile Include="src\Unloved\EditorSession\EditorScrollBar.cpp" />
-    <ClCompile Include="src\Unloved\EditorSession\EditorSelection.cpp" />
-    <ClCompile Include="src\Unloved\EditorSession\EditorUI.cpp" />
-    <ClCompile Include="src\Unloved\EditorSession\EditorViewports.cpp" />
-    <ClCompile Include="src\Unloved\EditorSession\EditorWorkspace.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Interaction\EditorSelection.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\UI\EditorUI.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Core\EditorViewports.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Interaction\EditorVisibility.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Core\EditorWorkspace.cpp" />
     <ClCompile Include="src\Unloved\Editor\Gizmo.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_camera.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_Input.cpp" />
@@ -796,6 +809,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Serialization\Json.h" />
     <ClInclude Include="src\Unloved\Common\Constants.h" />
     <ClInclude Include="src\Unloved\Common\Enums.h" />
+    <ClInclude Include="src\Unloved\Common\PlanarQuad.h" />
     <ClInclude Include="src\Unloved\Common\SequencePoint.h" />
     <ClInclude Include="src\Unloved\Common\Types.h" />
     <ClInclude Include="src\Unloved\Debug\DebugTypes.h" />
@@ -860,6 +874,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Systems\Blood\BloodSystem.h" />
     <ClInclude Include="src\Unloved\Systems\FeatureTest\FeatureTest.h" />
     <ClInclude Include="src\Unloved\Systems\House\HouseClipping.h" />
+    <ClInclude Include="src\Unloved\Systems\House\HouseGeometryBuilder.h" />
     <ClInclude Include="src\Unloved\Systems\P90Mag\P90MagManager.h" />
     <ClInclude Include="src\Unloved\Systems\Particles\ParticleManager.h" />
     <ClInclude Include="src\Unloved\Debug\DebugDraw.h" />
@@ -1012,6 +1027,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Objects\Exterior\PowerPoleSet.h" />
     <ClInclude Include="src\Unloved\Objects\Exterior\Road.h" />
     <ClInclude Include="src\Unloved\Objects\Spawns\SpawnPoint.h" />
+    <ClInclude Include="src\Unloved\Objects\Spawns\HouseLocation.h" />
     <ClInclude Include="src\Unloved\Objects\Props\GenericBouncable.h" />
     <ClInclude Include="src\Unloved\Objects\Exterior\Wire.h" />
     <ClInclude Include="src\Unloved\Objects\House\House.h" />
@@ -1019,6 +1035,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Objects\House\WeatherBoards.h" />
     <ClInclude Include="src\Unloved\Objects\Props\GenericStatic.h" />
     <ClInclude Include="src\Unloved\Objects\Props\GenericObject.h" />
+    <ClInclude Include="src\Unloved\Objects\Props\GenericAnimatedObject.h" />
     <ClInclude Include="src\Unloved\Maps\Map.h" />
     <ClInclude Include="src\Unloved\Maps\MapData.h" />
     <ClInclude Include="src\Unloved\Objects\Interior\Piano.h" />
@@ -1042,6 +1059,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Systems\Bullets\Bullet.h" />
     <ClInclude Include="src\Unloved\Objects\House\Door.h" />
     <ClInclude Include="src\Unloved\Objects\House\WorldPlane.h" />
+    <ClInclude Include="src\Unloved\Objects\House\PlanarQuadObject.h" />
+    <ClInclude Include="src\Unloved\Objects\House\PointPairObject.h" />
     <ClInclude Include="src\Unloved\Objects\Props\PickUp.h" />
     <ClInclude Include="src\Unloved\Objects\Exterior\Tree.h" />
     <ClInclude Include="src\Unloved\Objects\House\Wall.h" />
@@ -1061,22 +1080,26 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Player\Player.h" />
     <ClInclude Include="src\Unloved\Debug\Debug.h" />
     <ClInclude Include="src\Unloved\Editor\Editor.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorCamera.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorCoordinates.h" />
+    <ClInclude Include="src\Unloved\EditorSession\UI\EditorDialogs.h" />
     <ClInclude Include="src\Unloved\EditorSession\EditorHierarchy.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorInputElements.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorObjectProperties.h" />
+    <ClInclude Include="src\Unloved\EditorSession\UI\EditorInputElements.h" />
+    <ClInclude Include="src\Unloved\EditorSession\HeightMap\EditorHeightMap.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorObjectOptions.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorInspector.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Inspector\EditorInspectorInternal.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorMapTools.h" />
     <ClInclude Include="src\Unloved\EditorSession\EditorPlacement.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Interaction\EditorPointSequences.h" />
     <ClInclude Include="src\Unloved\EditorSession\EditorSession.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorLayout.h" />
+    <ClInclude Include="src\Unloved\EditorSession\UI\EditorLayout.h" />
     <ClInclude Include="src\Unloved\EditorSession\EditorMenuBar.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorScrollBar.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorSelection.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Interaction\EditorSelection.h" />
     <ClInclude Include="src\Unloved\EditorSession\EditorSessionTypes.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorStyle.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorUI.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorViewports.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorWorkspace.h" />
+    <ClInclude Include="src\Unloved\EditorSession\UI\EditorStyle.h" />
+    <ClInclude Include="src\Unloved\EditorSession\UI\EditorUI.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Core\EditorViewports.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Interaction\EditorVisibility.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Core\EditorWorkspace.h" />
     <ClInclude Include="src\Unloved\Editor\Editor_placement.h" />
     <ClInclude Include="src\Unloved\Editor\Editor_rays.h" />
     <ClInclude Include="src\Unloved\Editor\PlacementObjectCreation.h" />

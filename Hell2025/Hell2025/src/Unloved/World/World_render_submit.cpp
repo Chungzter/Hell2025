@@ -18,6 +18,8 @@
 #include "Unloved/Objects/Exterior/Wire.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/House/Fireplace.h"
+#include "Unloved/Objects/House/PlanarQuadObject.h"
+#include "Unloved/Objects/House/PointPairObject.h"
 #include "Unloved/Objects/House/TrimSet.h"
 #include "Unloved/Objects/House/Wall.h"
 #include "Unloved/Objects/House/Window.h"
@@ -32,8 +34,11 @@
 #include "Unloved/Objects/Props/GenericObject.h"
 #include "Unloved/Objects/Props/PickUp.h"
 #include "Unloved/Objects/Renderables/AnimatedGameObject.h"
+#include "Unloved/Objects/Spawns/HouseLocation.h"
+#include "Unloved/Objects/Spawns/SpawnPoint.h"
 #include "Unloved/Objects/Traversal/Ladder.h"
 #include "Unloved/Objects/Traversal/Staircase.h"
+#include "Unloved/EditorSession/EditorSession.h"
 #include "Unloved/Session/Session.h"
 
 #include "Unloved/Render/RenderDataManager.h"
@@ -60,9 +65,15 @@ void SubmitRenderItems() {
     for (GenericObject& object : Unloved::World::GetGenericObjects()) RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
     for (Mermaid& object : Unloved::World::GetMermaids())             RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
     for (Piano& object : Unloved::World::GetPianos())                 RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
-    for (PickUp& object : Unloved::World::GetPickUps())               RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
     for (PictureFrame& object : Unloved::World::GetPictureFrames())   RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
     for (Window& object : Unloved::World::GetWindows())               RenderDataManager::SubmitMeshNodes(object.GetMeshNodes());
+
+    // PickUps only if they are not despawned
+    for (PickUp& pickUp : Unloved::World::GetPickUps()) {
+        if (pickUp.IsDespawned()) continue;
+
+        RenderDataManager::SubmitMeshNodes(pickUp.GetMeshNodes());
+    }
 
     // Clean me up
     for (ChristmasTree& object : Unloved::World::GetChristmasTrees())          RenderDataManager::SubmitRenderItems(object.GetRenderItems());
@@ -74,7 +85,15 @@ void SubmitRenderItems() {
     for (Staircase& object : Unloved::World::GetStaircases())                  RenderDataManager::SubmitRenderItems(object.GetRenderItems());
     for (TrimSet& object : Unloved::World::GetTrimSets())                      RenderDataManager::SubmitRenderItems(object.GetRenderItems());
     for (PowerPoleSet& object : Unloved::World::GetPowerPoleSets())            RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+    for (PlanarQuadObject& object : Unloved::World::GetPlanarQuadObjects())   object.SubmitRenderItems();
+    for (PointPairObject& object : Unloved::World::GetPointPairObjects())     object.SubmitRenderItems();
     for (Wall& object : Unloved::World::GetWalls())                            RenderDataManager::SubmitRenderItems(object.GetWeatherBoardstopRenderItems());
+
+    if (Unloved::EditorSession::IsActive()) {
+        for (HouseLocation& object : Unloved::World::GetHouseLocations())              RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (SpawnPoint& object : Unloved::World::GetSpawnPointsCampaign())   RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+        for (SpawnPoint& object : Unloved::World::GetSpawnPointsDeathMatch()) RenderDataManager::SubmitRenderItems(object.GetRenderItems());
+    }
 
     for (Wall& wall : Unloved::World::GetWalls()) {
         wall.SubmitRenderItems();

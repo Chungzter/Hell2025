@@ -17,9 +17,6 @@ layout(binding = 3) uniform sampler2D DisplacementTexture_band1;
 layout(std430, binding = SSBO_IDX_RENDERER_DATA) readonly restrict buffer rendererDataBuffer { RendererData rendererData; };
 layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) readonly restrict buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
 
-uniform int u_displayMode;
-uniform float u_oceanOriginY;
-
 void main() {
     ivec2 px = ivec2(gl_GlobalInvocationID.xy);
     ivec2 outputImageSize = imageSize(u_oceanFlagsImage);
@@ -36,9 +33,9 @@ void main() {
     vec4 worldNear = inverseProjectionView * clipSpaceNear;
     vec3 worldPosition = worldNear.xyz / worldNear.w;
     
-    float height = SampleCombinedEstimatedOceanDisplacement(DisplacementTexture_band0, DisplacementTexture_band1, worldPosition.xz, u_displayMode).y;
+    float height = SampleCombinedEstimatedOceanDisplacement(DisplacementTexture_band0, DisplacementTexture_band1, worldPosition.xz, rendererData.oceanDisplayMode).y;
 
-    float waterHeight = height + u_oceanOriginY;
+    float waterHeight = height + rendererData.oceanOriginY;
     bool pixelUnderwater = worldPosition.y < waterHeight;
     
     uint oceanMask = imageLoad(u_oceanMaskImage, px).r;

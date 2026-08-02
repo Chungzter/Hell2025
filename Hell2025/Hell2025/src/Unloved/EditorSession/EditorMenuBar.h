@@ -8,8 +8,8 @@ namespace Unloved::EditorSession::MenuBar {
 
     enum class EditorMenuAction : uint8_t {
         NONE,
-        NEW_MAP,
-        OPEN_MAP,
+        NEW_FILE,
+        OPEN_FILE,
         SAVE,
         CLOSE_EDITOR,
         EXIT_APPLICATION,
@@ -28,7 +28,7 @@ namespace Unloved::EditorSession::MenuBar {
     bool WantsMouseCapture();
     bool WantsKeyboardCapture();
 
-    // EditorSession consumes all actions.
+    // EditorSession consumes all actions
     EditorMenuAction ConsumeAction();
     PlacementTool ConsumePlacementTool();
 }

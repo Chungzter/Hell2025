@@ -5,6 +5,7 @@
 namespace Unloved {
 
 inline constexpr char HELL_MAP_SIGNATURE[] = "HELL_MAP";
+inline constexpr uint32_t HELL_MAP_VERSION = 4;
 
 #pragma pack(push, 1)
 struct MapHeader {

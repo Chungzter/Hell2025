@@ -2,6 +2,7 @@
 
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 
 namespace Unloved {
 
@@ -14,6 +15,10 @@ Ladder::Ladder(uint64_t id, LadderCreateInfo& createInfo, SpawnOffset& spawnOffs
     m_position = m_createInfo.position;
     m_rotation = m_createInfo.rotation;
 
+    Reset();
+}
+
+void Ladder::Reset() {
     std::vector<MeshNodeCreateInfo> meshNodeCreateInfoSet;
 
     MeshNodeCreateInfo& ladder = meshNodeCreateInfoSet.emplace_back();
@@ -27,12 +32,13 @@ Ladder::Ladder(uint64_t id, LadderCreateInfo& createInfo, SpawnOffset& spawnOffs
     ladder.rigidDynamic.filterData.collidesWith = (CollisionGroup)(GENERIC_BOUNCEABLE | ITEM_PICK_UP | BULLET_CASING | RAGDOLL_PLAYER | RAGDOLL_ENEMY);
     ladder.addtoNavMesh = true;
 
-    m_meshNodes.Init(id, "Ladder", meshNodeCreateInfoSet);
+    m_meshNodes.Init(m_objectId, "Ladder", meshNodeCreateInfoSet);
     m_meshNodes.EnableCSMShadows();
 
     RecomputeModelMatrix();
     m_meshNodes.Update(m_modelMatrix);
     UpdateOverlapHitBoxAABB();
+    WorldBVH::MarkStaticSceneBvhDirty();
 }
 
 void Ladder::SetPosition(const glm::vec3& position) {
@@ -41,6 +47,7 @@ void Ladder::SetPosition(const glm::vec3& position) {
     RecomputeModelMatrix();
     m_meshNodes.Update(m_modelMatrix);
     UpdateOverlapHitBoxAABB();
+    WorldBVH::MarkStaticSceneBvhDirty();
 }
 
 void Ladder::SetRotation(const glm::vec3& rotation) {
@@ -49,6 +56,7 @@ void Ladder::SetRotation(const glm::vec3& rotation) {
     RecomputeModelMatrix();
     m_meshNodes.Update(m_modelMatrix);
     UpdateOverlapHitBoxAABB();
+    WorldBVH::MarkStaticSceneBvhDirty();
 }
 
 void Ladder::Update(float deltaTime) {

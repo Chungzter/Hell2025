@@ -1,4 +1,5 @@
 #include "../Bible.h"
+#include "Unloved/Objects/Renderables/AnimatedGameObject.h"
 
 namespace Bible {
     using namespace Unloved;
@@ -13,6 +14,18 @@ namespace Bible {
         if (presetName == "TrapKing")     ConfigureAnimatedMeshNodesTrapKing(id, meshNodes);
         if (presetName == "Remington870") ConfigureAnimatedMeshNodesRemington870(id, meshNodes);
         if (presetName == "SPAS")         ConfigureAnimatedMeshNodesSPAS(id, meshNodes);
+    }
+
+    void ConfigureGenericAnimatedObject(GenericAnimatedObjectType type, AnimatedGameObject* animatedGameObject) {
+        if (!animatedGameObject) return;
+
+        switch (type) {
+            case GenericAnimatedObjectType::RAT_KING:
+                animatedGameObject->SetSkinnedModel("RatKing", "RatKing");
+                break;
+            default:
+                break;
+        }
     }
 
     void ConfigureAnimatedMeshNodesRatKing(uint64_t id, AnimatedMeshNodes* meshNodes) {

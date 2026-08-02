@@ -4,7 +4,7 @@
 
 namespace OpenGL::Renderer {
 
-    // 1. TAA
+    // 1. Emissive and bloom
     // 2. Tone mapping
     // 3. FXAA
 
@@ -56,6 +56,9 @@ namespace OpenGL::Renderer {
         if (state == RendererOverrideState::NONE ||
             state == RendererOverrideState::CAMERA_NDOTL ||
             state == RendererOverrideState::INDIRECT_DIFFUSE) {
+            if (rendererSettings.enableLighting) {
+                EmissivePass();
+            }
             ToneMapping();
             FXAA();
         }

@@ -64,9 +64,9 @@ namespace OpenGL::Renderer {
     //void ComputeProbeLighting();
     void ComputeOceanFFTPass();
     void ComputeSkinningPass();
+    void UpdateTerrainDisplacementBuffer();
     void ComputeTileWorldBounds();
     void OceanHeightReadback();
-    void PaintHeightMap();
     void ComputeViewspaceDepth();
 
     // Init passes
@@ -89,6 +89,7 @@ namespace OpenGL::Renderer {
     void GlassPass();
     void GrassPass();
     void HairPass();
+    void HeightMapBrushPreviewPass();
     void HeightMapPass();
     void ProceduralGeometryPass();
     void ImGuiPass();
@@ -156,7 +157,9 @@ namespace OpenGL::Renderer {
     void UpdateGlobalIllumintation();
 
     // Utility passes
-    void RecalculateAllHeightMapData(bool uploadWorldHeightData);
+    void UploadWorldHeightData();
+    void UploadTerrainControlData(const Unloved::MapData* mapData, int32_t minimumX, int32_t minimumZ, int32_t maximumX, int32_t maximumZ);
+    void RecalculateAllHeightMapData(bool uploadWorldHeightData, bool updatePhysics);
     void ReadBackHeightMapData(Unloved::MapData* mapData);
     void ClearAllWoundMasks();
 
@@ -183,6 +186,7 @@ namespace OpenGL::Renderer {
 
     std::vector<float>& GetShadowCascadeLevels();
     void MultiDrawPerViewportRE(OpenGLFrameBuffer& fbo, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
+    void MultiDrawPatchesPerViewportRE(OpenGLFrameBuffer& fbo, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState);
 
     // Misc
     void CreateGrassGeometry();
@@ -192,6 +196,7 @@ namespace OpenGL::Renderer {
 
     // Drawing
     void MultiDrawIndirect(const std::vector<DrawIndexedIndirectCommand>& commands);
+    void MultiDrawIndirectPatches(const std::vector<DrawIndexedIndirectCommand>& commands);
 
     // Util
     void SetViewport(OpenGLFrameBuffer* framebuffer, Unloved::Viewport* viewport);

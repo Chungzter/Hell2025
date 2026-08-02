@@ -3,9 +3,9 @@
 
 #include "Unloved/Config/Config.h"
 #include "Unloved/Editor/Editor.h"
-#include "Unloved/EditorSession/EditorLayout.h"
+#include "Unloved/EditorSession/UI/EditorLayout.h"
 #include "Unloved/EditorSession/EditorSession.h"
-#include "Unloved/EditorSession/EditorViewports.h"
+#include "Unloved/EditorSession/Core/EditorViewports.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 

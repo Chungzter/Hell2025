@@ -98,6 +98,7 @@ void MeshNodes::Init(uint64_t parentId, const std::string& modelName, const std:
 		}
 
         meshNode->materialIndex = Hell::ResourceManager::GetMaterialIndexByName(createInfo.materialName);
+        if (createInfo.shadowModelName != UNDEFINED_STRING && createInfo.shadowMeshName != UNDEFINED_STRING) meshNode->renderItem.shadowMeshId = Hell::ResourceManager::GetModelMeshIdByName(createInfo.shadowModelName, createInfo.shadowMeshName);
         meshNode->blendingMode = createInfo.blendingMode;
         meshNode->customId = createInfo.customId;
         meshNode->decalType = createInfo.decalType;
@@ -597,6 +598,8 @@ void MeshNodes::Update(const glm::mat4& worldMatrix) {
         meshNode.renderItem.blendingMode = (int)meshNode.blendingMode;
         meshNode.renderItem.miscFlags = 0;
         meshNode.renderItem.materialIndex = meshNode.materialIndex;
+        meshNode.renderItem.roughnessFactor = meshNode.roughnessFactor;
+        meshNode.renderItem.metallicFactor = meshNode.metallicFactor;
 
         Hell::Bit::SetState(meshNode.renderItem.miscFlags, MISC_FLAG_DYNAMIC_OBJECT, !MeshNodeIsStatic((int32_t)i));
         Hell::Bit::SetState(meshNode.renderItem.shadowFlags, SHADOW_FLAG_POINT_LIGHT, meshNode.castShadows);
@@ -775,7 +778,7 @@ void MeshNodes::DisableMarkingStaticSceneBvhAsDirty() {
 
 void MeshNodes::InitPhysicsTransforms() {
 	for (MeshNode& meshNode : m_meshNodes) {
-        if (meshNode.rigidDynamicId != 0 && Editor::IsClosed()) {
+        if (meshNode.rigidDynamicId != 0) {
             Hell::Physics::SetRigidDynamicGlobalPose(meshNode.rigidDynamicId, meshNode.worldMatrix);
 		}
 	}

@@ -49,6 +49,7 @@ namespace OpenGL::Renderer {
 
         ComputeSkinningPass();
         UpdateSSBOS();
+        UpdateTerrainDisplacementBuffer();
         RenderShadowMaps();
         ClearRenderTargetsRE();
 
@@ -64,6 +65,7 @@ namespace OpenGL::Renderer {
         MaterialResolveHeightMapPass();
         MaterialResolveSkinnedPass();
         MaterialResolveProceduralPass();
+        GrassPass();
 
         VatBloodPass();
         VATPass();
@@ -103,7 +105,6 @@ namespace OpenGL::Renderer {
         OceanSurfaceCompositePass();
 
         GlassPass();
-        EmissivePass();
         RayMarchFog();
         OceanUnderwaterBlurPass();
 
@@ -138,6 +139,7 @@ namespace OpenGL::Renderer {
 
         PostProcessingPassRE();
         DebugViewPass();
+        HeightMapBrushPreviewPass();
         DebugPass();
 
         ExamineItemPass();
@@ -321,14 +323,20 @@ namespace OpenGL::Renderer {
         OpenGLFrameBuffer& indirectDiffuseFbo = OpenGL::ResourceManager::GetFrameBuffer("IndirectDiffuse");
 
         OpenGL::BindShader("LightingDeferred");
+
         OpenGL::BindSSBO(SSBO_IDX_SAMPLERS, "Samplers");
         OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTS, "Lights");
         OpenGL::BindSSBO(SSBO_IDX_SPOT_LIGHTS, "SpotLights");
+
         OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_LIGHTS, "TileLights");
         OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_SPOT_LIGHTS, "TileSpotLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_TILE_CHRISTMAS_LIGHTS, "TileChristmasLights");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_CHRISTMAS_LIGHTS, "ChristmasLightInstances");
+        OpenGL::BindSSBO(SSBO_IDX_LIGHTING_CHRISTMAS_INDEX_POOL, "ChristmasLightIndices");
+
         BindShadowMapsRE();
         OpenGL::SetUniformFloat("u_oceanHeight", Unloved::World::HasOcean() ? Ocean::GetOceanOriginY() : -1000.0f);
 
@@ -367,7 +375,7 @@ namespace OpenGL::Renderer {
         // Only allow these bits through
         state.stencilFunc = GL_NOTEQUAL;
         state.stencilRef = 0;
-        state.stencilReadMask = STENCIL_BIT_ASSET | STENCIL_BIT_SKINNED | STENCIL_BIT_PROCEDUAL | STENCIL_BIT_HEIGHT_MAP;
+        state.stencilReadMask = STENCIL_BIT_ASSET | STENCIL_BIT_SKINNED | STENCIL_BIT_PROCEDUAL | STENCIL_BIT_HEIGHT_MAP | STENCIL_BIT_GRASS;
 
         OpenGL::RasterizerStateManager::SetRasterizerState(state);
 

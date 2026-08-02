@@ -582,6 +582,20 @@ namespace Hell::AssetLoader {
             CreateTextureLoadJob(texture);
         }
 
+        // Height map brush previews
+        for (FileInfo fileInfo : File::IterateDirectory("res/textures/heightmap_brushes", { "exr" })) {
+            const std::string textureName = "HeightMapBrush_" + fileInfo.name;
+            fileInfo.name = textureName;
+            Texture& texture = ResourceManager::CreateTexture(textureName);
+            texture.SetFileInfo(fileInfo);
+            texture.SetImageDataType(ImageDataType::EXR);
+            texture.SetTextureWrapMode(TextureWrapMode::CLAMP_TO_EDGE);
+            texture.SetMinFilter(TextureFilter::LINEAR);
+            texture.SetMagFilter(TextureFilter::LINEAR);
+
+            CreateTextureLoadJob(texture);
+        }
+
         // Textures (spritesheets)
         for (FileInfo& fileInfo : File::IterateDirectory("res/textures/spritesheets", { "png", "jpg", "tga" })) {
             Texture& texture = ResourceManager::CreateTexture(fileInfo.name);

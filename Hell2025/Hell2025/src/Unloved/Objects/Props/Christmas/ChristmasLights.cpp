@@ -19,6 +19,7 @@ ChristmasLightSet::ChristmasLightSet(uint64_t id, const ChristmasLightsCreateInf
     m_createInfo = createInfo;
     m_createInfo.position += spawnOffset.translation;
     m_createInfo.sprialTopCenter += spawnOffset.translation;
+
     for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) {
         sequencePoint.position += spawnOffset.translation;
     }
@@ -79,6 +80,9 @@ void ChristmasLightSet::SetWireRadius(float wireRadius) {
 }
 
 void ChristmasLightSet::RecreateLightRenderItems() {
+    // Bit of a hack, but reset time here, that way when update runs, it'll detect this 0 and pick a random start time
+    m_time = 0;
+
     // TODO but something like this...
     static Model* model = Hell::ResourceManager::GetModelByName("ChristmasLight");
     static int whiteMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("ChristmasLightWhite");

@@ -20,6 +20,7 @@
 #include "Unloved/World/World.h"
 
 #include <algorithm>
+#include <limits>
 
 namespace Audio = Hell::Audio;
 namespace Input = Hell::Input;
@@ -77,8 +78,15 @@ void Player::UpdateInteract() {
     m_interactHitNormal = glm::vec3(0.0f, 0.0f, 1.0f);
     bool hitFound = false;
 
+    PickUp* bvhPickUp = World::GetPickUpByObjectId(m_bvhRayResult.objectId);
+    const bool bvhHitValid = m_bvhRayResult.hitFound && (!bvhPickUp || !bvhPickUp->IsDespawned());
+    const bool bvhHitPickUp = bvhHitValid && bvhPickUp != nullptr;
+
+    PickUp* physXPickUp = World::GetPickUpByObjectId(m_physXRayResult.userData.objectId);
+    const bool physXHitValid = m_physXRayResult.hitFound && (!physXPickUp || !physXPickUp->IsDespawned());
+
     // Replace me with some distance check with closest point from hit object AABB
-    if (m_bvhRayResult.hitFound) {
+    if (bvhHitValid) {
         m_interactObjectId = m_bvhRayResult.objectId;
         m_interactOpenableId = m_bvhRayResult.openableId;
         m_interactCustomId = m_bvhRayResult.customId;
@@ -87,8 +95,8 @@ void Player::UpdateInteract() {
         hitFound = true;
     }
 
-    // Now try see if the PhysX hit is closer, you need this position for the PhysX sweep tests
-    if (m_physXRayResult.hitFound && m_physXRayResult.distanceToHit < m_bvhRayResult.distanceToHit) {
+    // A visible pickup under the crosshair wins
+    if (physXHitValid && !bvhHitPickUp && (!bvhHitValid || m_physXRayResult.distanceToHit < m_bvhRayResult.distanceToHit)) {
         m_interactObjectId = m_physXRayResult.userData.objectId;
         m_interactOpenableId = 0;
         m_interactCustomId = 0;
@@ -97,8 +105,10 @@ void Player::UpdateInteract() {
         hitFound = true;
     }
 
+    PickUp* directPickUp = World::GetPickUpByObjectId(m_interactObjectId);
+
     // Sweep test
-    if (hitFound) {
+    if (hitFound && !directPickUp) {
         float sphereRadius = 0.15f;
         glm::vec3 spherePosition = m_interactHitPosition - GetCameraForward() * (sphereRadius * 1.25f);
 
@@ -106,21 +116,34 @@ void Player::UpdateInteract() {
         const PxTransform overlapSphereTranform = PxTransform(Hell::Physics::GlmVec3toPxVec3(spherePosition));
         PhysXOverlapReport overlapReport = Hell::Physics::OverlapTest(overlapSphereShape, overlapSphereTranform, CollisionGroup(GENERIC_BOUNCEABLE | GENERTIC_INTERACTBLE | ITEM_PICK_UP | ENVIROMENT_OBSTACLE));
 
-        // Sort by distance to player
-        sort(overlapReport.hits.begin(), overlapReport.hits.end(), [this, spherePosition](PhysXOverlapResult& lhs, PhysXOverlapResult& rhs) {
-            float distanceA = glm::distance(spherePosition, lhs.objectPosition);
-            float distanceB = glm::distance(spherePosition, rhs.objectPosition);
-            return distanceA < distanceB;
-            });
+        auto distanceToPickUp = [this](const PhysXOverlapResult& hit) {
+            PickUp* pickUp = World::GetPickUpByObjectId(hit.userData.objectId);
+            if (!pickUp || pickUp->IsDespawned()) return std::numeric_limits<float>::max();
 
-        if (overlapReport.hits.size()) {
-            PhysicsUserData userData = overlapReport.hits[0].userData;
+            float closestDistance = std::numeric_limits<float>::max();
+            for (const MeshNode& meshNode : pickUp->GetMeshNodes().GetNodes()) {
+                if (meshNode.blendingMode == BlendingMode::DO_NOT_RENDER) continue;
 
-            if (Unloved::World::GetPickUpByObjectId(userData.objectId)) {
-                m_interactObjectId = userData.objectId;
-                m_interactOpenableId = 0;
-                m_interactCustomId = 0;
+                const glm::vec3 closestPoint = meshNode.worldSpaceObb.ClosestPoint(m_interactHitPosition);
+                const glm::vec3 delta = closestPoint - m_interactHitPosition;
+                closestDistance = std::min(closestDistance, glm::dot(delta, delta));
             }
+            return closestDistance;
+        };
+
+        // Pick whatever is visually closest to the crosshair
+        sort(overlapReport.hits.begin(), overlapReport.hits.end(), [&distanceToPickUp](const PhysXOverlapResult& lhs, const PhysXOverlapResult& rhs) {
+            return distanceToPickUp(lhs) < distanceToPickUp(rhs);
+        });
+
+        for (const PhysXOverlapResult& hit : overlapReport.hits) {
+            PickUp* pickUp = World::GetPickUpByObjectId(hit.userData.objectId);
+            if (!pickUp || pickUp->IsDespawned()) continue;
+
+            m_interactObjectId = hit.userData.objectId;
+            m_interactOpenableId = 0;
+            m_interactCustomId = 0;
+            break;
         }
     }
 
@@ -135,7 +158,7 @@ void Player::UpdateInteract() {
     if (interactObjectType == ObjectType::PIANO && m_interactCustomId != 0) {
         m_interactFound = true;
     }
-    if (interactObjectType == ObjectType::PICK_UP)                                  m_interactFound = true;
+    if (PickUp* pickUp = World::GetPickUpByObjectId(m_interactObjectId); pickUp && !pickUp->IsDespawned()) m_interactFound = true;
 
     // Bail if nothing to interact with
     if (!InteractFound()) return;

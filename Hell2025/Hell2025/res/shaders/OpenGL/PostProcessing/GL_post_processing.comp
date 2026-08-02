@@ -84,23 +84,6 @@ vec3 RE(vec3 lighting, vec2 uv_screenspace, ivec2 pixelCoords, uint viewportInde
     finalColor *= colorTint;
     finalColor.rgb = AdjustContrast(finalColor.rgb, contrast);
 
-    // noise processing
-    float time = rendererData.time;
-    vec2 coord = vec2(pixelCoords);
-    vec2 rest = modf(uv_screenspace * outputImageSize, coord);
-    vec3 noise00 = FilmPixel(coord / outputImageSize, time);
-    vec3 noise01 = FilmPixel((coord + vec2(0, 1)) / outputImageSize, time);
-    vec3 noise10 = FilmPixel((coord + vec2(1, 0)) / outputImageSize, time);
-    vec3 noise11 = FilmPixel((coord + vec2(1, 1)) / outputImageSize, time);
-
-    float noiseSpeed = 15.0;
-    float x = Rand(uv_screenspace + Rand(vec2(int(time * noiseSpeed), int(-time * noiseSpeed))));
-    float noiseFactor = 0.035;
-    finalColor = finalColor + (x * -noiseFactor) + (noiseFactor / 2.0);
-
-    float gray = dot(finalColor.rgb, vec3(0.299, 0.587, 0.114));
-    finalColor.rgb = mix(finalColor.rgb, vec3(gray), 0.0); // based on 1.0 saturation amount
-
     return finalColor;
 }
 
@@ -122,34 +105,34 @@ vec3 OG(vec3 lighting, vec2 uv_screenspace, ivec2 pixelCoords, uint viewportInde
 }
 
 void main() {
-    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 px = ivec2(gl_GlobalInvocationID.xy);
     ivec2 outputImageSize = imageSize(u_outputImage);
     vec2 outputSize = vec2(outputImageSize);
 
-    if (pixelCoords.x >= int(outputSize.x) || pixelCoords.y >= int(outputSize.y)) return;
+    if (px.x >= int(outputSize.x) || px.y >= int(outputSize.y)) return;
 
-    vec2 uv = (vec2(pixelCoords) + 0.5) / outputSize;
-    vec3 rawLighting = imageLoad(u_inputImage, pixelCoords).rgb;
-    uint viewportIndex = ViewportIndexFromPixel(pixelCoords, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    vec2 uv = (vec2(px) + 0.5) / outputSize;
+    vec3 rawLighting = imageLoad(u_inputImage, px).rgb;
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
     ivec4 viewportRect = ivec4(viewportData[viewportIndex].xOffset, viewportData[viewportIndex].yOffset, viewportData[viewportIndex].width, viewportData[viewportIndex].height);
     float contrast = viewportData[viewportIndex].colorContrast;
     vec3 colorTint = viewportData[viewportIndex].colorTint.rgb;
 
     // compute the two looks
-    vec3 ogLook = OG(rawLighting, uv, pixelCoords, viewportIndex, colorTint, contrast);
-    vec3 reLook = RE(rawLighting, uv, pixelCoords, viewportIndex, colorTint, contrast);
+    vec3 ogLook = OG(rawLighting, uv, px, viewportIndex, colorTint, contrast);
+    vec3 reLook = RE(rawLighting, uv, px, viewportIndex, colorTint, contrast);
 
     // blend and apply brightness hack
     vec3 finalColor = mix(ogLook, reLook, 0.25);
     finalColor += vec3(0.0125);
-
+    
+    vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
 
     //finalColor = ogLook;
 
     // vignette setup
-    vec2 viewportUV = ViewportUVFromPixel(pixelCoords, outputImageSize, viewportRect);
     finalColor = ApplyVignette(finalColor, viewportData[viewportIndex].vignetteColor.rgb, viewportData[viewportIndex].intensityScalar * 0.5, viewportUV);
 
-    imageStore(u_outputImage, pixelCoords, vec4(finalColor, 1));
+    imageStore(u_outputImage, px, vec4(finalColor, 1));
     //imageStore(u_outputImage, pixelCoords, vec4(rawLighting, 1));
 }

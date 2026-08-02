@@ -11,6 +11,7 @@ namespace Hell::File {
 
     bool Delete(const std::string& path);
     bool Exists(std::string_view path);
+    bool Exists(const std::string& directory, const std::string& extension, const std::string& name);
     bool GetSize(const std::string& path, size_t& outSize);
     bool Rename(const std::string& oldPath, const std::string& newPath);
     uint64_t GetLastModifiedTime(const std::string& path);

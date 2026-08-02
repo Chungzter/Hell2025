@@ -128,6 +128,73 @@ struct RendererData {
     uint padding4;
     uint padding5;
     uint padding6;
+
+    vec4 oceanSurfaceAlbedo;
+    vec4 oceanSurfaceFogColor;
+    vec4 oceanSurfaceRippleVelocity;
+    vec4 oceanUnderwaterTint;
+    vec4 oceanUnderwaterRayFogColor;
+
+    float oceanOriginY;
+    int oceanDisplayMode;
+    uint oceanSurfaceSpecularAntiAliasing;
+    uint padding7;
+
+    float oceanSurfaceNormalScale;
+    float oceanSurfaceNormalConvergeStartDistance;
+    float oceanSurfaceNormalConvergeEndDistance;
+    float oceanSurfaceNormalConvergeMaxFactor;
+
+    float oceanSurfaceNormalConvergeExponent;
+    float oceanSurfaceNormalSoftening;
+    float oceanSurfaceRippleTiling;
+    float oceanSurfaceRippleStrength;
+
+    float oceanSurfaceRippleSecondLayerScale;
+    float oceanSurfaceRoughness;
+    float oceanSurfaceReflectance;
+    float oceanSurfaceReflectionGamma;
+
+    float oceanSurfaceDiffuseStrength;
+    float oceanSurfaceSssHeightRange;
+    float oceanSurfaceSssStrength;
+    float oceanSurfaceUnderwaterSssStrength;
+
+    float oceanSurfaceSssRadiusMinimum;
+    float oceanSurfaceSssRadiusMaximum;
+    float oceanSurfaceSssIntensity;
+    float oceanSurfaceSssFalloff;
+
+    float oceanSurfaceSssSaturation;
+    float oceanSurfaceFogStartDistance;
+    float oceanSurfaceFogEndDistance;
+    float oceanSurfaceFogExponent;
+
+    float oceanSurfaceFogStrength;
+    float oceanSurfaceCompositePlaneHeightOffset;
+    float oceanSurfaceCompositeDistortionSpeed;
+    float oceanSurfaceCompositeDistortionStrength;
+
+    float oceanSurfaceCompositeDistortionTiling;
+    float oceanSurfaceCompositeRefractionTintStrength;
+    float oceanUnderwaterRayFogStrength;
+    float oceanUnderwaterDarknessCurve;
+
+    float oceanUnderwaterDistortionSpeed;
+    float oceanUnderwaterDistortionStrength;
+    float oceanUnderwaterDepthTintStrength;
+    float oceanUnderwaterDepthTintOriginalWeight;
+
+    float oceanUnderwaterGeometryWaterColorSquaredStrength;
+    float oceanUnderwaterGeometryWaterColorStrength;
+    float oceanUnderwaterGeometryTintStrength;
+    float oceanUnderwaterOpenWaterTintStrength;
+
+    float oceanUnderwaterOpenWaterBrightness;
+    float emissiveStrength;
+    float christmasLightRadius;
+    float christmasLightStrength;
+    float irradianceDampening;
 };
 
 struct RenderItem {
@@ -170,7 +237,12 @@ struct RenderItem {
     uint customId;
     uint openableId;
     int woundMaterialIndex;
-    int padding;
+    uint shadowMeshId;
+
+    float roughnessFactor;
+    float metallicFactor;
+    int padding1;
+    int padding2;
 };
 
 struct SpriteSheetRenderItem {
@@ -330,8 +402,6 @@ const int PROBE_MAX_IRRADIANCE_COOLDOWN = 35;
 const float PROBE_MAX_RAY_DISTANCE = 1.5;
 const float PROBE_NORMAL_BIAS = 0.075;
 const float PROBE_VIEW_BIAS = 0.1;
-const float IRRADIANCE_DAMPENING = 0.0325;
-
 struct ProbeState {
     vec3 relocationOffset;
     uint padding;
@@ -387,8 +457,13 @@ struct Material {
 
     int opacity;
     int hairMaps;
-    int padding;
+    int disp;
     int padding2;
+
+    float displacementOffset;
+    float displacementScale;
+    int padding3;
+    int padding4;
 };
 
 #endif

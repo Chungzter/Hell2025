@@ -33,8 +33,8 @@ void main() {
     vec3 emissiveMapColor = texture(sampler2D(textureSamplers[material.emissive]), v_uv).rgb;
 
     // Material
-    float roughness = rma.r;
-    float metallic = rma.g;
+    float roughness = clamp(rma.r * renderItem.roughnessFactor, 0.0, 1.0);
+    float metallic = clamp(rma.g * renderItem.metallicFactor, 0.0, 1.0);
     float ao = rma.b;
 
     // Normal mapping

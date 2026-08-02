@@ -1,6 +1,5 @@
 #include "Wall.h"
 #include "Hell/Common/Bit.h"
-#include "Hell/Common/Random.h"
 #include "Hell/Math/Math.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
@@ -15,15 +14,19 @@
 
 #include "Unloved/Common/CreateInfo.h"
 
+#include <array>
+#include <cmath>
+
 namespace Unloved {
 
 Wall::Wall(uint64_t id, const WallCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
     m_objectId = id;
     m_createInfo = createInfo;
     m_spawnOffset = spawnOffset;
+    m_createInfo.weatherBoardTextureBoardCount = glm::max(m_createInfo.weatherBoardTextureBoardCount, 1u);
 
-    for (glm::vec3& point : m_createInfo.points) {
-        point += spawnOffset.translation;
+    for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) {
+        sequencePoint.position += spawnOffset.translation;
     }
 
     UpdateSegmentsTrimsAndVertexData();
@@ -31,39 +34,28 @@ Wall::Wall(uint64_t id, const WallCreateInfo& createInfo, const SpawnOffset& spa
 
 void Wall::UpdateSegmentsTrimsAndVertexData() {
     CleanUp();
-
-    for (WallSegment& wallSegment : m_wallSegments) {
-        wallSegment.CleanUp();
-    }
     m_wallSegments.clear();
 
-    //m_points = m_createInfo.points;
-    //m_height = m_createInfo.height;
-    //m_textureOffsetU = m_createInfo.textureOffsetU;
-    //m_textureOffsetV = m_createInfo.textureOffsetV;
-    //m_textureScale = m_createInfo.textureScale;
     m_materialIndex = Hell::ResourceManager::GetMaterialIndexByName(m_createInfo.materialName);
     m_ceilingTrimType = m_createInfo.ceilingTrimType;
     m_floorTrimType = m_createInfo.floorTrimType;
 
-    if (m_createInfo.useReversePointOrder) {
-        std::reverse(m_createInfo.points.begin(), m_createInfo.points.end());
-    }
-
-    for (int i = 0; i < GetPointCount() - 1; i++) {
-        const glm::vec3& start = m_createInfo.points[i];
-        const glm::vec3& end = m_createInfo.points[i + 1];
+    for (size_t i = 0; i + 1 < GetPointCount(); i++) {
+        const SequencePoint& pointA = m_createInfo.sequencePoints[i];
+        const SequencePoint& pointB = m_createInfo.sequencePoints[i + 1];
+        const SequencePoint& start = m_createInfo.useReversePointOrder ? pointB : pointA;
+        const SequencePoint& end = m_createInfo.useReversePointOrder ? pointA : pointB;
         WallSegment& wallSegment = m_wallSegments.emplace_back();
-        wallSegment.Init(start, end, m_createInfo.height, m_objectId, m_spawnOffset);
+        wallSegment.Init(start.position, end.position, start.customFloat, end.customFloat, m_objectId, m_spawnOffset);
     }
 
     // Calculate worldspace center
     m_worldSpaceCenter = glm::vec3(0.0f);
-    if (!m_createInfo.points.empty()) {
-        for (glm::vec3& point : m_createInfo.points) {
-            m_worldSpaceCenter += point;
+    if (!m_createInfo.sequencePoints.empty()) {
+        for (const SequencePoint& sequencePoint : m_createInfo.sequencePoints) {
+            m_worldSpaceCenter += sequencePoint.position;
         }
-        m_worldSpaceCenter /= m_createInfo.points.size();
+        m_worldSpaceCenter /= m_createInfo.sequencePoints.size();
     }
 
     // Create weather boards
@@ -90,53 +82,94 @@ void Wall::SetPosition(const glm::vec3& position) {
 
 void Wall::UpdateWorldSpaceCenter(glm::vec3 worldSpaceCenter) {
     glm::vec3 offset = worldSpaceCenter - m_worldSpaceCenter;
-    for (glm::vec3& point : m_createInfo.points) {
-        point += offset;
+    for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) {
+        sequencePoint.position += offset;
     }
     UpdateSegmentsTrimsAndVertexData();
     HouseBuilder::MarkDirty();
 }
 
 bool Wall::AddPointToEnd(glm::vec3 point, bool supressWarning) {
-    glm::vec3& previousPoint = m_createInfo.points.back();
+    if (m_createInfo.sequencePoints.empty()) {
+        SequencePoint& sequencePoint = m_createInfo.sequencePoints.emplace_back();
+        sequencePoint.position = point;
+        sequencePoint.customFloat = 2.4f;
+        UpdateSegmentsTrimsAndVertexData();
+        HouseBuilder::MarkDirty();
+        return true;
+    }
+
+    SequencePoint& previousSequencePoint = m_createInfo.sequencePoints.back();
+    const glm::vec3& previousPoint = previousSequencePoint.position;
     float threshold = 0.05f;
     if (glm::distance(point, previousPoint) < threshold) {
         Logging::Debug() << "Wall::AddPoint() failed: new point " << point << " is too close to previous point " << previousPoint << "\n";
         return false;
     }
 
-    m_createInfo.points.push_back(point);
+    SequencePoint& sequencePoint = m_createInfo.sequencePoints.emplace_back();
+    sequencePoint.position = point;
+    sequencePoint.customFloat = previousSequencePoint.customFloat;
     UpdateSegmentsTrimsAndVertexData();
     HouseBuilder::MarkDirty();
     return true;
 }
 
 bool Wall::UpdatePointPosition(int pointIndex, glm::vec3 position, bool supressWarning) {
-    if (pointIndex < 0 || pointIndex >= m_createInfo.points.size()) {
-        Logging::Debug() << "Wall::UpdatePointPosition() failed: point index " << pointIndex << " out of range of size " << m_createInfo.points.size() << "\n";
+    if (pointIndex < 0 || pointIndex >= m_createInfo.sequencePoints.size()) {
+        Logging::Debug() << "Wall::UpdatePointPosition() failed: point index " << pointIndex << " out of range of size " << m_createInfo.sequencePoints.size() << "\n";
+        return false;
     }
 
     // Threshold check
     float threshold = 0.05f;
+    const bool closed = m_createInfo.sequencePoints.size() > 2 && glm::distance(m_createInfo.sequencePoints.front().position, m_createInfo.sequencePoints.back().position) < threshold;
     if (pointIndex > 0) {
-        glm::vec3& previousPoint = m_createInfo.points[pointIndex - 1];
+        const glm::vec3& previousPoint = m_createInfo.sequencePoints[pointIndex - 1].position;
         if (glm::distance(position, previousPoint) < threshold) {
             Logging::Debug() << "Wall::UpdatePointPosition() failed: new point " << position << " is too close to previous point " << previousPoint << "\n";
             return false;
         }
     }
-    if (pointIndex < m_createInfo.points.size() - 1) {
-        glm::vec3& nextPoint = m_createInfo.points[pointIndex + 1];
+    if (pointIndex < m_createInfo.sequencePoints.size() - 1) {
+        const glm::vec3& nextPoint = m_createInfo.sequencePoints[pointIndex + 1].position;
         if (glm::distance(position, nextPoint) < threshold) {
             Logging::Debug() << "Wall::UpdatePointPosition() failed: new point " << position << " is too close to next point " << nextPoint << "\n";
             return false;
         }
     }
+    if (closed && pointIndex == 0 && glm::distance(position, m_createInfo.sequencePoints[m_createInfo.sequencePoints.size() - 2].position) < threshold) return false;
+    if (closed && pointIndex == m_createInfo.sequencePoints.size() - 1 && glm::distance(position, m_createInfo.sequencePoints[1].position) < threshold) return false;
 
-    m_createInfo.points[pointIndex] = position;
+    m_createInfo.sequencePoints[pointIndex].position = position;
+    if (closed && pointIndex == 0) m_createInfo.sequencePoints.back().position = position;
+    if (closed && pointIndex == m_createInfo.sequencePoints.size() - 1) m_createInfo.sequencePoints.front().position = position;
     UpdateSegmentsTrimsAndVertexData();
     HouseBuilder::MarkDirty();
     return true;
+}
+
+void Wall::UpdateSequencePoints(const std::vector<SequencePoint>& sequencePoints) {
+    m_createInfo.sequencePoints = sequencePoints;
+    UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
+}
+
+void Wall::SetPointHeight(int pointIndex, float height) {
+    if (pointIndex < 0 || pointIndex >= m_createInfo.sequencePoints.size()) return;
+    const bool closed = m_createInfo.sequencePoints.size() > 2 && glm::distance(m_createInfo.sequencePoints.front().position, m_createInfo.sequencePoints.back().position) < 0.05f;
+    m_createInfo.sequencePoints[pointIndex].customFloat = height;
+    if (closed && pointIndex == 0) m_createInfo.sequencePoints.back().customFloat = height;
+    if (closed && pointIndex == m_createInfo.sequencePoints.size() - 1) m_createInfo.sequencePoints.front().customFloat = height;
+    UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
+}
+
+void Wall::SetPointCustomBool(int pointIndex, bool value) {
+    if (pointIndex < 0 || pointIndex >= m_createInfo.sequencePoints.size()) return;
+    m_createInfo.sequencePoints[pointIndex].customBool = value;
+    RecreateWeatherBoardMesh();
+    HouseBuilder::MarkDirty();
 }
 
 void Wall::SetMaterial(const std::string& materialName) {
@@ -149,20 +182,54 @@ void Wall::SetMaterial(const std::string& materialName) {
     }
 }
 
+void Wall::SetWeatherBoardMaterial(const std::string& materialName, uint32_t boardCount, uint32_t startIndex, uint32_t endIndex, float textureOffsetU, float textureOffsetV) {
+    const int32_t materialIndex = Hell::ResourceManager::GetMaterialIndexByName(materialName);
+    if (materialIndex == -1) return;
+
+    m_createInfo.materialName = materialName;
+    m_createInfo.weatherBoardTextureBoardCount = glm::max(boardCount, 1u);
+    m_createInfo.weatherBoardStartIndex = startIndex;
+    m_createInfo.weatherBoardEndIndex = endIndex;
+    m_createInfo.textureOffsetU = textureOffsetU;
+    m_createInfo.textureOffsetV = textureOffsetV;
+    m_materialIndex = materialIndex;
+    UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
+}
+
+void Wall::SetWeatherBoardStopMaterial(const std::string& materialName) {
+    if (Hell::ResourceManager::GetMaterialIndexByName(materialName) == -1) return;
+    m_createInfo.weatherBoardStopMaterialName = materialName;
+    RecreateWeatherBoardMesh();
+    HouseBuilder::MarkDirty();
+}
+
 void Wall::SetWallType(WallType wallType) {
     m_createInfo.wallType = wallType;
     UpdateSegmentsTrimsAndVertexData();
     HouseBuilder::MarkDirty();
 }
 
-Material* Wall::GetMaterial() {
-    return Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
-}
-
-void Wall::SetHeight(float value) {
-    m_createInfo.height = value;
+void Wall::SetWeatherBoardTextureBoardCount(uint32_t value) {
+    m_createInfo.weatherBoardTextureBoardCount = glm::max(value, 1u);
     UpdateSegmentsTrimsAndVertexData();
     HouseBuilder::MarkDirty();
+}
+
+void Wall::SetWeatherBoardStartIndex(uint32_t value) {
+    m_createInfo.weatherBoardStartIndex = value;
+    UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
+}
+
+void Wall::SetWeatherBoardEndIndex(uint32_t value) {
+    m_createInfo.weatherBoardEndIndex = value;
+    UpdateSegmentsTrimsAndVertexData();
+    HouseBuilder::MarkDirty();
+}
+
+Material* Wall::GetMaterial() {
+    return Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
 }
 
 void Wall::SetTextureScale(float value) {
@@ -183,6 +250,18 @@ void Wall::SetTextureOffsetV(float value) {
     HouseBuilder::MarkDirty();
 }
 
+void Wall::SetRoughnessFactor(float value) {
+    m_createInfo.roughnessFactor = glm::clamp(value, 0.0f, 10.0f);
+    for (RenderItem& renderItem : m_weatherBoardstopRenderItems) renderItem.roughnessFactor = m_createInfo.roughnessFactor;
+    HouseBuilder::MarkDirty();
+}
+
+void Wall::SetMetallicFactor(float value) {
+    m_createInfo.metallicFactor = glm::clamp(value, 0.0f, 10.0f);
+    for (RenderItem& renderItem : m_weatherBoardstopRenderItems) renderItem.metallicFactor = m_createInfo.metallicFactor;
+    HouseBuilder::MarkDirty();
+}
+
 void Wall::SetFloorTrimType(TrimType trimType) {
     m_createInfo.floorTrimType = trimType;
     UpdateSegmentsTrimsAndVertexData();
@@ -197,11 +276,16 @@ void Wall::SetCeilingTrimType(TrimType trimType) {
 const glm::vec3& Wall::GetPointByIndex(int pointIndex) {
     static glm::vec3 invalid = glm::vec3(0.0f);
 
-    if (pointIndex < 0 || pointIndex >= m_createInfo.points.size()) {
-        Logging::Error() << "Wall::GetPointByIndex() failed: point index " << pointIndex << " out of range of size " << m_createInfo.points.size() << "\n";
+    if (pointIndex < 0 || pointIndex >= m_createInfo.sequencePoints.size()) {
+        Logging::Error() << "Wall::GetPointByIndex() failed: point index " << pointIndex << " out of range of size " << m_createInfo.sequencePoints.size() << "\n";
         return invalid;
     }
-    return m_createInfo.points[pointIndex];
+    return m_createInfo.sequencePoints[pointIndex].position;
+}
+
+float Wall::GetPointHeightByIndex(int pointIndex) const {
+    if (pointIndex < 0 || pointIndex >= m_createInfo.sequencePoints.size()) return 0.0f;
+    return m_createInfo.sequencePoints[pointIndex].customFloat;
 }
 
 void Wall::CleanUp() {
@@ -218,15 +302,15 @@ void Wall::CreateTrims() {
 
     // Ceiling
     if (m_ceilingTrimType != TrimType::NONE) {
-        for (int i = 0; i < (int)m_createInfo.points.size() - 1; i++) {
-            const glm::vec3& start = m_createInfo.points[i];
-            const glm::vec3& end = m_createInfo.points[i + 1];
+        for (int i = 0; i < (int)m_createInfo.sequencePoints.size() - 1; i++) {
+            const SequencePoint& start = m_createInfo.sequencePoints[i];
+            const SequencePoint& end = m_createInfo.sequencePoints[i + 1];
 
             Hell::Transform t;
-            t.position = start;
-            t.position.y += m_createInfo.height;
-            t.rotation.y = Hell::Math::YawBetweenPoints(start, end);
-            t.scale.x = glm::distance(start, end);
+            t.position = start.position;
+            t.position.y += start.customFloat;
+            t.rotation.y = Hell::Math::YawBetweenPoints(start.position, end.position);
+            t.scale.x = glm::distance(start.position, end.position);
 
             Trim& trim = m_trims.emplace_back();
             trim.Init(t, "TrimCeiling", "Trims");
@@ -235,9 +319,9 @@ void Wall::CreateTrims() {
 
     // Floor
     if (m_floorTrimType != TrimType::NONE) {
-        for (int i = 0; i < (int)m_createInfo.points.size() - 1; i++) {
-            const glm::vec3& start = m_createInfo.points[i];
-            const glm::vec3& end = m_createInfo.points[i + 1];
+        for (int i = 0; i < (int)m_createInfo.sequencePoints.size() - 1; i++) {
+            const glm::vec3& start = m_createInfo.sequencePoints[i].position;
+            const glm::vec3& end = m_createInfo.sequencePoints[i + 1].position;
 
             glm::vec3 rayOrigin = start;
             glm::vec3 rayDir = glm::normalize(end - start);
@@ -298,12 +382,13 @@ void Wall::SubmitRenderItems() {
             Mesh* mesh = meshBuffer.GetMeshById(meshId);
             if (!mesh) continue;
 
-            const int32_t materialIndex = Hell::ResourceManager::GetMaterialIndexByName("WeatherBoards0");
-            Material* material = Hell::ResourceManager::GetMaterialByIndex(materialIndex);
+            Material* material = Hell::ResourceManager::GetMaterialByIndex(m_materialIndex);
             if (!material) continue;
 
             RenderItem renderItem;
-            renderItem.materialIndex = materialIndex;
+            renderItem.materialIndex = m_materialIndex;
+            renderItem.roughnessFactor = m_createInfo.roughnessFactor;
+            renderItem.metallicFactor = m_createInfo.metallicFactor;
             renderItem.modelMatrix = glm::mat4(1.0f);
             renderItem.inverseModelMatrix = glm::mat4(1.0f);
             renderItem.prevModelMatrix = glm::mat4(1.0f);
@@ -332,6 +417,8 @@ void Wall::SubmitRenderItems() {
 
 	    RenderItem renderItem;
         renderItem.materialIndex = m_materialIndex;
+        renderItem.roughnessFactor = m_createInfo.roughnessFactor;
+        renderItem.metallicFactor = m_createInfo.metallicFactor;
 		renderItem.modelMatrix = glm::mat4(1.0f);
         renderItem.inverseModelMatrix = glm::mat4(1.0f);
         renderItem.prevModelMatrix = glm::mat4(1.0f);
@@ -357,8 +444,8 @@ void Wall::DrawSegmentVertices(glm::vec4 color) {
     for (WallSegment& wallSegment : m_wallSegments) {
         const glm::vec3& p1 = wallSegment.GetStart();
         const glm::vec3& p2 = wallSegment.GetEnd();
-        glm::vec3 p3 = wallSegment.GetStart() + glm::vec3(0.0f, wallSegment.GetHeight(), 0.0f);
-        glm::vec3 p4 = wallSegment.GetEnd() + glm::vec3(0.0f, wallSegment.GetHeight(), 0.0f);
+        glm::vec3 p3 = wallSegment.GetStart() + glm::vec3(0.0f, wallSegment.GetStartHeight(), 0.0f);
+        glm::vec3 p4 = wallSegment.GetEnd() + glm::vec3(0.0f, wallSegment.GetEndHeight(), 0.0f);
         DebugDraw::DrawPoint(p1, color);
         DebugDraw::DrawPoint(p2, color);
         DebugDraw::DrawPoint(p3, color);
@@ -370,8 +457,8 @@ void Wall::DrawSegmentLines(glm::vec4 color) {
     for (WallSegment& wallSegment : m_wallSegments) {
         const glm::vec3& p1 = wallSegment.GetStart();
         const glm::vec3& p2 = wallSegment.GetEnd();
-        glm::vec3 p3 = wallSegment.GetStart() + glm::vec3(0.0f, wallSegment.GetHeight(), 0.0f);
-        glm::vec3 p4 = wallSegment.GetEnd() + glm::vec3(0.0f, wallSegment.GetHeight(), 0.0f);
+        glm::vec3 p3 = wallSegment.GetStart() + glm::vec3(0.0f, wallSegment.GetStartHeight(), 0.0f);
+        glm::vec3 p4 = wallSegment.GetEnd() + glm::vec3(0.0f, wallSegment.GetEndHeight(), 0.0f);
         DebugDraw::DrawLine(p1, p2, color);
         DebugDraw::DrawLine(p3, p4, color);
         DebugDraw::DrawLine(p1, p3, color);
@@ -384,20 +471,22 @@ void Wall::DrawSegmentLines(glm::vec4 color) {
     }
 }
 
-void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, int boardY, float boardWidth, std::vector<Vertex>& verticesOut, std::vector<uint32_t>& indicesOut) {
-    Model* weatherBoardModel = Hell::ResourceManager::GetModelByName("WeatherBoard");
-    if (!weatherBoardModel || weatherBoardModel->GetMeshIndices().empty()) return;
-    if (weatherBoardModel->GetMeshCount() == 0) return;
+Vertex InterpolateVertex(const Vertex& a, const Vertex& b, float t) {
+    Vertex vertex;
+    vertex.position = glm::mix(a.position, b.position, t);
+    vertex.normal = glm::normalize(glm::mix(a.normal, b.normal, t));
+    vertex.uv = glm::mix(a.uv, b.uv, t);
+    vertex.tangent = glm::normalize(glm::mix(a.tangent, b.tangent, t));
+    return vertex;
+}
 
-    uint32_t meshId = weatherBoardModel->GetMeshIndices()[0];
-    Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(meshId);
-    if (!mesh) return;
+void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, uint32_t textureRow, uint32_t textureBoardCount, float textureOffsetU, float textureOffsetV, float boardWidth, const WallSegment& wallSegment, std::vector<Vertex>& verticesOut, std::vector<uint32_t>& indicesOut) {
+    const std::vector<Vertex>& sourceVertices = HouseBuilder::GetWeatherBoardVertices();
+    const std::vector<uint32_t>& sourceIndices = HouseBuilder::GetWeatherBoardIndices();
+    if (sourceVertices.empty() || sourceIndices.empty()) return;
 
-    Hell::MeshBuffer& assetGeometry = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
-    std::span<Vertex> verticesSpan(assetGeometry.GetVertices().data() + mesh->baseVertex, mesh->vertexCount);
-    std::span<uint32_t> indicesSpan(assetGeometry.GetIndices().data() + mesh->baseIndex, mesh->indexCount);
-
-    uint32_t baseVertex = verticesOut.size();
+    std::vector<Vertex> boardVertices;
+    boardVertices.reserve(sourceVertices.size());
 
     // Calculate rotation matrix
     glm::vec3 zAxis = glm::normalize(boardDir);
@@ -405,17 +494,7 @@ void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, int boardY, fl
     glm::vec3 yAxis = glm::cross(zAxis, xAxis);
     glm::mat3 rotationMatrix = glm::mat3(xAxis, yAxis, zAxis);
 
-    // If the board is above 15 then make it use board 12 and have a random x uv
-    float randomOffsetX = 0.0f;
-    if (boardY > 15) {
-        boardY = 12 + Hell::Random::Int(0, 3);
-        randomOffsetX = Hell::Random::Float(0.0f, 1.0f);
-    }
-
-    // This is the vertical uv distance between boards in the texture
-    float uvVerticalOffset = 1.0f / 16.0f;
-
-    for (Vertex vertex : verticesSpan) {
+    for (Vertex vertex : sourceVertices) {
 
         // If this vertex is on the right of the board then shift it to the desired width and update uvs
         bool isRightEdge = vertex.uv.x > 0.5f;
@@ -429,14 +508,52 @@ void AddBoard(const glm::vec3& origin, const glm::vec3& boardDir, int boardY, fl
         
         vertex.normal = glm::normalize(rotationMatrix * vertex.normal);
 
-        vertex.uv.x += randomOffsetX;
-        vertex.uv.y -= uvVerticalOffset * boardY;
+        // Remap the model UV into the selected texture row
+        vertex.uv.y = 1.0f - (textureRow + vertex.uv.y) / textureBoardCount;
+        vertex.uv.x += textureOffsetU;
+        vertex.uv.y += textureOffsetV;
 
-        verticesOut.push_back(vertex);
+        boardVertices.push_back(vertex);
     }
 
-    for (uint32_t index : indicesSpan) {
-        indicesOut.push_back(index + baseVertex);
+    glm::vec3 wallStart = wallSegment.GetStart();
+    glm::vec3 wallDirection = wallSegment.GetEnd() - wallStart;
+    wallDirection.y = 0.0f;
+    const float wallLength = glm::length(wallDirection);
+    if (wallLength <= 0.0f) return;
+    wallDirection /= wallLength;
+
+    const float wallStartTop = wallSegment.GetStart().y + wallSegment.GetStartHeight();
+    const float wallEndTop = wallSegment.GetEnd().y + wallSegment.GetEndHeight();
+    auto GetClipDistance = [&](const Vertex& vertex) { return glm::mix(wallStartTop, wallEndTop, glm::dot(vertex.position - wallStart, wallDirection) / wallLength) - vertex.position.y; };
+
+    // Cut the source triangles against the sloped wall top
+    for (size_t i = 0; i + 2 < sourceIndices.size(); i += 3) {
+        const std::array<Vertex, 3> triangle = { boardVertices[sourceIndices[i]], boardVertices[sourceIndices[i + 1]], boardVertices[sourceIndices[i + 2]] };
+        std::array<Vertex, 4> clipped;
+        int clippedCount = 0;
+        Vertex previous = triangle.back();
+        float previousDistance = GetClipDistance(previous);
+        bool previousInside = previousDistance >= 0.0f;
+
+        for (const Vertex& current : triangle) {
+            const float currentDistance = GetClipDistance(current);
+            const bool currentInside = currentDistance >= 0.0f;
+            if (currentInside != previousInside) clipped[clippedCount++] = InterpolateVertex(previous, current, previousDistance / (previousDistance - currentDistance));
+            if (currentInside) clipped[clippedCount++] = current;
+            previous = current;
+            previousDistance = currentDistance;
+            previousInside = currentInside;
+        }
+
+        if (clippedCount < 3) continue;
+        const uint32_t baseVertex = verticesOut.size();
+        for (int j = 0; j < clippedCount; j++) verticesOut.push_back(clipped[j]);
+        for (int j = 1; j + 1 < clippedCount; j++) {
+            indicesOut.push_back(baseVertex);
+            indicesOut.push_back(baseVertex + j);
+            indicesOut.push_back(baseVertex + j + 1);
+        }
     }
 }
 
@@ -459,7 +576,6 @@ void Wall::RecreateWeatherBoardMesh() {
 
     if (m_createInfo.wallType != WallType::WEATHER_BOARDS) return;
 
-    const int32_t weatherBoardsMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName("WeatherBoards0");
     Model* model = Hell::ResourceManager::GetModelByName("WeatherBoard_Stop");
 
     if (!model) {
@@ -468,18 +584,22 @@ void Wall::RecreateWeatherBoardMesh() {
     }
 
     float individualBoardHeight = 0.13f;
-    float desiredTotalWallHeight = m_createInfo.height;
-    int weatherBoardCount = (int)(desiredTotalWallHeight / individualBoardHeight);
-    float actualFinalWallHeight = weatherBoardCount * individualBoardHeight;
+    const uint32_t textureBoardCount = glm::max(m_createInfo.weatherBoardTextureBoardCount, 1u);
+    const uint32_t startIndex = glm::min(m_createInfo.weatherBoardStartIndex, textureBoardCount - 1);
+    const uint32_t endIndex = glm::clamp(m_createInfo.weatherBoardEndIndex, startIndex, textureBoardCount - 1);
+    const uint32_t boardIndexCount = endIndex - startIndex + 1;
+    const int32_t stopMaterialIndex = Hell::ResourceManager::GetMaterialIndexByName(m_createInfo.weatherBoardStopMaterialName);
 
-
-    for (WallSegment& wallSegemet : m_wallSegments) {
-        glm::vec3 start = wallSegemet.GetStart();
-        glm::vec3 end = wallSegemet.GetEnd();
+    // Each point owns the segment that follows it
+    for (size_t i = 0; i < m_wallSegments.size(); i++) {
+        if (stopMaterialIndex == -1 || !m_createInfo.sequencePoints[i].customBool) continue;
+        WallSegment& wallSegment = m_wallSegments[i];
+        glm::vec3 start = wallSegment.GetStart();
+        glm::vec3 end = wallSegment.GetEnd();
 
         Hell::Transform transform;
         transform.position = start;
-        transform.scale.y = actualFinalWallHeight;
+        transform.scale.y = glm::max(0.0f, wallSegment.GetStartHeight());
         transform.rotation.y = Hell::Math::YawBetweenPoints(start, end);
 
         RenderItem& renderItem = m_weatherBoardstopRenderItems.emplace_back();
@@ -487,7 +607,9 @@ void Wall::RecreateWeatherBoardMesh() {
         renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
         renderItem.prevModelMatrix = renderItem.modelMatrix;
         renderItem.meshId = model->GetMeshIndices()[0];
-        renderItem.materialIndex = weatherBoardsMaterialIndex;
+        renderItem.materialIndex = stopMaterialIndex;
+        renderItem.roughnessFactor = m_createInfo.roughnessFactor;
+        renderItem.metallicFactor = m_createInfo.metallicFactor;
 
         Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
         if (Mesh* mesh = meshBuffer.GetMeshById(renderItem.meshId)) {
@@ -500,18 +622,21 @@ void Wall::RecreateWeatherBoardMesh() {
         renderItem.shadowFlags |= (SHADOW_FLAG_POINT_LIGHT | SHADOW_FLAG_CSM);
 
         RendererUtil::UpdateRenderItemAABB(renderItem);
-        Hell::Bit::PackUint64(wallSegemet.GetObjectId(), renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
+        Hell::Bit::PackUint64(wallSegment.GetObjectId(), renderItem.objectIdLowerBit, renderItem.objectIdUpperBit);
     }
 
     // Create new mesh segments
-    for (WallSegment& wallSegemet : m_wallSegments) {
+    for (WallSegment& wallSegment : m_wallSegments) {
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
+        const float startHeight = glm::max(0.0f, wallSegment.GetStartHeight());
+        const float endHeight = glm::max(0.0f, wallSegment.GetEndHeight());
+        const int weatherBoardCount = (int)std::ceil(glm::max(startHeight, endHeight) / individualBoardHeight);
 
         for (int i = 0; i < weatherBoardCount; i++) {
-
-            glm::vec3 start = wallSegemet.GetStart();
-            glm::vec3 end = wallSegemet.GetEnd();
+            glm::vec3 start = wallSegment.GetStart();
+            glm::vec3 end = wallSegment.GetEnd();
+            const uint32_t textureRow = startIndex + static_cast<uint32_t>(i) % boardIndexCount;
 
             start.y += individualBoardHeight * i;
             end.y += individualBoardHeight * i;
@@ -531,7 +656,7 @@ void Wall::RecreateWeatherBoardMesh() {
                     glm::vec3 localEnd = rayOrigin + (rayDir * rayResult.distanceToHit);
                     float boardWidth = glm::distance(localStart, localEnd);
 
-                    AddBoard(rayOrigin, rayDir, i, boardWidth, vertices, indices);
+                    AddBoard(rayOrigin, rayDir, textureRow, textureBoardCount, m_createInfo.textureOffsetU, m_createInfo.textureOffsetV, boardWidth, wallSegment, vertices, indices);
                 }
 
                 float advance = rayResult.distanceToHit + eps;
@@ -541,7 +666,7 @@ void Wall::RecreateWeatherBoardMesh() {
 
             if (remaining > eps) {
                 float boardWidth = glm::distance(rayOrigin, end);
-                AddBoard(rayOrigin, rayDir, i, boardWidth, vertices, indices);
+                AddBoard(rayOrigin, rayDir, textureRow, textureBoardCount, m_createInfo.textureOffsetU, m_createInfo.textureOffsetV, boardWidth, wallSegment, vertices, indices);
             }
         }
 

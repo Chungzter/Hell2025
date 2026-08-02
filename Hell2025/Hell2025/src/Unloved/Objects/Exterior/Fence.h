@@ -15,7 +15,8 @@ struct Fence {
     ~Fence() = default;
 
     void AddControlPoint(const glm::vec2& controlPoint2D);
-    void UpdateControlPoints(const std::vector<glm::vec2>& controlPoints2D);
+    void SetPosition(const glm::vec3& position);
+    void UpdateSequencePoints(const std::vector<SequencePoint>& sequencePoints);
     void Init();
     void Update();
     void CleanUp();
@@ -23,10 +24,12 @@ struct Fence {
     const std::vector<RenderItem>& const GetRenderItems();
 
     const uint64_t GetObjectId() const           { return m_objectId; }
+    const glm::vec3& GetPosition() const         { return m_position; }
     const FenceCreateInfo& GetCreateInfo() const { return m_createInfo; }
 
 private:
     uint64_t m_objectId = 0;
+    glm::vec3 m_position = glm::vec3(0.0f);
     FenceCreateInfo m_createInfo;
     SpawnOffset m_spawnOffset;
 

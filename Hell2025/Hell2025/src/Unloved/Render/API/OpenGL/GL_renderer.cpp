@@ -96,6 +96,21 @@ namespace OpenGL::Renderer {
         geometryPassDefault->depthMask = true;
         geometryPassDefault->depthFunc = GL_GREATER;
 
+        OpenGLRasterizerState* grassPassRE = OpenGL::RasterizerStateManager::CreateRasterizerState("GrassPass_RE");
+        grassPassRE->depthTestEnabled = true;
+        grassPassRE->blendEnable = false;
+        grassPassRE->cullfaceEnable = true;
+        grassPassRE->depthMask = true;
+        grassPassRE->depthFunc = GL_GREATER;
+        grassPassRE->stencilTestEnabled = true;
+        grassPassRE->stencilFunc = GL_ALWAYS;
+        grassPassRE->stencilRef = STENCIL_BIT_GRASS;
+        grassPassRE->stencilReadMask = 0xFF;
+        grassPassRE->stencilWriteMask = 0xFF;
+        grassPassRE->stencilFailOp = GL_KEEP;
+        grassPassRE->stencilDepthFailOp = GL_KEEP;
+        grassPassRE->stencilPassOp = GL_REPLACE;
+
         OpenGLRasterizerState* geometryPassAlphaDiscard = OpenGL::RasterizerStateManager::CreateRasterizerState("GeometryPass_AlphaDiscard");
         geometryPassAlphaDiscard->depthTestEnabled = true;
         geometryPassAlphaDiscard->blendEnable = false;
@@ -218,7 +233,6 @@ namespace OpenGL::Renderer {
     }
 
     void PreGameLogicComputePasses() {
-        PaintHeightMap();
     }
 
 
@@ -254,6 +268,15 @@ namespace OpenGL::Renderer {
 
             // Fire of the commands
             glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (GLvoid*)0, (GLsizei)commands.size(), 0);
+        }
+    }
+
+    void MultiDrawIndirectPatches(const std::vector<DrawIndexedIndirectCommand>& commands) {
+        if (commands.size()) {
+            g_indirectBuffer.Bind();
+            g_indirectBuffer.Update(sizeof(DrawIndexedIndirectCommand) * commands.size(), commands.data());
+            glPatchParameteri(GL_PATCH_VERTICES, 3);
+            glMultiDrawElementsIndirect(GL_PATCHES, GL_UNSIGNED_INT, (GLvoid*)0, (GLsizei)commands.size(), 0);
         }
     }
 
@@ -302,6 +325,19 @@ namespace OpenGL::Renderer {
                 OpenGL::Renderer::SetViewport(&fbo, viewport);
                 OpenGL::SetUniformInt("u_viewportIndex", i);
                 MultiDrawIndirect(drawCommands[i]);
+            }
+        }
+    }
+
+    void MultiDrawPatchesPerViewportRE(OpenGLFrameBuffer& fbo, const std::vector<DrawIndexedIndirectCommand> drawCommands[4], OpenGLRasterizerState& rasterizerState) {
+        OpenGL::RasterizerStateManager::SetRasterizerState(rasterizerState);
+
+        for (int i = 0; i < 4; i++) {
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
+            if (viewport->IsVisible()) {
+                OpenGL::Renderer::SetViewport(&fbo, viewport);
+                OpenGL::SetUniformInt("u_viewportIndex", i);
+                MultiDrawIndirectPatches(drawCommands[i]);
             }
         }
     }

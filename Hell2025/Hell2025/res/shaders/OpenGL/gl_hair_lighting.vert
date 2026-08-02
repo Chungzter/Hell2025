@@ -26,6 +26,8 @@ out vec3 ViewPos;
 out flat int ViewportIndex;
 
 out flat int MaterialIndex;
+out flat float RoughnessFactor;
+out flat float MetallicFactor;
 uniform int u_viewportIndex;
 
 void main() {
@@ -34,6 +36,8 @@ void main() {
 
     RenderItem renderItem = sceneRenderItems[globalInstanceIndex];
     MaterialIndex = renderItem.materialIndex;
+    RoughnessFactor = renderItem.roughnessFactor;
+    MetallicFactor = renderItem.metallicFactor;
     
     mat4 jitterMatrix = viewportData[viewportIndex].jitteredProjectionViewReverseZ *
                         viewportData[viewportIndex].inverseProjectionViewReverseZ;

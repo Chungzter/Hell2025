@@ -21,6 +21,10 @@ struct RendererSettings {
     bool enableStaticShadowMapCaching = true;
     DirectPointShadowMode directPointShadowMode = DirectPointShadowMode::SHADOW_MAP;
     int taaJitterScale = 2;
+    float emissiveStrength = 1.0f;
+    float christmasLightRadius = 0.5f;
+    float christmasLightStrength = 0.1f;
+    float irradianceDampening = 0.0325f;
     float indirectSpecularFactor = 1.3f;
     float indirectSpecularRoughnessDampening = 0.3f;
     IndirectSpecularRaysPerQuad indirectSpecularRaysPerQuad = IndirectSpecularRaysPerQuad::ONE;

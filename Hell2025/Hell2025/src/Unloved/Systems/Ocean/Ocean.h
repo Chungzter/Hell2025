@@ -3,6 +3,7 @@
 
 #include <complex>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace Ocean {
@@ -113,6 +114,9 @@ namespace Ocean {
     Settings GetSettings();
     void SetSettings(const Settings& settings);
     void ResetSettings();
+    bool LoadFromDisk();
+    bool SaveToDisk();
+    const std::string& GetFilePath();
     const std::vector<std::complex<float>>& GetH0(int bandIndex);
     bool H0UploadRequired(int bandIndex);
     void MarkH0Uploaded(int bandIndex);

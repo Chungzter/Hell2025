@@ -96,7 +96,10 @@ void MeshBuffer::CleanUp() {
 uint32_t MeshBuffer::AddMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, const std::string& name) {
     if (!m_initialized) Initialize();
 
-    if (vertices.empty() || indices.empty()) return 0;
+    if (vertices.empty() || indices.empty()) {
+        Logging::Error() << "MeshBuffer::AddMesh(..) failed: vertex count'" << vertices.size() << "' index count '" << indices.size() << "'\n";
+        return 0;
+    }
 
     if (m_nextMeshId == std::numeric_limits<uint32_t>::max()) {
         Logging::Error() << "MeshBuffer::AddMesh(..) failed: mesh ID space exhausted for '" << m_name << "'\n";

@@ -51,6 +51,11 @@ glm::vec2 CalculateUV(const glm::vec3& vertexPosition, const glm::vec3& vertexNo
     return uv;
 }
 
+glm::vec2 CalculateUV(const glm::vec3& vertexPosition, const glm::vec3& origin, const glm::vec3& uAxis, const glm::vec3& vAxis) {
+    const glm::vec3 localPosition = vertexPosition - origin;
+    return glm::vec2(glm::dot(localPosition, glm::normalize(uAxis)), glm::dot(localPosition, glm::normalize(vAxis)));
+}
+
 void SetNormalsAndTangentsFromVertices(Vertex& vert0, Vertex& vert1, Vertex& vert2) {
     glm::vec3& v0 = vert0.position;
     glm::vec3& v1 = vert1.position;

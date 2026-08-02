@@ -7,6 +7,8 @@
 #include "Hell/Common/String.h"
 #include "Hell/Time.h"
 #include "Unloved/Objects/Interior/Piano.h"
+#include "Unloved/Player/Player.h"
+#include "Unloved/Session/Session.h"
 #include "Unloved/World/World.h"
 
 #include <array>
@@ -19,8 +21,6 @@ namespace Time = Hell::Time;
 namespace Unloved::PianoPlaybackManager {
 
     namespace {
-        constexpr size_t MIDI_PLAYBACK_PIANO_INDEX = 1;
-
         constexpr std::array<const char*, 3> TRACK_NAMES = {
             "Goat",
             "Nocturne",
@@ -60,16 +60,20 @@ namespace Unloved::PianoPlaybackManager {
         }
 
         Piano* GetPlaybackPiano() {
-            auto& pianos = Unloved::World::GetPianos();
-            if (pianos.empty()) {
-                return nullptr;
-            }
+            Player* player = Session::GetLocalPlayerByViewportIndex(0);
+            if (!player) return nullptr;
 
-            if (MIDI_PLAYBACK_PIANO_INDEX < pianos.size()) {
-                return &pianos[MIDI_PLAYBACK_PIANO_INDEX];
+            Piano* closestPiano = nullptr;
+            float closestDistanceSquared = 0.0f;
+            for (Piano& piano : World::GetPianos()) {
+                const glm::vec3 offset = piano.GetPosition() - player->GetFootPosition();
+                const float distanceSquared = glm::dot(offset, offset);
+                if (!closestPiano || distanceSquared < closestDistanceSquared) {
+                    closestPiano = &piano;
+                    closestDistanceSquared = distanceSquared;
+                }
             }
-
-            return &pianos[1];
+            return closestPiano;
         }
     }
 

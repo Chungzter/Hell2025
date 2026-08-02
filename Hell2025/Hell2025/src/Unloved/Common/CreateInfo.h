@@ -8,6 +8,7 @@
 
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Common/Enums.h"
+#include "Unloved/Common/PlanarQuad.h"
 #include "Unloved/Common/SequencePoint.h"
 #include "Unloved/Common/Types.h"
 #include "Unloved/Objects/ObjectEnums.h"
@@ -18,6 +19,8 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
+#include <array>
+#include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
@@ -126,14 +129,22 @@ struct DoorCreateInfo {
     bool deadLockedAtInit = false;
     bool openAtStart = false;
     float maxOpenValue = 2.1f;
+    std::string floorPlaneMaterialName = "FloorBoards";
+    float floorPlaneTextureScale = 0.4f;
+    float floorPlaneTextureOffsetU = 0.0f;
+    float floorPlaneTextureOffsetV = 0.0f;
+    bool floorPlaneRotateTexture90 = false;
+    float floorPlaneRoughnessFactor = 1.0f;
+    float floorPlaneMetallicFactor = 1.0f;
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Door";
 };
 
 struct FenceCreateInfo {
-    std::vector<glm::vec2> controlPoints2D;
+    std::vector<Unloved::SequencePoint> sequencePoints;
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Fence";
+    bool snapSequencePointsToTerrain = false;
 };
 
 struct FireplaceCreateInfo {
@@ -162,6 +173,17 @@ struct GenericObjectCreateInfo {
     GenericObjectType type = GenericObjectType::UNDEFINED;
 };
 
+struct GenericAnimatedObjectCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    float scale = 1.0f;
+    GenericAnimatedObjectType type = GenericAnimatedObjectType::UNDEFINED;
+    std::string animationName = "";
+    float animationSpeed = 1.0f;
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Generic Animated Object";
+};
+
 struct JettyCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
@@ -184,8 +206,35 @@ struct WorldPlaneCreateInfo {
     float textureOffsetU = 0.0f;
     float textureOffsetV = 0.0f;
     float textureRotation = 0.0f;
+    bool rotateTexture90 = false;
+    float roughnessFactor = 1.0f;
+    float metallicFactor = 1.0f;
     uint64_t parentDoorId = 0;
     WorldPlaneType type = WorldPlaneType::UNDEFINED;
+};
+
+struct PlanarQuadObjectCreateInfo {
+    Unloved::PlanarQuadCreateInfo planarQuad;
+    PlanarQuadObjectType type = PlanarQuadObjectType::UNDEFINED;
+    std::string editorName = UNDEFINED_STRING;
+    std::array<float, 8> customFloats = {};
+    std::array<int32_t, 4> customInts = {};
+    std::array<bool, 8> customBools = {};
+    std::array<glm::vec3, 4> customVec3s = {};
+    std::array<std::string, 8> materialNames = {};
+};
+
+struct PointPairCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    float length = 1.0f;
+    PointPairObjectType type = PointPairObjectType::UNDEFINED;
+    std::string editorName = UNDEFINED_STRING;
+    std::array<float, 8> customFloats = {};
+    std::array<int32_t, 4> customInts = {};
+    std::array<bool, 8> customBools = {};
+    std::array<glm::vec3, 4> customVec3s = {};
+    std::array<std::string, 8> materialNames = {};
 };
 
 struct KangarooCreateInfo {
@@ -238,6 +287,8 @@ struct MermaidCreateInfo {
 
 struct MeshNodeCreateInfo {
     std::string meshName;
+    std::string shadowModelName = UNDEFINED_STRING;
+    std::string shadowMeshName = UNDEFINED_STRING;
     std::string materialName = UNDEFINED_STRING;
     std::string baseColorOverrideTextureName = UNDEFINED_STRING;
     BlendingMode blendingMode = BlendingMode::DEFAULT;
@@ -290,6 +341,8 @@ struct PictureFrameCreateInfo {
     glm::vec3 rotation = glm::vec3(0.0f);
     glm::vec3 scale = glm::vec3(1.0f);
     PictureFrameType type = PictureFrameType::BIG_LANDSCAPE;
+    bool useRandom = true;
+    std::string materialName = "Picture_SHNakedLady";
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Picture Frame";
 };
@@ -308,9 +361,18 @@ struct SharkCreateInfo {
 
 struct SpawnPointCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 camEuler = glm::vec3(0.0f);
+    glm::vec2 rotation = glm::vec2(0.0f);
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Spawn Point";
+};
+
+struct HouseLocationCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    float rotation = 0.0f;
+    bool randomHouse = false;
+    std::string houseName = UNDEFINED_STRING;
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "House Location";
 };
 
 struct SpriteSheetObjectCreateInfo {
@@ -354,15 +416,20 @@ struct TrimSetCreateInfo {
 };
 
 struct WallCreateInfo {
-    std::vector<glm::vec3> points;
+    std::vector<Unloved::SequencePoint> sequencePoints;
     std::string materialName = "";
+    std::string weatherBoardStopMaterialName = "WeatherBoards0";
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Wall";
-    float height = 2.4f;
     float textureScale = 1.0f;
     float textureOffsetU = 0.0f;
     float textureOffsetV = 0.0f;
     float textureRotation = 0.0f;
+    float roughnessFactor = 1.0f;
+    float metallicFactor = 1.0f;
+    uint32_t weatherBoardTextureBoardCount = 16;
+    uint32_t weatherBoardStartIndex = 0;
+    uint32_t weatherBoardEndIndex = 15;
     float middleTrimHeight = 2.4f;
     bool useReversePointOrder = false;
     TrimType ceilingTrimType = TrimType::NONE;
@@ -386,8 +453,11 @@ struct CreateInfoCollection {
     std::vector<DoorCreateInfo> doors;
     std::vector<FenceCreateInfo> fences;
     std::vector<FireplaceCreateInfo> fireplaces;
+    std::vector<GenericAnimatedObjectCreateInfo> genericAnimatedObjects;
     std::vector<GenericObjectCreateInfo> genericObjects;
     std::vector<JettyCreateInfo> jetties;
+    std::vector<PlanarQuadObjectCreateInfo> planarQuadObjects;
+    std::vector<PointPairCreateInfo> pointPairObjects;
     std::vector<WorldPlaneCreateInfo> worldPlanes;
     std::vector<LadderCreateInfo> ladders;
     std::vector<LightCreateInfo> lights;
@@ -406,5 +476,5 @@ struct CreateInfoCollection {
 };
 
 struct AdditionalMapData {
-    std::vector<HouseLocation> houseLocations;
+    std::vector<HouseLocationCreateInfo> houseLocations;
 };

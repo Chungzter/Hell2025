@@ -1,9 +1,8 @@
 #include "EditorMenuBar.h"
 
-#include "EditorCoordinates.h"
-#include "EditorLayout.h"
-#include "EditorStyle.h"
-#include "EditorUI.h"
+#include "Unloved/EditorSession/UI/EditorLayout.h"
+#include "Unloved/EditorSession/UI/EditorStyle.h"
+#include "Unloved/EditorSession/UI/EditorUI.h"
 
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Input.h"
@@ -20,23 +19,6 @@
 
 namespace Unloved::EditorSession::MenuBar {
     namespace {
-        constexpr int32_t MENU_BAR_LEFT_PADDING = 10;
-        constexpr int32_t MENU_BUTTON_HORIZONTAL_PADDING = 10;
-        constexpr int32_t POPUP_MIN_WIDTH = 220;
-        constexpr int32_t POPUP_VERTICAL_PADDING = 4;
-        constexpr int32_t ITEM_HEIGHT = 24;
-        constexpr int32_t SEPARATOR_HEIGHT = 9;
-        constexpr int32_t ITEM_HORIZONTAL_PADDING = 12;
-        constexpr int32_t SHORTCUT_GAP = 32;
-        constexpr int32_t SUBMENU_ARROW_SIZE = 8;
-
-        const glm::vec4 MENU_BUTTON_HOVER_COLOR = glm::vec4(0.141176f, 0.125490f, 0.168627f, 1.0f); // #24202b
-        const glm::vec4 POPUP_BACKGROUND_COLOR = glm::vec4(0.058824f, 0.050980f, 0.070588f, 1.0f);  // #0f0d12
-        const glm::vec4 ITEM_HOVER_COLOR = glm::vec4(0.141176f, 0.125490f, 0.168627f, 1.0f);        // #24202b
-        const glm::vec4 BORDER_COLOR = glm::vec4(0.42f, 0.40f, 0.46f, 1.0f);
-        const glm::vec4 SEPARATOR_COLOR = glm::vec4(0.24f, 0.23f, 0.27f, 1.0f);
-        const glm::vec4 TEXT_COLOR = glm::vec4(0.545098f, 0.541176f, 0.568627f, 1.0f);
-
         enum class MenuItemKind : uint8_t {
             ACTION,
             SEPARATOR
@@ -109,30 +91,32 @@ namespace Unloved::EditorSession::MenuBar {
         }
 
         glm::ivec2 GetPopupSize(const std::vector<MenuItem>& items) {
-            int32_t width = POPUP_MIN_WIDTH;
-            int32_t height = POPUP_VERTICAL_PADDING * 2;
+            const EditorStyle& style = GetStyle();
+            int32_t width = style.menu.popupMinimumWidth;
+            int32_t height = style.menu.popupVerticalPadding * 2;
 
             for (const MenuItem& item : items) {
                 if (item.kind == MenuItemKind::SEPARATOR) {
-                    height += SEPARATOR_HEIGHT;
+                    height += style.menu.separatorHeight;
                     continue;
                 }
 
-                const int32_t labelWidth = TextBlitter::GetTextSize(item.label, Style::FONT_NAME, Style::FONT_SCALE).x;
-                const int32_t shortcutWidth = TextBlitter::GetTextSize(item.shortcut, Style::FONT_NAME, Style::FONT_SCALE).x;
-                const int32_t shortcutGap = item.shortcut.empty() ? 0 : SHORTCUT_GAP;
-                const int32_t submenuWidth = item.children.empty() ? 0 : SUBMENU_ARROW_SIZE + ITEM_HORIZONTAL_PADDING;
-                width = std::max(width, ITEM_HORIZONTAL_PADDING * 2 + labelWidth + shortcutGap + shortcutWidth + submenuWidth);
-                height += ITEM_HEIGHT;
+                const int32_t labelWidth = TextBlitter::GetTextSize(item.label, style.font.name, style.font.scale).x;
+                const int32_t shortcutWidth = TextBlitter::GetTextSize(item.shortcut, style.font.name, style.font.scale).x;
+                const int32_t shortcutGap = item.shortcut.empty() ? 0 : style.menu.shortcutGap;
+                const int32_t submenuWidth = item.children.empty() ? 0 : style.menu.submenuArrowSize + style.menu.itemHorizontalPadding;
+                width = std::max(width, style.menu.itemHorizontalPadding * 2 + labelWidth + shortcutGap + shortcutWidth + submenuWidth);
+                height += style.menu.itemHeight;
             }
 
             return { width, height };
         }
 
         void UpdateItemGeometry(std::vector<MenuItem>& items, const EditorRect& popupRect, const EditorRect& menuBarRect) {
-            int32_t itemY = popupRect.y + POPUP_VERTICAL_PADDING;
+            const EditorMenuStyle& style = GetStyle().menu;
+            int32_t itemY = popupRect.y + style.popupVerticalPadding;
             for (MenuItem& item : items) {
-                const int32_t itemHeight = item.kind == MenuItemKind::SEPARATOR ? SEPARATOR_HEIGHT : ITEM_HEIGHT;
+                const int32_t itemHeight = item.kind == MenuItemKind::SEPARATOR ? style.separatorHeight : style.itemHeight;
                 item.rect = { popupRect.x + 1, itemY, popupRect.width - 2, itemHeight };
                 itemY += itemHeight;
 
@@ -140,9 +124,11 @@ namespace Unloved::EditorSession::MenuBar {
 
                 const glm::ivec2 popupSize = GetPopupSize(item.children);
                 int32_t popupX = popupRect.Right();
-                if (popupX + popupSize.x > menuBarRect.Right()) popupX = popupRect.x - popupSize.x;
+                if (popupX + popupSize.x > menuBarRect.Right()) {
+                    popupX = popupRect.x - popupSize.x;
+                }
                 const int32_t maximumPopupY = std::max(menuBarRect.Bottom(), Hell::BackEnd::GetDrawableHeight() - popupSize.y);
-                const int32_t popupY = std::clamp(item.rect.y - POPUP_VERTICAL_PADDING, menuBarRect.Bottom(), maximumPopupY);
+                const int32_t popupY = std::clamp(item.rect.y - style.popupVerticalPadding, menuBarRect.Bottom(), maximumPopupY);
                 item.popupRect = { popupX, popupY, popupSize.x, popupSize.y };
                 UpdateItemGeometry(item.children, item.popupRect, menuBarRect);
             }
@@ -158,13 +144,14 @@ namespace Unloved::EditorSession::MenuBar {
         }
 
         void UpdateGeometry() {
+            const EditorStyle& style = GetStyle();
             const EditorRect& menuBarRect = Layout::GetFileMenuPanel().rect;
-            int32_t buttonX = menuBarRect.x + MENU_BAR_LEFT_PADDING;
+            int32_t buttonX = menuBarRect.x + style.menu.barLeftPadding;
             const int32_t buttonHeight = std::max(0, menuBarRect.height - 1);
 
             for (Menu& menu : g_menus) {
-                const int32_t textWidth = TextBlitter::GetTextSize(menu.label, Style::FONT_NAME, Style::FONT_SCALE).x;
-                const int32_t buttonWidth = std::max(40, textWidth + MENU_BUTTON_HORIZONTAL_PADDING * 2);
+                const int32_t textWidth = TextBlitter::GetTextSize(menu.label, style.font.name, style.font.scale).x;
+                const int32_t buttonWidth = std::max(40, textWidth + style.menu.buttonHorizontalPadding * 2);
                 menu.buttonRect = { buttonX, menuBarRect.y, buttonWidth, buttonHeight };
                 buttonX += buttonWidth;
                 UpdatePopupGeometry(menu, menuBarRect);
@@ -201,8 +188,8 @@ namespace Unloved::EditorSession::MenuBar {
 
         EditorMenuAction GetShortcutAction() {
             if (!ControlIsDown()) return EditorMenuAction::NONE;
-            if (Hell::Input::KeyPressed(HELL_KEY_N)) return EditorMenuAction::NEW_MAP;
-            if (Hell::Input::KeyPressed(HELL_KEY_O)) return EditorMenuAction::OPEN_MAP;
+            if (Hell::Input::KeyPressed(HELL_KEY_N)) return EditorMenuAction::NEW_FILE;
+            if (Hell::Input::KeyPressed(HELL_KEY_O)) return EditorMenuAction::OPEN_FILE;
             if (Hell::Input::KeyPressed(HELL_KEY_S)) return EditorMenuAction::SAVE;
             return EditorMenuAction::NONE;
         }
@@ -212,34 +199,41 @@ namespace Unloved::EditorSession::MenuBar {
         }
 
         void RenderPopup(const std::vector<MenuItem>& items, const EditorRect& popupRect, size_t level) {
-            UI::DrawSolidRect(popupRect, POPUP_BACKGROUND_COLOR);
+            const EditorStyle& style = GetStyle();
+            UI::DrawSolidRect(popupRect, style.colors.panelBackground);
 
             for (const MenuItem& item : items) {
                 const EditorRect& itemRect = item.rect;
 
+                // Separator
                 if (item.kind == MenuItemKind::SEPARATOR) {
-                    UI::DrawSolidRect({ itemRect.x + ITEM_HORIZONTAL_PADDING, itemRect.y + itemRect.height / 2, itemRect.width - ITEM_HORIZONTAL_PADDING * 2, 1 }, SEPARATOR_COLOR);
+                    UI::DrawSolidRect({ itemRect.x + style.menu.itemHorizontalPadding, itemRect.y + itemRect.height / 2, itemRect.width - style.menu.itemHorizontalPadding * 2, 1 }, style.colors.separator);
                     continue;
                 }
 
-                if (&item == g_hoveredItem) UI::DrawSolidRect(itemRect, ITEM_HOVER_COLOR);
+                // Hover highlight
+                if (&item == g_hoveredItem) {
+                    UI::DrawSolidRect(itemRect, style.colors.hover);
+                }
 
+                // Item label
                 const int32_t centerY = itemRect.y + itemRect.height / 2;
-                UIBackEnd::BlitText(UICanvas::NATIVE, WithColor(Style::TEXT_COLOR_TAG, item.label), Style::FONT_NAME, glm::ivec2(itemRect.x + ITEM_HORIZONTAL_PADDING, centerY), Alignment::CENTERED_VERTICAL, Style::FONT_SCALE, TextureFilter::NEAREST);
+                UIBackEnd::BlitText(UICanvas::NATIVE, WithColor(style.font.textColorTag, item.label), style.font.name, glm::ivec2(itemRect.x + style.menu.itemHorizontalPadding, centerY), Alignment::CENTERED_VERTICAL, style.font.scale, TextureFilter::NEAREST);
 
+                // Submenu arrow or keyboard shortcut
                 if (!item.children.empty()) {
-                    UIBackEnd::BlitTexture(UICanvas::NATIVE, "DropDownArrow", glm::ivec2(itemRect.Right() - ITEM_HORIZONTAL_PADDING - SUBMENU_ARROW_SIZE / 2, centerY), Alignment::CENTERED, TEXT_COLOR, glm::ivec2(SUBMENU_ARROW_SIZE), TextureFilter::NEAREST, HELL_PI * -0.5f);
+                    UIBackEnd::BlitTexture(UICanvas::NATIVE, "DropDownArrow", glm::ivec2(itemRect.Right() - style.menu.itemHorizontalPadding - style.menu.submenuArrowSize / 2, centerY), Alignment::CENTERED, style.colors.text, glm::ivec2(style.menu.submenuArrowSize), TextureFilter::NEAREST, HELL_PI * -0.5f);
                 }
                 else if (!item.shortcut.empty()) {
-                    const int32_t shortcutWidth = TextBlitter::GetTextSize(item.shortcut, Style::FONT_NAME, Style::FONT_SCALE).x;
-                    UIBackEnd::BlitText(UICanvas::NATIVE, WithColor(Style::TEXT_COLOR_TAG, item.shortcut), Style::FONT_NAME, glm::ivec2(itemRect.Right() - ITEM_HORIZONTAL_PADDING - shortcutWidth, centerY), Alignment::CENTERED_VERTICAL, Style::FONT_SCALE, TextureFilter::NEAREST);
+                    const int32_t shortcutWidth = TextBlitter::GetTextSize(item.shortcut, style.font.name, style.font.scale).x;
+                    UIBackEnd::BlitText(UICanvas::NATIVE, WithColor(style.font.textColorTag, item.shortcut), style.font.name, glm::ivec2(itemRect.Right() - style.menu.itemHorizontalPadding - shortcutWidth, centerY), Alignment::CENTERED_VERTICAL, style.font.scale, TextureFilter::NEAREST);
                 }
             }
 
             EditorPanel popupPanel;
             popupPanel.rect = popupRect;
             popupPanel.edges = EditorPanelEdge::ALL;
-            popupPanel.borderColor = BORDER_COLOR;
+            popupPanel.borderColor = style.colors.border;
             popupPanel.borderThickness = 1;
             popupPanel.drawBackground = false;
             UI::DrawPanelEdges(popupPanel);
@@ -256,8 +250,8 @@ namespace Unloved::EditorSession::MenuBar {
         Menu fileMenu;
         fileMenu.label = "File";
         fileMenu.items = {
-            Action("New",          "Ctrl+N", EditorMenuAction::NEW_MAP),
-            Action("Open...",      "Ctrl+O", EditorMenuAction::OPEN_MAP),
+            Action("New",          "Ctrl+N", EditorMenuAction::NEW_FILE),
+            Action("Open...",      "Ctrl+O", EditorMenuAction::OPEN_FILE),
             Action("Save",         "Ctrl+S", EditorMenuAction::SAVE),
             Separator(),
             Action("Close Editor", "`",      EditorMenuAction::CLOSE_EDITOR),
@@ -269,19 +263,125 @@ namespace Unloved::EditorSession::MenuBar {
         insertMenu.label = "Insert";
         insertMenu.items = {
             Action("Reinsert last", "Ctrl+T", EditorMenuAction::NONE),
-            Submenu("Bathroom", { Tool("Basin", PlacementTool::GENERIC_BATHROOM_BASIN), Tool("Cabinet", PlacementTool::GENERIC_BATHROOM_CABINET), Tool("Toilet", PlacementTool::GENERIC_TOILET) }),
-            Submenu("Christmas", { Tool("Christmas Lights", PlacementTool::CHRISTMAS_LIGHTS), Tool("Present Small", PlacementTool::GENERIC_CHRISTMAS_PRESENT_SMALL), Tool("Present Large", PlacementTool::GENERIC_CHRISTMAS_PRESENT_LARGE), Tool("Tree", PlacementTool::GENERIC_CHRISTMAS_TREE) }),
-            Submenu("Enemies", { Tool("Dobermann", PlacementTool::DOBERMANN), Tool("Kangaroo", PlacementTool::KANGAROO), Tool("Shark", PlacementTool::SHARK) }),
-            Submenu("Furniture", { Tool("Couch", PlacementTool::GENERIC_COUCH), Submenu("Chairs", { Tool("Chair RE", PlacementTool::GENERIC_CHAIR_RE), Tool("Chair Spindle Back", PlacementTool::GENERIC_CHAIR_SPINDLE_BACK) }), Submenu("Drawers", { Tool("Small", PlacementTool::GENERIC_DRAWERS_SMALL), Tool("Large", PlacementTool::GENERIC_DRAWERS_LARGE) }) }),
-            Submenu("Fishing", { Action("Jetty", "", EditorMenuAction::NONE) }),
-            Submenu("Rural", { Tool("Fence", PlacementTool::FENCE_FARM), Tool("Power Pole", PlacementTool::POWER_POLES) }),
-            Submenu("House", { Submenu("Wall", { Action("Interior", "", EditorMenuAction::NONE), Action("Weather Boards", "", EditorMenuAction::NONE) }), Tool("Door", PlacementTool::DOOR_STANDARD_A), Tool("Window", PlacementTool::WINDOW), Tool("Staircase", PlacementTool::STAIRCASE), Submenu("Fireplace", { Tool("Open", PlacementTool::FIREPLACE_OPEN), Tool("Stove", PlacementTool::FIREPLACE_WOOD_STOVE) }) }),
-            Submenu("Misc", { Tool("Ladder", PlacementTool::LADDER) }),
-            Submenu("Plants", { Tool("Tree", PlacementTool::GENERIC_PLANT_TREE), Tool("Black Berries", PlacementTool::GENERIC_PLANT_BLACKBERRIES) }),
-            Submenu("Lighting", { Tool("Christmas Lights", PlacementTool::CHRISTMAS_LIGHTS), Action("DDGI Volume", "", EditorMenuAction::NONE), Action("Light", "", EditorMenuAction::NONE) }),
-            Submenu("Mermaids", { Action("Mermaid Shop Owner", "", EditorMenuAction::NONE), Action("Mermaid Visitor Rock", "", EditorMenuAction::NONE) }),
-            Submenu("Pick Ups", { Submenu("Weapons", { Tool("AKS74U", PlacementTool::PICKUP_AKS74U), Tool("FN-P90", PlacementTool::PICKUP_P90), Tool("Glock", PlacementTool::PICKUP_GLOCK), Tool("Golden Glock", PlacementTool::PICKUP_GOLDEN_GLOCK), Tool("Knife", PlacementTool::PICKUP_KNIFE), Tool("Remington 870", PlacementTool::PICKUP_REMINGTON_870), Tool("SPAS", PlacementTool::PICKUP_SPAS), Tool("Tokarev", PlacementTool::PICKUP_TOKAREV) }), Submenu("Ammo", { Tool("Shotgun Shells Buckshot", PlacementTool::PICKUP_12_GAUGE_BUCKSHOT) }), Submenu("Items", { Tool("Black Skull", PlacementTool::PICKUP_BLACK_SKULL), Tool("Relief Pills", PlacementTool::PICKUP_PILLS), Tool("Small Key", PlacementTool::PICKUP_SMALL_KEY), Tool("Small Key Silver", PlacementTool::PICKUP_SMALL_KEY_SILVER) }) }),
-            Submenu("Test Models", { Action("Test Model 1", "", EditorMenuAction::NONE), Action("Test Model 2", "", EditorMenuAction::NONE), Action("Test Model 3", "", EditorMenuAction::NONE), Action("Test Model 4", "", EditorMenuAction::NONE) })
+            Submenu("Bathroom", {
+                Tool("Basin", PlacementTool::GENERIC_BATHROOM_BASIN),
+                Tool("Cabinet", PlacementTool::GENERIC_BATHROOM_CABINET),
+                Tool("Toilet", PlacementTool::GENERIC_TOILET),
+            }),
+            Submenu("Christmas", {
+                Tool("Christmas Lights", PlacementTool::CHRISTMAS_LIGHTS),
+                Tool("Present Small", PlacementTool::GENERIC_CHRISTMAS_PRESENT_SMALL),
+                Tool("Present Large", PlacementTool::GENERIC_CHRISTMAS_PRESENT_LARGE),
+                Tool("Tree", PlacementTool::GENERIC_CHRISTMAS_TREE),
+            }),
+            Submenu("Enemies", {
+                Tool("Dobermann", PlacementTool::DOBERMANN),
+                Tool("Kangaroo", PlacementTool::KANGAROO),
+                Tool("Shark", PlacementTool::SHARK),
+            }),
+            Submenu("Furniture", {
+                Tool("Couch", PlacementTool::GENERIC_COUCH),
+                Submenu("Chairs", {
+                    Tool("Chair RE", PlacementTool::GENERIC_CHAIR_RE),
+                    Tool("Chair Spindle Back", PlacementTool::GENERIC_CHAIR_SPINDLE_BACK),
+                }),
+                Submenu("Drawers", {
+                    Tool("Small", PlacementTool::GENERIC_DRAWERS_SMALL),
+                    Tool("Large", PlacementTool::GENERIC_DRAWERS_LARGE),
+                }),
+            }),
+            Submenu("Fishing", {
+                Tool("Jetty", PlacementTool::JETTY),
+            }),
+            Submenu("Rural", {
+                Tool("Fence", PlacementTool::FENCE_FARM),
+                Tool("Power Pole", PlacementTool::POWER_POLES),
+            }),
+            Submenu("House", {
+                Tool("Ceiling", PlacementTool::WORLD_PLANE_CEILING),
+                Tool("Floor", PlacementTool::WORLD_PLANE_FLOOR),
+                Submenu("Wall", {
+                    Tool("Interior", PlacementTool::WALL_INTERIOR),
+                    Tool("Weather Boards", PlacementTool::WALL_WEATHER_BOARDS),
+                }),
+                Tool("Door", PlacementTool::DOOR_STANDARD_A),
+                Tool("Window", PlacementTool::WINDOW),
+                Tool("Staircase", PlacementTool::STAIRCASE),
+                Submenu("Fireplace", {
+                    Tool("Open", PlacementTool::FIREPLACE_OPEN),
+                    Tool("Stove", PlacementTool::FIREPLACE_WOOD_STOVE),
+                }),
+                Submenu("Picture Frames", {
+                    Tool("Picture Frame Small", PlacementTool::PICTURE_FRAME_REGULAR_LANDSCAPE),
+                    Tool("Picture Frame Large", PlacementTool::PICTURE_FRAME_BIG_LANDSCAPE),
+                    Tool("Picture Frame Portrait", PlacementTool::PICTURE_FRAME_REGULAR_PORTRAIT),
+                    Tool("Picture Frame Tall Thin", PlacementTool::PICTURE_FRAME_TALL_THIN),
+                }),
+                Submenu("Roofing", {
+                    Tool("Ridge Capping", PlacementTool::RIDGE_CAPPING),
+                    Tool("Down Pipe", PlacementTool::DOWN_PIPE),
+                    Tool("Gutter", PlacementTool::GUTTER),
+                    Tool("Roofing Iron", PlacementTool::ROOFING_IRON),
+                }),
+                Submenu("Decking", {
+                    Tool("Decking Boards", PlacementTool::DECKING_BOARDS),
+                }),
+            }),
+            Submenu("Misc", {
+                Tool("Ladder", PlacementTool::LADDER),
+                Tool("Piano", PlacementTool::PIANO),
+            }),
+            Submenu("Ornaments", {
+                Tool("Deer Head", PlacementTool::GENERIC_DEER_HEAD),
+            }),
+            Submenu("Plants", {
+                Tool("Tree", PlacementTool::GENERIC_PLANT_TREE),
+                Tool("Black Berries", PlacementTool::GENERIC_PLANT_BLACKBERRIES),
+            }),
+            Submenu("Lighting", {
+                Tool("Christmas Lights", PlacementTool::CHRISTMAS_LIGHTS),
+                Tool("DDGI Volume", PlacementTool::DDGI_VOLUME),
+                Tool("Light", PlacementTool::LIGHT_HANGING),
+            }),
+            Submenu("Locations", {
+                Tool("House", PlacementTool::HOUSE_LOCATION),
+            }),
+            Submenu("Mermaids", {
+                Tool("Mermaid Shop Owner", PlacementTool::MERMAID),
+                Tool("Mermaid Visitor Rock", PlacementTool::GENERIC_MERMAID_ROCK),
+            }),
+            Submenu("Pick Ups", {
+                Submenu("Weapons", {
+                    Tool("AKS74U", PlacementTool::PICKUP_AKS74U),
+                    Tool("FN-P90", PlacementTool::PICKUP_P90),
+                    Tool("Glock", PlacementTool::PICKUP_GLOCK),
+                    Tool("Golden Glock", PlacementTool::PICKUP_GOLDEN_GLOCK),
+                    Tool("Knife", PlacementTool::PICKUP_KNIFE),
+                    Tool("Remington 870", PlacementTool::PICKUP_REMINGTON_870),
+                    Tool("SPAS", PlacementTool::PICKUP_SPAS),
+                    Tool("Tokarev", PlacementTool::PICKUP_TOKAREV),
+                }),
+                Submenu("Ammo", {
+                    Tool("Shotgun Shells Buckshot", PlacementTool::PICKUP_12_GAUGE_BUCKSHOT),
+                }),
+                Submenu("Items", {
+                    Tool("Black Skull", PlacementTool::PICKUP_BLACK_SKULL),
+                    Tool("Relief Pills", PlacementTool::PICKUP_PILLS),
+                    Tool("Small Key", PlacementTool::PICKUP_SMALL_KEY),
+                    Tool("Small Key Silver", PlacementTool::PICKUP_SMALL_KEY_SILVER),
+                }),
+            }),
+            Submenu("Spawn Points", {
+                Tool("Campaign", PlacementTool::PLAYER_CAMPAIGN_SPAWN),
+                Tool("Deathmatch", PlacementTool::PLAYER_DEATHMATCH_SPAWN),
+            }),
+            Submenu("Test Models", {
+                Tool("Animated Rat King", PlacementTool::GENERIC_ANIMATED_RAT_KING),
+                Action("Test Model 1", "", EditorMenuAction::NONE),
+                Action("Test Model 2", "", EditorMenuAction::NONE),
+                Action("Test Model 3", "", EditorMenuAction::NONE),
+                Action("Test Model 4", "", EditorMenuAction::NONE),
+            }),
         };
         g_menus.push_back(std::move(insertMenu));
 
@@ -315,22 +415,27 @@ namespace Unloved::EditorSession::MenuBar {
         const bool menuWasOpen = g_openMenuIndex >= 0;
         bool mousePressConsumed = false;
 
+        // Switch between open top-level menus
         g_hoveredMenuIndex = GetHoveredMenuIndex(mousePosition);
         if (g_openMenuIndex >= 0 && g_hoveredMenuIndex >= 0 && g_hoveredMenuIndex != g_openMenuIndex) {
             g_openMenuIndex = g_hoveredMenuIndex;
             g_openSubmenus.clear();
         }
 
+        // Resolve the hovered popup item
         g_hoveredItem = nullptr;
         if (g_openMenuIndex >= 0) {
             const HoveredItem hoveredItem = GetHoveredItem(g_menus[g_openMenuIndex], mousePosition);
             g_hoveredItem = hoveredItem.item;
             if (g_hoveredItem && g_hoveredItem->kind == MenuItemKind::ACTION) {
                 g_openSubmenus.resize(hoveredItem.level);
-                if (!g_hoveredItem->children.empty()) g_openSubmenus.push_back(g_hoveredItem);
+                if (!g_hoveredItem->children.empty()) {
+                    g_openSubmenus.push_back(g_hoveredItem);
+                }
             }
         }
 
+        // Handle mouse selection
         if (Hell::Input::LeftMousePressed()) {
             if (g_hoveredMenuIndex >= 0) {
                 g_openMenuIndex = openMenuAtFrameStart == g_hoveredMenuIndex ? -1 : g_hoveredMenuIndex;
@@ -341,8 +446,12 @@ namespace Unloved::EditorSession::MenuBar {
             else if (g_openMenuIndex >= 0) {
                 if (g_hoveredItem) {
                     if (g_hoveredItem->kind == MenuItemKind::ACTION && g_hoveredItem->children.empty()) {
-                        if (CanEmit(g_hoveredItem->action)) g_pendingAction = g_hoveredItem->action;
-                        if (g_hoveredItem->placementTool != PlacementTool::NONE) g_pendingPlacementTool = g_hoveredItem->placementTool;
+                        if (CanEmit(g_hoveredItem->action)) {
+                            g_pendingAction = g_hoveredItem->action;
+                        }
+                        if (g_hoveredItem->placementTool != PlacementTool::NONE) {
+                            g_pendingPlacementTool = g_hoveredItem->placementTool;
+                        }
                         CloseMenus();
                     }
                     mousePressConsumed = true;
@@ -354,6 +463,7 @@ namespace Unloved::EditorSession::MenuBar {
             }
         }
 
+        // Handle keyboard shortcuts
         const EditorMenuAction shortcutAction = GetShortcutAction();
         if (CanEmit(shortcutAction)) {
             g_pendingAction = shortcutAction;
@@ -361,6 +471,7 @@ namespace Unloved::EditorSession::MenuBar {
             g_wantsKeyboardCapture = true;
         }
 
+        // Capture input while the menu is active
         g_wantsMouseCapture = menuBarRect.Contains(mousePosition) || menuWasOpen || g_openMenuIndex >= 0 || mousePressConsumed;
         g_wantsKeyboardCapture = g_wantsKeyboardCapture || g_openMenuIndex >= 0;
 
@@ -371,15 +482,16 @@ namespace Unloved::EditorSession::MenuBar {
 
     void Render() {
         if (g_menus.empty()) return;
+        const EditorStyle& style = GetStyle();
 
         for (size_t i = 0; i < g_menus.size(); i++) {
             const Menu& menu = g_menus[i];
             const bool highlighted = static_cast<int32_t>(i) == g_hoveredMenuIndex || static_cast<int32_t>(i) == g_openMenuIndex;
             if (highlighted) {
-                UI::DrawSolidRect(menu.buttonRect, MENU_BUTTON_HOVER_COLOR);
+                UI::DrawSolidRect(menu.buttonRect, style.colors.hover);
             }
 
-            UIBackEnd::BlitText(UICanvas::NATIVE, WithColor(Style::TEXT_COLOR_TAG, menu.label), Style::FONT_NAME, glm::ivec2(menu.buttonRect.x + MENU_BUTTON_HORIZONTAL_PADDING, menu.buttonRect.y + menu.buttonRect.height / 2), Alignment::CENTERED_VERTICAL, Style::FONT_SCALE, TextureFilter::NEAREST);
+            UIBackEnd::BlitText(UICanvas::NATIVE, WithColor(style.font.textColorTag, menu.label), style.font.name, glm::ivec2(menu.buttonRect.x + style.menu.buttonHorizontalPadding, menu.buttonRect.y + menu.buttonRect.height / 2), Alignment::CENTERED_VERTICAL, style.font.scale, TextureFilter::NEAREST);
         }
 
         if (g_openMenuIndex < 0 || g_openMenuIndex >= static_cast<int32_t>(g_menus.size())) return;

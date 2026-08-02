@@ -6,6 +6,7 @@
 #define STENCIL_BIT_ASSET_HAIR   (1u << 3)
 #define STENCIL_BIT_SKINNED_HAIR (1u << 4)
 #define STENCIL_BIT_HEIGHT_MAP   (1u << 5)
+#define STENCIL_BIT_GRASS        (1u << 6)
 
 #define SHADOW_FLAG_NONE        0u
 #define SHADOW_FLAG_POINT_LIGHT (1u << 0)
@@ -59,6 +60,15 @@
 #define MAX_INDIRECT_DRAW_COMMAND_COUNT 4096
 
 #define TEXTURE_ARRAY_SIZE 1024
+
+// Terrain3D displacement-buffer layout. Each level occupies one horizontal
+// strip and doubles the effective terrain vertex density.
+#define TERRAIN_DISPLACEMENT_ENABLED 1
+#define TERRAIN_DISPLACEMENT_TESSELLATION_LEVEL 4
+#define TERRAIN_DISPLACEMENT_MESH_SIZE 48
+#define TERRAIN_DISPLACEMENT_STRIP_SIZE (TERRAIN_DISPLACEMENT_MESH_SIZE * 4)
+#define TERRAIN_DISPLACEMENT_LAYER_COUNT 4
+#define TERRAIN_DISPLACEMENT_MAX_OFFSET 0.08f
 
 #define TILE_SIZE 24
 

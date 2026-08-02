@@ -1,0 +1,2853 @@
+{
+  "CampaignSpawns": [
+    {
+      "EditorName": "Campaign Spawn",
+      "Position": [
+        5.400000095367432,
+        1.649999737739563,
+        0.029153311625123024
+      ],
+      "Rotation": [
+        -0.2040000557899475,
+        1.559999942779541
+      ]
+    },
+    {
+      "EditorName": "Campaign Spawn 2",
+      "Position": [
+        4.383848190307617,
+        1.6499998569488525,
+        1.158665657043457
+      ],
+      "Rotation": [
+        -0.20799978077411652,
+        3.12896466255188
+      ]
+    },
+    {
+      "EditorName": "Campaign Spawn 3",
+      "Position": [
+        2.6575229167938232,
+        1.6499998569488525,
+        -3.506904363632202
+      ],
+      "Rotation": [
+        -0.2919999063014984,
+        2.31815242767334
+      ]
+    }
+  ],
+  "ChristmasLights": [
+    {
+      "EditorName": "Christmas Lights",
+      "SequencePoints": [
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            -0.494729220867157,
+            0.23181039094924927,
+            0.8375601768493652
+          ],
+          "Position": [
+            5.0878424644470215,
+            2.0100672245025635,
+            -3.0738444328308105
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.20000000298023224,
+          "Normal": [
+            0.7438918948173523,
+            0.02115887589752674,
+            0.6679649353027344
+          ],
+          "Position": [
+            4.6460466384887695,
+            1.6847511529922485,
+            -3.21919322013855
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            -0.9053671956062317,
+            0.4128727912902832,
+            -0.09922879189252853
+          ],
+          "Position": [
+            5.264040470123291,
+            1.465069055557251,
+            -2.989414691925049
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            -0.07065951824188232,
+            0.9252578020095825,
+            0.3726998567581177
+          ],
+          "Position": [
+            4.643057346343994,
+            1.3004668951034546,
+            -3.2832698822021484
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            0.13860471546649933,
+            0.8833776712417603,
+            0.4476970136165619
+          ],
+          "Position": [
+            5.418874740600586,
+            0.9521592855453491,
+            -2.9987311363220215
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            -0.00520684476941824,
+            0.8884546756744385,
+            -0.45893487334251404
+          ],
+          "Position": [
+            4.516935348510742,
+            0.7206197381019592,
+            -3.506279468536377
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            -0.14478224515914917,
+            0.9853872060775757,
+            0.08972237259149551
+          ],
+          "Position": [
+            5.290571212768555,
+            0.7436094880104065,
+            -2.7395284175872803
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            0.6609799265861511,
+            0.7430869340896606,
+            -0.10453349351882935
+          ],
+          "Position": [
+            4.46315336227417,
+            0.7181093096733093,
+            -3.149348020553589
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            -0.8294014930725098,
+            0.3547385036945343,
+            -0.43157121539115906
+          ],
+          "Position": [
+            5.344587802886963,
+            1.1378757953643799,
+            -2.9780309200286865
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.20000000298023224,
+          "Normal": [
+            0.8253396153450012,
+            0.5263990759849548,
+            0.20425109565258026
+          ],
+          "Position": [
+            4.7967848777771,
+            1.839994192123413,
+            -3.012768268585205
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.20000000298023224,
+          "Normal": [
+            -0.8927448987960815,
+            0.4062587320804596,
+            0.1948341429233551
+          ],
+          "Position": [
+            5.258923053741455,
+            1.6763008832931519,
+            -3.057804584503174
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            -0.6289420127868652,
+            -0.20852579176425934,
+            -0.748965322971344
+          ],
+          "Position": [
+            4.744978427886963,
+            1.922777771949768,
+            -3.3319993019104004
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.10000000149011612,
+          "Normal": [
+            -0.6170517802238464,
+            0.6681414842605591,
+            -0.4157332181930542
+          ],
+          "Position": [
+            4.925694465637207,
+            2.1496684551239014,
+            -3.103055715560913
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.20000000298023224,
+          "Normal": [
+            -0.9937217831611633,
+            -0.09794306010007858,
+            -0.05407435819506645
+          ],
+          "Position": [
+            4.8453755378723145,
+            2.136678457260132,
+            -3.290332317352295
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.10000000149011612,
+          "Normal": [
+            0.34239327907562256,
+            0.9379985332489014,
+            0.05408944562077522
+          ],
+          "Position": [
+            4.815535545349121,
+            2.167793035507202,
+            -3.223123550415039
+          ]
+        }
+      ],
+      "SpiarlHeight": 1.0,
+      "Spiral": false,
+      "SpiralRadius": 1.0,
+      "SprialTopCenter": [
+        2.604602336883545,
+        0.0,
+        0.459450900554657
+      ]
+    },
+    {
+      "EditorName": "Christmas Lights 2",
+      "SequencePoints": [
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "Position": [
+            3.0,
+            2.294445514678955,
+            -0.8099027872085571
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            0.719250500202179,
+            0.5183269381523132,
+            -0.46261870861053467
+          ],
+          "Position": [
+            3.0589439868927,
+            2.287097454071045,
+            -3.8274712562561035
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            -0.8921108245849609,
+            0.037423331290483475,
+            0.4502641260623932
+          ],
+          "Position": [
+            5.494802474975586,
+            2.3041317462921143,
+            -3.6362946033477783
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            0.29463669657707214,
+            -0.6594976782798767,
+            -0.6915577054023743
+          ],
+          "Position": [
+            5.697454452514648,
+            2.3346753120422363,
+            -0.9063472747802734
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            0.10439249873161316,
+            0.723304271697998,
+            -0.6825929880142212
+          ],
+          "Position": [
+            3.0026845932006836,
+            2.3310534954071045,
+            -0.8192650079727173
+          ]
+        }
+      ],
+      "SpiarlHeight": 1.0,
+      "Spiral": false,
+      "SpiralRadius": 1.0,
+      "SprialTopCenter": [
+        2.760190963745117,
+        0.0,
+        -0.8836955428123474
+      ]
+    },
+    {
+      "EditorName": "Christmas Lights 3",
+      "SequencePoints": [
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.30000001192092896,
+          "Normal": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "Position": [
+            3.0,
+            2.294445514678955,
+            -0.8099027872085571
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.20000000298023224,
+          "Normal": [
+            0.719250500202179,
+            0.5183269381523132,
+            -0.46261870861053467
+          ],
+          "Position": [
+            3.118229627609253,
+            2.287097454071045,
+            -3.8274712562561035
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.20000000298023224,
+          "Normal": [
+            -0.8921108245849609,
+            0.037423331290483475,
+            0.4502641260623932
+          ],
+          "Position": [
+            5.494802474975586,
+            2.3041317462921143,
+            -3.6362946033477783
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.20000000298023224,
+          "Normal": [
+            0.29463669657707214,
+            -0.6594976782798767,
+            -0.6915577054023743
+          ],
+          "Position": [
+            5.697454452514648,
+            2.3346753120422363,
+            -0.9063472747802734
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 0.20000000298023224,
+          "Normal": [
+            0.10439249873161316,
+            0.723304271697998,
+            -0.6825929880142212
+          ],
+          "Position": [
+            3.0026845932006836,
+            2.3310534954071045,
+            -0.8192650079727173
+          ]
+        }
+      ],
+      "SpiarlHeight": 1.0,
+      "Spiral": false,
+      "SpiralRadius": 1.0,
+      "SprialTopCenter": [
+        2.760190963745117,
+        0.0,
+        -0.8836955428123474
+      ]
+    }
+  ],
+  "DDGIVolumes": [
+    {
+      "EditorName": "DDGI Volume",
+      "Extents": [
+        6.199999809265137,
+        3.5,
+        8.36418342590332
+      ],
+      "Origin": [
+        2.9000000953674316,
+        1.5499999523162842,
+        0.017908096313476563
+      ],
+      "PointCloudSpacing": 0.4000000059604645,
+      "ProbeSpacing": 0.75,
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "SaveToFile": true
+    }
+  ],
+  "DeathmatchSpawns": [],
+  "Dobermanns": [
+    {
+      "EditorName": "Dobermann",
+      "Position": [
+        5.243137836456299,
+        0.0,
+        2.538015604019165
+      ],
+      "Rotation": [
+        0.0,
+        -1.8478217124938965,
+        0.0
+      ]
+    }
+  ],
+  "Doors": [
+    {
+      "DeadLockedAtStart": false,
+      "EditorName": "Door",
+      "FloorPlaneMaterial": "FloorBoards",
+      "FloorPlaneMetallicFactor": 1.0,
+      "FloorPlaneRotateTexture90": false,
+      "FloorPlaneRoughnessFactor": 1.0,
+      "FloorPlaneTextureOffsetU": 0.0,
+      "FloorPlaneTextureOffsetV": 0.0,
+      "FloorPlaneTextureScale": 0.4000000059604645,
+      "HasDeadLock": false,
+      "MaterialTypeBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameFront": "RESIDENT_EVIL",
+      "MaterialTypeFront": "RESIDENT_EVIL",
+      "MaxOpenValue": 1.875,
+      "OpenAtStart": false,
+      "Position": [
+        0.05000000074505806,
+        0.0,
+        0.0
+      ],
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "Type": "STAINED_GLASS"
+    },
+    {
+      "DeadLockedAtStart": false,
+      "EditorName": "Door 2",
+      "FloorPlaneMaterial": "WeatherBoards_Bare",
+      "FloorPlaneMetallicFactor": 1.0,
+      "FloorPlaneRotateTexture90": true,
+      "FloorPlaneRoughnessFactor": 0.6000000238418579,
+      "FloorPlaneTextureOffsetU": 0.0,
+      "FloorPlaneTextureOffsetV": 0.0,
+      "FloorPlaneTextureScale": 0.4000000059604645,
+      "HasDeadLock": false,
+      "MaterialTypeBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameFront": "RESIDENT_EVIL",
+      "MaterialTypeFront": "RESIDENT_EVIL",
+      "MaxOpenValue": 2.0999999046325684,
+      "OpenAtStart": false,
+      "Position": [
+        1.496612787246704,
+        0.0,
+        -0.75
+      ],
+      "Rotation": [
+        0.0,
+        1.5707963705062866,
+        0.0
+      ],
+      "Type": "STANDARD_A"
+    },
+    {
+      "DeadLockedAtStart": false,
+      "EditorName": "Door 3",
+      "FloorPlaneMaterial": "WeatherBoards_Bare",
+      "FloorPlaneMetallicFactor": 1.0,
+      "FloorPlaneRotateTexture90": true,
+      "FloorPlaneRoughnessFactor": 0.6000000238418579,
+      "FloorPlaneTextureOffsetU": 0.0,
+      "FloorPlaneTextureOffsetV": 0.0,
+      "FloorPlaneTextureScale": 0.4000000059604645,
+      "HasDeadLock": false,
+      "MaterialTypeBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameFront": "RESIDENT_EVIL",
+      "MaterialTypeFront": "RESIDENT_EVIL",
+      "MaxOpenValue": 2.0999999046325684,
+      "OpenAtStart": false,
+      "Position": [
+        4.0,
+        0.0,
+        -0.75
+      ],
+      "Rotation": [
+        0.0,
+        1.5707963705062866,
+        0.0
+      ],
+      "Type": "STANDARD_A"
+    },
+    {
+      "DeadLockedAtStart": false,
+      "EditorName": "Door 4",
+      "FloorPlaneMaterial": "WeatherBoards_Bare",
+      "FloorPlaneMetallicFactor": 1.0,
+      "FloorPlaneRotateTexture90": true,
+      "FloorPlaneRoughnessFactor": 0.6000000238418579,
+      "FloorPlaneTextureOffsetU": 0.0,
+      "FloorPlaneTextureOffsetV": 0.0,
+      "FloorPlaneTextureScale": 0.4000000059604645,
+      "HasDeadLock": false,
+      "MaterialTypeBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameFront": "RESIDENT_EVIL",
+      "MaterialTypeFront": "RESIDENT_EVIL",
+      "MaxOpenValue": 2.0999999046325684,
+      "OpenAtStart": false,
+      "Position": [
+        4.0,
+        0.0,
+        0.75
+      ],
+      "Rotation": [
+        0.0,
+        -1.5707964897155762,
+        0.0
+      ],
+      "Type": "STANDARD_A"
+    },
+    {
+      "DeadLockedAtStart": false,
+      "EditorName": "Door 5",
+      "FloorPlaneMaterial": "WeatherBoards_Bare",
+      "FloorPlaneMetallicFactor": 1.0,
+      "FloorPlaneRotateTexture90": true,
+      "FloorPlaneRoughnessFactor": 0.6000000238418579,
+      "FloorPlaneTextureOffsetU": 0.0,
+      "FloorPlaneTextureOffsetV": 0.0,
+      "FloorPlaneTextureScale": 0.4000000059604645,
+      "HasDeadLock": false,
+      "MaterialTypeBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameFront": "RESIDENT_EVIL",
+      "MaterialTypeFront": "RESIDENT_EVIL",
+      "MaxOpenValue": 2.0999999046325684,
+      "OpenAtStart": false,
+      "Position": [
+        1.5,
+        0.0,
+        0.75
+      ],
+      "Rotation": [
+        0.0,
+        -1.5707964897155762,
+        0.0
+      ],
+      "Type": "STANDARD_A"
+    },
+    {
+      "DeadLockedAtStart": true,
+      "EditorName": "Door 6",
+      "FloorPlaneMaterial": "WeatherBoards_Bare",
+      "FloorPlaneMetallicFactor": 1.0,
+      "FloorPlaneRotateTexture90": false,
+      "FloorPlaneRoughnessFactor": 0.6000000238418579,
+      "FloorPlaneTextureOffsetU": 0.0,
+      "FloorPlaneTextureOffsetV": 0.0,
+      "FloorPlaneTextureScale": 0.4000000059604645,
+      "HasDeadLock": true,
+      "MaterialTypeBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameBack": "RESIDENT_EVIL",
+      "MaterialTypeFrameFront": "RESIDENT_EVIL",
+      "MaterialTypeFront": "RESIDENT_EVIL",
+      "MaxOpenValue": 1.7000000476837158,
+      "OpenAtStart": false,
+      "Position": [
+        2.950000047683716,
+        0.0,
+        2.4000000953674316
+      ],
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "Type": "STAINED_GLASS"
+    }
+  ],
+  "Drawers": [
+    {
+      "EditorName": "Chair Spindle Back",
+      "Position": [
+        0.9282263517379761,
+        0.0,
+        -3.124434471130371
+      ],
+      "Rotation": [
+        0.0,
+        -3.070357322692871,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHAIR_SPINDLE_BACK"
+    },
+    {
+      "EditorName": "Chair Spindle Back 2",
+      "Position": [
+        2.5147950649261475,
+        0.0,
+        -3.5056138038635254
+      ],
+      "Rotation": [
+        0.0,
+        -0.7617741823196411,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHAIR_RE"
+    },
+    {
+      "EditorName": "Drawers Large",
+      "Position": [
+        2.700000047683716,
+        0.0,
+        -2.0
+      ],
+      "Rotation": [
+        0.0,
+        -1.5707963705062866,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "DRAWERS_LARGE"
+    },
+    {
+      "EditorName": "Christmas Tree",
+      "Position": [
+        4.966495037078857,
+        0.0,
+        -3.208646297454834
+      ],
+      "Rotation": [
+        0.0,
+        -1.0944148302078247,
+        0.0
+      ],
+      "Scale": [
+        0.8999999761581421,
+        0.8999999761581421,
+        0.8999999761581421
+      ],
+      "Type": "CHRISTMAS_TREE"
+    },
+    {
+      "EditorName": "Christmas Present Small",
+      "Position": [
+        4.351963520050049,
+        0.22547483444213867,
+        -3.5905117988586426
+      ],
+      "Rotation": [
+        -0.23287327587604523,
+        -0.49654337763786316,
+        0.11251100897789001
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_SMALL"
+    },
+    {
+      "EditorName": "Christmas Present Small 2",
+      "Position": [
+        4.8215131759643555,
+        0.9546527862548828,
+        -3.3777918815612793
+      ],
+      "Rotation": [
+        0.0,
+        0.0,
+        0.38713037967681885
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_SMALL"
+    },
+    {
+      "EditorName": "Christmas Present Small 3",
+      "Position": [
+        4.190223217010498,
+        0.8847436904907227,
+        -3.5905117988586426
+      ],
+      "Rotation": [
+        0.0,
+        0.0,
+        0.07416601479053497
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_SMALL"
+    },
+    {
+      "EditorName": "Christmas Present Small 4",
+      "Position": [
+        4.500044822692871,
+        0.8463538289070129,
+        -3.1981658935546875
+      ],
+      "Rotation": [
+        0.3557758629322052,
+        3.725290298461914e-09,
+        -0.17361754179000854
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_SMALL"
+    },
+    {
+      "EditorName": "Christmas Present Small 5",
+      "Position": [
+        4.403212547302246,
+        0.8463538289070129,
+        -2.884610176086426
+      ],
+      "Rotation": [
+        -0.3702481985092163,
+        0.18070702254772186,
+        0.26002037525177
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_SMALL"
+    },
+    {
+      "EditorName": "Christmas Present Small 6",
+      "Position": [
+        4.323683738708496,
+        1.0717252492904663,
+        -3.3777918815612793
+      ],
+      "Rotation": [
+        -0.24007801711559296,
+        0.0,
+        -0.17361754179000854
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_SMALL"
+    },
+    {
+      "EditorName": "Chair Spindle Back 3",
+      "Position": [
+        3.200000047683716,
+        0.4149748384952545,
+        -3.3653149604797363
+      ],
+      "Rotation": [
+        4.659660816192627,
+        1.0058135986328125,
+        2.310342788696289
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHAIR_SPINDLE_BACK"
+    },
+    {
+      "EditorName": "Christmas Present Small 7",
+      "Position": [
+        4.403212547302246,
+        0.5197497606277466,
+        -2.884610176086426
+      ],
+      "Rotation": [
+        -1.1729975938796997,
+        1.1743930578231812,
+        -0.8136901259422302
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_LARGE"
+    },
+    {
+      "EditorName": "Christmas Present Small 8",
+      "Position": [
+        4.67274284362793,
+        0.6213382482528687,
+        -2.6392693519592285
+      ],
+      "Rotation": [
+        -0.25797808170318604,
+        -1.0010077953338623,
+        0.5988975763320923
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_LARGE"
+    },
+    {
+      "EditorName": "Chair Spindle Back 4",
+      "Position": [
+        3.5938186645507813,
+        0.4130961000919342,
+        -3.3698439598083496
+      ],
+      "Rotation": [
+        -2.313758611679077,
+        -0.38355526328086853,
+        -2.983964443206787
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHAIR_SPINDLE_BACK"
+    },
+    {
+      "EditorName": "Chair Spindle Back 5",
+      "Position": [
+        3.4562904834747314,
+        0.8722555041313171,
+        -3.4092490673065186
+      ],
+      "Rotation": [
+        -0.21818304061889648,
+        3.569464921951294,
+        3.146270751953125
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHAIR_SPINDLE_BACK"
+    },
+    {
+      "EditorName": "Christmas Present Small 9",
+      "Position": [
+        4.301621437072754,
+        0.35600054264068604,
+        -2.647305488586426
+      ],
+      "Rotation": [
+        -0.4833764135837555,
+        1.008606195449829,
+        -0.5744011998176575
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_LARGE"
+    },
+    {
+      "EditorName": "Christmas Present Small 10",
+      "Position": [
+        4.640616416931152,
+        0.8847436904907227,
+        -3.5905117988586426
+      ],
+      "Rotation": [
+        0.0,
+        0.0,
+        0.07416601479053497
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_SMALL"
+    },
+    {
+      "EditorName": "Christmas Present Small 11",
+      "Position": [
+        4.731242656707764,
+        0.8463538289070129,
+        -2.8924033641815186
+      ],
+      "Rotation": [
+        0.3281877338886261,
+        -0.13992194831371307,
+        0.21512842178344727
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_SMALL"
+    },
+    {
+      "EditorName": "Christmas Present Small 12",
+      "Position": [
+        5.376357078552246,
+        0.5522387027740479,
+        -3.3777918815612793
+      ],
+      "Rotation": [
+        0.0,
+        0.0,
+        -0.17361754179000854
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_SMALL"
+    },
+    {
+      "EditorName": "Christmas Present Small 13",
+      "Position": [
+        5.298487186431885,
+        0.5197497606277466,
+        -2.884610176086426
+      ],
+      "Rotation": [
+        -0.3788689970970154,
+        0.27517518401145935,
+        0.22191642224788666
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_LARGE"
+    },
+    {
+      "EditorName": "Christmas Present Small 14",
+      "Position": [
+        5.037115097045898,
+        0.6195952892303467,
+        -3.5905117988586426
+      ],
+      "Rotation": [
+        -0.23287327587604523,
+        -0.49654337763786316,
+        0.11251100897789001
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_SMALL"
+    },
+    {
+      "EditorName": "Christmas Present Small 15",
+      "Position": [
+        4.9429779052734375,
+        0.8847436904907227,
+        -2.79880952835083
+      ],
+      "Rotation": [
+        -1.0772517100576806e-08,
+        -1.2176902294158936,
+        0.07416601479053497
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "CHRISTMAS_PRESENT_SMALL"
+    },
+    {
+      "EditorName": "Couch",
+      "Position": [
+        4.354886531829834,
+        0.0,
+        3.9000000953674316
+      ],
+      "Rotation": [
+        0.0,
+        -3.1415927410125732,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "COUCH"
+    },
+    {
+      "EditorName": "Drawers Small",
+      "Position": [
+        5.400000095367432,
+        0.0,
+        -1.600000023841858
+      ],
+      "Rotation": [
+        0.0,
+        -1.5707963705062866,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "DRAWERS_SMALL"
+    },
+    {
+      "EditorName": "Deer Head",
+      "Position": [
+        4.362120628356934,
+        1.4856433868408203,
+        3.9000000953674316
+      ],
+      "Rotation": [
+        0.0,
+        1.5711417198181152,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "DEER_HEAD"
+    }
+  ],
+  "Fences": [],
+  "Fireplaces": [],
+  "GenericAnimatedObjects": [
+    {
+      "AnimationName": "RatKid_GlockIdle3",
+      "AnimationSpeed": 1.0,
+      "EditorName": "Animated Rat King",
+      "Position": [
+        1.976999044418335,
+        0.0,
+        2.95017671585083
+      ],
+      "Rotation": [
+        0.0,
+        -2.8800604343414307,
+        0.0
+      ],
+      "Scale": 1.0,
+      "Type": "RAT_KING"
+    }
+  ],
+  "Jetties": [],
+  "Ladders": [],
+  "Lights": [
+    {
+      "Color": [
+        1.0,
+        0.7799999713897705,
+        0.5289999842643738
+      ],
+      "EditorName": "Light 8",
+      "Forward": [
+        -1.0,
+        22.0,
+        0.0
+      ],
+      "IESExposure": 2.0,
+      "IESProfileType": "LAMP_5",
+      "Position": [
+        2.700000047683716,
+        1.7999999523162842,
+        -0.6000000238418579
+      ],
+      "Radius": 4.0,
+      "Rotation": [
+        0.0,
+        1.5707963705062866,
+        0.0
+      ],
+      "SaveToFile": true,
+      "Strength": 3.0,
+      "Twist": 0.0,
+      "Type": "WALL_LAMP"
+    },
+    {
+      "Color": [
+        1.0,
+        0.7799999713897705,
+        0.5289999842643738
+      ],
+      "EditorName": "Light 2",
+      "Forward": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "IESExposure": 2.0,
+      "IESProfileType": "LAMP_5",
+      "Position": [
+        5.599999904632568,
+        1.7999999523162842,
+        0.0
+      ],
+      "Radius": 3.0,
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "SaveToFile": true,
+      "Strength": 4.0,
+      "Twist": 0.0,
+      "Type": "WALL_LAMP"
+    },
+    {
+      "Color": [
+        1.0,
+        0.7799999713897705,
+        0.5289999842643738
+      ],
+      "EditorName": "Light 3",
+      "Forward": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "IESExposure": 1.0,
+      "IESProfileType": "LAMP_0",
+      "Position": [
+        1.600000023841858,
+        2.0,
+        -2.700000047683716
+      ],
+      "Radius": 2.5,
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "SaveToFile": true,
+      "Strength": 0.75,
+      "Twist": 0.0,
+      "Type": "HANGING_LIGHT"
+    },
+    {
+      "Color": [
+        1.0,
+        0.7799999713897705,
+        0.5289999842643738
+      ],
+      "EditorName": "Light 4",
+      "Forward": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "IESExposure": 1.0,
+      "IESProfileType": "LAMP_0",
+      "Position": [
+        1.600000023841858,
+        2.0,
+        2.200000047683716
+      ],
+      "Radius": 2.5,
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "SaveToFile": true,
+      "Strength": 1.0,
+      "Twist": 0.0,
+      "Type": "HANGING_LIGHT"
+    },
+    {
+      "Color": [
+        1.0,
+        0.7799999713897705,
+        0.5289999842643738
+      ],
+      "EditorName": "Light 5",
+      "Forward": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "IESExposure": 1.0,
+      "IESProfileType": "LAMP_0",
+      "Position": [
+        4.377938747406006,
+        2.0,
+        2.200000047683716
+      ],
+      "Radius": 2.5,
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "SaveToFile": true,
+      "Strength": 0.75,
+      "Twist": 0.0,
+      "Type": "HANGING_LIGHT"
+    },
+    {
+      "Color": [
+        1.0,
+        0.7799999713897705,
+        0.5289999842643738
+      ],
+      "EditorName": "Light 6",
+      "Forward": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "IESExposure": 1.0,
+      "IESProfileType": "LAMP_0",
+      "Position": [
+        5.599999904632568,
+        1.7999999523162842,
+        -2.3582653999328613
+      ],
+      "Radius": 3.5,
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "SaveToFile": true,
+      "Strength": 0.25,
+      "Twist": 0.0,
+      "Type": "WALL_LAMP"
+    },
+    {
+      "Color": [
+        1.0,
+        0.7799999713897705,
+        0.5289999842643738
+      ],
+      "EditorName": "Light 7",
+      "Forward": [
+        -1.0,
+        22.0,
+        0.0
+      ],
+      "IESExposure": 2.0,
+      "IESProfileType": "LAMP_5",
+      "Position": [
+        2.700000047683716,
+        1.7999999523162842,
+        0.6000000238418579
+      ],
+      "Radius": 4.0,
+      "Rotation": [
+        0.0,
+        -1.5707963705062866,
+        0.0
+      ],
+      "SaveToFile": true,
+      "Strength": 3.0,
+      "Twist": 0.0,
+      "Type": "WALL_LAMP"
+    }
+  ],
+  "Mermaids": [
+    {
+      "EditorName": "Mermaid Shop Owner",
+      "Position": [
+        1.2982532978057861,
+        0.0057594552636146545,
+        3.0170936584472656
+      ],
+      "Rotation": [
+        0.0,
+        2.507075071334839,
+        0.0
+      ]
+    }
+  ],
+  "Pianos": [
+    {
+      "EditorName": "Piano",
+      "Position": [
+        0.1382131576538086,
+        0.0,
+        -3.6184537410736084
+      ],
+      "Rotation": [
+        0.0,
+        0.23709392547607422,
+        0.0
+      ],
+      "SoundFontName": "YamahaGrandLiteV2"
+    }
+  ],
+  "PickUps": [
+    {
+      "DisablePhysicsAtSpawn": true,
+      "EditorName": "SPAS",
+      "Name": "SPAS",
+      "Position": [
+        2.602853298187256,
+        1.1770943403244019,
+        -2.2044081687927246
+      ],
+      "Respawn": true,
+      "Rotation": [
+        -1.4229825735092163,
+        -1.369832992553711,
+        -0.03180406242609024
+      ],
+      "SaveToFile": true,
+      "Type": "WEAPON"
+    },
+    {
+      "DisablePhysicsAtSpawn": true,
+      "EditorName": "Golden Glock",
+      "Name": "GoldenGlock",
+      "Position": [
+        3.3770062923431396,
+        0.5290436744689941,
+        -3.272110939025879
+      ],
+      "Respawn": true,
+      "Rotation": [
+        -1.7325934171676636,
+        -0.03227069973945618,
+        -0.1038193330168724
+      ],
+      "SaveToFile": true,
+      "Type": "WEAPON"
+    },
+    {
+      "DisablePhysicsAtSpawn": true,
+      "EditorName": "Shotgun Shells Buckshot",
+      "Name": "12GaugeBuckShot",
+      "Position": [
+        4.916637897491455,
+        0.5945663452148438,
+        3.241342544555664
+      ],
+      "Respawn": true,
+      "Rotation": [
+        0.0,
+        -1.0458605289459229,
+        0.0
+      ],
+      "SaveToFile": true,
+      "Type": "AMMO"
+    },
+    {
+      "DisablePhysicsAtSpawn": true,
+      "EditorName": "Remington 870",
+      "Name": "Remington870",
+      "Position": [
+        4.693448543548584,
+        0.5887030363082886,
+        3.172682285308838
+      ],
+      "Respawn": true,
+      "Rotation": [
+        1.577918291091919,
+        0.3564364016056061,
+        -0.009992147795855999
+      ],
+      "SaveToFile": true,
+      "Type": "WEAPON"
+    },
+    {
+      "DisablePhysicsAtSpawn": true,
+      "EditorName": "Tokarev",
+      "Name": "Tokarev",
+      "Position": [
+        5.353585720062256,
+        0.915989875793457,
+        -1.707687258720398
+      ],
+      "Respawn": true,
+      "Rotation": [
+        -1.5707967281341553,
+        -1.308964729309082,
+        5.75666263102903e-07
+      ],
+      "SaveToFile": true,
+      "Type": "WEAPON"
+    },
+    {
+      "DisablePhysicsAtSpawn": true,
+      "EditorName": "Relief Pills",
+      "Name": "Pills",
+      "Position": [
+        5.313014030456543,
+        0.8985274434089661,
+        -1.6385587453842163
+      ],
+      "Respawn": true,
+      "Rotation": [
+        0.0,
+        -1.7381949424743652,
+        0.0
+      ],
+      "SaveToFile": true,
+      "Type": "HEAL"
+    },
+    {
+      "DisablePhysicsAtSpawn": true,
+      "EditorName": "Knife",
+      "Name": "Knife",
+      "Position": [
+        5.253549575805664,
+        0.902908980846405,
+        -1.5344923734664917
+      ],
+      "Respawn": true,
+      "Rotation": [
+        -1.5707964897155762,
+        -4.218922138214111,
+        3.1415929794311523
+      ],
+      "SaveToFile": true,
+      "Type": "WEAPON"
+    },
+    {
+      "DisablePhysicsAtSpawn": true,
+      "EditorName": "Small Key",
+      "Name": "SmallKey",
+      "Position": [
+        2.5080385208129883,
+        1.234802484512329,
+        -1.8689658641815186
+      ],
+      "Respawn": true,
+      "Rotation": [
+        1.7418222427368164,
+        0.4336119592189789,
+        -3.171400785446167
+      ],
+      "SaveToFile": true,
+      "Type": "KEY"
+    }
+  ],
+  "PictureFrames": [
+    {
+      "EditorName": "Picture Frame",
+      "Material": "Picture_Minotaur",
+      "Position": [
+        3.8437254428863525,
+        1.600000023841858,
+        -3.9000000953674316
+      ],
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "BIG_LANDSCAPE",
+      "UseRandom": false
+    },
+    {
+      "EditorName": "Picture Frame 2",
+      "Material": "Picture_SHNakedLady",
+      "Position": [
+        5.699999809265137,
+        1.600000023841858,
+        2.0999999046325684
+      ],
+      "Rotation": [
+        0.0,
+        -1.5707963705062866,
+        0.0
+      ],
+      "Scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Type": "BIG_LANDSCAPE",
+      "UseRandom": false
+    }
+  ],
+  "PlanarQuadObjects": [
+    {
+      "CustomBools": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "CustomFloats": [
+        0.30000001192092896,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "CustomInts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "CustomVec3s": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "EditorName": "Decking Boards",
+      "Materials": [
+        "DeckingBoards3",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Points": [
+        [
+          -6.000000953674316,
+          0.0,
+          -1.3000009059906006
+        ],
+        [
+          -6.000000953674316,
+          0.0,
+          1.3000009059906006
+        ],
+        [
+          6.000000953674316,
+          0.0,
+          1.3000009059906006
+        ],
+        [
+          6.000000953674316,
+          0.0,
+          -1.3000009059906006
+        ]
+      ],
+      "Position": [
+        -1.200000524520874,
+        0.009999999776482582,
+        -3.5762778338721546e-07
+      ],
+      "Rotation": [
+        0.0,
+        -1.5707963705062866,
+        0.0
+      ],
+      "Type": "DECKING_BOARDS"
+    },
+    {
+      "CustomBools": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "CustomFloats": [
+        0.30000001192092896,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "CustomInts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "CustomVec3s": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "EditorName": "Decking Boards 2",
+      "Materials": [
+        "DeckingBoards3",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Points": [
+        [
+          -2.6500000953674316,
+          0.0,
+          -1.049999713897705
+        ],
+        [
+          -2.6500000953674316,
+          0.0,
+          1.049999713897705
+        ],
+        [
+          2.6500000953674316,
+          0.0,
+          1.049999713897705
+        ],
+        [
+          2.6500000953674316,
+          0.0,
+          -1.049999713897705
+        ]
+      ],
+      "Position": [
+        2.750000476837158,
+        0.0,
+        -4.949999809265137
+      ],
+      "Rotation": [
+        0.0,
+        -3.1415927410125732,
+        0.0
+      ],
+      "Type": "DECKING_BOARDS"
+    },
+    {
+      "CustomBools": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "CustomFloats": [
+        0.30000001192092896,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "CustomInts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "CustomVec3s": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "EditorName": "Decking Boards 3",
+      "Materials": [
+        "DeckingBoards3",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Points": [
+        [
+          -2.6500000953674316,
+          0.0,
+          -1.0249998569488525
+        ],
+        [
+          -2.6500000953674316,
+          0.0,
+          1.0249998569488525
+        ],
+        [
+          2.6500000953674316,
+          0.0,
+          1.0249998569488525
+        ],
+        [
+          2.6500000953674316,
+          0.0,
+          -1.0249998569488525
+        ]
+      ],
+      "Position": [
+        2.749999523162842,
+        0.0,
+        4.975000381469727
+      ],
+      "Rotation": [
+        0.0,
+        -3.1415927410125732,
+        0.0
+      ],
+      "Type": "DECKING_BOARDS"
+    },
+    {
+      "CustomBools": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "CustomFloats": [
+        0.30000001192092896,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "CustomInts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "CustomVec3s": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "EditorName": "Decking Boards 4",
+      "Materials": [
+        "DeckingBoards3",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Points": [
+        [
+          -6.000000953674316,
+          0.0,
+          -1.3000009059906006
+        ],
+        [
+          -6.000000953674316,
+          0.0,
+          1.3000009059906006
+        ],
+        [
+          6.000000953674316,
+          0.0,
+          1.3000009059906006
+        ],
+        [
+          6.000000953674316,
+          0.0,
+          -1.3000009059906006
+        ]
+      ],
+      "Position": [
+        6.699999809265137,
+        0.0,
+        -3.5762778338721546e-07
+      ],
+      "Rotation": [
+        0.0,
+        -1.5707963705062866,
+        0.0
+      ],
+      "Type": "DECKING_BOARDS"
+    },
+    {
+      "CustomBools": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "CustomFloats": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "CustomInts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "CustomVec3s": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "EditorName": "Gutter",
+      "Materials": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Points": [
+        [
+          -1.597256064414978,
+          0.0,
+          -0.30458542704582214
+        ],
+        [
+          -1.597256064414978,
+          0.0,
+          0.30458542704582214
+        ],
+        [
+          1.597256064414978,
+          0.0,
+          0.30458542704582214
+        ],
+        [
+          1.597256064414978,
+          0.0,
+          -0.30458542704582214
+        ]
+      ],
+      "Position": [
+        -4.072793960571289,
+        2.4000000953674316,
+        -0.7460644245147705
+      ],
+      "Rotation": [
+        0.0,
+        -1.5707963705062866,
+        0.0
+      ],
+      "Type": "GUTTER"
+    }
+  ],
+  "Planes": [
+    {
+      "EditorName": "Floor",
+      "Material": "WeatherBoards_Bare",
+      "MetallicFactor": 1.0,
+      "P0": [
+        0.09999990463256836,
+        0.0,
+        -0.699999988079071
+      ],
+      "P1": [
+        0.09999990463256836,
+        0.0,
+        0.699999988079071
+      ],
+      "P2": [
+        5.699999809265137,
+        0.0,
+        0.699999988079071
+      ],
+      "P3": [
+        5.699999809265137,
+        0.0,
+        -0.699999988079071
+      ],
+      "RotateTexture90": false,
+      "RoughnessFactor": 0.6000000238418579,
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": 0.0,
+      "TextureRotation": 0.0,
+      "TextureScale": 0.4000000059604645,
+      "Type": "FLOOR"
+    },
+    {
+      "EditorName": "Ceiling",
+      "Material": "Ceiling2",
+      "MetallicFactor": 1.0,
+      "P0": [
+        5.699999809265137,
+        2.40000057220459,
+        -3.9000000953674316
+      ],
+      "P1": [
+        5.699999809265137,
+        2.40000057220459,
+        3.9000000953674316
+      ],
+      "P2": [
+        0.09999990463256836,
+        2.3999996185302734,
+        3.9000000953674316
+      ],
+      "P3": [
+        0.09999990463256836,
+        2.3999996185302734,
+        -3.9000000953674316
+      ],
+      "RotateTexture90": false,
+      "RoughnessFactor": 0.6000000238418579,
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": 0.0,
+      "TextureRotation": 0.0,
+      "TextureScale": 1.0,
+      "Type": "CEILING"
+    },
+    {
+      "EditorName": "Floor 2",
+      "Material": "WeatherBoards_Bare",
+      "MetallicFactor": 1.0,
+      "P0": [
+        0.09999990463256836,
+        0.0,
+        -3.9000000953674316
+      ],
+      "P1": [
+        0.09999990463256836,
+        0.0,
+        -0.7999997138977051
+      ],
+      "P2": [
+        2.9000000953674316,
+        0.0,
+        -0.7999997138977051
+      ],
+      "P3": [
+        2.9000000953674316,
+        0.0,
+        -3.9000000953674316
+      ],
+      "RotateTexture90": false,
+      "RoughnessFactor": 0.6000000238418579,
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": 0.0,
+      "TextureRotation": 0.0,
+      "TextureScale": 0.4000000059604645,
+      "Type": "FLOOR"
+    },
+    {
+      "EditorName": "Floor 3",
+      "Material": "WeatherBoards_Bare",
+      "MetallicFactor": 1.0,
+      "P0": [
+        3.0,
+        0.0,
+        -3.9000000953674316
+      ],
+      "P1": [
+        3.0,
+        0.0,
+        -0.7999997138977051
+      ],
+      "P2": [
+        5.699999809265137,
+        0.0,
+        -0.7999997138977051
+      ],
+      "P3": [
+        5.699999809265137,
+        0.0,
+        -3.9000000953674316
+      ],
+      "RotateTexture90": false,
+      "RoughnessFactor": 0.6000000238418579,
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": 0.0,
+      "TextureRotation": 0.0,
+      "TextureScale": 0.4000000059604645,
+      "Type": "FLOOR"
+    },
+    {
+      "EditorName": "Floor 4",
+      "Material": "WeatherBoards_Bare",
+      "MetallicFactor": 1.0,
+      "P0": [
+        0.09999990463256836,
+        0.0,
+        0.7999997138977051
+      ],
+      "P1": [
+        0.09999990463256836,
+        0.0,
+        3.9000000953674316
+      ],
+      "P2": [
+        2.9000000953674316,
+        0.0,
+        3.9000000953674316
+      ],
+      "P3": [
+        2.9000000953674316,
+        0.0,
+        0.7999997138977051
+      ],
+      "RotateTexture90": false,
+      "RoughnessFactor": 0.6000000238418579,
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": 0.0,
+      "TextureRotation": 0.0,
+      "TextureScale": 0.4000000059604645,
+      "Type": "FLOOR"
+    },
+    {
+      "EditorName": "Floor 5",
+      "Material": "WeatherBoards_Bare",
+      "MetallicFactor": 1.0,
+      "P0": [
+        3.0,
+        0.0,
+        0.7999997138977051
+      ],
+      "P1": [
+        3.0,
+        0.0,
+        3.9000000953674316
+      ],
+      "P2": [
+        5.699999809265137,
+        0.0,
+        3.9000000953674316
+      ],
+      "P3": [
+        5.699999809265137,
+        0.0,
+        0.7999997138977051
+      ],
+      "RotateTexture90": false,
+      "RoughnessFactor": 0.6000000238418579,
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": 0.0,
+      "TextureRotation": 0.0,
+      "TextureScale": 0.4000000059604645,
+      "Type": "FLOOR"
+    }
+  ],
+  "PowerPoleSets": [],
+  "Sharks": [],
+  "Staircases": [],
+  "Trees": [],
+  "Walls": [
+    {
+      "EditorName": "Weather Boards",
+      "Material": "WeatherBoards_Greenish",
+      "MetallicFactor": 1.0,
+      "MiddleTrimHeight": 2.4000000953674316,
+      "RoughnessFactor": 1.0,
+      "SequencePoints": [
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.5999999046325684,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            0.007679857313632965,
+            0.0,
+            -4.0
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.5999999046325684,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            -0.0051195621490478516,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "CustomBool": false,
+          "CustomFloat": 3.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            2.9000000953674316,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.5999999046325684,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.800000190734863,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.5999999046325684,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.800000190734863,
+            0.0,
+            -4.0
+          ]
+        },
+        {
+          "CustomBool": false,
+          "CustomFloat": 3.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            2.9000000953674316,
+            0.0,
+            -4.0
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.5999999046325684,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            0.007679857313632965,
+            0.0,
+            -4.0
+          ]
+        }
+      ],
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": 0.02500000037252903,
+      "TextureRotation": 0.0,
+      "TextureScale": 1.0,
+      "TrimTypeCeiling": "TIMBER",
+      "TrimTypeFloor": "TIMBER",
+      "UseReversePointOrder": false,
+      "WallType": "WEATHER_BOARDS",
+      "WeatherBoardEndIndex": 25,
+      "WeatherBoardStartIndex": 0,
+      "WeatherBoardStopMaterial": "WeatherBoards0",
+      "WeatherBoardTextureBoardCount": 26
+    },
+    {
+      "EditorName": "Wall",
+      "Material": "Ceiling2",
+      "MetallicFactor": 1.0,
+      "MiddleTrimHeight": 2.4000000953674316,
+      "RoughnessFactor": 0.6000000238418579,
+      "SequencePoints": [
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            0.10000000149011612,
+            0.0,
+            -3.9000000953674316
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            2.9000000953674316,
+            0.0,
+            -3.9000000953674316
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            2.9000000953674316,
+            0.0,
+            -0.800000011920929
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            0.10000000149011612,
+            0.0,
+            -0.800000011920929
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            0.10000000149011612,
+            0.0,
+            -3.9000000953674316
+          ]
+        }
+      ],
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": -1.399999976158142,
+      "TextureRotation": 0.0,
+      "TextureScale": 1.0,
+      "TrimTypeCeiling": "TIMBER",
+      "TrimTypeFloor": "TIMBER",
+      "UseReversePointOrder": false,
+      "WallType": "INTERIOR",
+      "WeatherBoardEndIndex": 15,
+      "WeatherBoardStartIndex": 0,
+      "WeatherBoardStopMaterial": "WeatherBoards0",
+      "WeatherBoardTextureBoardCount": 16
+    },
+    {
+      "EditorName": "Wall 2",
+      "Material": "Ceiling2",
+      "MetallicFactor": 1.0,
+      "MiddleTrimHeight": 2.4000000953674316,
+      "RoughnessFactor": 0.6000000238418579,
+      "SequencePoints": [
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.699999809265137,
+            0.0,
+            0.699999988079071
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            0.10000000149011612,
+            0.0,
+            0.699999988079071
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            0.10000000149011612,
+            0.0,
+            -0.699999988079071
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.699999809265137,
+            0.0,
+            -0.699999988079071
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.699999809265137,
+            0.0,
+            0.699999988079071
+          ]
+        }
+      ],
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": -1.399999976158142,
+      "TextureRotation": 0.0,
+      "TextureScale": 1.0,
+      "TrimTypeCeiling": "TIMBER",
+      "TrimTypeFloor": "TIMBER",
+      "UseReversePointOrder": false,
+      "WallType": "INTERIOR",
+      "WeatherBoardEndIndex": 15,
+      "WeatherBoardStartIndex": 0,
+      "WeatherBoardStopMaterial": "WeatherBoards0",
+      "WeatherBoardTextureBoardCount": 16
+    },
+    {
+      "EditorName": "Wall 3",
+      "Material": "Ceiling2",
+      "MetallicFactor": 1.0,
+      "MiddleTrimHeight": 2.4000000953674316,
+      "RoughnessFactor": 0.6000000238418579,
+      "SequencePoints": [
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            3.0,
+            0.0,
+            -3.9000000953674316
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.699999809265137,
+            0.0,
+            -3.9000000953674316
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.699999809265137,
+            0.0,
+            -0.800000011920929
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            3.0,
+            0.0,
+            -0.800000011920929
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            3.0,
+            0.0,
+            -3.9000000953674316
+          ]
+        }
+      ],
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": -1.399999976158142,
+      "TextureRotation": 0.0,
+      "TextureScale": 1.0,
+      "TrimTypeCeiling": "TIMBER",
+      "TrimTypeFloor": "TIMBER",
+      "UseReversePointOrder": false,
+      "WallType": "INTERIOR",
+      "WeatherBoardEndIndex": 15,
+      "WeatherBoardStartIndex": 0,
+      "WeatherBoardStopMaterial": "WeatherBoards0",
+      "WeatherBoardTextureBoardCount": 16
+    },
+    {
+      "EditorName": "Wall 4",
+      "Material": "Ceiling2",
+      "MetallicFactor": 1.0,
+      "MiddleTrimHeight": 2.4000000953674316,
+      "RoughnessFactor": 0.5,
+      "SequencePoints": [
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            0.10000000149011612,
+            0.0,
+            0.800000011920929
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            2.9000000953674316,
+            0.0,
+            0.800000011920929
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            2.9000000953674316,
+            0.0,
+            3.9000000953674316
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            0.10000000149011612,
+            0.0,
+            3.9000000953674316
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            0.10000000149011612,
+            0.0,
+            0.800000011920929
+          ]
+        }
+      ],
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": -1.399999976158142,
+      "TextureRotation": 0.0,
+      "TextureScale": 1.0,
+      "TrimTypeCeiling": "TIMBER",
+      "TrimTypeFloor": "TIMBER",
+      "UseReversePointOrder": false,
+      "WallType": "INTERIOR",
+      "WeatherBoardEndIndex": 15,
+      "WeatherBoardStartIndex": 0,
+      "WeatherBoardStopMaterial": "WeatherBoards0",
+      "WeatherBoardTextureBoardCount": 16
+    },
+    {
+      "EditorName": "Wall 5",
+      "Material": "Ceiling2",
+      "MetallicFactor": 1.0,
+      "MiddleTrimHeight": 2.4000000953674316,
+      "RoughnessFactor": 0.6000000238418579,
+      "SequencePoints": [
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            3.0,
+            0.0,
+            0.800000011920929
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.699999809265137,
+            0.0,
+            0.800000011920929
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.699999809265137,
+            0.0,
+            3.9000000953674316
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            3.0,
+            0.0,
+            3.9000000953674316
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            3.0,
+            0.0,
+            0.800000011920929
+          ]
+        }
+      ],
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": -1.399999976158142,
+      "TextureRotation": 0.0,
+      "TextureScale": 1.0,
+      "TrimTypeCeiling": "TIMBER",
+      "TrimTypeFloor": "TIMBER",
+      "UseReversePointOrder": false,
+      "WallType": "INTERIOR",
+      "WeatherBoardEndIndex": 15,
+      "WeatherBoardStartIndex": 0,
+      "WeatherBoardStopMaterial": "WeatherBoards0",
+      "WeatherBoardTextureBoardCount": 16
+    }
+  ],
+  "Windows": [
+    {
+      "EditorName": "Window",
+      "Position": [
+        0.05000000074505806,
+        0.0,
+        -2.1500000953674316
+      ],
+      "Rotation": [
+        0.0,
+        -3.1415927410125732,
+        0.0
+      ]
+    },
+    {
+      "EditorName": "Window 2",
+      "Position": [
+        0.05000000074505806,
+        0.0,
+        2.1500000953674316
+      ],
+      "Rotation": [
+        0.0,
+        -3.1415927410125732,
+        0.0
+      ]
+    }
+  ]
+}

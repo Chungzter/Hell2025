@@ -334,22 +334,7 @@ namespace Unloved::Editor {
                 // HACK
                 if (GetSelectedObjectType() == ObjectType::WORLD_PLANE) {
                     if (WorldPlane* plane = Unloved::World::GetWorldPlaneByObjectId(GetSelectedObjectId())) {
-
-                        WorldPlaneCreateInfo& createInfo = plane->GetCreateInfo();
-
-                        if (g_selectedVertexIndex == 0) {
-                            createInfo.p0 = Gizmo::GetPosition();
-                        }
-                        if (g_selectedVertexIndex == 1) {
-                            createInfo.p1 = Gizmo::GetPosition();
-                        }
-                        if (g_selectedVertexIndex == 2) {
-                            createInfo.p2 = Gizmo::GetPosition();
-                        }
-                        if (g_selectedVertexIndex == 3) {
-                            createInfo.p3 = Gizmo::GetPosition();
-                        }
-                        plane->UpdateVertexDataFromCreateInfo();
+                        plane->SetPointPosition(g_selectedVertexIndex, Gizmo::GetPosition());
                     }
                 }
             }

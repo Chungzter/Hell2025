@@ -59,6 +59,9 @@ struct MeshNode {
     uint32_t baseIndex = 0;
     uint32_t vertexCount = 0;
     uint32_t indexCount = 0;
+
+    float roughnessFactor = 1.0f;
+    float metallicFactor = 1.0f;
 };
 
 struct MeshNodes {

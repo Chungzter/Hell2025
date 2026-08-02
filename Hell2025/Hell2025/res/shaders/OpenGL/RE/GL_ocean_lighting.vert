@@ -4,15 +4,13 @@
 #include "../../common/ocean.glsl"
 #include "../../common/types.glsl"
 
-uniform int u_displayMode = OCEAN_DISPLAY_MODE_COMBINED;
-
 layout(binding = 0) uniform sampler2D DisplacementTexture_band0;
 layout(binding = 2) uniform sampler2D DisplacementTexture_band1;
 
 readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
 
 uniform int u_viewportIndex;
-uniform float u_oceanOriginY;
 
 out vec3 v_worldPos;
 
@@ -70,14 +68,14 @@ void main() {
 
     float currentSpacing = u_mesh.baseSpacing * pow(u_mesh.lodScale, float(lodLevel));
 
-    vec3 worldPos = vec3(gridX * currentSpacing, u_oceanOriginY, gridY * currentSpacing);
+    vec3 worldPos = vec3(gridX * currentSpacing, rendererData.oceanOriginY, gridY * currentSpacing);
 
     // snapping camera to the current lod grid
     vec2 snappedCam = floor(viewPos.xz / currentSpacing) * currentSpacing;
     worldPos.x += snappedCam.x;
     worldPos.z += snappedCam.y;
 
-    vec3 displacement = SampleCombinedOceanDisplacement(DisplacementTexture_band0, DisplacementTexture_band1, worldPos.xz, u_displayMode);
+    vec3 displacement = SampleCombinedOceanDisplacement(DisplacementTexture_band0, DisplacementTexture_band1, worldPos.xz, rendererData.oceanDisplayMode);
 
     // applying the displacement
     worldPos += displacement;

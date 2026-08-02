@@ -49,8 +49,8 @@ namespace Bible {
         Logging::Init() << "The Bible has been read";
     }
 
-    void ConfigureMeshNodes(uint64_t id, GenericObjectType type, MeshNodes* meshNodes, MeshNodes* shadowCasterMeshNodes) {
-        if (!meshNodes || !shadowCasterMeshNodes) return;
+    void ConfigureMeshNodes(uint64_t id, GenericObjectType type, MeshNodes* meshNodes) {
+        if (!meshNodes) return;
 
         switch (type) {
             case GenericObjectType::CHRISTMAS_PRESENT_SMALL:    return ConfigureMeshNodesChristmasPresentSmall(id, meshNodes);
@@ -60,13 +60,14 @@ namespace Bible {
             case GenericObjectType::BATHROOM_CABINET:           return ConfigureMeshNodesBathroomCabinet(id, meshNodes);
             case GenericObjectType::CHAIR_RE:                   return ConfigureMeshNodesChairRE(id, meshNodes);
             case GenericObjectType::CHAIR_SPINDLE_BACK:         return ConfigureMeshNodesChairSpindleBack(id, meshNodes);
+            case GenericObjectType::DEER_HEAD:                  return ConfigureMeshNodesDeerHead(id, meshNodes);
             case GenericObjectType::DRAWERS_SMALL:              return ConfigureMeshNodesDrawersSmall(id, meshNodes);
             case GenericObjectType::DRAWERS_LARGE:              return ConfigureMeshNodesDrawersLarge(id, meshNodes);
             case GenericObjectType::MERMAID_ROCK:               return ConfigureMeshNodesMermaidRock(id, meshNodes);
             case GenericObjectType::TOILET:                     return ConfigureMeshNodesToilet(id, meshNodes);
             case GenericObjectType::COUCH:                      return ConfigureMeshNodesCouch(id, meshNodes);
             case GenericObjectType::PLANT_BLACKBERRIES:         return ConfigureMeshNodesPlantBlackBerries(id, meshNodes);
-            case GenericObjectType::PLANT_TREE:                 return ConfigureMeshNodesPlantTree(id, meshNodes, shadowCasterMeshNodes);
+            case GenericObjectType::PLANT_TREE:                 return ConfigureMeshNodesPlantTree(id, meshNodes);
             case GenericObjectType::TEST_MODEL:                 return ConfigureTestModel(id, meshNodes);
             case GenericObjectType::TEST_MODEL2:                return ConfigureTestModel2(id, meshNodes);
             case GenericObjectType::TEST_MODEL3:                return ConfigureTestModel3(id, meshNodes);
@@ -74,10 +75,6 @@ namespace Bible {
 
             default: Logging::Error() << "Bible::ConfigureMeshNodes(...) failed: non-implemented GenericObjectType: '" << Hell::Enum::ToString(type) << "'";
         }
-    }
-
-    void ConfigureMeshNodes(uint64_t id, GenericObjectType type, MeshNodes& meshNodes) {
-
     }
 
     void CreateSortedAmmoNameList() {

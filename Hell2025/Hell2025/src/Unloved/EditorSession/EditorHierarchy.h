@@ -8,7 +8,7 @@ namespace Unloved::EditorSession::Hierarchy {
 
     void Init();
     void Refresh();
-    void RefreshChristmasLightPoints(uint64_t objectId);
+    void RefreshObjectChildren(uint64_t objectId);
     void RemoveObject(uint64_t objectId);
     void Update(bool allowInput);
     void Render();

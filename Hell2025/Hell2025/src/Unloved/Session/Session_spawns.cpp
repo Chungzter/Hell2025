@@ -9,27 +9,27 @@
 namespace Unloved::Session {
 
     void CreateFallbackCampaignSpawnPoints() {
-        World::AddSpawnPointCampaign({ glm::vec3(43.9485, 32.6516, 36.7408), glm::vec3(-0.294, -5.0020, 0) });
-        World::AddSpawnPointCampaign({ glm::vec3(40.3495, 32.6486, 34.1408), glm::vec3(-0.168, -9.4820, 0) });
-        World::AddSpawnPointCampaign({ glm::vec3(42.6229, 32.6482, 41.4889), glm::vec3(-0.282, -11.772, 0) });
-        World::AddSpawnPointCampaign({ glm::vec3(34.7497, 35.4520, 37.4222), glm::vec3(-0.206, -15.736, 0) });
-        World::AddSpawnPointCampaign({ glm::vec3(34.9035, 32.6505, 39.5006), glm::vec3(-0.146, -14.242, 0) });
-        World::AddSpawnPointCampaign({ glm::vec3(34.8531, 32.6496, 33.6023), glm::vec3(-0.258, -15.138, 0) });
-        World::AddSpawnPointCampaign({ glm::vec3(33.3506, 32.6481, 41.1310), glm::vec3(-0.166, -18.282, 0) });
-        World::AddSpawnPointCampaign({ glm::vec3(57.3242, 33.5911, 48.8959), glm::vec3(-0.134, -18.100, 0) });
-        World::AddSpawnPointCampaign({ glm::vec3(40.0950, 32.4311, 31.6613), glm::vec3(-0.110, -14.256, 0) });
+        World::AddSpawnPointCampaign({ glm::vec3(43.9485, 32.6516, 36.7408), glm::vec2(-0.294f, -5.0020f) });
+        World::AddSpawnPointCampaign({ glm::vec3(40.3495, 32.6486, 34.1408), glm::vec2(-0.168f, -9.4820f) });
+        World::AddSpawnPointCampaign({ glm::vec3(42.6229, 32.6482, 41.4889), glm::vec2(-0.282f, -11.772f) });
+        World::AddSpawnPointCampaign({ glm::vec3(34.7497, 35.4520, 37.4222), glm::vec2(-0.206f, -15.736f) });
+        World::AddSpawnPointCampaign({ glm::vec3(34.9035, 32.6505, 39.5006), glm::vec2(-0.146f, -14.242f) });
+        World::AddSpawnPointCampaign({ glm::vec3(34.8531, 32.6496, 33.6023), glm::vec2(-0.258f, -15.138f) });
+        World::AddSpawnPointCampaign({ glm::vec3(33.3506, 32.6481, 41.1310), glm::vec2(-0.166f, -18.282f) });
+        World::AddSpawnPointCampaign({ glm::vec3(57.3242, 33.5911, 48.8959), glm::vec2(-0.134f, -18.100f) });
+        World::AddSpawnPointCampaign({ glm::vec3(40.0950, 32.4311, 31.6613), glm::vec2(-0.110f, -14.256f) });
     }
 
     void CreateFallbackDeathmatchSpawnPoints() {
-        World::AddSpawnPointDeathMatch({ glm::vec3(43.9485, 32.6516, 36.7408), glm::vec3(-0.294, -5.0020, 0) });
-        World::AddSpawnPointDeathMatch({ glm::vec3(40.3495, 32.6486, 34.1408), glm::vec3(-0.168, -9.4820, 0) });
-        World::AddSpawnPointDeathMatch({ glm::vec3(42.6229, 32.6482, 41.4889), glm::vec3(-0.282, -11.772, 0) });
-        World::AddSpawnPointDeathMatch({ glm::vec3(34.7497, 35.4520, 37.4222), glm::vec3(-0.206, -15.736, 0) });
-        World::AddSpawnPointDeathMatch({ glm::vec3(34.9035, 32.6505, 39.5006), glm::vec3(-0.146, -14.242, 0) });
-        World::AddSpawnPointDeathMatch({ glm::vec3(34.8531, 32.6496, 33.6023), glm::vec3(-0.258, -15.138, 0) });
-        World::AddSpawnPointDeathMatch({ glm::vec3(33.3506, 32.6481, 41.1310), glm::vec3(-0.166, -18.282, 0) });
-        World::AddSpawnPointDeathMatch({ glm::vec3(57.3242, 33.5911, 48.8959), glm::vec3(-0.134, -18.100, 0) });
-        World::AddSpawnPointDeathMatch({ glm::vec3(40.0950, 32.4311, 31.6613), glm::vec3(-0.110, -14.256, 0) });
+        World::AddSpawnPointDeathMatch({ glm::vec3(43.9485, 32.6516, 36.7408), glm::vec2(-0.294f, -5.0020f) });
+        World::AddSpawnPointDeathMatch({ glm::vec3(40.3495, 32.6486, 34.1408), glm::vec2(-0.168f, -9.4820f) });
+        World::AddSpawnPointDeathMatch({ glm::vec3(42.6229, 32.6482, 41.4889), glm::vec2(-0.282f, -11.772f) });
+        World::AddSpawnPointDeathMatch({ glm::vec3(34.7497, 35.4520, 37.4222), glm::vec2(-0.206f, -15.736f) });
+        World::AddSpawnPointDeathMatch({ glm::vec3(34.9035, 32.6505, 39.5006), glm::vec2(-0.146f, -14.242f) });
+        World::AddSpawnPointDeathMatch({ glm::vec3(34.8531, 32.6496, 33.6023), glm::vec2(-0.258f, -15.138f) });
+        World::AddSpawnPointDeathMatch({ glm::vec3(33.3506, 32.6481, 41.1310), glm::vec2(-0.166f, -18.282f) });
+        World::AddSpawnPointDeathMatch({ glm::vec3(57.3242, 33.5911, 48.8959), glm::vec2(-0.134f, -18.100f) });
+        World::AddSpawnPointDeathMatch({ glm::vec3(40.0950, 32.4311, 31.6613), glm::vec2(-0.110f, -14.256f) });
     }
 
     bool SpawnPointIsSafeDistance(const SpawnPoint& spawnPoint) {
@@ -67,9 +67,7 @@ namespace Unloved::Session {
     const SpawnPoint& GetRandomCampaignSpawnPoint() {
         Hell::SlotMap<SpawnPoint>& spawnPoints = World::GetSpawnPointsCampaign();
 
-        //if (spawnPoints.empty()) {
-            CreateFallbackCampaignSpawnPoints();
-        //}
+        if (spawnPoints.empty()) CreateFallbackCampaignSpawnPoints();
 
         return GetRandomSafeSpawnPoint(spawnPoints);
     }
@@ -77,9 +75,7 @@ namespace Unloved::Session {
     const SpawnPoint& GetRandomDeathmatchSpawnPoint() {
         Hell::SlotMap<SpawnPoint>& spawnPoints = World::GetSpawnPointsDeathMatch();
 
-        //if (spawnPoints.empty()) {
-            CreateFallbackDeathmatchSpawnPoints();
-        //}
+        if (spawnPoints.empty()) CreateFallbackDeathmatchSpawnPoints();
 
         return GetRandomSafeSpawnPoint(spawnPoints);
     }

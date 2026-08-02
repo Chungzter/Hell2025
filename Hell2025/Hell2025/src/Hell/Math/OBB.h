@@ -22,6 +22,7 @@ struct OBB {
 
 	void SetTransform(const glm::mat4& worldMatrix);
 	void SetLocalBounds(const AABB& localBounds);
+	glm::vec3 ClosestPoint(const glm::vec3& point) const;
 	OBBRayResult Raycast(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float maxDistance = std::numeric_limits<float>::max()) const;
 
 	const AABB& GetLocalBounds() const               { return m_localBounds; }

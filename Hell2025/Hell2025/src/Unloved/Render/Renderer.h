@@ -46,7 +46,7 @@ namespace Unloved::Renderer {
     int32_t GetNextFreeWoundMaskIndexAndMarkItTaken();
     void MarkWoundMaskIndexAsAvailable(int32_t index);
 
-    void RecalculateAllHeightMapData(bool uploadWorldHeightData);
+    void RecalculateAllHeightMapData(bool uploadWorldHeightData, bool updatePhysics = true);
     void ReadBackHeightMapData(Unloved::MapData* mapData);
 
 	uint32_t GetTileCount();

@@ -20,6 +20,9 @@ struct PictureFrame {
     void SetPosition(const glm::vec3& position);
     void SetRotation(const glm::vec3& rotation);
     void SetScale(const glm::vec3& scale);
+    void SetType(PictureFrameType type);
+    void SetUseRandom(bool useRandom);
+    void SetMaterialName(const std::string& materialName);
     void UpdateRenderItems();
 
     MeshNodes& GetMeshNodes()                               { return m_meshNodes; }

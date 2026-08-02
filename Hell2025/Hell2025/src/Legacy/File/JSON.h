@@ -18,8 +18,9 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const DoorCreateInfo& info);
     void to_json(nlohmann::json& j, const FenceCreateInfo& info);
     void to_json(nlohmann::json& j, const FireplaceCreateInfo& info);
+    void to_json(nlohmann::json& j, const GenericAnimatedObjectCreateInfo& info);
     void to_json(nlohmann::json& j, const GenericObjectCreateInfo& info);
-    void to_json(nlohmann::json& j, const HouseLocation& houseLocation);
+    void to_json(nlohmann::json& j, const HouseLocationCreateInfo& createInfo);
     void to_json(nlohmann::json& j, const JettyCreateInfo& info);
     void to_json(nlohmann::json& j, const LadderCreateInfo& info);
     void to_json(nlohmann::json& j, const LightCreateInfo& info);
@@ -28,6 +29,8 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const PickUpCreateInfo& info);
     void to_json(nlohmann::json& j, const PictureFrameCreateInfo& info);
     void to_json(nlohmann::json& j, const PowerPoleSetCreateInfo& info);
+    void to_json(nlohmann::json& j, const PlanarQuadObjectCreateInfo& info);
+    void to_json(nlohmann::json& j, const PointPairCreateInfo& info);
     void to_json(nlohmann::json& j, const SharkCreateInfo& info);
     void to_json(nlohmann::json& j, const SpawnPointCreateInfo& createInfo);
     void to_json(nlohmann::json& j, const StaircaseCreateInfo& info);
@@ -43,9 +46,9 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, DoorCreateInfo& info);
     void from_json(const nlohmann::json& j, FenceCreateInfo& info);
     void from_json(const nlohmann::json& j, FireplaceCreateInfo& info);
+    void from_json(const nlohmann::json& j, GenericAnimatedObjectCreateInfo& info);
     void from_json(const nlohmann::json& j, GenericObjectCreateInfo& info);
-    void from_json(const nlohmann::json& j, HouseLocation& houseLocation);
-    void from_json(const nlohmann::json& j, HouseLocation& houseLocation);
+    void from_json(const nlohmann::json& j, HouseLocationCreateInfo& createInfo);
     void from_json(const nlohmann::json& j, JettyCreateInfo& info);
     void from_json(const nlohmann::json& j, LightCreateInfo& info);
     void from_json(const nlohmann::json& j, MermaidCreateInfo& info);
@@ -53,6 +56,8 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, PickUpCreateInfo& info);
     void from_json(const nlohmann::json& j, PictureFrameCreateInfo& info);
     void from_json(const nlohmann::json& j, PowerPoleSetCreateInfo& info);
+    void from_json(const nlohmann::json& j, PlanarQuadObjectCreateInfo& info);
+    void from_json(const nlohmann::json& j, PointPairCreateInfo& info);
     void from_json(const nlohmann::json& j, SharkCreateInfo& info);
     void from_json(const nlohmann::json& j, SpawnPointCreateInfo& info);
     void from_json(const nlohmann::json& j, StaircaseCreateInfo& info);

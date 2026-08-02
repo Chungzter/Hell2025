@@ -15,6 +15,7 @@ namespace Hell::MaterialBuilder {
             EMI,
             OPA,
             HAR,
+            DSP,
             UNDEFINED
         };
 
@@ -31,17 +32,19 @@ namespace Hell::MaterialBuilder {
             if (suffix == "EMI") return TextureType::EMI;
             if (suffix == "OPA") return TextureType::OPA;
             if (suffix == "HAR") return TextureType::HAR;
+            if (suffix == "DSP") return TextureType::DSP;
 
             return TextureType::UNDEFINED;
         }
 
         void ApplyDefaultTextures(Material& material) {
-            if (material.m_basecolor == -1) material.m_basecolor = ResourceManager::GetTextureBindlessIndexByName("CheckerBoard_ALB");
-            if (material.m_normal == -1)    material.m_normal = ResourceManager::GetTextureBindlessIndexByName("DefaultNRM");
-            if (material.m_rma == -1)       material.m_rma = ResourceManager::GetTextureBindlessIndexByName("DefaultRMA");
-            if (material.m_emissive == -1)  material.m_emissive = ResourceManager::GetTextureBindlessIndexByName("Black");
-            if (material.m_opacity == -1)   material.m_opacity = ResourceManager::GetTextureBindlessIndexByName("White");
-            if (material.m_hairMaps == -1)  material.m_hairMaps = ResourceManager::GetTextureBindlessIndexByName("Black");
+            if (material.m_basecolor == -1)     material.m_basecolor = ResourceManager::GetTextureBindlessIndexByName("CheckerBoard_ALB");
+            if (material.m_normal == -1)        material.m_normal = ResourceManager::GetTextureBindlessIndexByName("DefaultNRM");
+            if (material.m_rma == -1)           material.m_rma = ResourceManager::GetTextureBindlessIndexByName("DefaultRMA");
+            if (material.m_emissive == -1)      material.m_emissive = ResourceManager::GetTextureBindlessIndexByName("Black");
+            if (material.m_opacity == -1)       material.m_opacity = ResourceManager::GetTextureBindlessIndexByName("White");
+            if (material.m_hairMaps == -1)      material.m_hairMaps = ResourceManager::GetTextureBindlessIndexByName("Black");
+            if (material.m_displacement == -1)  material.m_displacement = ResourceManager::GetTextureBindlessIndexByName("Black"); // Find out what the best default is
         }
     }
 
@@ -69,6 +72,7 @@ namespace Hell::MaterialBuilder {
                     case TextureType::EMI: material->m_emissive = bindlessIndex; break;
                     case TextureType::OPA: material->m_opacity = bindlessIndex; break;
                     case TextureType::HAR: material->m_hairMaps = bindlessIndex; break;
+                    case TextureType::DSP: material->m_displacement = bindlessIndex; break;
                     case TextureType::UNDEFINED: break;
                 }
             }

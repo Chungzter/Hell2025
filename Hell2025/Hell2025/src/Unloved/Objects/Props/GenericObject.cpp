@@ -26,12 +26,11 @@ GenericObject::GenericObject(uint64_t id, const GenericObjectCreateInfo& createI
     m_transform.scale = m_createInfo.scale;
     m_objectId = id;
 
-    Bible::ConfigureMeshNodes(id, m_createInfo.type, &m_meshNodes, &m_shadowCasterMeshNodes);
+    Bible::ConfigureMeshNodes(id, m_createInfo.type, &m_meshNodes);
 }
 
 void GenericObject::Update(float deltaTime) {
     m_meshNodes.Update(m_transform.to_mat4());
-    m_shadowCasterMeshNodes.Update(m_transform.to_mat4());
 
     if (m_navMeshTransformDirty) {
         NavMeshManager::MarkStaticDirty();
@@ -41,7 +40,6 @@ void GenericObject::Update(float deltaTime) {
 
 void GenericObject::CleanUp() {
     m_meshNodes.CleanUp();
-    m_shadowCasterMeshNodes.CleanUp();
 }
 
 void GenericObject::SetPosition(const glm::vec3& position) {
@@ -67,12 +65,12 @@ void GenericObject::SetType(GenericObjectType type) {
 
     m_createInfo.type = type;
     m_meshNodes.CleanUp();
-    m_shadowCasterMeshNodes.CleanUp();
-    Bible::ConfigureMeshNodes(m_objectId, m_createInfo.type, &m_meshNodes, &m_shadowCasterMeshNodes);
+    Bible::ConfigureMeshNodes(m_objectId, m_createInfo.type, &m_meshNodes);
     m_navMeshTransformDirty = true;
 }
 
 void GenericObject::ResetPhysics() {
+    m_meshNodes.ForceDirty();
     m_meshNodes.ResetFirstFrame();
     m_meshNodes.Update(m_transform.to_mat4());
 }

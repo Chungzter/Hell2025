@@ -6,16 +6,19 @@
 #include "Unloved/Player/Player.h"
 #include "Unloved/Session/Session_types.h"
 
+#include <string>
 #include <vector>
 
 namespace Unloved::Session {
     void BeginFrame();
     void Create();
+    void StartNewGame(GameMode mode, const std::string& mapName);
 
     void Update();
     void PostWorldUpdate();
 
     float GetSessionTime();
+    GameMode GetGameMode();
 
     // Players
     void AddLocalPlayer(const glm::vec3& position, const glm::vec3& rotation);

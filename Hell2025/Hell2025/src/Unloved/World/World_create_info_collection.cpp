@@ -8,6 +8,8 @@
 #include "Unloved/Objects/Exterior/PowerPoleSet.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/House/Fireplace.h"
+#include "Unloved/Objects/House/PlanarQuadObject.h"
+#include "Unloved/Objects/House/PointPairObject.h"
 #include "Unloved/Objects/House/WorldPlane.h"
 #include "Unloved/Objects/House/Wall.h"
 #include "Unloved/Objects/House/Window.h"
@@ -15,8 +17,10 @@
 #include "Unloved/Objects/Interior/PictureFrame.h"
 #include "Unloved/Objects/Lighting/Light.h"
 #include "Unloved/Objects/Props/Christmas/ChristmasLights.h"
+#include "Unloved/Objects/Props/GenericAnimatedObject.h"
 #include "Unloved/Objects/Props/GenericObject.h"
 #include "Unloved/Objects/Props/PickUp.h"
+#include "Unloved/Objects/Spawns/HouseLocation.h"
 #include "Unloved/Objects/Spawns/SpawnPoint.h"
 #include "Unloved/Objects/Traversal/Ladder.h"
 #include "Unloved/Objects/Traversal/Staircase.h"
@@ -32,6 +36,7 @@ namespace Unloved::World {
         for (const DoorCreateInfo& createInfo : createInfoCollection.doors)                       AddDoor(createInfo, spawnOffset);
         for (const FenceCreateInfo& createInfo : createInfoCollection.fences)                     AddFence(createInfo, spawnOffset);
         for (const FireplaceCreateInfo& createInfo : createInfoCollection.fireplaces)             AddFireplace(createInfo, spawnOffset);
+        for (const GenericAnimatedObjectCreateInfo& createInfo : createInfoCollection.genericAnimatedObjects) AddGenericAnimatedObject(createInfo, spawnOffset);
         for (const GenericObjectCreateInfo& createInfo : createInfoCollection.genericObjects)     AddGenericObject(createInfo, spawnOffset);
         for (const LightCreateInfo& createInfo : createInfoCollection.lights)                     AddLight(createInfo, spawnOffset);
         for (const JettyCreateInfo& createInfo : createInfoCollection.jetties)                    AddJetty(createInfo, spawnOffset);
@@ -41,6 +46,8 @@ namespace Unloved::World {
         for (const PickUpCreateInfo& createInfo : createInfoCollection.pickUps)                   AddPickUp(createInfo, spawnOffset);
         for (const PictureFrameCreateInfo& createInfo : createInfoCollection.pictureFrames)       AddPictureFrame(createInfo, spawnOffset);
         for (const PowerPoleSetCreateInfo& createInfo : createInfoCollection.powerPoleSets)       AddPowerPoleSet(createInfo, spawnOffset);
+        for (const PlanarQuadObjectCreateInfo& createInfo : createInfoCollection.planarQuadObjects) AddPlanarQuadObject(createInfo, spawnOffset);
+        for (const PointPairCreateInfo& createInfo : createInfoCollection.pointPairObjects)         AddPointPairObject(createInfo, spawnOffset);
         for (const SharkCreateInfo& createInfo : createInfoCollection.sharks)                     AddShark(createInfo, spawnOffset);
         for (const SpawnPointCreateInfo& createInfo : createInfoCollection.spawnPointsCampaign)   AddSpawnPointCampaign(createInfo, spawnOffset);
         for (const SpawnPointCreateInfo& createInfo : createInfoCollection.spawnPointsDeathMatch) AddSpawnPointDeathMatch(createInfo, spawnOffset);
@@ -78,6 +85,7 @@ namespace Unloved::World {
         for (Door& object : GetDoors())                           AddObject(object, createInfoCollection.doors);
         for (Fence& object : GetFences())                         AddObject(object, createInfoCollection.fences);
         for (Fireplace& object : GetFireplaces())                 AddObject(object, createInfoCollection.fireplaces);
+        for (GenericAnimatedObject& object : GetGenericAnimatedObjects()) AddObject(object, createInfoCollection.genericAnimatedObjects);
         for (GenericObject& object : GetGenericObjects())         AddObject(object, createInfoCollection.genericObjects);
         for (Ladder& object : GetLadders())                       AddObject(object, createInfoCollection.ladders);
         for (Jetty& object : GetJetties())                        AddObject(object, createInfoCollection.jetties);
@@ -85,6 +93,8 @@ namespace Unloved::World {
         for (Piano& object : GetPianos())                         AddObject(object, createInfoCollection.pianos);
         for (PictureFrame& object : GetPictureFrames())           AddObject(object, createInfoCollection.pictureFrames);
         for (PowerPoleSet& object : GetPowerPoleSets())           AddObject(object, createInfoCollection.powerPoleSets);
+        for (PlanarQuadObject& object : GetPlanarQuadObjects()) createInfoCollection.planarQuadObjects.push_back(object.GetCreateInfo());
+        for (PointPairObject& object : GetPointPairObjects()) createInfoCollection.pointPairObjects.push_back(object.GetCreateInfo());
         for (Shark& object : GetSharks())                         AddObject(object, createInfoCollection.sharks);
         for (SpawnPoint& object : GetSpawnPointsCampaign())       AddObject(object, createInfoCollection.spawnPointsCampaign);
         for (SpawnPoint& object : GetSpawnPointsDeathMatch())     AddObject(object, createInfoCollection.spawnPointsDeathMatch);
@@ -99,5 +109,12 @@ namespace Unloved::World {
         for (WorldPlane& object : GetWorldPlanes())               AddWorldPlaneIfNotDoorChild(object, createInfoCollection.worldPlanes);
 
         return createInfoCollection;
+    }
+
+    std::vector<HouseLocationCreateInfo> GetHouseLocationCreateInfos() {
+        std::vector<HouseLocationCreateInfo> createInfos;
+        createInfos.reserve(GetHouseLocations().size());
+        for (HouseLocation& houseLocation : GetHouseLocations()) createInfos.push_back(houseLocation.GetCreateInfo());
+        return createInfos;
     }
 }

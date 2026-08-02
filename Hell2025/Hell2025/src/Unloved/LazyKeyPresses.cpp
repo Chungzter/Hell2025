@@ -22,12 +22,12 @@ void UpdateLazyKeypresses() {
     if (EditorSession::WantsKeyboardCapture()) return;
 
     if (Hell::Input::KeyPressed(HELL_KEY_GRAVE_ACCENT)) {
-        if (Editor::IsOpen()) EditorSession::Close();
+        if (Editor::IsOpen()) { Hell::Audio::PlayAudio(AUDIO_SELECT, 1.0f); EditorSession::Close(); }
         else Debug::ToggleMenuVisiblity();
     }
 
     // Function keys
-    if (Hell::Input::KeyPressed(HELL_KEY_F1)) World::NewRun();
+    if (Hell::Input::KeyPressed(HELL_KEY_F1)) Session::StartNewGame(GameMode::CAMPAIGN, "Shit");
     if (Hell::Input::KeyPressed(HELL_KEY_F4)) Editor::OpenHouseEditor();
     if (Hell::Input::KeyPressed(HELL_KEY_F6)) Editor::OpenMapHeightEditor();
     if (Hell::Input::KeyPressed(HELL_KEY_F5)) Editor::OpenMapObjectEditor();

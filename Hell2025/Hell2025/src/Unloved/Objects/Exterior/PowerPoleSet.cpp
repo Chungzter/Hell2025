@@ -7,6 +7,7 @@
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Render/RendererUtil.h"
 #include "Unloved/Objects/Exterior/Wire.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/World/World.h"
 
 #include <cmath>
@@ -35,9 +36,18 @@ PowerPoleSet::PowerPoleSet(uint64_t id, PowerPoleSetCreateInfo& createInfo, Spaw
 
 void PowerPoleSet::AddControlPoint(const glm::vec2& controlPoint2D) {
     SequencePoint sequencePoint;
-    sequencePoint.position = glm::vec3(controlPoint2D.x, 0.0f, controlPoint2D.y);
+    sequencePoint.position = Hell::Physics::GetHeightMapPositionAtXZ(controlPoint2D.x, controlPoint2D.y);
+    if (sequencePoint.position == glm::vec3(0.0f)) sequencePoint.position = glm::vec3(controlPoint2D.x, 0.0f, controlPoint2D.y);
     m_createInfo.sequencePoints.push_back(sequencePoint);
 
+    Init();
+}
+
+void PowerPoleSet::SetPosition(const glm::vec3& position) {
+    if (m_createInfo.sequencePoints.empty()) return;
+
+    const glm::vec3 offset = position - m_createInfo.sequencePoints.front().position;
+    for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) sequencePoint.position += offset;
     Init();
 }
 
@@ -48,6 +58,7 @@ void PowerPoleSet::UpdateSequencePoints(const std::vector<SequencePoint>& sequen
 
 void PowerPoleSet::Init() {
     CleanUp();
+    m_position = m_createInfo.sequencePoints.empty() ? glm::vec3(0.0f) : m_createInfo.sequencePoints.front().position;
 
     std::vector<MeshNodeCreateInfo> emptyMeshNodeCreateInfoSet;
 
@@ -56,12 +67,7 @@ void PowerPoleSet::Init() {
     m_meshNodes.Update(glm::mat4(1.0f));
 
     std::vector<glm::vec3> controlPoints3D;
-    for (SequencePoint& sequencePoint : m_createInfo.sequencePoints) {
-        glm::vec3 worldPosition = Hell::Physics::GetHeightMapPositionAtXZ(sequencePoint.position.x, sequencePoint.position.z);
-        if (worldPosition == glm::vec3(0.0f)) worldPosition = sequencePoint.position;
-        sequencePoint.position.y = worldPosition.y;
-        controlPoints3D.push_back(worldPosition);
-    }
+    for (const SequencePoint& sequencePoint : m_createInfo.sequencePoints) controlPoints3D.push_back(sequencePoint.position);
 
     float spacing = 7.0f;
     m_finalPositions = Hell::Curve::SampleBezierPath(controlPoints3D, spacing);
@@ -115,7 +121,7 @@ void PowerPoleSet::Init() {
             wireCreateInfo.sequencePoints.resize(2);
             wireCreateInfo.sequencePoints[0].position = begin;
             wireCreateInfo.sequencePoints[1].position = end;
-            wireCreateInfo.sequencePoints[1].value = 0.5f;
+            wireCreateInfo.sequencePoints[1].customFloat = 0.5f;
             wireCreateInfo.radius = 0.015f;
             wireCreateInfo.spacing = 2.0f;
             wireCreateInfo.parentObjectId = m_objectId;
@@ -156,6 +162,7 @@ void PowerPoleSet::CleanUp() {
     m_wirePositionsFrontD.clear();
     m_renderItems.clear();
     m_wireIds.clear();
+    WorldBVH::MarkStaticSceneBvhDirty();
 }
 
 const std::vector<RenderItem>& const PowerPoleSet::GetRenderItems() {

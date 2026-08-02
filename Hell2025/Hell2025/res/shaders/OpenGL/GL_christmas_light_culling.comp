@@ -58,7 +58,7 @@ void main() {
     uint totalThreads = TILE_SIZE * TILE_SIZE;
     for (uint i = gl_LocalInvocationIndex; i < u_christmasLightCount; i += totalThreads) {
         vec3 sphereOrigin = christmasLights[i].position.rgb;
-        float sphereRadius = 0.1;
+        float sphereRadius = rendererData.christmasLightRadius;
 
         if (SphereVsAABB(worldSpaceMin, worldSpaceMax, sphereOrigin, sphereRadius)) {
             uint slot = atomicAdd(localChristmasLightCount, 1);

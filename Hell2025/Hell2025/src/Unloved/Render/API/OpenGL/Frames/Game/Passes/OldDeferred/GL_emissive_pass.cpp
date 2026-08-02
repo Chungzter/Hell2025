@@ -1,5 +1,6 @@
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
+#include "Unloved/Render/RendererConstants.h"
 #include "Unloved/Viewport/ViewportManager.h"
 
 #include <array>
@@ -75,8 +76,9 @@ namespace OpenGL::Renderer {
                 DispatchEmissiveBloomFilter(bloomHandleA, mip, glm::ivec2(0), bloomExtents[mip], bloomHandleB, mip, bloomExtents[mip], glm::ivec2(0, 1), 1.0f);
             }
 
-            // Composite bloom straight into lighting
+            // Composite direct emissive and bloom straight into lighting
             OpenGL::BindShader("EmissiveBloomComposite");
+            OpenGL::BindSSBO(SSBO_IDX_RENDERER_DATA, "RendererData");
 
             OpenGL::BindImageTexture(0, lightingHandle, GL_READ_WRITE, GL_RGBA16F);
             OpenGL::BindTextureUnit(1, emissiveHandle);

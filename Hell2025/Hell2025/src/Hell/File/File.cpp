@@ -1,5 +1,6 @@
 #include "File.h"
 
+#include "Hell/Common/String.h"
 #include "Hell/Logging.h"
 
 #include <algorithm>
@@ -16,10 +17,8 @@ namespace Hell::File {
             if (std::filesystem::remove(path)) {
                 return true;
             }
-            else {
-                Logging::Error() << "File::Delete() failed to delete '" << path << "', file does not exist or could not be deleted\n";
-                return false;
-            }
+            Logging::Error() << "File::Delete() failed to delete '" << path << "', file does not exist or could not be deleted\n";
+            return false;
         }
         catch (const std::filesystem::filesystem_error& e) {
             Logging::Error() << "File::Delete() failed: " << e.what() << "\n";
@@ -52,6 +51,15 @@ namespace Hell::File {
     bool Exists(std::string_view path) {
         return std::filesystem::exists(std::filesystem::path(std::string(path)));
     }
+
+    bool Exists(const std::string& directory, const std::string& extension, const std::string& name) {
+        const std::string lowerName = Hell::String::ToLower(name);
+        for (const FileInfo& fileInfo : Hell::File::IterateDirectory(directory, { extension })) {
+            if (Hell::String::ToLower(fileInfo.name) == lowerName) return true;
+        }
+        return false;
+    }
+
 
     bool Rename(const std::string& oldPath, const std::string& newPath) {
         if (!Exists(oldPath)) {
@@ -91,12 +99,7 @@ namespace Hell::File {
         }
 
         const std::filesystem::path filesystemPath(path);
-        return {
-            filesystemPath.string(),
-            filesystemPath.stem().string(),
-            GetExtension(path),
-            filesystemPath.parent_path().string()
-        };
+        return { filesystemPath.string(), filesystemPath.stem().string(), GetExtension(path), filesystemPath.parent_path().string() };
     }
 
     std::vector<FileInfo> IterateDirectory(const std::string& directory, std::vector<std::string> extensions) {
@@ -106,12 +109,7 @@ namespace Hell::File {
         for (const auto& entry : std::filesystem::directory_iterator(directory)) {
             if (!std::filesystem::is_regular_file(entry)) continue;
 
-            FileInfo fileInfo = {
-                entry.path().string(),
-                entry.path().stem().string(),
-                GetExtension(entry.path().string()),
-                directory
-            };
+            FileInfo fileInfo = { entry.path().string(), entry.path().stem().string(), GetExtension(entry.path().string()), directory };
 
             if (extensions.empty() || std::find(extensions.begin(), extensions.end(), fileInfo.ext) != extensions.end()) {
                 fileInfoList.push_back(fileInfo);

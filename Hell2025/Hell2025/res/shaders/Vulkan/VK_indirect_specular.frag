@@ -334,7 +334,7 @@ vec3 GetIndirectSpecularSample(Surface surface, vec3 viewDirToCamera, vec3 camer
         Surface reflectedSurface = SurfaceFromRayHit(rayQueryContext, reflectedHit, 0.0, 2.0);
 
         if (useDDGIReflections) {
-            vec3 probeIrradiance = SampleDDGIReflectionIrradiance(reflectedSurface.worldPos, reflectedSurface.normal, surface.worldPos) * IRRADIANCE_DAMPENING;
+            vec3 probeIrradiance = SampleDDGIReflectionIrradiance(reflectedSurface.worldPos, reflectedSurface.normal, surface.worldPos) * pc.data.frame.rendererDataBuffer.rendererData.irradianceDampening;
             vec3 diffuseAlbedo = reflectedSurface.linearBaseColor * (1.0 - reflectedSurface.metallic);
             incidentRadiance += probeIrradiance * diffuseAlbedo;
         }

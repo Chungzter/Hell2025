@@ -3,6 +3,7 @@
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Debug/DebugDraw.h"
 #include "Hell/Physics/Physics.h"
+#include "Unloved/Objects/House/WorldPlane.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
 #include "Legacy/World/LegacyWorld.h"
@@ -10,6 +11,7 @@
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
 #include "Unloved/Systems/NavMesh/NavMesh.h"
+#include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/World/World.h"
 
 #include "Hell/Logging.h"
@@ -78,8 +80,33 @@ void Door::UpdateFloor() {
     createInfo.parentDoorId = GetObjectId();
     createInfo.type = WorldPlaneType::FLOOR;
 
-    createInfo.textureScale = 0.4f;
-    createInfo.materialName = "FloorBoards";
+    createInfo.textureScale = m_createInfo.floorPlaneTextureScale;
+    createInfo.textureOffsetU = m_createInfo.floorPlaneTextureOffsetU;
+    createInfo.textureOffsetV = m_createInfo.floorPlaneTextureOffsetV;
+    createInfo.materialName = m_createInfo.floorPlaneMaterialName;
+    createInfo.rotateTexture90 = m_createInfo.floorPlaneRotateTexture90;
+    createInfo.roughnessFactor = m_createInfo.floorPlaneRoughnessFactor;
+    createInfo.metallicFactor = m_createInfo.floorPlaneMetallicFactor;
+
+    for (WorldPlane& worldPlane : World::GetWorldPlanes()) {
+        if (worldPlane.GetParentDoorId() != GetObjectId()) continue;
+
+        WorldPlaneCreateInfo& floorCreateInfo = worldPlane.GetCreateInfo();
+        floorCreateInfo.p0 = createInfo.p0;
+        floorCreateInfo.p1 = createInfo.p1;
+        floorCreateInfo.p2 = createInfo.p2;
+        floorCreateInfo.p3 = createInfo.p3;
+        floorCreateInfo.textureScale = createInfo.textureScale;
+        floorCreateInfo.textureOffsetU = createInfo.textureOffsetU;
+        floorCreateInfo.textureOffsetV = createInfo.textureOffsetV;
+        floorCreateInfo.rotateTexture90 = createInfo.rotateTexture90;
+        floorCreateInfo.roughnessFactor = createInfo.roughnessFactor;
+        floorCreateInfo.metallicFactor = createInfo.metallicFactor;
+        worldPlane.SetMaterial(createInfo.materialName);
+        worldPlane.UpdateVertexDataFromCreateInfo();
+        WorldBVH::MarkStaticSceneBvhDirty();
+        return;
+    }
 
     Unloved::World::AddWorldPlane(createInfo, SpawnOffset());
 }
@@ -260,6 +287,7 @@ void Door::SetPosition(const glm::vec3& position) {
     m_createInfo.position = position;
     m_position = position;
     UpdateClippingVolume();
+    UpdateFloor();
     HouseBuilder::MarkDirty();
 }
 
@@ -271,6 +299,8 @@ void Door::SetRotationY(float value) {
     m_createInfo.rotation.y = value;
     m_rotation.y = value;
     UpdateClippingVolume();
+    UpdateWorldForward();
+    UpdateFloor();
     HouseBuilder::MarkDirty();
 }
 
@@ -322,6 +352,41 @@ void Door::SetOpenAtStartState(bool value) {
 void Door::SetMaxOpenValue(float value) {
     m_createInfo.maxOpenValue = value;
     Reset();
+}
+
+void Door::SetFloorPlaneMaterial(const std::string& materialName) {
+    m_createInfo.floorPlaneMaterialName = materialName;
+    UpdateFloor();
+}
+
+void Door::SetFloorPlaneTextureScale(float value) {
+    m_createInfo.floorPlaneTextureScale = value;
+    UpdateFloor();
+}
+
+void Door::SetFloorPlaneTextureOffsetU(float value) {
+    m_createInfo.floorPlaneTextureOffsetU = value;
+    UpdateFloor();
+}
+
+void Door::SetFloorPlaneTextureOffsetV(float value) {
+    m_createInfo.floorPlaneTextureOffsetV = value;
+    UpdateFloor();
+}
+
+void Door::SetFloorPlaneRotateTexture90(bool value) {
+    m_createInfo.floorPlaneRotateTexture90 = value;
+    UpdateFloor();
+}
+
+void Door::SetFloorPlaneRoughnessFactor(float value) {
+    m_createInfo.floorPlaneRoughnessFactor = glm::clamp(value, 0.0f, 10.0f);
+    UpdateFloor();
+}
+
+void Door::SetFloorPlaneMetallicFactor(float value) {
+    m_createInfo.floorPlaneMetallicFactor = glm::clamp(value, 0.0f, 10.0f);
+    UpdateFloor();
 }
 
 void Door::Reset() {

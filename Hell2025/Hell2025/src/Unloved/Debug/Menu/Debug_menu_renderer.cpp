@@ -25,6 +25,10 @@ namespace Debug::Menu::Renderer {
         STATIC_SHADOW_MAP_CACHING,
         VULKAN_DIRECT_POINT_SHADOW_MODE,
         TAA_JITTER_SCALE,
+        EMISSIVE_STRENGTH,
+        CHRISTMAS_LIGHT_RADIUS,
+        CHRISTMAS_LIGHT_STRENGTH,
+        IRRADIANCE_DAMPENING,
         INDIRECT_SPECULAR_RAYS_PER_QUAD,
         INDIRECT_SPECULAR_FACTOR,
         INDIRECT_SPECULAR_ROUGHNESS_DAMPENING,
@@ -87,6 +91,10 @@ namespace Debug::Menu::Renderer {
         AddEnum(static_cast<uint32_t>(AdditionalSetting::VULKAN_DIRECT_POINT_SHADOW_MODE), "Vulkan Direct Point Shadows", static_cast<int32_t>(settings.directPointShadowMode), { "Shadow Maps", "Ray Queries" });
         AddLineBreak();
         AddInt(static_cast<uint32_t>(AdditionalSetting::TAA_JITTER_SCALE), "TAA Jitter Scale", settings.taaJitterScale, 1, 3, 1);
+        AddFloat(static_cast<uint32_t>(AdditionalSetting::EMISSIVE_STRENGTH), "Emissive Strength", settings.emissiveStrength, 0.0f, 10.0f, 0.1f, 2);
+        AddFloat(static_cast<uint32_t>(AdditionalSetting::CHRISTMAS_LIGHT_RADIUS), "Christmas Light Radius", settings.christmasLightRadius, 0.0f, 5.0f, 0.05f, 2);
+        AddFloat(static_cast<uint32_t>(AdditionalSetting::CHRISTMAS_LIGHT_STRENGTH), "Christmas Light Strength", settings.christmasLightStrength, 0.0f, 5.0f, 0.01f, 2);
+        AddFloat(static_cast<uint32_t>(AdditionalSetting::IRRADIANCE_DAMPENING), "Irradiance Dampening", settings.irradianceDampening, 0.0f, 1.0f, 0.0025f, 4);
         AddEnum(static_cast<uint32_t>(AdditionalSetting::INDIRECT_SPECULAR_RAYS_PER_QUAD), "Indirect Specular Rays Per Quad", static_cast<int32_t>(settings.indirectSpecularRaysPerQuad), { "1", "2", "4" });
         AddFloat(static_cast<uint32_t>(AdditionalSetting::INDIRECT_SPECULAR_FACTOR), "Indirect Specular Factor", settings.indirectSpecularFactor, 0.0f, 5.0f, 0.1f, 2);
         AddFloat(static_cast<uint32_t>(AdditionalSetting::INDIRECT_SPECULAR_ROUGHNESS_DAMPENING), "Indirect Specular Roughness Dampening", settings.indirectSpecularRoughnessDampening, 0.0f, 1.0f, 0.1f, 2);
@@ -132,6 +140,10 @@ namespace Debug::Menu::Renderer {
             case AdditionalSetting::STATIC_SHADOW_MAP_CACHING:             settings.enableStaticShadowMapCaching = value.boolValue;                                      break;
             case AdditionalSetting::VULKAN_DIRECT_POINT_SHADOW_MODE:       settings.directPointShadowMode = static_cast<DirectPointShadowMode>(value.intValue);           break;
             case AdditionalSetting::TAA_JITTER_SCALE:                      settings.taaJitterScale = value.intValue;                                                        break;
+            case AdditionalSetting::EMISSIVE_STRENGTH:                     settings.emissiveStrength = value.floatValue;                                                   break;
+            case AdditionalSetting::CHRISTMAS_LIGHT_RADIUS:                settings.christmasLightRadius = value.floatValue;                                               break;
+            case AdditionalSetting::CHRISTMAS_LIGHT_STRENGTH:              settings.christmasLightStrength = value.floatValue;                                             break;
+            case AdditionalSetting::IRRADIANCE_DAMPENING:                  settings.irradianceDampening = value.floatValue;                                                break;
             case AdditionalSetting::INDIRECT_SPECULAR_RAYS_PER_QUAD:       settings.indirectSpecularRaysPerQuad = static_cast<IndirectSpecularRaysPerQuad>(value.intValue); break;
             case AdditionalSetting::INDIRECT_SPECULAR_FACTOR:              settings.indirectSpecularFactor = value.floatValue;                                              break;
             case AdditionalSetting::INDIRECT_SPECULAR_ROUGHNESS_DAMPENING: settings.indirectSpecularRoughnessDampening = value.floatValue;                                  break;

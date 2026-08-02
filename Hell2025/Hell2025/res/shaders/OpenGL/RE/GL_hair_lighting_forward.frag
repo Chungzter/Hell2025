@@ -175,8 +175,8 @@ void main() {
 
     vec3 viewPos = viewportData[v_viewportIndex].viewPos.xyz;
 
-    float roughness = rma.r;
-    float metallic = 1.0;
+    float roughness = clamp(rma.r * renderItem.roughnessFactor, 0.0, 1.0);
+    float metallic = clamp(renderItem.metallicFactor, 0.0, 1.0);
     float ao = rma.b;
     vec3 linearBaseColor = pow(baseColor.rgb, vec3(2.2));
 
@@ -205,7 +205,7 @@ void main() {
     const float kRoughnessGamma = 1.0;
     const float kRoughnessWeight = 1.0;
 
-    float ue4Roughness = pow(abs(rma.r), kRoughnessGamma) * kRoughnessWeight * kHairRoughnessMapStrength;
+    float ue4Roughness = pow(abs(roughness), kRoughnessGamma) * kRoughnessWeight * kHairRoughnessMapStrength;
 
     const float u_specularAlpha1Min = 0.055;
     const float u_specularAlpha2Min = 0.070;

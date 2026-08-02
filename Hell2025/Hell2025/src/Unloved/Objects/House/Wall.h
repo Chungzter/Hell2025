@@ -33,24 +33,34 @@ struct Wall {
     void FlipFaces();
     bool AddPointToEnd(glm::vec3 point, bool supressWarning = true);
     bool UpdatePointPosition(int pointIndex, glm::vec3 position, bool supressWarning = true);
+    void UpdateSequencePoints(const std::vector<SequencePoint>& sequencePoints);
+    void SetPointHeight(int pointIndex, float height);
+    void SetPointCustomBool(int pointIndex, bool value);
 
     void SetCeilingTrimType(TrimType trimType);
     void SetFloorTrimType(TrimType trimType);
-    void SetHeight(float value);
     void SetTextureScale(float value);
     void SetTextureOffsetU(float value);
     void SetTextureOffsetV(float value);
+    void SetRoughnessFactor(float value);
+    void SetMetallicFactor(float value);
     void SetMaterial(const std::string& materialName);
+    void SetWeatherBoardMaterial(const std::string& materialName, uint32_t boardCount, uint32_t startIndex, uint32_t endIndex, float textureOffsetU, float textureOffsetV);
+    void SetWeatherBoardStopMaterial(const std::string& materialName);
     void SetWallType(WallType wallType);
+    void SetWeatherBoardTextureBoardCount(uint32_t value);
+    void SetWeatherBoardStartIndex(uint32_t value);
+    void SetWeatherBoardEndIndex(uint32_t value);
 
     void RecreateWeatherBoardMesh();
     void CleanUpWeatherBoardMesh();
 
     const glm::vec3& GetPointByIndex(int pointIndex); 
+    float GetPointHeightByIndex(int pointIndex) const;
 
     bool IsWeatherBoards()                                                  { return m_createInfo.wallType == WallType::WEATHER_BOARDS; }
     const WallType GetWallType() const                                      { return m_createInfo.wallType; }
-    const size_t GetPointCount() const                                      { return m_createInfo.points.size(); }
+    const size_t GetPointCount() const                                      { return m_createInfo.sequencePoints.size(); }
     const glm::vec3& GetWorldSpaceCenter() const                            { return m_worldSpaceCenter; }
     Material* GetMaterial();
     int32_t GetMaterialIndex() const                                        { return m_materialIndex; }

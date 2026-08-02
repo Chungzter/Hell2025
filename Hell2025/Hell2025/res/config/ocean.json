@@ -1,0 +1,122 @@
+{
+    "bands": [
+        {
+            "amplitude": 0.09873434156179428,
+            "domainSize": 13.123000144958496,
+            "maximumWavelength": 13.123000144958496,
+            "maximumWavelengthFade": 0.25,
+            "minimumWavelength": 1.0,
+            "minimumWavelengthFade": 0.5,
+            "opposingWavesDamping": 1.0,
+            "randomSeed": 42,
+            "smallWavesDamping": 1.4232489631282874e-09,
+            "windAlignmentExponent": 2.0,
+            "windDirection": [
+                0.9138115644454956,
+                -0.40613847970962524
+            ]
+        },
+        {
+            "amplitude": 2.471923828125,
+            "domainSize": 8.0,
+            "maximumWavelength": 2.0,
+            "maximumWavelengthFade": 0.5,
+            "minimumWavelength": 0.03125,
+            "minimumWavelengthFade": 0.015625,
+            "opposingWavesDamping": 1.0,
+            "randomSeed": 1337,
+            "smallWavesDamping": 2.844444402239077e-10,
+            "windAlignmentExponent": 2.0,
+            "windDirection": [
+                0.9950371384620667,
+                0.09950371831655502
+            ]
+        }
+    ],
+    "composite": {
+        "surface": {
+            "distortionSpeed": 0.05000000074505806,
+            "distortionStrength": 0.004000000189989805,
+            "distortionTiling": 0.15000000596046448,
+            "planeHeightOffset": 100.0,
+            "refractionTintStrength": 0.20000000298023224
+        },
+        "underwater": {
+            "darknessCurve": 0.949999988079071,
+            "depthTintOriginalWeight": 0.0,
+            "depthTintStrength": 1.0000004768371582,
+            "distortionSpeed": 0.07500000298023224,
+            "distortionStrength": 0.002400000113993883,
+            "geometryTintStrength": 0.25,
+            "geometryWaterColorSquaredStrength": 5.75,
+            "geometryWaterColorStrength": 0.25,
+            "openWaterBrightness": 0.6500000357627869,
+            "openWaterTintStrength": 0.7300002574920654,
+            "rayFogColor": [
+                0.4000000059604645,
+                0.800000011920929,
+                0.6000000238418579
+            ],
+            "rayFogStrength": 0.0012499999720603228
+        },
+        "underwaterTint": [
+            0.5274999737739563,
+            1.0575000047683716,
+            0.7975000143051147
+        ]
+    },
+    "displacementScale": 1.0,
+    "displayMode": 0,
+    "gravity": 9.800000190734863,
+    "heightScale": 0.5,
+    "simulate": true,
+    "simulationTimeOffset": 50.0,
+    "simulationTimeScale": 0.6000000238418579,
+    "surface": {
+        "albedo": [
+            0.03087499924004078,
+            0.06412500143051147,
+            0.05937499925494194
+        ],
+        "diffuseStrength": 0.0,
+        "fogColor": [
+            0.0032599999103695154,
+            0.0021699999924749136,
+            0.0007300000288523734
+        ],
+        "fogEndDistance": 550.0,
+        "fogExponent": 0.5,
+        "fogStartDistance": 0.0,
+        "fogStrength": 0.10000000149011612,
+        "normalConvergeEndDistance": 250.0,
+        "normalConvergeExponent": 0.949999988079071,
+        "normalConvergeMaxFactor": 0.8999999761581421,
+        "normalConvergeStartDistance": 0.0,
+        "normalScale": 4.0,
+        "normalSoftening": 0.5,
+        "reflectance": 0.9999993443489075,
+        "reflectionGamma": 2.200000047683716,
+        "rippleSecondLayerScale": 1.5,
+        "rippleStrength": 0.02500000037252903,
+        "rippleTiling": 0.32499998807907104,
+        "rippleVelocity0": [
+            0.15000000596046448,
+            0.10000000149011612
+        ],
+        "rippleVelocity1": [
+            -0.11999999731779099,
+            0.07999999821186066
+        ],
+        "roughness": 0.029999999329447746,
+        "specularAntiAliasing": true,
+        "sssFalloff": 3.0,
+        "sssHeightRange": 0.050999995321035385,
+        "sssIntensity": 0.20000000298023224,
+        "sssRadiusMaximum": 0.5,
+        "sssRadiusMinimum": 0.39000004529953003,
+        "sssSaturation": 2.0,
+        "sssStrength": 0.30000001192092896,
+        "underwaterSssStrength": 3.0
+    },
+    "windSpeed": 75.0
+}

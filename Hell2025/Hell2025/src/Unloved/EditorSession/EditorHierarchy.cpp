@@ -1,11 +1,10 @@
 #include "EditorHierarchy.h"
 
-#include "EditorCoordinates.h"
-#include "EditorLayout.h"
-#include "EditorScrollBar.h"
-#include "EditorSelection.h"
-#include "EditorStyle.h"
-#include "EditorUI.h"
+#include "Unloved/EditorSession/UI/EditorLayout.h"
+#include "Unloved/EditorSession/Interaction/EditorSelection.h"
+#include "EditorSession.h"
+#include "Unloved/EditorSession/UI/EditorStyle.h"
+#include "Unloved/EditorSession/UI/EditorUI.h"
 
 #include "Hell/Backend/BackEnd.h"
 #include "Hell/Common/Constants.h"
@@ -16,6 +15,8 @@
 #include "Unloved/ObjectId.h"
 #include "Unloved/Objects/House/Wall.h"
 #include "Unloved/Objects/House/WorldPlane.h"
+#include "Unloved/Objects/House/PlanarQuadObject.h"
+#include "Unloved/Objects/House/PointPairObject.h"
 #include "Unloved/Objects/Props/Christmas/ChristmasLights.h"
 #include "Unloved/World/World.h"
 
@@ -27,26 +28,17 @@
 
 namespace Unloved::EditorSession::Hierarchy {
     namespace {
-        constexpr int32_t ROW_HEIGHT = 24;
         constexpr int32_t ROWS_PER_SCROLL = 3;
-        constexpr int32_t SCROLL_BAR_WIDTH = 10;
-        constexpr int32_t SCROLL_BAR_RIGHT_PADDING = 7;
-        constexpr int32_t LEFT_PADDING = 8;
-        constexpr int32_t INDENT_WIDTH = 14;
-        constexpr int32_t ARROW_SIZE = 8;
-        constexpr int32_t TEXT_GAP = 6;
-
-        const glm::vec4 TEXT_COLOR = glm::vec4(0.545098f, 0.541176f, 0.568627f, 1.0f);
-        const glm::vec4 HOVER_COLOR = glm::vec4(0.141176f, 0.125490f, 0.168627f, 1.0f);
-        const glm::vec4 SELECTED_COLOR = glm::vec4(0.231373f, 0.196078f, 0.286275f, 1.0f);
 
         struct HierarchyNode {
             std::string label;
             uint64_t itemId = 0;
             bool selectable = false;
             bool expanded = false;
+            bool collapsible = true;
+            bool workspace = false;
             std::vector<HierarchyNode> children;
-            int32_t christmasLightPointIndex = -1;
+            int32_t pointIndex = -1;
             int32_t wallSegmentIndex = -1;
         };
 
@@ -61,6 +53,34 @@ namespace Unloved::EditorSession::Hierarchy {
         EditorScrollBar g_scrollBar;
         bool g_wantsMouseCapture = false;
         bool g_expandHierachyOnLoad = false;
+
+        const char* GetWorkspaceLabel() {
+            return Unloved::EditorSession::GetMode() == EditorSessionMode::MAP ? "Map Settings" : "House Settings";
+        }
+
+        void ResetRoot() {
+            g_root = {};
+            g_root.expanded = true;
+            g_root.collapsible = false;
+            if (!Unloved::EditorSession::HasMode()) return;
+
+            g_root.children.reserve(2);
+
+            HierarchyNode& workspaceNode = g_root.children.emplace_back();
+            workspaceNode.label = GetWorkspaceLabel();
+            workspaceNode.selectable = true;
+            workspaceNode.collapsible = false;
+            workspaceNode.workspace = true;
+
+            HierarchyNode& sceneNode = g_root.children.emplace_back();
+            sceneNode.label = "Scene";
+            sceneNode.expanded = true;
+            sceneNode.children.reserve(25);
+        }
+
+        HierarchyNode& GetSceneNode() {
+            return g_root.children.back();
+        }
 
         HierarchyNode& AddObjectNode(HierarchyNode& group, uint64_t objectId) {
             HierarchyNode& node = group.children.emplace_back();
@@ -84,7 +104,60 @@ namespace Unloved::EditorSession::Hierarchy {
                 AddObjectNode(group, objectId);
             }
 
-            g_root.children.push_back(std::move(group));
+            GetSceneNode().children.push_back(std::move(group));
+        }
+
+        void AddSpawnPointGroup() {
+            const std::vector<uint64_t>& campaignIds = World::GetSpawnPointsCampaign().ids();
+            const std::vector<uint64_t>& deathmatchIds = World::GetSpawnPointsDeathMatch().ids();
+            if (campaignIds.empty() && deathmatchIds.empty()) return;
+
+            HierarchyNode group;
+            group.label = "Spawn Points";
+            group.expanded = g_expandHierachyOnLoad;
+            group.children.reserve(2);
+
+            if (!campaignIds.empty()) {
+                HierarchyNode& campaign = group.children.emplace_back();
+                campaign.label = "Campaign";
+                campaign.expanded = g_expandHierachyOnLoad;
+                campaign.children.reserve(campaignIds.size());
+                for (uint64_t objectId : campaignIds) {
+                    AddObjectNode(campaign, objectId);
+                }
+            }
+
+            if (!deathmatchIds.empty()) {
+                HierarchyNode& deathmatch = group.children.emplace_back();
+                deathmatch.label = "Deathmatch";
+                deathmatch.expanded = g_expandHierachyOnLoad;
+                deathmatch.children.reserve(deathmatchIds.size());
+                for (uint64_t objectId : deathmatchIds) {
+                    AddObjectNode(deathmatch, objectId);
+                }
+            }
+
+            GetSceneNode().children.push_back(std::move(group));
+        }
+
+        bool RemoveObjectNode(std::vector<HierarchyNode>& nodes, uint64_t objectId) {
+            for (auto nodeIt = nodes.begin(); nodeIt != nodes.end(); nodeIt++) {
+                HierarchyNode& node = *nodeIt;
+                if (node.itemId == objectId && node.pointIndex < 0 && node.wallSegmentIndex < 0) {
+                    nodes.erase(nodeIt);
+                    return true;
+                }
+
+                if (!RemoveObjectNode(node.children, objectId)) continue;
+
+                if (node.children.empty() && !node.selectable) {
+                    nodes.erase(nodeIt);
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         void AddWorldPlaneGroup(const char* label, WorldPlaneType type) {
@@ -95,10 +168,61 @@ namespace Unloved::EditorSession::Hierarchy {
 
             for (uint64_t objectId : World::GetWorldPlanes().ids()) {
                 WorldPlane* worldPlane = World::GetWorldPlaneByObjectId(objectId);
-                if (worldPlane && worldPlane->GetType() == type) AddObjectNode(group, objectId);
+                if (worldPlane && worldPlane->GetParentDoorId() == 0 && worldPlane->GetType() == type) {
+                    AddObjectNode(group, objectId);
+                }
             }
 
-            if (!group.children.empty()) g_root.children.push_back(std::move(group));
+            if (!group.children.empty()) {
+                GetSceneNode().children.push_back(std::move(group));
+            }
+        }
+
+        void AddPlanarQuadObjectGroup(const char* label, PlanarQuadObjectType type) {
+            HierarchyNode group;
+            group.label = label;
+            group.expanded = g_expandHierachyOnLoad;
+            group.children.reserve(World::GetPlanarQuadObjects().size());
+
+            for (uint64_t objectId : World::GetPlanarQuadObjects().ids()) {
+                PlanarQuadObject* object = World::GetPlanarQuadObjectByObjectId(objectId);
+                if (object && object->GetType() == type) {
+                    AddObjectNode(group, objectId);
+                }
+            }
+
+            if (!group.children.empty()) {
+                GetSceneNode().children.push_back(std::move(group));
+            }
+        }
+
+        void AddPointPairObjectGroup(const char* label, PointPairObjectType type) {
+            HierarchyNode group;
+            group.label = label;
+            group.expanded = g_expandHierachyOnLoad;
+            group.children.reserve(World::GetPointPairObjects().size());
+
+            for (uint64_t objectId : World::GetPointPairObjects().ids()) {
+                PointPairObject* object = World::GetPointPairObjectByObjectId(objectId);
+                if (object && object->GetType() == type) {
+                    AddObjectNode(group, objectId);
+                }
+            }
+
+            if (!group.children.empty()) {
+                GetSceneNode().children.push_back(std::move(group));
+            }
+        }
+
+        void AddWallSegments(HierarchyNode& wallNode, Wall& wall) {
+            wallNode.children.reserve(wall.GetWallSegments().size());
+            for (size_t i = 0; i < wall.GetWallSegments().size(); i++) {
+                HierarchyNode& segmentNode = wallNode.children.emplace_back();
+                segmentNode.label = "Wall Segment " + std::to_string(i + 1);
+                segmentNode.itemId = wall.GetObjectId();
+                segmentNode.selectable = true;
+                segmentNode.wallSegmentIndex = static_cast<int32_t>(i);
+            }
         }
 
         void AddWallGroup() {
@@ -116,18 +240,12 @@ namespace Unloved::EditorSession::Hierarchy {
 
                 HierarchyNode& wallNode = AddObjectNode(group, wallId);
                 wallNode.expanded = g_expandHierachyOnLoad;
-                wallNode.children.reserve(wall->GetWallSegments().size());
-
-                for (size_t i = 0; i < wall->GetWallSegments().size(); i++) {
-                    HierarchyNode& segmentNode = wallNode.children.emplace_back();
-                    segmentNode.label = "Wall Segment " + std::to_string(i + 1);
-                    segmentNode.itemId = wallId;
-                    segmentNode.selectable = true;
-                    segmentNode.wallSegmentIndex = static_cast<int32_t>(i);
-                }
+                AddWallSegments(wallNode, *wall);
             }
 
-            if (!group.children.empty()) g_root.children.push_back(std::move(group));
+            if (!group.children.empty()) {
+                GetSceneNode().children.push_back(std::move(group));
+            }
         }
 
         void AddChristmasLightPoints(HierarchyNode& christmasLightsNode, const ChristmasLightSet& christmasLights) {
@@ -139,7 +257,7 @@ namespace Unloved::EditorSession::Hierarchy {
                 pointNode.label = "Point " + std::to_string(i + 1);
                 pointNode.itemId = christmasLights.GetObjectId();
                 pointNode.selectable = true;
-                pointNode.christmasLightPointIndex = static_cast<int32_t>(i);
+                pointNode.pointIndex = static_cast<int32_t>(i);
             }
         }
 
@@ -161,11 +279,13 @@ namespace Unloved::EditorSession::Hierarchy {
                 AddChristmasLightPoints(christmasLightsNode, *christmasLights);
             }
 
-            if (!group.children.empty()) g_root.children.push_back(std::move(group));
+            if (!group.children.empty()) {
+                GetSceneNode().children.push_back(std::move(group));
+            }
         }
 
         int32_t GetVisibleRowCapacity() {
-            return std::max(0, Layout::GetHierarchyContentRect().height / ROW_HEIGHT);
+            return std::max(0, Layout::GetHierarchyContentRect().height / GetStyle().hierarchy.rowHeight);
         }
 
         void GatherVisibleRows(HierarchyNode& node, uint32_t depth) {
@@ -179,27 +299,32 @@ namespace Unloved::EditorSession::Hierarchy {
 
         void RefreshVisibleRows() {
             g_visibleRows.clear();
-            GatherVisibleRows(g_root, 0);
+            for (HierarchyNode& node : g_root.children) {
+                GatherVisibleRows(node, 0);
+            }
 
             const int32_t maximumFirstRow = std::max(0, static_cast<int32_t>(g_visibleRows.size()) - GetVisibleRowCapacity());
             g_scrollBar.value = std::clamp(g_scrollBar.value, 0, maximumFirstRow);
         }
 
         EditorRect GetScrollBarRect() {
+            const EditorHierarchyStyle& style = GetStyle().hierarchy;
             const EditorRect contentRect = Layout::GetHierarchyContentRect();
-            return { contentRect.Right() - SCROLL_BAR_RIGHT_PADDING - SCROLL_BAR_WIDTH, contentRect.y, SCROLL_BAR_WIDTH, contentRect.height };
+            return { contentRect.Right() - style.scrollBarRightPadding - style.scrollBarWidth, contentRect.y, style.scrollBarWidth, contentRect.height };
         }
 
         EditorRect GetRowRect(size_t rowIndex) {
+            const EditorHierarchyStyle& style = GetStyle().hierarchy;
             const EditorRect contentRect = Layout::GetHierarchyContentRect();
             const int32_t visibleIndex = static_cast<int32_t>(rowIndex) - g_scrollBar.value;
-            const int32_t scrollBarWidth = g_scrollBar.visible ? SCROLL_BAR_WIDTH + SCROLL_BAR_RIGHT_PADDING : 0;
-            return { contentRect.x + 1, contentRect.y + visibleIndex * ROW_HEIGHT, std::max(0, contentRect.width - scrollBarWidth - 2), ROW_HEIGHT };
+            const int32_t scrollBarWidth = g_scrollBar.visible ? style.scrollBarWidth + style.scrollBarRightPadding : 0;
+            return { contentRect.x + 1, contentRect.y + visibleIndex * style.rowHeight, std::max(0, contentRect.width - scrollBarWidth - 2), style.rowHeight };
         }
 
         EditorRect GetArrowRect(const EditorRect& rowRect, uint32_t depth) {
-            const int32_t x = rowRect.x + LEFT_PADDING + static_cast<int32_t>(depth) * INDENT_WIDTH;
-            return { x, rowRect.y + (ROW_HEIGHT - ARROW_SIZE) / 2, ARROW_SIZE, ARROW_SIZE };
+            const EditorHierarchyStyle& style = GetStyle().hierarchy;
+            const int32_t x = rowRect.x + style.leftPadding + static_cast<int32_t>(depth) * style.indentWidth;
+            return { x, rowRect.y + (style.rowHeight - style.arrowSize) / 2, style.arrowSize, style.arrowSize };
         }
 
         int32_t FindHoveredRow(const glm::ivec2& mousePosition) {
@@ -223,24 +348,33 @@ namespace Unloved::EditorSession::Hierarchy {
 
             VisibleRow& row = g_visibleRows[hoveredRow];
             HierarchyNode& node = *row.node;
-            const bool clickedArrow = !node.children.empty() && GetArrowRect(GetRowRect(hoveredRow), row.depth).Contains(mousePosition);
+            const bool clickedArrow = node.collapsible && !node.children.empty() && GetArrowRect(GetRowRect(hoveredRow), row.depth).Contains(mousePosition);
 
-            // Groups toggle from the whole row but selectable bones keep the row for selection
-            if (clickedArrow || (!node.selectable && !node.children.empty())) {
+            // Groups toggle from the whole row; selectable nodes keep the row for selection
+            if (clickedArrow || (!node.selectable && node.collapsible && !node.children.empty())) {
                 node.expanded = !node.expanded;
                 RefreshVisibleRows();
                 RefreshHover(mousePosition);
                 return;
             }
 
-            if (node.christmasLightPointIndex >= 0) Selection::SelectChristmasLightPoint(node.itemId, node.christmasLightPointIndex);
-            else if (node.wallSegmentIndex >= 0) Selection::SelectWallSegment(node.itemId, node.wallSegmentIndex);
-            else if (node.selectable) Selection::SelectObject(node.itemId);
+            if (node.pointIndex >= 0) {
+                Selection::SelectPoint(node.itemId, node.pointIndex);
+            }
+            else if (node.wallSegmentIndex >= 0) {
+                Selection::SelectWallSegment(node.itemId, node.wallSegmentIndex);
+            }
+            else if (node.workspace) {
+                Selection::SelectWorkspace();
+            }
+            else if (node.selectable) {
+                Selection::SelectObject(node.itemId);
+            }
         }
     }
 
     void Init() {
-        g_root = { "Scene", 0, false, true, {} };
+        ResetRoot();
         g_scrollBar = {};
         g_hoveredNode = nullptr;
         g_wantsMouseCapture = false;
@@ -248,19 +382,30 @@ namespace Unloved::EditorSession::Hierarchy {
     }
 
     void Refresh() {
-        g_root = { "Scene", 0, false, true, {} };
-        g_root.children.reserve(23);
+        ResetRoot();
+        g_scrollBar.value = 0;
+        g_hoveredNode = nullptr;
+
+        if (!Unloved::EditorSession::HasMode()) {
+            RefreshVisibleRows();
+            return;
+        }
 
         AddWorldPlaneGroup("Ceilings", WorldPlaneType::CEILING);
         AddWorldGroup("Christmas Trees", World::GetChristmasTrees().ids());
         AddChristmasLightGroup();
+        AddPlanarQuadObjectGroup("Decking Boards", PlanarQuadObjectType::DECKING_BOARDS);
         AddWorldGroup("DDGI Volumes", World::GetDDGIVolumes().ids());
         AddWorldGroup("Dobermann", World::GetDobermanns().ids());
+        AddPointPairObjectGroup("Down Pipes", PointPairObjectType::DOWN_PIPE);
         AddWorldGroup("Doors", World::GetDoors().ids());
         AddWorldGroup("Fences", World::GetFences().ids());
         AddWorldGroup("Fireplaces", World::GetFireplaces().ids());
         AddWorldPlaneGroup("Floors", WorldPlaneType::FLOOR);
+        AddWorldGroup("Generic Animated Objects", World::GetGenericAnimatedObjects().ids());
         AddWorldGroup("Generic Objects", World::GetGenericObjects().ids());
+        AddPlanarQuadObjectGroup("Gutters", PlanarQuadObjectType::GUTTER);
+        AddWorldGroup("House Locations", World::GetHouseLocations().ids());
         AddWorldGroup("Jetties", World::GetJetties().ids());
         AddWorldGroup("Kangaroos", World::GetKangaroos().ids());
         AddWorldGroup("Ladders", World::GetLadders().ids());
@@ -270,26 +415,41 @@ namespace Unloved::EditorSession::Hierarchy {
         AddWorldGroup("Picture Frames", World::GetPictureFrames().ids());
         AddWorldGroup("Pianos", World::GetPianos().ids());
         AddWorldGroup("Power Pole Sets", World::GetPowerPoleSets().ids());
+        AddPointPairObjectGroup("Ridge Capping", PointPairObjectType::RIDGE_CAPPING);
+        AddPlanarQuadObjectGroup("Roofing Iron", PlanarQuadObjectType::ROOFING_IRON);
+        AddSpawnPointGroup();
         AddWorldGroup("Staircases", World::GetStaircases().ids());
         AddWorldGroup("Sharks", World::GetSharks().ids());
         AddWallGroup();
         AddWorldGroup("Windows", World::GetWindows().ids());
 
-        g_scrollBar.value = 0;
-        g_hoveredNode = nullptr;
         RefreshVisibleRows();
     }
 
-    void RefreshChristmasLightPoints(uint64_t objectId) {
-        ChristmasLightSet* christmasLights = World::GetChristmasLightsByObjectId(objectId);
-        if (!christmasLights) return;
-
-        for (HierarchyNode& group : g_root.children) {
+    void RefreshObjectChildren(uint64_t objectId) {
+        for (HierarchyNode& group : GetSceneNode().children) {
             for (HierarchyNode& node : group.children) {
-                if (node.itemId != objectId || node.christmasLightPointIndex >= 0) continue;
+                if (node.itemId != objectId || node.pointIndex >= 0) continue;
 
                 node.children.clear();
-                AddChristmasLightPoints(node, *christmasLights);
+                switch (GetObjectIdType(objectId)) {
+                    case ObjectType::WALL: {
+                        if (Wall* wall = World::GetWallByObjectId(objectId)) {
+                            AddWallSegments(node, *wall);
+                        }
+                        break;
+                    }
+                    case ObjectType::CHRISTMAS_LIGHTS: {
+                        if (ChristmasLightSet* christmasLights = World::GetChristmasLightsByObjectId(objectId)) {
+                            AddChristmasLightPoints(node, *christmasLights);
+                        }
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+
                 RefreshVisibleRows();
                 return;
             }
@@ -297,17 +457,10 @@ namespace Unloved::EditorSession::Hierarchy {
     }
 
     void RemoveObject(uint64_t objectId) {
-        for (auto groupIt = g_root.children.begin(); groupIt != g_root.children.end(); groupIt++) {
-            std::vector<HierarchyNode>& nodes = groupIt->children;
-            const auto objectIt = std::find_if(nodes.begin(), nodes.end(), [objectId](const HierarchyNode& node) { return node.itemId == objectId && node.christmasLightPointIndex < 0 && node.wallSegmentIndex < 0; });
-            if (objectIt == nodes.end()) continue;
-
-            nodes.erase(objectIt);
-            if (nodes.empty()) g_root.children.erase(groupIt);
-            g_hoveredNode = nullptr;
-            RefreshVisibleRows();
-            return;
-        }
+        std::vector<HierarchyNode>& groups = GetSceneNode().children;
+        if (!RemoveObjectNode(groups, objectId)) return;
+        g_hoveredNode = nullptr;
+        RefreshVisibleRows();
     }
 
     void Update(bool allowInput) {
@@ -336,10 +489,13 @@ namespace Unloved::EditorSession::Hierarchy {
         Hell::BackEnd::SetCursor(HELL_CURSOR_ARROW);
         RefreshHover(mousePosition);
 
-        if (Hell::Input::LeftMousePressed()) HandleMousePress(mousePosition);
+        if (Hell::Input::LeftMousePressed()) {
+            HandleMousePress(mousePosition);
+        }
     }
 
     void Render() {
+        const EditorStyle& style = GetStyle();
         RefreshVisibleRows();
 
         const int32_t lastVisibleRow = std::min(static_cast<int32_t>(g_visibleRows.size()), g_scrollBar.value + GetVisibleRowCapacity());
@@ -348,30 +504,35 @@ namespace Unloved::EditorSession::Hierarchy {
             const HierarchyNode& node = *row.node;
             const EditorRect rowRect = GetRowRect(i);
             std::string label = node.label;
-            // Sub items use their own labels
-            if (node.selectable && node.christmasLightPointIndex < 0 && node.wallSegmentIndex < 0) {
+
+            // Sub-items use their own labels
+            if (node.selectable && node.itemId != 0 && node.pointIndex < 0 && node.wallSegmentIndex < 0) {
                 const std::string& editorName = World::GetEditorNameById(node.itemId);
                 label = editorName.empty() || editorName == UNDEFINED_STRING ? std::to_string(node.itemId) : editorName;
             }
 
-            const bool pointSelected = node.christmasLightPointIndex >= 0 && Selection::HasSelectedChristmasLightPoint() && node.itemId == Selection::GetSelectedObjectId() && node.christmasLightPointIndex == Selection::GetSelectedChristmasLightPointIndex();
+            // Row background
+            const bool pointSelected = node.pointIndex >= 0 && Selection::HasSelectedPoint() && node.itemId == Selection::GetSelectedObjectId() && node.pointIndex == Selection::GetSelectedPointIndex();
             const bool wallSegmentSelected = node.wallSegmentIndex >= 0 && Selection::HasSelectedWallSegment() && node.itemId == Selection::GetSelectedObjectId() && node.wallSegmentIndex == Selection::GetSelectedWallSegmentIndex();
-            const bool objectSelected = node.christmasLightPointIndex < 0 && node.wallSegmentIndex < 0 && !Selection::HasSelectedChristmasLightPoint() && !Selection::HasSelectedWallSegment() && node.itemId == Selection::GetSelectedObjectId();
-            if (node.selectable && (pointSelected || wallSegmentSelected || objectSelected)) {
-                UI::DrawSolidRect(rowRect, SELECTED_COLOR);
+            const bool workspaceSelected = node.workspace && Selection::HasWorkspaceSelection();
+            const bool objectSelected = node.itemId != 0 && node.pointIndex < 0 && node.wallSegmentIndex < 0 && !Selection::HasSelectedPoint() && !Selection::HasSelectedWallSegment() && node.itemId == Selection::GetSelectedObjectId();
+            if (node.selectable && (workspaceSelected || pointSelected || wallSegmentSelected || objectSelected)) {
+                UI::DrawSolidRect(rowRect, style.colors.selected);
             }
             else if (row.node == g_hoveredNode) {
-                UI::DrawSolidRect(rowRect, HOVER_COLOR);
+                UI::DrawSolidRect(rowRect, style.colors.hover);
             }
 
+            // Expand arrow
             const EditorRect arrowRect = GetArrowRect(rowRect, row.depth);
-            if (!node.children.empty()) {
+            if (node.collapsible && !node.children.empty()) {
                 const float rotation = node.expanded ? 0.0f : HELL_PI * -0.5f;
-                UIBackEnd::BlitTexture(UICanvas::NATIVE, "DropDownArrow", glm::ivec2(arrowRect.x + arrowRect.width / 2, arrowRect.y + arrowRect.height / 2), Alignment::CENTERED, TEXT_COLOR, glm::ivec2(ARROW_SIZE), TextureFilter::NEAREST, rotation);
+                UIBackEnd::BlitTexture(UICanvas::NATIVE, "DropDownArrow", glm::ivec2(arrowRect.x + arrowRect.width / 2, arrowRect.y + arrowRect.height / 2), Alignment::CENTERED, style.colors.text, glm::ivec2(style.hierarchy.arrowSize), TextureFilter::NEAREST, rotation);
             }
 
-            const int32_t textX = arrowRect.Right() + TEXT_GAP;
-            UIBackEnd::BlitText(UICanvas::NATIVE, std::string(Style::TEXT_COLOR_TAG) + label, Style::FONT_NAME, glm::ivec2(textX, rowRect.y + rowRect.height / 2), Alignment::CENTERED_VERTICAL, Style::FONT_SCALE, TextureFilter::NEAREST);
+            // Row label
+            const int32_t textX = arrowRect.Right() + style.hierarchy.textGap;
+            UIBackEnd::BlitText(UICanvas::NATIVE, std::string(style.font.textColorTag) + label, style.font.name, glm::ivec2(textX, rowRect.y + rowRect.height / 2), Alignment::CENTERED_VERTICAL, style.font.scale, TextureFilter::NEAREST);
         }
 
         ScrollBar::Render(g_scrollBar);

@@ -4,6 +4,8 @@
 readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
 in flat int MaterialIndex;
 in flat int WoundMaterialIndex;
+in flat float RoughnessFactor;
+in flat float MetallicFactor;
 
 layout (binding = 7) uniform sampler2DArray woundMaskTextureArray;
 
@@ -104,8 +106,8 @@ void main() {
         normal = -normal;
     }
 
-    float roughness = rmat.r;
-    float metallic = rmat.g;
+    float roughness = clamp(rmat.r * RoughnessFactor, 0.0, 1.0);
+    float metallic = clamp(rmat.g * MetallicFactor, 0.0, 1.0);
     float ao = rmat.b;
 
 

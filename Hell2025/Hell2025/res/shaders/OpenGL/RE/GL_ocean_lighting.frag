@@ -26,45 +26,7 @@ readonly restrict layout(std430, binding = SSBO_IDX_SPOT_LIGHTS) buffer spotLigh
 in vec3 v_worldPos;
 
 uniform int u_viewportIndex;
-uniform float u_oceanOriginY;
 uniform float u_time;
-
-uniform int u_displayMode = OCEAN_DISPLAY_MODE_COMBINED;
-
-struct OceanSurfaceSettings {
-    bool specularAntiAliasing;
-    vec3 albedo;
-    vec3 fogColor;
-    float normalScale;
-    float normalConvergeStartDistance;
-    float normalConvergeEndDistance;
-    float normalConvergeMaxFactor;
-    float normalConvergeExponent;
-    float normalSoftening;
-    float rippleTiling;
-    float rippleStrength;
-    float rippleSecondLayerScale;
-    vec2 rippleVelocity0;
-    vec2 rippleVelocity1;
-    float roughness;
-    float reflectance;
-    float reflectionGamma;
-    float diffuseStrength;
-    float sssHeightRange;
-    float sssStrength;
-    float underwaterSssStrength;
-    float sssRadiusMinimum;
-    float sssRadiusMaximum;
-    float sssIntensity;
-    float sssFalloff;
-    float sssSaturation;
-    float fogStartDistance;
-    float fogEndDistance;
-    float fogExponent;
-    float fogStrength;
-};
-
-uniform OceanSurfaceSettings u_surface;
 
 // -90 degrees Y rotation (no cos/sin per fragment)
 const mat3 kRotateYMinus90 = mat3(0.0, 0.0, -1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0);
@@ -81,28 +43,28 @@ void main() {
     vec2 worldDdy = dFdy(worldXZ);
     float lod0 = OceanNormalLod(worldDdx, worldDdy, 0);
     float lod1 = OceanNormalLod(worldDdx, worldDdy, 1);
-    vec2 normalXZ = SampleCombinedEstimatedOceanNormalXZ(DisplacementTexture_band0, SlopeTexture_band0, DisplacementTexture_band1, SlopeTexture_band1, worldXZ, lod0, lod1, u_displayMode);
+    vec2 normalXZ = SampleCombinedEstimatedOceanNormalXZ(DisplacementTexture_band0, SlopeTexture_band0, DisplacementTexture_band1, SlopeTexture_band1, worldXZ, lod0, lod1, rendererData.oceanDisplayMode);
 
-    normalXZ *= u_surface.normalScale;
+    normalXZ *= rendererData.oceanSurfaceNormalScale;
     vec3 normal = normalize(vec3(normalXZ.x, 1.0, normalXZ.y));
 
     // Converge to up normal over distance
-    float t2 = clamp((viewDist - u_surface.normalConvergeStartDistance) / (u_surface.normalConvergeEndDistance - u_surface.normalConvergeStartDistance), 0.0, 1.0);
-    t2 = pow(t2, u_surface.normalConvergeExponent) * u_surface.normalConvergeMaxFactor;
+    float t2 = clamp((viewDist - rendererData.oceanSurfaceNormalConvergeStartDistance) / (rendererData.oceanSurfaceNormalConvergeEndDistance - rendererData.oceanSurfaceNormalConvergeStartDistance), 0.0, 1.0);
+    t2 = pow(t2, rendererData.oceanSurfaceNormalConvergeExponent) * rendererData.oceanSurfaceNormalConvergeMaxFactor;
     normal = normalize(mix(normal, vec3(0.0, 1.0, 0.0), t2));
 
     // Aggresively reduce normals
-    normal = normalize(mix(normal, vec3(0.0, 1.0, 0.0), u_surface.normalSoftening));
+    normal = normalize(mix(normal, vec3(0.0, 1.0, 0.0), rendererData.oceanSurfaceNormalSoftening));
 
 
     // High frequency normal ripples
-    vec2 rippleUV1 = worldXZ * u_surface.rippleTiling + u_time * u_surface.rippleVelocity0;
-    vec2 rippleUV2 = worldXZ * (u_surface.rippleTiling * u_surface.rippleSecondLayerScale) + u_time * u_surface.rippleVelocity1;
+    vec2 rippleUV1 = worldXZ * rendererData.oceanSurfaceRippleTiling + u_time * rendererData.oceanSurfaceRippleVelocity.xy;
+    vec2 rippleUV2 = worldXZ * (rendererData.oceanSurfaceRippleTiling * rendererData.oceanSurfaceRippleSecondLayerScale) + u_time * rendererData.oceanSurfaceRippleVelocity.zw;
     vec3 ripple1 = texture(DetailRippleNormal, rippleUV1).xyz * 2.0 - 1.0;
     vec3 ripple2 = texture(DetailRippleNormal, rippleUV2).xyz * 2.0 - 1.0;
     vec3 microRipplesTangent = ripple1 + ripple2;
     vec3 rippleWorld = vec3(microRipplesTangent.x, 0.0, microRipplesTangent.y);
-    normal = normal + (rippleWorld * u_surface.rippleStrength);
+    normal = normal + (rippleWorld * rendererData.oceanSurfaceRippleStrength);
 
     vec3 N = normalize(normal);
     vec3 V_view = normalize(viewPos - WorldPos);
@@ -111,21 +73,21 @@ void main() {
         V_view = -V_view;
     }
 
-    float roughness = u_surface.roughness;
+    float roughness = rendererData.oceanSurfaceRoughness;
     // Widen highlights when the normal moves faster than the pixels can represent
-    if (u_surface.specularAntiAliasing) {
+    if (rendererData.oceanSurfaceSpecularAntiAliasing != 0u) {
         vec3 normalDdx = dFdx(N);
         vec3 normalDdy = dFdy(N);
         float normalVariance = 0.15 * (dot(normalDdx, normalDdx) + dot(normalDdy, normalDdy));
         float kernelRoughness = min(2.0 * normalVariance, 0.18);
         roughness = min(sqrt(roughness * roughness + kernelRoughness), 1.0);
     }
-    vec3 F0 = vec3(u_surface.reflectance);
+    vec3 F0 = vec3(rendererData.oceanSurfaceReflectance);
 
     // SSS height
-    float h = WorldPos.y - u_oceanOriginY;
-    float u_minHeight = u_oceanOriginY - u_surface.sssHeightRange;
-    float u_maxHeight = u_oceanOriginY + u_surface.sssHeightRange;
+    float h = WorldPos.y - rendererData.oceanOriginY;
+    float u_minHeight = rendererData.oceanOriginY - rendererData.oceanSurfaceSssHeightRange;
+    float u_maxHeight = rendererData.oceanOriginY + rendererData.oceanSurfaceSssHeightRange;
     float hNorm = clamp((h - u_minHeight) / (u_maxHeight - u_minHeight), 0.0, 1.0);
 
     vec3 surfaceLighting = vec3(0.0);
@@ -143,7 +105,7 @@ void main() {
     vec3 kS_IBL = fresnelSchlick(clamp(dot(N, V_view), 0.0, 1.0), F0);
 
     float reflectionLod = 0.0;
-    if (u_surface.specularAntiAliasing) {
+    if (rendererData.oceanSurfaceSpecularAntiAliasing != 0u) {
         vec3 reflectionDdx = dFdx(R_rotated);
         vec3 reflectionDdy = dFdy(R_rotated);
         float reflectionFootprintSq = max(dot(reflectionDdx, reflectionDdx), dot(reflectionDdy, reflectionDdy));
@@ -157,9 +119,9 @@ void main() {
     }
 
     vec3 reflection_IBL = textureLod(cubeMap, R_rotated, reflectionLod).rgb;
-    reflection_IBL = pow(reflection_IBL, vec3(u_surface.reflectionGamma));
+    reflection_IBL = pow(reflection_IBL, vec3(rendererData.oceanSurfaceReflectionGamma));
     vec3 specular_IBL = reflection_IBL * kS_IBL;
-    vec3 diffuse_IBL = moonColor * u_surface.albedo * u_surface.diffuseStrength;
+    vec3 diffuse_IBL = moonColor * rendererData.oceanSurfaceAlbedo.rgb * rendererData.oceanSurfaceDiffuseStrength;
 
     surfaceLighting += Lo_direct;
     surfaceLighting += diffuse_IBL;
@@ -168,15 +130,15 @@ void main() {
     for (uint i = 0u; i < rendererData.spotLightCount; i++) {
         SpotLight spotLight = spotLights[i];
         sampler2D iesTexture = sampler2D(textureSamplers[max(rendererData.flashlightIESTextureIndex, 0)]);
-        surfaceLighting += GetSpotLightContribution(spotLight, rendererData, uint(u_viewportIndex), viewPos, N, WorldPos, u_surface.albedo, roughness, 0.0, viewDist, u_oceanOriginY, iesTexture, u_flashlighShadowMapArrayTexture);
+        surfaceLighting += GetSpotLightContribution(spotLight, rendererData, uint(u_viewportIndex), viewPos, N, WorldPos, rendererData.oceanSurfaceAlbedo.rgb, roughness, 0.0, viewDist, rendererData.oceanOriginY, iesTexture, u_flashlighShadowMapArrayTexture);
     }
 
     // SSS
-    float sssStrength = gl_FrontFacing ? u_surface.sssStrength : u_surface.underwaterSssStrength;
-    float sssRadius = mix(u_surface.sssRadiusMinimum, u_surface.sssRadiusMaximum, hNorm);
+    float sssStrength = gl_FrontFacing ? rendererData.oceanSurfaceSssStrength : rendererData.oceanSurfaceUnderwaterSssStrength;
+    float sssRadius = mix(rendererData.oceanSurfaceSssRadiusMinimum, rendererData.oceanSurfaceSssRadiusMaximum, hNorm);
     float NdotL = max(dot(N, L), 0.0);
-    float sssScalar = u_surface.sssIntensity * exp(-u_surface.sssFalloff * abs(NdotL) / (sssRadius + 0.001));
-    vec3 subColor = Saturate(u_surface.albedo, u_surface.sssSaturation);
+    float sssScalar = rendererData.oceanSurfaceSssIntensity * exp(-rendererData.oceanSurfaceSssFalloff * abs(NdotL) / (sssRadius + 0.001));
+    vec3 subColor = Saturate(rendererData.oceanSurfaceAlbedo.rgb, rendererData.oceanSurfaceSssSaturation);
     vec3 sssColor = subColor * sssRadius * sssScalar * sssStrength;
 
     surfaceLighting += sssColor;
@@ -184,14 +146,14 @@ void main() {
 
     // Fog (reuse viewDist)
     {
-        float fogRange = u_surface.fogEndDistance - u_surface.fogStartDistance;
-        float normDist = (viewDist - u_surface.fogStartDistance) / max(fogRange, 0.0001);
+        float fogRange = rendererData.oceanSurfaceFogEndDistance - rendererData.oceanSurfaceFogStartDistance;
+        float normDist = (viewDist - rendererData.oceanSurfaceFogStartDistance) / max(fogRange, 0.0001);
         normDist = clamp(normDist, 0.0, 1.0);
 
-        float fogEffect = pow(normDist, u_surface.fogExponent);
+        float fogEffect = pow(normDist, rendererData.oceanSurfaceFogExponent);
         float fogFactor = 1.0 - fogEffect;
 
-        surfaceLighting = mix(u_surface.fogColor * u_surface.fogStrength, surfaceLighting, fogFactor);
+        surfaceLighting = mix(rendererData.oceanSurfaceFogColor.rgb * rendererData.oceanSurfaceFogStrength, surfaceLighting, fogFactor);
     }
 
     ColorOut = vec4(surfaceLighting, 1.0);

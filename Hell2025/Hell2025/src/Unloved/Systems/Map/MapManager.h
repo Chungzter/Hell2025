@@ -7,9 +7,10 @@
 
 namespace Unloved::MapManager {
     void Init();
-    void NewMap(const std::string& name, int chunkWidth, int chunkDepth, float initialHeight);
+    bool NewMap(const std::string& name, int chunkWidth, int chunkDepth, float initialHeight);
     void SaveMap(const std::string& mapName);
     void LoadMapData(const std::string& mapName);
+    bool ReloadMapData(const std::string& mapName);
     void UpdateCreateInfoCollectionFromWorld(const std::string& mapName);
 
     MapData* GetTestMapData();

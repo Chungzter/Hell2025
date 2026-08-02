@@ -117,8 +117,8 @@ void main() {
     vec3 normalMap = texture(sampler2D(textures[nonuniformEXT(normalTextureIndex)], textureSamplers[nonuniformEXT(normalTextureIndex)]), v_texCoord).rgb;
     vec4 rma = texture(sampler2D(textures[nonuniformEXT(rmaTextureIndex)], textureSamplers[nonuniformEXT(rmaTextureIndex)]), v_texCoord).rgba;
 
-    float roughness = rma.r;
-    float metallic = rma.g;
+    float roughness = clamp(rma.r * renderItem.roughnessFactor, 0.0, 1.0);
+    float metallic = clamp(rma.g * renderItem.metallicFactor, 0.0, 1.0);
     float ao = rma.b;
     vec3 linearBaseColor = pow(baseColor.rgb, vec3(2.2));
 

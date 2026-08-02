@@ -44,6 +44,8 @@ namespace Gizmo {
     void CancelInteraction();
     void SetPosition(const glm::vec3& position);
     void SetRotation(const glm::vec3& rotation);
+    void SetLocalAxes(bool enabled);
+    void SetWorldRotationAxes(bool enabled);
     void SetSourceObjectOffeset(const glm::vec3& offset);
     void SetVisible(bool visible);
     void UpdateRenderItems();

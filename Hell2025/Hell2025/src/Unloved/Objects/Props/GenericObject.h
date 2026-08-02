@@ -38,7 +38,6 @@ private:
     GenericObjectCreateInfo m_createInfo;
     Hell::Transform m_transform;
     MeshNodes m_meshNodes;
-    MeshNodes m_shadowCasterMeshNodes;
     uint64_t m_objectId;
     bool m_navMeshTransformDirty = true;
 };

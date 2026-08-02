@@ -14,11 +14,13 @@
 #include "Unloved/Config/Config.h"
 #include "Unloved/Config/FlashlightConfig.h"
 #include "Unloved/Editor/Editor.h"
-#include "Unloved/EditorSession/EditorSelection.h"
+#include "Unloved/EditorSession/Interaction/EditorSelection.h"
 #include "Unloved/EditorSession/EditorSession.h"
-#include "Unloved/EditorSession/EditorViewports.h"
+#include "Unloved/EditorSession/Interaction/EditorVisibility.h"
+#include "Unloved/EditorSession/Core/EditorViewports.h"
 #include "Unloved/Objects/Lighting/SpotLight.h"
 #include "Unloved/Objects/Renderables/AnimatedGameObject.h"
+#include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
 #include "Unloved/Systems/BloodOLD/BloodSystemOLD.h"
 #include "Unloved/Systems/ShadowMaps/ShadowMapManager.h"
@@ -137,7 +139,7 @@ namespace Unloved::RenderDataManager {
     void CreateSkinningData(); // name me better
     void CreateSkinningDistpachGroups();
 
-    void CreateDrawCommandsFromIndices(std::vector<DrawIndexedIndirectCommand>& drawCommands, const std::vector<uint32_t>& renderItemIndices, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters = false, uint64_t excludedObjectId = 0);
+    void CreateDrawCommandsFromIndices(std::vector<DrawIndexedIndirectCommand>& drawCommands, const std::vector<uint32_t>& renderItemIndices, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters = false, uint64_t excludedObjectId = 0, bool useShadowMesh = false);
     void CreateHeightMapRenderItems();
     void CreateHeightMapDrawCommands(std::vector<DrawIndexedIndirectCommand>& drawCommands, Unloved::Frustum& frustum);
     void CreateDrawCommandsSkinnedFromIndices(std::vector<DrawIndexedIndirectCommand>& commands, const std::vector<uint32_t>& renderItemIndices, int viewportIndex, Unloved::Frustum* frustum = nullptr);
@@ -424,6 +426,11 @@ namespace Unloved::RenderDataManager {
         const RendererSettings& rendererSettings = Renderer::GetCurrentRendererSettings();
         const Resolutions& resolutions = Config::GetResolutions();
         const Config::Flashlight::Settings& flashlightSettings = Config::Flashlight::GetSettings();
+        const Ocean::Settings oceanSettings = Ocean::GetSettings();
+        const Ocean::SurfaceSettings& oceanSurface = oceanSettings.surface;
+        const Ocean::CompositeSettings& oceanComposite = oceanSettings.composite;
+        const Ocean::SurfaceCompositeSettings& oceanSurfaceComposite = oceanComposite.surface;
+        const Ocean::UnderwaterCompositeSettings& oceanUnderwater = oceanComposite.underwater;
         IESProfile* flashlightIESProfile = Hell::ResourceManager::GetIESProfilePtr(flashlightSettings.iesProfile);
 
         g_rendererData.nearPlane = Config::GetNearPlane();
@@ -472,6 +479,10 @@ namespace Unloved::RenderDataManager {
         g_rendererData.indirectSpecularFactor = rendererSettings.indirectSpecularFactor;
         g_rendererData.indirectSpecularRoughnessDampening = rendererSettings.indirectSpecularRoughnessDampening;
         g_rendererData.directPointShadowMode = static_cast<uint32_t>(rendererSettings.directPointShadowMode);
+        g_rendererData.emissiveStrength = rendererSettings.emissiveStrength;
+        g_rendererData.christmasLightRadius = rendererSettings.christmasLightRadius;
+        g_rendererData.christmasLightStrength = rendererSettings.christmasLightStrength;
+        g_rendererData.irradianceDampening = rendererSettings.irradianceDampening;
 
         g_rendererData.flashlightColor = glm::vec4(flashlightSettings.color, 1.0f);
         g_rendererData.flashlightRange = flashlightSettings.range;
@@ -492,6 +503,56 @@ namespace Unloved::RenderDataManager {
         g_rendererData.flashlightCenterSpotInnerAngle = flashlightSettings.centerSpotInnerAngle;
         g_rendererData.flashlightCenterSpotOuterAngle = flashlightSettings.centerSpotOuterAngle;
         g_rendererData.flashlightCenterSpotEnabled = flashlightSettings.centerSpotEnabled ? 1u : 0u;
+
+        g_rendererData.oceanSurfaceAlbedo = glm::vec4(oceanSurface.albedo, 0.0f);
+        g_rendererData.oceanSurfaceFogColor = glm::vec4(oceanSurface.fogColor, 0.0f);
+        g_rendererData.oceanSurfaceRippleVelocity = glm::vec4(oceanSurface.rippleVelocity0, oceanSurface.rippleVelocity1);
+        g_rendererData.oceanUnderwaterTint = glm::vec4(oceanComposite.underwaterTint, 0.0f);
+        g_rendererData.oceanUnderwaterRayFogColor = glm::vec4(oceanUnderwater.rayFogColor, 0.0f);
+        g_rendererData.oceanOriginY = Ocean::GetOceanOriginY();
+        g_rendererData.oceanDisplayMode = static_cast<int32_t>(oceanSettings.displayMode);
+        g_rendererData.oceanSurfaceSpecularAntiAliasing = oceanSurface.specularAntiAliasing ? 1u : 0u;
+        g_rendererData.oceanSurfaceNormalScale = oceanSurface.normalScale;
+        g_rendererData.oceanSurfaceNormalConvergeStartDistance = oceanSurface.normalConvergeStartDistance;
+        g_rendererData.oceanSurfaceNormalConvergeEndDistance = oceanSurface.normalConvergeEndDistance;
+        g_rendererData.oceanSurfaceNormalConvergeMaxFactor = oceanSurface.normalConvergeMaxFactor;
+        g_rendererData.oceanSurfaceNormalConvergeExponent = oceanSurface.normalConvergeExponent;
+        g_rendererData.oceanSurfaceNormalSoftening = oceanSurface.normalSoftening;
+        g_rendererData.oceanSurfaceRippleTiling = oceanSurface.rippleTiling;
+        g_rendererData.oceanSurfaceRippleStrength = oceanSurface.rippleStrength;
+        g_rendererData.oceanSurfaceRippleSecondLayerScale = oceanSurface.rippleSecondLayerScale;
+        g_rendererData.oceanSurfaceRoughness = oceanSurface.roughness;
+        g_rendererData.oceanSurfaceReflectance = oceanSurface.reflectance;
+        g_rendererData.oceanSurfaceReflectionGamma = oceanSurface.reflectionGamma;
+        g_rendererData.oceanSurfaceDiffuseStrength = oceanSurface.diffuseStrength;
+        g_rendererData.oceanSurfaceSssHeightRange = oceanSurface.sssHeightRange;
+        g_rendererData.oceanSurfaceSssStrength = oceanSurface.sssStrength;
+        g_rendererData.oceanSurfaceUnderwaterSssStrength = oceanSurface.underwaterSssStrength;
+        g_rendererData.oceanSurfaceSssRadiusMinimum = oceanSurface.sssRadiusMinimum;
+        g_rendererData.oceanSurfaceSssRadiusMaximum = oceanSurface.sssRadiusMaximum;
+        g_rendererData.oceanSurfaceSssIntensity = oceanSurface.sssIntensity;
+        g_rendererData.oceanSurfaceSssFalloff = oceanSurface.sssFalloff;
+        g_rendererData.oceanSurfaceSssSaturation = oceanSurface.sssSaturation;
+        g_rendererData.oceanSurfaceFogStartDistance = oceanSurface.fogStartDistance;
+        g_rendererData.oceanSurfaceFogEndDistance = oceanSurface.fogEndDistance;
+        g_rendererData.oceanSurfaceFogExponent = oceanSurface.fogExponent;
+        g_rendererData.oceanSurfaceFogStrength = oceanSurface.fogStrength;
+        g_rendererData.oceanSurfaceCompositePlaneHeightOffset = oceanSurfaceComposite.planeHeightOffset;
+        g_rendererData.oceanSurfaceCompositeDistortionSpeed = oceanSurfaceComposite.distortionSpeed;
+        g_rendererData.oceanSurfaceCompositeDistortionStrength = oceanSurfaceComposite.distortionStrength;
+        g_rendererData.oceanSurfaceCompositeDistortionTiling = oceanSurfaceComposite.distortionTiling;
+        g_rendererData.oceanSurfaceCompositeRefractionTintStrength = oceanSurfaceComposite.refractionTintStrength;
+        g_rendererData.oceanUnderwaterRayFogStrength = oceanUnderwater.rayFogStrength;
+        g_rendererData.oceanUnderwaterDarknessCurve = oceanUnderwater.darknessCurve;
+        g_rendererData.oceanUnderwaterDistortionSpeed = oceanUnderwater.distortionSpeed;
+        g_rendererData.oceanUnderwaterDistortionStrength = oceanUnderwater.distortionStrength;
+        g_rendererData.oceanUnderwaterDepthTintStrength = oceanUnderwater.depthTintStrength;
+        g_rendererData.oceanUnderwaterDepthTintOriginalWeight = oceanUnderwater.depthTintOriginalWeight;
+        g_rendererData.oceanUnderwaterGeometryWaterColorSquaredStrength = oceanUnderwater.geometryWaterColorSquaredStrength;
+        g_rendererData.oceanUnderwaterGeometryWaterColorStrength = oceanUnderwater.geometryWaterColorStrength;
+        g_rendererData.oceanUnderwaterGeometryTintStrength = oceanUnderwater.geometryTintStrength;
+        g_rendererData.oceanUnderwaterOpenWaterTintStrength = oceanUnderwater.openWaterTintStrength;
+        g_rendererData.oceanUnderwaterOpenWaterBrightness = oceanUnderwater.openWaterBrightness;
     }
 
     void SortRenderItemIndices(std::vector<uint32_t>& renderItemIndices) {
@@ -523,6 +584,23 @@ namespace Unloved::RenderDataManager {
         command.baseVertex = renderItem.baseVertex;
     }
 
+    uint32_t GetShadowMeshId(const RenderItem& renderItem) {
+        return renderItem.shadowMeshId ? renderItem.shadowMeshId : renderItem.meshId;
+    }
+
+    void SetShadowDrawCommandMeshRange(DrawIndexedIndirectCommand& command, const RenderItem& renderItem) {
+        if (renderItem.shadowMeshId) {
+            if (Mesh* mesh = Hell::ResourceManager::GetMeshBuffer("AssetGeometry").GetMeshById(renderItem.shadowMeshId)) {
+                command.indexCount = mesh->indexCount;
+                command.firstIndex = mesh->baseIndex;
+                command.baseVertex = mesh->baseVertex;
+                return;
+            }
+        }
+
+        SetDrawCommandMeshRange(command, renderItem);
+    }
+
     void CreateMoonLightShadowMapDrawCommands() {
         ProfilerCPUZone("Moon shadow commands");
 
@@ -546,7 +624,7 @@ namespace Unloved::RenderDataManager {
             for (int j = 0; j < cascadeCount; j++) {
                 frustum.Update(g_viewportData[i].csmLightProjectionView[j]);
 
-                CreateDrawCommandsFromIndices(set.moonLightCascades[i][j], g_renderItemIndicesMoonLightShadows, &frustum, i);
+                CreateDrawCommandsFromIndices(set.moonLightCascades[i][j], g_renderItemIndicesMoonLightShadows, &frustum, i, false, 0, true);
             }
         }
     }
@@ -810,7 +888,7 @@ namespace Unloved::RenderDataManager {
             g_flashLightShadowMapDrawInfo.active[shadowLayer] = true;
 
             // Build multi draw commands for regular geometry
-            CreateDrawCommandsFromIndices(g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[shadowLayer], g_renderItemIndices, &spotLightFrustum, ownerViewportIndex, true, light.GetOwnerObjectId());
+            CreateDrawCommandsFromIndices(g_flashLightShadowMapDrawInfo.flashlightShadowMapGeometry[shadowLayer], g_renderItemIndices, &spotLightFrustum, ownerViewportIndex, true, light.GetOwnerObjectId(), true);
 
             // Frustum cull the heightmap chunks
             std::vector<HeightMapChunk>& chunks = LegacyWorld::GetHeightMapChunks();
@@ -1004,7 +1082,7 @@ namespace Unloved::RenderDataManager {
         }
     }
 
-    void CreateDrawCommandsFromIndices(std::vector<DrawIndexedIndirectCommand>& drawCommands, const std::vector<uint32_t>& renderItemIndices, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters, uint64_t excludedObjectId) {
+    void CreateDrawCommandsFromIndices(std::vector<DrawIndexedIndirectCommand>& drawCommands, const std::vector<uint32_t>& renderItemIndices, Unloved::Frustum* frustum, int viewportIndex, bool ignoreNonShadowCasters, uint64_t excludedObjectId, bool useShadowMesh) {
         uint32_t drawIndexOffset = static_cast<uint32_t>(g_drawRenderItemIndices.size());
         g_drawRenderItemIndices.reserve(g_drawRenderItemIndices.size() + renderItemIndices.size());
 
@@ -1034,11 +1112,13 @@ namespace Unloved::RenderDataManager {
 
         for (uint32_t i = drawIndexOffset; i < g_drawRenderItemIndices.size(); i++) {
             const RenderItem& renderItem = g_sceneRenderItems[g_drawRenderItemIndices[i]];
+            const uint32_t meshId = useShadowMesh ? GetShadowMeshId(renderItem) : renderItem.meshId;
 
-            if (!currentCommand || renderItem.meshId != currentMeshId) {
-                currentMeshId = renderItem.meshId;
+            if (!currentCommand || meshId != currentMeshId) {
+                currentMeshId = meshId;
                 currentCommand = &drawCommands.emplace_back();
-                SetDrawCommandMeshRange(*currentCommand, renderItem);
+                if (useShadowMesh) SetShadowDrawCommandMeshRange(*currentCommand, renderItem);
+                else SetDrawCommandMeshRange(*currentCommand, renderItem);
                 currentCommand->baseInstance = i;
                 currentCommand->instanceCount = 1;
             }
@@ -1174,11 +1254,12 @@ namespace Unloved::RenderDataManager {
 
         for (uint32_t i = drawIndexOffset; i < g_drawRenderItemIndices.size(); i++) {
             const RenderItem& renderItem = g_sceneRenderItems[g_drawRenderItemIndices[i]];
+            const uint32_t meshId = GetShadowMeshId(renderItem);
 
-            if (!currentCommand || renderItem.meshId != currentMeshId) {
-                currentMeshId = renderItem.meshId;
+            if (!currentCommand || meshId != currentMeshId) {
+                currentMeshId = meshId;
                 currentCommand = &drawCommands.emplace_back();
-                SetDrawCommandMeshRange(*currentCommand, renderItem);
+                SetShadowDrawCommandMeshRange(*currentCommand, renderItem);
                 currentCommand->baseInstance = i;
                 currentCommand->instanceCount = 1;
             }
@@ -1314,6 +1395,7 @@ namespace Unloved::RenderDataManager {
         g_gpuLights.clear();
 
         for (Light& light : World::GetLights()) {
+            if (EditorSession::Visibility::ShouldHide(light.GetObjectId())) continue;
             GPULight& gpuLight = g_gpuLights.emplace_back();
             gpuLight.colorR = light.GetColor().r;
             gpuLight.colorG = light.GetColor().g;
@@ -1442,13 +1524,14 @@ namespace Unloved::RenderDataManager {
     }
 
 	void SubmitRenderItemProcedural(const RenderItem& renderItem) {
+		uint64_t objectId = 0;
+		Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+		if (EditorSession::Visibility::ShouldHide(objectId)) return;
 		if (!ValidateRenderItemMeshRange(renderItem, "RenderDataManager::SubmitRenderItemProcedural()")) return;
 
 		uint32_t renderItemIndex = AddSceneRenderItem(renderItem);
         AddRenderItemToCategory(g_renderItemIndicesProcedural, renderItemIndex);
 
-        uint64_t objectId = 0;
-        Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
         if (EditorSession::Selection::ShouldOutlineObject(objectId)) AddRenderItemToCategory(g_renderItemIndicesOutlineProcedural, renderItemIndex);
 
         if (Hell::BackEnd::GetAPI() == API::VULKAN) {
@@ -1487,7 +1570,7 @@ namespace Unloved::RenderDataManager {
         AnimatedGameObject* animatedGameObject = Unloved::World::GetAnimatedGameObjectByObjectId(animatedMeshNodes.m_parentId);
         if (!animatedGameObject) return;
 
-        if (!animatedMeshNodes.RenderingEnabled()) {
+        if (!animatedMeshNodes.RenderingEnabled() || EditorSession::Visibility::ShouldHide(animatedMeshNodes.m_parentId)) {
             animatedGameObject->CommitRenderPoseHistory();
             return;
         }
@@ -1603,6 +1686,9 @@ namespace Unloved::RenderDataManager {
         BlendingMode blendingMode = (BlendingMode)renderItem.blendingMode;
 
         if (blendingMode == BlendingMode::DO_NOT_RENDER) return;
+        uint64_t objectId = 0;
+        Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+        if (EditorSession::Visibility::ShouldHide(objectId)) return;
         if (!ValidateRenderItemMeshRange(renderItem, "RenderDataManager::SubmitRenderItem()")) return;
 
         uint32_t renderItemIndex = AddSceneRenderItem(renderItem);
@@ -1618,9 +1704,6 @@ namespace Unloved::RenderDataManager {
         case BlendingMode::PLASTIC:       AddRenderItemToCategory(g_renderItemIndicesPlastic,        renderItemIndex); break;
         default: break;
         }
-
-        uint64_t objectId = 0;
-        Hell::Bit::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
 
         // Emissive
         if (Material* material = ResourceManager::GetMaterialByIndex(renderItem.materialIndex)) {

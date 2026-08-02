@@ -5,8 +5,6 @@
 #include "Unloved/Bible/Bible.h"
 #include "Unloved/Systems/DirtyTracker/DirtyTracker.h"
 
-
-
 namespace Unloved {
 
 PickUp::PickUp(uint64_t id, const PickUpCreateInfo& createInfo, const SpawnOffset& spawnOffset) {
@@ -42,26 +40,30 @@ void PickUp::Update(float deltaTime) {
 }
 
 void PickUp::Respawn() {
-    m_meshNodes.SetBlendingModes(BlendingMode::DEFAULT);
     m_despawned = false;
     m_respawnCounter = 0.0f;
     m_modelMatrix = m_initialTransform.to_mat4();
     m_meshNodes.ResetFirstFrame();
     m_meshNodes.Update(m_modelMatrix);
 
+    // Reset physics position
     for (const MeshNode& meshNode : m_meshNodes.GetNodes()) {
         if (meshNode.rigidDynamicId != 0) Hell::Physics::SetRigidDynamicGlobalPose(meshNode.rigidDynamicId, meshNode.worldMatrix);
     }
 
+    // Put to sleep
     m_meshNodes.SleepAllPhysics();
-    if (!m_createInfo.disablePhysicsAtSpawn) m_meshNodes.WakeAllPhysics();
+
+    // Unless it was explicitly set to wake up
+    if (!m_createInfo.disablePhysicsAtSpawn) {
+        m_meshNodes.WakeAllPhysics();
+    }
+
     m_meshNodes.ForceDirty();
     MarkDirtyInTracker();
 }
 
 void PickUp::Despawn() {
-    m_meshNodes.SetBlendingModes(BlendingMode::DO_NOT_RENDER);
-
     m_respawnCounter = -8.0f;
     m_despawned = true;
 

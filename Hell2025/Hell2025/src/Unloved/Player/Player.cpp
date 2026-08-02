@@ -205,19 +205,17 @@ void Player::Respawn() {
     m_awaitingSpawn = false;
 
     // Get random spawn point
-    const SpawnPoint& spawnPoint = Session::GetRandomCampaignSpawnPoint();
+    const SpawnPoint& spawnPoint = Session::GetGameMode() == GameMode::DEATH_MATCH ? Session::GetRandomDeathmatchSpawnPoint() : Session::GetRandomCampaignSpawnPoint();
     glm::vec3 spawnPosition = spawnPoint.GetPosition() - glm::vec3(0.0f, 1.60, 0.0f);
 
     // Set position and camera rotation to spawn point
     SetFootPosition(spawnPosition);
-    m_camera.SetEulerRotation(spawnPoint.GetCamEuler());
+    m_camera.SetEulerRotation(spawnPoint.GetCameraEuler());
 
     //if (m_viewportIndex == 0) {
     //    SetFootPosition(glm::vec3(36.18, 31, 37.26));
     //    m_camera.SetEulerRotation(glm::vec3(-0.15, -0.02, 0));
     //}
-
-    //GetCamera().SetEulerRotation(spawnPoint.m_camEuler);
 
    // else {
    //     if (m_viewportIndex == 1) {

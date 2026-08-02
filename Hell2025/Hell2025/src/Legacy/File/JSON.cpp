@@ -10,7 +10,8 @@ namespace nlohmann {
         j = nlohmann::json{
             {"Position", sequencePoint.position},
             {"Normal", sequencePoint.normal},
-            {"Value", sequencePoint.value},
+            {"CustomFloat", sequencePoint.customFloat},
+            {"CustomBool", sequencePoint.customBool},
         };
     }
 
@@ -57,6 +58,13 @@ namespace nlohmann {
             {"MaterialTypeFrameFront", Hell::Enum::ToString(createInfo.materialTypeFrameFront) },
             {"MaterialTypeFrameBack", Hell::Enum::ToString(createInfo.materialTypeFrameBack) },
             {"MaxOpenValue", createInfo.maxOpenValue},
+            {"FloorPlaneMaterial", createInfo.floorPlaneMaterialName},
+            {"FloorPlaneTextureScale", createInfo.floorPlaneTextureScale},
+            {"FloorPlaneTextureOffsetU", createInfo.floorPlaneTextureOffsetU},
+            {"FloorPlaneTextureOffsetV", createInfo.floorPlaneTextureOffsetV},
+            {"FloorPlaneRotateTexture90", createInfo.floorPlaneRotateTexture90},
+            {"FloorPlaneRoughnessFactor", createInfo.floorPlaneRoughnessFactor},
+            {"FloorPlaneMetallicFactor", createInfo.floorPlaneMetallicFactor},
             {"HasDeadLock", createInfo.hasDeadLock},
             {"DeadLockedAtStart", createInfo.deadLockedAtInit},
             {"OpenAtStart", createInfo.openAtStart}
@@ -65,7 +73,7 @@ namespace nlohmann {
 
     void to_json(nlohmann::json& j, const FenceCreateInfo& createInfo) {
         j = nlohmann::json{
-            {"ControlPoints2D", createInfo.controlPoints2D },
+            {"SequencePoints", createInfo.sequencePoints},
             {"EditorName", createInfo.editorName}
         };
     }
@@ -75,6 +83,18 @@ namespace nlohmann {
             {"Position", createInfo.position},
             {"Rotation", createInfo.rotation},
             {"Type", Hell::Enum::ToString(createInfo.type)},
+            {"EditorName", createInfo.editorName}
+        };
+    }
+
+    void to_json(nlohmann::json& j, const GenericAnimatedObjectCreateInfo& createInfo) {
+        j = nlohmann::json{
+            {"Position", createInfo.position},
+            {"Rotation", createInfo.rotation},
+            {"Scale", createInfo.scale},
+            {"Type", Hell::Enum::ToString(createInfo.type)},
+            {"AnimationName", createInfo.animationName},
+            {"AnimationSpeed", createInfo.animationSpeed},
             {"EditorName", createInfo.editorName}
         };
     }
@@ -89,11 +109,13 @@ namespace nlohmann {
         };
     }
 
-    void to_json(nlohmann::json& j, const HouseLocation& houseLocation) {
+    void to_json(nlohmann::json& j, const HouseLocationCreateInfo& createInfo) {
         j = nlohmann::json{
-            {"Position", houseLocation.position},
-            {"Rotation", houseLocation.rotation},
-            {"Type", Hell::Enum::ToString(houseLocation.type)}
+            {"Position", createInfo.position},
+            {"Rotation", createInfo.rotation},
+            {"RandomHouse", createInfo.randomHouse},
+            {"HouseName", createInfo.houseName},
+            {"EditorName", createInfo.editorName}
         };
     }
 
@@ -107,6 +129,9 @@ namespace nlohmann {
             {"TextureOffsetU", createInfo.textureOffsetU},
             {"TextureOffsetV", createInfo.textureOffsetV},
             {"TextureRotation", createInfo.textureRotation},
+            {"RotateTexture90", createInfo.rotateTexture90},
+            {"RoughnessFactor", createInfo.roughnessFactor},
+            {"MetallicFactor", createInfo.metallicFactor},
             {"Material", createInfo.materialName},
             {"Type", Hell::Enum::ToString(createInfo.type)},
             {"EditorName", createInfo.editorName}
@@ -166,6 +191,36 @@ namespace nlohmann {
         };
     }
 
+    void to_json(nlohmann::json& j, const PlanarQuadObjectCreateInfo& createInfo) {
+        j = nlohmann::json{
+            {"Position", createInfo.planarQuad.position},
+            {"Rotation", createInfo.planarQuad.rotation},
+            {"Points", createInfo.planarQuad.points},
+            {"Type", Hell::Enum::ToString(createInfo.type)},
+            {"EditorName", createInfo.editorName},
+            {"CustomFloats", createInfo.customFloats},
+            {"CustomInts", createInfo.customInts},
+            {"CustomBools", createInfo.customBools},
+            {"CustomVec3s", createInfo.customVec3s},
+            {"Materials", createInfo.materialNames}
+        };
+    }
+
+    void to_json(nlohmann::json& j, const PointPairCreateInfo& createInfo) {
+        j = nlohmann::json{
+            {"Position", createInfo.position},
+            {"Rotation", createInfo.rotation},
+            {"Length", createInfo.length},
+            {"Type", Hell::Enum::ToString(createInfo.type)},
+            {"EditorName", createInfo.editorName},
+            {"CustomFloats", createInfo.customFloats},
+            {"CustomInts", createInfo.customInts},
+            {"CustomBools", createInfo.customBools},
+            {"CustomVec3s", createInfo.customVec3s},
+            {"Materials", createInfo.materialNames}
+        };
+    }
+
     void to_json(nlohmann::json& j, const PickUpCreateInfo& createInfo) {
         j = nlohmann::json{
             {"Position", createInfo.position},
@@ -185,6 +240,8 @@ namespace nlohmann {
             {"Rotation", createInfo.rotation},
             {"Scale", createInfo.scale},
             {"Type", Hell::Enum::ToString(createInfo.type)},
+            {"UseRandom", createInfo.useRandom},
+            {"Material", createInfo.materialName},
             {"EditorName", createInfo.editorName}
         };
     }
@@ -206,7 +263,8 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const SpawnPointCreateInfo& createInfo) {
         j = nlohmann::json{
             {"Position", createInfo.position},
-            {"CamEuler", createInfo.camEuler},
+            {"Rotation", createInfo.rotation},
+            {"EditorName", createInfo.editorName}
         };
     }
 
@@ -233,14 +291,19 @@ namespace nlohmann {
     void to_json(nlohmann::json& j, const WallCreateInfo& createInfo) {
         j = nlohmann::json{
             {"EditorName", createInfo.editorName},
-            {"Height", createInfo.height},
             {"Material", createInfo.materialName},
             {"MiddleTrimHeight", createInfo.middleTrimHeight},
-            {"Points", createInfo.points},
+            {"SequencePoints", createInfo.sequencePoints},
             {"TextureScale", createInfo.textureScale},
             {"TextureOffsetU", createInfo.textureOffsetU},
             {"TextureOffsetV", createInfo.textureOffsetV},
             {"TextureRotation", createInfo.textureRotation},
+            {"RoughnessFactor", createInfo.roughnessFactor},
+            {"MetallicFactor", createInfo.metallicFactor},
+            {"WeatherBoardTextureBoardCount", createInfo.weatherBoardTextureBoardCount},
+            {"WeatherBoardStartIndex", createInfo.weatherBoardStartIndex},
+            {"WeatherBoardEndIndex", createInfo.weatherBoardEndIndex},
+            {"WeatherBoardStopMaterial", createInfo.weatherBoardStopMaterialName},
             {"TrimTypeCeiling", Hell::Enum::ToString(createInfo.ceilingTrimType)},
             {"TrimTypeFloor",  Hell::Enum::ToString(createInfo.floorTrimType)},
             {"UseReversePointOrder", createInfo.useReversePointOrder},
@@ -270,23 +333,7 @@ namespace nlohmann {
 
     void from_json(const nlohmann::json& j, ChristmasLightsCreateInfo& info) {
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
-
         info.sequencePoints = j.value("SequencePoints", std::vector<Unloved::SequencePoint>{});
-        if (info.sequencePoints.empty()) {
-            const std::vector<glm::vec3> points = j.value("Points", std::vector<glm::vec3>{});
-            const std::vector<float> values = j.value("SagHeights", std::vector<float>{});
-
-            info.sequencePoints.reserve(points.size());
-            for (size_t i = 0; i < points.size(); i++) {
-                Unloved::SequencePoint sequencePoint;
-                sequencePoint.position = points[i];
-                if (i < values.size()) {
-                    sequencePoint.value = values[i];
-                }
-                info.sequencePoints.push_back(sequencePoint);
-            }
-        }
-
         info.spiral = j.value("Spiral", false);
         info.spiralRadius = j.value("SpiralRadius", 1.0f);
         info.spiarlHeight = j.value("SpiarlHeight", 1.0f);
@@ -296,7 +343,8 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, Unloved::SequencePoint& sequencePoint) {
         sequencePoint.position = j.value("Position", glm::vec3(0.0f));
         sequencePoint.normal = j.value("Normal", glm::vec3(0.0f, 1.0f, 0.0f));
-        sequencePoint.value = j.value("Value", 0.0f);
+        sequencePoint.customFloat = j.value("CustomFloat", 0.0f);
+        sequencePoint.customBool = j.value("CustomBool", true);
     }
 
     void from_json(const nlohmann::json& j, DDGIVolumeCreateInfo& createInfo) {
@@ -311,7 +359,7 @@ namespace nlohmann {
 
     void from_json(const nlohmann::json& j, DobermannCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
-        info.rotation = j.value("Rotation", j.value("EulerDirection", glm::vec3(0.0f)));
+        info.rotation = j.value("Rotation", glm::vec3(0.0f));
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -328,10 +376,27 @@ namespace nlohmann {
         info.deadLockedAtInit = j.value("DeadLockedAtStart", false);
         info.openAtStart = j.value("OpenAtStart", false);
         info.maxOpenValue = j.value("MaxOpenValue", 2.1f);
+        info.floorPlaneMaterialName = j.value("FloorPlaneMaterial", std::string("FloorBoards"));
+        info.floorPlaneTextureScale = j.value("FloorPlaneTextureScale", 0.4f);
+        info.floorPlaneTextureOffsetU = j.value("FloorPlaneTextureOffsetU", 0.0f);
+        info.floorPlaneTextureOffsetV = j.value("FloorPlaneTextureOffsetV", 0.0f);
+        info.floorPlaneRotateTexture90 = j.value("FloorPlaneRotateTexture90", false);
+        info.floorPlaneRoughnessFactor = j.value("FloorPlaneRoughnessFactor", 1.0f);
+        info.floorPlaneMetallicFactor = j.value("FloorPlaneMetallicFactor", 1.0f);
     }
 
     void from_json(const nlohmann::json& j, FenceCreateInfo& info) {
-        info.controlPoints2D = j.value("ControlPoints2D", std::vector<glm::vec2>());
+        info.sequencePoints = j.value("SequencePoints", std::vector<Unloved::SequencePoint>{});
+        if (info.sequencePoints.empty()) {
+            const std::vector<glm::vec2> controlPoints2D = j.value("ControlPoints2D", std::vector<glm::vec2>{});
+            info.sequencePoints.reserve(controlPoints2D.size());
+            for (const glm::vec2& point : controlPoints2D) {
+                Unloved::SequencePoint sequencePoint;
+                sequencePoint.position = glm::vec3(point.x, 0.0f, point.y);
+                info.sequencePoints.push_back(sequencePoint);
+            }
+            info.snapSequencePointsToTerrain = !controlPoints2D.empty();
+        }
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -340,6 +405,16 @@ namespace nlohmann {
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
         info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), FireplaceType::UNDEFINED);
+    }
+
+    void from_json(const nlohmann::json& j, GenericAnimatedObjectCreateInfo& info) {
+        info.position = j.value("Position", glm::vec3(0.0f));
+        info.rotation = j.value("Rotation", glm::vec3(0.0f));
+        info.scale = j.value("Scale", 1.0f);
+        info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), GenericAnimatedObjectType::UNDEFINED);
+        info.animationName = j.value("AnimationName", std::string());
+        info.animationSpeed = j.value("AnimationSpeed", 1.0f);
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
     void from_json(const nlohmann::json& j, GenericObjectCreateInfo& info) {
@@ -359,10 +434,38 @@ namespace nlohmann {
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
-    void from_json(const nlohmann::json& j, HouseLocation& houseLocation) {
-        houseLocation.position = j.value("Position", glm::vec3(0.0f));
-        houseLocation.rotation = j.value("Rotation", 0.0f);
-        houseLocation.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), HouseType::UNDEFINED);
+    void from_json(const nlohmann::json& j, HouseLocationCreateInfo& createInfo) {
+        createInfo.position = j.value("Position", glm::vec3(0.0f));
+        createInfo.rotation = j.value("Rotation", 0.0f);
+        createInfo.randomHouse = j.value("RandomHouse", false);
+        createInfo.houseName = j.value("HouseName", UNDEFINED_STRING);
+        createInfo.editorName = j.value("EditorName", UNDEFINED_STRING);
+    }
+
+    void from_json(const nlohmann::json& j, PlanarQuadObjectCreateInfo& createInfo) {
+        createInfo.planarQuad.position = j.value("Position", glm::vec3(0.0f));
+        createInfo.planarQuad.rotation = j.value("Rotation", glm::vec3(0.0f));
+        createInfo.planarQuad.points = j.value("Points", std::array<glm::vec3, 4>{});
+        createInfo.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), PlanarQuadObjectType::UNDEFINED);
+        createInfo.editorName = j.value("EditorName", UNDEFINED_STRING);
+        createInfo.customFloats = j.value("CustomFloats", std::array<float, 8>{});
+        createInfo.customInts = j.value("CustomInts", std::array<int32_t, 4>{});
+        createInfo.customBools = j.value("CustomBools", std::array<bool, 8>{});
+        createInfo.customVec3s = j.value("CustomVec3s", std::array<glm::vec3, 4>{});
+        createInfo.materialNames = j.value("Materials", std::array<std::string, 8>{});
+    }
+
+    void from_json(const nlohmann::json& j, PointPairCreateInfo& createInfo) {
+        createInfo.position = j.value("Position", glm::vec3(0.0f));
+        createInfo.rotation = j.value("Rotation", glm::vec3(0.0f));
+        createInfo.length = j.value("Length", 1.0f);
+        createInfo.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), PointPairObjectType::UNDEFINED);
+        createInfo.editorName = j.value("EditorName", UNDEFINED_STRING);
+        createInfo.customFloats = j.value("CustomFloats", std::array<float, 8>{});
+        createInfo.customInts = j.value("CustomInts", std::array<int32_t, 4>{});
+        createInfo.customBools = j.value("CustomBools", std::array<bool, 8>{});
+        createInfo.customVec3s = j.value("CustomVec3s", std::array<glm::vec3, 4>{});
+        createInfo.materialNames = j.value("Materials", std::array<std::string, 8>{});
     }
 
     void from_json(const nlohmann::json& j, WorldPlaneCreateInfo& info) {
@@ -374,6 +477,9 @@ namespace nlohmann {
         info.textureOffsetU = j.value("TextureOffsetU", 0.0f);
         info.textureOffsetV = j.value("TextureOffsetV", 0.0f);
         info.textureRotation = j.value("TextureRotation", 0.0f);
+        info.rotateTexture90 = j.value("RotateTexture90", false);
+        info.roughnessFactor = j.value("RoughnessFactor", 1.0f);
+        info.metallicFactor = j.value("MetallicFactor", 1.0f);
         info.materialName = j.value("Material", "CheckerBoard");
         info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), WorldPlaneType::UNDEFINED);
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
@@ -430,21 +536,13 @@ namespace nlohmann {
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
         info.scale = j.value("Scale", glm::vec3(1.0f));
         info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), PictureFrameType::UNDEFINED);
+        info.useRandom = j.value("UseRandom", true);
+        info.materialName = j.value("Material", std::string("Picture_SHNakedLady"));
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
     void from_json(const nlohmann::json& j, PowerPoleSetCreateInfo& info) {
         info.sequencePoints = j.value("SequencePoints", std::vector<Unloved::SequencePoint>{});
-        if (info.sequencePoints.empty()) {
-            const std::vector<glm::vec2> controlPoints2D = j.value("ControlPoints2D", std::vector<glm::vec2>());
-
-            info.sequencePoints.reserve(controlPoints2D.size());
-            for (const glm::vec2& point : controlPoints2D) {
-                Unloved::SequencePoint sequencePoint;
-                sequencePoint.position = glm::vec3(point.x, 0.0f, point.y);
-                info.sequencePoints.push_back(sequencePoint);
-            }
-        }
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -470,14 +568,19 @@ namespace nlohmann {
     }
 
     void from_json(const nlohmann::json& j, WallCreateInfo& info) {
-        info.height = j.value("Height", 2.4f);
         info.middleTrimHeight = j.value("MiddleTrimHeight", 2.4f);
         info.materialName = j.value("Material", "CheckerBoard");
-        info.points = j.value("Points", std::vector<glm::vec3>{});
+        info.sequencePoints = j.value("SequencePoints", std::vector<Unloved::SequencePoint>{});
         info.textureScale = j.value("TextureScale", 1.0f);
         info.textureOffsetU = j.value("TextureOffsetU", 0.0f);
         info.textureOffsetV = j.value("TextureOffsetV", 0.0f);
         info.textureRotation = j.value("TextureRotation", 0.0f);
+        info.roughnessFactor = j.value("RoughnessFactor", 1.0f);
+        info.metallicFactor = j.value("MetallicFactor", 1.0f);
+        info.weatherBoardTextureBoardCount = j.value("WeatherBoardTextureBoardCount", 16);
+        info.weatherBoardStartIndex = j.value("WeatherBoardStartIndex", 0);
+        info.weatherBoardEndIndex = j.value("WeatherBoardEndIndex", 15);
+        info.weatherBoardStopMaterialName = j.value("WeatherBoardStopMaterial", "WeatherBoards0");
         info.ceilingTrimType = Hell::Enum::FromString(j.value("TrimTypeCeiling", "NONE"), TrimType::UNDEFINED);
         info.floorTrimType = Hell::Enum::FromString(j.value("TrimTypeFloor", "NONE"), TrimType::UNDEFINED);
         info.wallType = Hell::Enum::FromString(j.value("WallType", "NONE"), WallType::UNDEFINED);
@@ -493,7 +596,8 @@ namespace nlohmann {
 
     void from_json(const nlohmann::json& j, SpawnPointCreateInfo& spawnPoint) {
         spawnPoint.position = j.value("Position", glm::vec3(0.0f));
-        spawnPoint.camEuler = j.value("CamEuler", glm::vec3(0.0f));
+        spawnPoint.rotation = j.value("Rotation", glm::vec2(0.0f));
+        spawnPoint.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
     void from_json(const nlohmann::json& j, std::map<Hell::ivecXZ, std::string>& mapData) {
@@ -536,6 +640,7 @@ namespace JSON {
         createInfoCollection.doors = json.value("Doors", std::vector<DoorCreateInfo>{});
         createInfoCollection.fences = json.value("Fences", std::vector<FenceCreateInfo>{});
         createInfoCollection.fireplaces = json.value("Fireplaces", std::vector<FireplaceCreateInfo>{});
+        createInfoCollection.genericAnimatedObjects = json.value("GenericAnimatedObjects", std::vector<GenericAnimatedObjectCreateInfo>{});
         createInfoCollection.genericObjects = json.value("Drawers", std::vector<GenericObjectCreateInfo>{});
         createInfoCollection.jetties = json.value("Jetties", std::vector<JettyCreateInfo>{});
         createInfoCollection.worldPlanes = json.value("Planes", std::vector<WorldPlaneCreateInfo>{});
@@ -546,6 +651,8 @@ namespace JSON {
         createInfoCollection.pickUps = json.value("PickUps", std::vector<PickUpCreateInfo>{});
         createInfoCollection.pictureFrames = json.value("PictureFrames", std::vector<PictureFrameCreateInfo>{});
         createInfoCollection.powerPoleSets = json.value("PowerPoleSets", std::vector<PowerPoleSetCreateInfo>{});
+        createInfoCollection.planarQuadObjects = json.value("PlanarQuadObjects", std::vector<PlanarQuadObjectCreateInfo>{});
+        createInfoCollection.pointPairObjects = json.value("PointPairObjects", std::vector<PointPairCreateInfo>{});
         createInfoCollection.sharks = json.value("Sharks", std::vector<SharkCreateInfo>{});
         createInfoCollection.spawnPointsCampaign = json.value("CampaignSpawns", std::vector<SpawnPointCreateInfo>{});
         createInfoCollection.spawnPointsDeathMatch = json.value("DeathmatchSpawns", std::vector<SpawnPointCreateInfo>{});
@@ -563,6 +670,7 @@ namespace JSON {
         json["DDGIVolumes"] = createInfoCollection.ddgiVolumes;
         json["Dobermanns"] = createInfoCollection.dobermanns;
         json["Doors"] = createInfoCollection.doors;
+        json["GenericAnimatedObjects"] = createInfoCollection.genericAnimatedObjects;
         json["Drawers"] = createInfoCollection.genericObjects;
         json["Fences"] = createInfoCollection.fences;
         json["Fireplaces"] = createInfoCollection.fireplaces;
@@ -574,6 +682,8 @@ namespace JSON {
         json["PickUps"] = createInfoCollection.pickUps;
         json["PictureFrames"] = createInfoCollection.pictureFrames;
         json["PowerPoleSets"] = createInfoCollection.powerPoleSets;
+        json["PlanarQuadObjects"] = createInfoCollection.planarQuadObjects;
+        json["PointPairObjects"] = createInfoCollection.pointPairObjects;
         json["Sharks"] = createInfoCollection.sharks;
         json["CampaignSpawns"] = createInfoCollection.spawnPointsCampaign;
         json["DeathmatchSpawns"] = createInfoCollection.spawnPointsDeathMatch;
@@ -594,7 +704,7 @@ namespace JSON {
         nlohmann::json json = nlohmann::json::parse(jsonString);
 
         AdditionalMapData additionalMapData;
-        additionalMapData.houseLocations = json.value("HouseLocations", std::vector<HouseLocation>{});
+        additionalMapData.houseLocations = json.value("HouseLocations", std::vector<HouseLocationCreateInfo>{});
 
         return additionalMapData;
     }

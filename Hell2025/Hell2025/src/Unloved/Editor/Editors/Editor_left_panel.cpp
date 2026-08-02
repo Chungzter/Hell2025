@@ -45,8 +45,6 @@ namespace Unloved::Editor {
     EditorUI::FloatSliderInput g_textureOffsetU;
     EditorUI::FloatSliderInput g_textureOffsetV;
 
-    EditorUI::FloatInput g_heightFloatInput;
-
     EditorUI::FloatInput g_worldPlaneP0X;
     EditorUI::FloatInput g_worldPlaneP0Y;
     EditorUI::FloatInput g_worldPlaneP0Z;
@@ -85,9 +83,6 @@ namespace Unloved::Editor {
 
         g_materialDropDown.SetText("Material");
         g_materialDropDown.SetOptions(Hell::ResourceManager::GetMaterialNames());
-
-        g_heightFloatInput.SetText("Height");
-        g_heightFloatInput.SetRange(0.1f, 100.0f);
 
         g_textureScale.SetText("Tex Scale");
         g_textureScale.SetRange(0.00f, 100.0f);
@@ -464,7 +459,6 @@ namespace Unloved::Editor {
                 // Walls
                 if (Wall* wall = Unloved::World::GetWallByObjectId(GetSelectedObjectId())) {
                     g_materialDropDown.SetCurrentOption(wall->GetCreateInfo().materialName);
-                    g_heightFloatInput.SetValue(wall->GetCreateInfo().height);
                     g_textureOffsetU.SetValue(wall->GetCreateInfo().textureOffsetU);
                     g_textureOffsetV.SetValue(wall->GetCreateInfo().textureOffsetV);
                     g_textureScale.SetValue(wall->GetCreateInfo().textureScale);
@@ -472,11 +466,6 @@ namespace Unloved::Editor {
                     // Material
                     if (g_materialDropDown.CreateImGuiElements()) {
                         wall->SetMaterial(g_materialDropDown.GetSelectedOptionText());
-                    }
-
-                    // Height
-                    if (g_heightFloatInput.CreateImGuiElements()) {
-                        wall->SetHeight(g_heightFloatInput.GetValue());
                     }
 
                     // Texture settings

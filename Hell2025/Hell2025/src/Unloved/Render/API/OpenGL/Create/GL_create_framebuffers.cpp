@@ -174,7 +174,8 @@ namespace OpenGL::Renderer {
 
         OpenGLFrameBuffer& worldFbo = OpenGL::ResourceManager::CreateFrameBuffer("World");
         worldFbo.Create(1, 1);
-        worldFbo.CreateAttachment("HeightMap", GL_R16F);
+        worldFbo.CreateAttachment("HeightMap", GL_R32F);
+        worldFbo.CreateAttachment("TerrainControl", GL_R32UI, GL_NEAREST, GL_NEAREST);
 
         OpenGLFrameBuffer& roadFbo = OpenGL::ResourceManager::CreateFrameBuffer("Road");
         roadFbo.Create(1, 1);

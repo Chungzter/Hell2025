@@ -13,7 +13,7 @@
 
 #include "Unloved/Config/Config.h"
 #include "Unloved/Editor/Editor.h"
-#include "Unloved/EditorSession/EditorViewports.h"
+#include "Unloved/EditorSession/Core/EditorViewports.h"
 
 #ifndef GLM_ENABLE_EXPERIMENTAL
     #define GLM_ENABLE_EXPERIMENTAL
@@ -112,6 +112,8 @@ namespace Gizmo {
     glm::vec3 g_gizmoPosition = glm::vec3(0.0, 0.0f, 0.0f);
     glm::quat g_gizmoRotationQ = glm::quat(glm::vec3(0.0f));
     glm::vec3 g_gizmoRotationEuler = glm::vec3(0.0f);
+    bool g_localAxes = false;
+    bool g_worldRotationAxes = false;
     std::vector<GizmoRenderItem> g_renderItems[4];
     std::vector<MeshBufferOLD> g_meshBuffers;
     GizmoFlag g_hoverFlag = GizmoFlag::NONE;
@@ -208,7 +210,7 @@ namespace Gizmo {
     }
 
     void UpdateLocalAxes() {
-        if (GetMode() == GizmoMode::ROTATE) {
+        if ((GetMode() == GizmoMode::ROTATE && !g_worldRotationAxes) || (GetMode() != GizmoMode::ROTATE && g_localAxes)) {
             glm::mat3 R = QuatToMat3(g_gizmoRotationQ);
             g_localRightAxis = R * glm::vec3(1, 0, 0);
             g_localUpAxis = R * glm::vec3(0, 1, 0);
@@ -262,8 +264,13 @@ namespace Gizmo {
 
         const glm::vec3 hitPosition = rayOrigin + rayDirection * distanceToHit;
         float translation = glm::dot(hitPosition - g_translateDrag.startPosition, g_translateDrag.axis) - g_translateDrag.startAxisCoordinate;
-        if (ControlIsDown()) translation = std::round(translation * 10.0f) / 10.0f;
         g_gizmoPosition = g_translateDrag.startPosition + g_translateDrag.axis * translation;
+
+        if (ControlIsDown()) {
+            const float axisPosition = glm::dot(g_gizmoPosition, g_translateDrag.axis);
+            const float snappedAxisPosition = std::round(axisPosition * 10.0f) / 10.0f;
+            g_gizmoPosition += g_translateDrag.axis * (snappedAxisPosition - axisPosition);
+        }
     }
 
     void UpdateInput(bool allowInput) {
@@ -299,15 +306,15 @@ namespace Gizmo {
 
         // Toggle mode
         if (Hell::Input::KeyPressed(HELL_KEY_T) && g_mode != GizmoMode::TRANSLATE) {
-            Audio::PlayAudio("UI_Select.wav", 1.0f);
+            Audio::PlayAudio(AUDIO_SELECT, 1.0f);
             g_mode = GizmoMode::TRANSLATE;
         }
         if (Hell::Input::KeyPressed(HELL_KEY_R) && g_mode != GizmoMode::ROTATE) {
-            Audio::PlayAudio("UI_Select.wav", 1.0f);
+            Audio::PlayAudio(AUDIO_SELECT, 1.0f);
             g_mode = GizmoMode::ROTATE;
         }
         if (Hell::Input::KeyPressed(HELL_KEY_S) && g_mode != GizmoMode::SCALE) {
-            Audio::PlayAudio("UI_Select.wav", 1.0f);
+            Audio::PlayAudio(AUDIO_SELECT, 1.0f);
             g_mode = GizmoMode::SCALE;
         }
 
@@ -696,7 +703,7 @@ namespace Gizmo {
         Transform transform;
         transform.position = g_gizmoPosition + g_sourceObjectOffset;
         
-        if (GetMode() == GizmoMode::ROTATE) {
+        if ((GetMode() == GizmoMode::ROTATE && !g_worldRotationAxes) || (GetMode() != GizmoMode::ROTATE && g_localAxes)) {
             transform.rotation = GetRotation();
         }
 
@@ -718,6 +725,14 @@ namespace Gizmo {
     void SetRotation(const glm::vec3& rotation) {
         g_gizmoRotationEuler = rotation;
         g_gizmoRotationQ = glm::normalize(glm::quat(rotation));
+    }
+
+    void SetLocalAxes(bool enabled) {
+        g_localAxes = enabled;
+    }
+
+    void SetWorldRotationAxes(bool enabled) {
+        g_worldRotationAxes = enabled;
     }
 
     void SetSourceObjectOffeset(const glm::vec3& offset) {

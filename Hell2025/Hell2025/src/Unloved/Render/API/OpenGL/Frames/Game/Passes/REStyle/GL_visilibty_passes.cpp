@@ -1,5 +1,6 @@
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Hell/Render/API/OpenGL/GL_back_end.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 #include "Unloved/Render/RendererConstants.h"
 #include "Unloved/Render/RenderDataManager.h"
 #include "Unloved/Render/Renderer.h"
@@ -21,7 +22,6 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
         OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
-
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
         state.blendEnable = false;
@@ -64,6 +64,10 @@ namespace OpenGL::Renderer {
         OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
         OpenGL::BindSSBO(SSBO_IDX_SCENE_RENDER_ITEMS, "SceneRenderItems");
         OpenGL::BindSSBO(SSBO_IDX_DRAW_RENDER_ITEM_INDICES, "DrawRenderItemIndices");
+        OpenGLFrameBuffer& worldFbo = OpenGL::ResourceManager::GetFrameBuffer("World");
+        Hell::TextureArray* displacementBuffer = Hell::ResourceManager::GetTextureArrayPtr("TerrainDisplacement");
+        OpenGL::BindTextureUnit(5, worldFbo.GetColorAttachmentHandleByName("HeightMap"));
+        if (displacementBuffer) OpenGL::BindTextureUnit(6, displacementBuffer->GetHandle());
 
         OpenGLRasterizerState state;
         state.depthTestEnabled = true;
@@ -83,7 +87,7 @@ namespace OpenGL::Renderer {
         state.stencilPassOp = GL_REPLACE;
 
         glBindVertexArray(meshBuffer.GetVAO());
-        MultiDrawPerViewportRE(fbo, drawInfoSet.heightMap, state);
+        MultiDrawPatchesPerViewportRE(fbo, drawInfoSet.heightMap, state);
     }
 
     void VisibilityAlphaDiscardPass() {

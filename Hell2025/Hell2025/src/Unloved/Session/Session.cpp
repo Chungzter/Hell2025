@@ -1,12 +1,14 @@
 #include "Session.h"
 
 #include "Hell/Logging.h"
+#include "Unloved/World/World.h"
 
 #include <algorithm>
 
 namespace Unloved::Session {
 
     float g_sessionTime = 0;
+    GameMode g_gameMode = GameMode::CAMPAIGN;
     SplitscreenMode g_splitscreenMode = SplitscreenMode::FULLSCREEN;
 
     void Create() {
@@ -21,6 +23,16 @@ namespace Unloved::Session {
 
     float GetSessionTime() {
         return g_sessionTime;
+    }
+
+    void StartNewGame(GameMode mode, const std::string& mapName) {
+        g_gameMode = mode;
+        g_sessionTime = 0.0f;
+        World::NewRun(mapName);
+    }
+
+    GameMode GetGameMode() {
+        return g_gameMode;
     }
 
     void NextSplitScreenMode() {

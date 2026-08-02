@@ -17,6 +17,8 @@ layout (binding = 2) uniform sampler2D NoiseTexture;
 
 in vec3 Normal;
 in vec3 WorldPos;
+in vec4 v_currPos;
+in vec4 v_prevPos;
 
 void main() {
 
@@ -41,7 +43,10 @@ void main() {
 
     vec3 baseColor = color * 0.6;
     vec3 normal = Normal;
-    vec2 velocity = vec2(0, 0);
+
+    vec2 currNDC = v_currPos.xy / v_currPos.w;
+    vec2 prevNDC = v_prevPos.xy / v_prevPos.w;
+    vec2 velocityNDC = currNDC - prevNDC;
 
     float roughness = 0.9;
     float metallic = 0.5;
@@ -57,7 +62,7 @@ void main() {
     NormalXYRoughnessMiscOut.a = 0.0; // Misc 4 bit value
 
     // Velocity / Occlusion / Subsurface out
-    VelocityXYOcclusionSubSurfaceOut.rg = velocity;
+    VelocityXYOcclusionSubSurfaceOut.rg = velocityNDC;
     VelocityXYOcclusionSubSurfaceOut.b = ao;
     VelocityXYOcclusionSubSurfaceOut.a = 0.0; // Subsurface. Not quite sure what this is yet
 

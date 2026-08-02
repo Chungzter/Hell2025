@@ -11,6 +11,23 @@ namespace Unloved::EditorSession {
         MAP
     };
 
+    enum class EditorRenderMode : uint8_t {
+        PBR,
+        SOLID_COLOR,
+        NORMALS
+    };
+
+    enum class EditorSelectionMode : uint8_t {
+        OBJECT,
+        VERTEX
+    };
+
+    enum class EditorObjectMode : uint8_t {
+        OBJECT,
+        VERTEX,
+        VERTEX_AND_OBJECT
+    };
+
     struct EditorRect {
         int32_t x = 0;
         int32_t y = 0;
@@ -46,7 +63,10 @@ namespace Unloved::EditorSession {
         FILE_MENU,
         HIERARCHY,
         VIEWPORTS,
-        PROPERTIES
+        PROPERTIES,
+        TOOLS,
+        MATERIALS,
+        BRUSHES
     };
 
     enum class EditorViewportLayout : uint8_t {

@@ -162,7 +162,7 @@ void main() {
         return;
     }
 
-    vec3 finalIrradiance = SampleIrradianceAtlas(worldPos, normal, viewPos) * IRRADIANCE_DAMPENING;
+    vec3 finalIrradiance = SampleIrradianceAtlas(worldPos, normal, viewPos) * rendererData.irradianceDampening;
 
     imageStore(storageImagesRGBA16F[outputImageIndex], px, vec4(finalIrradiance, 1.0));
     imageStore(storageImagesRGBA16F[outputSurfaceImageIndex], px, vec4(normal, distance(worldPos, viewPos)));

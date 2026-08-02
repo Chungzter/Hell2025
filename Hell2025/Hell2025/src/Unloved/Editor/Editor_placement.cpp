@@ -99,7 +99,7 @@ namespace Unloved::Editor {
             if (g_placementObjectId != 0 && rayResult.hitFound) {
                 g_sequencePoints.back().position = rayResult.position;
                 g_sequencePoints.back().normal = rayResult.normal;
-                g_sequencePoints.back().value = g_sequencePointValue;
+                g_sequencePoints.back().customFloat = g_sequencePointValue;
                 UpdatePointSequenceObject(g_currentPlacementTool, g_placementObjectId, g_sequencePoints);
             }
 
@@ -109,24 +109,24 @@ namespace Unloved::Editor {
                     SequencePoint& sequencePoint = g_sequencePoints.emplace_back();
                     sequencePoint.position = rayResult.position;
                     sequencePoint.normal = rayResult.normal;
-                    sequencePoint.value = g_sequencePointValue;
+                    sequencePoint.customFloat = g_sequencePointValue;
 
                     SequencePoint& liveSequencePoint = g_sequencePoints.emplace_back();
                     liveSequencePoint.position = rayResult.position + livePointOffset;
                     liveSequencePoint.normal = rayResult.normal;
-                    liveSequencePoint.value = g_sequencePointValue;
+                    liveSequencePoint.customFloat = g_sequencePointValue;
 
                     g_placementObjectId = CreatePointSequenceObject(g_currentPlacementTool, g_sequencePoints, *toolInfo);
                 }
                 else {
                     g_sequencePoints.back().position = rayResult.position;
                     g_sequencePoints.back().normal = rayResult.normal;
-                    g_sequencePoints.back().value = g_sequencePointValue;
+                    g_sequencePoints.back().customFloat = g_sequencePointValue;
 
                     SequencePoint& liveSequencePoint = g_sequencePoints.emplace_back();
                     liveSequencePoint.position = rayResult.position + livePointOffset;
                     liveSequencePoint.normal = rayResult.normal;
-                    liveSequencePoint.value = g_sequencePointValue;
+                    liveSequencePoint.customFloat = g_sequencePointValue;
 
                     UpdatePointSequenceObject(g_currentPlacementTool, g_placementObjectId, g_sequencePoints);
                 }

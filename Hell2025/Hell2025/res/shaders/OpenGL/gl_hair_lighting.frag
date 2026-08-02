@@ -6,6 +6,8 @@ readonly restrict layout(std430, binding = SSBO_IDX_SAMPLERS) buffer textureSamp
 	uvec2 textureSamplers[];
 };
 in flat int MaterialIndex;
+in flat float RoughnessFactor;
+in flat float MetallicFactor;
 
 layout (binding = TEX_IDX_SHADOW_MAP_HI_RES)     uniform samplerCubeArrayShadow hiResShadowMapArray;
 layout (binding = TEX_IDX_SHADOW_MAP_LOW_RES)    uniform samplerCubeArrayShadow lowResShadowMapArray;
@@ -58,8 +60,8 @@ void main() {
 
     finalAlpha = clamp(finalAlpha, 0, 1);
     
-    float roughness = rma.r;
-    float metallic = rma.g;
+    float roughness = clamp(rma.r * RoughnessFactor, 0.0, 1.0);
+    float metallic = clamp(rma.g * MetallicFactor, 0.0, 1.0);
     float ao = rma.b;
 
     // Tiled lights

@@ -11,33 +11,42 @@ namespace Unloved::HouseManager {
     std::vector<HouseData> g_houseData;
 
     void Init() {
-        //g_houseData.clear();
-        //for (FileInfo& fileInfo : Hell::File::IterateDirectory("res/houses/", { "json" })) {
-        //    g_houseData[fileInfo.name] = JSON::LoadHouse(fileInfo.path);
-        //}
+        g_houseData.clear();
+    }
 
-        LoadHouseData("TestHouse");
+    bool NewHouse(const std::string& filename) {
+        for (HouseData& houseData : g_houseData) {
+            if (houseData.GetFilename() == filename) return false;
+        }
+
+        HouseData& houseData = g_houseData.emplace_back();
+        houseData.SetFilename(filename);
+        return true;
     }
 
     void LoadHouseData(const std::string& filename) {
+        for (HouseData& houseData : g_houseData) {
+            if (houseData.GetFilename() == filename) return;
+        }
+
+        ReloadHouseData(filename);
+    }
+
+    bool ReloadHouseData(const std::string& filename) {
         const std::string path = "res/houses/" + filename + ".house";
         std::ifstream file(path, std::ios::binary);
         if (!file) {
             Logging::Error() << "HouseManager::LoadHouseData(): failed to open '" << path;
-            return;
+            return false;
         }
 
         nlohmann::json json;
         if (!JSON::LoadJsonFromFile(json, path)) {
             Logging::Error() << "HouseManager::LoadHouseData() failed to open file: " << path;
-            return;
+            return false;
         }
 
         CreateInfoCollection createInfoCollection = JSON::CreateInfoCollectionFromJSONObject(json);
-
-        HouseData& houseData = g_houseData.emplace_back();
-        houseData.SetFilename(filename);
-        houseData.SetCreateInfoCollection(createInfoCollection);
 
         for (size_t i = 0; i < createInfoCollection.genericObjects.size();) {
             if (createInfoCollection.genericObjects[i].type == GenericObjectType::UNDEFINED) {
@@ -49,20 +58,14 @@ namespace Unloved::HouseManager {
             }
         }
 
-        return;
-
-        // PRINTS HOUSE JSON ON LOAD
-
-        Logging::Debug()
-            << "Loaded: " << path
-            << "\n" << JSON::CreateInfoCollectionToJSON(createInfoCollection)
-            //<< "- signature:     " << header.signature << "\n"
-            //<< "- version:       " << header.version << "\n"
-            //<< "- chunk count x: " << header.chunkCountX << "\n"
-            //<< "- chunk count z: " << header.chunkCountZ << "\n"
-            //<< createInfoJson << "\n"
-            //<< additionalJson;
-            << "";
+        HouseData* houseData = nullptr;
+        for (HouseData& existingHouseData : g_houseData) {
+            if (existingHouseData.GetFilename() == filename) houseData = &existingHouseData;
+        }
+        if (!houseData) houseData = &g_houseData.emplace_back();
+        houseData->SetFilename(filename);
+        houseData->SetCreateInfoCollection(createInfoCollection);
+        return true;
     }
     
     void SaveHouse(const std::string& filename) {

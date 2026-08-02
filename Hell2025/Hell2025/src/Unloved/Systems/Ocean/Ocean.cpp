@@ -1,6 +1,8 @@
 #include "Ocean.h"
 
+#include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
+#include "Hell/Serialization/Json.h"
 #include "Hell/Time.h"
 
 #include "Unloved/Common/Constants.h"
@@ -9,9 +11,13 @@
 #include <glm/glm.hpp>
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <random>
+#include <system_error>
 
 namespace Ocean {
+
+    const std::string CONFIG_FILE_PATH = "res/config/ocean.json";
 
     struct FFTBandData {
         std::vector<std::complex<float>> h0;
@@ -41,11 +47,33 @@ namespace Ocean {
     bool BandSpectrumSettingsChanged(int bandIndex);
     void SanitizeSettings();
 
+    template<typename T>
+    void ReadIfPresent(const nlohmann::json& json, const char* name, T& value) {
+        const auto it = json.find(name);
+        if (it != json.end() && !it->is_null()) it->get_to(value);
+    }
+
+    void ReadVec2IfPresent(const nlohmann::json& json, const char* name, glm::vec2& value) {
+        const auto it = json.find(name);
+        if (it == json.end() || it->is_null()) return;
+        value.x = it->at(0).get<float>();
+        value.y = it->at(1).get<float>();
+    }
+
+    void ReadVec3IfPresent(const nlohmann::json& json, const char* name, glm::vec3& value) {
+        const auto it = json.find(name);
+        if (it == json.end() || it->is_null()) return;
+        value.x = it->at(0).get<float>();
+        value.y = it->at(1).get<float>();
+        value.z = it->at(2).get<float>();
+    }
+
     void Init() {
         g_spectrumGenerated = false;
         g_animationTime = 0.0f;
         g_simulationTime = 0.0f;
-        ResetSettings();
+        g_settings = CreateDefaultSettings();
+        if (!LoadFromDisk()) UpdateSpectrum();
 
         g_oceanReadbackData.heightPlayer0 = g_oceanOriginY;
         g_oceanReadbackData.heightPlayer1 = g_oceanOriginY;
@@ -320,6 +348,231 @@ namespace Ocean {
 
     void ResetSettings() {
         SetSettings(CreateDefaultSettings());
+    }
+
+    bool LoadFromDisk() {
+        nlohmann::json json;
+        if (!Hell::Json::LoadFromFile(json, CONFIG_FILE_PATH)) return false;
+
+        Settings loadedSettings = CreateDefaultSettings();
+        try {
+            ReadIfPresent(json, "simulate", loadedSettings.simulate);
+
+            int32_t displayMode = static_cast<int32_t>(loadedSettings.displayMode);
+            ReadIfPresent(json, "displayMode", displayMode);
+            loadedSettings.displayMode = static_cast<DisplayMode>(displayMode);
+
+            ReadIfPresent(json, "windSpeed", loadedSettings.windSpeed);
+            ReadIfPresent(json, "gravity", loadedSettings.gravity);
+            ReadIfPresent(json, "displacementScale", loadedSettings.displacementScale);
+            ReadIfPresent(json, "heightScale", loadedSettings.heightScale);
+            ReadIfPresent(json, "simulationTimeScale", loadedSettings.simulationTimeScale);
+            ReadIfPresent(json, "simulationTimeOffset", loadedSettings.simulationTimeOffset);
+
+            const auto bandsIt = json.find("bands");
+            if (bandsIt != json.end() && bandsIt->is_array()) {
+                for (int i = 0; i < FFT_BAND_COUNT && static_cast<size_t>(i) < bandsIt->size(); i++) {
+                    const nlohmann::json& bandJson = bandsIt->at(i);
+                    BandSettings& band = loadedSettings.bands[i];
+                    ReadIfPresent(bandJson, "domainSize", band.domainSize);
+                    ReadIfPresent(bandJson, "minimumWavelength", band.minimumWavelength);
+                    ReadIfPresent(bandJson, "maximumWavelength", band.maximumWavelength);
+                    ReadIfPresent(bandJson, "minimumWavelengthFade", band.minimumWavelengthFade);
+                    ReadIfPresent(bandJson, "maximumWavelengthFade", band.maximumWavelengthFade);
+                    ReadVec2IfPresent(bandJson, "windDirection", band.windDirection);
+                    ReadIfPresent(bandJson, "amplitude", band.amplitude);
+                    ReadIfPresent(bandJson, "windAlignmentExponent", band.windAlignmentExponent);
+                    ReadIfPresent(bandJson, "opposingWavesDamping", band.opposingWavesDamping);
+                    ReadIfPresent(bandJson, "smallWavesDamping", band.smallWavesDamping);
+                    ReadIfPresent(bandJson, "randomSeed", band.randomSeed);
+                }
+            }
+
+            const auto surfaceIt = json.find("surface");
+            if (surfaceIt != json.end() && surfaceIt->is_object()) {
+                const nlohmann::json& surfaceJson = *surfaceIt;
+                SurfaceSettings& surface = loadedSettings.surface;
+                ReadIfPresent(surfaceJson, "specularAntiAliasing", surface.specularAntiAliasing);
+                ReadVec3IfPresent(surfaceJson, "albedo", surface.albedo);
+                ReadVec3IfPresent(surfaceJson, "fogColor", surface.fogColor);
+                ReadIfPresent(surfaceJson, "normalScale", surface.normalScale);
+                ReadIfPresent(surfaceJson, "normalConvergeStartDistance", surface.normalConvergeStartDistance);
+                ReadIfPresent(surfaceJson, "normalConvergeEndDistance", surface.normalConvergeEndDistance);
+                ReadIfPresent(surfaceJson, "normalConvergeMaxFactor", surface.normalConvergeMaxFactor);
+                ReadIfPresent(surfaceJson, "normalConvergeExponent", surface.normalConvergeExponent);
+                ReadIfPresent(surfaceJson, "normalSoftening", surface.normalSoftening);
+                ReadIfPresent(surfaceJson, "rippleTiling", surface.rippleTiling);
+                ReadIfPresent(surfaceJson, "rippleStrength", surface.rippleStrength);
+                ReadIfPresent(surfaceJson, "rippleSecondLayerScale", surface.rippleSecondLayerScale);
+                ReadVec2IfPresent(surfaceJson, "rippleVelocity0", surface.rippleVelocity0);
+                ReadVec2IfPresent(surfaceJson, "rippleVelocity1", surface.rippleVelocity1);
+                ReadIfPresent(surfaceJson, "roughness", surface.roughness);
+                ReadIfPresent(surfaceJson, "reflectance", surface.reflectance);
+                ReadIfPresent(surfaceJson, "reflectionGamma", surface.reflectionGamma);
+                ReadIfPresent(surfaceJson, "diffuseStrength", surface.diffuseStrength);
+                ReadIfPresent(surfaceJson, "sssHeightRange", surface.sssHeightRange);
+                ReadIfPresent(surfaceJson, "sssStrength", surface.sssStrength);
+                ReadIfPresent(surfaceJson, "underwaterSssStrength", surface.underwaterSssStrength);
+                ReadIfPresent(surfaceJson, "sssRadiusMinimum", surface.sssRadiusMinimum);
+                ReadIfPresent(surfaceJson, "sssRadiusMaximum", surface.sssRadiusMaximum);
+                ReadIfPresent(surfaceJson, "sssIntensity", surface.sssIntensity);
+                ReadIfPresent(surfaceJson, "sssFalloff", surface.sssFalloff);
+                ReadIfPresent(surfaceJson, "sssSaturation", surface.sssSaturation);
+                ReadIfPresent(surfaceJson, "fogStartDistance", surface.fogStartDistance);
+                ReadIfPresent(surfaceJson, "fogEndDistance", surface.fogEndDistance);
+                ReadIfPresent(surfaceJson, "fogExponent", surface.fogExponent);
+                ReadIfPresent(surfaceJson, "fogStrength", surface.fogStrength);
+            }
+
+            const auto compositeIt = json.find("composite");
+            if (compositeIt != json.end() && compositeIt->is_object()) {
+                const nlohmann::json& compositeJson = *compositeIt;
+                CompositeSettings& composite = loadedSettings.composite;
+                ReadVec3IfPresent(compositeJson, "underwaterTint", composite.underwaterTint);
+
+                const auto surfaceCompositeIt = compositeJson.find("surface");
+                if (surfaceCompositeIt != compositeJson.end() && surfaceCompositeIt->is_object()) {
+                    const nlohmann::json& surfaceJson = *surfaceCompositeIt;
+                    ReadIfPresent(surfaceJson, "planeHeightOffset", composite.surface.planeHeightOffset);
+                    ReadIfPresent(surfaceJson, "distortionSpeed", composite.surface.distortionSpeed);
+                    ReadIfPresent(surfaceJson, "distortionStrength", composite.surface.distortionStrength);
+                    ReadIfPresent(surfaceJson, "distortionTiling", composite.surface.distortionTiling);
+                    ReadIfPresent(surfaceJson, "refractionTintStrength", composite.surface.refractionTintStrength);
+                }
+
+                const auto underwaterIt = compositeJson.find("underwater");
+                if (underwaterIt != compositeJson.end() && underwaterIt->is_object()) {
+                    const nlohmann::json& underwaterJson = *underwaterIt;
+                    UnderwaterCompositeSettings& underwater = composite.underwater;
+                    ReadVec3IfPresent(underwaterJson, "rayFogColor", underwater.rayFogColor);
+                    ReadIfPresent(underwaterJson, "rayFogStrength", underwater.rayFogStrength);
+                    ReadIfPresent(underwaterJson, "darknessCurve", underwater.darknessCurve);
+                    ReadIfPresent(underwaterJson, "distortionSpeed", underwater.distortionSpeed);
+                    ReadIfPresent(underwaterJson, "distortionStrength", underwater.distortionStrength);
+                    ReadIfPresent(underwaterJson, "depthTintStrength", underwater.depthTintStrength);
+                    ReadIfPresent(underwaterJson, "depthTintOriginalWeight", underwater.depthTintOriginalWeight);
+                    ReadIfPresent(underwaterJson, "geometryWaterColorSquaredStrength", underwater.geometryWaterColorSquaredStrength);
+                    ReadIfPresent(underwaterJson, "geometryWaterColorStrength", underwater.geometryWaterColorStrength);
+                    ReadIfPresent(underwaterJson, "geometryTintStrength", underwater.geometryTintStrength);
+                    ReadIfPresent(underwaterJson, "openWaterTintStrength", underwater.openWaterTintStrength);
+                    ReadIfPresent(underwaterJson, "openWaterBrightness", underwater.openWaterBrightness);
+                }
+            }
+        }
+        catch (const nlohmann::json::exception& e) {
+            Logging::Error() << "Ocean::LoadFromDisk() failed to read '" << CONFIG_FILE_PATH << "': " << e.what() << "\n";
+            return false;
+        }
+
+        SetSettings(loadedSettings);
+        Logging::Debug() << "Loaded " << CONFIG_FILE_PATH << "\n";
+        return true;
+    }
+
+    bool SaveToDisk() {
+        std::error_code errorCode;
+        std::filesystem::create_directories(std::filesystem::path(CONFIG_FILE_PATH).parent_path(), errorCode);
+        if (errorCode) {
+            Logging::Error() << "Ocean::SaveToDisk() failed to create config directory: " << errorCode.message() << "\n";
+            return false;
+        }
+
+        nlohmann::json bands = nlohmann::json::array();
+        for (int i = 0; i < FFT_BAND_COUNT; i++) {
+            const BandSettings& band = g_settings.bands[i];
+            const nlohmann::json bandJson = {
+                { "domainSize", band.domainSize },
+                { "minimumWavelength", band.minimumWavelength },
+                { "maximumWavelength", band.maximumWavelength },
+                { "minimumWavelengthFade", band.minimumWavelengthFade },
+                { "maximumWavelengthFade", band.maximumWavelengthFade },
+                { "windDirection", { band.windDirection.x, band.windDirection.y } },
+                { "amplitude", band.amplitude },
+                { "windAlignmentExponent", band.windAlignmentExponent },
+                { "opposingWavesDamping", band.opposingWavesDamping },
+                { "smallWavesDamping", band.smallWavesDamping },
+                { "randomSeed", band.randomSeed }
+            };
+            bands.push_back(bandJson);
+        }
+
+        const SurfaceSettings& surface = g_settings.surface;
+        const CompositeSettings& composite = g_settings.composite;
+        const SurfaceCompositeSettings& surfaceComposite = composite.surface;
+        const UnderwaterCompositeSettings& underwater = composite.underwater;
+        const nlohmann::json json = {
+            { "simulate", g_settings.simulate },
+            { "displayMode", static_cast<int32_t>(g_settings.displayMode) },
+            { "windSpeed", g_settings.windSpeed },
+            { "gravity", g_settings.gravity },
+            { "displacementScale", g_settings.displacementScale },
+            { "heightScale", g_settings.heightScale },
+            { "simulationTimeScale", g_settings.simulationTimeScale },
+            { "simulationTimeOffset", g_settings.simulationTimeOffset },
+            { "bands", bands },
+            { "surface", {
+                { "specularAntiAliasing", surface.specularAntiAliasing },
+                { "albedo", { surface.albedo.r, surface.albedo.g, surface.albedo.b } },
+                { "fogColor", { surface.fogColor.r, surface.fogColor.g, surface.fogColor.b } },
+                { "normalScale", surface.normalScale },
+                { "normalConvergeStartDistance", surface.normalConvergeStartDistance },
+                { "normalConvergeEndDistance", surface.normalConvergeEndDistance },
+                { "normalConvergeMaxFactor", surface.normalConvergeMaxFactor },
+                { "normalConvergeExponent", surface.normalConvergeExponent },
+                { "normalSoftening", surface.normalSoftening },
+                { "rippleTiling", surface.rippleTiling },
+                { "rippleStrength", surface.rippleStrength },
+                { "rippleSecondLayerScale", surface.rippleSecondLayerScale },
+                { "rippleVelocity0", { surface.rippleVelocity0.x, surface.rippleVelocity0.y } },
+                { "rippleVelocity1", { surface.rippleVelocity1.x, surface.rippleVelocity1.y } },
+                { "roughness", surface.roughness },
+                { "reflectance", surface.reflectance },
+                { "reflectionGamma", surface.reflectionGamma },
+                { "diffuseStrength", surface.diffuseStrength },
+                { "sssHeightRange", surface.sssHeightRange },
+                { "sssStrength", surface.sssStrength },
+                { "underwaterSssStrength", surface.underwaterSssStrength },
+                { "sssRadiusMinimum", surface.sssRadiusMinimum },
+                { "sssRadiusMaximum", surface.sssRadiusMaximum },
+                { "sssIntensity", surface.sssIntensity },
+                { "sssFalloff", surface.sssFalloff },
+                { "sssSaturation", surface.sssSaturation },
+                { "fogStartDistance", surface.fogStartDistance },
+                { "fogEndDistance", surface.fogEndDistance },
+                { "fogExponent", surface.fogExponent },
+                { "fogStrength", surface.fogStrength }
+            } },
+            { "composite", {
+                { "underwaterTint", { composite.underwaterTint.r, composite.underwaterTint.g, composite.underwaterTint.b } },
+                { "surface", {
+                    { "planeHeightOffset", surfaceComposite.planeHeightOffset },
+                    { "distortionSpeed", surfaceComposite.distortionSpeed },
+                    { "distortionStrength", surfaceComposite.distortionStrength },
+                    { "distortionTiling", surfaceComposite.distortionTiling },
+                    { "refractionTintStrength", surfaceComposite.refractionTintStrength }
+                } },
+                { "underwater", {
+                    { "rayFogColor", { underwater.rayFogColor.r, underwater.rayFogColor.g, underwater.rayFogColor.b } },
+                    { "rayFogStrength", underwater.rayFogStrength },
+                    { "darknessCurve", underwater.darknessCurve },
+                    { "distortionSpeed", underwater.distortionSpeed },
+                    { "distortionStrength", underwater.distortionStrength },
+                    { "depthTintStrength", underwater.depthTintStrength },
+                    { "depthTintOriginalWeight", underwater.depthTintOriginalWeight },
+                    { "geometryWaterColorSquaredStrength", underwater.geometryWaterColorSquaredStrength },
+                    { "geometryWaterColorStrength", underwater.geometryWaterColorStrength },
+                    { "geometryTintStrength", underwater.geometryTintStrength },
+                    { "openWaterTintStrength", underwater.openWaterTintStrength },
+                    { "openWaterBrightness", underwater.openWaterBrightness }
+                } }
+            } }
+        };
+
+        return Hell::Json::SaveToFile(json, CONFIG_FILE_PATH);
+    }
+
+    const std::string& GetFilePath() {
+        return CONFIG_FILE_PATH;
     }
 
     bool H0UploadRequired(int bandIndex) {

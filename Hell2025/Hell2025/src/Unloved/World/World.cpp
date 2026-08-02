@@ -10,6 +10,7 @@
 #include "Unloved/Maps/MapData.h"
 #include "Unloved/Render/Renderer.h"
 #include "Unloved/Session/Session.h"
+#include "Unloved/Systems/House/HouseBuilder.h"
 #include "Unloved/Systems/Map/MapManager.h"
 
 namespace {
@@ -20,11 +21,11 @@ namespace {
 
 namespace Unloved::World {
 
-    void Init() {
-        NewRun();
-    }
+    void NewRun(const std::string& mapName) {
+        MapManager::LoadMapData(mapName);
+        MapData* mapData = MapManager::GetMapDataByName(mapName);
+        if (!mapData) return;
 
-    void NewRun() {
         ResetWorld();
 
         for (Kangaroo& kangaroo : GetKangaroos()) {
@@ -32,18 +33,8 @@ namespace Unloved::World {
         }
 
         MapCreateInfo mapCreateInfo;
-        mapCreateInfo.mapName = "Shit";
+        mapCreateInfo.mapName = mapName;
         LoadMaps({ mapCreateInfo });
-
-        MapData* mapData = MapManager::GetMapDataByName("Shit");
-        if (mapData && !mapData->GetAdditionalMapData().houseLocations.empty()) {
-            const HouseLocation& houseLocation = mapData->GetAdditionalMapData().houseLocations.front();
-
-            SpawnOffset secondHouseSpawnOffset;
-            secondHouseSpawnOffset.translation = houseLocation.position + glm::vec3(0.0f, 0.0f, 10.0f);
-            secondHouseSpawnOffset.yRotation = houseLocation.rotation;
-            LoadHouse("TestHouse", secondHouseSpawnOffset);
-        }
 
         Editor::SetEditorMapName(UNDEFINED_STRING);
 
@@ -76,6 +67,7 @@ namespace Unloved::World {
     void ResetWorld() {
         Renderer::WaitIdle();
         LegacyWorld::ResetWorld();
+        HouseBuilder::ResetPictureFrameImageList();
         g_generation++;
     }
 

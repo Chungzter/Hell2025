@@ -9,10 +9,15 @@
 #include <string>
 #include <vector>
 
+namespace Debug::Menu::OceanMenu {
+    PageId RegisterMenu(PageId parentPage);
+}
+
 namespace Debug::Menu::ConfigMenu {
 
     enum struct RootSetting : uint32_t {
         FLASHLIGHT,
+        OCEAN,
     };
 
     enum struct FlashlightSetting : uint32_t {
@@ -40,6 +45,7 @@ namespace Debug::Menu::ConfigMenu {
 
     PageId g_homePage = ROOT_PAGE_ID;
     PageId g_flashlightPage = ROOT_PAGE_ID;
+    PageId g_oceanPage = ROOT_PAGE_ID;
 
     void BuildMainMenu();
     void BuildFlashlightMenu();
@@ -60,12 +66,14 @@ namespace Debug::Menu::ConfigMenu {
     void RegisterMenu() {
         g_homePage = RegisterRootPage("Config", "CONFIG", BuildMainMenu, nullptr);
         g_flashlightPage = RegisterPage("FLASHLIGHT", g_homePage, BuildFlashlightMenu, ApplyFlashlightEdit);
+        g_oceanPage = OceanMenu::RegisterMenu(g_homePage);
     }
 
     Registrar g_registrar(RegisterMenu);
 
     void BuildMainMenu() {
         AddSubMenu(static_cast<uint32_t>(RootSetting::FLASHLIGHT), "Flashlight", g_flashlightPage);
+        AddSubMenu(static_cast<uint32_t>(RootSetting::OCEAN), "Ocean", g_oceanPage);
     }
 
     void BuildFlashlightMenu() {

@@ -212,9 +212,9 @@ void main() {
     vec3 normalMap = textureGrad(sampler2D(textures[nonuniformEXT(normalTextureIndex)], textureSamplers[nonuniformEXT(normalTextureIndex)]), uv, dPdx, dPdy).rgb;
     vec4 rma = textureGrad(sampler2D(textures[nonuniformEXT(rmaTextureIndex)], textureSamplers[nonuniformEXT(rmaTextureIndex)]), uv, dPdx, dPdy).rgba;
 
-    float authoredPerceptualRoughness = rma.r;
+    float authoredPerceptualRoughness = clamp(rma.r * renderItem.roughnessFactor, 0.0, 1.0);
     float roughness = authoredPerceptualRoughness;
-    float metallic  = rma.g;
+    float metallic  = clamp(rma.g * renderItem.metallicFactor, 0.0, 1.0);
     float ao = rma.b;
 
     normalMap = normalMap * 2.0 - 1.0;

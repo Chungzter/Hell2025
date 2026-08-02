@@ -2,9 +2,13 @@
 #include "../common/OpenGL/GL_binding_indices.glsl"
 
 uniform mat4 u_projectionView;
+uniform mat4 u_prevProjectionView;
+uniform mat4 u_rasterProjectionView;
 
 out vec3 Normal;
 out vec3 WorldPos;
+out vec4 v_currPos;
+out vec4 v_prevPos;
 
 struct Vertex {
     float posX;
@@ -58,5 +62,9 @@ void main() {
     WorldPos = vec3(v.posX, v.posY, v.posZ) + basePos.xyz;
     Normal = vec3(v.normX, v.normY, v.normZ);
 
-	gl_Position = u_projectionView * vec4(WorldPos, 1.0);
+    vec4 worldPos = vec4(WorldPos, 1.0);
+    v_currPos = u_projectionView * worldPos;
+    v_prevPos = u_prevProjectionView * worldPos;
+
+	gl_Position = u_rasterProjectionView * worldPos;
 }

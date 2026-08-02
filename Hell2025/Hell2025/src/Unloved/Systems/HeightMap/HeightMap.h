@@ -8,6 +8,7 @@ namespace Unloved::HeightMap {
     void Clear();
 
     const std::vector<float>& GetWorldHeightData();
+    const std::vector<uint32_t>& GetWorldTerrainControlData();
     uint32_t GetWorldTextureWidth();
     uint32_t GetWorldTextureHeight();
 }

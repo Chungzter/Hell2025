@@ -38,6 +38,19 @@ enum struct WorldPlaneType {
     UNDEFINED
 };
 
+enum struct PlanarQuadObjectType {
+    DECKING_BOARDS,
+    GUTTER,
+    ROOFING_IRON,
+    UNDEFINED
+};
+
+enum struct PointPairObjectType {
+    RIDGE_CAPPING,
+    DOWN_PIPE,
+    UNDEFINED
+};
+
 enum struct WallType {
     INTERIOR,
     WEATHER_BOARDS,
@@ -68,14 +81,6 @@ enum class ChristmasPresentType : uint32_t {
     UNDEFINED
 };
 
-enum struct HouseType {
-    SMALL_HOUSE,
-    MEDIUM_HOUSE,
-    LARGE_HOUSE,
-    NAMED,
-    UNDEFINED
-};
-
 enum struct FireplaceType {
     WOOD_STOVE,
     DEFAULT,
@@ -98,6 +103,8 @@ enum struct GenericObjectType {
     CHAIR_RE,
     CHAIR_SPINDLE_BACK,
 
+    DEER_HEAD,
+
     MERMAID_ROCK,
 
     PLANT_BLACKBERRIES,
@@ -107,6 +114,11 @@ enum struct GenericObjectType {
     TEST_MODEL2,
     TEST_MODEL3,
     TEST_MODEL4,
+    UNDEFINED
+};
+
+enum struct GenericAnimatedObjectType {
+    RAT_KING,
     UNDEFINED
 };
 

@@ -82,7 +82,6 @@ namespace OpenGL::Renderer {
         OceanSurfaceCompositePass();
 
         GlassPass();
-        EmissivePass();
         ScreenspaceReflectionsPass();
         HairPass();
         //DepthPeeledTransparencyPass();
@@ -115,6 +114,7 @@ namespace OpenGL::Renderer {
         PostProcessingPass();
 
         DebugViewPass();
+        HeightMapBrushPreviewPass();
         DebugPass();
 
         ExamineItemPass();

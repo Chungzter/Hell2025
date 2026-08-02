@@ -15,6 +15,7 @@ struct PowerPoleSet {
 
     void Init();
     void AddControlPoint(const glm::vec2& controlPoint2D);
+    void SetPosition(const glm::vec3& position);
     void UpdateSequencePoints(const std::vector<SequencePoint>& sequencePoints);
     void Update();
     void CleanUp();
@@ -22,10 +23,12 @@ struct PowerPoleSet {
     const std::vector<RenderItem>& const GetRenderItems();
 
     const uint64_t GetObjectId() const                  { return m_objectId; }
+    const glm::vec3& GetPosition() const                { return m_position; }
     const PowerPoleSetCreateInfo& GetCreateInfo() const { return m_createInfo; }
 
 private:
     uint64_t m_objectId = 0;
+    glm::vec3 m_position = glm::vec3(0.0f);
     PowerPoleSetCreateInfo m_createInfo;
     SpawnOffset m_spawnOffset;
 

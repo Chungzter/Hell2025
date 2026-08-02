@@ -26,6 +26,8 @@ out vec3 EmissiveColor;
 
 out flat int MaterialIndex;
 out flat int WoundMaterialIndex;
+out flat float RoughnessFactor;
+out flat float MetallicFactor;
 
 out flat int WoundMaskTextureIndex;
 out flat uint MiscFlags;
@@ -47,6 +49,8 @@ void main() {
 
     MaterialIndex = renderItem.materialIndex;
     WoundMaterialIndex = renderItem.woundMaterialIndex;
+    RoughnessFactor = renderItem.roughnessFactor;
+    MetallicFactor = renderItem.metallicFactor;
 
     mat4 modelMatrix = renderItem.modelMatrix;
     mat4 prevModelMatrix = renderItem.prevModelMatrix;

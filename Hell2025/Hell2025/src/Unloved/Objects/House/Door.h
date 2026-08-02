@@ -34,6 +34,13 @@ struct Door {
     void SetDeadLockedAtInitState(bool value);
     void SetOpenAtStartState(bool value);
     void SetMaxOpenValue(float value);
+    void SetFloorPlaneMaterial(const std::string& materialName);
+    void SetFloorPlaneTextureScale(float value);
+    void SetFloorPlaneTextureOffsetU(float value);
+    void SetFloorPlaneTextureOffsetV(float value);
+    void SetFloorPlaneRotateTexture90(bool value);
+    void SetFloorPlaneRoughnessFactor(float value);
+    void SetFloorPlaneMetallicFactor(float value);
     void Reset();
     void DebugDraw();
     bool CameraFacingDoorWorldForward(const glm::vec3& cameraPositon, const glm::vec3& cameraForward);

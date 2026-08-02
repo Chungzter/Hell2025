@@ -92,6 +92,7 @@ namespace OpenGL::Renderer {
 
 #define BLADE_SPACING 0.0185185185185185f
 #define BLADES_PER_TILE_AXIS 432
+#define GRASS_COVERAGE_THRESHOLD 0.5f
 
     void GenerateBladePositions(float xOffset, float zOffset, int viewportIndex);
     void RenderGrass(int viewportIndex);
@@ -156,12 +157,18 @@ namespace OpenGL::Renderer {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_GRASS_POSITION_INPUT_VERTICES, g_grassGeometryMesh.GetVBO());
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_IDX_GRASS_POSITION_INPUT_INDICES, g_grassGeometryMesh.GetEBO());
         glBindTextureUnit(0, worldFramebuffer->GetColorAttachmentHandleByName("HeightMap"));
+        glBindTextureUnit(1, worldFramebuffer->GetColorAttachmentHandleByName("TerrainControl"));
         glBindTextureUnit(2, GetTextureHandleByName("Perlin"));
         glBindTextureUnit(3, roadFramebuffer->GetColorAttachmentHandleByName("RoadMask"));
         glBindTextureUnit(4, wipBuffer->GetDepthAttachmentHandle());
 
         // GL State
-        OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        if (Unloved::Renderer::GetRendererMode() == RendererMode::RE_STYLE) {
+            OpenGL::RasterizerStateManager::ForceRasterizerState("GrassPass_RE");
+        }
+        else {
+            OpenGL::RasterizerStateManager::ForceRasterizerState("GeometryPass_Default");
+        }
 
         // Generate and draw
         for (int i = 0; i < 4; i++) {   // CHANGE TO VIEWPORT NOT PLAYER!!!!
@@ -282,6 +289,7 @@ namespace OpenGL::Renderer {
         OpenGL::SetUniformInt("gridSize", BLADES_PER_TILE_AXIS);
         OpenGL::SetUniformInt("u_viewportIndex", viewportIndex);
         OpenGL::SetUniformFloat("spacing", BLADE_SPACING);
+        OpenGL::SetUniformFloat("u_grassCoverageThreshold", GRASS_COVERAGE_THRESHOLD);
         OpenGL::SetUniformVec3("offset", glm::vec3(xOffset, 0.0f, zOffset));
         OpenGL::SetUniformFloat("u_heightMapWorldSpaceSize", HEIGHT_MAP_SIZE * HEIGHTMAP_SCALE_XZ);
         OpenGL::SetUniformFloat("u_waterHeight", World::HasOcean() ? Ocean::GetOceanOriginY() : -1000.0f);
@@ -309,10 +317,12 @@ namespace OpenGL::Renderer {
         //gBuffer->DrawBuffers({ "BaseColor", "Normal", "RMA", "Emissive" });
         gBuffer->DrawBuffers({ "BaseColorMetallic", "NormalXYRoughnessMisc", "Emissive", "VelocityXYOcclusionSubSurface" });
 
-        glm::mat4 projectionView = viewportData[viewportIndex].jitteredProjectionViewReverseZ;
+        const ViewportData& currentViewportData = viewportData[viewportIndex];
 
         OpenGL::BindShader("Grass");
-        OpenGL::SetUniformMat4("u_projectionView", projectionView);
+        OpenGL::SetUniformMat4("u_projectionView", currentViewportData.projectionViewReverseZ);
+        OpenGL::SetUniformMat4("u_prevProjectionView", currentViewportData.prevProjectionViewReverseZ);
+        OpenGL::SetUniformMat4("u_rasterProjectionView", currentViewportData.jitteredProjectionViewReverseZ);
 
 
         glMemoryBarrier(GL_COMMAND_BARRIER_BIT);

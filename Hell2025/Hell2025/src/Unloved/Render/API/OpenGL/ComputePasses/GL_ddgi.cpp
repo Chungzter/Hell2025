@@ -54,6 +54,7 @@ namespace OpenGL::Renderer {
     void ComputeProbeIrradiance(Unloved::DDGIVolume& ddgiVolume);
     void ComputeProbeIrradianceBorder(Unloved::DDGIVolume& ddgiVolume);
     void ComputeIrradianceTexture(Unloved::DDGIVolume& ddgiVolume);
+    void ClearIrradianceTexture();
 
     size_t NonZeroByteCount(size_t byteCount) {
         return std::max(byteCount, sizeof(uint32_t));
@@ -229,7 +230,13 @@ namespace OpenGL::Renderer {
 
     void UpdateGlobalIllumintation() {
         Hell::SlotMap<Unloved::DDGIVolume>& ddgiVolumes = Unloved::DDGIManager::GetVolumes();
-        if (ddgiVolumes.empty()) return;
+
+        // Clear to black if there are no DDGI volumes. This happens when you load a map without them.
+        // Without this clear, it'll just display the last stale indirect diffuse texture computed.
+        if (ddgiVolumes.empty()) {
+            ClearIrradianceTexture();
+            return;
+        }
 
         ReserveGlobalDDGIProbeBuffers();
 
@@ -685,6 +692,14 @@ namespace OpenGL::Renderer {
 
         glBindImageTexture(0, fbo->GetColorAttachmentHandleByName("Color"), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
         OpenGL::DispatchCompute(fbo->GetWidth() / 8, fbo->GetHeight() / 8, 1);
+    }
+
+    void ClearIrradianceTexture() {
+        OpenGLFrameBuffer* fbo = OpenGL::ResourceManager::GetFrameBufferPtr("IndirectDiffuse");
+        if (!fbo) return;
+
+        fbo->ClearAttachment("Color", 0.0f, 0.0f, 0.0f, 0.0f);
+        fbo->ClearAttachment("Surface", 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
     void ComputeIrradianceTexture(Unloved::DDGIVolume& ddgiVolume) {

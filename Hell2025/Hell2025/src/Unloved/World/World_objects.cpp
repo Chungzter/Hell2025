@@ -17,6 +17,8 @@
 #include "Unloved/Objects/Effects/Decal.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/House/Fireplace.h"
+#include "Unloved/Objects/House/PlanarQuadObject.h"
+#include "Unloved/Objects/House/PointPairObject.h"
 #include "Unloved/Objects/House/WorldPlane.h"
 #include "Unloved/Objects/House/TrimSet.h"
 #include "Unloved/Objects/House/Wall.h"
@@ -29,9 +31,11 @@
 #include "Unloved/Objects/Props/Christmas/ChristmasLights.h"
 #include "Unloved/Objects/Props/Christmas/ChristmasTree.h"
 #include "Unloved/Objects/Props/GameObject.h"
+#include "Unloved/Objects/Props/GenericAnimatedObject.h"
 #include "Unloved/Objects/Props/GenericObject.h"
 #include "Unloved/Objects/Props/PickUp.h"
 #include "Unloved/Objects/Renderables/AnimatedGameObject.h"
+#include "Unloved/Objects/Spawns/HouseLocation.h"
 #include "Unloved/Objects/Spawns/SpawnPoint.h"
 #include "Unloved/Objects/Traversal/Ladder.h"
 #include "Unloved/Objects/Traversal/Staircase.h"
@@ -52,7 +56,9 @@ namespace Unloved::World {
     Hell::SlotMap<Fence> g_fences;
     Hell::SlotMap<Fireplace> g_fireplaces;
     Hell::SlotMap<GameObject> g_gameObjects;
+    Hell::SlotMap<GenericAnimatedObject> g_genericAnimatedObjects;
     Hell::SlotMap<GenericObject> g_genericObjects;
+    Hell::SlotMap<HouseLocation> g_houseLocations;
     Hell::SlotMap<WorldPlane> g_worldPlanes;
     Hell::SlotMap<Kangaroo> g_kangaroos;
     Hell::SlotMap<Jetty> g_jetties;
@@ -64,6 +70,8 @@ namespace Unloved::World {
     Hell::SlotMap<PickUp> g_pickUps;
     Hell::SlotMap<PictureFrame> g_pictureFrames;
     Hell::SlotMap<PowerPoleSet> g_powerPoleSets;
+    Hell::SlotMap<PlanarQuadObject> g_planarQuadObjects;
+    Hell::SlotMap<PointPairObject> g_pointPairObjects;
     Hell::SlotMap<Shark> g_sharks;
     Hell::SlotMap<SpawnPoint> g_spawnPointsCampaign;
     Hell::SlotMap<SpawnPoint> g_spawnPointsDeathMatch;
@@ -84,7 +92,9 @@ namespace Unloved::World {
     Hell::SlotMap<Fence>& GetFences()                           { return g_fences; }
     Hell::SlotMap<Fireplace>& GetFireplaces()                   { return g_fireplaces; }
     Hell::SlotMap<GameObject>& GetGameObjects()                 { return g_gameObjects; }
+    Hell::SlotMap<GenericAnimatedObject>& GetGenericAnimatedObjects() { return g_genericAnimatedObjects; }
     Hell::SlotMap<GenericObject>& GetGenericObjects()           { return g_genericObjects; }
+    Hell::SlotMap<HouseLocation>& GetHouseLocations()           { return g_houseLocations; }
     Hell::SlotMap<WorldPlane>& GetWorldPlanes()                 { return g_worldPlanes; }
     Hell::SlotMap<Kangaroo>& GetKangaroos()                     { return g_kangaroos; }
     Hell::SlotMap<Jetty>& GetJetties()                          { return g_jetties; }
@@ -96,6 +106,8 @@ namespace Unloved::World {
     Hell::SlotMap<PickUp>& GetPickUps()                         { return g_pickUps; }
     Hell::SlotMap<PictureFrame>& GetPictureFrames()             { return g_pictureFrames; }
     Hell::SlotMap<PowerPoleSet>& GetPowerPoleSets()             { return g_powerPoleSets; }
+    Hell::SlotMap<PlanarQuadObject>& GetPlanarQuadObjects()     { return g_planarQuadObjects; }
+    Hell::SlotMap<PointPairObject>& GetPointPairObjects()       { return g_pointPairObjects; }
     Hell::SlotMap<Shark>& GetSharks()                           { return g_sharks; }
     Hell::SlotMap<SpawnPoint>& GetSpawnPointsCampaign()         { return g_spawnPointsCampaign; }
     Hell::SlotMap<SpawnPoint>& GetSpawnPointsDeathMatch()       { return g_spawnPointsDeathMatch; }
@@ -262,6 +274,19 @@ namespace Unloved::World {
         return nullptr;
     }
 
+    // Generic Animated Objects
+
+    uint64_t AddGenericAnimatedObject(GenericAnimatedObjectCreateInfo createInfo, SpawnOffset spawnOffset) {
+        Editor::AssignEditorName(createInfo, GetGenericAnimatedObjects());
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::GENERIC_ANIMATED_OBJECT);
+        GetGenericAnimatedObjects().emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
+    GenericAnimatedObject* GetGenericAnimatedObjectById(uint64_t objectId) {
+        return GetGenericAnimatedObjects().get(objectId);
+    }
+
     // Generic Objects
 
     uint64_t AddGenericObject(GenericObjectCreateInfo createInfo, SpawnOffset spawnOffset) {
@@ -275,6 +300,19 @@ namespace Unloved::World {
 
     GenericObject* GetGenericObjectById(uint64_t objectId) {
         return GetGenericObjects().get(objectId);
+    }
+
+    // House Locations
+
+    uint64_t AddHouseLocation(HouseLocationCreateInfo createInfo, SpawnOffset spawnOffset) {
+        Editor::AssignEditorName(createInfo, GetHouseLocations());
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::HOUSE_LOCATION);
+        GetHouseLocations().emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
+    HouseLocation* GetHouseLocationByObjectId(uint64_t objectId) {
+        return GetHouseLocations().get(objectId);
     }
 
     // Jetties
@@ -354,6 +392,62 @@ namespace Unloved::World {
         }
 
         return ids;
+    }
+
+    uint64_t AddPlanarQuadObject(PlanarQuadObjectCreateInfo createInfo, SpawnOffset spawnOffset) {
+        const char* defaultEditorName = "Planar Quad Object";
+        if (createInfo.type == PlanarQuadObjectType::DECKING_BOARDS) defaultEditorName = "Decking Boards";
+        if (createInfo.type == PlanarQuadObjectType::GUTTER) defaultEditorName = "Gutter";
+        if (createInfo.type == PlanarQuadObjectType::ROOFING_IRON) defaultEditorName = "Roofing Iron";
+
+        std::string desiredName = createInfo.editorName;
+        if (desiredName.empty() || desiredName == UNDEFINED_STRING || desiredName == "Undefined") desiredName = defaultEditorName;
+
+        int32_t suffix = 1;
+        while (true) {
+            createInfo.editorName = suffix == 1 ? desiredName : desiredName + " " + std::to_string(suffix);
+            bool nameAvailable = true;
+            for (const PlanarQuadObject& object : GetPlanarQuadObjects()) {
+                if (object.GetEditorName() == createInfo.editorName) nameAvailable = false;
+            }
+            if (nameAvailable) break;
+            suffix++;
+        }
+
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::PLANAR_QUAD_OBJECT);
+        GetPlanarQuadObjects().emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
+    PlanarQuadObject* GetPlanarQuadObjectByObjectId(uint64_t objectId) {
+        return GetPlanarQuadObjects().get(objectId);
+    }
+
+    uint64_t AddPointPairObject(PointPairCreateInfo createInfo, SpawnOffset spawnOffset) {
+        const char* defaultEditorName = "Point Pair Object";
+        if (createInfo.type == PointPairObjectType::RIDGE_CAPPING) defaultEditorName = "Ridge Capping";
+        if (createInfo.type == PointPairObjectType::DOWN_PIPE) defaultEditorName = "Down Pipe";
+
+        std::string desiredName = createInfo.editorName;
+        if (desiredName.empty() || desiredName == UNDEFINED_STRING || desiredName == "Undefined") desiredName = defaultEditorName;
+        int32_t suffix = 1;
+        while (true) {
+            createInfo.editorName = suffix == 1 ? desiredName : desiredName + " " + std::to_string(suffix);
+            bool nameAvailable = true;
+            for (const PointPairObject& object : GetPointPairObjects()) {
+                if (object.GetEditorName() == createInfo.editorName) nameAvailable = false;
+            }
+            if (nameAvailable) break;
+            suffix++;
+        }
+
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::POINT_PAIR_OBJECT);
+        GetPointPairObjects().emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
+    PointPairObject* GetPointPairObjectByObjectId(uint64_t objectId) {
+        return GetPointPairObjects().get(objectId);
     }
 
     uint64_t AddSpotLight(uint64_t ownerObjectId, int32_t ownerViewportIndex) {
@@ -526,7 +620,7 @@ namespace Unloved::World {
     // Walls
 
     uint64_t AddWall(WallCreateInfo createInfo, SpawnOffset spawnOffset) {
-        if (createInfo.points.empty()) {
+        if (createInfo.sequencePoints.empty()) {
             Logging::Warning() << "World::AddWall() failed: createInfo has zero points!";
             return 0;
         }
@@ -595,6 +689,62 @@ namespace Unloved::World {
         return GetWorldPlanes().get(objectId);
     }
 
+    // Duplicate Object
+
+    template<typename Container, typename AddFunction>
+    uint64_t DuplicateObject_T(Container& objects, uint64_t objectId, AddFunction addObject) {
+        auto* object = objects.get(objectId);
+        if (!object) return 0;
+
+        auto createInfo = object->GetCreateInfo();
+        const size_t suffixStart = createInfo.editorName.find_last_of(' ');
+        if (suffixStart != std::string::npos && suffixStart + 1 < createInfo.editorName.size()) {
+            bool numberedSuffix = true;
+            for (size_t i = suffixStart + 1; i < createInfo.editorName.size(); i++) numberedSuffix &= createInfo.editorName[i] >= '0' && createInfo.editorName[i] <= '9';
+            const std::string baseName = createInfo.editorName.substr(0, suffixStart);
+            if (numberedSuffix && !Editor::EditorNameAvailable(objects, baseName)) createInfo.editorName = baseName;
+        }
+        return addObject(createInfo, SpawnOffset());
+    }
+
+    uint64_t DuplicateObjectById(uint64_t objectId) {
+        if (objectId == 0) return 0;
+
+        switch (GetObjectIdType(objectId)) {
+        case ObjectType::CHRISTMAS_LIGHTS:       return DuplicateObject_T(GetChristmasLightSets(), objectId, AddChristmasLights);
+        case ObjectType::TREE:                   return DuplicateObject_T(GetChristmasTrees(), objectId, AddChristmasTree);
+        case ObjectType::DDGI_VOLUME:            return DuplicateObject_T(GetDDGIVolumes(), objectId, AddDDGIVolume);
+        case ObjectType::DOBERMANN:              return DuplicateObject_T(GetDobermanns(), objectId, AddDobermann);
+        case ObjectType::DOOR:                   return DuplicateObject_T(GetDoors(), objectId, AddDoor);
+        case ObjectType::FENCE:                  return DuplicateObject_T(GetFences(), objectId, AddFence);
+        case ObjectType::FIREPLACE:              return DuplicateObject_T(GetFireplaces(), objectId, AddFireplace);
+        case ObjectType::GAME_OBJECT:            return DuplicateObject_T(GetGameObjects(), objectId, AddGameObject);
+        case ObjectType::GENERIC_ANIMATED_OBJECT:return DuplicateObject_T(GetGenericAnimatedObjects(), objectId, AddGenericAnimatedObject);
+        case ObjectType::GENERIC_OBJECT:         return DuplicateObject_T(GetGenericObjects(), objectId, AddGenericObject);
+        case ObjectType::HOUSE_LOCATION:         return DuplicateObject_T(GetHouseLocations(), objectId, AddHouseLocation);
+        case ObjectType::WORLD_PLANE:            return DuplicateObject_T(GetWorldPlanes(), objectId, AddWorldPlane);
+        case ObjectType::KANGAROO:               return DuplicateObject_T(GetKangaroos(), objectId, AddKangaroo);
+        case ObjectType::JETTY:                  return DuplicateObject_T(GetJetties(), objectId, AddJetty);
+        case ObjectType::LADDER:                 return DuplicateObject_T(GetLadders(), objectId, AddLadder);
+        case ObjectType::LIGHT:                  return DuplicateObject_T(GetLights(), objectId, AddLight);
+        case ObjectType::MERMAID:                return DuplicateObject_T(GetMermaids(), objectId, AddMermaid);
+        case ObjectType::PIANO:                  return DuplicateObject_T(GetPianos(), objectId, AddPiano);
+        case ObjectType::PICK_UP:                return DuplicateObject_T(GetPickUps(), objectId, AddPickUp);
+        case ObjectType::PICTURE_FRAME:          return DuplicateObject_T(GetPictureFrames(), objectId, AddPictureFrame);
+        case ObjectType::POWER_POLE_SET:         return DuplicateObject_T(GetPowerPoleSets(), objectId, AddPowerPoleSet);
+        case ObjectType::PLANAR_QUAD_OBJECT:     return DuplicateObject_T(GetPlanarQuadObjects(), objectId, AddPlanarQuadObject);
+        case ObjectType::POINT_PAIR_OBJECT:      return DuplicateObject_T(GetPointPairObjects(), objectId, AddPointPairObject);
+        case ObjectType::SHARK:                  return DuplicateObject_T(GetSharks(), objectId, AddShark);
+        case ObjectType::SPAWN_POINT_CAMPAIGN:   return DuplicateObject_T(GetSpawnPointsCampaign(), objectId, AddSpawnPointCampaign);
+        case ObjectType::SPAWN_POINT_DEATHMATCH: return DuplicateObject_T(GetSpawnPointsDeathMatch(), objectId, AddSpawnPointDeathMatch);
+        case ObjectType::STAIRCASE:              return DuplicateObject_T(GetStaircases(), objectId, AddStaircase);
+        case ObjectType::TRIM_SET:               return DuplicateObject_T(GetTrimSets(), objectId, AddTrimSet);
+        case ObjectType::WALL:                   return DuplicateObject_T(GetWalls(), objectId, AddWall);
+        case ObjectType::WINDOW:                 return DuplicateObject_T(GetWindows(), objectId, AddWindow);
+        default:                                 return 0;
+        }
+    }
+
     // Set Position
 
     template<typename Container>
@@ -617,9 +767,12 @@ namespace Unloved::World {
         case ObjectType::DDGI_VOLUME:    updated = SetPosition_T(GetDDGIVolumes(), objectId, position); break;
         case ObjectType::DOBERMANN:      updated = SetPosition_T(GetDobermanns(), objectId, position); break;
         case ObjectType::DOOR:           updated = SetPosition_T(GetDoors(), objectId, position); break;
+        case ObjectType::FENCE:          updated = SetPosition_T(GetFences(), objectId, position); break;
         case ObjectType::FIREPLACE:      updated = SetPosition_T(GetFireplaces(), objectId, position); break;
         case ObjectType::GAME_OBJECT:    updated = SetPosition_T(GetGameObjects(), objectId, position); break;
+        case ObjectType::GENERIC_ANIMATED_OBJECT: updated = SetPosition_T(GetGenericAnimatedObjects(), objectId, position); break;
         case ObjectType::GENERIC_OBJECT: updated = SetPosition_T(GetGenericObjects(), objectId, position); break;
+        case ObjectType::HOUSE_LOCATION: updated = SetPosition_T(GetHouseLocations(), objectId, position); break;
         case ObjectType::WORLD_PLANE:    updated = SetPosition_T(GetWorldPlanes(), objectId, position); break;
         case ObjectType::JETTY:          updated = SetPosition_T(GetJetties(), objectId, position); break;
         case ObjectType::LADDER:         updated = SetPosition_T(GetLadders(), objectId, position); break;
@@ -628,7 +781,12 @@ namespace Unloved::World {
         case ObjectType::PIANO:          updated = SetPosition_T(GetPianos(), objectId, position); break;
         case ObjectType::PICK_UP:        updated = SetPosition_T(GetPickUps(), objectId, position); break;
         case ObjectType::PICTURE_FRAME:  updated = SetPosition_T(GetPictureFrames(), objectId, position); break;
+        case ObjectType::POWER_POLE_SET: updated = SetPosition_T(GetPowerPoleSets(), objectId, position); break;
+        case ObjectType::PLANAR_QUAD_OBJECT: updated = SetPosition_T(GetPlanarQuadObjects(), objectId, position); break;
+        case ObjectType::POINT_PAIR_OBJECT:  updated = SetPosition_T(GetPointPairObjects(), objectId, position); break;
         case ObjectType::SHARK:          updated = SetPosition_T(GetSharks(), objectId, position); break;
+        case ObjectType::SPAWN_POINT_CAMPAIGN:   updated = SetPosition_T(GetSpawnPointsCampaign(), objectId, position); break;
+        case ObjectType::SPAWN_POINT_DEATHMATCH: updated = SetPosition_T(GetSpawnPointsDeathMatch(), objectId, position); break;
         case ObjectType::STAIRCASE:      updated = SetPosition_T(GetStaircases(), objectId, position); break;
         case ObjectType::WALL:           updated = SetPosition_T(GetWalls(), objectId, position); break;
         case ObjectType::WINDOW:         updated = SetPosition_T(GetWindows(), objectId, position); break;
@@ -660,7 +818,9 @@ namespace Unloved::World {
         case ObjectType::DOOR:           return SetRotation_T(GetDoors(), objectId, rotation);
         case ObjectType::FIREPLACE:      return SetRotation_T(GetFireplaces(), objectId, rotation);
         case ObjectType::GAME_OBJECT:    return SetRotation_T(GetGameObjects(), objectId, rotation);
+        case ObjectType::GENERIC_ANIMATED_OBJECT: return SetRotation_T(GetGenericAnimatedObjects(), objectId, rotation);
         case ObjectType::GENERIC_OBJECT: return SetRotation_T(GetGenericObjects(), objectId, rotation);
+        case ObjectType::HOUSE_LOCATION: return SetRotation_T(GetHouseLocations(), objectId, rotation);
         case ObjectType::JETTY:          return SetRotation_T(GetJetties(), objectId, rotation);
         case ObjectType::LADDER:         return SetRotation_T(GetLadders(), objectId, rotation);
         case ObjectType::LIGHT:          return SetRotation_T(GetLights(), objectId, rotation);
@@ -668,8 +828,13 @@ namespace Unloved::World {
         case ObjectType::PIANO:          return SetRotation_T(GetPianos(), objectId, rotation);
         case ObjectType::PICK_UP:        return SetRotation_T(GetPickUps(), objectId, rotation);
         case ObjectType::PICTURE_FRAME:  return SetRotation_T(GetPictureFrames(), objectId, rotation);
+        case ObjectType::PLANAR_QUAD_OBJECT: return SetRotation_T(GetPlanarQuadObjects(), objectId, rotation);
+        case ObjectType::POINT_PAIR_OBJECT:  return SetRotation_T(GetPointPairObjects(), objectId, rotation);
+        case ObjectType::SPAWN_POINT_CAMPAIGN:   return SetRotation_T(GetSpawnPointsCampaign(), objectId, rotation);
+        case ObjectType::SPAWN_POINT_DEATHMATCH: return SetRotation_T(GetSpawnPointsDeathMatch(), objectId, rotation);
         case ObjectType::STAIRCASE:      return SetRotation_T(GetStaircases(), objectId, rotation);
         case ObjectType::WINDOW:         return SetRotation_T(GetWindows(), objectId, rotation);
+        case ObjectType::WORLD_PLANE:    return SetRotation_T(GetWorldPlanes(), objectId, rotation);
         default:
             Logging::Error() << "World::SetRotationById() failed: unsupported object type '" << Hell::Enum::ToString(GetObjectIdType(objectId)) << "'\n";
             return false;
@@ -716,9 +881,12 @@ namespace Unloved::World {
         case ObjectType::DDGI_VOLUME:            position = GetPosition_T(GetDDGIVolumes(), objectId); break;
         case ObjectType::DOBERMANN:              position = GetCreateInfoPosition_T(GetDobermanns(), objectId); break;
         case ObjectType::DOOR:                   position = GetPosition_T(GetDoors(), objectId); break;
+        case ObjectType::FENCE:                  position = GetPosition_T(GetFences(), objectId); break;
         case ObjectType::FIREPLACE:              position = GetPosition_T(GetFireplaces(), objectId); break;
         case ObjectType::GAME_OBJECT:            position = GetPosition_T(GetGameObjects(), objectId); break;
+        case ObjectType::GENERIC_ANIMATED_OBJECT:position = GetPosition_T(GetGenericAnimatedObjects(), objectId); break;
         case ObjectType::GENERIC_OBJECT:         position = GetPosition_T(GetGenericObjects(), objectId); break;
+        case ObjectType::HOUSE_LOCATION:         position = GetPosition_T(GetHouseLocations(), objectId); break;
         case ObjectType::WORLD_PLANE:            position = GetWorldSpaceCenter_T(GetWorldPlanes(), objectId); break;
         case ObjectType::KANGAROO:               position = GetPosition_T(GetKangaroos(), objectId); break;
         case ObjectType::LADDER:                 position = GetPosition_T(GetLadders(), objectId); break;
@@ -728,15 +896,15 @@ namespace Unloved::World {
         case ObjectType::PIANO:                  position = GetPosition_T(GetPianos(), objectId); break;
         case ObjectType::PICK_UP:                position = GetPosition_T(GetPickUps(), objectId); break;
         case ObjectType::PICTURE_FRAME:          position = GetPosition_T(GetPictureFrames(), objectId); break;
+        case ObjectType::POWER_POLE_SET:         position = GetPosition_T(GetPowerPoleSets(), objectId); break;
+        case ObjectType::PLANAR_QUAD_OBJECT:     position = GetPosition_T(GetPlanarQuadObjects(), objectId); break;
+        case ObjectType::POINT_PAIR_OBJECT:      position = GetPosition_T(GetPointPairObjects(), objectId); break;
         case ObjectType::SHARK:                  position = GetCreateInfoPosition_T(GetSharks(), objectId); break;
         case ObjectType::SPAWN_POINT_CAMPAIGN:   position = GetPosition_T(GetSpawnPointsCampaign(), objectId); break;
         case ObjectType::SPAWN_POINT_DEATHMATCH: position = GetPosition_T(GetSpawnPointsDeathMatch(), objectId); break;
         case ObjectType::STAIRCASE:              position = GetPosition_T(GetStaircases(), objectId); break;
         case ObjectType::WALL:                   position = GetWorldSpaceCenter_T(GetWalls(), objectId); break;
         case ObjectType::WINDOW:                 position = GetPosition_T(GetWindows(), objectId); break;
-        case ObjectType::FENCE:
-        case ObjectType::POWER_POLE_SET:
-            return invalid;
         default:
             break;
         }
@@ -765,15 +933,7 @@ namespace Unloved::World {
         return &object->GetCreateInfo().rotation;
     }
 
-    template<typename Container>
-    const glm::vec3* GetSpawnPointRotation_T(Container& objects, uint64_t objectId) {
-        const auto* object = objects.get(objectId);
-        if (!object) return nullptr;
-
-        return &object->GetCreateInfo().camEuler;
-    }
-
-    const glm::vec3& GetRotationById(uint64_t objectId) {
+    glm::vec3 GetRotationById(uint64_t objectId) {
         const static glm::vec3 invalid = glm::vec3(0.0f);
         if (objectId == 0) return invalid;
 
@@ -788,7 +948,9 @@ namespace Unloved::World {
         case ObjectType::DOOR:                   rotation = GetRotation_T(GetDoors(), objectId); break;
         case ObjectType::FIREPLACE:              rotation = GetRotation_T(GetFireplaces(), objectId); break;
         case ObjectType::GAME_OBJECT:            rotation = GetRotation_T(GetGameObjects(), objectId); break;
+        case ObjectType::GENERIC_ANIMATED_OBJECT:rotation = GetRotation_T(GetGenericAnimatedObjects(), objectId); break;
         case ObjectType::GENERIC_OBJECT:         rotation = GetRotation_T(GetGenericObjects(), objectId); break;
+        case ObjectType::HOUSE_LOCATION:         if (HouseLocation* houseLocation = GetHouseLocationByObjectId(objectId)) return houseLocation->GetRotation(); break;
         case ObjectType::KANGAROO:               rotation = GetRotation_T(GetKangaroos(), objectId); break;
         case ObjectType::JETTY:                  rotation = GetRotation_T(GetJetties(), objectId); break;
         case ObjectType::LADDER:                 rotation = GetRotation_T(GetLadders(), objectId); break;
@@ -797,16 +959,18 @@ namespace Unloved::World {
         case ObjectType::PIANO:                  rotation = GetRotation_T(GetPianos(), objectId); break;
         case ObjectType::PICK_UP:                rotation = GetRotation_T(GetPickUps(), objectId); break;
         case ObjectType::PICTURE_FRAME:          rotation = GetRotation_T(GetPictureFrames(), objectId); break;
-        case ObjectType::SPAWN_POINT_CAMPAIGN:   rotation = GetSpawnPointRotation_T(GetSpawnPointsCampaign(), objectId); break;
-        case ObjectType::SPAWN_POINT_DEATHMATCH: rotation = GetSpawnPointRotation_T(GetSpawnPointsDeathMatch(), objectId); break;
+        case ObjectType::PLANAR_QUAD_OBJECT:     rotation = GetRotation_T(GetPlanarQuadObjects(), objectId); break;
+        case ObjectType::POINT_PAIR_OBJECT:      rotation = GetRotation_T(GetPointPairObjects(), objectId); break;
+        case ObjectType::SPAWN_POINT_CAMPAIGN:   if (SpawnPoint* spawnPoint = GetSpawnPointCampaignByObjectId(objectId)) return spawnPoint->GetRotation(); break;
+        case ObjectType::SPAWN_POINT_DEATHMATCH: if (SpawnPoint* spawnPoint = GetSpawnPointDeathMatchByObjectId(objectId)) return spawnPoint->GetRotation(); break;
         case ObjectType::STAIRCASE:              rotation = GetRotation_T(GetStaircases(), objectId); break;
         case ObjectType::WINDOW:                 rotation = GetRotation_T(GetWindows(), objectId); break;
+        case ObjectType::WORLD_PLANE:            rotation = GetRotation_T(GetWorldPlanes(), objectId); break;
         case ObjectType::ANIMATED_GAME_OBJECT:
         case ObjectType::FENCE:
         case ObjectType::POWER_POLE_SET:
         case ObjectType::SHARK:
         case ObjectType::WALL:
-        case ObjectType::WORLD_PLANE:
             return invalid;
         default:
             break;
@@ -841,6 +1005,10 @@ namespace Unloved::World {
         const std::string* currentEditorName = GetEditorName_T(objects, objectId);
         if (!currentEditorName) return false;
 
+        for (auto& object : objects) {
+            if (object.GetObjectId() != objectId && object.GetEditorName() == editorName) return false;
+        }
+
         *const_cast<std::string*>(currentEditorName) = editorName;
         return true;
     }
@@ -849,6 +1017,10 @@ namespace Unloved::World {
     bool SetCreateInfoEditorName_T(Container& objects, uint64_t objectId, const std::string& editorName) {
         const std::string* currentEditorName = GetCreateInfoEditorName_T(objects, objectId);
         if (!currentEditorName) return false;
+
+        for (auto& object : objects) {
+            if (object.GetObjectId() != objectId && object.GetCreateInfo().editorName == editorName) return false;
+        }
 
         *const_cast<std::string*>(currentEditorName) = editorName;
         return true;
@@ -872,7 +1044,9 @@ namespace Unloved::World {
         case ObjectType::FENCE:                  editorName = GetCreateInfoEditorName_T(GetFences(), objectId); break;
         case ObjectType::FIREPLACE:              editorName = GetCreateInfoEditorName_T(GetFireplaces(), objectId); break;
         case ObjectType::GAME_OBJECT:            editorName = GetCreateInfoEditorName_T(GetGameObjects(), objectId); break;
+        case ObjectType::GENERIC_ANIMATED_OBJECT:editorName = GetEditorName_T(GetGenericAnimatedObjects(), objectId); break;
         case ObjectType::GENERIC_OBJECT:         editorName = GetEditorName_T(GetGenericObjects(), objectId); break;
+        case ObjectType::HOUSE_LOCATION:         editorName = GetCreateInfoEditorName_T(GetHouseLocations(), objectId); break;
         case ObjectType::WORLD_PLANE:            editorName = GetEditorName_T(GetWorldPlanes(), objectId); break;
         case ObjectType::KANGAROO:               editorName = GetEditorName_T(GetKangaroos(), objectId); break;
         case ObjectType::LADDER:                 editorName = GetCreateInfoEditorName_T(GetLadders(), objectId); break;
@@ -882,6 +1056,8 @@ namespace Unloved::World {
         case ObjectType::PICK_UP:                editorName = GetCreateInfoEditorName_T(GetPickUps(), objectId); break;
         case ObjectType::PICTURE_FRAME:          editorName = GetCreateInfoEditorName_T(GetPictureFrames(), objectId); break;
         case ObjectType::POWER_POLE_SET:         editorName = GetCreateInfoEditorName_T(GetPowerPoleSets(), objectId); break;
+        case ObjectType::PLANAR_QUAD_OBJECT:     editorName = GetEditorName_T(GetPlanarQuadObjects(), objectId); break;
+        case ObjectType::POINT_PAIR_OBJECT:      editorName = GetEditorName_T(GetPointPairObjects(), objectId); break;
         case ObjectType::SHARK:                  editorName = GetEditorName_T(GetSharks(), objectId); break;
         case ObjectType::SPAWN_POINT_CAMPAIGN:   editorName = GetCreateInfoEditorName_T(GetSpawnPointsCampaign(), objectId); break;
         case ObjectType::SPAWN_POINT_DEATHMATCH: editorName = GetCreateInfoEditorName_T(GetSpawnPointsDeathMatch(), objectId); break;
@@ -915,7 +1091,9 @@ namespace Unloved::World {
         case ObjectType::FENCE:                  return SetCreateInfoEditorName_T(GetFences(), objectId, editorName);
         case ObjectType::FIREPLACE:              return SetCreateInfoEditorName_T(GetFireplaces(), objectId, editorName);
         case ObjectType::GAME_OBJECT:            return SetCreateInfoEditorName_T(GetGameObjects(), objectId, editorName);
+        case ObjectType::GENERIC_ANIMATED_OBJECT:return SetEditorName_T(GetGenericAnimatedObjects(), objectId, editorName);
         case ObjectType::GENERIC_OBJECT:         return SetEditorName_T(GetGenericObjects(), objectId, editorName);
+        case ObjectType::HOUSE_LOCATION:         return SetCreateInfoEditorName_T(GetHouseLocations(), objectId, editorName);
         case ObjectType::WORLD_PLANE:            return SetEditorName_T(GetWorldPlanes(), objectId, editorName);
         case ObjectType::KANGAROO:               return SetEditorName_T(GetKangaroos(), objectId, editorName);
         case ObjectType::LADDER:                 return SetCreateInfoEditorName_T(GetLadders(), objectId, editorName);
@@ -925,6 +1103,8 @@ namespace Unloved::World {
         case ObjectType::PICK_UP:                return SetCreateInfoEditorName_T(GetPickUps(), objectId, editorName);
         case ObjectType::PICTURE_FRAME:          return SetCreateInfoEditorName_T(GetPictureFrames(), objectId, editorName);
         case ObjectType::POWER_POLE_SET:         return SetCreateInfoEditorName_T(GetPowerPoleSets(), objectId, editorName);
+        case ObjectType::PLANAR_QUAD_OBJECT:     return SetEditorName_T(GetPlanarQuadObjects(), objectId, editorName);
+        case ObjectType::POINT_PAIR_OBJECT:      return SetEditorName_T(GetPointPairObjects(), objectId, editorName);
         case ObjectType::SHARK:                  return SetEditorName_T(GetSharks(), objectId, editorName);
         case ObjectType::SPAWN_POINT_CAMPAIGN:   return SetCreateInfoEditorName_T(GetSpawnPointsCampaign(), objectId, editorName);
         case ObjectType::SPAWN_POINT_DEATHMATCH: return SetCreateInfoEditorName_T(GetSpawnPointsDeathMatch(), objectId, editorName);
@@ -967,7 +1147,9 @@ namespace Unloved::World {
         case ObjectType::FENCE:                   removed = RemoveFromSlotMap(GetFences(), objectId); break;
         case ObjectType::FIREPLACE:               removed = RemoveFromSlotMap(GetFireplaces(), objectId); break;
         case ObjectType::GAME_OBJECT:             removed = RemoveFromSlotMap(GetGameObjects(), objectId); break;
+        case ObjectType::GENERIC_ANIMATED_OBJECT: removed = RemoveFromSlotMap(GetGenericAnimatedObjects(), objectId); break;
         case ObjectType::GENERIC_OBJECT:          removed = RemoveFromSlotMap(GetGenericObjects(), objectId); break;
+        case ObjectType::HOUSE_LOCATION:          removed = RemoveFromSlotMap(GetHouseLocations(), objectId); break;
         case ObjectType::WORLD_PLANE:             removed = RemoveFromSlotMap(GetWorldPlanes(), objectId); break;
         case ObjectType::KANGAROO:                removed = RemoveFromSlotMap(GetKangaroos(), objectId); break;
         case ObjectType::LADDER:                  removed = RemoveFromSlotMap(GetLadders(), objectId); break;
@@ -978,6 +1160,8 @@ namespace Unloved::World {
         case ObjectType::PICK_UP:                 removed = RemoveFromSlotMap(GetPickUps(), objectId); break;
         case ObjectType::PICTURE_FRAME:           removed = RemoveFromSlotMap(GetPictureFrames(), objectId); break;
         case ObjectType::POWER_POLE_SET:          removed = RemoveFromSlotMap(GetPowerPoleSets(), objectId); break;
+        case ObjectType::PLANAR_QUAD_OBJECT:      removed = RemoveFromSlotMap(GetPlanarQuadObjects(), objectId); break;
+        case ObjectType::POINT_PAIR_OBJECT:       removed = RemoveFromSlotMap(GetPointPairObjects(), objectId); break;
         case ObjectType::SHARK:                   removed = RemoveFromSlotMap(GetSharks(), objectId); break;
         case ObjectType::SPAWN_POINT_CAMPAIGN:    removed = RemoveFromSlotMap(GetSpawnPointsCampaign(), objectId); break;
         case ObjectType::SPAWN_POINT_DEATHMATCH:  removed = RemoveFromSlotMap(GetSpawnPointsDeathMatch(), objectId); break;
@@ -1065,17 +1249,20 @@ namespace Unloved::World {
     }
 
     void CleanUpAll() {
+        DDGIManager::CleanUp();
+
         CleanUpSlotMap(g_bulletCasings);
         CleanUpSlotMap(g_christmasLightSets);
         CleanUpSlotMap(g_christmasTrees);
         CleanUpSlotMap(g_decals);
-        DDGIManager::CleanUp();
         CleanUpSlotMap(g_dobermanns);
         CleanUpSlotMap(g_doors);
         CleanUpSlotMap(g_fences);
         CleanUpSlotMap(g_fireplaces);
         CleanUpSlotMap(g_gameObjects);
+        CleanUpSlotMap(g_genericAnimatedObjects);
         CleanUpSlotMap(g_genericObjects);
+        CleanUpSlotMap(g_houseLocations);
         CleanUpSlotMap(g_worldPlanes);
         CleanUpSlotMap(g_jetties);
         CleanUpSlotMap(g_kangaroos);
@@ -1087,6 +1274,8 @@ namespace Unloved::World {
         CleanUpSlotMap(g_pickUps);
         CleanUpSlotMap(g_pictureFrames);
         CleanUpSlotMap(g_powerPoleSets);
+        CleanUpSlotMap(g_planarQuadObjects);
+        CleanUpSlotMap(g_pointPairObjects);
         CleanUpSlotMap(g_sharks);
         CleanUpSlotMap(g_spawnPointsCampaign);
         CleanUpSlotMap(g_spawnPointsDeathMatch);
