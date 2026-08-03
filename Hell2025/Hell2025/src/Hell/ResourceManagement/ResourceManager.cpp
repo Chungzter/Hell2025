@@ -620,6 +620,7 @@ namespace Hell::ResourceManager {
         }
 
         Logging::Error() << "ResourceManager::GetModelIdByName(..) failed: model '" << name << "' does not exist\n";
+        //__debugbreak();
         return 0;
     }
 

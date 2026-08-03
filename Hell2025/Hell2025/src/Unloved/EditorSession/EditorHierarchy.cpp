@@ -394,7 +394,9 @@ namespace Unloved::EditorSession::Hierarchy {
         AddWorldPlaneGroup("Ceilings", WorldPlaneType::CEILING);
         AddWorldGroup("Christmas Trees", World::GetChristmasTrees().ids());
         AddChristmasLightGroup();
+        AddPointPairObjectGroup("Decking Bearer", PointPairObjectType::DECKING_BEARER);
         AddPlanarQuadObjectGroup("Decking Boards", PlanarQuadObjectType::DECKING_BOARDS);
+        AddPointPairObjectGroup("Decking Posts", PointPairObjectType::DECKING_POST);
         AddWorldGroup("DDGI Volumes", World::GetDDGIVolumes().ids());
         AddWorldGroup("Dobermann", World::GetDobermanns().ids());
         AddPointPairObjectGroup("Down Pipes", PointPairObjectType::DOWN_PIPE);
@@ -404,7 +406,7 @@ namespace Unloved::EditorSession::Hierarchy {
         AddWorldPlaneGroup("Floors", WorldPlaneType::FLOOR);
         AddWorldGroup("Generic Animated Objects", World::GetGenericAnimatedObjects().ids());
         AddWorldGroup("Generic Objects", World::GetGenericObjects().ids());
-        AddPlanarQuadObjectGroup("Gutters", PlanarQuadObjectType::GUTTER);
+        AddPointPairObjectGroup("Gutters", PointPairObjectType::GUTTER);
         AddWorldGroup("House Locations", World::GetHouseLocations().ids());
         AddWorldGroup("Jetties", World::GetJetties().ids());
         AddWorldGroup("Kangaroos", World::GetKangaroos().ids());

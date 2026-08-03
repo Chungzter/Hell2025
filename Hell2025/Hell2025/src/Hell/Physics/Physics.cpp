@@ -47,6 +47,14 @@ namespace Hell::Physics {
     ContactReportCallback g_contactReportCallback;
     CCTHitCallback g_cctHitCallback;
 
+    // ABSTRACT ME OUTTA HERE!!!
+    PxRigidStatic* g_groundPlane = NULL;
+
+    PxRigidStatic* GetGroundPlanePxRigidStatic() {
+        return g_groundPlane;
+    }
+    // ABSTRACT ME OUTTA HERE!!!
+
     #define PVD_HOST "127.0.0.1"
 
     void Init() {
@@ -90,12 +98,11 @@ namespace Hell::Physics {
         g_characterControllerManager = PxCreateControllerManager(*g_scene);
 
         // temporary ground plane
-        PxRigidStatic* groundPlane = NULL;
         PxShape* groundShape = NULL;
 
-        groundPlane = PxCreatePlane(*g_physics, PxPlane(0, 1, 0, 0.01f), *g_defaultMaterial);
-        g_scene->addActor(*groundPlane);
-        groundPlane->getShapes(&groundShape, 1);
+        g_groundPlane = PxCreatePlane(*g_physics, PxPlane(0, 1, 0, 0.01f), *g_defaultMaterial);
+        g_scene->addActor(*g_groundPlane);
+        g_groundPlane->getShapes(&groundShape, 1);
         PxFilterData filterData;
         filterData.word0 = RaycastGroup::RAYCAST_ENABLED; // must be disabled or it causes crash in scene::update when it tries to retrieve rigid body flags from this actor
         filterData.word1 = CollisionGroup::ENVIROMENT_OBSTACLE;
@@ -107,7 +114,7 @@ namespace Hell::Physics {
         userData.physicsId = CreatePhysicsId(PhysicsObjectType::GROUND_PLANE);
         userData.objectId = 0;
         userData.physicsType = PhysicsType::GROUND_PLANE;
-        groundPlane->userData = new PhysicsUserData(userData);
+        g_groundPlane->userData = new PhysicsUserData(userData);
 
         // This might not work!
         PxScene* pxScene = GetPxScene();

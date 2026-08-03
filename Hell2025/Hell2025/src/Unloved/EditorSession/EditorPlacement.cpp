@@ -155,6 +155,7 @@ namespace Unloved::EditorSession::Placement {
             PlanarQuadObjectCreateInfo createInfo;
             createInfo.planarQuad.position = hit.position;
             createInfo.planarQuad.points = { glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(-1.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, -1.0f) };
+
             if (type == PlanarQuadObjectType::DECKING_BOARDS) {
                 createInfo.materialNames[0] = "NumGrid";
                 createInfo.customFloats[0] = 0.6f;
@@ -174,9 +175,20 @@ namespace Unloved::EditorSession::Placement {
                 createInfo.length = 1.0f;
                 createInfo.materialNames[0] = "Brass";
             }
+            if (type == PointPairObjectType::GUTTER) {
+                createInfo.length = 1.0f;
+                createInfo.materialNames[0] = "Brass";
+            }
             if (type == PointPairObjectType::DOWN_PIPE) {
                 createInfo.length = 1.0f;
                 createInfo.rotation.x = glm::radians(-90.0f);
+            }
+            if (type == PointPairObjectType::DECKING_POST) {
+                createInfo.length = 1.0f;
+                createInfo.rotation.x = glm::radians(-90.0f);
+            }
+            if (type == PointPairObjectType::DECKING_BEARER) {
+                createInfo.length = 1.0f;
             }
 
             return World::AddPointPairObject(createInfo);
@@ -323,8 +335,10 @@ namespace Unloved::EditorSession::Placement {
                     return World::AddWindow(createInfo);
                 }
                 case PlacementTool::DECKING_BOARDS: return CreatePlanarQuadObject(toolInfo, hit, PlanarQuadObjectType::DECKING_BOARDS);
+                case PlacementTool::DECKING_BEARER: return CreatePointPairObject(toolInfo, hit, PointPairObjectType::DECKING_BEARER);
+                case PlacementTool::DECKING_POST:   return CreatePointPairObject(toolInfo, hit, PointPairObjectType::DECKING_POST);
                 case PlacementTool::DOWN_PIPE:      return CreatePointPairObject(toolInfo, hit, PointPairObjectType::DOWN_PIPE);
-                case PlacementTool::GUTTER:         return CreatePlanarQuadObject(toolInfo, hit, PlanarQuadObjectType::GUTTER);
+                case PlacementTool::GUTTER:         return CreatePointPairObject(toolInfo, hit, PointPairObjectType::GUTTER);
                 case PlacementTool::RIDGE_CAPPING:  return CreatePointPairObject(toolInfo, hit, PointPairObjectType::RIDGE_CAPPING);
                 case PlacementTool::ROOFING_IRON:   return CreatePlanarQuadObject(toolInfo, hit, PlanarQuadObjectType::ROOFING_IRON);
                 case PlacementTool::WORLD_PLANE_CEILING:

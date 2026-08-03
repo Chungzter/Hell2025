@@ -40,12 +40,14 @@ enum struct WorldPlaneType {
 
 enum struct PlanarQuadObjectType {
     DECKING_BOARDS,
-    GUTTER,
     ROOFING_IRON,
     UNDEFINED
 };
 
 enum struct PointPairObjectType {
+    DECKING_BEARER,
+    DECKING_POST,
+    GUTTER,
     RIDGE_CAPPING,
     DOWN_PIPE,
     UNDEFINED

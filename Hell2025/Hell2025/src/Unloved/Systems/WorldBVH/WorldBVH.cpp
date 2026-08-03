@@ -246,8 +246,8 @@ namespace Unloved::WorldBVH {
         for (Ladder& object : World::GetLadders())							CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
         for (Mermaid& object : World::GetMermaids())						CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
         for (PowerPoleSet& object : World::GetPowerPoleSets())			    CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (PlanarQuadObject& object : World::GetPlanarQuadObjects())    CreateObjectInstanceDataFromProceduralRenderItems(object.GetRenderItems(), g_staticSceneInstances);
-        for (PointPairObject& object : World::GetPointPairObjects())      CreateObjectInstanceDataFromProceduralRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (PlanarQuadObject& object : World::GetPlanarQuadObjects())      CreateObjectInstanceDataFromProceduralRenderItems(object.GetRenderItems(), g_staticSceneInstances);
+        for (PointPairObject& object : World::GetPointPairObjects())        CreateObjectInstanceDataFromProceduralRenderItems(object.GetRenderItems(), g_staticSceneInstances);
         for (Staircase& object : World::GetStaircases())					CreateObjectInstanceDataFromRenderItems(object.GetRenderItems(), g_staticSceneInstances);
 
         if (EditorSession::IsActive()) {

@@ -324,7 +324,9 @@ namespace Unloved::EditorSession::MenuBar {
                     Tool("Roofing Iron", PlacementTool::ROOFING_IRON),
                 }),
                 Submenu("Decking", {
+                    Tool("Decking Bearer", PlacementTool::DECKING_BEARER),
                     Tool("Decking Boards", PlacementTool::DECKING_BOARDS),
+                    Tool("Decking Post",   PlacementTool::DECKING_POST),
                 }),
             }),
             Submenu("Misc", {

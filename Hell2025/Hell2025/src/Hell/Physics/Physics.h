@@ -44,7 +44,7 @@ namespace Hell::Physics {
     std::vector<CharacterCollisionReport>& GetCharacterCollisionReports();
     PxPhysics* GetPxPhysics();
     PxScene* GetPxScene();
-    CCTHitCallback& GetCharacterControllerHitCallback();    
+    CCTHitCallback& GetCharacterControllerHitCallback();
     PxControllerManager* GetCharacterControllerManager();
 
     // Materials
@@ -57,4 +57,6 @@ namespace Hell::Physics {
 
     // Misc
 
+    // CLEAN ME UP
+    PxRigidStatic* GetGroundPlanePxRigidStatic();
 }

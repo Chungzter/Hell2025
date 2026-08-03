@@ -665,7 +665,7 @@ namespace Unloved::EditorSession::Viewports {
                 SetMode(viewportIndex, currentMode == EditorViewportMode::PERSPECTIVE ? EditorViewportMode::ORTHOGRAPHIC : EditorViewportMode::PERSPECTIVE);
                 commandPressed = true;
             }
-            else if (Hell::Input::KeyPressed(HELL_KEY_NUMPAD_1)) {
+            else if (Hell::Input::KeyPressed(HELL_KEY_NUMPAD_1) || Hell::Input::KeyPressed(HELL_KEY_8)) {
                 SetMode(viewportIndex, EditorViewportMode::FRONT);
                 commandPressed = true;
             }
@@ -677,15 +677,15 @@ namespace Unloved::EditorSession::Viewports {
                 SetMode(viewportIndex, EditorViewportMode::LEFT);
                 commandPressed = true;
             }
-            else if (Hell::Input::KeyPressed(HELL_KEY_NUMPAD_6)) {
+            else if (Hell::Input::KeyPressed(HELL_KEY_NUMPAD_6) || Hell::Input::KeyPressed(HELL_KEY_0)) {
                 SetMode(viewportIndex, EditorViewportMode::RIGHT);
                 commandPressed = true;
             }
-            else if (Hell::Input::KeyPressed(HELL_KEY_NUMPAD_5)) {
+            else if (Hell::Input::KeyPressed(HELL_KEY_NUMPAD_5) || Hell::Input::KeyPressed(HELL_KEY_9)) {
                 SetMode(viewportIndex, EditorViewportMode::TOP);
                 commandPressed = true;
             }
-            else if (Hell::Input::KeyPressed(HELL_KEY_NUMPAD_2)) {
+            else if (Hell::Input::KeyPressed(HELL_KEY_NUMPAD_2) || Hell::Input::KeyPressed(HELL_KEY_7)) {
                 SetMode(viewportIndex, EditorViewportMode::BOTTOM);
                 commandPressed = true;
             }

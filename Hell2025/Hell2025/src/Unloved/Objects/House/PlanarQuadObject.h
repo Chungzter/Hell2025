@@ -42,8 +42,10 @@ struct PlanarQuadObject {
 private:
     void Reset();
     void Rebuild();
+
     void RebuildDeckingBoards();
-    void RebuildGutter();
+    void RebuildRoofingIron();
+
     void SyncCreateInfoFromPlanarQuad();
 
     uint64_t m_objectId = 0;

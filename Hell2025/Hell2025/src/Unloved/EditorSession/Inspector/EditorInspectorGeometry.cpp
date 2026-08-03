@@ -62,7 +62,39 @@ namespace Unloved::EditorSession::Inspector::Internal {
             properties.Float(objectId, "UV Scale", uvScale, [object, uvScale = &uvScale] { object->SetCustomFloat(0, *uvScale); });
             properties.DropDown(objectId, "Material", materials, materialName, [object, materialName = &materialName] { object->SetDeckingBoardsMaterial(*materialName); });
         }
+
+        void AddDeckingPostProperties(InputElements::PropertyList& properties, uint64_t objectId, std::string& materialName, bool& rotateUVs, float& uvScale) {
+            static const std::vector<std::string> materials = {
+                "NumGrid",
+                "WeatherBoards_Bare",
+                "WoodOak"
+            };
+
+            PlanarQuadObject* object = World::GetPlanarQuadObjectByObjectId(objectId);
+            if (!object) return;
+
+            properties.CheckBox("Rotate UVs", rotateUVs, [object, rotateUVs = &rotateUVs] { object->SetCustomBool(0, *rotateUVs); });
+            properties.Float(objectId, "UV Scale", uvScale, [object, uvScale = &uvScale] { object->SetCustomFloat(0, *uvScale); });
+            properties.DropDown(objectId, "Material", materials, materialName, [object, materialName = &materialName] { object->SetDeckingBoardsMaterial(*materialName); });
+        }
+
+        void AddDeckingBearerProperties(InputElements::PropertyList& properties, uint64_t objectId, std::string& materialName, bool& rotateUVs, float& uvScale) {
+            static const std::vector<std::string> materials = {
+                "NumGrid",
+                "WeatherBoards_Bare",
+                "WoodOak"
+            };
+
+            PlanarQuadObject* object = World::GetPlanarQuadObjectByObjectId(objectId);
+            if (!object) return;
+
+            properties.CheckBox("Rotate UVs", rotateUVs, [object, rotateUVs = &rotateUVs] { object->SetCustomBool(0, *rotateUVs); });
+            properties.Float(objectId, "UV Scale", uvScale, [object, uvScale = &uvScale] { object->SetCustomFloat(0, *uvScale); });
+            properties.DropDown(objectId, "Material", materials, materialName, [object, materialName = &materialName] { object->SetDeckingBoardsMaterial(*materialName); });
+        }
     }
+
+
 
     void RenderPlanarQuadProperties(const EditorRect& rect, uint64_t objectId) {
         PlanarQuadObject* object = World::GetPlanarQuadObjectByObjectId(objectId);
@@ -113,8 +145,11 @@ namespace Unloved::EditorSession::Inspector::Internal {
         }
 
         std::string editorName = object->GetEditorName();
+        std::string materialName = object->GetCreateInfo().materialNames[0];
         glm::vec3 position = object->GetPosition();
         glm::vec3 rotation = object->GetRotation();
+        bool customBool0 = object->GetCreateInfo().customBools[0];
+        float customFloat0 = object->GetCreateInfo().customFloats[0];
 
         properties.String(objectId, "Name", editorName, [objectId, editorName = &editorName] { SetEditorName(objectId, *editorName); });
         properties.Vec3(objectId, "Position", position, [objectId, position = &position] { SetObjectPosition(objectId, *position); });
@@ -128,6 +163,12 @@ namespace Unloved::EditorSession::Inspector::Internal {
             if (PointSequences::GetPointPosition(objectId, pointIndex, handleType, pointPosition)) {
                 properties.Vec3(objectId, "Point", pointPosition, [objectId, pointIndex, handleType, pointPosition = &pointPosition] { SetSelectedPointPosition(objectId, pointIndex, handleType, *pointPosition); });
             }
+        }
+
+
+        switch (object->GetType()) {
+            case PointPairObjectType::DECKING_BEARER: AddDeckingBearerProperties(properties, objectId, materialName, customBool0, customFloat0); break;
+            case PointPairObjectType::DECKING_POST:   AddDeckingPostProperties(properties, objectId, materialName, customBool0, customFloat0); break;
         }
 
         properties.Render(rect);

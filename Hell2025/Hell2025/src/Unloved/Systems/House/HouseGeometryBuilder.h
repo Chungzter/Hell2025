@@ -9,8 +9,6 @@
 struct HouseGeometrySourceMesh {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
-    glm::vec3 aabbMin = glm::vec3(0.0f);
-    glm::vec3 aabbMax = glm::vec3(0.0f);
 };
 
 namespace Unloved::HouseGeometryBuilder {
@@ -20,7 +18,14 @@ namespace Unloved::HouseGeometryBuilder {
     void CreateDownFacingPlane(const PlanarQuad& planarQuad, std::vector<Vertex>& verticesOut, std::vector<uint32_t>& indicesOut);
     void CreateUpFacingPlane(const PlanarQuad& planarQuad, std::vector<Vertex>& verticesOut, std::vector<uint32_t>& indicesOut);
 
+    const HouseGeometrySourceMesh& GetCubeSourceMesh();
     const HouseGeometrySourceMesh& GetDeckingBoardsSourceMesh();
     const HouseGeometrySourceMesh& GetGutterSourceMesh();
+    const HouseGeometrySourceMesh& GetGutterEndCapLeftSourceMesh();
+    const HouseGeometrySourceMesh& GetGutterEndCapRightSourceMesh();
+    const HouseGeometrySourceMesh& GetGutterFasciaSourceMesh();
     const HouseGeometrySourceMesh& GetRidgeCappingSourceMesh();
+    const HouseGeometrySourceMesh& GetRoofingFlashingLeftSourceMesh();
+    const HouseGeometrySourceMesh& GetRoofingFlashingRightSourceMesh();
+    const HouseGeometrySourceMesh& GetRoofingIronSourceMesh();
 }

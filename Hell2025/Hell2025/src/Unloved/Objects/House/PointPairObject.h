@@ -30,6 +30,7 @@ struct PointPairObject {
     const glm::vec3& GetRotation() const                      { return m_createInfo.rotation; }
     const glm::vec3& GetPositionP0() const                    { return m_worldP0; }
     const glm::vec3& GetPositionP1() const                    { return m_worldP1; }
+    const glm::mat4& GetWorldMatrix() const                   { return m_worldMatrix; }
     const glm::mat4& GetWorldMatrixP0() const                 { return m_worldMatrixP0; }
     const glm::mat4& GetWorldMatrixP1() const                 { return m_worldMatrixP1; }
     glm::vec3 GetRight() const;
@@ -46,13 +47,19 @@ struct PointPairObject {
 private:
     void Reset();
     void Rebuild();
+
+    void RebuildDeckingPost();
+    void RebuildGutter();
+    void RebuildDeckingBearer();
     void RebuildRidgeCapping();
+
     void UpdateWorldPoints();
 
     uint64_t m_objectId = 0;
     PointPairCreateInfo m_createInfo;
     glm::vec3 m_worldP0 = glm::vec3(0.0f);
     glm::vec3 m_worldP1 = glm::vec3(0.0f);
+    glm::mat4 m_worldMatrix = glm::mat4(1.0f);
     glm::mat4 m_worldMatrixP0 = glm::mat4(1.0f);
     glm::mat4 m_worldMatrixP1 = glm::mat4(1.0f);
     std::vector<uint32_t> m_meshIds;

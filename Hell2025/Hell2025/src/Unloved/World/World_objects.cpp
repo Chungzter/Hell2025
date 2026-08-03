@@ -397,7 +397,6 @@ namespace Unloved::World {
     uint64_t AddPlanarQuadObject(PlanarQuadObjectCreateInfo createInfo, SpawnOffset spawnOffset) {
         const char* defaultEditorName = "Planar Quad Object";
         if (createInfo.type == PlanarQuadObjectType::DECKING_BOARDS) defaultEditorName = "Decking Boards";
-        if (createInfo.type == PlanarQuadObjectType::GUTTER) defaultEditorName = "Gutter";
         if (createInfo.type == PlanarQuadObjectType::ROOFING_IRON) defaultEditorName = "Roofing Iron";
 
         std::string desiredName = createInfo.editorName;
@@ -425,6 +424,9 @@ namespace Unloved::World {
 
     uint64_t AddPointPairObject(PointPairCreateInfo createInfo, SpawnOffset spawnOffset) {
         const char* defaultEditorName = "Point Pair Object";
+        if (createInfo.type == PointPairObjectType::DECKING_BEARER) defaultEditorName = "Decking Bearer";
+        if (createInfo.type == PointPairObjectType::DECKING_POST) defaultEditorName = "Decking Post";
+        if (createInfo.type == PointPairObjectType::GUTTER) defaultEditorName = "Gutter";
         if (createInfo.type == PointPairObjectType::RIDGE_CAPPING) defaultEditorName = "Ridge Capping";
         if (createInfo.type == PointPairObjectType::DOWN_PIPE) defaultEditorName = "Down Pipe";
 

@@ -209,6 +209,16 @@ namespace Unloved::EditorSession {
         deckingBoards.insertMode = PlacementInsertMode::DIRECT;
         deckingBoards.defaultEditorName = "Decking Boards";
 
+        PlacementToolInfo& deckingBearer = g_placementTools[PlacementTool::DECKING_BEARER];
+        deckingBearer.rayMode = PlacementRayMode::WORLD;
+        deckingBearer.insertMode = PlacementInsertMode::DIRECT;
+        deckingBearer.defaultEditorName = "Decking Bearer";
+
+        PlacementToolInfo& deckingPost = g_placementTools[PlacementTool::DECKING_POST];
+        deckingPost.rayMode = PlacementRayMode::WORLD;
+        deckingPost.insertMode = PlacementInsertMode::DIRECT;
+        deckingPost.defaultEditorName = "Decking Post";
+
         PlacementToolInfo& ladder = g_placementTools[PlacementTool::LADDER];
         ladder.rayMode = PlacementRayMode::WORLD;
         ladder.insertMode = PlacementInsertMode::DIRECT;
